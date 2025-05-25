@@ -4,13 +4,13 @@
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js';
-import { 
-    initializePrimaryEventListeners, 
-    setupMIDI, 
+import {
+    initializePrimaryEventListeners,
+    setupMIDI,
     attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
-    selectMIDIInput // Exposing selectMIDIInput for reconstructDAW in state.js
+    selectMIDIInput
 } from './eventHandlers.js';
 import {
     getTracks, getTrackById,
@@ -19,18 +19,18 @@ import {
     gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav,
     getArmedTrackId, getSoloedTrackId, getActiveSequencerTrackId, isTrackRecording, getRecordingTrackId, getUndoStack
 } from './state.js';
-import { 
-    initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, 
-    loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview, 
-    loadSampleFile, loadDrumSamplerPadFile, autoSliceSample 
+import {
+    initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
+    loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
+    loadSampleFile, loadDrumSamplerPadFile, autoSliceSample
 } from './audio.js';
 import {
     openTrackEffectsRackWindow, openTrackSequencerWindow,
     openGlobalControlsWindow, openTrackInspectorWindow,
     openMixerWindow, updateMixerWindow,
-    openSoundBrowserWindow, renderSoundBrowserDirectory, 
+    openSoundBrowserWindow, renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, // Added updateSoundBrowserDisplayForLibrary
     highlightPlayingStep,
-    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI 
+    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI
 } from './ui.js';
 
 
@@ -38,12 +38,13 @@ console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js)");
 
 // --- Global Variables & Initialization ---
 window.loadedZipFiles = {};
+window.soundLibraryFileTrees = {}; // For storing processed file trees of libraries
 window.currentLibraryName = null;
 window.currentSoundFileTree = null;
 window.currentSoundBrowserPath = [];
 window.previewPlayer = null;
-window.midiAccess = null; 
-window.activeMIDIInput = null; 
+window.midiAccess = null;
+window.activeMIDIInput = null;
 window.transportEventsInitialized = false;
 window.masterMeter = null;
 window.openWindows = {};
@@ -61,19 +62,7 @@ window.playBtn = null; window.recordBtn = null; window.tempoInput = null;
 window.masterMeterBar = null; window.midiInputSelectGlobal = null;
 window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
 
-
-// --- DIAGNOSTIC LOG (Confirming key imports) ---
-// console.log("--- MAIN.JS DIAGNOSTICS (Confirming Imports) ---");
-// console.log("typeof getArmedTrackId (from state.js):", typeof getArmedTrackId);
-// console.log("typeof addTrackToState (from state.js):", typeof addTrackToState);
-// console.log("typeof openTrackInspectorWindow (from ui.js):", typeof openTrackInspectorWindow);
-// console.log("typeof handleTrackMute (from eventHandlers.js):", typeof handleTrackMute);
-// console.log("typeof autoSliceSample (from audio.js):", typeof autoSliceSample);
-// console.log("typeof reconstructDAW (from state.js):", typeof reconstructDAW);
-// console.log("--- END MAIN.JS DIAGNOSTICS ---");
-
-
-// --- Exposing functions globally (TEMPORARY - Reduce these as modules import directly) ---
+// --- Exposing functions globally ---
 // UI functions
 window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
 window.openTrackSequencerWindow = openTrackSequencerWindow;
@@ -85,8 +74,9 @@ window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
     return newWindow.element ? newWindow : null;
 };
 window.updateMixerWindow = updateMixerWindow;
-window.highlightPlayingStep = highlightPlayingStep; 
+window.highlightPlayingStep = highlightPlayingStep;
 window.renderSoundBrowserDirectory = renderSoundBrowserDirectory;
+window.updateSoundBrowserDisplayForLibrary = updateSoundBrowserDisplayForLibrary; // Exposed
 window.openGlobalControlsWindow = openGlobalControlsWindow;
 window.openMixerWindow = openMixerWindow;
 window.openSoundBrowserWindow = openSoundBrowserWindow;
@@ -109,19 +99,19 @@ window.autoSliceSample = autoSliceSample;
 
 // State functions
 window.captureStateForUndo = captureStateForUndo;
-window.handleProjectFileLoad = handleProjectFileLoad; 
+window.handleProjectFileLoad = handleProjectFileLoad;
 window.undoLastAction = undoLastAction;
 window.redoLastAction = redoLastAction;
 window.saveProject = saveProject;
 window.loadProject = loadProject;
 window.exportToWav = exportToWav;
-window.addTrack = addTrackToState; // For Start Menu via appContext
+window.addTrack = addTrackToState;
 
 // Event Handler functions
 window.handleTrackMute = handleTrackMute;
 window.handleTrackSolo = handleTrackSolo;
 window.handleTrackArm = handleTrackArm;
-window.removeTrack = handleRemoveTrack; 
+window.removeTrack = handleRemoveTrack;
 window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
@@ -160,23 +150,63 @@ window.updateTaskbarTempoDisplay = (newTempo) => {
 // --- Core Application Initialization ---
 async function initializeSnugOS() {
     console.log("[Main] Window loaded. Initializing SnugOS...");
-    
+
     const appContext = {
         addTrack: addTrackToState,
         openSoundBrowserWindow: openSoundBrowserWindow,
         undoLastAction: undoLastAction,
         redoLastAction: redoLastAction,
         saveProject: saveProject,
-        loadProject: loadProject, 
+        loadProject: loadProject,
         exportToWav: exportToWav,
         openGlobalControlsWindow: openGlobalControlsWindow,
         openMixerWindow: openMixerWindow,
         handleProjectFileLoad: handleProjectFileLoad
     };
     initializePrimaryEventListeners(appContext);
-    
+
     await openGlobalControlsWindow();
     await setupMIDI();
+
+    // --- Autofetch Sound Libraries ---
+    const libraryPromises = [];
+    let librariesToFetchCount = 0;
+    if (Constants.soundLibraries) { // Check if soundLibraries is defined
+        for (const libName in Constants.soundLibraries) {
+            if (Object.hasOwnProperty.call(Constants.soundLibraries, libName)) {
+                librariesToFetchCount++;
+                // Pass true for isAutofetch
+                libraryPromises.push(fetchSoundLibrary(libName, Constants.soundLibraries[libName], true));
+            }
+        }
+    }
+
+    if (librariesToFetchCount > 0) {
+        showNotification(`Pre-loading ${librariesToFetchCount} sound libraries...`, 2000);
+        Promise.allSettled(libraryPromises).then(results => {
+            let successCount = 0;
+            results.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    // fetchSoundLibrary resolves to undefined, so check for actual successful load via window.loadedZipFiles
+                    // This part is tricky as fetchSoundLibrary doesn't return a success boolean directly for its operation.
+                    // We assume if it didn't throw and reached 'fulfilled', it's a success in terms of Promise.allSettled.
+                    // The actual data check will be done by the Sound Browser itself.
+                    successCount++;
+                } else {
+                    console.warn(`[Main] Autofetch failed for one library: ${result.reason}`);
+                }
+            });
+            if (successCount === librariesToFetchCount) {
+                showNotification("All sound library pre-load attempts finished.", 2500);
+            } else if (successCount > 0) {
+                showNotification(`${successCount} of ${librariesToFetchCount} sound library pre-load attempts finished. Some may have had issues.`, 3000);
+            } else if (librariesToFetchCount > 0) {
+                showNotification("Failed to pre-load sound libraries. Check console.", 3000);
+            }
+        });
+    }
+    // --- End Autofetch ---
+
     requestAnimationFrame(updateMetersLoop);
     updateUndoRedoButtons();
 
@@ -194,8 +224,9 @@ function updateMetersLoop() {
 // --- Global Event Listeners ---
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
-    const currentUndoStack = getUndoStack();
-    if (getTracks().length > 0 && (currentUndoStack.length > 0 || Object.keys(window.openWindows).length > 1)) {
+    const currentUndoStack = getUndoStack ? getUndoStack() : [];
+    const currentTracks = getTracks ? getTracks() : [];
+    if (currentTracks.length > 0 && (currentUndoStack.length > 0 || (window.openWindows && Object.keys(window.openWindows).length > 1))) {
         e.preventDefault();
         e.returnValue = '';
     }
