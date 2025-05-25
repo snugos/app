@@ -3,11 +3,11 @@
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
-import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js'; // Ensure showNotification is available
-import {
+import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js';
+import { // Ensure this block is correct
     initializePrimaryEventListeners,
     setupMIDI,
-    attachGlobalControlEvents,
+    attachGlobalControlEvents, // This was the function causing the previous error
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
     selectMIDIInput
@@ -50,13 +50,20 @@ window.masterMeter = null;
 window.openWindows = {};
 window.highestZIndex = 100;
 
-const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground'; // localStorage key
+const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
 
 // --- DOM Elements ---
-// ... (no changes here)
+const desktop = document.getElementById('desktop');
+const startButton = document.getElementById('startButton');
+const startMenu = document.getElementById('startMenu');
+const taskbarButtonsContainer = document.getElementById('taskbarButtons');
+const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
+const loadProjectInputEl = document.getElementById('loadProjectInput');
 
 window.playBtn = null; window.recordBtn = null; window.tempoInput = null;
-// ... (no changes here)
+window.masterMeterBar = null; window.midiInputSelectGlobal = null;
+window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
+
 
 // --- Desktop Background Functions ---
 function applyDesktopBackground(imageUrl) {
@@ -66,10 +73,10 @@ function applyDesktopBackground(imageUrl) {
         desktopEl.style.backgroundSize = 'cover';
         desktopEl.style.backgroundPosition = 'center center';
         desktopEl.style.backgroundRepeat = 'no-repeat';
-        desktopEl.style.backgroundColor = ''; // Clear background color if an image is set
-    } else if (desktopEl) { // Clear background image and revert to default color
+        desktopEl.style.backgroundColor = ''; 
+    } else if (desktopEl) { 
         desktopEl.style.backgroundImage = '';
-        desktopEl.style.backgroundColor = Constants.defaultDesktopBg || '#FFB6C1'; // Apply default color
+        desktopEl.style.backgroundColor = Constants.defaultDesktopBg || '#FFB6C1'; 
     }
 }
 
@@ -86,7 +93,7 @@ function handleCustomBackgroundUpload(event) {
             } catch (error) {
                 console.error("Error saving background to localStorage:", error);
                 showNotification("Could not save background: Storage full or image too large.", 4000);
-                applyDesktopBackground(dataURL); // Still apply for current session
+                applyDesktopBackground(dataURL); 
             }
         };
         reader.onerror = () => {
@@ -96,26 +103,98 @@ function handleCustomBackgroundUpload(event) {
     } else if (file) {
         showNotification("Invalid file type. Please select an image.", 3000);
     }
-    if (event.target) event.target.value = null; // Reset file input
+    if (event.target) event.target.value = null; 
 }
 
 function removeCustomDesktopBackground() {
     localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
-    applyDesktopBackground(null); // Clears the inline style and applies default color via applyDesktopBackground
+    applyDesktopBackground(null); 
     showNotification("Custom background removed.", 2000);
 }
 
-
 // --- Exposing functions globally ---
-// ... (existing exposed functions)
+window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
+window.openTrackSequencerWindow = openTrackSequencerWindow;
+window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
+    if (window.openWindows[id]) {
+        window.openWindows[id].restore(); return window.openWindows[id];
+    }
+    const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
+    return newWindow.element ? newWindow : null;
+};
+window.updateMixerWindow = updateMixerWindow;
+window.highlightPlayingStep = highlightPlayingStep;
+window.renderSoundBrowserDirectory = renderSoundBrowserDirectory;
 window.updateSoundBrowserDisplayForLibrary = updateSoundBrowserDisplayForLibrary;
+window.openGlobalControlsWindow = openGlobalControlsWindow;
+window.openMixerWindow = openMixerWindow;
+window.openSoundBrowserWindow = openSoundBrowserWindow;
+window.openTrackInspectorWindow = openTrackInspectorWindow;
+window.drawWaveform = drawWaveform;
+window.drawInstrumentWaveform = drawInstrumentWaveform;
+window.renderSamplePads = renderSamplePads;
+window.updateSliceEditorUI = updateSliceEditorUI;
+window.updateDrumPadControlsUI = updateDrumPadControlsUI;
+
+window.playSlicePreview = playSlicePreview;
+window.playDrumSamplerPadPreview = playDrumSamplerPadPreview;
+window.loadSampleFile = loadSampleFile;
+window.loadDrumSamplerPadFile = loadDrumSamplerPadFile;
+window.loadSoundFromBrowserToTarget = loadSoundFromBrowserToTarget;
+window.fetchSoundLibrary = fetchSoundLibrary;
+window.initAudioContextAndMasterMeter = initAudioContextAndMasterMeter;
+window.autoSliceSample = autoSliceSample;
+
+window.captureStateForUndo = captureStateForUndo;
+window.handleProjectFileLoad = handleProjectFileLoad;
+window.undoLastAction = undoLastAction;
+window.redoLastAction = redoLastAction;
+window.saveProject = saveProject;
+window.loadProject = loadProject;
+window.exportToWav = exportToWav;
+window.addTrack = addTrackToState;
+
+window.handleTrackMute = handleTrackMute;
+window.handleTrackSolo = handleTrackSolo;
+window.handleTrackArm = handleTrackArm;
+window.removeTrack = handleRemoveTrack;
+window.handleOpenTrackInspector = handleOpenTrackInspector;
+window.handleOpenEffectsRack = handleOpenEffectsRack;
+window.handleOpenSequencer = handleOpenSequencer;
+window.attachGlobalControlEvents = attachGlobalControlEvents; // This is used when opening Global Controls
+window.selectMIDIInput = selectMIDIInput;
+
+window.getTracks = getTracks;
+window.getTrackById = getTrackById;
+window.getArmedTrackId = getArmedTrackId;
+window.getSoloedTrackId = getSoloedTrackId;
+window.getActiveSequencerTrackId = getActiveSequencerTrackId;
+window.isTrackRecording = isTrackRecording;
+window.getRecordingTrackId = getRecordingTrackId;
+window.getUndoStack = getUndoStack;
+
+window.updateSequencerCellUI = (cell, trackType, isActive) => {
+    if (!cell) return;
+    cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
+    if (isActive) {
+        let activeClass = '';
+        if (trackType === 'Synth') activeClass = 'active-synth';
+        else if (trackType === 'Sampler') activeClass = 'active-sampler';
+        else if (trackType === 'DrumSampler') activeClass = 'active-drum-sampler';
+        else if (trackType === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
+        if (activeClass) cell.classList.add(activeClass);
+    }
+};
+window.updateTaskbarTempoDisplay = (newTempo) => {
+    const display = document.getElementById('taskbarTempoDisplay');
+    if (display) display.textContent = `${parseFloat(newTempo).toFixed(1)} BPM`;
+};
 
 
 // --- Core Application Initialization ---
 async function initializeSnugOS() {
     console.log("[Main] Window loaded. Initializing SnugOS...");
 
-    // Load custom background at startup or apply default
     const savedBg = localStorage.getItem(DESKTOP_BACKGROUND_KEY);
     if (savedBg) {
         applyDesktopBackground(savedBg);
@@ -137,20 +216,16 @@ async function initializeSnugOS() {
         openGlobalControlsWindow: openGlobalControlsWindow,
         openMixerWindow: openMixerWindow,
         handleProjectFileLoad: handleProjectFileLoad,
-        // Add new handlers for background management to appContext
         triggerCustomBackgroundUpload: () => document.getElementById('customBgInput').click(),
         removeCustomDesktopBackground: removeCustomDesktopBackground,
     };
     initializePrimaryEventListeners(appContext);
 
-    // Attach listener for the file input here in main.js after DOM is ready
     document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
 
-
-    await openGlobalControlsWindow();
+    await openGlobalControlsWindow(); // This function will use window.attachGlobalControlEvents
     await setupMIDI();
 
-    // --- Autofetch Sound Libraries ---
     const libraryPromises = [];
     let librariesToFetchCount = 0;
     if (Constants.soundLibraries) {
@@ -182,7 +257,6 @@ async function initializeSnugOS() {
             }
         });
     }
-    // --- End Autofetch ---
 
     requestAnimationFrame(updateMetersLoop);
     updateUndoRedoButtons();
@@ -191,10 +265,20 @@ async function initializeSnugOS() {
     console.log("[Main] SnugOS Initialized.");
 }
 
-// Meter Update Loop
-// ... (no changes here)
+function updateMetersLoop() {
+    const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
+    updateMeters(window.masterMeter, window.masterMeterBar, document.getElementById('mixerMasterMeterBar'), currentTracks);
+    requestAnimationFrame(updateMetersLoop);
+}
 
-// --- Global Event Listeners ---
-// ... (no changes here)
+window.addEventListener('load', initializeSnugOS);
+window.addEventListener('beforeunload', (e) => {
+    const currentUndoStack = getUndoStack ? getUndoStack() : [];
+    const currentTracks = getTracks ? getTracks() : [];
+    if (currentTracks.length > 0 && (currentUndoStack.length > 0 || (window.openWindows && Object.keys(window.openWindows).length > 1))) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
 
 console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1");
