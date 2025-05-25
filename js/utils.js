@@ -1,7 +1,5 @@
 // js/utils.js - Utility Functions Module
 
-import { showNotification as utilShowNotification } from './utils.js'; // Use a different name to avoid conflict if this file is also named utils.js
-
 // --- Notification System ---
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
@@ -105,29 +103,29 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         event.stopPropagation();
         dropZoneElement.classList.remove('dragover');
         const soundDataString = event.dataTransfer.getData("application/json");
-        // const trackIdFromDrop = event.currentTarget.dataset.trackId || trackId; // Get trackId from element if available
+        
+        // The undo capture is now handled within the loadSoundCallback or loadFileCallback (in audio.js)
+        // after the state has actually changed.
 
         if (soundDataString) {
             try {
                 const soundData = JSON.parse(soundDataString);
-                // Undo capture should happen in the loadSoundCallback AFTER successful loading
                 if (loadSoundCallback) {
                     await loadSoundCallback(soundData, trackId, trackTypeHint, padIndexOrSliceId);
                 } else {
-                    console.warn("loadSoundCallback not provided to setupDropZoneListeners");
+                    console.warn("[Utils] loadSoundCallback not provided to setupDropZoneListeners");
                 }
             } catch (e) {
-                console.error("Error parsing dropped sound data:", e);
+                console.error("[Utils] Error parsing dropped sound data:", e);
                 showNotification("Error processing dropped sound.", 3000);
             }
         } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
             const file = event.dataTransfer.files[0];
             const simulatedEvent = { target: { files: [file] } };
-            // Undo capture should happen in the loadFileCallback AFTER successful loading
             if (loadFileCallback) {
                 await loadFileCallback(simulatedEvent, trackId, trackTypeHint, padIndexOrSliceId);
             } else {
-                 console.warn("loadFileCallback not provided to setupDropZoneListeners");
+                 console.warn("[Utils] loadFileCallback not provided to setupDropZoneListeners");
             }
         }
     });
