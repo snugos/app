@@ -104,8 +104,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         dropZoneElement.classList.remove('dragover');
         const soundDataString = event.dataTransfer.getData("application/json");
         
-        // The undo capture is now handled within the loadSoundCallback or loadFileCallback (in audio.js)
-        // after the state has actually changed.
+        // Undo capture is now handled within the loadSoundCallback or loadFileCallback (in audio.js)
 
         if (soundDataString) {
             try {
