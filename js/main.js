@@ -10,14 +10,14 @@ import {
     attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
+    selectMIDIInput // Exposing selectMIDIInput for reconstructDAW
 } from './eventHandlers.js';
 import {
     getTracks, getTrackById,
     addTrackToState,
     updateUndoRedoButtons, captureStateForUndo, undoLastAction, redoLastAction,
     gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav,
-    // Ensuring all expected state getters are imported
-    getArmedTrackId, getSoloedTrackId, getActiveSequencerTrackId, isTrackRecording, getRecordingTrackId 
+    getArmedTrackId, getSoloedTrackId, getActiveSequencerTrackId, isTrackRecording, getRecordingTrackId, getUndoStack
 } from './state.js';
 import { 
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, 
@@ -29,11 +29,12 @@ import {
     openGlobalControlsWindow, openTrackInspectorWindow,
     openMixerWindow, updateMixerWindow,
     openSoundBrowserWindow, renderSoundBrowserDirectory, 
-    highlightPlayingStep
+    highlightPlayingStep,
+    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI 
 } from './ui.js';
 
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js with Diagnostics)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js)");
 
 // --- Global Variables & Initialization ---
 window.loadedZipFiles = {};
@@ -61,19 +62,18 @@ window.masterMeterBar = null; window.midiInputSelectGlobal = null;
 window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
 
 
-// --- DIAGNOSTIC LOG ---
-console.log("--- MAIN.JS DIAGNOSTICS (before global assignments) ---");
-console.log("Type of getTracks (from state.js):", typeof getTracks, getTracks);
-console.log("Type of getTrackById (from state.js):", typeof getTrackById, getTrackById);
-console.log("Type of getArmedTrackId (from state.js):", typeof getArmedTrackId, getArmedTrackId); // Check this one specifically
-console.log("Type of addTrackToState (from state.js):", typeof addTrackToState, addTrackToState);
-console.log("Type of openTrackInspectorWindow (from ui.js):", typeof openTrackInspectorWindow, openTrackInspectorWindow);
-console.log("Type of handleTrackMute (from eventHandlers.js):", typeof handleTrackMute, handleTrackMute);
-console.log("Type of autoSliceSample (from audio.js):", typeof autoSliceSample, autoSliceSample);
+// --- DIAGNOSTIC LOG (Confirming key imports) ---
+console.log("--- MAIN.JS DIAGNOSTICS (Confirming Imports) ---");
+console.log("typeof getArmedTrackId (from state.js):", typeof getArmedTrackId);
+console.log("typeof addTrackToState (from state.js):", typeof addTrackToState);
+console.log("typeof openTrackInspectorWindow (from ui.js):", typeof openTrackInspectorWindow);
+console.log("typeof handleTrackMute (from eventHandlers.js):", typeof handleTrackMute);
+console.log("typeof autoSliceSample (from audio.js):", typeof autoSliceSample);
+console.log("typeof reconstructDAW (from state.js):", typeof reconstructDAW);
 console.log("--- END MAIN.JS DIAGNOSTICS ---");
 
 
-// --- Exposing functions globally (TEMPORARY) ---
+// --- Exposing functions globally (TEMPORARY - Reduce these as modules import directly) ---
 // UI functions
 window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
 window.openTrackSequencerWindow = openTrackSequencerWindow;
@@ -91,6 +91,11 @@ window.openGlobalControlsWindow = openGlobalControlsWindow;
 window.openMixerWindow = openMixerWindow;
 window.openSoundBrowserWindow = openSoundBrowserWindow;
 window.openTrackInspectorWindow = openTrackInspectorWindow;
+window.drawWaveform = drawWaveform;
+window.drawInstrumentWaveform = drawInstrumentWaveform;
+window.renderSamplePads = renderSamplePads;
+window.updateSliceEditorUI = updateSliceEditorUI;
+window.updateDrumPadControlsUI = updateDrumPadControlsUI;
 
 // Audio functions
 window.playSlicePreview = playSlicePreview;
@@ -110,27 +115,30 @@ window.redoLastAction = redoLastAction;
 window.saveProject = saveProject;
 window.loadProject = loadProject;
 window.exportToWav = exportToWav;
-window.addTrack = addTrackToState;
+window.addTrack = addTrackToState; // For Start Menu via appContext
 
 // Event Handler functions
 window.handleTrackMute = handleTrackMute;
 window.handleTrackSolo = handleTrackSolo;
 window.handleTrackArm = handleTrackArm;
-window.removeTrack = handleRemoveTrack;
+window.removeTrack = handleRemoveTrack; 
 window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
 window.attachGlobalControlEvents = attachGlobalControlEvents;
+window.selectMIDIInput = selectMIDIInput; // Expose for state.js -> reconstructDAW
 
-// Expose state getters
+// State getters
 window.getTracks = getTracks;
 window.getTrackById = getTrackById;
-window.getArmedTrackId = getArmedTrackId; // Line ~118
+window.getArmedTrackId = getArmedTrackId;
 window.getSoloedTrackId = getSoloedTrackId;
 window.getActiveSequencerTrackId = getActiveSequencerTrackId;
 window.isTrackRecording = isTrackRecording;
 window.getRecordingTrackId = getRecordingTrackId;
+window.getUndoStack = getUndoStack;
 
+// UI Update stubs
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
     cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
@@ -151,7 +159,7 @@ window.updateTaskbarTempoDisplay = (newTempo) => {
 
 // --- Core Application Initialization ---
 async function initializeSnugOS() {
-    console.log("Window loaded. Initializing SnugOS (Modular)...");
+    console.log("[Main] Window loaded. Initializing SnugOS...");
     
     const appContext = {
         addTrack: addTrackToState,
@@ -159,7 +167,7 @@ async function initializeSnugOS() {
         undoLastAction: undoLastAction,
         redoLastAction: redoLastAction,
         saveProject: saveProject,
-        loadProject: loadProject,
+        loadProject: loadProject, 
         exportToWav: exportToWav,
         openGlobalControlsWindow: openGlobalControlsWindow,
         openMixerWindow: openMixerWindow,
@@ -172,23 +180,26 @@ async function initializeSnugOS() {
     requestAnimationFrame(updateMetersLoop);
     updateUndoRedoButtons();
 
-    showNotification("Welcome to SnugOS! (Diagnostics Added)", 2500);
-    console.log("SnugOS Initialized (Diagnostics Added).");
+    showNotification("Welcome to SnugOS!", 2500);
+    console.log("[Main] SnugOS Initialized.");
 }
 
 // Meter Update Loop
 function updateMetersLoop() {
-    updateMeters(window.masterMeter, window.masterMeterBar, document.getElementById('mixerMasterMeterBar'), getTracks());
+    // Ensure getTracks() is available and working from state.js
+    const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
+    updateMeters(window.masterMeter, window.masterMeterBar, document.getElementById('mixerMasterMeterBar'), currentTracks);
     requestAnimationFrame(updateMetersLoop);
 }
 
 // --- Global Event Listeners ---
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
-    if (getTracks().length > 0 && (typeof undoStack !== 'undefined' && undoStack.length > 0 || Object.keys(window.openWindows).length > 1)) { // Check if undoStack is defined
+    const currentUndoStack = getUndoStack();
+    if (getTracks().length > 0 && (currentUndoStack.length > 0 || Object.keys(window.openWindows).length > 1)) {
         e.preventDefault();
         e.returnValue = '';
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Modularized - main.js with Diagnostics)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1");
