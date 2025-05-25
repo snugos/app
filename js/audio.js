@@ -1,24 +1,35 @@
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 import * as Constants from './constants.js';
 import { showNotification } from './utils.js';
-// Track class might be needed if we directly instantiate or do complex manipulations,
-// but mostly track instances will be passed.
 
 export async function initAudioContextAndMasterMeter() {
+    console.log("[Audio] Attempting to initialize AudioContext and Master Meter...");
     try {
         if (Tone.context.state !== 'running') {
+            console.log("[Audio] AudioContext not running. Calling Tone.start()...");
             await Tone.start();
-            console.log("AudioContext started.");
+            console.log("[Audio] Tone.start() completed. AudioContext state:", Tone.context.state);
+            if (Tone.context.state !== 'running') {
+                showNotification("AudioContext could not be started. Please interact with the page (e.g., click a button) and try again.", 5000);
+                console.warn("[Audio] AudioContext failed to start even after Tone.start(). User gesture might be required earlier or was missed.");
+                // return false; // Indicate failure
+            }
+        } else {
+            console.log("[Audio] AudioContext already running.");
         }
-        if (!window.masterMeter && Tone.getDestination()) { // Assuming masterMeter is global for now
+
+        if (!window.masterMeter && Tone.getDestination()) {
             window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
             Tone.getDestination().connect(window.masterMeter);
-            console.log("Master meter initialized.");
+            console.log("[Audio] Master meter initialized and connected. Master Volume:", Tone.getDestination().volume.value);
+        } else if (window.masterMeter) {
+            console.log("[Audio] Master meter already initialized. Master Volume:", Tone.getDestination().volume.value);
         }
+        // return true; // Indicate success
     } catch (error) {
-        console.error("Error initializing audio context or master meter:", error);
+        console.error("[Audio] Error initializing audio context or master meter:", error);
         showNotification("Error initializing audio. Please ensure permissions and refresh.", 4000);
-        throw error;
+        throw error; // Re-throw to indicate failure
     }
 }
 
@@ -29,16 +40,15 @@ export function updateMeters(masterMeter, masterMeterBar, mixerMasterMeter, trac
         masterMeterBar.classList.toggle('clipping', masterMeter.getValue() > -0.1);
     }
     
-    if (masterMeter && mixerMasterMeter) { // mixerMasterMeter is passed now
+    if (masterMeter && mixerMasterMeter) {
         const level = Tone.dbToGain(masterMeter.getValue());
         mixerMasterMeter.style.width = `${Math.min(100, level * 100)}%`;
         mixerMasterMeter.classList.toggle('clipping', masterMeter.getValue() > -0.1);
     }
 
-    tracks.forEach(track => {
-        if (track.trackMeter) {
+    (tracks || []).forEach(track => { // Add guard for tracks
+        if (track && track.trackMeter) { // Add guard for track
             const level = Tone.dbToGain(track.trackMeter.getValue());
-            // Assuming track.inspectorWindow and window.openWindows are still globally accessible for now
             const inspectorMeterBar = track.inspectorWindow?.element?.querySelector(`#trackMeterBar-${track.id}`);
             if (inspectorMeterBar) {
                 inspectorMeterBar.style.width = `${Math.min(100, level * 100)}%`;
@@ -58,7 +68,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
     if (!soundBrowserList || !pathDisplay) {
-        console.warn("Sound browser DOM elements not found for fetchSoundLibrary.");
+        console.warn("[Audio] Sound browser DOM elements not found for fetchSoundLibrary.");
         return;
     }
 
@@ -96,11 +106,11 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
         if (typeof window.renderSoundBrowserDirectory === 'function') {
             window.renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree);
         } else {
-            console.warn("renderSoundBrowserDirectory function not found. UI for sound browser won't update.");
+            console.warn("[Audio] renderSoundBrowserDirectory function not found. UI for sound browser won't update.");
         }
 
     } catch (error) {
-        console.error(`Error fetching or processing ${libraryName} ZIP:`, error);
+        console.error(`[Audio] Error fetching or processing ${libraryName} ZIP:`, error);
         showNotification(`Error with ${libraryName} library: ${error.message}`, 4000);
         if (soundBrowserList) soundBrowserList.innerHTML = `<div class="sound-browser-loading">Error fetching ${libraryName}. Check console.</div>`;
         if (pathDisplay) pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
@@ -109,18 +119,21 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
 
 export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetTrackType, targetPadOrSliceIndex = null) {
     const { fullPath, libraryName, fileName } = soundData;
-    const track = window.tracks.find(t => t.id === parseInt(targetTrackId)); 
+     // Ensure tracks are accessed via getter if possible, fallback to window.tracks for transition
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const track = tracksArray.find(t => t.id === parseInt(targetTrackId));
+
     if (!track) {
         showNotification(`Target track ID ${targetTrackId} not found.`, 3000);
         return;
     }
-    if (track.type !== targetTrackType &&
-        !( (targetTrackType === 'Sampler' || targetTrackType === 'InstrumentSampler' || targetTrackType === 'DrumSampler') &&
-           (track.type === 'Sampler' || track.type === 'InstrumentSampler' || track.type === 'DrumSampler') )
-    ) {
-        showNotification(`Cannot load "${fileName}" into a ${track.type} track from a ${targetTrackType} drop zone.`, 3500);
+    // Allow loading into compatible types, e.g. any sample into any sampler type
+    const isTargetSamplerType = ['Sampler', 'InstrumentSampler', 'DrumSampler'].includes(track.type);
+    if (!isTargetSamplerType) {
+         showNotification(`Cannot load "${fileName}" into a ${track.type} track. Target must be a sampler type.`, 3500);
         return;
     }
+
     showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
     try {
         if (!window.loadedZipFiles[libraryName]) throw new Error(`Sound library "${libraryName}" not loaded.`);
@@ -132,32 +145,42 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
-            if (actualPadIndex === null) {
+            // If dropping onto the main drop zone of a drum sampler, find first empty or selected pad
+            if (targetPadOrSliceIndex === null || targetPadOrSliceIndex === undefined) { 
                 actualPadIndex = track.drumSamplerPads.findIndex(p => !p.audioBufferDataURL);
-                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;
+                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; // Fallback to selected
+                 if (actualPadIndex === -1) actualPadIndex = 0; // Fallback to first pad if still none
             }
             await loadDrumSamplerPadFile(blobUrl, track.id, actualPadIndex, fileName);
         } else if (track.type === 'Sampler') {
-            if (targetPadOrSliceIndex !== null) {
-                showNotification("Drag & drop to individual slices reloads the main sample for now.", 3000);
-            }
             await loadSampleFile(blobUrl, track.id, 'Sampler', fileName);
         } else if (track.type === 'InstrumentSampler') {
             await loadSampleFile(blobUrl, track.id, 'InstrumentSampler', fileName);
         }
+        // URL.revokeObjectURL(blobUrl); // Tone.Buffer.load should handle this.
     } catch (error) {
-        console.error(`Error loading sound "${fileName}" from browser:`, error);
+        console.error(`[Audio] Error loading sound "${fileName}" from browser:`, error);
         showNotification(`Error loading "${fileName}": ${error.message}`, 3000);
     }
 }
 
 export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7) {
+    console.log(`[Audio] playSlicePreview called for Track ID: ${trackId}, Slice: ${sliceIndex}, Velocity: ${velocity}`);
     await initAudioContextAndMasterMeter();
-    const track = window.tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded || !track.slices[sliceIndex]) return;
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const track = tracksArray.find(t => t.id === trackId);
+
+    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded || !track.slices[sliceIndex]) {
+        console.warn(`[Audio] playSlicePreview: Conditions not met for track ${trackId}, slice ${sliceIndex}. Track:`, track);
+        return;
+    }
     
     const sliceData = track.slices[sliceIndex];
-    if (sliceData.duration <= 0) return;
+    if (sliceData.duration <= 0) {
+        console.warn(`[Audio] playSlicePreview: Slice ${sliceIndex} has zero duration.`);
+        return;
+    }
+    console.log(`[Audio] Playing slice ${sliceIndex} for track ${track.id}. Offset: ${sliceData.offset}, Duration: ${sliceData.duration}`);
 
     const time = Tone.now();
     const totalPitchShift = sliceData.pitchShift;
@@ -168,7 +191,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7) {
     if (!track.slicerIsPolyphonic) {
         if (!track.slicerMonoPlayer || track.slicerMonoPlayer.disposed) {
             track.setupSlicerMonoNodes();
-            if(!track.slicerMonoPlayer) { console.warn("Mono player not set up for preview"); return; }
+            if(!track.slicerMonoPlayer) { console.warn("[Audio] Mono player not set up for preview"); return; }
         }
         const player = track.slicerMonoPlayer;
         const env = track.slicerMonoEnvelope;
@@ -186,6 +209,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7) {
         player.loopStart = sliceData.offset;
         player.loopEnd = sliceData.offset + sliceData.duration;
         
+        console.log(`[Audio] Starting MONO slice player for track ${track.id}, slice ${sliceIndex}.`);
         player.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
         env.triggerAttack(time);
         if (!sliceData.loop) {
@@ -205,6 +229,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7) {
         tempPlayer.loopStart = sliceData.offset;
         tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
 
+        console.log(`[Audio] Starting POLY slice player for track ${track.id}, slice ${sliceIndex}.`);
         tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
         tempEnv.triggerAttack(time);
         if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
@@ -218,24 +243,34 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7) {
 }
 
 export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7) {
+    console.log(`[Audio] playDrumSamplerPadPreview called for Track ID: ${trackId}, Pad: ${padIndex}, Velocity: ${velocity}`);
     await initAudioContextAndMasterMeter();
-    const track = window.tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) return;
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const track = tracksArray.find(t => t.id === trackId);
+
+    if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) {
+        console.warn(`[Audio] playDrumSamplerPadPreview: Conditions not met for track ${trackId}, pad ${padIndex}. Player:`, track?.drumPadPlayers[padIndex]);
+        return;
+    }
     
     const player = track.drumPadPlayers[padIndex];
     const padData = track.drumSamplerPads[padIndex];
 
     player.volume.value = Tone.gainToDb(padData.volume * velocity);
     player.playbackRate = Math.pow(2, (padData.pitchShift) / 12);
+    console.log(`[Audio] Starting drum pad player for track ${track.id}, pad ${padIndex}. Volume: ${player.volume.value}dB, Rate: ${player.playbackRate}`);
     player.start(Tone.now());
 }
 
 export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null) {
-    const track = window.tracks.find(t => t.id === trackId);
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const track = tracksArray.find(t => t.id === trackId);
+
     if (!track || (trackTypeHint !== 'Sampler' && trackTypeHint !== 'InstrumentSampler')) {
         showNotification("Invalid track or track type for sample loading.", 3000);
         return;
     }
+    console.log(`[Audio] loadSampleFile: Track ${trackId} (${track.name}), Type: ${trackTypeHint}`);
 
     let file;
     let sourceName;
@@ -250,6 +285,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         showNotification("No file or URL provided for sample.", 3000);
         return;
     }
+    console.log(`[Audio] Loading sample "${sourceName}" for track ${track.id}`);
 
     try {
         await initAudioContextAndMasterMeter();
@@ -281,6 +317,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         });
 
         const newBuffer = await new Tone.Buffer().load(base64DataURL);
+        console.log(`[Audio] Sample "${sourceName}" loaded into Tone.Buffer for track ${track.id}. Duration: ${newBuffer.duration}`);
 
         if (trackTypeHint === 'Sampler') {
             track.audioBufferDataURL = base64DataURL;
@@ -289,7 +326,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) {
                 track.setupSlicerMonoNodes();
             }
-            autoSliceSample(track.id, Constants.numSlices); // autoSliceSample is exported from this module
+            autoSliceSample(track.id, Constants.numSlices);
             if (typeof window.drawWaveform === 'function') window.drawWaveform(track);
             if (track.inspectorWindow?.element) {
                  const dropZone = track.inspectorWindow.element.querySelector(`#dropZone-${track.id}-sampler`);
@@ -301,7 +338,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             track.instrumentSamplerSettings.originalFileName = sourceName;
             track.instrumentSamplerSettings.loopStart = 0;
             track.instrumentSamplerSettings.loopEnd = newBuffer.duration;
-            track.setupToneSampler();
+            track.setupToneSampler(); // This will use the new buffer
             if (typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track);
             if (track.inspectorWindow?.element) {
                 const dropZone = track.inspectorWindow.element.querySelector(`#dropZone-${track.id}-instrumentsampler`);
@@ -315,14 +352,25 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         showNotification(`Sample "${sourceName}" loaded for ${track.name}.`, 2000);
 
     } catch (error) {
-        console.error("Error loading sample:", error);
+        console.error(`[Audio] Error loading sample "${sourceName}" for track ${track.id}:`, error);
         showNotification(`Error loading sample: ${error.message}`, 3000);
     }
 }
 
 export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, fileNameForUrl = null) {
-    const track = window.tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'DrumSampler') return;
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const track = tracksArray.find(t => t.id === trackId);
+
+    if (!track || track.type !== 'DrumSampler') {
+        console.warn(`[Audio] loadDrumSamplerPadFile: Track ${trackId} not found or not a DrumSampler.`);
+        return;
+    }
+    if (padIndex < 0 || padIndex >= track.drumSamplerPads.length) {
+        console.warn(`[Audio] loadDrumSamplerPadFile: Invalid padIndex ${padIndex} for track ${trackId}.`);
+        return;
+    }
+    console.log(`[Audio] loadDrumSamplerPadFile: Track ${trackId}, Pad ${padIndex}`);
+
 
     let file = null;
     let sourceName = '';
@@ -337,6 +385,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         showNotification("No file provided for drum pad.", 3000);
         return;
     }
+    console.log(`[Audio] Loading sample "${sourceName}" for track ${track.id}, pad ${padIndex}`);
 
     try {
         await initAudioContextAndMasterMeter();
@@ -362,6 +411,8 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         });
         
         const newAudioBuffer = await new Tone.Buffer().load(base64DataURL);
+        console.log(`[Audio] Sample "${sourceName}" loaded into Tone.Buffer for track ${track.id}, pad ${padIndex}. Duration: ${newAudioBuffer.duration}`);
+
 
         if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
         if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
@@ -370,23 +421,28 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         padData.audioBufferDataURL = base64DataURL;
         padData.originalFileName = sourceName;
         track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.distortionNode);
+        console.log(`[Audio] Drum pad ${padIndex} for track ${track.id} player created and connected.`);
+
 
         showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1} on track ${track.name}.`, 2000);
         if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
         if (typeof window.renderDrumSamplerPads === 'function') window.renderDrumSamplerPads(track);
 
     } catch (error) {
-        console.error(`Error loading sample for drum pad ${padIndex}:`, error);
+        console.error(`[Audio] Error loading sample "${sourceName}" for drum pad ${padIndex} of track ${track.id}:`, error);
         showNotification(`Error loading sample "${sourceName}": ${error.message}`, 3000);
     }
 }
 
 export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices) {
-    const track = window.tracks.find(t => t.id === trackId);
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const track = tracksArray.find(t => t.id === trackId);
+
     if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded) {
         showNotification("Cannot auto-slice: No audio loaded or track not a Sampler.", 3000);
         return;
     }
+    console.log(`[Audio] Auto-slicing sample for track ${trackId} into ${numSlicesToCreate} parts.`);
     const duration = track.audioBuffer.duration;
     track.slices = [];
     const sliceDuration = duration / numSlicesToCreate;
@@ -401,7 +457,7 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
         });
     }
     track.selectedSliceForEdit = 0;
-    track.setSequenceLength(track.sequenceLength, true); // true to skipUndoCapture
+    track.setSequenceLength(track.sequenceLength, true);
 
     if (typeof window.renderSamplePads === 'function') window.renderSamplePads(track);
     if (typeof window.updateSliceEditorUI === 'function') window.updateSliceEditorUI(track);
