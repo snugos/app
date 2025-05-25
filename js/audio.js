@@ -2,67 +2,48 @@
 import * as Constants from './constants.js';
 import { showNotification } from './utils.js';
 
-let audioContextInitialized = false; // Module-level flag
+let audioContextInitialized = false;
 
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
-    // If already initialized and context is running, nothing more to do.
     if (audioContextInitialized && Tone.context.state === 'running') {
-        // console.log("[Audio] AudioContext already initialized and running.");
         return true;
     }
-
-    // If context is running but our flag is false (e.g., page reloaded but context persisted),
-    // update flag and set up meter if needed.
     if (!audioContextInitialized && Tone.context.state === 'running') {
-        console.log("[Audio] Context is running (e.g. from previous interaction or auto-resume), ensuring meter is set up.");
         if (!window.masterMeter && Tone.getDestination()) {
             window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
             Tone.getDestination().connect(window.masterMeter);
-            console.log("[Audio] Master meter (re)initialized and connected.");
         }
         audioContextInitialized = true;
         return true;
     }
-
-    // Context is not running, attempt to start it.
-    console.log("[Audio] Attempting to initialize AudioContext. User initiated:", isUserInitiated);
     try {
-        // Tone.start() must be called in response to a user gesture for most browsers.
         await Tone.start();
-        console.log("[Audio] Tone.start() attempt completed. AudioContext state:", Tone.context.state);
-
         if (Tone.context.state === 'running') {
             if (!window.masterMeter && Tone.getDestination()) {
                 window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
                 Tone.getDestination().connect(window.masterMeter);
-                console.log("[Audio] Master meter initialized and connected post Tone.start().");
             }
             audioContextInitialized = true;
-            console.log("[Audio] AudioContext successfully started and initialized.");
-            return true; // Indicate success
+            return true;
         } else {
-            // If Tone.start() was called but context is still not running
             if (isUserInitiated) {
                 showNotification("AudioContext could not be started even with user interaction. Please check browser permissions or try another interaction.", 5000);
             } else {
-                // This case should be less common if we primarily call this with isUserInitiated=true
-                // or if Tone.js internally queues operations until context starts.
                 showNotification("Audio system needs a user interaction (like clicking Play) to start.", 4000);
             }
-            console.warn("[Audio] AudioContext failed to start. Current state:", Tone.context.state);
-            audioContextInitialized = false; // Explicitly mark as not initialized
-            return false; // Indicate failure
+            audioContextInitialized = false;
+            return false;
         }
     } catch (error) {
         console.error("[Audio] Error during Tone.start() or meter setup:", error);
         showNotification("Error initializing audio. Please check permissions and refresh.", 4000);
         audioContextInitialized = false;
-        return false; // Indicate failure
+        return false;
     }
 }
 
 export function updateMeters(masterMeter, masterMeterBar, mixerMasterMeter, tracks) {
-    if (Tone.context.state !== 'running' && !audioContextInitialized) return; // Don't try to update if not ready
+    if (Tone.context.state !== 'running' && !audioContextInitialized) return;
 
     if (masterMeter && masterMeterBar) {
         const level = Tone.dbToGain(masterMeter.getValue());
@@ -93,38 +74,59 @@ export function updateMeters(masterMeter, masterMeterBar, mixerMasterMeter, trac
     });
 }
 
-
-export async function fetchSoundLibrary(libraryName, zipUrl) {
-    const soundBrowserList = document.getElementById('soundBrowserList');
-    const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    if (!soundBrowserList || !pathDisplay) {
-        console.warn("[Audio] Sound browser DOM elements not found for fetchSoundLibrary.");
-        return;
+export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
+    // Check if already fully loaded
+    if (window.loadedZipFiles && window.loadedZipFiles[libraryName] && window.loadedZipFiles[libraryName] !== "loading") {
+        if (isAutofetch) console.log(`[Audio] Autofetch: Library ${libraryName} already loaded.`);
+        // If a user action (not autofetch) tries to load an already loaded library,
+        // ensure the UI updates to display it.
+        if (!isAutofetch && typeof window.updateSoundBrowserDisplayForLibrary === 'function') {
+            window.updateSoundBrowserDisplayForLibrary(libraryName);
+        }
+        return; // Already fully loaded
     }
 
-    soundBrowserList.innerHTML = `<div class="sound-browser-loading">Fetching ${libraryName} sounds...</div>`;
-    pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`;
-    window.currentLibraryName = libraryName;
+    // Check if currently being loaded by another call
+    if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") {
+        if (isAutofetch) console.log(`[Audio] Autofetch: Library ${libraryName} is currently being loaded by another call.`);
+        // If user initiates, and it's already loading, the UI should reflect "Loading..."
+        // which is handled by updateSoundBrowserDisplayForLibrary if called from UI.
+        return; // Already being loaded
+    }
+
+    console.log(`[Audio] Fetching library: ${libraryName} from ${zipUrl}. Autofetch: ${isAutofetch}`);
+    // Only show "Fetching..." in UI if it's not an autofetch (i.e., user actively selected it)
+    if (!isAutofetch) {
+        const soundBrowserList = document.getElementById('soundBrowserList');
+        const pathDisplay = document.getElementById('soundBrowserPathDisplay');
+        if (soundBrowserList) soundBrowserList.innerHTML = `<div class="sound-browser-loading">Fetching ${libraryName} sounds...</div>`;
+        if (pathDisplay) pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`;
+    }
 
     try {
+        if (!window.loadedZipFiles) window.loadedZipFiles = {};
+        window.loadedZipFiles[libraryName] = "loading"; // Mark as "loading" to prevent re-fetch
+
         const response = await fetch(zipUrl);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status} fetching ${zipUrl}`);
         const zipData = await response.arrayBuffer();
         const jszip = new JSZip();
-        window.loadedZipFiles[libraryName] = await jszip.loadAsync(zipData);
+        const loadedZip = await jszip.loadAsync(zipData);
+        window.loadedZipFiles[libraryName] = loadedZip; // Replace "loading" with actual JSZip object
 
-        window.currentSoundFileTree = {};
+        // Process the ZIP file to build the file tree
+        const fileTree = {};
         window.loadedZipFiles[libraryName].forEach((relativePath, zipEntry) => {
-            if (zipEntry.dir) return;
-            const pathParts = relativePath.split('/').filter(p => p);
-            let currentLevel = window.currentSoundFileTree;
+            if (zipEntry.dir) return; // Skip directories
+            const pathParts = relativePath.split('/').filter(p => p); // Filter out empty parts
+            let currentLevel = fileTree;
             for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
-                if (i === pathParts.length - 1) {
+                if (i === pathParts.length - 1) { // File part
                     if (part.endsWith('.wav') || part.endsWith('.mp3') || part.endsWith('.ogg')) {
                         currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
                     }
-                } else {
+                } else { // Directory part
                     if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
                         currentLevel[part] = { type: 'folder', children: {} };
                     }
@@ -132,18 +134,30 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
                 }
             }
         });
-        window.currentSoundBrowserPath = [];
-        if (typeof window.renderSoundBrowserDirectory === 'function') {
-            window.renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree);
-        } else {
-            console.warn("[Audio] renderSoundBrowserDirectory function not found. UI for sound browser won't update.");
+        if (!window.soundLibraryFileTrees) window.soundLibraryFileTrees = {};
+        window.soundLibraryFileTrees[libraryName] = fileTree; // Store the processed tree
+        console.log(`[Audio] Library ${libraryName} fetched and processed successfully.`);
+
+        // If this fetch was user-initiated (not autofetch), update the browser UI to show this library.
+        if (!isAutofetch && typeof window.updateSoundBrowserDisplayForLibrary === 'function') {
+            window.updateSoundBrowserDisplayForLibrary(libraryName);
+        } else if (isAutofetch) {
+            // For autofetch, no immediate UI update needed here, as it's a background task.
+            // The UI will pick up the loaded data when the user opens/selects the library.
         }
 
     } catch (error) {
         console.error(`[Audio] Error fetching or processing ${libraryName} ZIP:`, error);
-        showNotification(`Error with ${libraryName} library: ${error.message}`, 4000);
-        if (soundBrowserList) soundBrowserList.innerHTML = `<div class="sound-browser-loading">Error fetching ${libraryName}. Check console.</div>`;
-        if (pathDisplay) pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
+        if (window.loadedZipFiles) delete window.loadedZipFiles[libraryName]; // Clear loading marker on error
+
+        // Only show error in UI if it was not an autofetch
+        if (!isAutofetch) {
+            showNotification(`Error with ${libraryName} library: ${error.message}`, 4000);
+            const soundBrowserList = document.getElementById('soundBrowserList');
+            const pathDisplay = document.getElementById('soundBrowserPathDisplay');
+            if (soundBrowserList) soundBrowserList.innerHTML = `<div class="sound-browser-loading">Error fetching ${libraryName}. Check console.</div>`;
+            if (pathDisplay) pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
+        }
     }
 }
 
@@ -170,7 +184,9 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 
     showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
     try {
-        if (!window.loadedZipFiles[libraryName]) throw new Error(`Sound library "${libraryName}" not loaded.`);
+        if (!window.loadedZipFiles[libraryName] || window.loadedZipFiles[libraryName] === "loading") {
+            throw new Error(`Sound library "${libraryName}" not fully loaded or still loading.`);
+        }
         const zipEntry = window.loadedZipFiles[libraryName].file(fullPath);
         if (!zipEntry) throw new Error(`File "${fullPath}" not found in "${libraryName}" ZIP.`);
 
@@ -194,6 +210,8 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         } else if (track.type === 'InstrumentSampler') {
             await loadSampleFile(blobUrl, track.id, 'InstrumentSampler', fileName);
         }
+        // Consider revoking blobUrl if not done by downstream functions, though Tone.Buffer likely copies data.
+        // URL.revokeObjectURL(blobUrl);
     } catch (error) {
         console.error(`[Audio] Error loading sound "${fileName}" from browser:`, error);
         showNotification(`Error loading "${fileName}": ${error.message}`, 3000);
@@ -391,7 +409,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         console.error(`[Audio] Error loading sample "${sourceName}" for track ${track.id}:`, error);
         showNotification(`Error loading sample: ${error.message}`, 3000);
     } finally {
-        if (!isUrlSource && fileUrl.startsWith('blob:')) {
+        if (!isUrlSource && fileUrl && fileUrl.startsWith('blob:')) { // Ensure fileUrl is defined
             URL.revokeObjectURL(fileUrl);
         }
     }
@@ -472,7 +490,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         console.error(`[Audio] Error loading sample "${sourceName}" for drum pad ${padIndex} of track ${track.id}:`, error);
         showNotification(`Error loading sample "${sourceName}": ${error.message}`, 3000);
     } finally {
-        if (!isUrlSource && fileUrl.startsWith('blob:')) {
+        if (!isUrlSource && fileUrl && fileUrl.startsWith('blob:')) { // Ensure fileUrl is defined
             URL.revokeObjectURL(fileUrl);
         }
     }
