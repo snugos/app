@@ -1,6 +1,5 @@
 // js/utils.js - Utility Functions Module
 
-// --- Notification System ---
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
@@ -11,48 +10,37 @@ export function showNotification(message, duration = 3000) {
     notification.className = 'notification-message';
     notification.textContent = message;
     notificationArea.appendChild(notification);
-    // Trigger the animation
     setTimeout(() => {
         notification.classList.add('show');
-    }, 10); // Small delay to ensure the element is in the DOM for transition
+    }, 10);
 
-    // Remove the notification after the duration
     setTimeout(() => {
         notification.classList.remove('show');
-        // Remove the element from DOM after transition out
         setTimeout(() => {
             if (notification.parentElement) {
                 notificationArea.removeChild(notification);
             }
-        }, 300); // Matches CSS transition duration
+        }, 300);
     }, duration);
 }
 
-
-// --- Custom Confirmation Modal ---
 export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = '') {
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) {
         console.error("Modal container not found!");
         return null;
     }
-
-    // Remove any existing modal first
     if (modalContainer.firstChild) {
         modalContainer.firstChild.remove();
     }
-
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
-
     const dialog = document.createElement('div');
-    dialog.className = `modal-dialog ${modalClass}`; // Apply any custom class
-
+    dialog.className = `modal-dialog ${modalClass}`;
     const titleBar = document.createElement('div');
     titleBar.className = 'modal-title-bar';
-    titleBar.textContent = title || 'Dialog'; // Default title
+    titleBar.textContent = title || 'Dialog';
     dialog.appendChild(titleBar);
-
     const contentDiv = document.createElement('div');
     contentDiv.className = 'modal-content';
     if (typeof contentHTML === 'string') {
@@ -61,7 +49,6 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
         contentDiv.appendChild(contentHTML);
     }
     dialog.appendChild(contentDiv);
-
     if (buttonsConfig && buttonsConfig.length > 0) {
         const buttonsDiv = document.createElement('div');
         buttonsDiv.className = 'modal-buttons';
@@ -69,41 +56,28 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
             const button = document.createElement('button');
             button.textContent = btnConfig.text;
             button.onclick = () => {
-                if (btnConfig.action) {
-                    btnConfig.action();
-                }
-                // Close modal by default unless specified otherwise
-                if (btnConfig.closesModal !== false) {
-                    overlay.remove();
-                }
+                if (btnConfig.action) btnConfig.action();
+                if (btnConfig.closesModal !== false) overlay.remove();
             };
             buttonsDiv.appendChild(button);
         });
         dialog.appendChild(buttonsDiv);
     }
-
     overlay.appendChild(dialog);
     modalContainer.appendChild(overlay);
-
-    // Focus the first button if available
     const firstButton = dialog.querySelector('.modal-buttons button');
-    if (firstButton) {
-        firstButton.focus();
-    }
-
-    return { overlay, dialog, contentDiv }; // Return references if needed
+    if (firstButton) firstButton.focus();
+    return { overlay, dialog, contentDiv };
 }
 
 export function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
     const buttons = [
         { text: 'OK', action: onConfirm },
-        { text: 'Cancel', action: onCancel } // onCancel can be null, modal will still close
+        { text: 'Cancel', action: onCancel }
     ];
     showCustomModal(title, message, buttons);
 }
 
-
-// --- Drop Zone Utilities ---
 export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOrSliceIndex = null) {
     const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${padOrSliceIndex !== null ? '-' + padOrSliceIndex : ''}`;
     let dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHintForLoad}"`;
@@ -111,12 +85,13 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
         dataAttributes += ` data-pad-slice-index="${padOrSliceIndex}"`;
     }
 
+    // Ensure the returned string is trimmed to remove leading/trailing whitespace
     return `
         <div class="drop-zone" id="${dropZoneId}" ${dataAttributes}>
             Drag & Drop Audio File or <br>
             <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Click to Upload</label>
             <input type="file" id="${inputId}" accept="audio/*" class="hidden">
-        </div>`;
+        </div>`.trim();
 }
 
 export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
@@ -124,7 +99,6 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         console.error("[Utils] setupDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint);
         return;
     }
-    // console.log(`[Utils] Setting up drop zone listeners for: ${dropZoneElement.id}`);
 
     dropZoneElement.addEventListener('dragover', (event) => {
         event.preventDefault();
@@ -151,7 +125,6 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint;
         const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex;
         const dzPadSliceIndex = dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" ? parseInt(dzPadSliceIndexStr) : padIndexOrSliceId;
-
 
         // console.log(`[Utils] Using effective params: trackId=${dzTrackId}, type=${dzTrackType}, index=${dzPadSliceIndex}`);
 
@@ -182,10 +155,6 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
                  console.warn("[Utils] loadFileCallback not provided for OS file drop.");
             }
         } else {
-            // This is where line 152 from the error message would be if the above conditions are false.
-            // It's just a console.log, so it's highly unlikely to be the source of a SyntaxError itself.
-            // The error is almost certainly happening *before* this line is reached,
-            // or due to how the file is being processed by the browser's JS engine.
             console.log("[Utils] Drop event with no recognized data (JSON or files).");
         }
     });
