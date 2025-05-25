@@ -10,7 +10,7 @@ import {
     attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
-    selectMIDIInput // Exposing selectMIDIInput for reconstructDAW
+    selectMIDIInput // Exposing selectMIDIInput for reconstructDAW in state.js
 } from './eventHandlers.js';
 import {
     getTracks, getTrackById,
@@ -63,14 +63,14 @@ window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
 
 
 // --- DIAGNOSTIC LOG (Confirming key imports) ---
-console.log("--- MAIN.JS DIAGNOSTICS (Confirming Imports) ---");
-console.log("typeof getArmedTrackId (from state.js):", typeof getArmedTrackId);
-console.log("typeof addTrackToState (from state.js):", typeof addTrackToState);
-console.log("typeof openTrackInspectorWindow (from ui.js):", typeof openTrackInspectorWindow);
-console.log("typeof handleTrackMute (from eventHandlers.js):", typeof handleTrackMute);
-console.log("typeof autoSliceSample (from audio.js):", typeof autoSliceSample);
-console.log("typeof reconstructDAW (from state.js):", typeof reconstructDAW);
-console.log("--- END MAIN.JS DIAGNOSTICS ---");
+// console.log("--- MAIN.JS DIAGNOSTICS (Confirming Imports) ---");
+// console.log("typeof getArmedTrackId (from state.js):", typeof getArmedTrackId);
+// console.log("typeof addTrackToState (from state.js):", typeof addTrackToState);
+// console.log("typeof openTrackInspectorWindow (from ui.js):", typeof openTrackInspectorWindow);
+// console.log("typeof handleTrackMute (from eventHandlers.js):", typeof handleTrackMute);
+// console.log("typeof autoSliceSample (from audio.js):", typeof autoSliceSample);
+// console.log("typeof reconstructDAW (from state.js):", typeof reconstructDAW);
+// console.log("--- END MAIN.JS DIAGNOSTICS ---");
 
 
 // --- Exposing functions globally (TEMPORARY - Reduce these as modules import directly) ---
@@ -126,7 +126,7 @@ window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
 window.attachGlobalControlEvents = attachGlobalControlEvents;
-window.selectMIDIInput = selectMIDIInput; // Expose for state.js -> reconstructDAW
+window.selectMIDIInput = selectMIDIInput;
 
 // State getters
 window.getTracks = getTracks;
@@ -186,7 +186,6 @@ async function initializeSnugOS() {
 
 // Meter Update Loop
 function updateMetersLoop() {
-    // Ensure getTracks() is available and working from state.js
     const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
     updateMeters(window.masterMeter, window.masterMeterBar, document.getElementById('mixerMasterMeterBar'), currentTracks);
     requestAnimationFrame(updateMetersLoop);
