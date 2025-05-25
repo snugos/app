@@ -1,464 +1,571 @@
-/* --- Classic OS Structure - Kawaii Pastel Colors Theme --- */
-
-/* Base Colors - Soft Pastels with Clearer Definition */
+/* Base Styles - Inspired by uploaded classic Windows theme */
 :root {
-    --theme-bg-desktop: #e0d6e9; /* Soft lavender for desktop */
-    --theme-bg-window: #ffffff; /* White for window content areas */
-    --theme-bg-panel: #f5eef8;  /* Very light lavender for panels */
-
-    --theme-pink-primary: #ffc0cb;   /* Main Pink */
-    --theme-pink-border: #f8a2b2;   /* Border for Pink elements */
-    --theme-pink-light: #fff0f5;     /* Lighter Pink for hover/accents */
-
-    --theme-blue-primary: #add8e6;   /* Main Light Blue */
-    --theme-blue-border: #9ac0d3;   /* Border for Blue elements */
-
-    --theme-purple-titlebar: #d8c8e8; /* Light Purple for Title Bars */
-    --theme-purple-border: #b8a2c8;  /* Border for Purple elements */
-    --theme-purple-text: #5a3f68;    /* Darker Purple for main text */
-
-    --theme-yellow-accent: #fffacd; /* Lemon Chiffon for highlights */
-
-    --theme-text-dark: var(--theme-purple-text);
-    --theme-text-light: #ffffff; /* For text on dark/colored backgrounds */
-    --theme-text-disabled: #a090a8;
-
-    --theme-border-light: #f0f0f0; /* For subtle 3D effects - top/left */
-    --theme-border-shadow: #c0c0c0; /* For subtle 3D effects - bottom/right */
-    --theme-border-strong: var(--theme-purple-border); /* General strong border */
-
-    --theme-button-face: var(--theme-pink-light);
-    --theme-button-border: var(--theme-pink-border);
-    --theme-button-hover: var(--theme-pink-primary);
-    --theme-button-active: #f8a2b2; /* Slightly darker pink for active */
-    --theme-button-text: var(--theme-text-dark);
-
-    --theme-input-bg: #ffffff;
-    --theme-input-border: #c0c8d0; /* Neutral light gray border for inputs */
-    --theme-input-focus-border: var(--theme-blue-primary);
-
-    --theme-taskbar-bg: #e8e0f0; /* Lighter purple/lavender for taskbar */
+    --classic-bg: #c0c0c0;
+    --classic-button-face: #c0c0c0;
+    --classic-button-text: #000000;
+    --classic-window-frame-light: #ffffff;
+    --classic-window-frame-shadow: #808080;
+    --classic-window-frame-darkshadow: #000000;
+    --classic-title-bar-active: #000080;
+    --classic-title-bar-inactive: #7f7f7f; /* Or a lighter gray */
+    --classic-title-text: #ffffff;
+    --classic-highlight: #000080;
+    --classic-highlight-text: #ffffff;
+    --classic-text-disabled: #808080;
+    --classic-input-bg: #ffffff;
+    --classic-input-border: var(--classic-window-frame-shadow);
+    --classic-input-border-inset-dark: var(--classic-window-frame-darkshadow);
+    --classic-input-border-inset-light: var(--classic-window-frame-light);
+    --classic-desktop-bg: #008080; /* Teal */
 }
 
-/* --- General SnugOS Styles --- */
 body {
-    font-family: 'Tahoma', 'Geneva', sans-serif; /* Classic, clean sans-serif */
-    font-size: 12px;
+    font-family: 'Tahoma', 'Geneva', sans-serif; /* More classic Windows font */
+    font-size: 12px; /* Or 11px for a more compact feel */
+    overscroll-behavior: none;
+    background-color: var(--classic-desktop-bg);
+    color: var(--classic-button-text);
     margin: 0;
-    background-color: var(--theme-bg-desktop);
-    color: var(--theme-text-dark);
-    overflow: hidden;
+    height: 100vh;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    overflow: hidden;
     user-select: none;
 }
 
 #desktop {
     flex-grow: 1;
     position: relative;
-    overflow: auto;
-    background-color: var(--theme-bg-desktop);
-}
-
-#taskbar {
-    height: 30px;
-    background-color: var(--theme-taskbar-bg);
-    border-top: 1px solid var(--theme-border-light);
-    box-shadow: inset 0 1px 0 var(--theme-border-light); /* Subtle inner top highlight */
-    display: flex;
-    align-items: center;
-    padding: 2px 4px;
-    box-sizing: border-box;
-    flex-shrink: 0;
-}
-
-#startButton {
-    background-color: var(--theme-button-face);
-    color: var(--theme-button-text);
-    border: 1px solid var(--theme-border-shadow);
-    border-top-color: var(--theme-border-light);
-    border-left-color: var(--theme-border-light);
-    padding: 3px 12px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-right: 4px;
-    border-radius: 3px; /* Slightly rounded, classic button */
-    box-shadow: 1px 1px 0px rgba(0,0,0,0.1);
-}
-#startButton:hover {
-    border-color: var(--theme-input-focus-border);
-}
-#startButton:active {
-    background-color: var(--theme-button-active);
-    border-top-color: var(--theme-border-shadow);
-    border-left-color: var(--theme-border-shadow);
-    border-bottom-color: var(--theme-border-light);
-    border-right-color: var(--theme-border-light);
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
-    padding: 4px 11px 2px 13px;
-}
-
-#startMenu {
-    position: absolute;
-    bottom: 30px;
-    left: 0;
-    background-color: var(--theme-bg-panel);
-    border: 1px solid var(--theme-border-shadow);
-    border-top-color: var(--theme-border-light);
-    border-left-color: var(--theme-border-light);
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.15);
-    z-index: 10000;
-    width: 190px;
-    padding: 3px;
-    border-radius: 3px;
-}
-#startMenu ul { list-style: none; padding: 0; margin: 0; }
-#startMenu li {
-    padding: 5px 10px 5px 25px;
-    cursor: pointer;
-    font-size: 12px;
-    color: var(--theme-text-dark);
-    white-space: nowrap;
-    border-radius: 2px;
-    margin: 1px 0;
-}
-#startMenu li:hover {
-    background-color: var(--theme-blue-primary);
-    color: var(--theme-text-dark); /* Or white if blue is darker */
-}
-#startMenu li.disabled { color: var(--theme-text-disabled); cursor: default; }
-#startMenu li.disabled:hover { background-color: transparent; color: var(--theme-text-disabled); }
-#startMenu hr { border: none; border-top: 1px solid var(--theme-border-shadow); margin: 3px 0; }
-
-#taskbarButtons { display: flex; flex-grow: 1; margin-left: 4px; overflow-x: auto; gap: 3px; }
-.taskbar-button {
-    background-color: var(--theme-button-face);
-    border: 1px solid var(--theme-border-shadow);
-    border-top-color: var(--theme-border-light);
-    border-left-color: var(--theme-border-light);
-    color: var(--theme-text-dark);
-    padding: 3px 8px;
-    font-size: 11px;
-    cursor: pointer;
-    white-space: nowrap;
-    max-width: 150px;
-    min-width: 90px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    border-radius: 3px;
-    text-align: left;
-    box-shadow: 1px 1px 0px rgba(0,0,0,0.05);
-}
-.taskbar-button:hover {
-    border-color: var(--theme-input-focus-border);
-}
-.taskbar-button.active {
-    background-color: var(--theme-bg-panel); /* Slightly indented look */
-    border-top-color: var(--theme-border-shadow);
-    border-left-color: var(--theme-border-shadow);
-    border-bottom-color: var(--theme-border-light);
-    border-right-color: var(--theme-border-light);
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
-    padding: 4px 7px 2px 9px;
+    padding: 0; /* Desktop itself usually has no padding */
+    background-color: var(--classic-desktop-bg);
 }
 
-#taskbarTempoDisplay {
-    font-size: 11px;
-    padding: 4px 8px;
-    margin-left: auto;
-    color: var(--theme-text-dark);
-    cursor: pointer;
-    background-color: var(--theme-bg-panel);
-    border: 1px solid var(--theme-border-shadow);
-    border-radius: 3px;
-    min-width: 70px;
-    text-align: center;
-}
-
-/* --- Window Styles --- */
+/* Window Styles */
 .window {
     position: absolute;
-    background-color: var(--theme-bg-panel); /* Main window area */
-    border: 1px solid var(--theme-border-light); /* Outermost highlight */
-    box-shadow: 1px 1px 0px var(--theme-border-shadow),
-                2px 2px 0px var(--theme-border-strong), /* Main 3D border */
-                3px 3px 5px rgba(0,0,0,0.1); /* Drop shadow */
+    background-color: var(--classic-bg);
+    border: 1px solid var(--classic-window-frame-darkshadow); /* Outer dark line */
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow); /* Match uploaded style */
+    border-right-color: var(--classic-window-frame-shadow);
+    box-shadow: 1px 1px 0px var(--classic-window-frame-shadow), 2px 2px 0px var(--classic-window-frame-darkshadow); /* More subtle shadow */
+    min-width: 250px;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
-    min-width: 200px;
-    min-height: 150px;
+    border-radius: 0;
     resize: both;
-    overflow: hidden;
-    border-radius: 5px; /* Slightly rounded corners for a softer classic feel */
-    padding: 0; /* Padding now handled by inner elements */
+    overflow: hidden; /* Content will scroll */
+    padding: 2px; /* Inner padding for 3D frame effect */
 }
-.window.minimized { display: none; }
+
+.window.minimized {
+    display: none !important;
+}
 
 .window-title-bar {
-    background-color: var(--theme-purple-titlebar);
-    color: var(--theme-text-dark);
-    padding: 4px 8px;
+    background-color: var(--classic-title-bar-active);
+    color: var(--classic-title-text);
+    padding: 2px 4px 3px 4px; /* Adjusted padding */
+    font-weight: bold;
+    font-size: 12px; /* Consistent with body */
     cursor: grab;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 12px;
-    font-weight: bold;
-    user-select: none;
-    border-top-left-radius: 4px; /* Match outer radius */
-    border-top-right-radius: 4px;
-    border-bottom: 1px solid var(--theme-purple-border);
-}
-.window.focused .window-title-bar {
-    /* Could use a brighter gradient or color if needed */
-    /* background: linear-gradient(to right, var(--theme-blue-primary), #c0d8f0); */
-    /* color: var(--theme-text-light); */
+    height: 20px; /* Classic title bar height */
+    flex-shrink: 0;
+    margin-bottom: 2px; /* Space between title and content frame */
 }
 
-.window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 3px; }
+.window-title-bar:active { cursor: grabbing; }
 
 .window-title-buttons button {
-    background-color: var(--theme-button-face);
-    border: 1px solid var(--theme-border-shadow);
-    border-top-color: var(--theme-border-light);
-    border-left-color: var(--theme-border-light);
-    color: var(--theme-text-dark);
-    font-family: 'Verdana', sans-serif; /* Using text for now */
-    font-weight: bold;
-    margin-left: 3px;
-    cursor: pointer;
-    padding: 0;
-    width: 20px;
-    height: 18px;
-    font-size: 10px;
-    line-height: 18px;
+    background-color: var(--classic-button-face);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    border-right-color: var(--classic-window-frame-shadow);
+    color: var(--classic-button-text);
+    font-family: "Marlett", "Webdings", "Arial"; /* For symbols */
+    font-weight: normal; /* Symbols are often bold by default */
+    width: 16px;
+    height: 14px;
+    line-height: 14px;
     text-align: center;
-    border-radius: 2px;
+    margin-left: 2px;
+    padding: 0;
+    box-shadow: none; /* Simpler buttons */
 }
-.window-title-buttons button:hover{
-    border-color: var(--theme-input-focus-border);
-}
+
 .window-title-buttons button:active {
-    background-color: var(--theme-button-active);
-    border-top-color: var(--theme-border-shadow);
-    border-left-color: var(--theme-border-shadow);
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    padding: 1px 0 0 1px; /* Simulate press */
 }
-.window-minimize-btn::before { content: "_"; }
-.window-close-btn::before { content: "X"; }
+.window-minimize-btn::before { content: "0"; } /* Marlett/Webdings */
+.window-close-btn::before { content: "r"; }   /* Marlett/Webdings */
 
 
 .window-content {
-    flex-grow: 1;
     padding: 8px;
-    overflow: auto;
-    background-color: var(--theme-bg-window); /* Content area often white or very light gray */
-    border-top: 1px solid var(--theme-border-shadow); /* Inner bevel for content area */
-    border-left: 1px solid var(--theme-border-shadow);
-    border-bottom-right-radius: 4px; /* Match outer radius */
-    border-bottom-left-radius: 4px;
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: var(--classic-bg);
+    color: var(--classic-button-text);
+    font-size: 12px;
+    border: 1px solid var(--classic-window-frame-shadow); /* Inset border */
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+}
+.window-content input, .window-content select, .window-content button, .window-content textarea {
+     font-family: 'Tahoma', 'Geneva', sans-serif;
+     font-size: 12px;
+}
+.window-content .control-label { color: var(--classic-button-text); }
+
+/* Taskbar Styles */
+#taskbar {
+    background-color: var(--classic-bg);
+    border-top: 1px solid var(--classic-window-frame-light); /* Lighter top border */
+    padding: 2px 3px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 2000;
+    flex-shrink: 0;
 }
 
-/* --- Notification Area & Modal Styles (Simplified for brevity, adapt as needed) --- */
-#notification-area { position: fixed; bottom: 38px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
+#startButton {
+    background-color: var(--classic-button-face);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    border-right-color: var(--classic-window-frame-shadow);
+    padding: 2px 10px; /* Adjusted padding */
+    font-weight: bold;
+    font-size: 12px;
+    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset, -1px -1px 0px var(--classic-window-frame-shadow) inset; /* Subtle 3D */
+    margin-right: 3px;
+    cursor: pointer;
+}
+
+#startButton:active {
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    box-shadow: none;
+    padding: 3px 9px 1px 11px; /* Simulate press */
+}
+
+#taskbarButtons {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    margin-left: 3px;
+}
+
+#taskbarTempoDisplay {
+    font-size: 11px;
+    padding: 2px 6px;
+    border: 1px solid var(--classic-window-frame-shadow);
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    background-color: var(--classic-bg);
+    min-width: 65px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: 2px;
+    cursor: pointer;
+}
+#taskbarTempoDisplay:hover {
+    /* No specific hover for classic look */
+}
+
+/* Start Menu Styles */
+#startMenu {
+    position: absolute;
+    bottom: 28px;
+    left: 2px;
+    background-color: var(--classic-bg);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    border-right-color: var(--classic-window-frame-shadow);
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    padding: 2px;
+    z-index: 2001;
+    min-width: 180px;
+}
+#startMenu ul { list-style: none; margin: 0; padding: 0; }
+#startMenu li { padding: 4px 8px 4px 22px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+#startMenu li:hover { background-color: var(--classic-highlight); color: var(--classic-highlight-text); }
+#startMenu li.disabled { color: var(--classic-text-disabled); cursor: default; }
+#startMenu li.disabled:hover { background-color: transparent; color: var(--classic-text-disabled); }
+#startMenu hr { border: 0; border-top: 1px solid var(--classic-window-frame-shadow); border-bottom: 1px solid var(--classic-window-frame-light); margin: 2px 0; }
+
+/* Taskbar Button Styles */
+.taskbar-button {
+    background-color: var(--classic-button-face);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    border-right-color: var(--classic-window-frame-shadow);
+    padding: 2px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    min-width: 70px;
+    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset;
+    cursor: pointer;
+    flex-shrink: 0;
+    text-align: left;
+}
+.taskbar-button.active {
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    box-shadow: none;
+    padding: 3px 7px 1px 9px; /* Simulate pressed */
+}
+.taskbar-button.minimized-on-taskbar { /* Same as non-active */ }
+
+
+/* Notification System Styles */
+#notification-area {
+    position: fixed;
+    bottom: 35px; /* Above taskbar */
+    right: 5px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
 .notification-message {
-    background-color: var(--theme-yellow-accent); color: var(--theme-text-dark);
-    border: 1px solid var(--theme-border-main); padding: 8px 12px; margin-top: 5px;
-    border-radius: 4px; font-size: 11px; box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-    opacity: 0; transform: translateX(100%); transition: opacity 0.3s ease, transform 0.3s ease;
+    background-color: var(--classic-bg);
+    color: var(--classic-button-text);
+    padding: 8px 15px;
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    font-size: 12px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
-.notification-message.show { opacity: 1; transform: translateX(0); }
+.notification-message.show {
+    opacity: 1;
+    transform: translateX(0);
+}
 
-.modal-overlay { background-color: rgba(100,100,120,0.3); /* Same */ }
+/* Custom Modal Styles */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.25); /* Less intrusive overlay */
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10000;
+}
 .modal-dialog {
-    background-color: var(--theme-bg-panel); border: 1px solid var(--theme-border-light);
-    box-shadow: 1px 1px 0px var(--theme-border-shadow), 2px 2px 0px var(--theme-border-strong), 3px 3px 5px rgba(0,0,0,0.1);
-    min-width: 300px; max-width: 480px; padding: 3px; border-radius: 5px;
+    background-color: var(--classic-bg);
+    padding: 2px; /* For 3D frame */
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    min-width: 300px;
+    max-width: 90%;
+    display: flex;
+    flex-direction: column;
 }
 .modal-title-bar {
-    background-color: var(--theme-purple-titlebar); color: var(--theme-text-dark);
-    padding: 5px 10px; font-size: 12px; font-weight: bold; margin-bottom: 5px;
-    border-top-left-radius: 2px; border-top-right-radius: 2px;
-    border-bottom: 1px solid var(--theme-purple-border);
+    background-color: var(--classic-title-bar-active);
+    color: var(--classic-title-text);
+    padding: 3px 8px;
+    font-weight: bold;
+    font-size: 12px;
+    text-align: left; /* Classic modals often left-aligned title */
+    margin-bottom: 2px;
 }
-.modal-content { padding: 10px; font-size: 12px; background-color: var(--theme-bg-window); border: 1px solid var(--theme-border-shadow); border-top-color: var(--theme-border-strong); border-left-color: var(--theme-border-strong); }
-.modal-buttons { padding: 10px; text-align: center; background-color: var(--theme-bg-panel); margin-top: 5px; }
+.modal-content {
+    padding: 15px;
+    font-size: 12px;
+    color: var(--classic-button-text);
+    text-align: left;
+    border: 1px solid var(--classic-window-frame-shadow); /* Inset border */
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    background-color: var(--classic-bg);
+}
+.modal-buttons {
+    padding: 8px 15px;
+    display: flex;
+    justify-content: flex-end; /* Buttons typically right-aligned */
+    gap: 6px;
+    background-color: var(--classic-bg);
+    border-top: 1px solid var(--classic-window-frame-light); /* Separator line */
+    margin-top: 2px;
+}
 .modal-buttons button {
-    background-color: var(--theme-button-face); color: var(--theme-button-text);
-    border: 1px solid var(--theme-border-shadow); border-top-color: var(--theme-border-light); border-left-color: var(--theme-border-light);
-    padding: 4px 12px; font-size: 12px; cursor: pointer; margin: 0 4px; min-width: 70px; border-radius: 3px;
+    background-color: var(--classic-button-face);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    border-right-color: var(--classic-window-frame-shadow);
+    padding: 3px 12px;
+    font-size: 12px;
+    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset;
+    min-width: 70px;
+    cursor: pointer;
 }
-.modal-buttons button:active { /* ... classic pressed style ... */ }
-
-
-/* --- Inspector & Control Panel Styles --- */
-.track-inspector-content, .effects-rack-window, .global-controls-window { font-size: 12px; background-color: var(--theme-bg-panel); }
-.panel {
-    background-color: var(--theme-bg-panel); padding: 10px; padding-top: 15px;
-    margin-bottom: 8px; border: 1px solid var(--theme-border-shadow);
-    border-top-color: var(--theme-border-light); border-left-color: var(--theme-border-light); /* Classic group box */
-    border-radius: 3px; position: relative;
-}
-.panel h4 { /* Panel title as legend */
-    position: absolute; top: -0.65em; left: 10px; background-color: var(--theme-bg-panel);
-    padding: 0 5px; font-size: 11px; color: var(--theme-text-dark); font-weight: normal;
-}
-.control-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-around; padding-top: 5px; }
-
-/* --- Knob Styles --- */
-.knob-container { display: flex; flex-direction: column; align-items: center; width: 60px; margin-bottom: 5px; }
-.knob-label { font-size: 10px; color: var(--theme-text-dark); margin-bottom: 2px; text-align: center; }
-.knob {
-    width: 40px; height: 40px; background-color: var(--theme-blue-primary); /* Accent color for knob */
-    border-radius: 50%; position: relative; cursor: ns-resize;
-    border: 1px solid var(--theme-blue-border);
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.15), 1px 1px 2px rgba(0,0,0,0.1);
-}
-.knob-handle {
-    width: 5px; height: 12px; background-color: var(--theme-text-light);
-    position: absolute; top: 4px; left: 50%;
-    transform: translateX(-50%); transform-origin: bottom center;
-    border-radius: 2px; box-shadow: 0 0 1px rgba(0,0,0,0.3);
-}
-.knob-value {
-    font-size: 10px; color: var(--theme-text-dark); margin-top: 3px;
-    min-height: 1em; text-align: center; background: var(--theme-input-bg);
-    border: 1px solid var(--theme-input-border); padding: 2px 4px; border-radius: 3px; min-width: 35px;
+.modal-buttons button:active {
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    box-shadow: none;
+    padding: 4px 11px 2px 13px;
 }
 
-/* --- Meter Styles --- */
-.meter-bar-container {
-    background-color: var(--theme-border-shadow); border-radius: 2px;
-    overflow: hidden; height: 10px; border: 1px solid var(--theme-border-strong); padding: 1px;
+/* Component-Specific Styles */
+.track-inspector-content .panel,
+.effects-rack-window .effect-group {
+    margin-top: 8px; padding: 8px; padding-top: 12px; /* Space for legend */
+    border: 1px solid var(--classic-window-frame-shadow); /* GroupBox style */
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    position: relative;
 }
-.meter-bar { background-color: var(--theme-pink-primary); height: 100%; width: 0%; transition: width 0.05s linear; border-radius: 1px; }
-.meter-bar.clipping { background-color: #e53e3e; /* Red-600 for clipping */ }
+.effects-rack-window .effect-group:first-child {
+    margin-top: 0;
+}
+.panel h4 { /* GroupBox legend */
+    position: absolute;
+    top: -0.6em; /* Adjust to sit on top border */
+    left: 8px;
+    background-color: var(--classic-bg); /* Match panel background */
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: normal;
+}
 
-/* --- Sequencer Styles --- */
-.sequencer-window-content { /* Same */ }
-.sequencer-grid-container {
-    flex-grow: 1; overflow: auto;
-    border: 1px solid var(--theme-border-shadow); /* Inset look */
-    border-top-color: var(--theme-border-strong); border-left-color: var(--theme-border-strong);
-    background-color: var(--theme-bg-window); /* White background for grid */
-    border-radius: 3px;
+
+/* Sequencer Styles */
+.sequencer-window-content { display: flex; height: 100%; flex-direction: column; }
+.sequencer-grid-container { flex-grow: 1; overflow: auto; border: 1px solid var(--classic-input-border-inset-dark); background-color: var(--classic-input-bg); }
+.sequencer-grid { display: grid; gap: 0; width: 100%; }
+.sequencer-label-cell {
+    font-size: 10px; padding: 3px 2px; text-align: right;
+    background-color: var(--classic-bg);
+    border-right: 1px solid var(--classic-window-frame-shadow);
+    border-bottom: 1px solid var(--classic-window-frame-shadow);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    min-width: 45px;
+    position: sticky; left: 0; z-index: 10;
 }
-.sequencer-grid { display: grid; gap: 1px; background-color: #d0d8e0; /* Light grid lines */ padding: 1px; min-width: fit-content; }
-.sequencer-label-cell, .sequencer-step-cell, .sequencer-bar-header-cell, .sequencer-bar-header-placeholder {
-    background-color: var(--theme-bg-panel); display: flex; justify-content: center; align-items: center;
-    font-size: 10px; min-height: 20px; user-select: none; border-radius: 1px;
+.sequencer-bar-header-cell {
+    font-size: 10px; padding: 2px 0; text-align: center;
+    background-color: var(--classic-bg);
+    border-right: 1px solid var(--classic-window-frame-shadow);
+    border-bottom: 1px solid var(--classic-window-frame-shadow);
+    font-weight: normal; color: var(--classic-button-text);
+    grid-column-start: span var(--steps-per-bar); /* Set by JS */
+    position: sticky; top: 0; z-index: 5;
 }
-.sequencer-label-cell { font-weight: normal; position: sticky; left: 0; z-index: 2; padding: 0 5px; white-space: nowrap; background-color: var(--theme-bg-desktop); color: var(--theme-text-dark); border-right: 1px solid var(--theme-border-shadow); }
-.sequencer-bar-header-placeholder { position: sticky; top: 0; left: 0; z-index: 3; background-color: var(--theme-bg-desktop); }
-.sequencer-bar-header-cell { font-weight: normal; grid-column: span var(--steps-per-bar, 16); position: sticky; top: 0; z-index: 1; background-color: var(--theme-bg-desktop); color: var(--theme-text-dark); border-bottom: 1px solid var(--theme-border-shadow); }
-.sequencer-step-cell { cursor: pointer; min-width: 20px; background-color: var(--theme-input-bg); border: 1px solid #e0e8f0; }
-.sequencer-step-cell:hover { background-color: var(--theme-yellow-accent); }
-.sequencer-step-cell.beat-downbeat { background-color: #f0f4f8; }
+.sequencer-bar-header-placeholder {
+    background-color: var(--classic-bg);
+    border-right: 1px solid var(--classic-window-frame-shadow);
+    border-bottom: 1px solid var(--classic-window-frame-shadow);
+    position: sticky; top: 0; left: 0; z-index: 15;
+}
+.sequencer-step-cell {
+    aspect-ratio: 1 / 1;
+    border-right: 1px solid var(--classic-input-border);
+    border-bottom: 1px solid var(--classic-input-border);
+    cursor: pointer;
+    transition: background-color 0.05s;
+    min-width: 18px; /* Min step size */
+    background-color: var(--classic-input-bg); /* Default step color */
+}
+.sequencer-step-cell.beat-1, /* Downbeat */
+.sequencer-step-cell.beat-3 { background-color: #f0f0f0; }
+.sequencer-step-cell.beat-2,
+.sequencer-step-cell.beat-4 { background-color: #fafafa; }
+
 .sequencer-step-cell.active-synth,
 .sequencer-step-cell.active-sampler,
 .sequencer-step-cell.active-drum-sampler,
 .sequencer-step-cell.active-instrument-sampler {
-    background-color: var(--theme-pink-primary); border-color: var(--theme-pink-border);
+    background-color: var(--classic-button-text); /* Black for active */
 }
-.sequencer-step-cell.playing { outline: 2px solid var(--theme-blue-primary); outline-offset: -2px; z-index: 1; }
+.sequencer-step-cell.playing { outline: 1px solid #ff0000; z-index: 1; }
 
-/* --- Sound Browser Styles --- */
-.sound-browser-content { /* Same */ }
-#soundBrowserLibrarySelect { flex-shrink: 0; margin-bottom: 4px; font-size: 11px; background-color: var(--theme-input-bg); border: 1px solid var(--theme-input-border); padding: 3px; border-radius: 3px; }
-#soundBrowserPathDisplay { flex-shrink: 0; padding: 3px 6px; background-color: var(--theme-bg-panel); border-bottom: 1px solid var(--theme-border-shadow); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sound-browser-list { flex-grow: 1; overflow-y: auto; border: 1px solid var(--theme-input-border); background-color: var(--theme-input-bg); border-radius: 3px; }
-.sound-browser-item { padding: 4px 8px; cursor: pointer; border-bottom: 1px solid #e8eff5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sound-browser-item:last-child { border-bottom: none; }
-.sound-browser-item:hover { background-color: var(--theme-highlight); color: var(--theme-highlight-text); }
-.sound-browser-loading { /* Same */ }
-
-/* --- Sampler/Drum Sampler Pad Styles --- */
-.pads-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; margin-top: 6px; }
+/* Pad Styles */
+.pads-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(55px, 1fr)); gap: 5px; margin-top: 8px; }
 .pad-button {
-    background-color: var(--theme-button-face); color: var(--theme-text-dark);
-    border: 1px solid var(--theme-border-shadow); border-top-color: var(--theme-border-light); border-left-color: var(--theme-border-light);
-    padding: 6px 4px; font-size: 10px;
-    cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 45px; line-height: 1.2; word-break: break-word; border-radius: 3px;
-    box-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+    background-color: var(--classic-button-face);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    aspect-ratio: 1 / 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 10px; text-align: center; padding: 2px;
+    overflow: hidden; cursor: pointer; user-select: none;
 }
-.pad-button:hover { border-color: var(--theme-input-focus-border); }
 .pad-button:active, .pad-button.selected-for-edit {
-    background-color: var(--theme-button-active);
-    border-top-color: var(--theme-border-shadow); border-left-color: var(--theme-border-shadow);
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    background-color: #a0a0a0;
 }
-.pad-label { /* Same */ }
+.pad-button .pad-label { font-size: 9px; margin-top: 2px; color: #333; }
+.pad-button.selected-for-edit .pad-label { color: #111; }
 
-/* --- Waveform Canvas --- */
-.waveform-canvas { background-color: var(--theme-input-bg); border: 1px solid var(--theme-input-border); width: 100%; height: 65px; border-radius: 3px; }
-
-/* --- Drop Zone Styles --- */
-.drop-zone {
-    padding: 12px; border: 1px dashed var(--theme-border-main);
-    background-color: var(--theme-bg-panel); color: var(--theme-text-dark);
-    text-align: center; font-size: 11px; line-height: 1.4;
-    transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
-    margin-bottom: 6px; box-sizing: border-box; border-radius: 4px;
-}
-.drop-zone label { color: var(--theme-blue-primary); text-decoration: underline; cursor: pointer; font-weight: normal; }
-.drop-zone label:hover { color: var(--theme-blue-border); }
-.drop-zone.dragover { background-color: var(--theme-yellow-accent); border-color: var(--theme-border-strong); }
-.track-inspector-content .drop-zone { padding: 10px; margin-top: 6px; }
-.drum-sampler-panel .drop-zone { padding: 7px; font-size: 10px; }
-.drum-sampler-panel .drop-zone label { display: block; margin-top: 2px; }
-
-/* --- Utility classes --- */
-.hidden { display: none !important; }
-
-/* General Button (shared by modal, etc.) */
-button.snug-button, .button-general { /* Target specific buttons if needed */
-    background-color: var(--theme-button-face);
-    color: var(--theme-button-text);
-    border: 1px solid var(--theme-border-shadow);
-    border-top-color: var(--theme-border-light);
-    border-left-color: var(--theme-border-light);
-    padding: 4px 12px;
-    font-size: 12px;
+/* General Button Styles (Mute, Solo, Arm, etc.) */
+.arm-input-button, .mute-button, .solo-button, .waveform-control-button, .slice-toggle-button, .automation-button, .effects-rack-button, .button-general {
+    background-color: var(--classic-button-face);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    border-right-color: var(--classic-window-frame-shadow);
+    color: var(--classic-button-text);
+    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset;
     cursor: pointer;
-    border-radius: 3px;
-    box-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 2px;
+    margin: 1px;
 }
-button.snug-button:hover, .button-general:hover {
-    border-color: var(--theme-input-focus-border);
+.arm-input-button:active, .mute-button:active, .solo-button:active, .waveform-control-button:active, .slice-toggle-button:active, .automation-button:active, .effects-rack-button:active, .button-general:active {
+    border-top-color: var(--classic-window-frame-darkshadow);
+    border-left-color: var(--classic-window-frame-darkshadow);
+    border-bottom-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-light);
+    box-shadow: none;
+    padding: 4px 7px 2px 9px;
 }
-button.snug-button:active, .button-general:active {
-    background-color: var(--theme-button-active);
-    border-top-color: var(--theme-border-shadow);
-    border-left-color: var(--theme-border-shadow);
-    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.1);
-    padding: 5px 11px 3px 13px;
+.slice-toggle-button.active { background-color: var(--classic-highlight); color: var(--classic-highlight-text); }
+.arm-input-button.armed { background-color: #ff6060; color: white; }
+.mute-button.muted { background-color: #ff8080; color: white; }
+.solo-button.soloed { background-color: #ffff80; color: black; }
+
+/* MIDI and Keyboard Indicators */
+#midiIndicatorGlobal, #keyboardIndicatorGlobal { border: 1px solid black; width: 10px; height: 10px; display: inline-block; border-radius: 2px; transition: background-color 0.1s; background-color: #a0a0a0; }
+#midiIndicatorGlobal.active { background-color: #33ff33; }
+#keyboardIndicatorGlobal.active { background-color: #33ccff; }
+
+/* Knob Styles (simplified) */
+.knob-container { display: flex; flex-direction: column; align-items: center; margin: 2px 0; }
+.knob {
+    width: 36px; height: 36px; border-radius: 50%; background-color: #a0a0a0;
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light); border-left-color: var(--classic-window-frame-light);
+    position: relative; cursor: ns-resize;
 }
-.slice-toggle-button {
-    background-color: var(--theme-button-face);
-    border: 1px solid var(--theme-border-main);
-    padding: 3px 6px; font-size: 11px; border-radius: 3px;
+.knob-handle {
+    width: 3px; height: 10px; background-color: var(--classic-button-text);
+    position: absolute; top: 4px; left: 50%; transform-origin: 50% 14px;
+    transform: translateX(-50%) rotate(0deg); border-radius: 1px;
 }
-.slice-toggle-button.active { background-color: var(--theme-blue-primary); color: var(--theme-text-dark); border-color: var(--theme-blue-border); }
+.knob-label, .slider-label { font-size: 10px; margin-top: 1px; text-align: center; color: var(--classic-button-text); max-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.knob-value, .slider-value { font-size: 10px; color: var(--classic-button-text); }
+
+/* Waveform Canvas */
+.waveform-canvas { background-color: var(--classic-input-bg); border: 1px solid var(--classic-input-border-inset-dark); display: block; width: 100%; border-top-color:var(--classic-input-border); border-left-color:var(--classic-input-border) }
+
+/* Meter Bar Styles */
+.meter-bar-container { background-color: var(--classic-input-border-inset-dark); border: 1px solid var(--classic-input-border); padding:1px;}
+.meter-bar { background-color: #00b000; height: 100%; width: 0%; }
+.meter-bar.clipping { background-color: #e00000; }
+
+/* Mixer Styles */
+.mixer-window-content { display: flex; gap: 8px; padding: 8px; overflow-x: auto; background-color: var(--classic-bg); min-height: 250px; }
+.channel-strip {
+    display: flex; flex-direction: column; align-items: center;
+    background-color: var(--classic-bg); padding: 6px;
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-window-frame-light); border-left-color: var(--classic-window-frame-light);
+    min-width: 70px; flex-shrink: 0;
+}
+.channel-strip .track-name { font-size: 11px; font-weight: normal; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; cursor: pointer;}
+.channel-strip .fader-container { height: auto; margin-bottom: 4px; display: flex; justify-content: center; align-items: center; }
+.channel-strip .mixer-buttons button { font-size: 10px; padding: 1px 3px; margin: 1px;}
+.channel-strip .mixer-meter-container { width: 40px; height: 12px; margin-top: 4px; }
+
+/* Drag and Drop Zone Styles */
+.drop-zone {
+    border: 1px dashed var(--classic-window-frame-shadow);
+    padding: 10px; text-align: center; transition: background-color 0.1s, border-color 0.1s;
+    font-size: 11px; background-color: var(--classic-bg);
+    color: var(--classic-button-text);
+}
+.drop-zone.dragover {
+    background-color: #dadada; /* Slightly lighter gray */
+    border-color: var(--classic-window-frame-darkshadow);
+}
+.drop-zone label { color: var(--classic-title-bar-active); text-decoration: underline; cursor: pointer; }
 
 /* Input fields */
 input[type="text"], input[type="number"], select, textarea {
-    background-color: var(--theme-input-bg);
-    border: 1px solid var(--theme-input-border); /* Inset-like border */
-    border-top-color: var(--theme-border-shadow);
-    border-left-color: var(--theme-border-shadow);
-    border-bottom-color: var(--theme-border-light);
-    border-right-color: var(--theme-border-light);
-    padding: 4px 6px;
+    background-color: var(--classic-input-bg);
+    border: 1px solid var(--classic-window-frame-darkshadow);
+    border-top-color: var(--classic-input-border);
+    border-left-color: var(--classic-input-border);
+    padding: 3px 4px;
     font-family: 'Tahoma', 'Geneva', sans-serif;
     font-size: 12px;
-    color: var(--theme-text-dark);
-    border-radius: 2px; /* Very slight rounding or none */
+    color: var(--classic-button-text);
+    box-shadow: inset 1px 1px 0px var(--classic-window-frame-shadow); /* Inner shadow */
+    border-radius: 0; /* Sharp corners for inputs */
 }
 input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-    outline: 1px solid var(--theme-input-focus-border); /* Simple focus outline */
-    outline-offset: 0px;
-    border-color: var(--theme-input-focus-border); /* Change border on focus */
+    outline: 1px dotted var(--classic-button-text); /* Classic dotted focus */
+    outline-offset: -1px; /* Inside border */
 }
-select { padding-right: 20px; }
+select {
+    padding-right: 15px; /* Space for arrow, though native arrow will show */
+}
+
+/* Hidden utility */
+.hidden {
+    display: none !important;
+}
+
+/* Record Button Animation */
+#recordBtnGlobal.recording {
+    background-color: #CC0000; /* Darker Red when recording */
+    color: white;
+    animation: pulseClassic 1.2s infinite ease-in-out;
+    border-color: #800000;
+}
+@keyframes pulseClassic {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
