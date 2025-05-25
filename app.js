@@ -1,7 +1,7 @@
 // SnugOS - Main Application Logic
 // Version 5.5.1: Updated Sound Libraries, Tutorial Removed
-// Refactor Step 3: Effects Rack DOM Building
-console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Refactor 3)");
+// Refactor Step 4: Sequencer DOM Building
+console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Refactor 4)");
 
 // --- Notification System ---
 const notificationArea = document.getElementById('notification-area');
@@ -1820,7 +1820,7 @@ function openTrackInspectorWindow(trackId, savedState = null) {
     return inspectorWin;
 }
 
-// --- NEW: Effects Rack DOM Builder and Control Definitions ---
+// --- Effects Rack DOM Builder and Control Definitions ---
 const effectControlDefinitions = {
     distortion: {
         title: 'Distortion',
@@ -1894,32 +1894,25 @@ function buildEffectsRackContentDOM(track) {
 
     for (const effectKey in effectControlDefinitions) {
         const effectDef = effectControlDefinitions[effectKey];
-
         const effectGroupDiv = document.createElement('div');
         effectGroupDiv.className = 'effect-group';
-
         const titleEl = document.createElement('h4');
         titleEl.className = 'text-sm font-semibold';
         titleEl.textContent = effectDef.title;
         effectGroupDiv.appendChild(titleEl);
-
         const controlsContainer = document.createElement('div');
-        // Apply 'control-group' class if there are multiple controls or if it's standard for single controls too
-        if (effectDef.controls.length > 1 || effectKey === 'distortion' || effectKey === 'saturation') { // Distortion and Saturation have single knobs but might still use control-group
+        if (effectDef.controls.length > 1 || ['distortion', 'saturation'].includes(effectKey)) {
              controlsContainer.className = 'control-group';
         }
-
-
         effectDef.controls.forEach(controlDef => {
             if (controlDef.type === 'select') {
                 const selectEl = document.createElement('select');
                 selectEl.id = `${controlDef.idPrefix}-${track.id}`;
-                selectEl.className = 'text-xs p-1 border w-full mb-1 bg-white text-black'; // Standard select styling
-                // Options will be added during initialization
+                selectEl.className = 'text-xs p-1 border w-full mb-1 bg-white text-black';
                 controlsContainer.appendChild(selectEl);
             } else if (controlDef.type === 'knob') {
                 const knobPlaceholder = document.createElement('div');
-                knobPlaceholder.id = `${controlDef.idPrefix}Knob-${track.id}`; // e.g., distAmountKnob-1
+                knobPlaceholder.id = `${controlDef.idPrefix}Knob-${track.id}`;
                 controlsContainer.appendChild(knobPlaceholder);
             }
         });
@@ -1942,14 +1935,11 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
         openWindows[windowId].close();
     }
 
-    track.inspectorControls = track.inspectorControls || {}; // Ensure it exists
-
-    // 1. Build the DOM content
+    track.inspectorControls = track.inspectorControls || {};
     const effectsRackContentElement = buildEffectsRackContentDOM(track);
 
-    // 2. Define window options
     const winOptions = {
-        width: 450, height: 600, // Default, can be adjusted
+        width: 450, height: 600,
         initialContentKey: `effectsRack-${track.id}`
     };
     if (savedState) {
@@ -1960,21 +1950,19 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
         });
     }
 
-    // 3. Create the window
     const effectsWin = createWindow(windowId, `Effects: ${track.name}`, effectsRackContentElement, winOptions);
     if (!effectsWin || !effectsWin.element) {
         showNotification("Failed to create Effects Rack.", 5000);
         return null;
     }
     track.effectsRackWindow = effectsWin;
-    const winEl = effectsWin.contentArea; // Work within the content area
+    const winEl = effectsWin.contentArea;
 
-    // 4. Initialize controls
     for (const effectKey in effectControlDefinitions) {
         const effectDef = effectControlDefinitions[effectKey];
         effectDef.controls.forEach(controlDef => {
             const controlIdBase = `${controlDef.idPrefix}-${track.id}`;
-            const initialValue = track.effects[effectKey] ? track.effects[effectKey][controlDef.paramKey] : controlDef.min; // Fallback for safety
+            const initialValue = track.effects[effectKey] ? track.effects[effectKey][controlDef.paramKey] : controlDef.min;
 
             if (controlDef.type === 'select') {
                 const selectEl = winEl.querySelector(`#${controlIdBase}`);
@@ -2006,12 +1994,11 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
                         }
                     });
                     knobPlaceholder.appendChild(knob.element);
-                    track.inspectorControls[controlDef.idPrefix] = knob; // Store knob reference
+                    track.inspectorControls[controlDef.idPrefix] = knob;
                 }
             }
         });
     }
-     // Refresh knob visuals after a short delay
     setTimeout(() => {
         for (const effectKey in effectControlDefinitions) {
             effectControlDefinitions[effectKey].controls.forEach(controlDef => {
@@ -2024,1116 +2011,89 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
 
     return effectsWin;
 }
-// --- END NEW: Effects Rack ---
+// --- END Effects Rack ---
 
+// --- Sequencer Window DOM Builder ---
+function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
+    const mainContentDiv = document.createElement('div');
+    mainContentDiv.className = 'sequencer-window-content p-2';
 
-function openMixerWindow(savedState = null) {
-    const windowId = 'mixer';
-    if (openWindows[windowId] && !savedState) { openWindows[windowId].restore(); return openWindows[windowId]; }
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'mixer-window-content';
-    const winOptions = {
-        width: Math.max(500, Math.min(800, window.innerWidth - 60)), height: 350,
-        initialContentKey: 'mixer'
-    };
-     if (savedState) {
-        Object.assign(winOptions, {
-            x: parseFloat(savedState.left), y: parseFloat(savedState.top),
-            width: parseFloat(savedState.width), height: parseFloat(savedState.height),
-            zIndex: savedState.zIndex, isMinimized: savedState.isMinimized
-        });
+    const titleP = document.createElement('p');
+    titleP.className = 'text-xs';
+    titleP.textContent = `${track.name} - ${track.type} Sequencer (${rows} rows x ${track.sequenceLength} steps, ${numBars} Bars)`;
+    mainContentDiv.appendChild(titleP);
+
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'sequencer-grid-container';
+
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'sequencer-grid';
+    gridDiv.style.gridTemplateColumns = `50px repeat(${track.sequenceLength}, 1fr)`;
+    gridDiv.style.gridTemplateRows = `auto repeat(${rows}, auto)`;
+    gridDiv.style.setProperty('--steps-per-bar', STEPS_PER_BAR);
+
+    // Top-left empty cell
+    const placeholderCell = document.createElement('div');
+    placeholderCell.className = 'sequencer-bar-header-placeholder';
+    gridDiv.appendChild(placeholderCell);
+
+    // Bar headers
+    for (let bar = 0; bar < numBars; bar++) {
+        const barHeaderCell = document.createElement('div');
+        barHeaderCell.className = 'sequencer-bar-header-cell';
+        barHeaderCell.textContent = `Bar ${bar + 1}`;
+        gridDiv.appendChild(barHeaderCell);
     }
-    const mixerWin = createWindow(windowId, 'Mixer', contentDiv, winOptions);
-    if (!mixerWin || !mixerWin.element) {
-        showNotification("Failed to create Mixer window.", 5000);
-        return null;
-    }
-    const mixerContentArea = mixerWin.contentArea;
-    if (mixerContentArea) { renderMixer(mixerContentArea); }
-    return mixerWin;
-}
-function renderMixer(container) {
-    if (!container) { console.error("Mixer container not found for rendering."); return; }
-    container.innerHTML = '';
-    tracks.forEach(track => {
-        const strip = document.createElement('div');
-        strip.className = 'channel-strip';
-        const trackNameDiv = document.createElement('div');
-        trackNameDiv.className = 'track-name';
-        trackNameDiv.title = track.name;
-        trackNameDiv.textContent = track.name.substring(0,8) + (track.name.length > 8 ? '...' : '');
-        trackNameDiv.onclick = () => openTrackInspectorWindow(track.id);
-        strip.appendChild(trackNameDiv);
-        const faderContainer = document.createElement('div');
-        faderContainer.className = 'fader-container';
-        faderContainer.id = `mixerVolumeSliderContainer-${track.id}`;
-        strip.appendChild(faderContainer);
-        const buttonsDiv = document.createElement('div');
-        buttonsDiv.className = 'mixer-buttons flex gap-1 mb-1';
-        buttonsDiv.innerHTML = `
-                <button id="mixerMuteBtn-${track.id}" class="mute-button text-xs p-0.5 ${track.isMuted ? 'muted' : ''}">M</button>
-                <button id="mixerSoloBtn-${track.id}" class="solo-button text-xs p-0.5 ${track.isSoloed ? 'soloed' : ''}">S</button>
-            `;
-        strip.appendChild(buttonsDiv);
-        const meterDiv = document.createElement('div');
-        meterDiv.id = `mixerTrackMeterContainer-${track.id}`;
-        meterDiv.className = 'mixer-meter-container h-3';
-        meterDiv.innerHTML = `<div id="mixerTrackMeterBar-${track.id}" class="meter-bar"></div>`;
-        strip.appendChild(meterDiv);
-        container.appendChild(strip);
-        const volKnobContainer = strip.querySelector(`#mixerVolumeSliderContainer-${track.id}`);
-        if(volKnobContainer) {
-            const volKnob = createKnob({
-                label: '',
-                min:0, max:1, step:0.01, initialValue: track.previousVolumeBeforeMute, decimals:2, sensitivity: 0.8,
-                trackRef: track,
-                onValueChange: (val, oldVal, fromInteraction) => {
-                    track.setVolume(val, fromInteraction);
-                    if (track.inspectorControls?.volume?.type === 'knob') {
-                        track.inspectorControls.volume.setValue(val, false);
-                    }
-                }
-            });
-            volKnobContainer.innerHTML = '';
-            volKnobContainer.appendChild(volKnob.element);
-            track.inspectorControls[`mixerVolume-${track.id}`] = volKnob;
-        }
-        strip.querySelector(`#mixerMuteBtn-${track.id}`)?.addEventListener('click', () => handleTrackMute(track.id));
-        strip.querySelector(`#mixerSoloBtn-${track.id}`)?.addEventListener('click', () => handleTrackSolo(track.id));
-    });
-    const masterStrip = document.createElement('div');
-    masterStrip.className = 'channel-strip bg-gray-400';
-    masterStrip.innerHTML = `<div class="track-name">Master</div>
-                                     <div class="fader-container" id="mixerMasterVolumeSliderContainer"></div>
-                                     <div id="mixerMasterMeterContainer" class="mixer-meter-container h-3 mt-auto">
-                                        <div id="mixerMasterMeterBar" class="meter-bar"></div>
-                                     </div>`;
-    container.appendChild(masterStrip);
-    const masterVolSliderCont = masterStrip.querySelector('#mixerMasterVolumeSliderContainer');
-    if(masterVolSliderCont){
-        const masterVolKnob = createKnob({
-            label: '', min:-60, max:6, step:1, initialValue: Tone.getDestination().volume.value,
-            displaySuffix: 'dB', decimals:0, sensitivity: 0.3,
-            onValueChange: (val, oldVal, fromInteraction) => {
-                Tone.getDestination().volume.value = val;
-            }
-        });
-        masterVolSliderCont.innerHTML = '';
-        masterVolSliderCont.appendChild(masterVolKnob.element);
-    }
-    setTimeout(() => {
-        tracks.forEach(track => {
-            track.inspectorControls[`mixerVolume-${track.id}`]?.refreshVisuals?.();
-        });
-    }, 0);
-}
-function updateMixerWindow() {
-    const mixerWin = openWindows['mixer'];
-    if (mixerWin && mixerWin.element && !mixerWin.isMinimized) {
-        const mixerContentArea = mixerWin.contentArea;
-        if (mixerContentArea) { renderMixer(mixerContentArea); }
-    }
-}
-async function setupMIDI() {
-    if (navigator.requestMIDIAccess) {
-        try {
-            midiAccess = await navigator.requestMIDIAccess();
-            populateMIDIInputs();
-            midiAccess.onstatechange = populateMIDIInputs;
-            showNotification("MIDI ready.", 2000);
-        } catch (e) {
-            console.error("Could not access MIDI devices.", e);
-            let errorMsg = "Could not access MIDI devices.";
-            if (e && e.message) errorMsg += ` Reason: ${e.message}`;
-            else if (e && e.name) errorMsg += ` Reason: ${e.name}`;
-            errorMsg += " Please ensure your browser has permission to access MIDI devices and that MIDI devices are connected properly."
-            showNotification(errorMsg, 6000);
-        }
-    } else {
-        showNotification("Web MIDI API not supported in this browser.", 3000);
-    }
-}
-function populateMIDIInputs() {
-    if (!midiAccess || !midiInputSelectGlobal) return;
-    const currentVal = midiInputSelectGlobal.value;
-    midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>';
-    const inputs = midiAccess.inputs.values();
-    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
-        const option = document.createElement('option');
-        option.value = input.value.id;
-        option.textContent = input.value.name;
-        midiInputSelectGlobal.appendChild(option);
-    }
-    if (currentVal && Array.from(midiInputSelectGlobal.options).some(opt => opt.value === currentVal)) {
-        midiInputSelectGlobal.value = currentVal;
-    } else if (midiAccess.inputs.size > 0) {
-        midiInputSelectGlobal.value = midiAccess.inputs.values().next().value.id;
-    }
-    if (!midiInputSelectGlobal.onchange) {
-         midiInputSelectGlobal.onchange = () => {
-            const oldMidiName = activeMIDIInput ? activeMIDIInput.name : "No MIDI Input";
-            const newMidiId = midiInputSelectGlobal.value;
-            const newMidiDevice = midiAccess && newMidiId ? midiAccess.inputs.get(newMidiId) : null;
-            const newMidiName = newMidiDevice ? newMidiDevice.name : "No MIDI Input";
-            if (oldMidiName !== newMidiName) {
-                 captureStateForUndo(`Change MIDI Input to ${newMidiName}`);
-            }
-            selectMIDIInput();
-        };
-    }
-    selectMIDIInput(true);
-}
-function selectMIDIInput(skipUndoCapture = false) {
-    if (activeMIDIInput && activeMIDIInput.onmidimessage) {
-        activeMIDIInput.onmidimessage = null;
-    }
-    activeMIDIInput = null;
-    const selectedId = midiInputSelectGlobal ? midiInputSelectGlobal.value : null;
-    if (midiAccess && selectedId) {
-        const inputDevice = midiAccess.inputs.get(selectedId);
-        if (inputDevice) {
-            activeMIDIInput = inputDevice;
-            activeMIDIInput.onmidimessage = handleMIDIMessage;
-            if (!skipUndoCapture) {
-                showNotification(`MIDI Input: ${activeMIDIInput.name} selected.`, 2000);
-            }
-        }
-    }
-    if(midiIndicatorGlobalEl) midiIndicatorGlobalEl.classList.toggle('active', !!activeMIDIInput);
-}
-function handleMIDIMessage(message) {
-    const [command, note, velocity] = message.data;
-    const time = Tone.now();
-    const normVel = velocity / 127;
-    if (midiIndicatorGlobalEl) {
-        midiIndicatorGlobalEl.classList.add('active');
-        setTimeout(() => midiIndicatorGlobalEl.classList.remove('active'), 100);
-    }
-    if (isRecording && armedTrackId === recordingTrackId && command === 144 && velocity > 0) {
-        const track = tracks.find(t => t.id === recordingTrackId);
-        if (track) {
-            const currentTimeInSeconds = Tone.Transport.seconds;
-            const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
-            let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
-            currentStep = (currentStep % track.sequenceLength + track.sequenceLength) % track.sequenceLength;
-            let rowIndex = -1;
-            if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
-                const pitchName = Tone.Frequency(note, "midi").toNote();
-                rowIndex = synthPitches.indexOf(pitchName);
-            } else if (track.type === 'Sampler') {
-                rowIndex = note - samplerMIDINoteStart;
-                if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-            } else if (track.type === 'DrumSampler') {
-                rowIndex = note - samplerMIDINoteStart;
-                if (rowIndex < 0 || rowIndex >= numDrumSamplerPads) rowIndex = -1;
-            }
-            if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
-                if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
-                track.sequenceData[rowIndex][currentStep] = { active: true, velocity: normVel };
-                if (track.sequencerWindow && !track.sequencerWindow.isMinimized && activeSequencerTrackId === track.id) {
-                    const cell = track.sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${rowIndex}"][data-col="${currentStep}"]`);
-                    if (cell) {
-                        let activeClass = '';
-                        if (track.type === 'Synth') activeClass = 'active-synth';
-                        else if (track.type === 'Sampler') activeClass = 'active-sampler';
-                        else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler';
-                        else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
-                        cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
-                        if (activeClass) cell.classList.add(activeClass);
-                    }
-                }
-            }
-        }
-    }
-    if (!armedTrackId) return;
-    const currentArmedTrack = tracks.find(t => t.id === armedTrackId);
-    if (!currentArmedTrack) return;
-    if (command === 144 && velocity > 0) {
-        if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
-        } else if (currentArmedTrack.type === 'Sampler') {
-            const sliceIdx = note - samplerMIDINoteStart;
-            if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length) {
-                playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
-            }
-        } else if (currentArmedTrack.type === 'DrumSampler') {
-            const padIndex = note - samplerMIDINoteStart;
-            if (padIndex >= 0 && padIndex < numDrumSamplerPads) {
-                playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
-            }
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
-            if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                currentArmedTrack.toneSampler.releaseAll(time);
-            }
-            const shiftedNote = Tone.Frequency(note, "midi").toNote();
-            currentArmedTrack.toneSampler.triggerAttack(shiftedNote, time, normVel);
-        }
-    } else if (command === 128 || (command === 144 && velocity === 0)) {
-        if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
-             if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                const shiftedNote = Tone.Frequency(note, "midi").toNote();
-                currentArmedTrack.toneSampler.triggerRelease(shiftedNote, time + 0.05);
-             }
-        }
-    }
-}
-document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.repeat || currentlyPressedComputerKeys[e.code]) return;
-    currentlyPressedComputerKeys[e.code] = true;
-    if(keyboardIndicatorGlobalEl) keyboardIndicatorGlobalEl.classList.add('active');
-    const time = Tone.now();
-    const computerKeyNote = computerKeySynthMap[e.code] || computerKeySamplerMap[e.code];
-    const computerKeyVelocity = defaultVelocity;
-    if (isRecording && armedTrackId === recordingTrackId && computerKeyNote !== undefined) {
-        const track = tracks.find(t => t.id === recordingTrackId);
-        if (track) {
-            const currentTimeInSeconds = Tone.Transport.seconds;
-            const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
-            let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
-            currentStep = (currentStep % track.sequenceLength + track.sequenceLength) % track.sequenceLength;
-            let rowIndex = -1;
-            if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && computerKeySynthMap[e.code]) {
-                const pitchName = Tone.Frequency(computerKeySynthMap[e.code], "midi").toNote();
-                rowIndex = synthPitches.indexOf(pitchName);
-            } else if ((track.type === 'Sampler' || track.type === 'DrumSampler') && computerKeySamplerMap[e.code]) {
-                const mappedNote = computerKeySamplerMap[e.code];
-                if (track.type === 'Sampler') {
-                     rowIndex = mappedNote - samplerMIDINoteStart;
-                     if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-                } else {
-                     rowIndex = mappedNote - samplerMIDINoteStart;
-                     if (rowIndex < 0 || rowIndex >= numDrumSamplerPads) rowIndex = -1;
-                }
-            }
-            if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
-                if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
-                track.sequenceData[rowIndex][currentStep] = { active: true, velocity: computerKeyVelocity };
-                if (track.sequencerWindow && !track.sequencerWindow.isMinimized && activeSequencerTrackId === track.id) {
-                    const cell = track.sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${rowIndex}"][data-col="${currentStep}"]`);
-                    if (cell) {
-                        let activeClass = '';
-                        if (track.type === 'Synth') activeClass = 'active-synth';
-                        else if (track.type === 'Sampler') activeClass = 'active-sampler';
-                        else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler';
-                        else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
-                        cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
-                        if (activeClass) cell.classList.add(activeClass);
-                    }
-                }
-            }
-        }
-    }
-    if (!armedTrackId) return;
-    const currentArmedTrack = tracks.find(t => t.id === armedTrackId);
-    if (!currentArmedTrack) return;
-    if (currentArmedTrack.type === 'Synth' && computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
-        currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeySynthMap[e.code], "midi").toNote(), time, computerKeyVelocity);
-    } else if (currentArmedTrack.type === 'Sampler' && computerKeySamplerMap[e.code] !== undefined) {
-        const sliceIdx = computerKeySamplerMap[e.code] - samplerMIDINoteStart;
-        if (sliceIdx >=0 && sliceIdx < currentArmedTrack.slices.length) playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity);
-    } else if (currentArmedTrack.type === 'DrumSampler' && computerKeySamplerMap[e.code] !== undefined) {
-        const padIndex = computerKeySamplerMap[e.code] - samplerMIDINoteStart;
-        if (padIndex >=0 && padIndex < numDrumSamplerPads) playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity);
-    } else if (currentArmedTrack.type === 'InstrumentSampler' && computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
-        if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
-            currentArmedTrack.toneSampler.releaseAll(time);
-        }
-        const midiNote = computerKeySynthMap[e.code];
-        const shiftedNote = Tone.Frequency(midiNote, "midi").toNote();
-        currentArmedTrack.toneSampler.triggerAttack(shiftedNote, time, computerKeyVelocity);
-    }
-});
-document.addEventListener('keyup', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-    const time = Tone.now();
-    if (armedTrackId && currentlyPressedComputerKeys[e.code]) {
-        const track = tracks.find(t => t.id === armedTrackId);
-        if (track) {
-            if (track.type === 'Synth' && computerKeySynthMap[e.code] && track.instrument) {
-                track.instrument.triggerRelease(Tone.Frequency(computerKeySynthMap[e.code], "midi").toNote(), time + 0.05);
-            } else if (track.type === 'InstrumentSampler' && computerKeySynthMap[e.code] && track.toneSampler && track.toneSampler.loaded) {
-                if (track.instrumentSamplerIsPolyphonic) {
-                    const midiNote = computerKeySynthMap[e.code];
-                    const shiftedNote = Tone.Frequency(midiNote, "midi").toNote();
-                    track.toneSampler.triggerRelease(shiftedNote, time + 0.05);
-                }
-            }
-        }
-    }
-    delete currentlyPressedComputerKeys[e.code];
-    if(keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).length === 0) {
-        keyboardIndicatorGlobalEl.classList.remove('active');
-    }
-});
-function autoSliceSample(trackId, numSlicesToCreate = numSlices) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded) {
-        showNotification("Cannot auto-slice: No audio loaded or track not a Sampler.", 3000);
-        return;
-    }
-    const duration = track.audioBuffer.duration;
-    track.slices = [];
-    const sliceDuration = duration / numSlicesToCreate;
-    for (let i = 0; i < numSlicesToCreate; i++) {
-        track.slices.push({
-            offset: i * sliceDuration,
-            duration: sliceDuration,
-            userDefined: false,
-            volume: 1.0, pitchShift: 0, loop: false, reverse: false,
-            envelope: { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 }
-        });
-    }
-    track.selectedSliceForEdit = 0;
-    track.setSequenceLength(track.sequenceLength, true);
-    renderSamplePads(track);
-    updateSliceEditorUI(track);
-    drawWaveform(track);
-    showNotification(`Sample auto-sliced into ${numSlicesToCreate} parts.`, 2000);
-}
-function renderSamplePads(track) {
-    if (!track || !track.inspectorWindow?.element) return;
-    const padsContainer = track.inspectorWindow.contentArea.querySelector(`#samplePadsContainer-${track.id}`);
-    if (!padsContainer) return;
-    padsContainer.innerHTML = '';
-    track.slices.forEach((slice, index) => {
-        const pad = document.createElement('button');
-        pad.className = `pad-button ${index === track.selectedSliceForEdit ? 'selected-for-edit' : ''}`;
-        pad.textContent = `Slice ${index + 1}`;
-        pad.title = `Select Slice ${index + 1} for editing. Click to preview. Drag sound from browser to load.`;
-        pad.dataset.trackId = track.id;
-        pad.dataset.trackType = "Sampler";
-        pad.dataset.padSliceIndex = index;
-        pad.addEventListener('click', async () => {
-            track.selectedSliceForEdit = index;
-            await playSlicePreview(track.id, index);
-            renderSamplePads(track);
-            updateSliceEditorUI(track);
-        });
-        setupDropZoneListeners(pad, track.id, 'Sampler', index);
-        padsContainer.appendChild(pad);
-    });
-}
-function updateSliceEditorUI(track) {
-    if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
-    const inspectorEl = track.inspectorWindow.contentArea;
-    const selectedSlice = track.slices[track.selectedSliceForEdit];
-    if (!selectedSlice) return;
-    inspectorEl.querySelector(`#selectedSliceLabel-${track.id}`).textContent = track.selectedSliceForEdit + 1;
-    const startInput = inspectorEl.querySelector(`#sliceStart-${track.id}`);
-    const endInput = inspectorEl.querySelector(`#sliceEnd-${track.id}`);
-    if (startInput) startInput.value = selectedSlice.offset.toFixed(3);
-    if (endInput) endInput.value = (selectedSlice.offset + selectedSlice.duration).toFixed(3);
-    track.inspectorControls.sliceVolume?.setValue(selectedSlice.volume, false);
-    track.inspectorControls.slicePitch?.setValue(selectedSlice.pitchShift, false);
-    track.inspectorControls.sliceEnvAttack?.setValue(selectedSlice.envelope.attack, false);
-    track.inspectorControls.sliceEnvDecay?.setValue(selectedSlice.envelope.decay, false);
-    track.inspectorControls.sliceEnvSustain?.setValue(selectedSlice.envelope.sustain, false);
-    track.inspectorControls.sliceEnvRelease?.setValue(selectedSlice.envelope.release, false);
-    const loopToggle = inspectorEl.querySelector(`#sliceLoopToggle-${track.id}`);
-    if (loopToggle) {
-        loopToggle.textContent = selectedSlice.loop ? 'Loop: ON' : 'Loop: OFF';
-        loopToggle.classList.toggle('active', selectedSlice.loop);
-    }
-    const reverseToggle = inspectorEl.querySelector(`#sliceReverseToggle-${track.id}`);
-    if (reverseToggle) {
-        reverseToggle.textContent = selectedSlice.reverse ? 'Rev: ON' : 'Rev: OFF';
-        reverseToggle.classList.toggle('active', selectedSlice.reverse);
-    }
-}
-function applySliceEdits(trackId) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
-    const inspectorEl = track.inspectorWindow.contentArea;
-    const slice = track.slices[track.selectedSliceForEdit];
-    if (!slice) return;
-    const newStart = parseFloat(inspectorEl.querySelector(`#sliceStart-${track.id}`)?.value);
-    const newEnd = parseFloat(inspectorEl.querySelector(`#sliceEnd-${track.id}`)?.value);
-    if (!isNaN(newStart) && !isNaN(newEnd) && newEnd > newStart && track.audioBuffer) {
-        slice.offset = Math.max(0, Math.min(newStart, track.audioBuffer.duration));
-        slice.duration = Math.max(0.001, Math.min(newEnd - slice.offset, track.audioBuffer.duration - slice.offset));
-        slice.userDefined = true;
-        drawWaveform(track);
-        showNotification(`Slice ${track.selectedSliceForEdit + 1} updated.`, 1500);
-    } else {
-        showNotification("Invalid slice start/end times.", 2000);
-        updateSliceEditorUI(track);
-    }
-}
-function drawWaveform(track) {
-    if (!track || (track.type !== 'Sampler' && track.type !== 'InstrumentSampler') || !track.audioBuffer || !track.audioBuffer.loaded) return;
-    const ctx = track.type === 'Sampler' ? track.waveformCanvasCtx : track.instrumentWaveformCanvasCtx;
-    if (!ctx) return;
-    const canvas = ctx.canvas;
-    const width = canvas.width;
-    const height = canvas.height;
-    const channelData = track.audioBuffer.getChannelData(0);
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#a0a0a0';
-    ctx.fillRect(0, 0, width, height);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#333';
-    ctx.beginPath();
-    const sliceWidth = width / channelData.length;
-    for (let i = 0; i < channelData.length; i++) {
-        const x = i * sliceWidth;
-        const y = (0.5 + channelData[i] * 0.5) * height;
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-    ctx.stroke();
-    if (track.type === 'Sampler') {
-        ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
-        ctx.lineWidth = 1;
-        track.slices.forEach((slice, index) => {
-            const startX = (slice.offset / track.audioBuffer.duration) * width;
-            ctx.beginPath();
-            ctx.moveTo(startX, 0);
-            ctx.lineTo(startX, height);
-            ctx.stroke();
-            if (index === track.selectedSliceForEdit) {
-                ctx.strokeStyle = 'rgba(0, 0, 255, 0.9)';
-                ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(startX,0); ctx.lineTo(startX,height); ctx.stroke();
-                ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1;
-            }
-        });
-    }
-    if (track.type === 'InstrumentSampler' && track.instrumentSamplerSettings.loop) {
-        ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)';
-        ctx.lineWidth = 1;
-        const loopStartX = (track.instrumentSamplerSettings.loopStart / track.audioBuffer.duration) * width;
-        const loopEndX = (track.instrumentSamplerSettings.loopEnd / track.audioBuffer.duration) * width;
-        ctx.beginPath(); ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, height); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, height); ctx.stroke();
-    }
-}
-function drawInstrumentWaveform(track) { drawWaveform(track); }
-async function playSlicePreview(trackId, sliceIndex, velocity = 0.7) {
-    await initAudioContextAndMasterMeter();
-    const track = tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded || !track.slices[sliceIndex]) return;
-    const sliceData = track.slices[sliceIndex];
-    if (sliceData.duration <= 0) return;
-    const time = Tone.now();
-    const totalPitchShift = sliceData.pitchShift;
-    const playbackRate = Math.pow(2, totalPitchShift / 12);
-    let playDuration = sliceData.duration / playbackRate;
-    if (sliceData.loop) playDuration = Math.min(playDuration, 2);
-    if (!track.slicerIsPolyphonic) {
-        if (!track.slicerMonoPlayer || track.slicerMonoPlayer.disposed) {
-            track.setupSlicerMonoNodes();
-            if(!track.slicerMonoPlayer) {
-                 console.warn("Mono player could not be set up for slicer preview"); return;
-            }
-        }
-        const player = track.slicerMonoPlayer;
-        const env = track.slicerMonoEnvelope;
-        const gain = track.slicerMonoGain;
-        if (player.state === 'started') { player.stop(time);  }
-        if (env.getValueAtTime(time) > 0.001) { env.triggerRelease(time); }
-        player.buffer = track.audioBuffer;
-        env.set(sliceData.envelope);
-        gain.gain.value = Tone.dbToGain(-6) * sliceData.volume * velocity;
-        player.playbackRate = playbackRate;
-        player.reverse = sliceData.reverse;
-        player.loop = sliceData.loop;
-        player.loopStart = sliceData.offset;
-        player.loopEnd = sliceData.offset + sliceData.duration;
-        player.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
-        env.triggerAttack(time);
-        if (!sliceData.loop) {
-            const effectiveDuration = playDuration;
-            const releaseTime = time + effectiveDuration - (sliceData.envelope.release || 0.1);
-            env.triggerRelease(Math.max(time, releaseTime));
-        }
-    } else {
-        const tempPlayer = new Tone.Player(track.audioBuffer);
-        const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
-        const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * velocity);
-        tempPlayer.chain(tempEnv, tempGain, track.distortionNode);
-        tempPlayer.playbackRate = playbackRate;
-        tempPlayer.reverse = sliceData.reverse;
-        tempPlayer.loop = sliceData.loop;
-        tempPlayer.loopStart = sliceData.offset;
-        tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
-        tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
-        tempEnv.triggerAttack(time);
-        if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
-        Tone.Transport.scheduleOnce(() => {
-            if (tempPlayer && !tempPlayer.disposed) { tempPlayer.stop(); tempPlayer.dispose(); }
-            if (tempEnv && !tempEnv.disposed) tempEnv.dispose();
-            if (tempGain && !tempGain.disposed) tempGain.dispose();
-        }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.1);
-    }
-}
-function renderDrumSamplerPads(track) {
-    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) return;
-    const padsContainer = track.inspectorWindow.contentArea.querySelector(`#drumSamplerPadsContainer-${track.id}`);
-    if (!padsContainer) return;
-    padsContainer.innerHTML = '';
-    track.drumSamplerPads.forEach((padData, index) => {
-        const padEl = document.createElement('button');
-        padEl.className = `pad-button ${index === track.selectedDrumPadForEdit ? 'selected-for-edit' : ''}`;
-        padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 50px;">${padData.originalFileName || 'Empty'}</span>`;
-        padEl.title = `Select Pad ${index + 1}. Click to preview. Drag sound from browser to load.`;
-        padEl.dataset.trackId = track.id;
-        padEl.dataset.trackType = "DrumSampler";
-        padEl.dataset.padSliceIndex = index;
-        padEl.addEventListener('click', async () => {
-            track.selectedDrumPadForEdit = index;
-            await playDrumSamplerPadPreview(track.id, index);
-            renderDrumSamplerPads(track);
-            updateDrumPadControlsUI(track);
-        });
-        setupDropZoneListeners(padEl, track.id, 'DrumSampler', index);
-        padsContainer.appendChild(padEl);
-    });
-}
-function updateDrumPadControlsUI(track) {
-    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) return;
-    const inspectorEl = track.inspectorWindow.contentArea;
-    const selectedPad = track.drumSamplerPads[track.selectedDrumPadForEdit];
-    if (!selectedPad) return;
-    inspectorEl.querySelector(`#selectedDrumPadLabel-${track.id}`).textContent = track.selectedDrumPadForEdit + 1;
-    const loadContainer = inspectorEl.querySelector(`#drumPadLoadContainer-${track.id}`);
-    if (loadContainer) {
-        const inputId = `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`;
-        loadContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', track.selectedDrumPadForEdit) +
-                                          `<span id="drumPadFileName-${track.id}" class="text-xs ml-2 block truncate" style="max-width: 150px;">${selectedPad.originalFileName || 'No file'}</span>`;
-        const fileInputEl = loadContainer.querySelector(`#${inputId}`);
-        if (fileInputEl) {
-            fileInputEl.addEventListener('change', (e) => {
-                captureStateForUndo(`Load sample to Drum Pad ${track.selectedDrumPadForEdit + 1} on ${track.name}`);
-                loadDrumSamplerPadFile(e, track.id, track.selectedDrumPadForEdit);
-            });
-        }
-        const dropZoneEl = loadContainer.querySelector(`#dropZone-${track.id}-drumsampler-${track.selectedDrumPadForEdit}`);
-        if (dropZoneEl) setupDropZoneListeners(dropZoneEl, track.id, 'DrumSampler', track.selectedDrumPadForEdit);
-    }
-    track.inspectorControls.drumPadVolume?.setValue(selectedPad.volume, false);
-    track.inspectorControls.drumPadPitch?.setValue(selectedPad.pitchShift, false);
-    track.inspectorControls.drumPadEnvAttack?.setValue(selectedPad.envelope.attack, false);
-    track.inspectorControls.drumPadEnvRelease?.setValue(selectedPad.envelope.release, false);
-}
-async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, fileNameForUrl = null) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'DrumSampler') return;
-    let file = null;
-    let sourceName = '';
-    let isUrlSource = typeof eventOrUrl === 'string';
-    if (isUrlSource) {
-        sourceName = fileNameForUrl || eventOrUrl.split('/').pop();
-    } else if (eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
-        file = eventOrUrl.target.files[0];
-        sourceName = file.name;
-    } else {
-        showNotification("No file provided for drum pad.", 3000);
-        return;
-    }
-    try {
-        await initAudioContextAndMasterMeter();
-        const padData = track.drumSamplerPads[padIndex];
-        const loadBuffer = async (source) => {
-            if (isUrlSource) {
-                return await new Tone.Buffer().load(source);
+
+    // Rows (labels and step cells)
+    for (let r = 0; r < rows; r++) {
+        const labelCell = document.createElement('div');
+        labelCell.className = 'sequencer-label-cell';
+        labelCell.title = rowLabels[r] || '';
+        labelCell.textContent = rowLabels[r] || '';
+        gridDiv.appendChild(labelCell);
+
+        for (let c = 0; c < track.sequenceLength; c++) {
+            const stepCell = document.createElement('div');
+            let cellClass = 'sequencer-step-cell';
+            const beatInBar = (c % STEPS_PER_BAR);
+
+            if (STEPS_PER_BAR === 16) {
+                if (beatInBar >= 0 && beatInBar <= 3) cellClass += ' beat-1';
+                else if (beatInBar >= 4 && beatInBar <= 7) cellClass += ' beat-2';
+                else if (beatInBar >= 8 && beatInBar <= 11) cellClass += ' beat-3';
+                else if (beatInBar >= 12 && beatInBar <= 15) cellClass += ' beat-4';
             } else {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        try {
-                            const buffer = await new Tone.Buffer().load(e.target.result);
-                            padData.audioBufferDataURL = e.target.result;
-                            resolve(buffer);
-                        } catch (err) {
-                            reject(err);
-                        }
-                    };
-                    reader.onerror = (err) => reject(err);
-                    reader.readAsDataURL(source);
-                });
+                if (Math.floor(beatInBar / 4) % 2 === 0) cellClass += ' beat-1';
+                else cellClass += ' beat-2';
             }
-        };
-        const newAudioBuffer = await loadBuffer(isUrlSource ? eventOrUrl : file);
-        if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
-        if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
-        padData.audioBuffer = newAudioBuffer;
-        if (isUrlSource && eventOrUrl.startsWith('blob:')) {
-            const response = await fetch(eventOrUrl);
-            const blob = await response.blob();
-            padData.audioBufferDataURL = await new Promise(resolve => {
-                const fr = new FileReader();
-                fr.onload = () => resolve(fr.result);
-                fr.readAsDataURL(blob);
-            });
-        } else if (isUrlSource) {
-            padData.audioBufferDataURL = eventOrUrl;
-        }
-        padData.originalFileName = sourceName;
-        track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.distortionNode);
-        showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1} on track ${track.name}.`, 2000);
-        updateDrumPadControlsUI(track);
-        renderDrumSamplerPads(track);
-    } catch (error) {
-        console.error(`Error loading sample for drum pad ${padIndex}:`, error);
-        showNotification(`Error loading sample "${sourceName}": ${error.message}`, 3000);
-    }
-}
-async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7) {
-    await initAudioContextAndMasterMeter();
-    const track = tracks.find(t => t.id === trackId);
-    if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) return;
-    const player = track.drumPadPlayers[padIndex];
-    const padData = track.drumSamplerPads[padIndex];
-    player.volume.value = Tone.gainToDb(padData.volume * velocity);
-    player.playbackRate = Math.pow(2, (padData.pitchShift) / 12);
-    player.start(Tone.now());
-}
-async function loadSampleFile(event, trackId, trackTypeHint) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track || (trackTypeHint !== 'Sampler' && trackTypeHint !== 'InstrumentSampler')) {
-        showNotification("Invalid track or track type for sample loading.", 3000);
-        return;
-    }
-    let file;
-    let sourceName;
-    let isUrlSource = typeof event === 'string';
-    if (isUrlSource) {
-        sourceName = event.split('/').pop().split('?')[0];
-    } else if (event.target && event.target.files && event.target.files.length > 0) {
-        file = event.target.files[0];
-        sourceName = file.name;
-    } else {
-        showNotification("No file or URL provided for sample.", 3000);
-        return;
-    }
-    try {
-        await initAudioContextAndMasterMeter();
-        if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
-        if (track.instrumentSamplerSettings?.audioBuffer && !track.instrumentSamplerSettings.audioBuffer.disposed) {
-            track.instrumentSamplerSettings.audioBuffer.dispose();
-        }
-        if (track.toneSampler && !track.toneSampler.disposed) track.toneSampler.dispose();
-        if (track.type === 'Sampler') track.disposeSlicerMonoNodes();
-        const loadAndProcessBuffer = async (source) => {
-            const base64DataURL = await new Promise((resolve, reject) => {
-                if (isUrlSource) {
-                    fetch(source)
-                        .then(response => response.blob())
-                        .then(blob => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result);
-                            reader.onerror = reject;
-                            reader.readAsDataURL(blob);
-                        })
-                        .catch(reject);
-                } else {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(source);
-                }
-            });
-            const newBuffer = await new Tone.Buffer().load(base64DataURL);
-            if (trackTypeHint === 'Sampler') {
-                track.audioBufferDataURL = base64DataURL;
-                track.audioBuffer = newBuffer;
-                track.originalFileName = sourceName;
-                if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) {
-                    track.setupSlicerMonoNodes();
-                }
-                autoSliceSample(track.id, numSlices);
-                if (track.inspectorWindow?.element) {
-                    const dropZone = track.inspectorWindow.contentArea.querySelector(`#dropZone-${track.id}-sampler`);
-                    if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName}.<br>Drag/Click to replace.`;
-                }
-            } else if (trackTypeHint === 'InstrumentSampler') {
-                track.instrumentSamplerSettings.audioBufferDataURL = base64DataURL;
-                track.instrumentSamplerSettings.audioBuffer = newBuffer;
-                track.instrumentSamplerSettings.originalFileName = sourceName;
-                track.instrumentSamplerSettings.loopStart = 0;
-                track.instrumentSamplerSettings.loopEnd = newBuffer.duration;
-                track.setupToneSampler();
-                drawInstrumentWaveform(track);
-                 if (track.inspectorWindow?.element) {
-                    const dropZone = track.inspectorWindow.contentArea.querySelector(`#dropZone-${track.id}-instrumentsampler`);
-                    if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName}.<br>Drag/Click to replace.`;
-                    const loopStartInput = track.inspectorWindow.contentArea.querySelector(`#instrumentLoopStart-${track.id}`);
-                    const loopEndInput = track.inspectorWindow.contentArea.querySelector(`#instrumentLoopEnd-${track.id}`);
-                    if(loopStartInput) loopStartInput.value = track.instrumentSamplerSettings.loopStart.toFixed(3);
-                    if(loopEndInput) loopEndInput.value = track.instrumentSamplerSettings.loopEnd.toFixed(3);
-                }
+
+            const stepData = track.sequenceData[r]?.[c];
+            if (stepData && stepData.active) {
+                if (track.type === 'Synth') cellClass += ' active-synth';
+                else if (track.type === 'Sampler') cellClass += ' active-sampler';
+                else if (track.type === 'DrumSampler') cellClass += ' active-drum-sampler';
+                else if (track.type === 'InstrumentSampler') cellClass += ' active-instrument-sampler';
             }
-            showNotification(`Sample "${sourceName}" loaded for ${track.name}.`, 2000);
-        };
-        await loadAndProcessBuffer(isUrlSource ? event : file);
-    } catch (error) {
-        console.error("Error loading sample:", error);
-        showNotification(`Error loading sample: ${error.message}`, 3000);
+            stepCell.className = cellClass;
+            stepCell.dataset.row = r;
+            stepCell.dataset.col = c;
+            stepCell.title = `${rowLabels[r] || ''} - Step ${c + 1}`;
+            gridDiv.appendChild(stepCell);
+        }
     }
+    gridContainer.appendChild(gridDiv);
+    mainContentDiv.appendChild(gridContainer);
+    return mainContentDiv;
 }
 
-// --- Track Management ---
-function addTrack(type, initialData = null) {
-    if (initialData === null) {
-        captureStateForUndo(`Add ${type} Track`);
-    } else if (initialData && initialData._isUserActionPlaceholder) {
-         captureStateForUndo(`Add ${type} Track`);
-         initialData = null;
-    }
-    trackIdCounter++;
-    const newTrack = new Track(trackIdCounter, type, initialData);
-    tracks.push(newTrack);
-    if (initialData === null) {
-        showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
-        openTrackInspectorWindow(newTrack.id);
-        updateMixerWindow();
-    }
-    return newTrack;
-}
-function handleTrackMute(trackId) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track) return;
-    captureStateForUndo(`${track.isMuted ? "Unmute" : "Mute"} Track "${track.name}"`);
-    track.isMuted = !track.isMuted;
-    track.applyMuteState();
-    const inspectorMuteBtn = track.inspectorWindow?.contentArea?.querySelector(`#muteBtn-${track.id}`);
-    if (inspectorMuteBtn) inspectorMuteBtn.classList.toggle('muted', track.isMuted);
-    const mixerMuteBtn = openWindows['mixer']?.contentArea?.querySelector(`#mixerMuteBtn-${track.id}`);
-    if (mixerMuteBtn) mixerMuteBtn.classList.toggle('muted', track.isMuted);
-}
-function handleTrackSolo(trackId) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track) return;
-    captureStateForUndo(`${soloedTrackId === track.id ? "Unsolo" : "Solo"} Track "${track.name}"`);
-    if (soloedTrackId === track.id) {
-        soloedTrackId = null;
-        track.isSoloed = false;
-    } else {
-        if (soloedTrackId) {
-            const prevSoloTrack = tracks.find(t => t.id === soloedTrackId);
-            if (prevSoloTrack) prevSoloTrack.isSoloed = false;
-        }
-        soloedTrackId = track.id;
-        track.isSoloed = true;
-    }
-    tracks.forEach(t => {
-        t.applySoloState();
-        const inspectorSoloBtn = t.inspectorWindow?.contentArea?.querySelector(`#soloBtn-${t.id}`);
-        if (inspectorSoloBtn) inspectorSoloBtn.classList.toggle('soloed', t.isSoloed);
-        const mixerSoloBtn = openWindows['mixer']?.contentArea?.querySelector(`#mixerSoloBtn-${t.id}`);
-        if (mixerSoloBtn) mixerSoloBtn.classList.toggle('soloed', t.isSoloed);
-    });
-}
-function handleTrackArm(trackId) {
-    const track = tracks.find(t => t.id === trackId);
-    if (!track) return;
-    captureStateForUndo(`${armedTrackId === track.id ? "Disarm" : "Arm"} Track "${track.name}" for Input`);
-    if (armedTrackId === track.id) {
-        armedTrackId = null;
-    } else {
-        armedTrackId = track.id;
-    }
-    tracks.forEach(t => {
-        const inspectorArmBtn = t.inspectorWindow?.contentArea?.querySelector(`#armInputBtn-${t.id}`);
-        if (inspectorArmBtn) inspectorArmBtn.classList.toggle('armed', armedTrackId === t.id);
-    });
-    showNotification(armedTrackId ? `${track.name} armed for input.` : "Input disarmed.", 1500);
-}
-function removeTrack(trackId) {
-    const trackIndex = tracks.findIndex(t => t.id === trackId);
-    if (trackIndex === -1) return;
-    const track = tracks[trackIndex];
-    showConfirmationDialog(
-        'Confirm Delete Track',
-        `Are you sure you want to remove track "${track.name}"? This specific action cannot be undone by the application's undo/redo after this point, but the project state before deletion can be restored.`,
-        () => {
-            captureStateForUndo(`Remove Track "${track.name}"`);
-            track.dispose();
-            tracks.splice(trackIndex, 1);
-            if (armedTrackId === trackId) armedTrackId = null;
-            if (soloedTrackId === trackId) {
-                soloedTrackId = null;
-                tracks.forEach(t => { t.isSoloed = false; t.applySoloState(); });
-            }
-            if (activeSequencerTrackId === trackId) activeSequencerTrackId = null;
-            showNotification(`Track "${track.name}" removed.`, 2000);
-            updateMixerWindow();
-        }
-    );
-}
-function gatherProjectData() {
-    const projectData = {
-        version: "5.5.1",
-        globalSettings: {
-            tempo: Tone.Transport.bpm.value,
-            masterVolume: Tone.getDestination().volume.value,
-            activeMIDIInputId: activeMIDIInput ? activeMIDIInput.id : null,
-            soloedTrackId: soloedTrackId,
-            armedTrackId: armedTrackId,
-            highestZIndex: highestZIndex,
-        },
-        tracks: tracks.map(track => {
-            const trackData = {
-                id: track.id,
-                type: track.type,
-                name: track.name,
-                isMuted: track.isMuted,
-                volume: track.previousVolumeBeforeMute,
-                effects: track.effects,
-                sequenceLength: track.sequenceLength,
-                sequenceData: track.sequenceData,
-                automation: track.automation,
-            };
-            if (track.type === 'Synth') {
-                trackData.synthParams = track.synthParams;
-            } else if (track.type === 'Sampler') {
-                trackData.samplerAudioData = {
-                    fileName: track.originalFileName,
-                    audioBufferDataURL: track.audioBufferDataURL
-                };
-                trackData.slices = track.slices.map(s => ({...s, pan: undefined}));
-                trackData.waveformZoom = track.waveformZoom;
-                trackData.waveformScrollOffset = track.waveformScrollOffset;
-                trackData.slicerIsPolyphonic = track.slicerIsPolyphonic;
-            } else if (track.type === 'DrumSampler') {
-                trackData.drumSamplerPads = track.drumSamplerPads.map(p => ({
-                    originalFileName: p.originalFileName,
-                    audioBufferDataURL: p.audioBufferDataURL,
-                    volume: p.volume, pitchShift: p.pitchShift, envelope: p.envelope
-                }));
-            } else if (track.type === 'InstrumentSampler') {
-                trackData.instrumentSamplerSettings = {
-                    originalFileName: track.instrumentSamplerSettings.originalFileName,
-                    audioBufferDataURL: track.instrumentSamplerSettings.audioBufferDataURL,
-                    rootNote: track.instrumentSamplerSettings.rootNote,
-                    loop: track.instrumentSamplerSettings.loop,
-                    loopStart: track.instrumentSamplerSettings.loopStart,
-                    loopEnd: track.instrumentSamplerSettings.loopEnd,
-                    envelope: track.instrumentSamplerSettings.envelope,
-                };
-                trackData.instrumentSamplerIsPolyphonic = track.instrumentSamplerIsPolyphonic;
-            }
-            return trackData;
-        }),
-        windowStates: Object.values(openWindows).map(win => {
-            if (!win || !win.element) return null;
-            return {
-                id: win.id,
-                title: win.title,
-                left: win.element.style.left,
-                top: win.element.style.top,
-                width: win.element.style.width,
-                height: win.element.style.height,
-                zIndex: parseInt(win.element.style.zIndex),
-                isMinimized: win.isMinimized,
-                initialContentKey: win.initialContentKey
-            };
-        }).filter(ws => ws !== null)
-    };
-    return projectData;
-}
-async function reconstructDAW(projectData, isUndoRedo = false) {
-    tracks.forEach(track => track.dispose());
-    tracks = [];
-    trackIdCounter = 0;
-    Object.values(openWindows).forEach(win => {
-        if (win.taskbarButton) win.taskbarButton.remove();
-        if (win.element) win.element.remove();
-        if (win.resizeObserver) win.resizeObserver.disconnect();
-    });
-    openWindows = {};
-    highestZIndex = 100;
-    armedTrackId = null;
-    soloedTrackId = null;
-    activeSequencerTrackId = null;
-    isRecording = false;
-    recordingTrackId = null;
-    if (recordBtn) { recordBtn.classList.remove('recording'); recordBtn.textContent = 'Record';}
-    const gs = projectData.globalSettings;
-    if (gs) {
-        Tone.Transport.bpm.value = gs.tempo || 120;
-        Tone.getDestination().volume.value = gs.masterVolume !== undefined ? gs.masterVolume : 0;
-        updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
-        highestZIndex = gs.highestZIndex || 100;
-    }
-    if (projectData.tracks) {
-        for (const trackData of projectData.tracks) {
-            const newTrack = addTrack(trackData.type, trackData);
-            if (newTrack && newTrack.id > trackIdCounter) trackIdCounter = newTrack.id;
-        }
-    }
-    if (gs) {
-        soloedTrackId = gs.soloedTrackId || null;
-        armedTrackId = gs.armedTrackId || null;
-        tracks.forEach(t => {
-            t.isSoloed = (t.id === soloedTrackId);
-        });
-        if (gs.activeMIDIInputId && midiAccess && midiInputSelectGlobal) {
-            const inputExists = Array.from(midiInputSelectGlobal.options).some(opt => opt.value === gs.activeMIDIInputId);
-            if (inputExists) {
-                midiInputSelectGlobal.value = gs.activeMIDIInputId;
-            } else {
-                 console.warn(`MIDI input ID ${gs.activeMIDIInputId} from project not found.`);
-            }
-            selectMIDIInput(true);
-        } else if (midiInputSelectGlobal) {
-             selectMIDIInput(true);
-        }
-    }
-    if (projectData.windowStates) {
-        const sortedWindowStates = projectData.windowStates.sort((a, b) => a.zIndex - b.zIndex);
-        for (const winState of sortedWindowStates) {
-            if (!winState) continue;
-            let newWin = null;
-            const key = winState.initialContentKey;
-            if (key === 'globalControls') newWin = openGlobalControlsWindow(winState);
-            else if (key === 'mixer') newWin = openMixerWindow(winState);
-            else if (key === 'soundBrowser') newWin = openSoundBrowserWindow(winState);
-            else if (key && key.startsWith('trackInspector-')) {
-                const tId = parseInt(key.split('-')[1]);
-                newWin = openTrackInspectorWindow(tId, winState);
-            } else if (key && key.startsWith('effectsRack-')) {
-                const tId = parseInt(key.split('-')[1]);
-                newWin = openTrackEffectsRackWindow(tId, winState);
-            } else if (key && key.startsWith('sequencerWin-')) {
-                const tId = parseInt(key.split('-')[1]);
-                newWin = openTrackSequencerWindow(tId, true, winState);
-            }
-            if (newWin && newWin.element) {
-                newWin.element.style.zIndex = winState.zIndex;
-                if (winState.isMinimized && !newWin.isMinimized) {
-                    newWin.minimize(true);
-                } else if (!winState.isMinimized && newWin.isMinimized) {
-                    newWin.restore(true);
-                }
-                newWin.updateTaskbarButtonActiveState();
-            }
-        }
-    }
-    updateMixerWindow();
-    tracks.forEach(track => {
-        if (track.inspectorWindow) {
-            const inspectorArmBtn = track.inspectorWindow.contentArea?.querySelector(`#armInputBtn-${track.id}`);
-            if (inspectorArmBtn) inspectorArmBtn.classList.toggle('armed', armedTrackId === track.id);
-            const inspectorSoloBtn = track.inspectorWindow.contentArea?.querySelector(`#soloBtn-${track.id}`);
-            if (inspectorSoloBtn) inspectorSoloBtn.classList.toggle('soloed', track.isSoloed);
-            const inspectorMuteBtn = track.inspectorWindow.contentArea?.querySelector(`#muteBtn-${track.id}`);
-            if (inspectorMuteBtn) inspectorMuteBtn.classList.toggle('muted', track.isMuted);
-        }
-    });
-    if (!isUndoRedo) {
-        showNotification(`Project loaded.`, 3500);
-    }
-}
-function saveProject() {
-    const projectData = gatherProjectData();
-    const jsonString = JSON.stringify(projectData, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    a.download = `snugos-project-${timestamp}.snug`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showNotification(`Project saved.`, 2000);
-}
-function loadProject() {
-    loadProjectInputEl.click();
-}
-loadProjectInputEl.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file && file.name.endsWith('.snug')) {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const projectData = JSON.parse(e.target.result);
-                undoStack = [];
-                redoStack = [];
-                updateUndoRedoButtons();
-                await reconstructDAW(projectData);
-            } catch (error) {
-                console.error("Error loading project:", error);
-                showNotification(`Error loading project: ${error.message}`, 5000);
-            }
-        };
-        reader.readAsText(file);
-    } else if (file) {
-        showNotification("Invalid file type. Please select a .snug project file.", 3000);
-    }
-    event.target.value = null;
-});
-async function exportToWav() {
-    showNotification("Preparing export... Please wait.", 3000);
-    try {
-        await initAudioContextAndMasterMeter();
-        if (Tone.Transport.state === 'started') {
-            Tone.Transport.stop();
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-        Tone.Transport.position = 0;
-        let maxDuration = 0;
-        tracks.forEach(track => {
-            if (track.sequence) {
-                const trackDuration = Tone.Time(track.sequenceLength + " * 16n").toSeconds();
-                if (trackDuration > maxDuration) maxDuration = trackDuration;
-            }
-        });
-        if (maxDuration === 0) maxDuration = 5;
-        maxDuration += 1;
-        const recorder = new Tone.Recorder();
-        Tone.getDestination().connect(recorder);
-        recorder.start();
-        showNotification(`Recording for export (${maxDuration.toFixed(1)}s)...`, maxDuration * 1000);
-        tracks.forEach(track => {
-            if (track.sequence) {
-                track.sequence.start(0);
-                if (track.sequence instanceof Tone.Sequence) {
-                     track.sequence.progress = 0;
-                }
-            }
-        });
-        Tone.Transport.start("+0.1", 0);
-        await new Promise(resolve => setTimeout(resolve, maxDuration * 1000));
-        Tone.Transport.stop();
-        tracks.forEach(track => {
-            if (track.sequence) {
-                track.sequence.stop(0);
-                if (track.sequence instanceof Tone.Sequence) {
-                     track.sequence.progress = 0;
-                }
-            }
-        });
-        const recording = await recorder.stop();
-        recorder.dispose();
-        const url = URL.createObjectURL(recording);
-        const a = document.createElement('a');
-        a.href = url;
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        a.download = `snugos-export-${timestamp}.wav`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showNotification("Export to WAV successful!", 3000);
-    } catch (error) {
-        console.error("Error exporting WAV:", error);
-        showNotification(`Error exporting WAV: ${error.message}`, 5000);
-    }
-}
+
 function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = tracks.find(t => t.id === trackId);
     if (!track) return null;
     const windowId = `sequencerWin-${track.id}`;
     activeSequencerTrackId = track.id;
+
     if (openWindows[windowId] && !forceRedraw && !savedState) {
         openWindows[windowId].restore();
         return openWindows[windowId];
@@ -3141,6 +2101,7 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
     if (openWindows[windowId] && (forceRedraw || savedState)) {
         openWindows[windowId].close();
     }
+
     let windowTitle = `Sequencer: ${track.name}`;
     let rows = 0, rowLabels = [];
     if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
@@ -3151,44 +2112,10 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
         rows = numDrumSamplerPads; rowLabels = Array.from({length: numDrumSamplerPads}, (_, i) => `Pad ${i+1}`);
     }
     const numBars = Math.ceil(track.sequenceLength / STEPS_PER_BAR);
-    let gridHTML = `<div class="sequencer-grid-container">
-                                <div class="sequencer-grid"
-                                     style="grid-template-columns: 50px repeat(${track.sequenceLength}, 1fr);
-                                            grid-template-rows: auto repeat(${rows}, auto);
-                                            --steps-per-bar: ${STEPS_PER_BAR};">`;
-    gridHTML += `<div class="sequencer-bar-header-placeholder"></div>`;
-    for (let bar = 0; bar < numBars; bar++) {
-        gridHTML += `<div class="sequencer-bar-header-cell">Bar ${bar + 1}</div>`;
-    }
-    for (let r = 0; r < rows; r++) {
-        gridHTML += `<div class="sequencer-label-cell" title="${rowLabels[r] || ''}">${rowLabels[r] || ''}</div>`;
-        for (let c = 0; c < track.sequenceLength; c++) {
-            const stepData = track.sequenceData[r]?.[c];
-            let cellClass = 'sequencer-step-cell';
-            const beatInBar = (c % STEPS_PER_BAR);
-            if (STEPS_PER_BAR === 16) {
-                if (beatInBar >=0 && beatInBar <=3) cellClass += ' beat-1';
-                else if (beatInBar >=4 && beatInBar <=7) cellClass += ' beat-2';
-                else if (beatInBar >=8 && beatInBar <=11) cellClass += ' beat-3';
-                else if (beatInBar >=12 && beatInBar <=15) cellClass += ' beat-4';
-            } else {
-                 if (Math.floor(beatInBar / 4) % 2 === 0) cellClass += ' beat-1';
-                 else cellClass += ' beat-2';
-            }
-            if (stepData && stepData.active) {
-                if (track.type === 'Synth') cellClass += ' active-synth';
-                else if (track.type === 'Sampler') cellClass += ' active-sampler';
-                else if (track.type === 'DrumSampler') cellClass += ' active-drum-sampler';
-                else if (track.type === 'InstrumentSampler') cellClass += ' active-instrument-sampler';
-            }
-            gridHTML += `<div class="${cellClass}" data-row="${r}" data-col="${c}" title="${rowLabels[r] || ''} - Step ${c+1}"></div>`;
-        }
-    }
-    gridHTML += `</div></div>`;
-    const contentHTML = `<div class="sequencer-window-content p-2">
-                                    <p class="text-xs">${track.name} - ${track.type} Sequencer (${rows} rows x ${track.sequenceLength} steps, ${numBars} Bars)</p>
-                                    ${gridHTML}
-                                 </div>`;
+
+    // Build the content DOM
+    const sequencerContentElement = buildSequencerContentDOM(track, rows, rowLabels, numBars);
+
     const winOptions = {
         width: Math.min(700, window.innerWidth - 50),
         height: Math.min(420 + rows * 22, window.innerHeight - 100),
@@ -3201,9 +2128,10 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
             zIndex: savedState.zIndex, isMinimized: savedState.isMinimized
         });
     }
-    const seqWin = createWindow(windowId, windowTitle, contentHTML, winOptions);
+    const seqWin = createWindow(windowId, windowTitle, sequencerContentElement, winOptions);
     if (!seqWin || !seqWin.element) { showNotification("Failed to create Sequencer window.", 5000); return null; }
     track.sequencerWindow = seqWin;
+
     seqWin.contentArea.querySelectorAll('.sequencer-step-cell').forEach(cell => {
         cell.addEventListener('click', () => {
             const r = parseInt(cell.dataset.row);
@@ -3217,11 +2145,13 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
                 else if (track.type === 'Sampler') activeClass = 'active-sampler';
                 else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler';
                 else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
-                cell.classList.add(activeClass);
+                // Remove other active classes before adding the new one
+                cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
+                if(activeClass) cell.classList.add(activeClass);
             } else {
                 track.sequenceData[r][c].active = false;
-                cell.className = 'sequencer-step-cell';
-                const beatInBar = (c % STEPS_PER_BAR);
+                cell.className = 'sequencer-step-cell'; // Reset to base
+                const beatInBar = (c % STEPS_PER_BAR); // Re-apply beat highlighting
                 if (STEPS_PER_BAR === 16) {
                     if (beatInBar >=0 && beatInBar <=3) cell.classList.add('beat-1');
                     else if (beatInBar >=4 && beatInBar <=7) cell.classList.add('beat-2');
@@ -3237,6 +2167,9 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
     seqWin.onCloseCallback = () => { if (activeSequencerTrackId === track.id) activeSequencerTrackId = null; };
     return seqWin;
 }
+// --- END Sequencer Window ---
+
+
 function highlightPlayingStep(col, trackType, gridElement) {
     if (!gridElement) return;
     gridElement.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
@@ -3594,4 +2527,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Refactor 3)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Refactor 4)");
