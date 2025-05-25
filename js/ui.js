@@ -3,14 +3,10 @@
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners } from './utils.js';
 import * as Constants from './constants.js';
-// Import event handlers that will be attached to UI elements
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
-// Import audio functions that UI elements might trigger (via window for now)
-// import { playSlicePreview, playDrumSamplerPadPreview } from './audio.js';
-
 
 export function createKnob(options) {
     const container = document.createElement('div');
@@ -100,7 +96,6 @@ export function createKnob(options) {
     return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
 }
 
-
 export function buildTrackInspectorContentDOM(track) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'track-inspector-content p-2 space-y-1';
@@ -134,14 +129,16 @@ export function buildTrackInspectorContentDOM(track) {
 
     const soloBtn = document.createElement('button');
     soloBtn.id = `soloBtn-${track.id}`;
-    soloBtn.className = `solo-button text-xs p-1 ${window.getSoloedTrackId && window.getSoloedTrackId() === track.id ? 'soloed' : ''}`;
+    const currentSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
+    soloBtn.className = `solo-button text-xs p-1 ${currentSoloId === track.id ? 'soloed' : ''}`;
     soloBtn.textContent = 'S';
     soloBtn.addEventListener('click', () => handleTrackSolo(track.id));
     actionsDiv.appendChild(soloBtn);
 
     const armBtn = document.createElement('button');
     armBtn.id = `armInputBtn-${track.id}`;
-    armBtn.className = `arm-input-button text-xs p-1 ${window.getArmedTrackId && window.getArmedTrackId() === track.id ? 'armed' : ''}`;
+    const currentArmedId = typeof window.getArmedTrackId === 'function' ? window.getArmedTrackId() : null;
+    armBtn.className = `arm-input-button text-xs p-1 ${currentArmedId === track.id ? 'armed' : ''}`;
     armBtn.textContent = 'Arm';
     armBtn.addEventListener('click', () => handleTrackArm(track.id));
     actionsDiv.appendChild(armBtn);
@@ -645,8 +642,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentEnvReleaseSlider-${track.id}`)?.appendChild(iERK.element); track.inspectorControls.instEnvRelease = iERK;
 }
 
-
-// --- Window Opening Functions ---
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -699,8 +694,8 @@ export function openGlobalControlsWindow(savedState = null) {
 }
 
 export function openTrackInspectorWindow(trackId, savedState = null) {
-    const track = window.getTrackById ? window.getTrackById(trackId) : window.tracks.find(t => t.id === trackId);
-    if (!track) { showNotification(`Track with ID ${trackId} not found.`, 3000); return null; }
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
+    if (!track) { showNotification(`Track with ID ${trackId} not found. Cannot open inspector.`, 3000); return null; }
     
     const inspectorId = `trackInspector-${track.id}`;
     if (window.openWindows[inspectorId] && !savedState) {
@@ -748,7 +743,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
 const effectControlDefinitions = {
     distortion: { title: 'Distortion', controls: [ { idPrefix: 'distAmount', type: 'knob', label: 'Amount', min:0, max:1, step:0.01, paramKey: 'amount', decimals:2, setter: 'setDistortionAmount' } ]},
     saturation: { title: 'Saturation', controls: [ { idPrefix: 'satWet', type: 'knob', label: 'Sat Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setSaturationWet' }, { idPrefix: 'satAmount', type: 'knob', label: 'Sat Amt', min:0, max:20, step:1, paramKey: 'amount', decimals:0, setter: 'setSaturationAmount' } ]},
-    filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); track.filterNode.Q.value = parseFloat(val); } } ]},
+    filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); track.filterNode.Q.value = parseFloat(val); } } ]},
     chorus: { title: 'Chorus', controls: [ { idPrefix: 'chorusWet', type: 'knob', label: 'Chorus Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setChorusWet' }, { idPrefix: 'chorusFreq', type: 'knob', label: 'Chorus Freq', min:0.1, max:20, step:0.1, paramKey: 'frequency', decimals:1, displaySuffix:'Hz', setter: 'setChorusFrequency' }, { idPrefix: 'chorusDelayTime', type: 'knob', label: 'Chorus Delay', min:1, max:20, step:0.1, paramKey: 'delayTime', decimals:1, displaySuffix:'ms', setter: 'setChorusDelayTime' }, { idPrefix: 'chorusDepth', type: 'knob', label: 'Chorus Depth', min:0, max:1, step:0.01, paramKey: 'depth', decimals:2, setter: 'setChorusDepth' } ]},
     eq3: { title: 'EQ3', controls: [ { idPrefix: 'eqLow', type: 'knob', label: 'Low', min:-24, max:24, step:1, paramKey: 'low', decimals:0, displaySuffix:'dB', setter: 'setEQ3Low' }, { idPrefix: 'eqMid', type: 'knob', label: 'Mid', min:-24, max:24, step:1, paramKey: 'mid', decimals:0, displaySuffix:'dB', setter: 'setEQ3Mid' }, { idPrefix: 'eqHigh', type: 'knob', label: 'High', min:-24, max:24, step:1, paramKey: 'high', decimals:0, displaySuffix:'dB', setter: 'setEQ3High' } ]},
     compressor: { title: 'Compressor', controls: [ { idPrefix: 'compThresh', type: 'knob', label: 'Thresh', min:-60, max:0, step:1, paramKey: 'threshold', decimals:0, displaySuffix:'dB', setter: 'setCompressorThreshold' }, { idPrefix: 'compRatio', type: 'knob', label: 'Ratio', min:1, max:20, step:1, paramKey: 'ratio', decimals:0, setter: 'setCompressorRatio' }, { idPrefix: 'compAttack', type: 'knob', label: 'Attack', min:0.001, max:0.1, step:0.001, paramKey: 'attack', decimals:3, displaySuffix:'s', setter: 'setCompressorAttack' }, { idPrefix: 'compRelease', type: 'knob', label: 'Release', min:0.01, max:1, step:0.01, paramKey: 'release', decimals:2, displaySuffix:'s', setter: 'setCompressorRelease' }, { idPrefix: 'compKnee', type: 'knob', label: 'Knee', min:0, max:40, step:1, paramKey: 'knee', decimals:0, displaySuffix:'dB', setter: 'setCompressorKnee' } ]},
@@ -789,7 +784,7 @@ export function buildEffectsRackContentDOM(track) {
 }
 
 export function openTrackEffectsRackWindow(trackId, savedState = null) {
-    const track = window.getTrackById ? window.getTrackById(trackId) : window.tracks.find(t => t.id === trackId);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${track.id}`;
 
@@ -918,7 +913,7 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
-    const track = window.getTrackById ? window.getTrackById(trackId) : window.tracks.find(t => t.id === trackId);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `sequencerWin-${track.id}`;
     if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(track.id);
@@ -983,7 +978,12 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             }
         });
     });
-    seqWin.onCloseCallback = () => { if (window.getActiveSequencerTrackId && window.getActiveSequencerTrackId() === track.id) window.setActiveSequencerTrackId(null); };
+    seqWin.onCloseCallback = () => { 
+        const currentActiveSeqId = typeof window.getActiveSequencerTrackId === 'function' ? window.getActiveSequencerTrackId() : null;
+        if (currentActiveSeqId === track.id) {
+            if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(null);
+        }
+    };
     return seqWin;
 }
 
@@ -1025,7 +1025,7 @@ export function updateMixerWindow() {
 export function renderMixer(container) {
     if (!container) { console.error("Mixer container not found for rendering."); return; }
     container.innerHTML = '';
-    const currentTracks = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
+    const currentTracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
 
     currentTracks.forEach(track => {
         const strip = document.createElement('div'); 
@@ -1135,7 +1135,7 @@ export function openSoundBrowserWindow(savedState = null) {
     if (!soundBrowserWin) return null;
 
     const librarySelect = soundBrowserWin.element.querySelector('#soundBrowserLibrarySelect');
-    librarySelect.onchange = () => {
+    librarySelect.onchange = () => { // This listener ideally moves to eventHandlers.js or calls a handler from there
         const selectedLibraryName = librarySelect.value;
         const zipUrl = Constants.soundLibraries[selectedLibraryName];
         if (zipUrl) {
@@ -1175,7 +1175,6 @@ export function openSoundBrowserWindow(savedState = null) {
     return soundBrowserWin;
 }
 
-// Moved from audio.js as it's purely UI
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
@@ -1188,7 +1187,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         const backButton = document.createElement('div');
         backButton.className = 'sound-browser-item font-semibold';
         backButton.textContent = 'ç­®ï½¸.. (Up)';
-        backButton.onclick = () => { // This could call a handler in eventHandlers.js
+        backButton.addEventListener('click', () => { 
             window.currentSoundBrowserPath.pop();
             let newTreeNode = window.currentSoundFileTree;
             for (const segment of window.currentSoundBrowserPath) {
@@ -1198,7 +1197,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                 }
             }
             renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode);
-        };
+        });
         soundBrowserList.appendChild(backButton);
     }
 
@@ -1213,23 +1212,23 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         div.className = 'sound-browser-item';
         if (item.type === 'folder') {
             div.textContent = `î žåˆ€ ${name}`;
-            div.onclick = () => { // This could call a handler in eventHandlers.js
+            div.addEventListener('click', () => { 
                 window.currentSoundBrowserPath.push(name);
                 renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children);
-            };
+            });
         } else if (item.type === 'file') {
             div.textContent = `î žä¸ƒ ${name}`;
             div.title = `Click to play. Drag to load: ${name}`;
             div.draggable = true;
-            div.addEventListener('dragstart', (event) => { // This is fine here
+            div.addEventListener('dragstart', (event) => {
                 const soundData = { fullPath: item.fullPath, libraryName: window.currentLibraryName, fileName: name };
                 event.dataTransfer.setData("application/json", JSON.stringify(soundData));
                 event.dataTransfer.effectAllowed = "copy";
                 div.style.opacity = '0.5';
             });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
-            div.addEventListener('click', async (event) => { // This could call a handler in eventHandlers.js that then calls audio.js
-                if (event.detail === 0) return;
+            div.addEventListener('click', async (event) => {
+                if (event.detail === 0) return; // Prevent dblclick issues
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter();
                 if (window.previewPlayer && !window.previewPlayer.disposed) {
                     window.previewPlayer.stop(); window.previewPlayer.dispose();
@@ -1306,7 +1305,7 @@ export function updateSliceEditorUI(track) {
 }
 
 export function applySliceEdits(trackId) {
-    const track = window.getTrackById ? window.getTrackById(trackId) : window.tracks.find(t => t.id === trackId);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
     const inspectorEl = track.inspectorWindow.element;
     const slice = track.slices[track.selectedSliceForEdit];
