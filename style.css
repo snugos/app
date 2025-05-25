@@ -1,4 +1,4 @@
-/* Base Styles - Inspired by uploaded classic Windows theme */
+/* Base Styles - Inspired by user's uploaded classic Windows theme */
 :root {
     --classic-bg: #c0c0c0;
     --classic-button-face: #c0c0c0;
@@ -7,7 +7,7 @@
     --classic-window-frame-shadow: #808080;
     --classic-window-frame-darkshadow: #000000;
     --classic-title-bar-active: #000080;
-    --classic-title-bar-inactive: #7f7f7f; /* Or a lighter gray */
+    --classic-title-bar-inactive: #7f7f7f; /* As per user CSS, can be adjusted */
     --classic-title-text: #ffffff;
     --classic-highlight: #000080;
     --classic-highlight-text: #ffffff;
@@ -16,14 +16,18 @@
     --classic-input-border: var(--classic-window-frame-shadow);
     --classic-input-border-inset-dark: var(--classic-window-frame-darkshadow);
     --classic-input-border-inset-light: var(--classic-window-frame-light);
-    --classic-desktop-bg: #008080; /* Teal */
+    --classic-desktop-bg: #008080; /* Teal, common classic default */
+    --body-bg: var(--classic-desktop-bg); /* From user CSS */
+    --window-bg: var(--classic-bg); /* From user CSS */
+    --window-content-bg: var(--classic-bg); /* From user CSS */
+    --taskbar-bg: var(--classic-bg); /* From user CSS */
 }
 
 body {
-    font-family: 'Tahoma', 'Geneva', sans-serif; /* More classic Windows font */
-    font-size: 12px; /* Or 11px for a more compact feel */
+    font-family: 'Inter', sans-serif;  /* User CSS specified Inter */
+    font-size: 12px; /* Common classic size */
     overscroll-behavior: none;
-    background-color: var(--classic-desktop-bg);
+    background-color: var(--body-bg);
     color: var(--classic-button-text);
     margin: 0;
     height: 100vh;
@@ -37,28 +41,26 @@ body {
     flex-grow: 1;
     position: relative;
     overflow: hidden;
-    padding: 0; /* Desktop itself usually has no padding */
-    background-color: var(--classic-desktop-bg);
+    padding: 5px; /* From user CSS */
+    background-color: var(--desktop-bg, var(--classic-desktop-bg)); /* Allow override but default to classic */
 }
 
-/* Window Styles */
+/* Window Styles - Merging user styles with classic theme */
 .window {
     position: absolute;
-    background-color: var(--classic-bg);
-    border: 1px solid var(--classic-window-frame-darkshadow); /* Outer dark line */
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow); /* Match uploaded style */
+    background-color: var(--window-bg);
+    border: 2px solid var(--classic-window-frame-light); /* User CSS had 2px */
     border-right-color: var(--classic-window-frame-shadow);
-    box-shadow: 1px 1px 0px var(--classic-window-frame-shadow), 2px 2px 0px var(--classic-window-frame-darkshadow); /* More subtle shadow */
+    border-bottom-color: var(--classic-window-frame-shadow);
+    box-shadow: 2px 2px 0px var(--classic-window-frame-darkshadow); /* User CSS shadow */
     min-width: 250px;
     min-height: 150px;
     display: flex;
     flex-direction: column;
-    border-radius: 0;
+    border-radius: 0; /* Sharp corners */
     resize: both;
-    overflow: hidden; /* Content will scroll */
-    padding: 2px; /* Inner padding for 3D frame effect */
+    overflow: auto; /* User CSS had auto */
+    /* padding: 2px; /* Classic theme had this for inner frame, user CSS implies padding is for content */
 }
 
 .window.minimized {
@@ -68,74 +70,69 @@ body {
 .window-title-bar {
     background-color: var(--classic-title-bar-active);
     color: var(--classic-title-text);
-    padding: 2px 4px 3px 4px; /* Adjusted padding */
+    padding: 3px 5px;
     font-weight: bold;
-    font-size: 12px; /* Consistent with body */
+    font-size: 0.9rem; /* From user CSS */
     cursor: grab;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 20px; /* Classic title bar height */
+    height: 22px; /* From user CSS */
     flex-shrink: 0;
-    margin-bottom: 2px; /* Space between title and content frame */
 }
 
 .window-title-bar:active { cursor: grabbing; }
 
 .window-title-buttons button {
     background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow);
+    border: 1px solid var(--classic-window-frame-light); /* User CSS had 1px */
     border-right-color: var(--classic-window-frame-shadow);
+    border-bottom-color: var(--classic-window-frame-shadow);
     color: var(--classic-button-text);
-    font-family: "Marlett", "Webdings", "Arial"; /* For symbols */
-    font-weight: normal; /* Symbols are often bold by default */
+    font-family: "Arial", sans-serif; /* From user CSS */
+    font-weight: bold;
     width: 16px;
-    height: 14px;
-    line-height: 14px;
+    height: 16px;
+    line-height: 13px; /* From user CSS */
     text-align: center;
     margin-left: 2px;
     padding: 0;
-    box-shadow: none; /* Simpler buttons */
+    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS shadow */
 }
 
 .window-title-buttons button:active {
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
+    border-top-color: var(--classic-window-frame-shadow); /* User CSS active border */
+    border-left-color: var(--classic-window-frame-shadow);
     border-right-color: var(--classic-window-frame-light);
-    padding: 1px 0 0 1px; /* Simulate press */
+    border-bottom-color: var(--classic-window-frame-light);
+    box-shadow: none;
+    padding-top: 1px; /* User CSS press effect */
+    padding-left: 1px;
 }
-.window-minimize-btn::before { content: "0"; } /* Marlett/Webdings */
-.window-close-btn::before { content: "r"; }   /* Marlett/Webdings */
+/* Using text for now as per previous setup, Marlett/Webdings would be ideal if available */
+.window-minimize-btn::before { content: "_"; font-family: "Arial", sans-serif; font-weight: bolder; line-height: 14px;}
+.window-close-btn::before { content: "X"; font-family: "Arial", sans-serif; font-weight: normal; line-height: 14px;}
 
 
 .window-content {
     padding: 8px;
     flex-grow: 1;
     overflow-y: auto;
-    background-color: var(--classic-bg);
+    background-color: var(--window-content-bg);
     color: var(--classic-button-text);
-    font-size: 12px;
-    border: 1px solid var(--classic-window-frame-shadow); /* Inset border */
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
-    border-right-color: var(--classic-window-frame-light);
+    font-size: 0.85rem; /* From user CSS */
 }
 .window-content input, .window-content select, .window-content button, .window-content textarea {
-     font-family: 'Tahoma', 'Geneva', sans-serif;
-     font-size: 12px;
+     font-family: 'Inter', sans-serif; /* From user CSS */
+     font-size: 0.85rem; /* Match content font size */
 }
 .window-content .control-label { color: var(--classic-button-text); }
 
 /* Taskbar Styles */
 #taskbar {
-    background-color: var(--classic-bg);
-    border-top: 1px solid var(--classic-window-frame-light); /* Lighter top border */
-    padding: 2px 3px;
+    background-color: var(--taskbar-bg);
+    border-top: 2px solid var(--classic-window-frame-light); /* User CSS */
+    padding: 2px 4px;
     height: 28px;
     display: flex;
     align-items: center;
@@ -147,155 +144,149 @@ body {
 
 #startButton {
     background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow);
+    border: 2px solid var(--classic-window-frame-light); /* User CSS */
     border-right-color: var(--classic-window-frame-shadow);
-    padding: 2px 10px; /* Adjusted padding */
+    border-bottom-color: var(--classic-window-frame-shadow);
+    padding: 1px 8px;
     font-weight: bold;
-    font-size: 12px;
-    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset, -1px -1px 0px var(--classic-window-frame-shadow) inset; /* Subtle 3D */
-    margin-right: 3px;
+    font-size: 0.85rem; /* User CSS */
+    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS */
+    margin-right: 4px;
     cursor: pointer;
 }
 
 #startButton:active {
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
+    border-top-color: var(--classic-window-frame-shadow); /* User CSS */
+    border-left-color: var(--classic-window-frame-shadow);
     border-right-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-light);
     box-shadow: none;
-    padding: 3px 9px 1px 11px; /* Simulate press */
 }
 
 #taskbarButtons {
     flex-grow: 1;
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 2px; /* User CSS */
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
-    margin-left: 3px;
+    margin-left: 0; /* User CSS has no margin-left here */
 }
 
 #taskbarTempoDisplay {
-    font-size: 11px;
+    font-size: 0.8rem; /* User CSS */
     padding: 2px 6px;
-    border: 1px solid var(--classic-window-frame-shadow);
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
-    border-right-color: var(--classic-window-frame-light);
+    border: 1px inset var(--classic-window-frame-shadow); /* User CSS */
     background-color: var(--classic-bg);
-    min-width: 65px;
+    min-width: 60px;
     text-align: center;
     margin-left: auto;
-    margin-right: 2px;
+    margin-right: 4px; /* User CSS */
     cursor: pointer;
 }
 #taskbarTempoDisplay:hover {
-    /* No specific hover for classic look */
+    background-color: #b0b0b0; /* User CSS */
 }
 
 /* Start Menu Styles */
 #startMenu {
     position: absolute;
     bottom: 28px;
-    left: 2px;
+    left: 2px; /* User CSS */
     background-color: var(--classic-bg);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow);
+    border: 2px solid var(--classic-window-frame-light); /* User CSS */
     border-right-color: var(--classic-window-frame-shadow);
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    box-shadow: 2px 2px 0px var(--classic-window-frame-darkshadow); /* User CSS */
     padding: 2px;
     z-index: 2001;
-    min-width: 180px;
+    min-width: 200px; /* User CSS */
 }
 #startMenu ul { list-style: none; margin: 0; padding: 0; }
-#startMenu li { padding: 4px 8px 4px 22px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+#startMenu li { padding: 5px 10px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; } /* User CSS padding & font */
 #startMenu li:hover { background-color: var(--classic-highlight); color: var(--classic-highlight-text); }
 #startMenu li.disabled { color: var(--classic-text-disabled); cursor: default; }
-#startMenu li.disabled:hover { background-color: transparent; color: var(--classic-text-disabled); }
+#startMenu li.disabled:hover { background-color: var(--classic-bg); color: var(--classic-text-disabled); } /* User CSS */
 #startMenu hr { border: 0; border-top: 1px solid var(--classic-window-frame-shadow); border-bottom: 1px solid var(--classic-window-frame-light); margin: 2px 0; }
 
 /* Taskbar Button Styles */
 .taskbar-button {
     background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow);
+    border: 2px solid var(--classic-window-frame-light); /* User CSS */
     border-right-color: var(--classic-window-frame-shadow);
+    border-bottom-color: var(--classic-window-frame-shadow);
     padding: 2px 8px;
-    font-size: 11px;
+    font-size: 0.8rem; /* User CSS */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
-    min-width: 70px;
-    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset;
+    min-width: 60px; /* User CSS */
+    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS */
     cursor: pointer;
     flex-shrink: 0;
     text-align: left;
 }
 .taskbar-button.active {
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
+    border-top-color: var(--classic-window-frame-shadow); /* User CSS */
+    border-left-color: var(--classic-window-frame-shadow);
     border-right-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-light);
     box-shadow: none;
-    padding: 3px 7px 1px 9px; /* Simulate pressed */
+    background-color: #a0a0a0; /* User CSS */
 }
-.taskbar-button.minimized-on-taskbar { /* Same as non-active */ }
+.taskbar-button.minimized-on-taskbar { /* From user CSS, ensures it looks like a non-active button */
+    background-color: var(--classic-button-face);
+    border-top-color: var(--classic-window-frame-light);
+    border-left-color: var(--classic-window-frame-light);
+    border-right-color: var(--classic-window-frame-shadow);
+    border-bottom-color: var(--classic-window-frame-shadow);
+}
 
 
-/* Notification System Styles */
+/* Notification System Styles - Using user's positioning */
 #notification-area {
     position: fixed;
-    bottom: 35px; /* Above taskbar */
-    right: 5px;
+    top: 10px; /* User CSS */
+    left: 50%; /* User CSS */
+    transform: translateX(-50%); /* User CSS */
     z-index: 9999;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 5px;
+    align-items: center; /* User CSS */
+    gap: 5px; /* User CSS */
 }
 .notification-message {
-    background-color: var(--classic-bg);
-    color: var(--classic-button-text);
-    padding: 8px 15px;
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    font-size: 12px;
+    background-color: rgba(0,0,0,0.75); /* User CSS */
+    color: white;
+    padding: 10px 20px; /* User CSS */
+    border-radius: 5px; /* User CSS */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2); /* User CSS */
+    font-size: 0.9rem; /* User CSS */
     opacity: 0;
-    transform: translateX(100%);
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    transform: translateY(-20px); /* User CSS */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* User CSS */
 }
 .notification-message.show {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
-/* Custom Modal Styles */
+/* Custom Modal Styles - Merging user styles */
 .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0,0,0,0.25); /* Less intrusive overlay */
+    background-color: rgba(0,0,0,0.5); /* User CSS */
     display: flex; align-items: center; justify-content: center;
     z-index: 10000;
 }
 .modal-dialog {
     background-color: var(--classic-bg);
-    padding: 2px; /* For 3D frame */
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    padding: 0; /* User CSS */
+    border: 2px solid var(--classic-window-frame-light); /* User CSS */
+    border-right-color: var(--classic-window-frame-shadow);
+    border-bottom-color: var(--classic-window-frame-shadow);
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3); /* User CSS */
     min-width: 300px;
     max-width: 90%;
     display: flex;
@@ -304,252 +295,253 @@ body {
 .modal-title-bar {
     background-color: var(--classic-title-bar-active);
     color: var(--classic-title-text);
-    padding: 3px 8px;
+    padding: 3px 8px; /* User CSS */
     font-weight: bold;
-    font-size: 12px;
-    text-align: left; /* Classic modals often left-aligned title */
-    margin-bottom: 2px;
+    font-size: 0.9rem; /* User CSS */
+    text-align: center; /* User CSS */
 }
 .modal-content {
     padding: 15px;
-    font-size: 12px;
+    font-size: 0.9rem; /* User CSS */
     color: var(--classic-button-text);
-    text-align: left;
-    border: 1px solid var(--classic-window-frame-shadow); /* Inset border */
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    background-color: var(--classic-bg);
+    text-align: center; /* User CSS */
+    border-top: 1px solid var(--classic-window-frame-shadow); /* User CSS */
+    border-bottom: 1px solid var(--classic-window-frame-light); /* User CSS */
 }
 .modal-buttons {
     padding: 8px 15px;
     display: flex;
-    justify-content: flex-end; /* Buttons typically right-aligned */
-    gap: 6px;
+    justify-content: center; /* User CSS */
+    gap: 10px; /* User CSS */
     background-color: var(--classic-bg);
-    border-top: 1px solid var(--classic-window-frame-light); /* Separator line */
-    margin-top: 2px;
+    border-top: 1px solid var(--classic-window-frame-light); /* User CSS */
 }
 .modal-buttons button {
     background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow);
+    border: 2px solid var(--classic-window-frame-light); /* User CSS */
     border-right-color: var(--classic-window-frame-shadow);
-    padding: 3px 12px;
-    font-size: 12px;
-    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset;
+    border-bottom-color: var(--classic-window-frame-shadow);
+    padding: 4px 12px; /* User CSS */
+    font-size: 0.85rem; /* User CSS */
+    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS */
     min-width: 70px;
     cursor: pointer;
 }
 .modal-buttons button:active {
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
+    border-top-color: var(--classic-window-frame-shadow); /* User CSS */
+    border-left-color: var(--classic-window-frame-shadow);
     border-right-color: var(--classic-window-frame-light);
+    border-bottom-color: var(--classic-window-frame-light);
     box-shadow: none;
-    padding: 4px 11px 2px 13px;
 }
 
-/* Component-Specific Styles */
+/* Component-Specific Styles from user CSS */
 .track-inspector-content .panel,
 .effects-rack-window .effect-group {
-    margin-top: 8px; padding: 8px; padding-top: 12px; /* Space for legend */
-    border: 1px solid var(--classic-window-frame-shadow); /* GroupBox style */
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    position: relative;
+    margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid var(--classic-window-frame-shadow); /* User CSS */
 }
 .effects-rack-window .effect-group:first-child {
-    margin-top: 0;
+    border-top: none; margin-top: 0; padding-top: 0;
 }
-.panel h4 { /* GroupBox legend */
-    position: absolute;
-    top: -0.6em; /* Adjust to sit on top border */
+.track-inspector-content .panel {
+     border-bottom: 1px solid var(--classic-window-frame-shadow); /* User CSS */
+     padding-bottom: 10px; margin-bottom: 10px;
+}
+/* Panel h4 (legend) for classic GroupBox look */
+.panel h4 {
+    position: relative; /* Or absolute if panel has padding-top */
+    top: -0.7em; /* Adjust to sit on border */
     left: 8px;
-    background-color: var(--classic-bg); /* Match panel background */
+    background-color: var(--classic-bg);
     padding: 0 4px;
+    display: inline-block; /* Important */
     font-size: 11px;
     font-weight: normal;
+    margin-bottom: 0; /* Adjust as needed */
 }
 
 
-/* Sequencer Styles */
+/* Sequencer Styles - from user CSS */
 .sequencer-window-content { display: flex; height: 100%; flex-direction: column; }
-.sequencer-grid-container { flex-grow: 1; overflow: auto; border: 1px solid var(--classic-input-border-inset-dark); background-color: var(--classic-input-bg); }
-.sequencer-grid { display: grid; gap: 0; width: 100%; }
+.sequencer-grid-container { flex-grow: 1; overflow: auto; }
+.sequencer-grid { display: grid; gap: 1px; width: 100%; margin-top: 8px; }
+.sequencer-row { display: contents; }
 .sequencer-label-cell {
-    font-size: 10px; padding: 3px 2px; text-align: right;
-    background-color: var(--classic-bg);
-    border-right: 1px solid var(--classic-window-frame-shadow);
-    border-bottom: 1px solid var(--classic-window-frame-shadow);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    min-width: 45px;
+    font-size: 0.7rem; padding: 4px 2px; text-align: right;
+    background-color: #b0b0b0; border-right: 1px solid #808080; border-bottom: 1px solid #808080;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 50px;
     position: sticky; left: 0; z-index: 10;
 }
 .sequencer-bar-header-cell {
-    font-size: 10px; padding: 2px 0; text-align: center;
-    background-color: var(--classic-bg);
-    border-right: 1px solid var(--classic-window-frame-shadow);
-    border-bottom: 1px solid var(--classic-window-frame-shadow);
-    font-weight: normal; color: var(--classic-button-text);
-    grid-column-start: span var(--steps-per-bar); /* Set by JS */
-    position: sticky; top: 0; z-index: 5;
+    font-size: 0.65rem; padding: 2px 0; text-align: center;
+    background-color: #a0a0a0; border-right: 1px solid #707070; border-bottom: 1px solid #707070;
+    font-weight: bold; color: #333; grid-column-start: span var(--steps-per-bar);
 }
 .sequencer-bar-header-placeholder {
-    background-color: var(--classic-bg);
-    border-right: 1px solid var(--classic-window-frame-shadow);
-    border-bottom: 1px solid var(--classic-window-frame-shadow);
-    position: sticky; top: 0; left: 0; z-index: 15;
+    background-color: #b0b0b0; border-right: 1px solid #808080; border-bottom: 1px solid #707070;
 }
 .sequencer-step-cell {
-    aspect-ratio: 1 / 1;
-    border-right: 1px solid var(--classic-input-border);
-    border-bottom: 1px solid var(--classic-input-border);
-    cursor: pointer;
-    transition: background-color 0.05s;
-    min-width: 18px; /* Min step size */
-    background-color: var(--classic-input-bg); /* Default step color */
+    aspect-ratio: 1 / 1; border: 1px solid #404040; cursor: pointer;
+    transition: background-color 0.1s, opacity 0.1s; min-width: 20px;
 }
-.sequencer-step-cell.beat-1, /* Downbeat */
-.sequencer-step-cell.beat-3 { background-color: #f0f0f0; }
-.sequencer-step-cell.beat-2,
-.sequencer-step-cell.beat-4 { background-color: #fafafa; }
+.sequencer-step-cell.beat-1 { background-color: #909090; }
+.sequencer-step-cell.beat-2 { background-color: #a0a0a0; }
+.sequencer-step-cell.beat-3 { background-color: #909090; }
+.sequencer-step-cell.beat-4 { background-color: #a0a0a0; }
+.sequencer-step-cell.active-synth { background-color: #0000FF; }
+.sequencer-step-cell.active-sampler { background-color: #FFA500; }
+.sequencer-step-cell.active-drum-sampler { background-color: #FF69B4; }
+.sequencer-step-cell.active-instrument-sampler { background-color: #8A2BE2; }
+.sequencer-step-cell.playing { outline: 2px solid #FFFF00; z-index: 1; opacity: 0.7; }
+.sequencer-window-content .sequencer-grid { margin: 0 auto; }
+.sequencer-window-content p { text-align: center; margin-top: 8px; font-size: 0.8rem; }
 
-.sequencer-step-cell.active-synth,
-.sequencer-step-cell.active-sampler,
-.sequencer-step-cell.active-drum-sampler,
-.sequencer-step-cell.active-instrument-sampler {
-    background-color: var(--classic-button-text); /* Black for active */
-}
-.sequencer-step-cell.playing { outline: 1px solid #ff0000; z-index: 1; }
-
-/* Pad Styles */
-.pads-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(55px, 1fr)); gap: 5px; margin-top: 8px; }
+/* Pad Styles - from user CSS */
+.pads-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 8px; margin-top: 10px; }
 .pad-button {
-    background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    aspect-ratio: 1 / 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    font-size: 10px; text-align: center; padding: 2px;
-    overflow: hidden; cursor: pointer; user-select: none;
+    background-color: #a0a0a0; color: black;
+    border: 2px solid #ffffff; border-right-color: #808080; border-bottom-color: #808080;
+    box-shadow: 1px 1px 0px #000000;
+    aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 0.7rem; text-align: center; padding: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    cursor: pointer; user-select: none;
 }
 .pad-button:active, .pad-button.selected-for-edit {
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
-    border-right-color: var(--classic-window-frame-light);
-    background-color: #a0a0a0;
+    background-color: #000080; color: white;
+    border-top-color: #808080; border-left-color: #808080;
+    border-right-color: #ffffff; border-bottom-color: #ffffff; box-shadow: none;
 }
-.pad-button .pad-label { font-size: 9px; margin-top: 2px; color: #333; }
-.pad-button.selected-for-edit .pad-label { color: #111; }
+.pad-button .pad-label { font-size: 0.6rem; margin-top: 2px; color: #333; }
+.pad-button.selected-for-edit .pad-label { color: #ccc; }
 
-/* General Button Styles (Mute, Solo, Arm, etc.) */
+/* Button Styles for Track Controls (Mute, Solo, Arm, etc.) - from user CSS */
 .arm-input-button, .mute-button, .solo-button, .waveform-control-button, .slice-toggle-button, .automation-button, .effects-rack-button, .button-general {
-    background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    border-right-color: var(--classic-window-frame-shadow);
-    color: var(--classic-button-text);
-    box-shadow: 1px 1px 0px var(--classic-window-frame-light) inset;
-    cursor: pointer;
-    padding: 3px 8px;
-    font-size: 11px;
-    border-radius: 2px;
-    margin: 1px;
+    background-color: #c0c0c0; border: 2px solid #ffffff; border-right-color: #808080; border-bottom-color: #808080;
+    color: black; box-shadow: 1px 1px 0px #000000; cursor: pointer;
+    padding: 3px 8px; font-size: 11px; border-radius: 2px; margin: 1px; /* Added from classic theme */
 }
-.arm-input-button:active, .mute-button:active, .solo-button:active, .waveform-control-button:active, .slice-toggle-button:active, .automation-button:active, .effects-rack-button:active, .button-general:active {
-    border-top-color: var(--classic-window-frame-darkshadow);
-    border-left-color: var(--classic-window-frame-darkshadow);
-    border-bottom-color: var(--classic-window-frame-light);
-    border-right-color: var(--classic-window-frame-light);
-    box-shadow: none;
-    padding: 4px 7px 2px 9px;
-}
-.slice-toggle-button.active { background-color: var(--classic-highlight); color: var(--classic-highlight-text); }
-.arm-input-button.armed { background-color: #ff6060; color: white; }
-.mute-button.muted { background-color: #ff8080; color: white; }
-.solo-button.soloed { background-color: #ffff80; color: black; }
+.slice-toggle-button:hover, .arm-input-button:hover, .mute-button:hover, .solo-button:hover, .automation-button:hover, .effects-rack-button:hover, .button-general:hover { background-color: #d0d0d0; }
+.slice-toggle-button.active, .arm-input-button.armed, .mute-button.muted, .solo-button.soloed { color: white; }
+.slice-toggle-button.active { background-color: #000080; }
+.arm-input-button.armed { background-color: #FF0000; border-color: #FF6347; }
+.mute-button.muted { background-color: #FF0000; border-color: #FF6347; }
+.solo-button.soloed { background-color: #FFFF00; color: black; border-color: #FFFACD;}
 
-/* MIDI and Keyboard Indicators */
-#midiIndicatorGlobal, #keyboardIndicatorGlobal { border: 1px solid black; width: 10px; height: 10px; display: inline-block; border-radius: 2px; transition: background-color 0.1s; background-color: #a0a0a0; }
-#midiIndicatorGlobal.active { background-color: #33ff33; }
-#keyboardIndicatorGlobal.active { background-color: #33ccff; }
+/* MIDI and Keyboard Indicators - from user CSS */
+#midiIndicatorGlobal, #keyboardIndicatorGlobal { border: 1px solid black; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 50%; transition: background-color 0.1s; }
+#midiIndicatorGlobal { background-color: #808080; }
+#midiIndicatorGlobal.active { background-color: #00FF00; }
+#keyboardIndicatorGlobal { background-color: #808080; }
+#keyboardIndicatorGlobal.active { background-color: #00FFFF; }
 
-/* Knob Styles (simplified) */
+/* Knob and Slider Styles - from user CSS */
 .knob-container { display: flex; flex-direction: column; align-items: center; margin: 2px 0; }
 .knob {
-    width: 36px; height: 36px; border-radius: 50%; background-color: #a0a0a0;
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light); border-left-color: var(--classic-window-frame-light);
-    position: relative; cursor: ns-resize;
+    width: 40px; height: 40px; border-radius: 50%; background-color: #777;
+    border: 2px solid #555; position: relative; cursor: ns-resize;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
 }
 .knob-handle {
-    width: 3px; height: 10px; background-color: var(--classic-button-text);
-    position: absolute; top: 4px; left: 50%; transform-origin: 50% 14px;
-    transform: translateX(-50%) rotate(0deg); border-radius: 1px;
+    width: 4px; height: 12px; background-color: #ddd;
+    position: absolute; top: 3px; left: 50%; transform-origin: 50% 17px;
+    transform: translateX(-50%) rotate(0deg); border-radius: 2px;
 }
-.knob-label, .slider-label { font-size: 10px; margin-top: 1px; text-align: center; color: var(--classic-button-text); max-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-.knob-value, .slider-value { font-size: 10px; color: var(--classic-button-text); }
+.knob-label, .slider-label { font-size: 0.65rem; margin-top: 1px; text-align: center; color: #333; max-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.knob-value, .slider-value { font-size: 0.6rem; color: #111; }
+.slider-container { display: flex; flex-direction: column; align-items: center; margin: 2px 5px; min-width: 30px; }
+.slider-track {
+    width: 12px; height: 100px; background-color: #555; border: 1px solid #333;
+    position: relative; cursor: ns-resize; border-radius: 3px; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+}
+.slider-thumb {
+    width: 20px; height: 8px; background-color: #bbb; border: 1px solid #999;
+    position: absolute; left: 50%; transform: translateX(-50%);
+    border-radius: 2px; box-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+}
+.slider-label { max-width: 50px; margin-bottom: 2px;}
+.slider-value { margin-top: 2px; }
 
-/* Waveform Canvas */
-.waveform-canvas { background-color: var(--classic-input-bg); border: 1px solid var(--classic-input-border-inset-dark); display: block; width: 100%; border-top-color:var(--classic-input-border); border-left-color:var(--classic-input-border) }
+/* Slice Editor Styles - from user CSS */
+.slice-edit-group details > summary { cursor: pointer; font-size: 0.75rem; font-weight: 500; padding: 2px 0; }
+.slice-edit-group details > div { padding-left: 10px; }
 
-/* Meter Bar Styles */
-.meter-bar-container { background-color: var(--classic-input-border-inset-dark); border: 1px solid var(--classic-input-border); padding:1px;}
-.meter-bar { background-color: #00b000; height: 100%; width: 0%; }
-.meter-bar.clipping { background-color: #e00000; }
+/* Waveform Canvas - from user CSS */
+.waveform-canvas { background-color: #a0a0a0; border: 1px solid #808080; display: block; width: 100%; }
 
-/* Mixer Styles */
-.mixer-window-content { display: flex; gap: 8px; padding: 8px; overflow-x: auto; background-color: var(--classic-bg); min-height: 250px; }
+/* Meter Bar Styles - from user CSS */
+.meter-bar-container { background-color: #808080; border: 1px solid #404040;}
+.meter-bar { background-color: #00FF00; height: 100%; width: 0%; transition: width 0.05s linear; }
+.meter-bar.clipping { background-color: #FF0000; }
+
+/* Mixer Styles - from user CSS */
+.mixer-window-content { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background-color: #b0b0b0; min-height: 280px; }
 .channel-strip {
     display: flex; flex-direction: column; align-items: center;
-    background-color: var(--classic-bg); padding: 6px;
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-window-frame-light); border-left-color: var(--classic-window-frame-light);
-    min-width: 70px; flex-shrink: 0;
+    background-color: #c0c0c0; padding: 8px; border: 2px solid #ffffff;
+    border-right-color: #808080; border-bottom-color: #808080; min-width: 80px;
+    flex-shrink: 0;
 }
-.channel-strip .track-name { font-size: 11px; font-weight: normal; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; cursor: pointer;}
-.channel-strip .fader-container { height: auto; margin-bottom: 4px; display: flex; justify-content: center; align-items: center; }
-.channel-strip .mixer-buttons button { font-size: 10px; padding: 1px 3px; margin: 1px;}
-.channel-strip .mixer-meter-container { width: 40px; height: 12px; margin-top: 4px; }
+.channel-strip .track-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; cursor: pointer;}
+.channel-strip .fader-container {
+     height: auto; margin-bottom: 5px; display: flex; justify-content: center; align-items: center;
+}
+.channel-strip .mixer-buttons button { font-size: 0.7rem; padding: 2px 4px; margin: 1px;}
+.channel-strip .mixer-meter-container { width: 50px; height: 15px; margin-top: 5px; background-color: #808080; border: 1px solid #404040;}
+.channel-strip .mixer-meter-container .meter-bar { background-color: #00FF00; height: 100%; width: 0%;}
+.channel-strip .mixer-meter-container .meter-bar.clipping { background-color: #FF0000; }
 
-/* Drag and Drop Zone Styles */
+/* Drag and Drop Zone Styles - from user CSS, with .dragover added */
 .drop-zone {
-    border: 1px dashed var(--classic-window-frame-shadow);
-    padding: 10px; text-align: center; transition: background-color 0.1s, border-color 0.1s;
-    font-size: 11px; background-color: var(--classic-bg);
-    color: var(--classic-button-text);
+    border: 2px dashed #888; /* User CSS */
+    padding: 10px;
+    text-align: center;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    font-size: 0.8rem; /* User CSS */
+    background-color: #d0d0d0; /* User CSS */
+    color: var(--classic-button-text); /* Ensure text is visible */
 }
 .drop-zone.dragover {
-    background-color: #dadada; /* Slightly lighter gray for dragover */
-    border-color: var(--classic-window-frame-darkshadow); /* Darker border for dragover */
+    background-color: #e0e0e0; /* Slightly lighter gray for dragover, as per user CSS */
+    border-color: #555; /* Darker border for dragover, as per user CSS */
 }
 .drop-zone label { color: var(--classic-title-bar-active); text-decoration: underline; cursor: pointer; }
 
-/* Input fields */
+
+/* Control Grouping Styles - from user CSS */
+.control-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-around; }
+.control-group-vertical { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+
+/* Sound Browser Styles - from user CSS */
+.sound-browser-content { display: flex; flex-direction: column; height: 100%; }
+#soundBrowserLibrarySelect { margin-bottom: 5px; padding: 2px; font-size: 0.8rem; border: 1px solid #808080; background-color: #fff; }
+#soundBrowserPathDisplay { font-size: 0.75rem; padding: 2px 4px; background-color: #ddd; border-bottom: 1px solid #aaa; margin-bottom: 4px; }
+.sound-browser-list { flex-grow: 1; overflow-y: auto; border: 1px inset #808080; background-color: #fff; padding: 4px; }
+.sound-browser-item { padding: 3px 5px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.8rem;}
+.sound-browser-item:hover { background-color: #000080; color: #ffffff; }
+.sound-browser-item:last-child { border-bottom: none; }
+.sound-browser-loading { padding: 10px; text-align: center; font-style: italic; }
+
+/* Input fields - Merged from classic theme and user CSS */
 input[type="text"], input[type="number"], select, textarea {
     background-color: var(--classic-input-bg);
-    border: 1px solid var(--classic-window-frame-darkshadow);
-    border-top-color: var(--classic-input-border);
-    border-left-color: var(--classic-input-border);
-    padding: 3px 4px;
-    font-family: 'Tahoma', 'Geneva', sans-serif;
-    font-size: 12px;
+    border: 1px solid var(--classic-window-frame-darkshadow); /* From classic */
+    border-top-color: var(--classic-input-border); /* From classic */
+    border-left-color: var(--classic-input-border); /* From classic */
+    padding: 3px 4px; /* From classic */
+    font-family: 'Tahoma', 'Geneva', sans-serif; /* From classic */
+    font-size: 12px; /* From classic */
     color: var(--classic-button-text);
-    box-shadow: inset 1px 1px 0px var(--classic-window-frame-shadow); /* Inner shadow */
-    border-radius: 0; /* Sharp corners for inputs */
+    box-shadow: inset 1px 1px 0px var(--classic-window-frame-shadow); /* From classic */
+    border-radius: 0; /* From classic */
 }
 input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-    outline: 1px dotted var(--classic-button-text); /* Classic dotted focus */
-    outline-offset: -1px; /* Inside border */
+    outline: 1px dotted var(--classic-button-text); /* From classic */
+    outline-offset: -1px; /* From classic */
 }
 select {
-    padding-right: 15px; /* Space for arrow, though native arrow will show */
+    padding-right: 15px; /* From classic */
 }
 
 /* Hidden utility */
@@ -557,15 +549,14 @@ select {
     display: none !important;
 }
 
-/* Record Button Animation */
+/* Record Button Animation - from user CSS */
 #recordBtnGlobal.recording {
-    background-color: #CC0000; /* Darker Red when recording */
+    background-color: #FF0000;
     color: white;
-    animation: pulseClassic 1.2s infinite ease-in-out;
-    border-color: #800000;
+    animation: pulse 1s infinite; /* User CSS specified 'pulse' */
 }
-@keyframes pulseClassic {
-    0% { opacity: 1; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,0,0, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(255,0,0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,0,0, 0); }
 }
