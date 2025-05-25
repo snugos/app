@@ -8,7 +8,7 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-console.log("UI.JS FILE LOADED - VERSION_HIGHLIGHT_FIX_ATTEMPT"); // Temporary log
+// console.log("UI.JS FILE LOADED - DEBUG DRAG DROP"); // For sanity check
 
 export function createKnob(options) {
     const container = document.createElement('div');
@@ -269,12 +269,16 @@ function buildSynthSpecificInspectorDOM(track) {
     return panel;
 }
 
-function buildSamplerSpecificInspectorDOM(track) {
+function buildSamplerSpecificInspectorDOM(track) { // This is for Slicer Sampler (type: 'Sampler')
     const panel = document.createElement('div');
     panel.className = 'panel sampler-panel';
     const dropZoneContainer = document.createElement('div');
+    // The inputId here is `fileInput-${track.id}`
+    // The trackTypeHintForLoad is 'Sampler'
     dropZoneContainer.innerHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler');
-    panel.appendChild(dropZoneContainer.firstChild);
+    panel.appendChild(dropZoneContainer.firstChild); // Appends the div.drop-zone
+
+    // ... rest of the Sampler specific DOM ...
     const editorPanel = document.createElement('div');
     editorPanel.className = 'sampler-editor-panel mt-1 flex flex-wrap md:flex-nowrap gap-3';
     const leftSide = document.createElement('div');
@@ -370,13 +374,14 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
     panel.appendChild(title);
     const padsContainer = document.createElement('div');
     padsContainer.id = `drumSamplerPadsContainer-${track.id}`;
-    padsContainer.className = 'pads-container mb-2';
+    padsContainer.className = 'pads-container mb-2'; // Renders pad buttons
     panel.appendChild(padsContainer);
     const controlsContainer = document.createElement('div');
     controlsContainer.id = `drumPadControlsContainer-${track.id}`;
     controlsContainer.className = 'border-t pt-2';
+    // The drop zone for the *selected pad* is created/updated by updateDrumPadControlsUI
     const loadContainer = document.createElement('div');
-    loadContainer.id = `drumPadLoadContainer-${track.id}`;
+    loadContainer.id = `drumPadLoadContainer-${track.id}`; // This is where the pad-specific drop zone goes
     loadContainer.className = 'mb-2';
     controlsContainer.appendChild(loadContainer);
     const volPitchGroup = document.createElement('div');
@@ -411,8 +416,12 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel instrument-sampler-panel';
     const dropZoneContainer = document.createElement('div');
+    // The inputId here is `instrumentFileInput-${track.id}`
+    // The trackTypeHintForLoad is 'InstrumentSampler'
     dropZoneContainer.innerHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
-    panel.appendChild(dropZoneContainer.firstChild);
+    panel.appendChild(dropZoneContainer.firstChild); // Appends the div.drop-zone
+
+    // ... rest of Instrument Sampler DOM ...
     const canvas = document.createElement('canvas');
     canvas.id = `instrumentWaveformCanvas-${track.id}`;
     canvas.className = 'waveform-canvas w-full mb-1';
@@ -503,7 +512,7 @@ export function initializeCommonInspectorControls(track, winEl) {
 export function initializeTypeSpecificInspectorControls(track, winEl) {
     if (track.type === 'Synth') {
         initializeSynthSpecificControls(track, winEl);
-    } else if (track.type === 'Sampler') {
+    } else if (track.type === 'Sampler') { // Slicer Sampler
         initializeSamplerSpecificControls(track, winEl);
     } else if (track.type === 'DrumSampler') {
         initializeDrumSamplerSpecificControls(track, winEl);
@@ -532,23 +541,26 @@ function initializeSynthSpecificControls(track, winEl) {
     winEl.querySelector(`#envReleaseSlider-${track.id}`)?.appendChild(envRKnob.element); track.inspectorControls.envRelease = envRKnob;
 }
 
-function initializeSamplerSpecificControls(track, winEl) {
+function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
     const dropZoneEl = winEl.querySelector(`#dropZone-${track.id}-sampler`);
-    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`);
+    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`); // Matches ID from createDropZoneHTML
     if (dropZoneEl && fileInputEl) {
+        // Ensure the correct loadFileCallback (window.loadSampleFile) and trackTypeHint ('Sampler') are passed
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
         fileInputEl.onchange = (e) => {
-            window.loadSampleFile(e, track.id, 'Sampler');
+            window.loadSampleFile(e, track.id, 'Sampler'); // trackTypeHint is 'Sampler'
         };
+    } else {
+        console.warn(`[UI] Drop zone or file input not found for Sampler track ${track.id}`);
     }
-    renderSamplePads(track);
+    renderSamplePads(track); // Renders slice pads
     winEl.querySelector(`#applySliceEditsBtn-${track.id}`)?.addEventListener('click', () => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Apply Slice Edits for ${track.name}`);
         applySliceEdits(track.id);
     });
 
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
-    if (canvas) { track.waveformCanvasCtx = canvas.getContext('2d'); if(typeof drawWaveform === 'function') drawWaveform(track); }
+    if (canvas) { track.waveformCanvasCtx = canvas.getContext('2d'); if(typeof window.drawWaveform === 'function') window.drawWaveform(track); }
     updateSliceEditorUI(track);
 
     ['sliceStart', 'sliceEnd'].forEach(idSuffix => {
@@ -599,7 +611,7 @@ function initializeSamplerSpecificControls(track, winEl) {
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
     const padLoadContainer = winEl.querySelector(`#drumPadLoadContainer-${track.id}`);
-    if (padLoadContainer) updateDrumPadControlsUI(track);
+    if (padLoadContainer) updateDrumPadControlsUI(track); // This sets up the drop zone for the selected pad
     renderDrumSamplerPads(track);
 
     const pVolK = createKnob({ label: 'Pad Vol', min:0, max:1, step:0.01, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(track.selectedDrumPadForEdit, val)});
@@ -614,16 +626,19 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const dropZoneEl = winEl.querySelector(`#dropZone-${track.id}-instrumentsampler`);
-    const fileInputEl = winEl.querySelector(`#instrumentFileInput-${track.id}`);
+    const fileInputEl = winEl.querySelector(`#instrumentFileInput-${track.id}`); // Matches ID from createDropZoneHTML
     if (dropZoneEl && fileInputEl) {
+        // Ensure the correct loadFileCallback (window.loadSampleFile) and trackTypeHint ('InstrumentSampler') are passed
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
          fileInputEl.onchange = (e) => {
-            window.loadSampleFile(e, track.id, 'InstrumentSampler');
+            window.loadSampleFile(e, track.id, 'InstrumentSampler'); // trackTypeHint is 'InstrumentSampler'
         };
+    } else {
+        console.warn(`[UI] Drop zone or file input not found for InstrumentSampler track ${track.id}`);
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
-    if(iCanvas) { track.instrumentWaveformCanvasCtx = iCanvas.getContext('2d'); if(typeof drawInstrumentWaveform === 'function') drawInstrumentWaveform(track); }
+    if(iCanvas) { track.instrumentWaveformCanvasCtx = iCanvas.getContext('2d'); if(typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track); }
 
     winEl.querySelector(`#instrumentRootNote-${track.id}`)?.addEventListener('change', (e) => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set Root Note for ${track.name} to ${e.target.value}`);
@@ -664,6 +679,8 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentEnvReleaseSlider-${track.id}`)?.appendChild(iERK.element); track.inspectorControls.instEnvRelease = iERK;
 }
 
+// ... (Rest of the ui.js file: openGlobalControlsWindow, openTrackInspectorWindow, etc. ... )
+// ... (Ensure all window opening functions, renderMixer, highlightPlayingStep, etc. are present) ...
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -1230,10 +1247,6 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         return;
     }
     if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
-        // UI should already show "Loading..." from updateSoundBrowserDisplayForLibrary if that was called
-        // If not, this provides a fallback.
-        soundBrowserList.innerHTML = `<div class="sound-browser-loading">Loading ${window.currentLibraryName}...</div>`;
-        pathDisplay.textContent = `Path: / (${window.currentLibraryName} - Loading...)`;
         return;
     }
      if (!treeNode) {
