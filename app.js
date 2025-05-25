@@ -1,7 +1,7 @@
 // SnugOS - Main Application Logic
 // Version 5.5.1: Updated Sound Libraries, Tutorial Removed
-// Refactor Step 2: Track Inspector DOM Building
-console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Refactor 2)");
+// Refactor Step 2: Global Controls & Sequencer Fix
+console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Refactor 2 Fix)");
 
 // --- Notification System ---
 const notificationArea = document.getElementById('notification-area');
@@ -302,7 +302,7 @@ function createWindow(id, title, contentHTMLOrElement, options = {}) {
     const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
     return newWindow.element ? newWindow : null;
 }
-function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOrSliceIndex = null) { // This still returns HTML, can be refactored later
+function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOrSliceIndex = null) {
     const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${padOrSliceIndex !== null ? '-' + padOrSliceIndex : ''}`;
     const dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHintForLoad}" ${padOrSliceIndex !== null ? `data-pad-slice-index="${padOrSliceIndex}"` : ''}`;
     return `
@@ -984,12 +984,10 @@ class Track {
 // --- UI Creation Functions ---
 
 // --- Track Inspector DOM Builder Functions ---
-// Renamed from buildTrackInspectorContentHTML to buildTrackInspectorContentDOM
 function buildTrackInspectorContentDOM(track) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'track-inspector-content p-2 space-y-1';
 
-    // Header: Track Name Input and Meter
     const headerDiv = document.createElement('div');
     headerDiv.className = 'flex items-center justify-between mb-1';
     const nameInput = document.createElement('input');
@@ -1008,7 +1006,6 @@ function buildTrackInspectorContentDOM(track) {
     headerDiv.appendChild(meterContainer);
     contentDiv.appendChild(headerDiv);
 
-    // Action Buttons: Mute, Solo, Arm, Remove
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'flex items-center gap-1 mb-1';
     const muteBtn = document.createElement('button');
@@ -1033,7 +1030,6 @@ function buildTrackInspectorContentDOM(track) {
     actionsDiv.appendChild(removeBtn);
     contentDiv.appendChild(actionsDiv);
 
-    // Panel: Track Controls (Volume, Seq Length)
     const trackControlsPanel = document.createElement('div');
     trackControlsPanel.className = 'panel';
     const panelTitle = document.createElement('h4');
@@ -1043,7 +1039,7 @@ function buildTrackInspectorContentDOM(track) {
     const controlGroup = document.createElement('div');
     controlGroup.className = 'control-group';
     const volumeContainer = document.createElement('div');
-    volumeContainer.id = `volumeSliderContainer-${track.id}`; // Placeholder for knob
+    volumeContainer.id = `volumeSliderContainer-${track.id}`;
     controlGroup.appendChild(volumeContainer);
     const seqLengthContainer = document.createElement('div');
     seqLengthContainer.className = 'flex flex-col items-center';
@@ -1069,7 +1065,6 @@ function buildTrackInspectorContentDOM(track) {
     trackControlsPanel.appendChild(controlGroup);
     contentDiv.appendChild(trackControlsPanel);
 
-    // Track-Type Specific Content
     let specificContentElement;
     if (track.type === 'Synth') {
         specificContentElement = buildSynthSpecificInspectorDOM(track);
@@ -1084,7 +1079,6 @@ function buildTrackInspectorContentDOM(track) {
         contentDiv.appendChild(specificContentElement);
     }
 
-    // Effects Rack and Sequencer Buttons
     const effectsButton = document.createElement('button');
     effectsButton.className = 'effects-rack-button text-xs py-1 px-2 rounded mt-2 w-full hover:bg-gray-300';
     effectsButton.textContent = 'Effects Rack';
@@ -1100,26 +1094,21 @@ function buildTrackInspectorContentDOM(track) {
     return contentDiv;
 }
 
-// Renamed from buildSynthSpecificInspectorHTML
 function buildSynthSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel synth-panel';
-
     const oscTitle = document.createElement('h4');
     oscTitle.className = 'text-sm font-semibold';
     oscTitle.textContent = 'Oscillator';
     panel.appendChild(oscTitle);
-
     const oscSelect = document.createElement('select');
     oscSelect.id = `oscType-${track.id}`;
     oscSelect.className = 'text-xs p-1 border w-full mb-2 bg-white text-black';
     panel.appendChild(oscSelect);
-
     const envTitle = document.createElement('h4');
     envTitle.className = 'text-sm font-semibold';
     envTitle.textContent = 'Envelope (ADSR)';
     panel.appendChild(envTitle);
-
     const envGroup = document.createElement('div');
     envGroup.className = 'control-group';
     ['envAttackSlider', 'envDecaySlider', 'envSustainSlider', 'envReleaseSlider'].forEach(id => {
@@ -1131,17 +1120,16 @@ function buildSynthSpecificInspectorDOM(track) {
     return panel;
 }
 
-// Renamed from buildSamplerSpecificInspectorHTML
 function buildSamplerSpecificInspectorDOM(track) {
-    const panel = document.createElement('div');
-    // The createDropZoneHTML still returns a string, so we use innerHTML here.
-    // This could be further refactored to have createDropZoneDOM.
+    const panel = document.createElement('div'); // Main panel for sampler content
+    panel.className = 'panel sampler-panel'; // Add a general class if needed
+
     const dropZoneContainer = document.createElement('div');
     dropZoneContainer.innerHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler');
-    panel.appendChild(dropZoneContainer.firstChild); // Append the actual drop-zone div
+    panel.appendChild(dropZoneContainer.firstChild);
 
     const editorPanel = document.createElement('div');
-    editorPanel.className = 'panel sampler-editor-panel mt-1 flex flex-wrap md:flex-nowrap gap-3';
+    editorPanel.className = 'sampler-editor-panel mt-1 flex flex-wrap md:flex-nowrap gap-3'; // Keep existing panel class for styling
 
     const leftSide = document.createElement('div');
     leftSide.className = 'flex-grow w-full md:w-3/5';
@@ -1159,48 +1147,135 @@ function buildSamplerSpecificInspectorDOM(track) {
     const rightSide = document.createElement('div');
     rightSide.id = `sliceControlsContainer-${track.id}`;
     rightSide.className = 'slice-edit-group w-full md:w-2/5 space-y-1';
-    rightSide.innerHTML = `
-        <h4 class="text-sm font-semibold">Slice: <span id="selectedSliceLabel-${track.id}">${track.selectedSliceForEdit + 1}</span></h4>
-        <div class="flex gap-1 items-center text-xs"><label>Start:</label><input type="number" id="sliceStart-${track.id}" class="flex-grow p-0.5 text-xs bg-white text-black border"></div>
-        <div class="flex gap-1 items-center text-xs"><label>End:</label><input type="number" id="sliceEnd-${track.id}" class="flex-grow p-0.5 text-xs bg-white text-black border"></div>
-        <button id="applySliceEditsBtn-${track.id}" class="bg-blue-500 text-white text-xs py-0.5 px-1.5 rounded mt-1 hover:bg-blue-600">Apply S/E</button>
-        <div class="control-group mt-1">
-            <div id="sliceVolumeSlider-${track.id}"></div> <div id="slicePitchKnob-${track.id}"></div>
-        </div>
-        <div class="flex gap-2 mt-1">
-            <button id="sliceLoopToggle-${track.id}" class="slice-toggle-button text-xs p-1">Loop</button>
-            <button id="sliceReverseToggle-${track.id}" class="slice-toggle-button text-xs p-1">Reverse</button>
-        </div>
-        <button id="slicerPolyphonyToggle-${track.id}" class="slice-toggle-button text-xs p-1 mt-1 w-full">Mode: Poly</button>
-        <details class="mt-1"><summary class="text-xs font-semibold">Slice Env</summary><div class="control-group">
-            <div id="sliceEnvAttackSlider-${track.id}"></div> <div id="sliceEnvDecaySlider-${track.id}"></div>
-            <div id="sliceEnvSustainSlider-${track.id}"></div> <div id="sliceEnvReleaseSlider-${track.id}"></div>
-        </div></details>`;
+    // Build right side content programmatically
+    const sliceTitle = document.createElement('h4');
+    sliceTitle.className = 'text-sm font-semibold';
+    sliceTitle.innerHTML = `Slice: <span id="selectedSliceLabel-${track.id}">${track.selectedSliceForEdit + 1}</span>`;
+    rightSide.appendChild(sliceTitle);
+
+    ['Start', 'End'].forEach(label => {
+        const div = document.createElement('div');
+        div.className = 'flex gap-1 items-center text-xs';
+        const lbl = document.createElement('label');
+        lbl.textContent = `${label}:`;
+        div.appendChild(lbl);
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = `slice${label}-${track.id}`;
+        input.className = 'flex-grow p-0.5 text-xs bg-white text-black border';
+        div.appendChild(input);
+        rightSide.appendChild(div);
+    });
+
+    const applyBtn = document.createElement('button');
+    applyBtn.id = `applySliceEditsBtn-${track.id}`;
+    applyBtn.className = 'bg-blue-500 text-white text-xs py-0.5 px-1.5 rounded mt-1 hover:bg-blue-600';
+    applyBtn.textContent = 'Apply S/E';
+    rightSide.appendChild(applyBtn);
+
+    const volPitchGroup = document.createElement('div');
+    volPitchGroup.className = 'control-group mt-1';
+    const volPlaceholder = document.createElement('div');
+    volPlaceholder.id = `sliceVolumeSlider-${track.id}`;
+    volPitchGroup.appendChild(volPlaceholder);
+    const pitchPlaceholder = document.createElement('div');
+    pitchPlaceholder.id = `slicePitchKnob-${track.id}`;
+    volPitchGroup.appendChild(pitchPlaceholder);
+    rightSide.appendChild(volPitchGroup);
+
+    const loopReverseGroup = document.createElement('div');
+    loopReverseGroup.className = 'flex gap-2 mt-1';
+    const loopBtn = document.createElement('button');
+    loopBtn.id = `sliceLoopToggle-${track.id}`;
+    loopBtn.className = 'slice-toggle-button text-xs p-1';
+    loopBtn.textContent = 'Loop';
+    loopReverseGroup.appendChild(loopBtn);
+    const reverseBtn = document.createElement('button');
+    reverseBtn.id = `sliceReverseToggle-${track.id}`;
+    reverseBtn.className = 'slice-toggle-button text-xs p-1';
+    reverseBtn.textContent = 'Reverse';
+    loopReverseGroup.appendChild(reverseBtn);
+    rightSide.appendChild(loopReverseGroup);
+
+    const polyBtn = document.createElement('button');
+    polyBtn.id = `slicerPolyphonyToggle-${track.id}`;
+    polyBtn.className = 'slice-toggle-button text-xs p-1 mt-1 w-full';
+    polyBtn.textContent = 'Mode: Poly';
+    rightSide.appendChild(polyBtn);
+
+    const details = document.createElement('details');
+    details.className = 'mt-1';
+    const summary = document.createElement('summary');
+    summary.className = 'text-xs font-semibold';
+    summary.textContent = 'Slice Env';
+    details.appendChild(summary);
+    const sliceEnvGroup = document.createElement('div');
+    sliceEnvGroup.className = 'control-group';
+    ['sliceEnvAttackSlider', 'sliceEnvDecaySlider', 'sliceEnvSustainSlider', 'sliceEnvReleaseSlider'].forEach(id => {
+        const knobPlaceholder = document.createElement('div');
+        knobPlaceholder.id = `${id}-${track.id}`;
+        sliceEnvGroup.appendChild(knobPlaceholder);
+    });
+    details.appendChild(sliceEnvGroup);
+    rightSide.appendChild(details);
+
     editorPanel.appendChild(rightSide);
     panel.appendChild(editorPanel);
     return panel;
 }
 
-// Renamed from buildDrumSamplerSpecificInspectorHTML
 function buildDrumSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel drum-sampler-panel';
-    panel.innerHTML = `
-        <h4 class="text-sm font-semibold mb-1">Drum Pads (Selected: <span id="selectedDrumPadLabel-${track.id}">${track.selectedDrumPadForEdit + 1}</span>)</h4>
-        <div id="drumSamplerPadsContainer-${track.id}" class="pads-container mb-2"></div>
-        <div id="drumPadControlsContainer-${track.id}" class="border-t pt-2">
-             <div id="drumPadLoadContainer-${track.id}" class="mb-2"></div>
-            <div class="control-group">
-                <div id="drumPadVolumeSlider-${track.id}"></div> <div id="drumPadPitchKnob-${track.id}"></div>
-            </div>
-            <details class="mt-1"><summary class="text-xs font-semibold">Pad Envelope (AR)</summary><div class="control-group">
-                <div id="drumPadEnvAttackSlider-${track.id}"></div> <div id="drumPadEnvReleaseSlider-${track.id}"></div>
-            </div></details>
-        </div>`;
+
+    const title = document.createElement('h4');
+    title.className = 'text-sm font-semibold mb-1';
+    title.innerHTML = `Drum Pads (Selected: <span id="selectedDrumPadLabel-${track.id}">${track.selectedDrumPadForEdit + 1}</span>)`;
+    panel.appendChild(title);
+
+    const padsContainer = document.createElement('div');
+    padsContainer.id = `drumSamplerPadsContainer-${track.id}`;
+    padsContainer.className = 'pads-container mb-2';
+    panel.appendChild(padsContainer);
+
+    const controlsContainer = document.createElement('div');
+    controlsContainer.id = `drumPadControlsContainer-${track.id}`;
+    controlsContainer.className = 'border-t pt-2';
+
+    const loadContainer = document.createElement('div');
+    loadContainer.id = `drumPadLoadContainer-${track.id}`;
+    loadContainer.className = 'mb-2';
+    controlsContainer.appendChild(loadContainer); // Dropzone will be added here by updateDrumPadControlsUI
+
+    const volPitchGroup = document.createElement('div');
+    volPitchGroup.className = 'control-group';
+    const volPlaceholder = document.createElement('div');
+    volPlaceholder.id = `drumPadVolumeSlider-${track.id}`;
+    volPitchGroup.appendChild(volPlaceholder);
+    const pitchPlaceholder = document.createElement('div');
+    pitchPlaceholder.id = `drumPadPitchKnob-${track.id}`;
+    volPitchGroup.appendChild(pitchPlaceholder);
+    controlsContainer.appendChild(volPitchGroup);
+
+    const details = document.createElement('details');
+    details.className = 'mt-1';
+    const summary = document.createElement('summary');
+    summary.className = 'text-xs font-semibold';
+    summary.textContent = 'Pad Envelope (AR)';
+    details.appendChild(summary);
+    const padEnvGroup = document.createElement('div');
+    padEnvGroup.className = 'control-group';
+    ['drumPadEnvAttackSlider', 'drumPadEnvReleaseSlider'].forEach(id => {
+        const knobPlaceholder = document.createElement('div');
+        knobPlaceholder.id = `${id}-${track.id}`;
+        padEnvGroup.appendChild(knobPlaceholder);
+    });
+    details.appendChild(padEnvGroup);
+    controlsContainer.appendChild(details);
+    panel.appendChild(controlsContainer);
     return panel;
 }
 
-// Renamed from buildInstrumentSamplerSpecificInspectorHTML
 function buildInstrumentSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel instrument-sampler-panel';
@@ -1215,22 +1290,48 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     canvas.width = 380; canvas.height = 70;
     panel.appendChild(canvas);
 
-    // Using innerHTML for the group of controls for brevity in this step
-    const controlsGroup = document.createElement('div');
-    controlsGroup.innerHTML = `
-        <div class="control-group mb-2 items-center">
-            <div><label class="knob-label text-xs">Root Note</label><input type="text" id="instrumentRootNote-${track.id}" value="${track.instrumentSamplerSettings.rootNote}" class="bg-white text-black w-12 p-0.5 text-xs text-center border"></div>
-            <div><label class="knob-label text-xs">Loop</label><button id="instrumentLoopToggle-${track.id}" class="slice-toggle-button text-xs p-1">${track.instrumentSamplerSettings.loop ? 'Loop: ON' : 'Loop: OFF'}</button></div>
-            <div><label class="knob-label text-xs">Start</label><input type="number" id="instrumentLoopStart-${track.id}" value="${track.instrumentSamplerSettings.loopStart.toFixed(3)}" step="0.001" class="bg-white text-black w-16 p-0.5 text-xs text-center border"></div>
-            <div><label class="knob-label text-xs">End</label><input type="number" id="instrumentLoopEnd-${track.id}" value="${track.instrumentSamplerSettings.loopEnd.toFixed(3)}" step="0.001" class="bg-white text-black w-16 p-0.5 text-xs text-center border"></div>
-        </div>
-         <button id="instrumentSamplerPolyphonyToggle-${track.id}" class="slice-toggle-button text-xs p-1 mb-2 w-full">Mode: Poly</button>
-        <h4 class="text-sm font-semibold">Envelope (ADSR)</h4>
-        <div class="control-group">
-            <div id="instrumentEnvAttackSlider-${track.id}"></div> <div id="instrumentEnvDecaySlider-${track.id}"></div>
-            <div id="instrumentEnvSustainSlider-${track.id}"></div> <div id="instrumentEnvReleaseSlider-${track.id}"></div>
-        </div>`;
-    panel.appendChild(controlsGroup);
+    const controlsContainer = document.createElement('div'); // Main container for below controls
+
+    const rootLoopGroup = document.createElement('div');
+    rootLoopGroup.className = 'control-group mb-2 items-center';
+    // Root Note
+    const rootNoteDiv = document.createElement('div');
+    rootNoteDiv.innerHTML = `<label class="knob-label text-xs">Root Note</label><input type="text" id="instrumentRootNote-${track.id}" value="${track.instrumentSamplerSettings.rootNote}" class="bg-white text-black w-12 p-0.5 text-xs text-center border">`;
+    rootLoopGroup.appendChild(rootNoteDiv);
+    // Loop Toggle
+    const loopToggleDiv = document.createElement('div');
+    loopToggleDiv.innerHTML = `<label class="knob-label text-xs">Loop</label><button id="instrumentLoopToggle-${track.id}" class="slice-toggle-button text-xs p-1">${track.instrumentSamplerSettings.loop ? 'Loop: ON' : 'Loop: OFF'}</button>`;
+    rootLoopGroup.appendChild(loopToggleDiv);
+    // Loop Start
+    const loopStartDiv = document.createElement('div');
+    loopStartDiv.innerHTML = `<label class="knob-label text-xs">Start</label><input type="number" id="instrumentLoopStart-${track.id}" value="${track.instrumentSamplerSettings.loopStart.toFixed(3)}" step="0.001" class="bg-white text-black w-16 p-0.5 text-xs text-center border">`;
+    rootLoopGroup.appendChild(loopStartDiv);
+    // Loop End
+    const loopEndDiv = document.createElement('div');
+    loopEndDiv.innerHTML = `<label class="knob-label text-xs">End</label><input type="number" id="instrumentLoopEnd-${track.id}" value="${track.instrumentSamplerSettings.loopEnd.toFixed(3)}" step="0.001" class="bg-white text-black w-16 p-0.5 text-xs text-center border">`;
+    rootLoopGroup.appendChild(loopEndDiv);
+    controlsContainer.appendChild(rootLoopGroup);
+
+    const polyBtn = document.createElement('button');
+    polyBtn.id = `instrumentSamplerPolyphonyToggle-${track.id}`;
+    polyBtn.className = 'slice-toggle-button text-xs p-1 mb-2 w-full';
+    polyBtn.textContent = 'Mode: Poly'; // Initial text, will be updated in initialize
+    controlsContainer.appendChild(polyBtn);
+
+    const envTitle = document.createElement('h4');
+    envTitle.className = 'text-sm font-semibold';
+    envTitle.textContent = 'Envelope (ADSR)';
+    controlsContainer.appendChild(envTitle);
+
+    const envGroup = document.createElement('div');
+    envGroup.className = 'control-group';
+    ['instrumentEnvAttackSlider', 'instrumentEnvDecaySlider', 'instrumentEnvSustainSlider', 'instrumentEnvReleaseSlider'].forEach(id => {
+        const knobPlaceholder = document.createElement('div');
+        knobPlaceholder.id = `${id}-${track.id}`;
+        envGroup.appendChild(knobPlaceholder);
+    });
+    controlsContainer.appendChild(envGroup);
+    panel.appendChild(controlsContainer);
     return panel;
 }
 // --- END Track Inspector DOM Builder Functions ---
@@ -1320,8 +1421,8 @@ function initializeSynthSpecificControls(track, winEl) {
 }
 
 function initializeSamplerSpecificControls(track, winEl) {
-    const dropZoneEl = winEl.querySelector(`#dropZone-${track.id}-sampler`); // Query from winEl
-    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`); // Query from winEl
+    const dropZoneEl = winEl.querySelector(`#dropZone-${track.id}-sampler`);
+    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`);
     if (dropZoneEl && fileInputEl) {
         setupDropZoneListeners(dropZoneEl, track.id, 'Sampler');
         fileInputEl.onchange = (e) => {
@@ -1329,7 +1430,7 @@ function initializeSamplerSpecificControls(track, winEl) {
             loadSampleFile(e, track.id, 'Sampler');
         };
     }
-    renderSamplePads(track); // This function needs to query within track.inspectorWindow.contentArea
+    renderSamplePads(track);
     winEl.querySelector(`#applySliceEditsBtn-${track.id}`)?.addEventListener('click', () => {
         captureStateForUndo(`Apply Slice Edits for ${track.name}`);
         applySliceEdits(track.id);
@@ -1337,10 +1438,10 @@ function initializeSamplerSpecificControls(track, winEl) {
 
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
     if (canvas) { track.waveformCanvasCtx = canvas.getContext('2d'); drawWaveform(track); }
-    updateSliceEditorUI(track); // This function needs to query within track.inspectorWindow.contentArea
+    updateSliceEditorUI(track);
 
     ['sliceStart', 'sliceEnd'].forEach(idSuffix => {
-        const inputEl = winEl.querySelector(`#${idSuffix}-${track.id}`);
+        const inputEl = winEl.querySelector(`#slice${idSuffix}-${track.id}`); // Corrected selector
         if (inputEl) {
             inputEl.addEventListener('change', () => { /* Value picked up by applySliceEdits */ });
         }
@@ -1459,7 +1560,226 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 // --- END Track Inspector Control Initializer Functions ---
 
 
-// MODIFIED: openTrackInspectorWindow - now uses DOM builder
+function openGlobalControlsWindow(savedState = null) {
+    const windowId = 'globalControls';
+    if (openWindows[windowId] && !savedState) {
+         openWindows[windowId].restore(); return;
+    }
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'global-controls-window p-2 space-y-3';
+    const transportControlsDiv = document.createElement('div');
+    transportControlsDiv.className = 'flex items-center gap-2';
+    playBtn = document.createElement('button');
+    playBtn.id = 'playBtnGlobal';
+    playBtn.className = 'bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-sm shadow';
+    playBtn.textContent = 'Play';
+    transportControlsDiv.appendChild(playBtn);
+    recordBtn = document.createElement('button');
+    recordBtn.id = 'recordBtnGlobal';
+    recordBtn.className = 'bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded-sm shadow';
+    recordBtn.textContent = 'Record';
+    transportControlsDiv.appendChild(recordBtn);
+    contentDiv.appendChild(transportControlsDiv);
+    const tempoDiv = document.createElement('div');
+    tempoDiv.className = 'flex items-center gap-2';
+    tempoDiv.innerHTML = `<label for="tempoGlobalInput" class="control-label text-xs">Tempo:</label>`;
+    tempoInput = document.createElement('input');
+    tempoInput.type = 'number';
+    tempoInput.id = 'tempoGlobalInput';
+    tempoInput.value = Tone.Transport.bpm.value.toFixed(1);
+    tempoInput.min = "40"; tempoInput.max = "240"; tempoInput.step = "0.1";
+    tempoInput.className = 'bg-white text-black w-16 p-1 rounded-sm text-center text-xs border border-gray-500';
+    const bpmLabel = document.createElement('span');
+    bpmLabel.textContent = ' BPM';
+    bpmLabel.className = 'text-xs';
+    tempoDiv.append(tempoInput, bpmLabel);
+    contentDiv.appendChild(tempoDiv);
+    const midiDiv = document.createElement('div');
+    midiDiv.className = 'flex items-center gap-2 mt-2';
+    midiInputSelectGlobal = document.createElement('select');
+    midiInputSelectGlobal.id = 'midiInputSelectGlobal';
+    midiInputSelectGlobal.className = 'bg-white text-black p-1 rounded-sm text-xs border border-gray-500 flex-grow';
+    midiDiv.innerHTML = `<label for="midiInputSelectGlobal" class="text-xs">MIDI In:</label>`;
+    midiDiv.appendChild(midiInputSelectGlobal);
+    midiIndicatorGlobalEl = document.createElement('span');
+    midiIndicatorGlobalEl.id='midiIndicatorGlobal';
+    midiIndicatorGlobalEl.title = "MIDI Activity";
+    keyboardIndicatorGlobalEl = document.createElement('span');
+    keyboardIndicatorGlobalEl.id='keyboardIndicatorGlobal';
+    keyboardIndicatorGlobalEl.title = "Keyboard Input Activity";
+    midiDiv.append(midiIndicatorGlobalEl, keyboardIndicatorGlobalEl);
+    contentDiv.appendChild(midiDiv);
+    const meterContainer = document.createElement('div');
+    meterContainer.id = 'masterMeterContainerGlobal';
+    meterContainer.className = 'meter-bar-container mt-2';
+    meterContainer.title="Master Output Level";
+    meterContainer.style.height="15px";
+    masterMeterBar = document.createElement('div');
+    masterMeterBar.id = 'masterMeterBarGlobal';
+    masterMeterBar.className = 'meter-bar';
+    masterMeterBar.style.width = '0%';
+    meterContainer.appendChild(masterMeterBar);
+    contentDiv.appendChild(meterContainer);
+    const winOptions = {
+        width: 280, height: 250, x: 20, y: 20,
+        initialContentKey: 'globalControls'
+    };
+     if (savedState) {
+        Object.assign(winOptions, {
+            x: parseFloat(savedState.left), y: parseFloat(savedState.top),
+            width: parseFloat(savedState.width), height: parseFloat(savedState.height),
+            zIndex: savedState.zIndex, isMinimized: savedState.isMinimized
+        });
+    }
+    const globalControlsWin = createWindow(windowId, 'Global Controls', contentDiv, winOptions);
+    if (!globalControlsWin || !globalControlsWin.element) {
+        showNotification("Failed to create Global Controls window.", 5000);
+        return null;
+    }
+    // CORRECTED: Query from contentArea
+    const winEl = globalControlsWin.contentArea;
+
+    playBtn = winEl.querySelector('#playBtnGlobal');
+    recordBtn = winEl.querySelector('#recordBtnGlobal');
+    tempoInput = winEl.querySelector('#tempoGlobalInput');
+    masterMeterBar = winEl.querySelector('#masterMeterBarGlobal');
+    midiInputSelectGlobal = winEl.querySelector('#midiInputSelectGlobal');
+    midiIndicatorGlobalEl = winEl.querySelector('#midiIndicatorGlobal');
+    keyboardIndicatorGlobalEl = winEl.querySelector('#keyboardIndicatorGlobal');
+
+    if (playBtn) {
+        playBtn.addEventListener('click', async () => {
+            try {
+                await initAudioContextAndMasterMeter();
+                if (Tone.Transport.state !== 'started') {
+                    Tone.Transport.position = 0;
+                    Tone.Transport.start();
+                } else {
+                    Tone.Transport.pause();
+                }
+            } catch (error) {
+                console.error("Error in play/pause click:", error);
+                const actualPlayBtn = document.getElementById('playBtnGlobal'); // This might still be an issue if ID is not unique globally
+                if (actualPlayBtn && Tone.Transport.state !== 'started') {
+                    actualPlayBtn.textContent = 'Play';
+                }
+            }
+        });
+    }
+    if (recordBtn) {
+        recordBtn.addEventListener('click', async () => {
+            try {
+                await initAudioContextAndMasterMeter();
+                if (!isRecording) {
+                    if (!armedTrackId) {
+                        showNotification("No track armed for recording. Arm a track first.", 3000);
+                        return;
+                    }
+                    const trackToRecord = tracks.find(t => t.id === armedTrackId);
+                    if (!trackToRecord) {
+                        showNotification("Armed track not found.", 3000);
+                        return;
+                    }
+                    isRecording = true;
+                    recordingTrackId = armedTrackId;
+                    recordingStartTime = Tone.Transport.seconds;
+                    recordBtn.textContent = 'Stop Rec';
+                    recordBtn.classList.add('recording');
+                    showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
+                    captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
+                    if (Tone.Transport.state !== 'started') {
+                        Tone.Transport.position = 0;
+                        Tone.Transport.start();
+                    }
+                } else {
+                    isRecording = false;
+                    recordBtn.textContent = 'Record';
+                    recordBtn.classList.remove('recording');
+                    showNotification("Recording stopped.", 2000);
+                    captureStateForUndo(`Stop Recording (Track: ${tracks.find(t => t.id === recordingTrackId)?.name || 'Unknown'})`);
+                    recordingTrackId = null;
+                }
+            } catch (error) {
+                console.error("Error in record button click:", error);
+                showNotification("Error during recording setup.", 3000);
+                if (recordBtn) {
+                    recordBtn.textContent = 'Record';
+                    recordBtn.classList.remove('recording');
+                }
+                isRecording = false;
+                recordingTrackId = null;
+            }
+        });
+    }
+    if (tempoInput) {
+        tempoInput.addEventListener('change', (e) => {
+            const newTempo = parseFloat(e.target.value);
+            if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
+                if (Tone.Transport.bpm.value !== newTempo) {
+                    captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
+                }
+                Tone.Transport.bpm.value = newTempo;
+                updateTaskbarTempoDisplay(newTempo);
+            } else {
+                e.target.value = Tone.Transport.bpm.value.toFixed(1);
+            }
+        });
+    }
+    if(midiInputSelectGlobal) {
+        populateMIDIInputs();
+        if (activeMIDIInput) midiInputSelectGlobal.value = activeMIDIInput.id;
+        midiInputSelectGlobal.onchange = () => {
+            const oldMidiName = activeMIDIInput ? activeMIDIInput.name : "No MIDI Input";
+            const newMidiId = midiInputSelectGlobal.value;
+            const newMidiDevice = midiAccess && newMidiId ? midiAccess.inputs.get(newMidiId) : null;
+            const newMidiName = newMidiDevice ? newMidiDevice.name : "No MIDI Input";
+            if (oldMidiName !== newMidiName) {
+                 captureStateForUndo(`Change MIDI Input to ${newMidiName}`);
+            }
+            selectMIDIInput();
+        };
+    }
+    if (!transportEventsInitialized && typeof Tone !== 'undefined' && Tone.Transport) {
+        Tone.Transport.on('start', () => {
+            const btn = document.getElementById('playBtnGlobal'); // Consider querying within winEl if possible
+            if (btn) btn.textContent = 'Pause';
+        });
+        Tone.Transport.on('pause', () => {
+            const btn = document.getElementById('playBtnGlobal'); // Consider querying within winEl
+            if (btn) btn.textContent = 'Play';
+             if (isRecording) {
+                isRecording = false;
+                const recBtn = document.getElementById('recordBtnGlobal'); // Consider querying within winEl
+                if (recBtn) {
+                    recBtn.textContent = 'Record';
+                    recBtn.classList.remove('recording');
+                }
+                showNotification("Recording stopped due to transport pause.", 2000);
+                captureStateForUndo(`Stop Recording (Track: ${tracks.find(t => t.id === recordingTrackId)?.name || 'Unknown'}, transport paused)`);
+                recordingTrackId = null;
+            }
+        });
+        Tone.Transport.on('stop', () => {
+            const btn = document.getElementById('playBtnGlobal'); // Consider querying within winEl
+            if (btn) btn.textContent = 'Play';
+            document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+            if (isRecording) {
+                isRecording = false;
+                const recBtn = document.getElementById('recordBtnGlobal'); // Consider querying within winEl
+                if (recBtn) {
+                    recBtn.textContent = 'Record';
+                    recBtn.classList.remove('recording');
+                }
+                showNotification("Recording stopped due to transport stop.", 2000);
+                captureStateForUndo(`Stop Recording (Track: ${tracks.find(t => t.id === recordingTrackId)?.name || 'Unknown'}, transport stopped)`);
+                recordingTrackId = null;
+            }
+        });
+        transportEventsInitialized = true;
+    }
+    return globalControlsWin;
+}
+
 function openTrackInspectorWindow(trackId, savedState = null) {
     const track = tracks.find(t => t.id === trackId);
     if (!track) {
@@ -1472,16 +1792,14 @@ function openTrackInspectorWindow(trackId, savedState = null) {
         openWindows[inspectorId].restore();
         return openWindows[inspectorId];
     }
-    if (openWindows[inspectorId] && (savedState)) { // If restoring from save, close to ensure fresh state
+    if (openWindows[inspectorId] && (savedState)) {
         openWindows[inspectorId].close();
     }
 
     track.inspectorControls = {};
 
-    // 1. Build the DOM content element
-    const inspectorContentElement = buildTrackInspectorContentDOM(track); // CHANGED
+    const inspectorContentElement = buildTrackInspectorContentDOM(track);
 
-    // 2. Define window options
     let windowHeight = 450;
     if (track.type === 'Synth') windowHeight = 520;
     else if (track.type === 'Sampler') windowHeight = 620;
@@ -1501,8 +1819,7 @@ function openTrackInspectorWindow(trackId, savedState = null) {
         });
     }
 
-    // 3. Create the window with the DOM element
-    const inspectorWin = createWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions); // CHANGED
+    const inspectorWin = createWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions);
     if (!inspectorWin || !inspectorWin.element) {
         showNotification(`Failed to create Inspector for track ${track.id}`, 5000);
         return null;
@@ -1510,7 +1827,6 @@ function openTrackInspectorWindow(trackId, savedState = null) {
     track.inspectorWindow = inspectorWin;
     const winEl = inspectorWin.contentArea;
 
-    // 4. Initialize controls
     initializeCommonInspectorControls(track, winEl);
     initializeTypeSpecificInspectorControls(track, winEl);
 
@@ -2809,6 +3125,8 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
     const seqWin = createWindow(windowId, windowTitle, contentHTML, winOptions);
     if (!seqWin || !seqWin.element) { showNotification("Failed to create Sequencer window.", 5000); return null; }
     track.sequencerWindow = seqWin;
+
+    // CORRECTED: Query from contentArea
     seqWin.contentArea.querySelectorAll('.sequencer-step-cell').forEach(cell => {
         cell.addEventListener('click', () => {
             const r = parseInt(cell.dataset.row);
@@ -2865,12 +3183,12 @@ async function initAudioContextAndMasterMeter() {
     }
 }
 function updateMeters() {
-    if (masterMeter && masterMeterBar) {
+    if (masterMeter && masterMeterBar) { // masterMeterBar is queried from globalControlsWin.contentArea
         const level = Tone.dbToGain(masterMeter.getValue());
         masterMeterBar.style.width = `${Math.min(100, level * 100)}%`;
         masterMeterBar.classList.toggle('clipping', masterMeter.getValue() > -0.1);
     }
-    const mixerMasterMeter = document.getElementById('mixerMasterMeterBar');
+    const mixerMasterMeter = document.getElementById('mixerMasterMeterBar'); // This is fine, ID is unique
      if (masterMeter && mixerMasterMeter) {
         const level = Tone.dbToGain(masterMeter.getValue());
         mixerMasterMeter.style.width = `${Math.min(100, level * 100)}%`;
@@ -3199,4 +3517,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Refactor 2)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Refactor 2 Fix)");
