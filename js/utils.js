@@ -1,5 +1,7 @@
 // js/utils.js - Utility Functions Module
 
+import { showNotification as utilShowNotification } from './utils.js'; // Use a different name to avoid conflict if this file is also named utils.js
+
 // --- Notification System ---
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
@@ -20,7 +22,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) return null;
 
-    if (modalContainer.firstChild) { // Remove any existing modal
+    if (modalContainer.firstChild) {
         modalContainer.firstChild.remove();
     }
     const overlay = document.createElement('div');
@@ -83,8 +85,6 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
 }
 
 export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
-    // loadSoundCallback: (soundData, trackId, trackTypeHint, padIndexOrSliceId) => Promise<void>
-    // loadFileCallback: (event, trackId, trackTypeHint, padIndexOrSliceId) => Promise<void>
     if (!dropZoneElement) return;
 
     dropZoneElement.addEventListener('dragover', (event) => {
@@ -105,14 +105,12 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         event.stopPropagation();
         dropZoneElement.classList.remove('dragover');
         const soundDataString = event.dataTransfer.getData("application/json");
-        const currentTrack = window.tracks.find(t => t.id === parseInt(trackId)); // Assuming window.tracks is accessible
+        // const trackIdFromDrop = event.currentTarget.dataset.trackId || trackId; // Get trackId from element if available
 
         if (soundDataString) {
             try {
                 const soundData = JSON.parse(soundDataString);
-                if (typeof window.captureStateForUndo === 'function') { // Check if captureStateForUndo is available
-                     window.captureStateForUndo(`Load "${soundData.fileName}" to ${currentTrack ? currentTrack.name : 'track ' + trackId}`);
-                }
+                // Undo capture should happen in the loadSoundCallback AFTER successful loading
                 if (loadSoundCallback) {
                     await loadSoundCallback(soundData, trackId, trackTypeHint, padIndexOrSliceId);
                 } else {
@@ -125,9 +123,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
             const file = event.dataTransfer.files[0];
             const simulatedEvent = { target: { files: [file] } };
-             if (typeof window.captureStateForUndo === 'function') {
-                window.captureStateForUndo(`Load file "${file.name}" to ${currentTrack ? currentTrack.name : 'track ' + trackId}`);
-            }
+            // Undo capture should happen in the loadFileCallback AFTER successful loading
             if (loadFileCallback) {
                 await loadFileCallback(simulatedEvent, trackId, trackTypeHint, padIndexOrSliceId);
             } else {
