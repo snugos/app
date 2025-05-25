@@ -14,14 +14,12 @@ import {
 
 export let currentlyPressedComputerKeys = {};
 
-// `appContext` will contain callbacks for Start Menu actions and other globally needed functions
 export function initializePrimaryEventListeners(appContext) {
     const {
-        // Callbacks from appContext
         addTrack, openSoundBrowserWindow, undoLastAction, redoLastAction,
         saveProject, loadProject, exportToWav,
         openGlobalControlsWindow, openMixerWindow,
-        // DOM elements (still queried directly for now, could be passed in appContext too)
+        handleProjectFileLoad // Now expecting handleProjectFileLoad from appContext
     } = appContext;
 
     const startButton = document.getElementById('startButton');
@@ -36,7 +34,6 @@ export function initializePrimaryEventListeners(appContext) {
         }
     });
 
-    // Start Menu Item Event Listeners - Now using appContext
     document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => { addTrack('Synth', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
@@ -57,9 +54,6 @@ export function initializePrimaryEventListeners(appContext) {
 
     document.getElementById('menuSaveProject')?.addEventListener('click', () => { saveProject(); startMenu?.classList.add('hidden'); });
     document.getElementById('menuLoadProject')?.addEventListener('click', () => { 
-        // loadProject (from state.js) is now just a trigger for the input element.
-        // The actual file handling is done by handleProjectFileLoad (also from state.js)
-        // which is attached to the input's 'change' event.
         document.getElementById('loadProjectInput').click(); 
         startMenu?.classList.add('hidden'); 
     });
@@ -80,13 +74,17 @@ export function initializePrimaryEventListeners(appContext) {
     });
 
     document.getElementById('taskbarTempoDisplay')?.addEventListener('click', () => {
-        openGlobalControlsWindow(); // This is fine as openGlobalControlsWindow is part of appContext
+        openGlobalControlsWindow();
     });
 
-    // The 'change' listener for loadProjectInput is better placed in main.js or where appContext.handleProjectFileLoad is defined
-    // For now, we assume it's correctly attached in main.js or via a more direct mechanism.
-    // If appContext included handleProjectFileLoad:
-    // document.getElementById('loadProjectInput')?.addEventListener('change', appContext.handleProjectFileLoad);
+    // Correctly attach the listener for project file loading
+    const loadProjectInputEl = document.getElementById('loadProjectInput');
+    if (loadProjectInputEl && typeof handleProjectFileLoad === 'function') {
+        loadProjectInputEl.addEventListener('change', handleProjectFileLoad);
+    } else if (!handleProjectFileLoad) {
+        console.warn("handleProjectFileLoad function not provided to initializePrimaryEventListeners. Project loading from file will not work.");
+    }
+
 
     document.addEventListener('keydown', handleComputerKeyDown);
     document.addEventListener('keyup', handleComputerKeyUp);
@@ -121,8 +119,6 @@ export function initializePrimaryEventListeners(appContext) {
 }
 
 export function attachGlobalControlEvents(globalControlsWindowElement) {
-    // This function now assumes that the functions it calls (like initAudioContextAndMasterMeter, captureStateForUndo)
-    // are available, likely through window or passed via a broader app context if this function itself was part of a class.
     globalControlsWindowElement.querySelector('#playBtnGlobal')?.addEventListener('click', async () => {
         try {
             if (typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter();
@@ -162,17 +158,18 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
 
     globalControlsWindowElement.querySelector('#tempoGlobalInput')?.addEventListener('change', (e) => {
         const newTempo = parseFloat(e.target.value);
-        const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay'); // Direct DOM access
+        const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
         if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
             if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
             Tone.Transport.bpm.value = newTempo;
-            // updateTaskbarTempoDisplay should be a dedicated UI function
-            if(taskbarTempoDisplay) taskbarTempoDisplay.textContent = `${newTempo.toFixed(1)} BPM`;
+            if(taskbarTempoDisplay && typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
+            else if(taskbarTempoDisplay) taskbarTempoDisplay.textContent = `${newTempo.toFixed(1)} BPM`;
+
         } else { e.target.value = Tone.Transport.bpm.value.toFixed(1); }
     });
 
-     if (window.midiInputSelectGlobal) { // Assumes midiInputSelectGlobal is on window
-        window.midiInputSelectGlobal.onchange = () => { // This onchange itself is an event handler
+     if (window.midiInputSelectGlobal) {
+        window.midiInputSelectGlobal.onchange = () => {
             const oldMidiName = window.activeMIDIInput ? window.activeMIDIInput.name : "No MIDI Input";
             const newMidiId = window.midiInputSelectGlobal.value;
             const newMidiDevice = window.midiAccess && newMidiId ? window.midiAccess.inputs.get(newMidiId) : null;
@@ -180,10 +177,11 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
             if (oldMidiName !== newMidiName) {
                  captureStateForUndo(`Change MIDI Input to ${newMidiName}`);
             }
-            selectMIDIInput(); // Calls local selectMIDIInput
+            selectMIDIInput();
         };
     }
 }
+
 
 export async function setupMIDI() {
     if (navigator.requestMIDIAccess) {
@@ -217,10 +215,10 @@ function populateMIDIInputs() {
     } else if (window.midiAccess.inputs.size > 0) {
         window.midiInputSelectGlobal.value = window.midiAccess.inputs.values().next().value.id;
     }
-    if (!window.midiInputSelectGlobal.onchange) { // Ensure it's set if not by attachGlobalControlEvents
+    if (!window.midiInputSelectGlobal.onchange) {
         window.midiInputSelectGlobal.onchange = () => selectMIDIInput();
     }
-    selectMIDIInput(true); // skipUndoCapture
+    selectMIDIInput(true);
 }
 
 function selectMIDIInput(skipUndoCapture = false) {
@@ -233,7 +231,7 @@ function selectMIDIInput(skipUndoCapture = false) {
         const inputDevice = window.midiAccess.inputs.get(selectedId);
         if (inputDevice) {
             window.activeMIDIInput = inputDevice;
-            window.activeMIDIInput.onmidimessage = handleMIDIMessage; // Uses exported handleMIDIMessage
+            window.activeMIDIInput.onmidimessage = handleMIDIMessage;
             if (!skipUndoCapture) {
                 showNotification(`MIDI Input: ${window.activeMIDIInput.name} selected.`, 2000);
             }
@@ -278,7 +276,7 @@ export function handleMIDIMessage(message) {
                 
                 if (track.sequencerWindow && !track.sequencerWindow.isMinimized && getActiveSequencerTrackId() === track.id) {
                     const cell = track.sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${rowIndex}"][data-col="${currentStep}"]`);
-                    if (cell && typeof window.updateSequencerCellUI === 'function') { // Check if UI update function is available
+                    if (cell && typeof window.updateSequencerCellUI === 'function') {
                         window.updateSequencerCellUI(cell, track.type, true);
                     }
                 }
@@ -419,7 +417,6 @@ export function handleTrackMute(trackId) {
     captureStateForUndo(`${track.isMuted ? "Unmute" : "Mute"} Track "${track.name}"`);
     track.isMuted = !track.isMuted;
     track.applyMuteState();
-    // UI Update:
     const inspectorMuteBtn = track.inspectorWindow?.element?.querySelector(`#muteBtn-${track.id}`);
     if (inspectorMuteBtn) inspectorMuteBtn.classList.toggle('muted', track.isMuted);
     const mixerMuteBtn = window.openWindows['mixer']?.element?.querySelector(`#mixerMuteBtn-${track.id}`);
