@@ -1,0 +1,505 @@
+/* Base Styles */
+        body {
+            font-family: 'Inter', sans-serif; 
+            overscroll-behavior: none; /* Prevents pull-to-refresh on mobile */
+            background-color: var(--body-bg, #FFB6C1); /* Default light pink, customizable */
+            color: #000000; /* Default text color */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent body scrollbars */
+        }
+        #desktop {
+            flex-grow: 1; /* Desktop takes remaining space */
+            position: relative;
+            overflow: hidden; /* Prevents desktop scroll, windows handle their own */
+            padding: 5px; /* Small padding around desktop edge */
+            background-color: var(--desktop-bg, #FFB6C1); /* Customizable desktop background */
+        }
+
+        /* Window Styles */
+        .window {
+            position: absolute;
+            background-color: var(--window-bg, #c0c0c0); /* Classic grey, customizable */
+            border: 2px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            box-shadow: 2px 2px 0px #000000; /* Classic 3D effect */
+            min-width: 250px; 
+            min-height: 150px; 
+            display: flex;
+            flex-direction: column;
+            border-radius: 0; /* Sharp corners for retro look */
+            resize: both; /* Allow user resizing */
+            overflow: auto; /* Changed from hidden to auto to allow content scroll with resize */
+        }
+        .window.minimized {
+            display: none !important; /* Hide minimized windows */
+        }
+        .window-title-bar {
+            background-color: #000080; /* Classic Windows blue */
+            color: #ffffff;
+            padding: 3px 5px; 
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: grab;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 22px; /* Fixed height for title bar */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        .window-title-bar:active { cursor: grabbing; }
+        .window-title-buttons button {
+            background-color: #c0c0c0;
+            border: 1px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            color: #000000;
+            font-family: "Arial", sans-serif; /* Classic UI font */
+            font-weight: bold;
+            width: 16px;
+            height: 16px;
+            line-height: 13px; /* Align text vertically */
+            text-align: center;
+            margin-left: 2px;
+            padding: 0;
+            box-shadow: 1px 1px 0px #000000;
+        }
+        .window-title-buttons button:active {
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            box-shadow: none;
+            padding-top: 1px; /* Simulate button press */
+            padding-left: 1px;
+        }
+        .window-content {
+            padding: 8px; 
+            flex-grow: 1; /* Content area takes available space */
+            overflow-y: auto; /* Allow vertical scroll within content */
+            background-color: var(--window-content-bg, #c0c0c0); /* Customizable content background */
+            color: #000000;
+            font-size: 0.85rem; /* Slightly smaller font for content */
+        }
+        .window-content input, .window-content select, .window-content button, .window-content textarea {
+             font-family: 'Inter', sans-serif; /* Consistent font for form elements */
+        }
+        .window-content .control-label { color: #000000; } /* Ensure labels are visible */
+
+        /* Taskbar Styles */
+        #taskbar {
+            background-color: var(--taskbar-bg, #c0c0c0); /* Customizable taskbar background */
+            border-top: 2px solid #ffffff;
+            padding: 2px 4px; 
+            height: 28px; /* Fixed height */
+            display: flex;
+            align-items: center;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 2000; /* Above windows */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+        #startButton {
+            background-color: #c0c0c0;
+            border: 2px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            padding: 1px 8px; 
+            font-weight: bold;
+            font-size: 0.85rem;
+            box-shadow: 1px 1px 0px #000000;
+            margin-right: 4px; /* Space between start and window buttons */
+        }
+        #startButton:active {
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            box-shadow: none;
+        }
+        #taskbarButtons {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 2px; /* Space between taskbar buttons */
+            overflow-x: auto; /* Allow horizontal scroll if many windows */
+            overflow-y: hidden; /* Hide vertical scrollbar */
+            white-space: nowrap; /* Prevent button text wrapping */
+        }
+        #taskbarTempoDisplay {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border: 1px inset #808080; /* Inset border for classic look */
+            background-color: #c0c0c0;
+            min-width: 60px;
+            text-align: center;
+            margin-left: auto; /* Push to the right */
+            margin-right: 4px; /* Space from edge */
+            cursor: pointer; /* Indicate it's clickable */
+        }
+        #taskbarTempoDisplay:hover {
+            background-color: #b0b0b0; /* Slight hover effect */
+        }
+
+        /* Start Menu Styles */
+        #startMenu {
+            position: absolute;
+            bottom: 28px; /* Position above taskbar */
+            left: 2px;
+            background-color: #c0c0c0;
+            border: 2px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            box-shadow: 2px 2px 0px #000000;
+            padding: 2px;
+            z-index: 2001; /* Above taskbar, below focused window */
+            min-width: 200px; /* Minimum width for readability */
+        }
+        #startMenu ul { list-style: none; margin: 0; padding: 0; }
+        #startMenu li { padding: 5px 10px; font-size: 0.85rem; cursor: pointer; }
+        #startMenu li:hover { background-color: #000080; color: #ffffff; } /* Classic selection style */
+        #startMenu li.disabled { color: #808080; cursor: default; }
+        #startMenu li.disabled:hover { background-color: #c0c0c0; color: #808080; } /* No hover effect for disabled */
+        #startMenu hr { border: 0; border-top: 1px solid #808080; border-bottom: 1px solid #ffffff; margin: 2px 0; }
+
+        /* Taskbar Button Styles */
+        .taskbar-button {
+            background-color: #c0c0c0;
+            border: 2px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px; /* Prevent overly wide buttons */
+            min-width: 60px; /* Ensure some text is visible */
+            box-shadow: 1px 1px 0px #000000;
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent shrinking in flex container */
+        }
+        .taskbar-button.active { /* Style for focused window's button */
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            box-shadow: none;
+            background-color: #a0a0a0; /* Slightly darker when active */
+        }
+        .taskbar-button.minimized-on-taskbar { /* Style for minimized window's button */
+            background-color: #c0c0c0; /* Default background */
+            border-top-color: #ffffff;
+            border-left-color: #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+        }
+
+        /* Notification System Styles */
+        #notification-area {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999; /* Highest z-index */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .notification-message {
+            background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+        .notification-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Custom Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.5); /* Dim background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000; /* Above notifications */
+        }
+        .modal-dialog {
+            background-color: #c0c0c0; 
+            padding: 0; /* Padding handled by inner elements */
+            border: 2px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            min-width: 300px;
+            max-width: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-title-bar {
+            background-color: #000080; /* Consistent with window title bars */
+            color: #ffffff;
+            padding: 3px 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center; 
+        }
+        .modal-content {
+            padding: 15px;
+            font-size: 0.9rem;
+            color: #000000;
+            text-align: center; 
+            border-top: 1px solid #808080; /* Separator line */
+            border-bottom: 1px solid #ffffff; /* Separator line */
+        }
+        .modal-buttons {
+            padding: 8px 15px;
+            display: flex;
+            justify-content: center; /* Center buttons */
+            gap: 10px;
+            background-color: #c0c0c0; /* Consistent background */
+            border-top: 1px solid #ffffff; /* Separator line */
+        }
+        .modal-buttons button {
+            background-color: #c0c0c0;
+            border: 2px solid #ffffff;
+            border-right-color: #808080;
+            border-bottom-color: #808080;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            box-shadow: 1px 1px 0px #000000;
+            min-width: 70px;
+            cursor: pointer;
+        }
+        .modal-buttons button:active {
+            border-top-color: #808080;
+            border-left-color: #808080;
+            border-right-color: #ffffff;
+            border-bottom-color: #ffffff;
+            box-shadow: none;
+        }
+
+        /* Component-Specific Styles */
+        .track-inspector-content .panel, 
+        .effects-rack-window .effect-group { 
+            margin-top: 8px; padding-top: 8px; 
+            border-top: 1px solid #808080; /* Separator for sections */
+        }
+        .effects-rack-window .effect-group:first-child {
+            border-top: none; margin-top: 0; padding-top: 0;
+        }
+        .track-inspector-content .panel { 
+             border-bottom: 1px solid #808080; /* Bottom border for panels */
+             padding-bottom: 10px; margin-bottom: 10px;
+        }
+
+        /* Sequencer Styles */
+        .sequencer-window-content { display: flex; height: 100%; flex-direction: column; } 
+        .sequencer-grid-container { flex-grow: 1; overflow: auto; } /* Allows scrolling of the grid */
+        .sequencer-grid { display: grid; gap: 1px; width: 100%; margin-top: 8px; } 
+        .sequencer-row { display: contents; } /* For proper grid layout */
+        .sequencer-label-cell {
+            font-size: 0.7rem;
+            padding: 4px 2px;
+            text-align: right;
+            background-color: #b0b0b0; /* Slightly darker for labels */
+            border-right: 1px solid #808080;
+            border-bottom: 1px solid #808080;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 50px; 
+            position: sticky; /* Make labels sticky on scroll */
+            left: 0; /* Stick to the left */
+            z-index: 10; /* Ensure labels are above steps */
+        }
+        .sequencer-bar-header-cell {
+            font-size: 0.65rem;
+            padding: 2px 0;
+            text-align: center;
+            background-color: #a0a0a0; /* Header background */
+            border-right: 1px solid #707070;
+            border-bottom: 1px solid #707070;
+            font-weight: bold;
+            color: #333;
+            grid-column-start: span var(--steps-per-bar); /* Will be set by JS */
+        }
+        .sequencer-bar-header-placeholder { /* For the top-left empty cell */
+            background-color: #b0b0b0; /* Match label cell bg */
+            border-right: 1px solid #808080;
+            border-bottom: 1px solid #707070; /* Match bar header bottom border */
+        }
+        .sequencer-step-cell {
+            aspect-ratio: 1 / 1; /* Square cells */
+            border: 1px solid #404040; /* Dark border for cells */
+            cursor: pointer; 
+            transition: background-color 0.1s, opacity 0.1s;
+            min-width: 20px; /* Ensure steps have a minimum width */
+        }
+        /* Beat highlighting for 4/4 time (16 steps per bar) */
+        .sequencer-step-cell.beat-1 { background-color: #909090; } /* Darker for strong beats */
+        .sequencer-step-cell.beat-2 { background-color: #a0a0a0; } /* Lighter for other beats */
+        .sequencer-step-cell.beat-3 { background-color: #909090; }
+        .sequencer-step-cell.beat-4 { background-color: #a0a0a0; }
+        .sequencer-step-cell.active-synth { background-color: #0000FF; } /* Blue for active synth */
+        .sequencer-step-cell.active-sampler { background-color: #FFA500; } /* Orange for active sampler */
+        .sequencer-step-cell.active-drum-sampler { background-color: #FF69B4; } /* Pink for active drum sampler */
+        .sequencer-step-cell.active-instrument-sampler { background-color: #8A2BE2; } /* Purple for active instrument sampler */
+        .sequencer-step-cell.playing { outline: 2px solid #FFFF00; z-index: 1; opacity: 0.7; } /* Yellow outline for playing step */
+        .sequencer-window-content .sequencer-grid { margin: 0 auto; } /* Center grid if space allows */
+        .sequencer-window-content p { text-align: center; margin-top: 8px; font-size: 0.8rem; }
+
+        /* Pad Styles (for Sampler and Drum Sampler) */
+        .pads-container { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); 
+            gap: 8px; margin-top: 10px;
+        }
+        .pad-button { 
+            background-color: #a0a0a0; color: black; 
+            border: 2px solid #ffffff; border-right-color: #808080; border-bottom-color: #808080; 
+            box-shadow: 1px 1px 0px #000000; 
+            aspect-ratio: 1 / 1; /* Square pads */
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.7rem; text-align: center; padding: 2px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            cursor: pointer;
+            user-select: none; /* Prevent text selection during drag */
+        }
+        .pad-button:active, .pad-button.selected-for-edit { /* Style for active/selected pad */
+            background-color: #000080; color: white; 
+            border-top-color: #808080; border-left-color: #808080; 
+            border-right-color: #ffffff; border-bottom-color: #ffffff; box-shadow: none;
+        } 
+        .pad-button .pad-label { font-size: 0.6rem; margin-top: 2px; color: #333; }
+        .pad-button.selected-for-edit .pad-label { color: #ccc; } /* Lighter label for selected pad */
+
+        /* Button Styles for Track Controls (Mute, Solo, Arm, etc.) */
+        .arm-input-button, .mute-button, .solo-button, .waveform-control-button, .slice-toggle-button, .automation-button, .effects-rack-button { 
+            background-color: #c0c0c0; border: 2px solid #ffffff; border-right-color: #808080; border-bottom-color: #808080; 
+            color: black; box-shadow: 1px 1px 0px #000000; cursor: pointer;
+        }
+        .slice-toggle-button:hover, .arm-input-button:hover, .mute-button:hover, .solo-button:hover, .automation-button:hover, .effects-rack-button:hover { background-color: #d0d0d0; }
+        .slice-toggle-button.active, .arm-input-button.armed, .mute-button.muted, .solo-button.soloed { color: white; }
+        .slice-toggle-button.active { background-color: #000080; } /* Blue when active */
+        .arm-input-button.armed { background-color: #FF0000; border-color: #FF6347; } /* Red when armed */
+        .mute-button.muted { background-color: #FF0000; border-color: #FF6347; } /* Red when muted */
+        .solo-button.soloed { background-color: #FFFF00; color: black; border-color: #FFFACD;} /* Yellow when soloed */
+
+        /* MIDI and Keyboard Indicators */
+        #midiIndicatorGlobal, #keyboardIndicatorGlobal { border: 1px solid black; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 50%; transition: background-color 0.1s; }
+        #midiIndicatorGlobal { background-color: #808080; } /* Grey when inactive */
+        #midiIndicatorGlobal.active { background-color: #00FF00; } /* Green when active */
+        #keyboardIndicatorGlobal { background-color: #808080; } 
+        #keyboardIndicatorGlobal.active { background-color: #00FFFF; } /* Cyan when active */
+
+        /* Knob and Slider Styles */
+        .knob-container { display: flex; flex-direction: column; align-items: center; margin: 2px 0; }
+        .knob {
+            width: 40px; height: 40px; border-radius: 50%; background-color: #777; /* Dark grey knob */
+            border: 2px solid #555; position: relative; cursor: ns-resize; /* Vertical resize cursor */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3); /* Inner shadow for depth */
+        }
+        .knob-handle {
+            width: 4px; height: 12px; background-color: #ddd; /* Light grey handle */
+            position: absolute; top: 3px; left: 50%; transform-origin: 50% 17px; /* Rotation origin */
+            transform: translateX(-50%) rotate(0deg); border-radius: 2px;
+        }
+        .knob-label, .slider-label { font-size: 0.65rem; margin-top: 1px; text-align: center; color: #333; max-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+        .knob-value, .slider-value { font-size: 0.6rem; color: #111; }
+        .slider-container { display: flex; flex-direction: column; align-items: center; margin: 2px 5px; min-width: 30px; }
+        .slider-track {
+            width: 12px; height: 100px; background-color: #555; border: 1px solid #333;
+            position: relative; cursor: ns-resize; border-radius: 3px; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+        }
+        .slider-thumb {
+            width: 20px; height: 8px; background-color: #bbb; border: 1px solid #999;
+            position: absolute; left: 50%; transform: translateX(-50%);
+            border-radius: 2px; box-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+        }
+        .slider-label { max-width: 50px; margin-bottom: 2px;} 
+        .slider-value { margin-top: 2px; }
+
+        /* Slice Editor Styles */
+        .slice-edit-group details > summary { cursor: pointer; font-size: 0.75rem; font-weight: 500; padding: 2px 0; }
+        .slice-edit-group details > div { padding-left: 10px; } /* Indent content of details */
+
+        /* Waveform Canvas */
+        .waveform-canvas { background-color: #a0a0a0; border: 1px solid #808080; display: block; width: 100%; }
+
+        /* Meter Bar Styles */
+        .meter-bar-container { background-color: #808080; border: 1px solid #404040;}
+        .meter-bar { background-color: #00FF00; height: 100%; width: 0%; transition: width 0.05s linear; } 
+        .meter-bar.clipping { background-color: #FF0000; } /* Red when clipping */
+
+        /* Mixer Styles */
+        .mixer-window-content { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background-color: #b0b0b0; min-height: 280px; }
+        .channel-strip { 
+            display: flex; flex-direction: column; align-items: center; 
+            background-color: #c0c0c0; padding: 8px; border: 2px solid #ffffff; 
+            border-right-color: #808080; border-bottom-color: #808080; min-width: 80px;
+            flex-shrink: 0; /* Prevent strips from shrinking too much */
+        }
+        .channel-strip .track-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; cursor: pointer;}
+        .channel-strip .fader-container { 
+             height: auto; /* Adjusted for knobs instead of sliders */
+             margin-bottom: 5px; 
+             display: flex; 
+             justify-content: center; 
+             align-items: center; 
+        }
+        .channel-strip .mixer-buttons button { font-size: 0.7rem; padding: 2px 4px; margin: 1px;}
+        .channel-strip .mixer-meter-container { width: 50px; height: 15px; margin-top: 5px; background-color: #808080; border: 1px solid #404040;}
+        .channel-strip .mixer-meter-container .meter-bar { background-color: #00FF00; height: 100%; width: 0%;}
+        .channel-strip .mixer-meter-container .meter-bar.clipping { background-color: #FF0000; }
+
+        /* Drag and Drop Zone Styles */
+        .drop-zone {
+            border: 2px dashed #888;
+            padding: 10px;
+            text-align: center;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            font-size: 0.8rem;
+            background-color: #d0d0d0;
+        }
+        .drop-zone.dragover {
+            background-color: #e0e0e0; /* Lighter when dragging over */
+            border-color: #555;
+        }
+
+        /* Control Grouping Styles */
+        .control-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-around; } 
+        .control-group-vertical { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+
+        /* Sound Browser Styles */
+        .sound-browser-content { display: flex; flex-direction: column; height: 100%; }
+        #soundBrowserLibrarySelect { margin-bottom: 5px; padding: 2px; font-size: 0.8rem; border: 1px solid #808080; background-color: #fff; }
+        #soundBrowserPathDisplay { font-size: 0.75rem; padding: 2px 4px; background-color: #ddd; border-bottom: 1px solid #aaa; margin-bottom: 4px; }
+        .sound-browser-list { flex-grow: 1; overflow-y: auto; border: 1px inset #808080; background-color: #fff; padding: 4px; }
+        .sound-browser-item { padding: 3px 5px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.8rem;}
+        .sound-browser-item:hover { background-color: #000080; color: #ffffff; }
+        .sound-browser-item:last-child { border-bottom: none; }
+        .sound-browser-loading { padding: 10px; text-align: center; font-style: italic; }
+        
+        /* Record Button Animation */
+        #recordBtnGlobal.recording {
+            background-color: #FF0000; /* Red when recording */
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { /* Pulsing animation for record button */
+            0% { box-shadow: 0 0 0 0 rgba(255,0,0, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255,0,0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255,0,0, 0); }
+        }
