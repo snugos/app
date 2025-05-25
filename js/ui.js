@@ -8,6 +8,8 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
+console.log("UI.JS FILE LOADED - VERSION_HIGHLIGHT_FIX_ATTEMPT"); // Temporary log
+
 export function createKnob(options) {
     const container = document.createElement('div');
     container.className = 'knob-container';
@@ -491,7 +493,7 @@ export function initializeCommonInspectorControls(track, winEl) {
             e.target.value = numBars;
             const numSteps = numBars * Constants.STEPS_PER_BAR;
             if (track.sequenceLength !== numSteps) {
-                track.setSequenceLength(numSteps, false); // false to allow undo capture
+                track.setSequenceLength(numSteps, false);
                 seqLenDisplaySpan.textContent = `${numBars} bars (${numSteps} steps)`;
             }
         });
@@ -662,8 +664,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentEnvReleaseSlider-${track.id}`)?.appendChild(iERK.element); track.inspectorControls.instEnvRelease = iERK;
 }
 
-// --- Window Opening Functions --- (Global Controls, Inspector, EffectsRack, Sequencer, Mixer)
-// ... (These functions remain the same as your latest correct versions) ...
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -761,6 +761,56 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     }, 0);
     return inspectorWin;
 }
+
+const effectControlDefinitions = {
+    distortion: { title: 'Distortion', controls: [ { idPrefix: 'distAmount', type: 'knob', label: 'Amount', min:0, max:1, step:0.01, paramKey: 'amount', decimals:2, setter: 'setDistortionAmount' } ]},
+    saturation: { title: 'Saturation', controls: [ { idPrefix: 'satWet', type: 'knob', label: 'Sat Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setSaturationWet' }, { idPrefix: 'satAmount', type: 'knob', label: 'Sat Amt', min:0, max:20, step:1, paramKey: 'amount', decimals:0, setter: 'setSaturationAmount' } ]},
+    filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); track.filterNode.Q.value = parseFloat(val); } } ]},
+    chorus: { title: 'Chorus', controls: [ { idPrefix: 'chorusWet', type: 'knob', label: 'Chorus Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setChorusWet' }, { idPrefix: 'chorusFreq', type: 'knob', label: 'Chorus Freq', min:0.1, max:20, step:0.1, paramKey: 'frequency', decimals:1, displaySuffix:'Hz', setter: 'setChorusFrequency' }, { idPrefix: 'chorusDelayTime', type: 'knob', label: 'Chorus Delay', min:1, max:20, step:0.1, paramKey: 'delayTime', decimals:1, displaySuffix:'ms', setter: 'setChorusDelayTime' }, { idPrefix: 'chorusDepth', type: 'knob', label: 'Chorus Depth', min:0, max:1, step:0.01, paramKey: 'depth', decimals:2, setter: 'setChorusDepth' } ]},
+    eq3: { title: 'EQ3', controls: [ { idPrefix: 'eqLow', type: 'knob', label: 'Low', min:-24, max:24, step:1, paramKey: 'low', decimals:0, displaySuffix:'dB', setter: 'setEQ3Low' }, { idPrefix: 'eqMid', type: 'knob', label: 'Mid', min:-24, max:24, step:1, paramKey: 'mid', decimals:0, displaySuffix:'dB', setter: 'setEQ3Mid' }, { idPrefix: 'eqHigh', type: 'knob', label: 'High', min:-24, max:24, step:1, paramKey: 'high', decimals:0, displaySuffix:'dB', setter: 'setEQ3High' } ]},
+    compressor: { title: 'Compressor', controls: [ { idPrefix: 'compThresh', type: 'knob', label: 'Thresh', min:-60, max:0, step:1, paramKey: 'threshold', decimals:0, displaySuffix:'dB', setter: 'setCompressorThreshold' }, { idPrefix: 'compRatio', type: 'knob', label: 'Ratio', min:1, max:20, step:1, paramKey: 'ratio', decimals:0, setter: 'setCompressorRatio' }, { idPrefix: 'compAttack', type: 'knob', label: 'Attack', min:0.001, max:0.1, step:0.001, paramKey: 'attack', decimals:3, displaySuffix:'s', setter: 'setCompressorAttack' }, { idPrefix: 'compRelease', type: 'knob', label: 'Release', min:0.01, max:1, step:0.01, paramKey: 'release', decimals:2, displaySuffix:'s', setter: 'setCompressorRelease' }, { idPrefix: 'compKnee', type: 'knob', label: 'Knee', min:0, max:40, step:1, paramKey: 'knee', decimals:0, displaySuffix:'dB', setter: 'setCompressorKnee' } ]},
+    delay: { title: 'Delay', controls: [ { idPrefix: 'delayWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setDelayWet' }, { idPrefix: 'delayTime', type: 'knob', label: 'Time', min:0, max:1, step:0.01, paramKey: 'time', decimals:2, displaySuffix:'s', setter: 'setDelayTime' }, { idPrefix: 'delayFeedback', type: 'knob', label: 'Feedback', min:0, max:0.99, step:0.01, paramKey: 'feedback', decimals:2, setter: 'setDelayFeedback' } ]},
+    reverb: { title: 'Reverb', controls: [ { idPrefix: 'reverbWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setReverbWet' }, { idPrefix: 'reverbDecay', type: 'knob', label: 'Decay', min:0.1, max:10, step:0.1, paramKey: 'decay', decimals:1, displaySuffix:'s', customSetter: (track, val) => { track.effects.reverb.decay = parseFloat(val); track.reverbNode.decay = parseFloat(val);} }, { idPrefix: 'reverbPreDelay', type: 'knob', label: 'PreDelay', min:0, max:0.1, step:0.001, paramKey: 'preDelay', decimals:3, displaySuffix:'s', customSetter: (track, val) => { track.effects.reverb.preDelay = parseFloat(val); track.reverbNode.preDelay = parseFloat(val);} } ]}
+};
+
+export function buildEffectsRackContentDOM(track) {
+    const mainContentDiv = document.createElement('div');
+    mainContentDiv.className = 'effects-rack-window p-2 space-y-3';
+    for (const effectKey in effectControlDefinitions) {
+        const effectDef = effectControlDefinitions[effectKey];
+        const effectGroupDiv = document.createElement('div');
+        effectGroupDiv.className = 'effect-group';
+        const titleEl = document.createElement('h4');
+        titleEl.className = 'text-sm font-semibold'; titleEl.textContent = effectDef.title;
+        effectGroupDiv.appendChild(titleEl);
+        const controlsContainer = document.createElement('div');
+        if (effectDef.controls.length > 1 || ['distortion', 'saturation'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) {
+             controlsContainer.className = 'control-group';
+        } else {
+            controlsContainer.className = 'single-control-container';
+        }
+
+        effectDef.controls.forEach(controlDef => {
+            if (controlDef.type === 'select') {
+                const selectContainer = document.createElement('div');
+                if(controlsContainer.className !== 'control-group') selectContainer.className = 'mb-1';
+                const selectEl = document.createElement('select');
+                selectEl.id = `${controlDef.idPrefix}-${track.id}`;
+                selectEl.className = 'text-xs p-1 border w-full bg-white text-black';
+                selectContainer.appendChild(selectEl)
+                controlsContainer.appendChild(selectContainer);
+            } else if (controlDef.type === 'knob') {
+                const knobPlaceholder = document.createElement('div');
+                knobPlaceholder.id = `${controlDef.idPrefix}Knob-${track.id}`;
+                controlsContainer.appendChild(knobPlaceholder);
+            }
+        });
+        effectGroupDiv.appendChild(controlsContainer);
+        mainContentDiv.appendChild(effectGroupDiv);
+    }
+    return mainContentDiv;
+}
+
 export function openTrackEffectsRackWindow(trackId, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) return null;
@@ -833,6 +883,63 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     return effectsWin;
 }
 
+export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
+    const mainContentDiv = document.createElement('div');
+    mainContentDiv.className = 'sequencer-window-content p-2';
+    const titleP = document.createElement('p');
+    titleP.className = 'text-xs';
+    titleP.textContent = `${track.name} - ${track.type} Sequencer (${rows} rows x ${track.sequenceLength} steps, ${numBars} Bars)`;
+    mainContentDiv.appendChild(titleP);
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'sequencer-grid-container';
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'sequencer-grid';
+    gridDiv.style.gridTemplateColumns = `50px repeat(${track.sequenceLength}, 1fr)`;
+    gridDiv.style.gridTemplateRows = `auto repeat(${rows}, auto)`;
+    gridDiv.style.setProperty('--steps-per-bar', Constants.STEPS_PER_BAR);
+    const placeholderCell = document.createElement('div');
+    placeholderCell.className = 'sequencer-bar-header-placeholder';
+    gridDiv.appendChild(placeholderCell);
+    for (let bar = 0; bar < numBars; bar++) {
+        const barHeaderCell = document.createElement('div');
+        barHeaderCell.className = 'sequencer-bar-header-cell';
+        barHeaderCell.textContent = `Bar ${bar + 1}`;
+        gridDiv.appendChild(barHeaderCell);
+    }
+    for (let r = 0; r < rows; r++) {
+        const labelCell = document.createElement('div');
+        labelCell.className = 'sequencer-label-cell';
+        labelCell.title = rowLabels[r] || `Row ${r+1}`;
+        labelCell.textContent = rowLabels[r] || `R${r+1}`;
+        gridDiv.appendChild(labelCell);
+        for (let c = 0; c < track.sequenceLength; c++) {
+            const stepCell = document.createElement('div');
+            let cellClass = 'sequencer-step-cell';
+            const beatInBar = (c % Constants.STEPS_PER_BAR);
+            if (Constants.STEPS_PER_BAR === 16) {
+                if (beatInBar % 4 === 0) cellClass += ' beat-downbeat';
+                else cellClass += ' beat-other';
+            } else {
+                if (Math.floor(beatInBar / 4) % 2 === 0) cellClass += ' beat-1'; else cellClass += ' beat-2';
+            }
+            const stepData = track.sequenceData[r]?.[c];
+            if (stepData && stepData.active) {
+                if (track.type === 'Synth') cellClass += ' active-synth';
+                else if (track.type === 'Sampler') cellClass += ' active-sampler';
+                else if (track.type === 'DrumSampler') cellClass += ' active-drum-sampler';
+                else if (track.type === 'InstrumentSampler') cellClass += ' active-instrument-sampler';
+            }
+            stepCell.className = cellClass;
+            stepCell.dataset.row = r; stepCell.dataset.col = c;
+            stepCell.title = `${rowLabels[r] || ''} - Step ${c + 1}`;
+            gridDiv.appendChild(stepCell);
+        }
+    }
+    gridContainer.appendChild(gridDiv);
+    mainContentDiv.appendChild(gridContainer);
+    return mainContentDiv;
+}
+
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) return null;
@@ -894,6 +1001,13 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     };
     return seqWin;
 }
+
+export function highlightPlayingStep(col, trackType, gridElement) {
+    if (!gridElement) return;
+    gridElement.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+    gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`).forEach(cell => cell.classList.add('playing'));
+}
+
 export function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
@@ -1013,7 +1127,6 @@ export function renderMixer(container) {
     }, 0);
 }
 
-// Sound Browser Functions with Autofetch modifications
 export function updateSoundBrowserDisplayForLibrary(libraryName) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
@@ -1023,9 +1136,6 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
         return;
     }
 
-    // Do not automatically change librarySelect.value here if this function was called BY its onchange,
-    // otherwise, it's okay to ensure consistency if called programmatically.
-    // For safety, we assume this function is called with the correct libraryName context.
     window.currentLibraryName = libraryName;
 
     if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) {
@@ -1038,7 +1148,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
     } else {
         const zipUrl = Constants.soundLibraries[libraryName];
         if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
-            window.fetchSoundLibrary(libraryName, zipUrl, false); // false for isAutofetch (on-demand fetch)
+            window.fetchSoundLibrary(libraryName, zipUrl, false);
         } else {
             soundBrowserList.innerHTML = `<div class="sound-browser-loading">Library ${libraryName} configuration not found.</div>`;
             pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
@@ -1104,6 +1214,7 @@ export function openSoundBrowserWindow(savedState = null) {
     return soundBrowserWin;
 }
 
+
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
@@ -1119,7 +1230,11 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         return;
     }
     if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
-        return; // UI should already show "Loading..." from updateSoundBrowserDisplayForLibrary
+        // UI should already show "Loading..." from updateSoundBrowserDisplayForLibrary if that was called
+        // If not, this provides a fallback.
+        soundBrowserList.innerHTML = `<div class="sound-browser-loading">Loading ${window.currentLibraryName}...</div>`;
+        pathDisplay.textContent = `Path: / (${window.currentLibraryName} - Loading...)`;
+        return;
     }
      if (!treeNode) {
         soundBrowserList.innerHTML = `<div class="sound-browser-loading">Select a library.</div>`;
@@ -1218,7 +1333,6 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     });
 }
 
-// --- Waveform, Slice, Pad rendering functions ---
 export function renderSamplePads(track) {
     if (!track || !track.inspectorWindow?.element) return;
     const padsContainer = track.inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
