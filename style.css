@@ -526,8 +526,8 @@ body {
     color: var(--classic-button-text);
 }
 .drop-zone.dragover {
-    background-color: #dadada; /* Slightly lighter gray */
-    border-color: var(--classic-window-frame-darkshadow);
+    background-color: #dadada; /* Slightly lighter gray for dragover */
+    border-color: var(--classic-window-frame-darkshadow); /* Darker border for dragover */
 }
 .drop-zone label { color: var(--classic-title-bar-active); text-decoration: underline; cursor: pointer; }
 
