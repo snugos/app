@@ -2,44 +2,40 @@
 // SnugOS Version 5.5.1 (Modularized)
 
 import { SnugWindow } from './SnugWindow.js';
-// Constants are imported directly where needed or via the * as Constants import
 import * as Constants from './constants.js';
-// Import specific constants if main.js uses them directly (it doesn't seem to in this version)
-// import { computerKeySynthMap, computerKeySamplerMap } from './constants.js'; 
-
 import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js';
-// Import initializers and specific handlers
 import { 
     initializePrimaryEventListeners, 
     setupMIDI, 
     attachGlobalControlEvents,
-    // These specific handlers are now primarily used by ui.js via direct import from eventHandlers.js
-    // So, main.js might not need to import them directly unless it's also calling them.
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
-    // currentlyPressedComputerKeys is internal to eventHandlers.js now
 } from './eventHandlers.js';
 import {
     getTracks, getTrackById,
     addTrackToState,
     updateUndoRedoButtons, captureStateForUndo, undoLastAction, redoLastAction,
-    gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav
+    gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav,
+    // Ensuring all expected state getters are imported
+    getArmedTrackId, getSoloedTrackId, getActiveSequencerTrackId, isTrackRecording, getRecordingTrackId 
 } from './state.js';
-import { initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile, autoSliceSample } from './audio.js';
+import { 
+    initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, 
+    loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview, 
+    loadSampleFile, loadDrumSamplerPadFile, autoSliceSample 
+} from './audio.js';
 import {
     openTrackEffectsRackWindow, openTrackSequencerWindow,
     openGlobalControlsWindow, openTrackInspectorWindow,
     openMixerWindow, updateMixerWindow,
-    openSoundBrowserWindow, renderSoundBrowserDirectory,
+    openSoundBrowserWindow, renderSoundBrowserDirectory, 
     highlightPlayingStep
 } from './ui.js';
 
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js with Diagnostics)");
 
 // --- Global Variables & Initialization ---
-// These are largely managed by their respective modules now.
-// `window.` prefix is for values that ui.js or eventHandlers.js might still expect globally during transition.
 window.loadedZipFiles = {};
 window.currentLibraryName = null;
 window.currentSoundFileTree = null;
@@ -63,6 +59,19 @@ const loadProjectInputEl = document.getElementById('loadProjectInput');
 window.playBtn = null; window.recordBtn = null; window.tempoInput = null;
 window.masterMeterBar = null; window.midiInputSelectGlobal = null;
 window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
+
+
+// --- DIAGNOSTIC LOG ---
+console.log("--- MAIN.JS DIAGNOSTICS (before global assignments) ---");
+console.log("Type of getTracks (from state.js):", typeof getTracks, getTracks);
+console.log("Type of getTrackById (from state.js):", typeof getTrackById, getTrackById);
+console.log("Type of getArmedTrackId (from state.js):", typeof getArmedTrackId, getArmedTrackId); // Check this one specifically
+console.log("Type of addTrackToState (from state.js):", typeof addTrackToState, addTrackToState);
+console.log("Type of openTrackInspectorWindow (from ui.js):", typeof openTrackInspectorWindow, openTrackInspectorWindow);
+console.log("Type of handleTrackMute (from eventHandlers.js):", typeof handleTrackMute, handleTrackMute);
+console.log("Type of autoSliceSample (from audio.js):", typeof autoSliceSample, autoSliceSample);
+console.log("--- END MAIN.JS DIAGNOSTICS ---");
+
 
 // --- Exposing functions globally (TEMPORARY) ---
 // UI functions
@@ -91,6 +100,7 @@ window.loadDrumSamplerPadFile = loadDrumSamplerPadFile;
 window.loadSoundFromBrowserToTarget = loadSoundFromBrowserToTarget;
 window.fetchSoundLibrary = fetchSoundLibrary;
 window.initAudioContextAndMasterMeter = initAudioContextAndMasterMeter;
+window.autoSliceSample = autoSliceSample;
 
 // State functions
 window.captureStateForUndo = captureStateForUndo;
@@ -102,24 +112,24 @@ window.loadProject = loadProject;
 window.exportToWav = exportToWav;
 window.addTrack = addTrackToState;
 
-// Event Handler functions (programmatic attachment in ui.js is preferred)
+// Event Handler functions
 window.handleTrackMute = handleTrackMute;
 window.handleTrackSolo = handleTrackSolo;
 window.handleTrackArm = handleTrackArm;
-window.removeTrack = handleRemoveTrack; // This is the handler from eventHandlers.js
+window.removeTrack = handleRemoveTrack;
 window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
 window.attachGlobalControlEvents = attachGlobalControlEvents;
 
-// Expose state getters needed by other modules if they are still accessing via window
+// Expose state getters
 window.getTracks = getTracks;
 window.getTrackById = getTrackById;
-window.getArmedTrackId = getArmedTrackId;
+window.getArmedTrackId = getArmedTrackId; // Line ~118
 window.getSoloedTrackId = getSoloedTrackId;
 window.getActiveSequencerTrackId = getActiveSequencerTrackId;
-window.isTrackRecording = isTrackRecording; // from state.js
-window.getRecordingTrackId = getRecordingTrackId; // from state.js
+window.isTrackRecording = isTrackRecording;
+window.getRecordingTrackId = getRecordingTrackId;
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -149,11 +159,11 @@ async function initializeSnugOS() {
         undoLastAction: undoLastAction,
         redoLastAction: redoLastAction,
         saveProject: saveProject,
-        loadProject: loadProject, // state.js loadProject just triggers input click
+        loadProject: loadProject,
         exportToWav: exportToWav,
         openGlobalControlsWindow: openGlobalControlsWindow,
         openMixerWindow: openMixerWindow,
-        handleProjectFileLoad: handleProjectFileLoad // from state.js
+        handleProjectFileLoad: handleProjectFileLoad
     };
     initializePrimaryEventListeners(appContext);
     
@@ -162,8 +172,8 @@ async function initializeSnugOS() {
     requestAnimationFrame(updateMetersLoop);
     updateUndoRedoButtons();
 
-    showNotification("Welcome to SnugOS! (Imports Corrected)", 2500);
-    console.log("SnugOS Initialized (Imports Corrected).");
+    showNotification("Welcome to SnugOS! (Diagnostics Added)", 2500);
+    console.log("SnugOS Initialized (Diagnostics Added).");
 }
 
 // Meter Update Loop
@@ -175,10 +185,10 @@ function updateMetersLoop() {
 // --- Global Event Listeners ---
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
-    if (getTracks().length > 0 && (window.undoStack.length > 0 || Object.keys(window.openWindows).length > 1)) {
+    if (getTracks().length > 0 && (typeof undoStack !== 'undefined' && undoStack.length > 0 || Object.keys(window.openWindows).length > 1)) { // Check if undoStack is defined
         e.preventDefault();
         e.returnValue = '';
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Modularized - main.js with Corrected Imports)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1 (Modularized - main.js with Diagnostics)");
