@@ -38,7 +38,6 @@ export function initializePrimaryEventListeners(appContext) {
         }
     });
 
-    // Menu item listeners
     document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => { addTrack('Synth', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
@@ -191,18 +190,15 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
     globalControlsWindowElement.querySelector('#tempoGlobalInput')?.addEventListener('change', (e) => {
         const newTempo = parseFloat(e.target.value);
         const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
-        // Assuming MIN_TEMPO and MAX_TEMPO are defined in Constants.js, e.g., 40 and 240
-        const minTempo = Constants.MIN_TEMPO || 40;
-        const maxTempo = Constants.MAX_TEMPO || 240;
-
-        if (!isNaN(newTempo) && newTempo >= minTempo && newTempo <= maxTempo) {
+        // Reverted to hardcoded tempo range as MIN_TEMPO/MAX_TEMPO are not in constants.js
+        if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
             if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
             Tone.Transport.bpm.value = newTempo;
             if(typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
             else if(taskbarTempoDisplay) taskbarTempoDisplay.textContent = `${newTempo.toFixed(1)} BPM`;
         } else {
             e.target.value = Tone.Transport.bpm.value.toFixed(1);
-            showNotification(`Tempo must be between ${minTempo} and ${maxTempo}.`, 2500);
+            showNotification(`Tempo must be between 40 and 240.`, 2500);
         }
     });
 
@@ -296,7 +292,7 @@ export async function handleMIDIMessage(message) {
         setTimeout(() => window.midiIndicatorGlobalEl.classList.remove('active'), 100);
     }
 
-    if (command === 144 && velocity > 0) {
+    if (command === 144 && velocity > 0) { // Note On
         const audioReady = await window.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             console.warn("[EventHandlers] Audio context not ready for MIDI Note On.");
@@ -349,12 +345,12 @@ export async function handleMIDIMessage(message) {
         } else if (currentArmedTrack.type === 'Sampler') {
             const sliceIdx = note - Constants.samplerMIDINoteStart;
             if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-                window.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
+                window.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel); // No additional pitch shift for direct MIDI
             }
         } else if (currentArmedTrack.type === 'DrumSampler') {
             const padIndex = note - Constants.samplerMIDINoteStart;
             if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-                window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
+                window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel); // No additional pitch shift for direct MIDI
             }
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
             if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
@@ -378,6 +374,7 @@ export async function handleMIDIMessage(message) {
 async function handleComputerKeyDown(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
+    // Handle Octave Shift Keys first
     if (e.code === 'KeyZ') {
         if (!currentlyPressedComputerKeys[e.code]) {
             if (currentOctaveShift > MIN_OCTAVE_SHIFT) {
@@ -405,6 +402,7 @@ async function handleComputerKeyDown(e) {
         return;
     }
 
+    // Process note keys
     if (e.repeat || currentlyPressedComputerKeys[e.code]) return;
 
     currentlyPressedComputerKeys[e.code] = true;
@@ -413,26 +411,31 @@ async function handleComputerKeyDown(e) {
     const time = Tone.now();
     const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
 
-    if (baseComputerKeyNote === undefined) return;
+    if (baseComputerKeyNote === undefined) { // Not a mapped musical key (and not Z/X)
+        // For unmapped keys that aren't Z/X, we still marked them pressed, so they need to be released in keyup.
+        // No note playing logic here.
+        return;
+    }
 
     const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
     const computerKeyVelocity = Constants.defaultVelocity;
 
     if (computerKeyNote < 0 || computerKeyNote > 127) {
         console.warn(`Octave shifted note ${computerKeyNote} (Base: ${baseComputerKeyNote}, Shift: ${currentOctaveShift}) is out of MIDI range.`);
-        return;
+        return; // Don't play or record if out of range
     }
 
     const audioReady = await window.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
         console.warn("[EventHandlers] Audio context not ready for Computer Key Down note playing.");
-        delete currentlyPressedComputerKeys[e.code];
+        delete currentlyPressedComputerKeys[e.code]; // Release key if audio not ready
         if(window.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).length === 0) {
             window.keyboardIndicatorGlobalEl.classList.remove('active');
         }
         return;
     }
 
+    // Recording Logic (uses baseComputerKeyNote for row index)
     if (isTrackRecording() && getArmedTrackId() === getRecordingTrackId()) {
         const track = getTrackById(getRecordingTrackId());
         if (track) {
@@ -449,7 +452,7 @@ async function handleComputerKeyDown(e) {
                 if (track.type === 'Sampler') {
                      rowIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
                      if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-                } else {
+                } else { // DrumSampler
                      rowIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
                      if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
                 }
@@ -466,20 +469,21 @@ async function handleComputerKeyDown(e) {
         }
     }
 
+    // Live Playback Logic (uses shifted computerKeyNote for pitch)
     const currentArmedTrackId = getArmedTrackId();
-    if (!currentArmedTrackId) return;
+    if (!currentArmedTrackId) return; // No track armed, nothing to play live
     const currentArmedTrack = getTrackById(currentArmedTrackId);
-    if (!currentArmedTrack) return;
+    if (!currentArmedTrack) return; // Armed track not found
 
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
         currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, computerKeyVelocity);
     } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
-        const sliceIdx = baseComputerKeyNote - Constants.samplerMIDINoteStart;
+        const sliceIdx = baseComputerKeyNote - Constants.samplerMIDINoteStart; // Slice index is from base key
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
             window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
-        const padIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
+        const padIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart; // Pad index is from base key
         if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
             window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
         }
@@ -504,28 +508,31 @@ function handleComputerKeyUp(e) {
         return;
     }
 
-    const time = Tone.now();
-    const currentArmedTrackId = getArmedTrackId();
-
-    if (currentArmedTrackId && currentlyPressedComputerKeys[e.code]) {
-        const track = getTrackById(currentArmedTrackId);
-        if (track) {
-            const baseComputerKeyNote = Constants.computerKeySynthMap[e.code];
-            if (baseComputerKeyNote !== undefined) {
-                const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-                 if (computerKeyNote >= 0 && computerKeyNote <= 127) {
-                    if (track.type === 'Synth' && track.instrument) {
-                        track.instrument.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
-                    } else if (track.type === 'InstrumentSampler' && track.toneSampler && track.toneSampler.loaded) {
-                        if (track.instrumentSamplerIsPolyphonic) {
-                            track.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
+    // For any other key that was marked as pressed
+    if (currentlyPressedComputerKeys[e.code]) {
+        const time = Tone.now();
+        const currentArmedTrackId = getArmedTrackId();
+        if (currentArmedTrackId) {
+            const track = getTrackById(currentArmedTrackId);
+            if (track) {
+                const baseComputerKeyNote = Constants.computerKeySynthMap[e.code]; // Note-off mainly for Synth/InstSampler
+                if (baseComputerKeyNote !== undefined) { // If it was a key that could have produced a note
+                    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
+                     if (computerKeyNote >= 0 && computerKeyNote <= 127) {
+                        if (track.type === 'Synth' && track.instrument) {
+                            track.instrument.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
+                        } else if (track.type === 'InstrumentSampler' && track.toneSampler && track.toneSampler.loaded) {
+                            if (track.instrumentSamplerIsPolyphonic) {
+                                track.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
+                            }
                         }
-                    }
-                 }
+                     }
+                }
             }
         }
+        delete currentlyPressedComputerKeys[e.code];
     }
-    delete currentlyPressedComputerKeys[e.code];
+
     if(window.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).length === 0) {
         window.keyboardIndicatorGlobalEl.classList.remove('active');
     }
@@ -605,7 +612,6 @@ export function handleRemoveTrack(trackId) {
         }
     );
 }
-
 
 export function handleOpenTrackInspector(trackId) {
     if (typeof window.openTrackInspectorWindow === 'function') {
