@@ -8,7 +8,7 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-// console.log("UI.JS FILE LOADED - DEBUG DRAG DROP"); // For sanity check
+console.log("UI.JS FILE LOADED - DEBUG DRAG DROP (v3 - Specific Element Check)");
 
 export function createKnob(options) {
     const container = document.createElement('div');
@@ -273,12 +273,9 @@ function buildSamplerSpecificInspectorDOM(track) { // This is for Slicer Sampler
     const panel = document.createElement('div');
     panel.className = 'panel sampler-panel';
     const dropZoneContainer = document.createElement('div');
-    // The inputId here is `fileInput-${track.id}`
-    // The trackTypeHintForLoad is 'Sampler'
     dropZoneContainer.innerHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler');
-    panel.appendChild(dropZoneContainer.firstChild); // Appends the div.drop-zone
+    panel.appendChild(dropZoneContainer.firstChild);
 
-    // ... rest of the Sampler specific DOM ...
     const editorPanel = document.createElement('div');
     editorPanel.className = 'sampler-editor-panel mt-1 flex flex-wrap md:flex-nowrap gap-3';
     const leftSide = document.createElement('div');
@@ -374,14 +371,13 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
     panel.appendChild(title);
     const padsContainer = document.createElement('div');
     padsContainer.id = `drumSamplerPadsContainer-${track.id}`;
-    padsContainer.className = 'pads-container mb-2'; // Renders pad buttons
+    padsContainer.className = 'pads-container mb-2';
     panel.appendChild(padsContainer);
     const controlsContainer = document.createElement('div');
     controlsContainer.id = `drumPadControlsContainer-${track.id}`;
     controlsContainer.className = 'border-t pt-2';
-    // The drop zone for the *selected pad* is created/updated by updateDrumPadControlsUI
     const loadContainer = document.createElement('div');
-    loadContainer.id = `drumPadLoadContainer-${track.id}`; // This is where the pad-specific drop zone goes
+    loadContainer.id = `drumPadLoadContainer-${track.id}`;
     loadContainer.className = 'mb-2';
     controlsContainer.appendChild(loadContainer);
     const volPitchGroup = document.createElement('div');
@@ -416,12 +412,9 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel instrument-sampler-panel';
     const dropZoneContainer = document.createElement('div');
-    // The inputId here is `instrumentFileInput-${track.id}`
-    // The trackTypeHintForLoad is 'InstrumentSampler'
     dropZoneContainer.innerHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
-    panel.appendChild(dropZoneContainer.firstChild); // Appends the div.drop-zone
+    panel.appendChild(dropZoneContainer.firstChild);
 
-    // ... rest of Instrument Sampler DOM ...
     const canvas = document.createElement('canvas');
     canvas.id = `instrumentWaveformCanvas-${track.id}`;
     canvas.className = 'waveform-canvas w-full mb-1';
@@ -512,7 +505,7 @@ export function initializeCommonInspectorControls(track, winEl) {
 export function initializeTypeSpecificInspectorControls(track, winEl) {
     if (track.type === 'Synth') {
         initializeSynthSpecificControls(track, winEl);
-    } else if (track.type === 'Sampler') { // Slicer Sampler
+    } else if (track.type === 'Sampler') {
         initializeSamplerSpecificControls(track, winEl);
     } else if (track.type === 'DrumSampler') {
         initializeDrumSamplerSpecificControls(track, winEl);
@@ -541,19 +534,31 @@ function initializeSynthSpecificControls(track, winEl) {
     winEl.querySelector(`#envReleaseSlider-${track.id}`)?.appendChild(envRKnob.element); track.inspectorControls.envRelease = envRKnob;
 }
 
-function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
-    const dropZoneEl = winEl.querySelector(`#dropZone-${track.id}-sampler`);
-    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`); // Matches ID from createDropZoneHTML
+function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler (type: 'Sampler')
+    const dropZoneQuery = `#dropZone-${track.id}-sampler`;
+    const fileInputQuery = `#fileInput-${track.id}`; // This is the ID used in createDropZoneHTML for Sampler
+
+    const dropZoneEl = winEl.querySelector(dropZoneQuery);
+    const fileInputEl = winEl.querySelector(fileInputQuery);
+
+    if (!dropZoneEl) {
+        console.warn(`[UI] Slicer Sampler: Drop zone element NOT FOUND using query: ${dropZoneQuery} within`, winEl);
+    }
+    if (!fileInputEl) {
+        console.warn(`[UI] Slicer Sampler: File input element NOT FOUND using query: ${fileInputQuery} within`, winEl);
+    }
+
     if (dropZoneEl && fileInputEl) {
-        // Ensure the correct loadFileCallback (window.loadSampleFile) and trackTypeHint ('Sampler') are passed
+        console.log(`[UI] Slicer Sampler: Both drop zone and file input FOUND for track ${track.id}. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
         fileInputEl.onchange = (e) => {
-            window.loadSampleFile(e, track.id, 'Sampler'); // trackTypeHint is 'Sampler'
+            window.loadSampleFile(e, track.id, 'Sampler');
         };
     } else {
-        console.warn(`[UI] Drop zone or file input not found for Sampler track ${track.id}`);
+        // console.warn(`[UI] Drop zone or file input not found for Sampler track ${track.id}`);
     }
-    renderSamplePads(track); // Renders slice pads
+
+    renderSamplePads(track);
     winEl.querySelector(`#applySliceEditsBtn-${track.id}`)?.addEventListener('click', () => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Apply Slice Edits for ${track.name}`);
         applySliceEdits(track.id);
@@ -611,7 +616,7 @@ function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
     const padLoadContainer = winEl.querySelector(`#drumPadLoadContainer-${track.id}`);
-    if (padLoadContainer) updateDrumPadControlsUI(track); // This sets up the drop zone for the selected pad
+    if (padLoadContainer) updateDrumPadControlsUI(track);
     renderDrumSamplerPads(track);
 
     const pVolK = createKnob({ label: 'Pad Vol', min:0, max:1, step:0.01, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(track.selectedDrumPadForEdit, val)});
@@ -625,16 +630,29 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
-    const dropZoneEl = winEl.querySelector(`#dropZone-${track.id}-instrumentsampler`);
-    const fileInputEl = winEl.querySelector(`#instrumentFileInput-${track.id}`); // Matches ID from createDropZoneHTML
+    const dropZoneQuery = `#dropZone-${track.id}-instrumentsampler`;
+    const fileInputQuery = `#instrumentFileInput-${track.id}`; // Matches ID from createDropZoneHTML
+
+    const dropZoneEl = winEl.querySelector(dropZoneQuery);
+    const fileInputEl = winEl.querySelector(fileInputQuery);
+
+    if (!dropZoneEl) {
+        console.warn(`[UI] InstrumentSampler: Drop zone element NOT FOUND using query: ${dropZoneQuery} within`, winEl);
+        // console.log("[UI] winEl.innerHTML for InstrumentSampler:", winEl.innerHTML); // Log HTML if not found
+    }
+    if (!fileInputEl) {
+        console.warn(`[UI] InstrumentSampler: File input element NOT FOUND using query: ${fileInputQuery} within`, winEl);
+    }
+
     if (dropZoneEl && fileInputEl) {
-        // Ensure the correct loadFileCallback (window.loadSampleFile) and trackTypeHint ('InstrumentSampler') are passed
+        console.log(`[UI] InstrumentSampler: Both drop zone and file input FOUND for track ${track.id}. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
          fileInputEl.onchange = (e) => {
-            window.loadSampleFile(e, track.id, 'InstrumentSampler'); // trackTypeHint is 'InstrumentSampler'
+            window.loadSampleFile(e, track.id, 'InstrumentSampler');
         };
     } else {
-        console.warn(`[UI] Drop zone or file input not found for InstrumentSampler track ${track.id}`);
+        // This log is now covered by the more specific logs above.
+        // console.warn(`[UI] Drop zone or file input not found for InstrumentSampler track ${track.id}`);
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
@@ -680,7 +698,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 }
 
 // ... (Rest of the ui.js file: openGlobalControlsWindow, openTrackInspectorWindow, etc. ... )
-// ... (Ensure all window opening functions, renderMixer, highlightPlayingStep, etc. are present) ...
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -779,6 +796,17 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     return inspectorWin;
 }
 
+// ... (effectControlDefinitions, buildEffectsRackContentDOM, openTrackEffectsRackWindow) ...
+// ... (buildSequencerContentDOM, openTrackSequencerWindow, highlightPlayingStep) ...
+// ... (openMixerWindow, updateMixerWindow, renderMixer) ...
+// ... (updateSoundBrowserDisplayForLibrary, openSoundBrowserWindow, renderSoundBrowserDirectory) ...
+// ... (renderSamplePads, updateSliceEditorUI, applySliceEdits) ...
+// ... (drawWaveform, drawInstrumentWaveform) ...
+// ... (updateDrumPadControlsUI, renderDrumSamplerPads) ...
+// Ensure all these functions are present and correctly defined as in your last working version.
+// For brevity, I'm omitting them here but they need to be in your actual ui.js file.
+
+// (Make sure all the functions from the previous ui.js are here, including highlightPlayingStep)
 const effectControlDefinitions = {
     distortion: { title: 'Distortion', controls: [ { idPrefix: 'distAmount', type: 'knob', label: 'Amount', min:0, max:1, step:0.01, paramKey: 'amount', decimals:2, setter: 'setDistortionAmount' } ]},
     saturation: { title: 'Saturation', controls: [ { idPrefix: 'satWet', type: 'knob', label: 'Sat Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setSaturationWet' }, { idPrefix: 'satAmount', type: 'knob', label: 'Sat Amt', min:0, max:20, step:1, paramKey: 'amount', decimals:0, setter: 'setSaturationAmount' } ]},
