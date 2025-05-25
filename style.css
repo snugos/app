@@ -1,43 +1,52 @@
-/* --- Kawaii Pastel OS Theme for SnugOS --- */
+/* --- Kawaii Pastel OS Theme for SnugOS (Mixed Inspiration) --- */
 
-/* Base Colors - Inspired by the uploaded image */
+/* Base Colors - Inspired by the uploaded images */
 :root {
-    --kawaii-bg-main: #f0d9e7; /* Light pinkish lavender for desktop */
+    --kawaii-bg-main: #f2e6f0; /* Lighter, soft lavender-pink for desktop */
     --kawaii-bg-window: #ffffff; /* White for window content */
-    --kawaii-bg-window-alt: #fff0f5; /* Very light pink for some panels */
-    --kawaii-accent-pink: #ffc0cb; /* Classic pink */
-    --kawaii-accent-blue: #add8e6; /* Light blue */
-    --kawaii-accent-yellow: #fffacd; /* Lemon chiffon */
-    --kawaii-accent-purple: #e6e6fa; /* Lavender */
-    --kawaii-text-dark: #7c5c82;   /* Darker purple for text */
+    --kawaii-bg-window-alt: #fdf6f8; /* Very light pink for panels/alt backgrounds */
+
+    --kawaii-pink-primary: #ffc0cb;   /* Classic Pink */
+    --kawaii-pink-secondary: #f8b2c2; /* Slightly deeper pink for borders/accents */
+    --kawaii-pink-light: #fff0f5;     /* Lavender blush for hover/light backgrounds */
+
+    --kawaii-purple-primary: #e0c8f0; /* Light Purple (like new image title bar) */
+    --kawaii-purple-secondary: #c8a2c8; /* Deeper Purple for borders/text */
+    --kawaii-purple-text: #6a4f78;    /* Darker purple for main text */
+
+    --kawaii-blue-primary: #add8e6;   /* Light Blue */
+    --kawaii-blue-secondary: #9ac7d9; /* Deeper blue for borders */
+
+    --kawaii-yellow-primary: #fffacd; /* Lemon Chiffon */
+
+    --kawaii-text-dark: var(--kawaii-purple-text);
     --kawaii-text-light: #ffffff;
-    --kawaii-border-main: #e7b2c4; /* A slightly darker pink for borders */
-    --kawaii-border-strong: #c88ca2; /* Stronger border */
-    --kawaii-highlight: var(--kawaii-accent-blue);
+    --kawaii-text-heart: var(--kawaii-pink-primary);
+
+    --kawaii-border-main: var(--kawaii-pink-secondary);
+    --kawaii-border-strong: var(--kawaii-purple-secondary);
+
+    --kawaii-highlight: var(--kawaii-blue-primary);
     --kawaii-highlight-text: var(--kawaii-text-dark);
-    --kawaii-button-face: var(--kawaii-accent-pink);
+
+    --kawaii-button-face: var(--kawaii-pink-primary);
     --kawaii-button-hover: #ffb0b9;
     --kawaii-button-active: #ffa0ab;
     --kawaii-button-text: var(--kawaii-text-dark);
+
     --kawaii-input-bg: #ffffff;
     --kawaii-input-border: var(--kawaii-border-main);
-    --kawaii-input-focus-border: var(--kawaii-accent-blue);
+    --kawaii-input-focus-border: var(--kawaii-blue-primary);
 
-    /* Specifics from image */
-    --kawaii-titlebar-pink: #ffc0cb;
-    --kawaii-titlebar-blue: #add8e6;
-    --kawaii-titlebar-yellow: #fffacd; /* For other window types if needed */
-    --kawaii-titlebar-text: var(--kawaii-text-dark);
-
-    --kawaii-taskbar-bg: #e7b2c4; /* Pinkish taskbar */
-    --kawaii-startbutton-bg: #fff0f5; /* Light pink start button */
+    --kawaii-taskbar-bg: var(--kawaii-pink-secondary);
+    --kawaii-startbutton-bg: var(--kawaii-pink-light);
     --kawaii-startbutton-border: var(--kawaii-border-strong);
 }
 
-/* --- General SnugOS Styles (Kawaii Pastel Theme) --- */
+/* --- General SnugOS Styles --- */
 body {
-    font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif; /* Rounded, friendly font */
-    font-size: 13px; /* Slightly larger for a softer feel */
+    font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+    font-size: 13px;
     margin: 0;
     background-color: var(--kawaii-bg-main);
     color: var(--kawaii-text-dark);
@@ -53,16 +62,15 @@ body {
     position: relative;
     overflow: auto;
     background-color: var(--kawaii-bg-main);
-    /* Custom background image will override this */
 }
 
 #taskbar {
-    height: 32px;
+    height: 34px; /* Slightly taller for a chunkier feel */
     background-color: var(--kawaii-taskbar-bg);
     border-top: 2px solid var(--kawaii-border-strong);
     display: flex;
     align-items: center;
-    padding: 2px 5px;
+    padding: 3px 6px;
     box-sizing: border-box;
     flex-shrink: 0;
 }
@@ -71,65 +79,53 @@ body {
     background-color: var(--kawaii-startbutton-bg);
     color: var(--kawaii-text-dark);
     border: 2px solid var(--kawaii-startbutton-border);
-    padding: 3px 12px;
+    padding: 4px 14px;
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    margin-right: 5px;
-    border-radius: 8px; /* Rounded start button */
+    margin-right: 6px;
+    border-radius: 8px;
     transition: background-color 0.1s, transform 0.1s;
 }
-#startButton:hover {
-    background-color: #ffe6f0;
-}
-#startButton:active {
-    background-color: #ffdbe8;
-    transform: translateY(1px);
-}
-
+#startButton:hover { background-color: #ffe0e9; }
+#startButton:active { background-color: #ffd8e2; transform: translateY(1px); }
 
 #startMenu {
     position: absolute;
-    bottom: 32px; /* Height of taskbar */
+    bottom: 34px; /* Adjusted for taskbar height */
     left: 0;
     background-color: var(--kawaii-bg-window-alt);
     border: 2px solid var(--kawaii-border-strong);
     box-shadow: 3px 3px 6px rgba(0,0,0,0.1);
     z-index: 10000;
-    width: 200px;
-    padding: 5px;
-    border-radius: 10px 10px 0 0; /* Rounded top */
+    width: 210px;
+    padding: 6px;
+    border-radius: 10px 10px 0 0;
 }
-
 #startMenu ul { list-style: none; padding: 0; margin: 0; }
 #startMenu li {
-    padding: 6px 10px 6px 25px;
+    padding: 7px 12px 7px 28px; /* More padding for icons */
     cursor: pointer;
     font-size: 12px;
     color: var(--kawaii-text-dark);
     white-space: nowrap;
-    border-radius: 5px;
-    margin: 2px 0;
+    border-radius: 6px;
+    margin: 3px 0;
+    position: relative;
 }
-#startMenu li:hover {
-    background-color: var(--kawaii-accent-pink);
-    color: var(--kawaii-text-light);
-}
+/* Example for adding a heart icon to menu items if desired via JS */
+/* #startMenu li::before { content: '♡'; position: absolute; left: 10px; color: var(--kawaii-text-heart); } */
+#startMenu li:hover { background-color: var(--kawaii-accent-pink); color: var(--kawaii-text-light); }
 #startMenu li.disabled { color: #b0a0b8; cursor: default; }
 #startMenu li.disabled:hover { background-color: transparent; color: #b0a0b8; }
-#startMenu hr {
-    border: none;
-    border-top: 1px dashed var(--kawaii-border-main);
-    margin: 4px 0;
-}
+#startMenu hr { border: none; border-top: 1px dashed var(--kawaii-border-main); margin: 5px 0; }
 
-
-#taskbarButtons { display: flex; flex-grow: 1; margin-left: 5px; overflow-x: auto; gap: 3px; }
+#taskbarButtons { display: flex; flex-grow: 1; margin-left: 6px; overflow-x: auto; gap: 4px; }
 .taskbar-button {
     background-color: var(--kawaii-bg-window-alt);
     border: 2px solid var(--kawaii-border-main);
     color: var(--kawaii-text-dark);
-    padding: 3px 10px;
+    padding: 4px 10px;
     font-size: 11px;
     cursor: pointer;
     white-space: nowrap;
@@ -137,14 +133,11 @@ body {
     min-width: 90px;
     overflow: hidden;
     text-overflow: ellipsis;
-    border-radius: 6px;
+    border-radius: 8px; /* More rounded */
     text-align: left;
     transition: background-color 0.1s, border-color 0.1s;
 }
-.taskbar-button:hover {
-    border-color: var(--kawaii-border-strong);
-    background-color: #ffe8f0;
-}
+.taskbar-button:hover { border-color: var(--kawaii-border-strong); background-color: #ffe8f0; }
 .taskbar-button.active {
     background-color: var(--kawaii-accent-pink);
     border-color: var(--kawaii-border-strong);
@@ -152,42 +145,40 @@ body {
     font-weight: bold;
 }
 
-
 #taskbarTempoDisplay {
     font-size: 11px;
-    padding: 4px 8px;
+    padding: 5px 10px;
     margin-left: auto;
     color: var(--kawaii-text-dark);
     cursor: pointer;
     background-color: var(--kawaii-bg-window-alt);
     border: 2px solid var(--kawaii-border-main);
-    border-radius: 6px;
-    min-width: 70px;
+    border-radius: 8px;
+    min-width: 75px;
     text-align: center;
 }
-
 
 /* --- Window Styles --- */
 .window {
     position: absolute;
     background-color: var(--kawaii-bg-window);
-    border: 3px solid var(--kawaii-titlebar-pink); /* Default to pink titlebar color for border */
-    box-shadow: 4px 4px 8px rgba(0,0,0,0.1);
+    border: 3px solid var(--kawaii-purple-secondary); /* Default border to a darker purple */
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.12);
     display: flex;
     flex-direction: column;
-    min-width: 200px; /* Wider minimums for cute style */
-    min-height: 150px;
+    min-width: 220px;
+    min-height: 160px;
     resize: both;
     overflow: hidden;
-    border-radius: 12px; /* Very rounded corners */
-    padding: 0; /* No outer padding, border is the frame */
+    border-radius: 10px; /* Consistent rounded corners */
+    padding: 0;
 }
 .window.minimized { display: none; }
 
 .window-title-bar {
-    background-color: var(--kawaii-titlebar-pink); /* Default pink */
-    color: var(--kawaii-titlebar-text);
-    padding: 6px 10px;
+    background-color: var(--kawaii-purple-primary); /* Solid light purple */
+    color: var(--kawaii-text-dark); /* Darker text on light purple */
+    padding: 5px 10px; /* Adjusted padding */
     cursor: grab;
     display: flex;
     justify-content: space-between;
@@ -195,73 +186,70 @@ body {
     font-size: 13px;
     font-weight: bold;
     user-select: none;
-    /* No bottom border, window border serves as frame */
-    border-top-left-radius: 9px; /* Match outer radius minus border width */
-    border-top-right-radius: 9px;
+    border-top-left-radius: 7px; /* Inner radius */
+    border-top-right-radius: 7px;
+    border-bottom: 2px solid var(--kawaii-purple-secondary); /* Separator line */
 }
-/* Example for different window types (apply class to window element) */
-.window.type-blue .window-title-bar { background-color: var(--kawaii-titlebar-blue); }
-.window.type-yellow .window-title-bar { background-color: var(--kawaii-titlebar-yellow); }
-.window.type-blue { border-color: var(--kawaii-titlebar-blue); }
-.window.type-yellow { border-color: var(--kawaii-titlebar-yellow); }
+/* Focused window might have a slightly different title bar if needed */
+.window.focused .window-title-bar {
+    /* background-color: #d8bfeb; Slightly brighter purple for focus */
+}
 
-
-.window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 3px; }
+.window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 4px; }
 
 .window-title-buttons button {
-    background-color: rgba(255,255,255,0.3); /* Semi-transparent buttons on title bar */
-    border: 1px solid rgba(0,0,0,0.1);
-    color: var(--kawaii-titlebar-text);
+    background-color: var(--kawaii-bg-window-alt);
+    border: 1px solid var(--kawaii-purple-secondary);
+    color: var(--kawaii-text-dark);
     font-weight: bold;
-    margin-left: 4px;
+    margin-left: 3px;
     cursor: pointer;
     padding: 0;
-    width: 20px;
+    width: 22px; /* Slightly larger, more square-ish */
     height: 20px;
-    font-size: 12px;
-    line-height: 20px;
+    font-size: 11px;
+    line-height: 18px; /* Adjust for vertical centering */
     text-align: center;
-    border-radius: 50%; /* Circular buttons */
+    border-radius: 5px; /* Rounded square */
     transition: background-color 0.1s;
 }
-.window-title-buttons button:hover { background-color: rgba(255,255,255,0.5); }
-.window-title-buttons button:active { background-color: rgba(0,0,0,0.1); }
-/* Using text for now, can be replaced with SVGs/images */
-.window-minimize-btn::before { content: "_"; }
-.window-close-btn::before { content: "X"; }
+.window-title-buttons button:hover { background-color: var(--kawaii-accent-pink); color: var(--kawaii-text-light); }
+.window-title-buttons button:active { background-color: var(--kawaii-border-strong); color: var(--kawaii-text-light); }
+.window-minimize-btn::before { content: "_"; font-weight: bolder; }
+.window-close-btn::before { content: "X"; font-weight: normal; }
 
 
 .window-content {
     flex-grow: 1;
-    padding: 10px;
+    padding: 12px; /* More padding inside content area */
     overflow: auto;
-    background-color: var(--kawaii-bg-window);
-    border-bottom-left-radius: 9px;
-    border-bottom-right-radius: 9px;
+    background-color: var(--kawaii-bg-window); /* Usually white or very light */
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
 }
 
 /* --- Notification Area --- */
-#notification-area { position: fixed; bottom: 40px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
+#notification-area { /* Same */ }
 .notification-message {
-    background-color: var(--kawaii-accent-purple);
+    background-color: var(--kawaii-accent-yellow);
     color: var(--kawaii-text-dark);
-    border: 2px solid var(--kawaii-border-strong);
-    padding: 10px 15px; margin-top: 8px; border-radius: 8px;
+    border: 2px solid var(--kawaii-border-main);
+    padding: 10px 15px; margin-top: 8px; border-radius: 10px; /* More rounded */
     font-size: 12px; opacity: 0; transform: translateX(100%);
     transition: opacity 0.3s ease, transform 0.3s ease; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
 }
-.notification-message.show { opacity: 1; transform: translateX(0); }
+.notification-message.show { /* Same */ }
 
 /* --- Modal Styles --- */
 #modalContainer { /* Same */ }
-.modal-overlay { background-color: rgba(255, 192, 203, 0.3); /* Pinkish overlay */ /* Same */ }
+.modal-overlay { background-color: rgba(231, 178, 196, 0.3); /* Softer pink overlay */ }
 .modal-dialog {
     background-color: var(--kawaii-bg-window-alt);
     border: 3px solid var(--kawaii-accent-pink);
     box-shadow: 4px 4px 10px rgba(0,0,0,0.15);
     border-radius: 12px;
-    min-width: 300px; max-width: 450px;
-    padding: 0; /* Padding handled by title/content/buttons */
+    min-width: 320px; max-width: 450px;
+    padding: 0;
 }
 .modal-title-bar {
     background-color: var(--kawaii-accent-pink);
@@ -287,63 +275,54 @@ body {
     background-color: var(--kawaii-bg-window-alt);
     padding: 12px; padding-top: 18px; margin-bottom: 10px;
     border: 2px solid var(--kawaii-border-main);
-    border-radius: 8px; position: relative;
+    border-radius: 10px; /* More rounded panels */
+    position: relative;
 }
 .panel h4 {
-    position: absolute; top: -0.7em; left: 10px;
-    background-color: var(--kawaii-bg-window-alt); padding: 0 5px;
+    position: absolute; top: -0.7em; left: 12px;
+    background-color: var(--kawaii-bg-window-alt); padding: 0 6px;
     font-size: 12px; color: var(--kawaii-text-dark); font-weight: bold;
 }
-.control-group { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-around; padding-top: 5px; }
+.control-group { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-around; padding-top: 8px; }
 
-/* --- Knob Styles (Kawaii: Simple, Rounded) --- */
-.knob-container { display: flex; flex-direction: column; align-items: center; width: 70px; margin-bottom: 8px; }
-.knob-label { font-size: 10px; color: var(--kawaii-text-dark); margin-bottom: 4px; text-align: center; }
+/* --- Knob Styles --- */
+.knob-container { /* Same */ }
+.knob-label { /* Same */ }
 .knob {
     width: 44px; height: 44px; background-color: var(--kawaii-accent-blue);
     border-radius: 50%; position: relative; cursor: ns-resize;
-    border: 2px solid var(--kawaii-border-strong);
+    border: 2px solid var(--kawaii-blue-secondary); /* Border matching accent */
     box-shadow: inset 0 0 6px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1);
 }
-.knob-handle {
-    width: 6px; height: 14px; background-color: var(--kawaii-bg-window);
-    position: absolute; top: 4px; left: 50%;
-    transform: translateX(-50%); transform-origin: bottom center;
-    border-radius: 3px; box-shadow: 0 0 2px rgba(0,0,0,0.2);
-}
-.knob-value {
-    font-size: 10px; color: var(--kawaii-text-dark); margin-top: 4px;
-    min-height: 1em; text-align: center;
-    background: var(--kawaii-bg-window-alt); border: 1px solid var(--kawaii-border-main);
-    padding: 2px 5px; border-radius: 4px; min-width: 35px;
-}
+.knob-handle { /* Same */ }
+.knob-value { /* Same */ }
 
 /* --- Meter Styles --- */
 .meter-bar-container {
-    background-color: var(--kawaii-accent-purple); border-radius: 5px;
-    overflow: hidden; height: 12px; border: 1px solid var(--kawaii-border-main); padding: 2px;
+    background-color: var(--kawaii-accent-purple); border-radius: 6px; /* Rounded meter track */
+    overflow: hidden; height: 14px; border: 1px solid var(--kawaii-border-main); padding: 2px;
 }
-.meter-bar { background-color: var(--kawaii-accent-pink); height: 100%; width: 0%; transition: width 0.05s linear; border-radius: 3px; }
-.meter-bar.clipping { background-color: #ff69b4; /* Hot pink for clipping */ }
+.meter-bar { background-color: var(--kawaii-accent-pink); height: 100%; width: 0%; transition: width 0.05s linear; border-radius: 4px; }
+.meter-bar.clipping { background-color: #ff69b4; }
 
 /* --- Sequencer Styles --- */
 .sequencer-window-content { /* Same */ }
 .sequencer-grid-container {
     flex-grow: 1; overflow: auto;
-    border: 2px solid var(--kawaii-border-main); border-radius: 8px;
+    border: 2px solid var(--kawaii-border-main); border-radius: 10px; /* Rounded grid container */
     background-color: var(--kawaii-bg-window-alt);
 }
-.sequencer-grid { display: grid; gap: 2px; background-color: var(--kawaii-border-main); padding: 2px; min-width: fit-content; }
+.sequencer-grid { display: grid; gap: 2px; background-color: var(--kawaii-border-main); padding: 3px; min-width: fit-content; }
 .sequencer-label-cell, .sequencer-step-cell, .sequencer-bar-header-cell, .sequencer-bar-header-placeholder {
     background-color: var(--kawaii-bg-window); display: flex; justify-content: center; align-items: center;
-    font-size: 10px; min-height: 22px; user-select: none; border-radius: 4px;
+    font-size: 10px; min-height: 24px; user-select: none; border-radius: 5px; /* Rounded cells */
 }
 .sequencer-label-cell { font-weight: bold; position: sticky; left: 0; z-index: 2; padding: 0 5px; white-space: nowrap; background-color: var(--kawaii-accent-purple); color: var(--kawaii-text-dark); }
 .sequencer-bar-header-placeholder { position: sticky; top: 0; left: 0; z-index: 3; background-color: var(--kawaii-accent-purple); }
 .sequencer-bar-header-cell { font-weight: bold; grid-column: span var(--steps-per-bar, 16); position: sticky; top: 0; z-index: 1; background-color: var(--kawaii-accent-purple); color: var(--kawaii-text-dark); }
-.sequencer-step-cell { cursor: pointer; min-width: 22px; background-color: var(--kawaii-input-bg); border: 1px solid var(--kawaii-border-main); }
+.sequencer-step-cell { cursor: pointer; min-width: 24px; background-color: var(--kawaii-input-bg); border: 1px solid var(--kawaii-border-main); }
 .sequencer-step-cell:hover { background-color: var(--kawaii-accent-yellow); }
-.sequencer-step-cell.beat-downbeat { background-color: #faf0ff; /* Lighter lavender */ }
+.sequencer-step-cell.beat-downbeat { background-color: #fdf0ff; } /* Very light purple for downbeats */
 .sequencer-step-cell.active-synth,
 .sequencer-step-cell.active-sampler,
 .sequencer-step-cell.active-drum-sampler,
@@ -354,29 +333,29 @@ body {
 
 /* --- Sound Browser Styles --- */
 .sound-browser-content { /* Same */ }
-#soundBrowserLibrarySelect { flex-shrink: 0; margin-bottom: 5px; font-size: 12px; background-color: var(--kawaii-input-bg); border: 2px solid var(--kawaii-input-border); padding: 4px; border-radius: 6px; }
-#soundBrowserPathDisplay { flex-shrink: 0; padding: 4px 8px; background-color: var(--kawaii-accent-purple); color: var(--kawaii-text-dark); border-bottom: 2px solid var(--kawaii-border-main); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-top-left-radius: 6px; border-top-right-radius: 6px;}
-.sound-browser-list { flex-grow: 1; overflow-y: auto; border: 2px solid var(--kawaii-border-main); border-top: none; background-color: var(--kawaii-input-bg); border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;}
-.sound-browser-item { padding: 5px 10px; cursor: pointer; border-bottom: 1px dashed var(--kawaii-border-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#soundBrowserLibrarySelect { flex-shrink: 0; margin-bottom: 5px; font-size: 12px; background-color: var(--kawaii-input-bg); border: 2px solid var(--kawaii-input-border); padding: 4px; border-radius: 8px; }
+#soundBrowserPathDisplay { flex-shrink: 0; padding: 4px 8px; background-color: var(--kawaii-accent-purple); color: var(--kawaii-text-dark); border-bottom: 2px solid var(--kawaii-border-main); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-top-left-radius: 8px; border-top-right-radius: 8px;}
+.sound-browser-list { flex-grow: 1; overflow-y: auto; border: 2px solid var(--kawaii-border-main); border-top: none; background-color: var(--kawaii-input-bg); border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+.sound-browser-item { padding: 5px 10px; cursor: pointer; border-bottom: 1px dashed var(--kawaii-border-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 4px; margin: 1px; }
 .sound-browser-item:last-child { border-bottom: none; }
 .sound-browser-item:hover { background-color: var(--kawaii-accent-yellow); color: var(--kawaii-text-dark); }
-.sound-browser-loading { padding: 15px; text-align: center; color: var(--kawaii-text-dark); }
+.sound-browser-loading { /* Same */ }
 
 /* --- Sampler/Drum Sampler Pad Styles --- */
-.pads-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 5px; margin-top: 8px; }
+.pads-container { /* Same */ }
 .pad-button {
     background-color: var(--kawaii-accent-blue); color: var(--kawaii-text-dark);
-    border: 2px solid var(--kawaii-border-strong); padding: 8px 5px; font-size: 10px;
+    border: 2px solid var(--kawaii-blue-secondary); padding: 8px 5px; font-size: 10px;
     cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 50px; line-height: 1.2; word-break: break-word; border-radius: 8px;
-    transition: background-color 0.1s, transform 0.1s;
+    min-height: 55px; line-height: 1.2; word-break: break-word; border-radius: 10px; /* More rounded */
+    transition: background-color 0.1s, transform 0.1s; box-shadow: 2px 2px 4px rgba(0,0,0,0.08);
 }
 .pad-button:hover { background-color: #c0e8f8; }
-.pad-button:active, .pad-button.selected-for-edit { background-color: var(--kawaii-accent-pink); border-color: var(--kawaii-border-main); transform: scale(0.95); }
-.pad-label { font-size: 9px; margin-top: 3px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pad-button:active, .pad-button.selected-for-edit { background-color: var(--kawaii-accent-pink); border-color: var(--kawaii-pink-secondary); transform: scale(0.95); }
+.pad-label { /* Same */ }
 
 /* --- Waveform Canvas --- */
-.waveform-canvas { background-color: var(--kawaii-input-bg); border: 2px solid var(--kawaii-border-main); width: 100%; height: 65px; border-radius: 6px; }
+.waveform-canvas { background-color: var(--kawaii-input-bg); border: 2px solid var(--kawaii-border-main); width: 100%; height: 70px; border-radius: 8px; }
 
 /* --- Drop Zone Styles (Kawaii Theme) --- */
 .drop-zone {
@@ -384,7 +363,7 @@ body {
     background-color: var(--kawaii-bg-window-alt); color: var(--kawaii-text-dark);
     text-align: center; font-size: 12px; line-height: 1.5;
     transition: background-color 0.1s ease-in-out, border-color 0.1s ease-in-out;
-    margin-bottom: 8px; box-sizing: border-box; border-radius: 8px;
+    margin-bottom: 8px; box-sizing: border-box; border-radius: 10px; /* More rounded */
 }
 .drop-zone label { color: var(--kawaii-accent-pink); text-decoration: underline; cursor: pointer; font-weight: bold; }
 .drop-zone label:hover { color: #ff80a0; }
@@ -397,39 +376,40 @@ body {
 .hidden { display: none !important; }
 
 /* Generic Button */
-.button-general, input[type="button"], input[type="submit"], button {
+.button-general, input[type="button"], input[type="submit"], button.snug-button { /* Added .snug-button for explicit targeting */
     background-color: var(--kawaii-button-face); color: var(--kawaii-button-text);
-    border: 2px solid var(--kawaii-border-strong); padding: 5px 12px;
+    border: 2px solid var(--kawaii-border-strong); padding: 6px 15px; /* Slightly more padding */
     font-size: 12px; cursor: pointer; border-radius: 8px;
     transition: background-color 0.1s, transform 0.1s;
+    font-weight: bold;
 }
-.button-general:hover, input[type="button"]:hover, input[type="submit"]:hover, button:hover {
+.button-general:hover, input[type="button"]:hover, input[type="submit"]:hover, button.snug-button:hover {
     background-color: var(--kawaii-button-hover);
 }
-.button-general:active, input[type="button"]:active, input[type="submit"]:active, button:active {
+.button-general:active, input[type="button"]:active, input[type="submit"]:active, button.snug-button:active {
     background-color: var(--kawaii-button-active);
     transform: translateY(1px);
 }
-.slice-toggle-button { /* Checkbox-like toggle */
+.slice-toggle-button {
     background-color: var(--kawaii-button-face); border: 2px solid var(--kawaii-border-main);
-    padding: 4px 8px; font-size: 11px; border-radius: 6px;
+    padding: 4px 8px; font-size: 11px; border-radius: 8px; /* More rounded */
 }
-.slice-toggle-button.active { background-color: var(--kawaii-accent-blue); color: var(--kawaii-text-dark); border-color: var(--kawaii-border-strong); }
+.slice-toggle-button.active { background-color: var(--kawaii-accent-blue); color: var(--kawaii-text-dark); border-color: var(--kawaii-blue-secondary); }
 
 /* Input fields */
 input[type="text"], input[type="number"], select, textarea {
     background-color: var(--kawaii-input-bg);
     border: 2px solid var(--kawaii-input-border);
-    padding: 5px 8px;
+    padding: 6px 10px; /* More padding */
     font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
     font-size: 12px;
     color: var(--kawaii-text-dark);
-    border-radius: 6px;
+    border-radius: 8px; /* More rounded */
     box-shadow: inset 1px 1px 2px rgba(0,0,0,0.05);
 }
 input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--kawaii-input-focus-border);
-    box-shadow: 0 0 0 2px rgba(173, 216, 230, 0.5); /* Light blue focus ring */
+    box-shadow: 0 0 0 3px rgba(173, 216, 230, 0.4); /* Softer, larger focus ring */
 }
-select { padding-right: 25px; /* Space for dropdown arrow */ }
+select { padding-right: 25px; }
