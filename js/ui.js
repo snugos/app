@@ -159,14 +159,14 @@ export function buildTrackInspectorContentDOM(track) {
     trackControlsPanel.appendChild(panelTitle);
 
     const controlGroup = document.createElement('div');
-    controlGroup.className = 'control-group'; // Often flex for layout
+    controlGroup.className = 'control-group';
 
     const volumeContainer = document.createElement('div');
     volumeContainer.id = `volumeSliderContainer-${track.id}`;
     controlGroup.appendChild(volumeContainer);
 
     const seqLengthContainer = document.createElement('div');
-    seqLengthContainer.className = 'flex flex-col items-center space-y-1'; // For vertical stacking
+    seqLengthContainer.className = 'flex flex-col items-center space-y-1';
     const currentBars = track.sequenceLength / Constants.STEPS_PER_BAR;
     const seqLabel = document.createElement('label');
     seqLabel.htmlFor = `sequenceLengthBars-${track.id}`;
@@ -188,27 +188,25 @@ export function buildTrackInspectorContentDOM(track) {
     seqDisplay.textContent = `${currentBars} bars (${track.sequenceLength} steps)`;
     seqLengthContainer.appendChild(seqDisplay);
 
-    // "Double Sequence" Button
     const doubleSeqButton = document.createElement('button');
     doubleSeqButton.id = `doubleSeqBtn-${track.id}`;
-    doubleSeqButton.className = 'bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded w-full mt-1'; // Full width in its container
+    doubleSeqButton.className = 'bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded w-full mt-1';
     doubleSeqButton.textContent = 'Double Steps (x2)';
     doubleSeqButton.title = 'Double sequence length and content';
     doubleSeqButton.addEventListener('click', async () => {
-        // 'track' here is from the closure of buildTrackInspectorContentDOM
         if (track && typeof track.doubleSequence === 'function') {
-            const result = await track.doubleSequence(); // Call the method on the track instance
+            const result = await track.doubleSequence();
             if (result && typeof showNotification === 'function') {
                 showNotification(result.message, result.success ? 2000 : 3000);
             }
         } else {
             console.error("Could not find track or doubleSequence method for track ID:", track.id);
-            if (typeof showNotification === 'function') { // Check again before calling
+            if (typeof showNotification === 'function') {
                 showNotification("Error: Could not double sequence.", 3000);
             }
         }
     });
-    seqLengthContainer.appendChild(doubleSeqButton); // Add to the sequence length controls area
+    seqLengthContainer.appendChild(doubleSeqButton);
 
     controlGroup.appendChild(seqLengthContainer);
     trackControlsPanel.appendChild(controlGroup);
@@ -243,7 +241,6 @@ export function buildTrackInspectorContentDOM(track) {
     return contentDiv;
 }
 
-// ... (buildSynthSpecificInspectorDOM, buildSamplerSpecificInspectorDOM, etc. remain the same as your last correct version)
 function buildSynthSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel synth-panel';
@@ -456,7 +453,6 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     return panel;
 }
 
-
 export function initializeCommonInspectorControls(track, winEl) {
     winEl.querySelector(`#trackNameDisplay-${track.id}`)?.addEventListener('change', (e) => {
         const oldName = track.name;
@@ -491,20 +487,17 @@ export function initializeCommonInspectorControls(track, winEl) {
         seqLenBarsInput.addEventListener('change', (e) => {
             let numBars = parseInt(e.target.value);
             if(isNaN(numBars) || numBars < 1) numBars = 1;
-            if(numBars > 256) numBars = 256; // Example max, ensure consistent with Track.js
-            e.target.value = numBars; // Update input value if it was corrected
+            if(numBars > 256) numBars = 256;
+            e.target.value = numBars;
             const numSteps = numBars * Constants.STEPS_PER_BAR;
             if (track.sequenceLength !== numSteps) {
-                // Call captureStateForUndo from setSequenceLength when called directly by user
-                track.setSequenceLength(numSteps, false); // false to allow undo capture in setSequenceLength
+                track.setSequenceLength(numSteps, false); // false to allow undo capture
                 seqLenDisplaySpan.textContent = `${numBars} bars (${numSteps} steps)`;
-                // setSequenceLength already handles refreshing the sequencer window
             }
         });
     }
 }
 
-// ... (initializeTypeSpecificInspectorControls and its sub-functions remain the same) ...
 export function initializeTypeSpecificInspectorControls(track, winEl) {
     if (track.type === 'Synth') {
         initializeSynthSpecificControls(track, winEl);
@@ -669,9 +662,8 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentEnvReleaseSlider-${track.id}`)?.appendChild(iERK.element); track.inspectorControls.instEnvRelease = iERK;
 }
 
-// ... (openGlobalControlsWindow, openTrackInspectorWindow, buildEffectsRackContentDOM, openTrackEffectsRackWindow, buildSequencerContentDOM, openTrackSequencerWindow, highlightPlayingStep, openMixerWindow, updateMixerWindow, renderMixer - these remain the same as your last correct versions)
-// Make sure these functions are using the latest patterns for window creation and control initialization.
-
+// --- Window Opening Functions --- (Global Controls, Inspector, EffectsRack, Sequencer, Mixer)
+// ... (These functions remain the same as your latest correct versions) ...
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -740,12 +732,12 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
 
     let windowHeight = 450;
     if (track.type === 'Synth') windowHeight = 520;
-    else if (track.type === 'Sampler') windowHeight = 620; // Increased for pads and slice editor
-    else if (track.type === 'DrumSampler') windowHeight = 580; // Increased for pads and controls
-    else if (track.type === 'InstrumentSampler') windowHeight = 620; // Increased for waveform and controls
+    else if (track.type === 'Sampler') windowHeight = 620;
+    else if (track.type === 'DrumSampler') windowHeight = 580;
+    else if (track.type === 'InstrumentSampler') windowHeight = 620;
 
     const winOptions = {
-        width: Math.min(500, window.innerWidth - 40), // Adjusted for potentially wider content
+        width: Math.min(500, window.innerWidth - 40),
         height: Math.min(windowHeight, window.innerHeight - 80),
         initialContentKey: `trackInspector-${track.id}`
     };
@@ -1013,16 +1005,15 @@ export function renderMixer(container) {
         });
         masterVolSliderCont.innerHTML = '';
         masterVolSliderCont.appendChild(masterVolKnob.element);
-        // window.masterVolumeKnob = masterVolKnob; // If needed globally
     }
     setTimeout(() => {
         currentTracks.forEach(track => {
             track.inspectorControls[`mixerVolume-${track.id}`]?.refreshVisuals?.();
         });
-        // window.masterVolumeKnob?.refreshVisuals?.();
     }, 0);
 }
 
+// Sound Browser Functions with Autofetch modifications
 export function updateSoundBrowserDisplayForLibrary(libraryName) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
@@ -1032,14 +1023,9 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
         return;
     }
 
-    if (librarySelect.value !== libraryName) {
-        // This might be called by fetchSoundLibrary after an async load,
-        // ensure dropdown reflects the target library.
-        // However, directly setting .value here won't trigger onchange if it was the source.
-        // This is more for ensuring consistency if called programmatically.
-        // librarySelect.value = libraryName; // Avoid if it causes loops.
-    }
-
+    // Do not automatically change librarySelect.value here if this function was called BY its onchange,
+    // otherwise, it's okay to ensure consistency if called programmatically.
+    // For safety, we assume this function is called with the correct libraryName context.
     window.currentLibraryName = libraryName;
 
     if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) {
@@ -1052,7 +1038,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
     } else {
         const zipUrl = Constants.soundLibraries[libraryName];
         if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
-            window.fetchSoundLibrary(libraryName, zipUrl, false); // false for isAutofetch
+            window.fetchSoundLibrary(libraryName, zipUrl, false); // false for isAutofetch (on-demand fetch)
         } else {
             soundBrowserList.innerHTML = `<div class="sound-browser-loading">Library ${libraryName} configuration not found.</div>`;
             pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
@@ -1065,7 +1051,6 @@ export function openSoundBrowserWindow(savedState = null) {
     if (window.openWindows[windowId] && !savedState) {
         window.openWindows[windowId].restore();
         if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') {
-            // If restoring, ensure content reflects current state if a library was already selected/loaded
             updateSoundBrowserDisplayForLibrary(window.currentLibraryName);
         }
         return window.openWindows[windowId];
@@ -1104,7 +1089,6 @@ export function openSoundBrowserWindow(savedState = null) {
 
         if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) {
             const firstLibraryName = Object.keys(Constants.soundLibraries)[0];
-             // Check if firstLibraryName is actually an option, otherwise pick the first valid option
             if (librarySelect.options.length > 0) {
                 const firstOptionValue = librarySelect.options[0].value;
                 const targetLibrary = Array.from(librarySelect.options).find(opt => opt.value === firstLibraryName) ? firstLibraryName : firstOptionValue;
@@ -1120,7 +1104,6 @@ export function openSoundBrowserWindow(savedState = null) {
     return soundBrowserWin;
 }
 
-
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
@@ -1129,23 +1112,20 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         console.warn("renderSoundBrowserDirectory: DOM elements missing.");
         return;
     }
-     if (!treeNode && window.currentLibraryName && window.loadedZipFiles[window.currentLibraryName] !== "loading") {
-        // If treeNode is null but library is not marked as loading, it might have failed to process or is empty
+    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") {
         console.warn("renderSoundBrowserDirectory: treeNode is undefined for library:", window.currentLibraryName);
         soundBrowserList.innerHTML = `<div class="sound-browser-loading">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`;
         pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Library Selected'})`;
         return;
     }
-    if (!treeNode && window.loadedZipFiles[window.currentLibraryName] === "loading") {
-        // Still loading, UI should already reflect this from updateSoundBrowserDisplayForLibrary
-        return;
+    if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
+        return; // UI should already show "Loading..." from updateSoundBrowserDisplayForLibrary
     }
-     if (!treeNode) { // General fallback if treeNode is null/undefined
+     if (!treeNode) {
         soundBrowserList.innerHTML = `<div class="sound-browser-loading">Select a library.</div>`;
         pathDisplay.textContent = `Path: /`;
         return;
     }
-
 
     soundBrowserList.innerHTML = '';
     pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Library Selected'})`;
@@ -1219,14 +1199,14 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                     const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath);
                     if (!zipEntry) throw new Error(`File ${item.fullPath} not found in ${window.currentLibraryName}.`);
                     const fileBlob = await zipEntry.async("blob");
-                    const objectURL = URL.createObjectURL(fileBlob); // Create URL for blob
+                    const objectURL = URL.createObjectURL(fileBlob);
                     const buffer = await new Tone.Buffer().load(objectURL);
                     window.previewPlayer = new Tone.Player(buffer).toDestination();
                     window.previewPlayer.autostart = true;
                     window.previewPlayer.onstop = () => {
                         if (window.previewPlayer && !window.previewPlayer.disposed) window.previewPlayer.dispose();
                         window.previewPlayer = null;
-                        URL.revokeObjectURL(objectURL); // Clean up blob URL after use
+                        URL.revokeObjectURL(objectURL);
                     };
                 } catch (error) {
                     console.error(`Error previewing sound ${name}:`, error);
@@ -1238,7 +1218,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     });
 }
 
-
+// --- Waveform, Slice, Pad rendering functions ---
 export function renderSamplePads(track) {
     if (!track || !track.inspectorWindow?.element) return;
     const padsContainer = track.inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
