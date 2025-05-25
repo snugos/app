@@ -25,9 +25,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -38,7 +38,7 @@
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
             </div>
-        <div id="taskbarTempoDisplay" title="Current Tempo">120.0 BPM</div> 
+        <div id="taskbarTempoDisplay" title="Current Tempo">120.0 BPM</div>
     </div>
 
     <div id="startMenu" class="hidden">
@@ -58,16 +58,20 @@
             <li id="menuExportWav">Export to WAV</li>
             <li><hr></li>
             <li id="menuOpenGlobalControls">Global Controls</li>
-            <li id="menuOpenMixer">Mixer</li> 
+            <li id="menuOpenMixer">Mixer</li>
+            <li><hr></li>
+            <li id="menuUploadCustomBg">Upload Custom Background...</li>
+            <li id="menuRemoveCustomBg">Remove Custom Background</li>
             <li><hr></li>
             <li id="menuToggleFullScreen">Toggle Full Screen</li>
         </ul>
     </div>
-    
+
     <input type="file" id="loadProjectInput" class="hidden" accept=".snug">
-    
+    <input type="file" id="customBgInput" class="hidden" accept="image/*">
+
     <div id="notification-area"></div>
-    
+
     <div id="modalContainer"></div>
 
     <script type="module" src="js/main.js"></script>
