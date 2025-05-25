@@ -1,6 +1,6 @@
 // js/SnugWindow.js - SnugWindow Class Module
 
-import { captureStateForUndo } from './state.js'; // Assuming state.js will export this
+import { captureStateForUndo, getTracks } from './state.js'; // Import getTracks
 
 // Default theme colors (can be overridden by user settings in future)
 const defaultWindowBg = '#c0c0c0';
@@ -14,7 +14,7 @@ export class SnugWindow {
         this.isMinimized = false;
         this.initialContentKey = options.initialContentKey || id;
         this.resizeObserver = null;
-        this.taskbarButton = null; // Initialize taskbarButton property
+        this.taskbarButton = null;
 
         const desktopEl = document.getElementById('desktop');
         if (!desktopEl) {
@@ -37,7 +37,7 @@ export class SnugWindow {
             x: randomX, y: randomY,
             width: defaultWidth, height: defaultHeight,
             closable: true, minimizable: true,
-            ...options // Spread options to override defaults
+            ...options
         };
         
         this.element = document.createElement('div');
@@ -47,7 +47,7 @@ export class SnugWindow {
         this.element.style.top = `${this.options.y}px`;
         this.element.style.width = `${this.options.width}px`;
         this.element.style.height = `${this.options.height}px`;
-        this.element.style.zIndex = options.zIndex !== undefined ? options.zIndex : ++window.highestZIndex;
+        this.element.style.zIndex = options.zIndex !== undefined ? options.zIndex : ++window.highestZIndex; // window.highestZIndex is still global for now
         this.element.style.backgroundColor = `var(--window-bg, ${defaultWindowBg})`;
 
         let buttonsHTML = '';
@@ -75,7 +75,7 @@ export class SnugWindow {
         this.element.appendChild(this.contentArea);
 
         desktopEl.appendChild(this.element);
-        window.openWindows[this.id] = this; // Assumes openWindows is globally accessible or passed in
+        window.openWindows[this.id] = this; // window.openWindows is still global for now
 
         this.makeDraggable();
         this.makeResizable();
@@ -140,14 +140,10 @@ export class SnugWindow {
 
     makeResizable() {
         let initialWidth, initialHeight;
-        // Using a simple mouseup on the element itself after a mousedown on the "resize area"
-        // A more robust solution might involve dedicated resize handles or a more complex ResizeObserver usage.
         this.element.addEventListener('mousedown', (e) => {
             const rect = this.element.getBoundingClientRect();
-            const resizeHandleSize = 15; // Approximate size of the browser's resize handle
-            // Check if mousedown is in the bottom-right corner (typical resize area)
+            const resizeHandleSize = 15;
             if (e.clientX > rect.right - resizeHandleSize && e.clientY > rect.bottom - resizeHandleSize) {
-                 // Only set these if the mousedown is in a potential resize area
                 initialWidth = this.element.offsetWidth;
                 initialHeight = this.element.offsetHeight;
             } else {
@@ -157,12 +153,11 @@ export class SnugWindow {
         });
 
         this.element.addEventListener('mouseup', () => {
-            if (initialWidth !== null && initialHeight !== null) { // Check if a resize was initiated
+            if (initialWidth !== null && initialHeight !== null) {
                 if (this.element.offsetWidth !== initialWidth || this.element.offsetHeight !== initialHeight) {
                     captureStateForUndo(`Resize window "${this.title}"`);
                 }
             }
-            // Reset for next interaction
             initialWidth = null;
             initialHeight = null;
         });
@@ -215,7 +210,7 @@ export class SnugWindow {
         if (this.isMinimized) {
             this.isMinimized = false;
             this.element.classList.remove('minimized');
-            this.focus(true); // Focus, skip undo for focus if part of restore
+            this.focus(true);
             if (!skipUndo) captureStateForUndo(`Restore window "${this.title}"`);
         } else {
             this.focus();
@@ -223,22 +218,26 @@ export class SnugWindow {
     }
 
     close() {
+        console.log(`[SnugWindow] Closing window: ${this.id} (${this.title})`);
         if (this.onCloseCallback) this.onCloseCallback();
         if (this.taskbarButton) this.taskbarButton.remove();
         if (this.element) this.element.remove();
-        // No ResizeObserver in this simplified version to disconnect yet
 
         const oldWindowTitle = this.title;
-        delete window.openWindows[this.id];
+        delete window.openWindows[this.id]; // Still using global window.openWindows
 
         const trackIdStr = this.id.split('-')[1];
         if (trackIdStr) {
             const trackIdNum = parseInt(trackIdStr);
-            const track = window.tracks.find(t => t.id === trackIdNum); // Assumes tracks is global or accessible
+            const tracksArray = getTracks(); // Use imported getTracks()
+            const track = tracksArray.find(t => t.id === trackIdNum);
             if (track) {
+                console.log(`[SnugWindow] Window ${this.id} belongs to track ${track.id}. Nullifying window reference on track.`);
                 if (this.id.startsWith('trackInspector-')) track.inspectorWindow = null;
                 if (this.id.startsWith('sequencerWin-')) track.sequencerWindow = null;
                 if (this.id.startsWith('effectsRack-')) track.effectsRackWindow = null;
+            } else {
+                console.log(`[SnugWindow] Window ${this.id} track ID ${trackIdNum} not found in current tracks.`);
             }
         }
         captureStateForUndo(`Close window "${oldWindowTitle}"`);
@@ -273,6 +272,5 @@ export class SnugWindow {
         this.updateTaskbarButtonActiveState();
     }
 
-    // Placeholder for custom close behavior, can be set by the window creator
     onCloseCallback() {}
 }
