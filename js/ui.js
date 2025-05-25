@@ -8,7 +8,7 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-console.log("UI.JS FILE LOADED - DEBUG DRAG DROP (v4 - Element Creation/Query Logging)");
+console.log("UI.JS FILE LOADED - DEBUG DRAG DROP (v5 - Using getElementById)");
 
 export function createKnob(options) {
     const container = document.createElement('div');
@@ -272,18 +272,15 @@ function buildSynthSpecificInspectorDOM(track) {
 function buildSamplerSpecificInspectorDOM(track) { // This is for Slicer Sampler (type: 'Sampler')
     const panel = document.createElement('div');
     panel.className = 'panel sampler-panel';
-    const dropZoneContainer = document.createElement('div'); // Temporary container
+    const dropZoneContainer = document.createElement('div');
     const dropZoneHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler');
-    // console.log(`[UI] buildSamplerSpecific: Generated dropZoneHTML for track ${track.id}:`, dropZoneHTML);
     dropZoneContainer.innerHTML = dropZoneHTML;
-    const actualDropZoneElement = dropZoneContainer.firstChild;
+    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone');
 
-    if (actualDropZoneElement && actualDropZoneElement.classList && actualDropZoneElement.classList.contains('drop-zone')) {
-        // console.log(`[UI] buildSamplerSpecific: Successfully created drop-zone element for track ${track.id}:`, actualDropZoneElement);
+    if (actualDropZoneElement) {
         panel.appendChild(actualDropZoneElement);
     } else {
-        console.error(`[UI] buildSamplerSpecific: Failed to create drop-zone element from HTML for track ${track.id}. First child:`, actualDropZoneElement);
-        // Fallback or error display could go here
+        console.error(`[UI] buildSamplerSpecific: Failed to create/find drop-zone element from HTML for track ${track.id}. HTML was:`, dropZoneHTML);
     }
 
     const editorPanel = document.createElement('div');
@@ -421,18 +418,17 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
 function buildInstrumentSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel instrument-sampler-panel';
-    const dropZoneContainer = document.createElement('div'); // Temporary container
+    const dropZoneContainer = document.createElement('div');
     const dropZoneHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
-    console.log(`[UI] buildInstrumentSampler: Generated dropZoneHTML for track ${track.id}:`, dropZoneHTML);
+    // console.log(`[UI] buildInstrumentSampler: Generated dropZoneHTML for track ${track.id}:`, dropZoneHTML);
     dropZoneContainer.innerHTML = dropZoneHTML;
-    const actualDropZoneElement = dropZoneContainer.firstChild;
+    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone'); // More robust selection
 
-    if (actualDropZoneElement && actualDropZoneElement.classList && actualDropZoneElement.classList.contains('drop-zone')) {
-        console.log(`[UI] buildInstrumentSampler: Successfully created drop-zone element for track ${track.id}:`, actualDropZoneElement);
-        panel.appendChild(actualDropZoneElement); // Append the actual drop zone div
+    if (actualDropZoneElement) {
+        // console.log(`[UI] buildInstrumentSampler: Successfully created drop-zone element for track ${track.id}:`, actualDropZoneElement);
+        panel.appendChild(actualDropZoneElement);
     } else {
-        console.error(`[UI] buildInstrumentSampler: Failed to create drop-zone element from HTML for track ${track.id}. First child:`, actualDropZoneElement);
-        // Fallback or error display could go here
+        console.error(`[UI] buildInstrumentSampler: Failed to create/find drop-zone element from HTML for track ${track.id}. HTML was:`, dropZoneHTML);
     }
 
     const canvas = document.createElement('canvas');
@@ -555,31 +551,20 @@ function initializeSynthSpecificControls(track, winEl) {
 }
 
 function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
-    const dropZoneQuery = `#dropZone-${track.id}-sampler`;
-    const fileInputQuery = `#fileInput-${track.id}`;
+    const dropZoneId = `dropZone-${track.id}-sampler`;
+    const fileInputId = `fileInput-${track.id}`;
 
-    // console.log(`[UI] initializeSamplerSpecific: Searching in winEl for track ${track.id}:`, winEl);
-    // console.log(`[UI] initializeSamplerSpecific: Drop zone query: ${dropZoneQuery}`);
-    // console.log(`[UI] initializeSamplerSpecific: File input query: ${fileInputQuery}`);
-
-    const dropZoneEl = winEl.querySelector(dropZoneQuery);
-    const fileInputEl = winEl.querySelector(fileInputQuery);
-
-    const dropZoneGlobal = document.getElementById(`dropZone-${track.id}-sampler`);
-    const fileInputGlobal = document.getElementById(`fileInput-${track.id}`);
+    const dropZoneEl = document.getElementById(dropZoneId);
+    const fileInputEl = document.getElementById(fileInputId);
 
     if (!dropZoneEl) {
-        console.warn(`[UI] Slicer Sampler: Drop zone element NOT FOUND using query '${dropZoneQuery}' within winEl. winEl.innerHTML snippet:`, winEl.innerHTML.substring(0, 500));
-        console.log(`[UI] Slicer Sampler: Global search for dropZone found:`, dropZoneGlobal);
+        console.warn(`[UI] Slicer Sampler (Track ID: ${track.id}): Drop zone element NOT FOUND using ID: ${dropZoneId}`);
     }
     if (!fileInputEl) {
-        console.warn(`[UI] Slicer Sampler: File input element NOT FOUND using query '${fileInputQuery}' within winEl. winEl.innerHTML snippet:`, winEl.innerHTML.substring(0, 500));
-        console.log(`[UI] Slicer Sampler: Global search for fileInput found:`, fileInputGlobal);
+        console.warn(`[UI] Slicer Sampler (Track ID: ${track.id}): File input element NOT FOUND using ID: ${fileInputId}`);
     }
 
-
     if (dropZoneEl && fileInputEl) {
-        // console.log(`[UI] Slicer Sampler: Both drop zone and file input FOUND for track ${track.id}. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
         fileInputEl.onchange = (e) => {
             window.loadSampleFile(e, track.id, 'Sampler');
@@ -657,34 +642,45 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
-    const dropZoneQuery = `#dropZone-${track.id}-instrumentsampler`;
-    const fileInputQuery = `#instrumentFileInput-${track.id}`;
+    const dropZoneId = `dropZone-${track.id}-instrumentsampler`;
+    const fileInputId = `instrumentFileInput-${track.id}`;
 
-    // console.log(`[UI] initializeInstrumentSampler: Searching in winEl for track ${track.id}:`, winEl);
-    // console.log(`[UI] initializeInstrumentSampler: Drop zone query: ${dropZoneQuery}`);
-    // console.log(`[UI] initializeInstrumentSampler: File input query: ${fileInputQuery}`);
-
-    const dropZoneEl = winEl.querySelector(dropZoneQuery);
-    const fileInputEl = winEl.querySelector(fileInputQuery);
-
-    const dropZoneGlobal = document.getElementById(`dropZone-${track.id}-instrumentsampler`);
-    const fileInputGlobal = document.getElementById(`instrumentFileInput-${track.id}`);
+    // Use document.getElementById as a more reliable way to find elements if winEl.querySelector fails
+    const dropZoneEl = document.getElementById(dropZoneId);
+    const fileInputEl = document.getElementById(fileInputId);
 
     if (!dropZoneEl) {
-        console.warn(`[UI] InstrumentSampler: Drop zone element NOT FOUND using query '${dropZoneQuery}' within winEl. winEl.innerHTML snippet:`, winEl.innerHTML.substring(0, 1000)); // Increased snippet length
-        console.log(`[UI] InstrumentSampler: Global search for dropZone (ID: dropZone-${track.id}-instrumentsampler) found:`, dropZoneGlobal);
+        console.warn(`[UI] InstrumentSampler (Track ID: ${track.id}): Drop zone element NOT FOUND using ID: ${dropZoneId}`);
     }
     if (!fileInputEl) {
-        console.warn(`[UI] InstrumentSampler: File input element NOT FOUND using query '${fileInputQuery}' within winEl. winEl.innerHTML snippet:`, winEl.innerHTML.substring(0, 1000)); // Increased snippet length
-        console.log(`[UI] InstrumentSampler: Global search for fileInput (ID: instrumentFileInput-${track.id}) found:`, fileInputGlobal);
+        console.warn(`[UI] InstrumentSampler (Track ID: ${track.id}): File input element NOT FOUND using ID: ${fileInputId}`);
     }
 
-    if (dropZoneEl && fileInputEl) {
-        // console.log(`[UI] InstrumentSampler: Both drop zone and file input FOUND for track ${track.id}. Setting up listeners.`);
+    // Check if the found elements are indeed within the current window's content area
+    // This is an extra sanity check. If getElementById finds them, they exist.
+    // The issue might be if they are somehow outside winEl, which would be strange.
+    const dropZoneIsInWindow = winEl.contains(dropZoneEl);
+    const fileInputIsInWindow = winEl.contains(fileInputEl);
+
+    if (!dropZoneIsInWindow && dropZoneEl) {
+        console.warn(`[UI] InstrumentSampler: Drop zone ${dropZoneId} was found in document, but NOT within winEl!`, winEl);
+    }
+    if (!fileInputIsInWindow && fileInputEl) {
+        console.warn(`[UI] InstrumentSampler: File input ${fileInputId} was found in document, but NOT within winEl!`, winEl);
+    }
+
+
+    if (dropZoneEl && fileInputEl && dropZoneIsInWindow && fileInputIsInWindow) {
+        // console.log(`[UI] InstrumentSampler: Both drop zone and file input FOUND for track ${track.id} and are within winEl. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
          fileInputEl.onchange = (e) => {
             window.loadSampleFile(e, track.id, 'InstrumentSampler');
         };
+    } else {
+        if (dropZoneEl && fileInputEl) { // They were found globally but not in winEl
+             console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): Elements found globally but not within the expected window panel. This indicates a DOM structure issue.`);
+        }
+        // Previous logs for not found by ID cover other cases.
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
