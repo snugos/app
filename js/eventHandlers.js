@@ -9,7 +9,7 @@ import {
     setIsRecording, isTrackRecording,
     setRecordingTrackId, getRecordingTrackId,
     setRecordingStartTime,
-    removeTrackFromState as coreRemoveTrackFromState
+    removeTrackFromState as coreRemoveTrackFromState 
 } from './state.js';
 
 export let currentlyPressedComputerKeys = {};
@@ -19,7 +19,7 @@ export function initializePrimaryEventListeners(appContext) {
         addTrack, openSoundBrowserWindow, undoLastAction, redoLastAction,
         saveProject, loadProject, exportToWav,
         openGlobalControlsWindow, openMixerWindow,
-        handleProjectFileLoad
+        handleProjectFileLoad 
     } = appContext;
 
     const startButton = document.getElementById('startButton');
@@ -38,7 +38,9 @@ export function initializePrimaryEventListeners(appContext) {
     document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddInstrumentSamplerTrack')?.addEventListener('click', () => { addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
+    
     document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => { openSoundBrowserWindow(); startMenu?.classList.add('hidden'); });
+    
     document.getElementById('menuUndo')?.addEventListener('click', () => {
         if (!document.getElementById('menuUndo').classList.contains('disabled')) {
             undoLastAction(); startMenu?.classList.add('hidden');
@@ -49,14 +51,17 @@ export function initializePrimaryEventListeners(appContext) {
             redoLastAction(); startMenu?.classList.add('hidden');
         }
     });
+
     document.getElementById('menuSaveProject')?.addEventListener('click', () => { saveProject(); startMenu?.classList.add('hidden'); });
     document.getElementById('menuLoadProject')?.addEventListener('click', () => { 
         document.getElementById('loadProjectInput').click(); 
         startMenu?.classList.add('hidden'); 
     });
     document.getElementById('menuExportWav')?.addEventListener('click', () => { exportToWav(); startMenu?.classList.add('hidden'); });
+    
     document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { openGlobalControlsWindow(); startMenu?.classList.add('hidden'); });
     document.getElementById('menuOpenMixer')?.addEventListener('click', () => { openMixerWindow(); startMenu?.classList.add('hidden'); });
+    
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
@@ -82,16 +87,17 @@ export function initializePrimaryEventListeners(appContext) {
         console.warn("[EventHandlers] loadProjectInput element not found.");
     }
 
+
     document.addEventListener('keydown', handleComputerKeyDown);
     document.addEventListener('keyup', handleComputerKeyUp);
 
     if (!window.transportEventsInitialized && typeof Tone !== 'undefined' && Tone.Transport) {
         Tone.Transport.on('start', () => {
-            console.log("[EventHandlers] Tone.Transport started.");
+            // console.log("[EventHandlers] Tone.Transport started.");
             if (window.playBtn) window.playBtn.textContent = 'Pause';
         });
         Tone.Transport.on('pause', () => {
-            console.log("[EventHandlers] Tone.Transport paused.");
+            // console.log("[EventHandlers] Tone.Transport paused.");
             if (window.playBtn) window.playBtn.textContent = 'Play';
             if (isTrackRecording()) {
                 setIsRecording(false);
@@ -102,7 +108,7 @@ export function initializePrimaryEventListeners(appContext) {
             }
         });
         Tone.Transport.on('stop', () => {
-            console.log("[EventHandlers] Tone.Transport stopped.");
+            // console.log("[EventHandlers] Tone.Transport stopped.");
             if (window.playBtn) window.playBtn.textContent = 'Play';
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
             if (isTrackRecording()) {
@@ -119,22 +125,21 @@ export function initializePrimaryEventListeners(appContext) {
 
 export function attachGlobalControlEvents(globalControlsWindowElement) {
     globalControlsWindowElement.querySelector('#playBtnGlobal')?.addEventListener('click', async () => {
-        console.log("[EventHandlers] Play button clicked.");
+        // console.log("[EventHandlers] Play button clicked.");
         try {
-            // initAudioContextAndMasterMeter is from audio.js, exposed via window by main.js
             if (typeof window.initAudioContextAndMasterMeter === 'function') {
-                await window.initAudioContextAndMasterMeter(); // Ensure AudioContext is started
-                console.log("[EventHandlers] initAudioContextAndMasterMeter completed.");
+                await window.initAudioContextAndMasterMeter(); 
+                // console.log("[EventHandlers] initAudioContextAndMasterMeter completed.");
             } else {
                 console.warn("[EventHandlers] initAudioContextAndMasterMeter function not found!");
             }
 
             if (Tone.Transport.state !== 'started') {
-                console.log("[EventHandlers] Starting Tone.Transport.");
+                // console.log("[EventHandlers] Starting Tone.Transport.");
                 Tone.Transport.position = 0; 
-                Tone.Transport.start("+0.1"); // Start with a slight delay to ensure context is ready
+                Tone.Transport.start("+0.1"); 
             } else {
-                console.log("[EventHandlers] Pausing Tone.Transport.");
+                // console.log("[EventHandlers] Pausing Tone.Transport.");
                 Tone.Transport.pause();
             }
         } catch (error) { 
@@ -144,7 +149,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
     });
 
     globalControlsWindowElement.querySelector('#recordBtnGlobal')?.addEventListener('click', async () => {
-        console.log("[EventHandlers] Record button clicked.");
+        // console.log("[EventHandlers] Record button clicked.");
          try {
             if (typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter();
             if (!isTrackRecording()) {
@@ -204,6 +209,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
     }
 }
 
+
 export async function setupMIDI() {
     if (navigator.requestMIDIAccess) {
         try {
@@ -242,7 +248,8 @@ function populateMIDIInputs() {
     selectMIDIInput(true);
 }
 
-function selectMIDIInput(skipUndoCapture = false) {
+// Export selectMIDIInput so it can be called by reconstructDAW via main.js
+export function selectMIDIInput(skipUndoCapture = false) {
     if (window.activeMIDIInput && window.activeMIDIInput.onmidimessage) {
         window.activeMIDIInput.onmidimessage = null;
     }
@@ -307,28 +314,28 @@ export function handleMIDIMessage(message) {
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
-    console.log(`[EventHandlers] MIDI Note On for armed track ${currentArmedTrack.id} (${currentArmedTrack.name}): Note ${note}, Vel ${velocity}`);
+    // console.log(`[EventHandlers] MIDI Note On for armed track ${currentArmedTrack.id} (${currentArmedTrack.name}): Note ${note}, Vel ${velocity}. Track Gain: ${currentArmedTrack.gainNode.gain.value}`);
     if (command === 144 && velocity > 0) { // Note On
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            console.log(`[EventHandlers] Triggering Synth: ${Tone.Frequency(note, "midi").toNote()}`);
+            // console.log(`[EventHandlers] Triggering Synth: ${Tone.Frequency(note, "midi").toNote()}`);
             currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
         } else if (currentArmedTrack.type === 'Sampler') {
             const sliceIdx = note - Constants.samplerMIDINoteStart;
             if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-                 console.log(`[EventHandlers] Triggering Sampler Slice: ${sliceIdx}`);
+                //  console.log(`[EventHandlers] Triggering Sampler Slice: ${sliceIdx}`);
                 window.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
             }
         } else if (currentArmedTrack.type === 'DrumSampler') {
             const padIndex = note - Constants.samplerMIDINoteStart;
             if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-                console.log(`[EventHandlers] Triggering Drum Pad: ${padIndex}`);
+                // console.log(`[EventHandlers] Triggering Drum Pad: ${padIndex}`);
                 window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
             }
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
             if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
                 currentArmedTrack.toneSampler.releaseAll(time);
             }
-            console.log(`[EventHandlers] Triggering InstrumentSampler: ${Tone.Frequency(note, "midi").toNote()}`);
+            // console.log(`[EventHandlers] Triggering InstrumentSampler: ${Tone.Frequency(note, "midi").toNote()}`);
             currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && !currentArmedTrack.toneSampler.loaded) {
             console.warn(`[EventHandlers] InstrumentSampler on track ${currentArmedTrack.id} not loaded, cannot play note.`);
@@ -392,27 +399,27 @@ function handleComputerKeyDown(e) {
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
-    console.log(`[EventHandlers] Computer Key Down for armed track ${currentArmedTrack.id} (${currentArmedTrack.name}): Key ${e.code}, Note ${computerKeyNote}`);
+    // console.log(`[EventHandlers] Computer Key Down for armed track ${currentArmedTrack.id} (${currentArmedTrack.name}): Key ${e.code}, Note ${computerKeyNote}. Track Gain: ${currentArmedTrack.gainNode.gain.value}`);
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
-        console.log(`[EventHandlers] Triggering Synth (KBD): ${Tone.Frequency(Constants.computerKeySynthMap[e.code], "midi").toNote()}`);
+        // console.log(`[EventHandlers] Triggering Synth (KBD): ${Tone.Frequency(Constants.computerKeySynthMap[e.code], "midi").toNote()}`);
         currentArmedTrack.instrument.triggerAttack(Tone.Frequency(Constants.computerKeySynthMap[e.code], "midi").toNote(), time, computerKeyVelocity);
     } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const sliceIdx = Constants.computerKeySamplerMap[e.code] - Constants.samplerMIDINoteStart;
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-            console.log(`[EventHandlers] Triggering Sampler Slice (KBD): ${sliceIdx}`);
+            // console.log(`[EventHandlers] Triggering Sampler Slice (KBD): ${sliceIdx}`);
             window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity);
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const padIndex = Constants.computerKeySamplerMap[e.code] - Constants.samplerMIDINoteStart;
         if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-            console.log(`[EventHandlers] Triggering Drum Pad (KBD): ${padIndex}`);
+            // console.log(`[EventHandlers] Triggering Drum Pad (KBD): ${padIndex}`);
             window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity);
         }
     } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
         if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
             currentArmedTrack.toneSampler.releaseAll(time);
         }
-        console.log(`[EventHandlers] Triggering InstrumentSampler (KBD): ${Tone.Frequency(Constants.computerKeySynthMap[e.code], "midi").toNote()}`);
+        // console.log(`[EventHandlers] Triggering InstrumentSampler (KBD): ${Tone.Frequency(Constants.computerKeySynthMap[e.code], "midi").toNote()}`);
         currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(Constants.computerKeySynthMap[e.code], "midi").toNote(), time, computerKeyVelocity);
     } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && !currentArmedTrack.toneSampler.loaded) {
         console.warn(`[EventHandlers] InstrumentSampler on track ${currentArmedTrack.id} not loaded, cannot play note (KBD).`);
@@ -461,16 +468,19 @@ export function handleTrackSolo(trackId) {
     captureStateForUndo(`${currentSoloId === track.id ? "Unsolo" : "Solo"} Track "${track.name}"`);
 
     if (currentSoloId === track.id) {
-        setSoloedTrackId(null); track.isSoloed = false;
+        setSoloedTrackId(null); // Unsolo this track
+        // track.isSoloed = false; // Track class will set this in applySoloState
     } else {
-        if (currentSoloId) {
+        if (currentSoloId) { // Unsolo the previously soloed track
             const prevSoloTrack = getTrackById(currentSoloId);
             if (prevSoloTrack) prevSoloTrack.isSoloed = false;
         }
-        setSoloedTrackId(track.id); track.isSoloed = true;
+        setSoloedTrackId(track.id); // Solo the new track
+        // track.isSoloed = true; // Track class will set this in applySoloState
     }
     getTracks().forEach(t => {
-        t.applySoloState();
+        t.applySoloState(); 
+        // Update UI based on the track's actual isSoloed state after applySoloState
         const inspectorSoloBtn = t.inspectorWindow?.element?.querySelector(`#soloBtn-${t.id}`);
         if (inspectorSoloBtn) inspectorSoloBtn.classList.toggle('soloed', t.isSoloed);
         const mixerSoloBtn = window.openWindows['mixer']?.element?.querySelector(`#mixerSoloBtn-${t.id}`);
