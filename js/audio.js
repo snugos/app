@@ -1,6 +1,6 @@
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 import * as Constants from './constants.js';
-import { showNotification } from './utils.js';
+import { showNotification } from './utils.js'; // Assuming showNotification is correctly exported from utils.js
 
 let audioContextInitialized = false;
 
@@ -74,28 +74,21 @@ export function updateMeters(masterMeter, masterMeterBar, mixerMasterMeter, trac
     });
 }
 
+
 export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
-    // Check if already fully loaded
     if (window.loadedZipFiles && window.loadedZipFiles[libraryName] && window.loadedZipFiles[libraryName] !== "loading") {
         if (isAutofetch) console.log(`[Audio] Autofetch: Library ${libraryName} already loaded.`);
-        // If a user action (not autofetch) tries to load an already loaded library,
-        // ensure the UI updates to display it.
         if (!isAutofetch && typeof window.updateSoundBrowserDisplayForLibrary === 'function') {
             window.updateSoundBrowserDisplayForLibrary(libraryName);
         }
-        return; // Already fully loaded
+        return;
     }
-
-    // Check if currently being loaded by another call
     if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") {
         if (isAutofetch) console.log(`[Audio] Autofetch: Library ${libraryName} is currently being loaded by another call.`);
-        // If user initiates, and it's already loading, the UI should reflect "Loading..."
-        // which is handled by updateSoundBrowserDisplayForLibrary if called from UI.
-        return; // Already being loaded
+        return;
     }
 
     console.log(`[Audio] Fetching library: ${libraryName} from ${zipUrl}. Autofetch: ${isAutofetch}`);
-    // Only show "Fetching..." in UI if it's not an autofetch (i.e., user actively selected it)
     if (!isAutofetch) {
         const soundBrowserList = document.getElementById('soundBrowserList');
         const pathDisplay = document.getElementById('soundBrowserPathDisplay');
@@ -105,28 +98,27 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 
     try {
         if (!window.loadedZipFiles) window.loadedZipFiles = {};
-        window.loadedZipFiles[libraryName] = "loading"; // Mark as "loading" to prevent re-fetch
+        window.loadedZipFiles[libraryName] = "loading";
 
         const response = await fetch(zipUrl);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status} fetching ${zipUrl}`);
         const zipData = await response.arrayBuffer();
         const jszip = new JSZip();
         const loadedZip = await jszip.loadAsync(zipData);
-        window.loadedZipFiles[libraryName] = loadedZip; // Replace "loading" with actual JSZip object
+        window.loadedZipFiles[libraryName] = loadedZip;
 
-        // Process the ZIP file to build the file tree
         const fileTree = {};
         window.loadedZipFiles[libraryName].forEach((relativePath, zipEntry) => {
-            if (zipEntry.dir) return; // Skip directories
-            const pathParts = relativePath.split('/').filter(p => p); // Filter out empty parts
+            if (zipEntry.dir) return;
+            const pathParts = relativePath.split('/').filter(p => p);
             let currentLevel = fileTree;
             for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
-                if (i === pathParts.length - 1) { // File part
+                if (i === pathParts.length - 1) {
                     if (part.endsWith('.wav') || part.endsWith('.mp3') || part.endsWith('.ogg')) {
                         currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
                     }
-                } else { // Directory part
+                } else {
                     if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
                         currentLevel[part] = { type: 'folder', children: {} };
                     }
@@ -135,22 +127,16 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
             }
         });
         if (!window.soundLibraryFileTrees) window.soundLibraryFileTrees = {};
-        window.soundLibraryFileTrees[libraryName] = fileTree; // Store the processed tree
-        console.log(`[Audio] Library ${libraryName} fetched and processed successfully.`);
+        window.soundLibraryFileTrees[libraryName] = fileTree;
+        console.log(`[Audio] Library ${libraryName} fetched and processed.`);
 
-        // If this fetch was user-initiated (not autofetch), update the browser UI to show this library.
         if (!isAutofetch && typeof window.updateSoundBrowserDisplayForLibrary === 'function') {
             window.updateSoundBrowserDisplayForLibrary(libraryName);
-        } else if (isAutofetch) {
-            // For autofetch, no immediate UI update needed here, as it's a background task.
-            // The UI will pick up the loaded data when the user opens/selects the library.
         }
 
     } catch (error) {
         console.error(`[Audio] Error fetching or processing ${libraryName} ZIP:`, error);
-        if (window.loadedZipFiles) delete window.loadedZipFiles[libraryName]; // Clear loading marker on error
-
-        // Only show error in UI if it was not an autofetch
+        if (window.loadedZipFiles) delete window.loadedZipFiles[libraryName];
         if (!isAutofetch) {
             showNotification(`Error with ${libraryName} library: ${error.message}`, 4000);
             const soundBrowserList = document.getElementById('soundBrowserList');
@@ -191,7 +177,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         if (!zipEntry) throw new Error(`File "${fullPath}" not found in "${libraryName}" ZIP.`);
 
         const fileBlob = await zipEntry.async("blob");
-        const blobUrl = URL.createObjectURL(fileBlob);
+        const blobUrl = URL.createObjectURL(fileBlob); // This URL is temporary
 
         if(typeof window.captureStateForUndo === 'function') {
              window.captureStateForUndo(`Load ${fileName} to ${track.name}`);
@@ -204,14 +190,17 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;
                  if (actualPadIndex === -1) actualPadIndex = 0;
             }
+            // Pass blobUrl to loadDrumSamplerPadFile, it will handle conversion to base64 if needed
             await loadDrumSamplerPadFile(blobUrl, track.id, actualPadIndex, fileName);
         } else if (track.type === 'Sampler') {
             await loadSampleFile(blobUrl, track.id, 'Sampler', fileName);
         } else if (track.type === 'InstrumentSampler') {
             await loadSampleFile(blobUrl, track.id, 'InstrumentSampler', fileName);
         }
-        // Consider revoking blobUrl if not done by downstream functions, though Tone.Buffer likely copies data.
-        // URL.revokeObjectURL(blobUrl);
+        // It's safer to revoke the blobUrl after the consuming function has processed it,
+        // especially if it reads it asynchronously (like converting to base64).
+        // For now, assuming loadSampleFile/loadDrumSamplerPadFile handle it or we revoke later.
+        // URL.revokeObjectURL(blobUrl); // Potentially revoke here if sure it's no longer needed
     } catch (error) {
         console.error(`[Audio] Error loading sound "${fileName}" from browser:`, error);
         showNotification(`Error loading "${fileName}": ${error.message}`, 3000);
@@ -315,14 +304,25 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     player.start(Tone.now());
 }
 
+// Handles both file input events (simulated from OS drop) and direct blob URLs (from sound browser drop)
 export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null) {
+    console.log(`[Audio] loadSampleFile CALLED. trackId: ${trackId}, typeHint: ${trackTypeHint}, eventOrUrl type: ${typeof eventOrUrl}`, eventOrUrl);
+
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
     const track = tracksArray.find(t => t.id === trackId);
 
-    if (!track || (trackTypeHint !== 'Sampler' && trackTypeHint !== 'InstrumentSampler')) {
-        showNotification("Invalid track or track type for sample loading.", 3000);
+    if (!track) {
+        console.error(`[Audio] loadSampleFile: Track ${trackId} not found.`);
+        showNotification(`Track ${trackId} not found for sample loading.`, 3000);
         return;
     }
+    // This function is specifically for 'Sampler' (Slicer) and 'InstrumentSampler'
+    if (trackTypeHint !== 'Sampler' && trackTypeHint !== 'InstrumentSampler') {
+        console.error(`[Audio] loadSampleFile: Invalid trackTypeHint "${trackTypeHint}" for track ${trackId}. Expected 'Sampler' or 'InstrumentSampler'.`);
+        showNotification("Invalid track type for this sample loading method.", 3000);
+        return;
+    }
+    console.log(`[Audio] loadSampleFile: Target track is ${track.name} (Type: ${track.type}, Expected Hint: ${trackTypeHint})`);
 
     const audioReady = await initAudioContextAndMasterMeter(true);
     if (!audioReady) {
@@ -330,44 +330,67 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         return;
     }
 
-    let fileUrl;
+    let fileObject; // This will hold the File object
     let sourceName;
-    const isUrlSource = typeof eventOrUrl === 'string';
+    const isUrlSource = typeof eventOrUrl === 'string'; // True if a blob URL from sound browser
 
     if (isUrlSource) {
-        fileUrl = eventOrUrl;
-        sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample";
+        sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample_from_url";
+        console.log(`[Audio] loadSampleFile: Fetching blob from URL: ${eventOrUrl}`);
+        try {
+            const response = await fetch(eventOrUrl);
+            if (!response.ok) throw new Error(`Failed to fetch blob URL: ${response.status}`);
+            const blob = await response.blob();
+            fileObject = new File([blob], sourceName, { type: blob.type || 'audio/*' }); // Create a File object
+            console.log(`[Audio] loadSampleFile: Created File object from blob URL. Name: ${fileObject.name}, Type: ${fileObject.type}`);
+        } catch (e) {
+            console.error(`[Audio] Error fetching blob URL for loadSampleFile: ${eventOrUrl}`, e);
+            showNotification("Error processing sample from URL.", 3000);
+            return;
+        }
     } else if (eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
-        const file = eventOrUrl.target.files[0];
-        fileUrl = URL.createObjectURL(file);
-        sourceName = file.name;
+        fileObject = eventOrUrl.target.files[0]; // This is already a File object
+        sourceName = fileObject.name;
+        console.log(`[Audio] loadSampleFile: Using File object from event. Name: ${sourceName}, Type: ${fileObject.type}`);
     } else {
+        console.error("[Audio] loadSampleFile: No valid file, file event, or URL provided.");
         showNotification("No file or URL provided for sample.", 3000);
         return;
     }
 
+    if (!fileObject || !fileObject.type || !fileObject.type.startsWith('audio/')) {
+        console.error("[Audio] loadSampleFile: Invalid or missing file type:", fileObject ? fileObject.type : 'undefined');
+        showNotification("Invalid file type. Please select an audio file.", 3000);
+        return;
+    }
+
+    console.log(`[Audio] loadSampleFile: Processing file "${sourceName}" for track ${track.id} (Type: ${trackTypeHint})`);
     if(typeof window.captureStateForUndo === 'function') {
         window.captureStateForUndo(`Load sample ${sourceName} to ${track.name}`);
     }
 
-    console.log(`[Audio] Loading sample "${sourceName}" for track ${track.id} from ${isUrlSource ? 'URL' : 'file event'}`);
-
     try {
-        if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
-        if (track.instrumentSamplerSettings?.audioBuffer && !track.instrumentSamplerSettings.audioBuffer.disposed) {
-            track.instrumentSamplerSettings.audioBuffer.dispose();
+        // Dispose old resources specific to the track type
+        if (trackTypeHint === 'Sampler' && track.audioBuffer && !track.audioBuffer.disposed) {
+            track.audioBuffer.dispose();
+            track.disposeSlicerMonoNodes(); // Also dispose mono player if it was a Sampler
+        } else if (trackTypeHint === 'InstrumentSampler') {
+            if (track.instrumentSamplerSettings?.audioBuffer && !track.instrumentSamplerSettings.audioBuffer.disposed) {
+                track.instrumentSamplerSettings.audioBuffer.dispose();
+            }
+            if (track.toneSampler && !track.toneSampler.disposed) {
+                track.toneSampler.dispose();
+            }
         }
-        if (track.toneSampler && !track.toneSampler.disposed) track.toneSampler.dispose();
-        if (track.type === 'Sampler') track.disposeSlicerMonoNodes();
 
         const base64DataURL = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            fetch(fileUrl)
-                .then(response => response.blob())
-                .then(blob => reader.readAsDataURL(blob))
-                .catch(reject);
+            reader.onerror = (err) => {
+                console.error("[Audio] FileReader error in loadSampleFile:", err);
+                reject(err);
+            };
+            reader.readAsDataURL(fileObject); // Read the actual File object
         });
 
         const newBuffer = await new Tone.Buffer().load(base64DataURL);
@@ -384,7 +407,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             if (typeof window.drawWaveform === 'function') window.drawWaveform(track);
             if (track.inspectorWindow?.element) {
                  const dropZone = track.inspectorWindow.element.querySelector(`#dropZone-${track.id}-sampler`);
-                 if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName}.<br>Drag/Click to replace.`;
+                 if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName.substring(0,25)}${sourceName.length > 25 ? '...' : ''}<br>Drag/Click to replace.`;
             }
         } else if (trackTypeHint === 'InstrumentSampler') {
             track.instrumentSamplerSettings.audioBufferDataURL = base64DataURL;
@@ -396,7 +419,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             if (typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track);
             if (track.inspectorWindow?.element) {
                 const dropZone = track.inspectorWindow.element.querySelector(`#dropZone-${track.id}-instrumentsampler`);
-                if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName}.<br>Drag/Click to replace.`;
+                if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName.substring(0,25)}${sourceName.length > 25 ? '...' : ''}<br>Drag/Click to replace.`;
                 const loopStartInput = track.inspectorWindow.element.querySelector(`#instrumentLoopStart-${track.id}`);
                 const loopEndInput = track.inspectorWindow.element.querySelector(`#instrumentLoopEnd-${track.id}`);
                 if(loopStartInput) loopStartInput.value = track.instrumentSamplerSettings.loopStart.toFixed(3);
@@ -409,13 +432,19 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         console.error(`[Audio] Error loading sample "${sourceName}" for track ${track.id}:`, error);
         showNotification(`Error loading sample: ${error.message}`, 3000);
     } finally {
-        if (!isUrlSource && fileUrl && fileUrl.startsWith('blob:')) { // Ensure fileUrl is defined
-            URL.revokeObjectURL(fileUrl);
+        // If eventOrUrl was a blob URL created by URL.createObjectURL (e.g. from sound browser drop),
+        // it should be revoked by the caller (loadSoundFromBrowserToTarget) after this function completes.
+        // If it was from a file input, the browser manages its lifecycle.
+        if (isUrlSource && eventOrUrl.startsWith('blob:')) {
+            // This was a blob URL. It's tricky to know if it should be revoked here or by the caller.
+            // For now, assume the caller (loadSoundFromBrowserToTarget) handles revocation if it created it.
+            // console.log(`[Audio] loadSampleFile processed blob URL: ${eventOrUrl}. Consider revocation by caller.`);
         }
     }
 }
 
 export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, fileNameForUrl = null) {
+    console.log(`[Audio] loadDrumSamplerPadFile CALLED. trackId: ${trackId}, padIndex: ${padIndex}, eventOrUrl type: ${typeof eventOrUrl}`, eventOrUrl);
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
     const track = tracksArray.find(t => t.id === trackId);
 
@@ -434,19 +463,33 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         return;
     }
 
-    let fileUrl;
+    let fileObject;
     let sourceName;
     const isUrlSource = typeof eventOrUrl === 'string';
 
     if (isUrlSource) {
-        fileUrl = eventOrUrl;
-        sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_pad_sample";
+        sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_pad_sample_url";
+        console.log(`[Audio] loadDrumSamplerPadFile: Fetching blob from URL: ${eventOrUrl}`);
+        try {
+            const response = await fetch(eventOrUrl);
+            if (!response.ok) throw new Error(`Failed to fetch blob URL: ${response.status}`);
+            const blob = await response.blob();
+            fileObject = new File([blob], sourceName, { type: blob.type || 'audio/*' });
+        } catch (e) {
+            console.error(`[Audio] Error fetching blob URL for loadDrumSamplerPadFile: ${eventOrUrl}`, e);
+            showNotification("Error processing sample for pad from URL.", 3000);
+            return;
+        }
     } else if (eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
-        const file = eventOrUrl.target.files[0];
-        fileUrl = URL.createObjectURL(file);
-        sourceName = file.name;
+        fileObject = eventOrUrl.target.files[0];
+        sourceName = fileObject.name;
     } else {
         showNotification("No file provided for drum pad.", 3000);
+        return;
+    }
+
+     if (!fileObject || !fileObject.type || !fileObject.type.startsWith('audio/')) {
+        showNotification("Invalid file type for drum pad. Please select an audio file.", 3000);
         return;
     }
 
@@ -461,11 +504,11 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         const base64DataURL = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            fetch(fileUrl)
-                .then(response => response.blob())
-                .then(blob => reader.readAsDataURL(blob))
-                .catch(reject);
+            reader.onerror = (err) => {
+                console.error("[Audio] FileReader error in loadDrumSamplerPadFile:", err);
+                reject(err);
+            };
+            reader.readAsDataURL(fileObject);
         });
 
         const newAudioBuffer = await new Tone.Buffer().load(base64DataURL);
@@ -489,10 +532,6 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     } catch (error) {
         console.error(`[Audio] Error loading sample "${sourceName}" for drum pad ${padIndex} of track ${track.id}:`, error);
         showNotification(`Error loading sample "${sourceName}": ${error.message}`, 3000);
-    } finally {
-        if (!isUrlSource && fileUrl && fileUrl.startsWith('blob:')) { // Ensure fileUrl is defined
-            URL.revokeObjectURL(fileUrl);
-        }
     }
 }
 
