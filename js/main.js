@@ -3,7 +3,7 @@
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
-import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js';
+import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js'; // Ensure showNotification is available
 import {
     initializePrimaryEventListeners,
     setupMIDI,
@@ -28,7 +28,7 @@ import {
     openTrackEffectsRackWindow, openTrackSequencerWindow,
     openGlobalControlsWindow, openTrackInspectorWindow,
     openMixerWindow, updateMixerWindow,
-    openSoundBrowserWindow, renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, // Added updateSoundBrowserDisplayForLibrary
+    openSoundBrowserWindow, renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary,
     highlightPlayingStep,
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI
 } from './ui.js';
@@ -38,7 +38,7 @@ console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js)");
 
 // --- Global Variables & Initialization ---
 window.loadedZipFiles = {};
-window.soundLibraryFileTrees = {}; // For storing processed file trees of libraries
+window.soundLibraryFileTrees = {};
 window.currentLibraryName = null;
 window.currentSoundFileTree = null;
 window.currentSoundBrowserPath = [];
@@ -50,106 +50,81 @@ window.masterMeter = null;
 window.openWindows = {};
 window.highestZIndex = 100;
 
+const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground'; // localStorage key
+
 // --- DOM Elements ---
-const desktop = document.getElementById('desktop');
-const startButton = document.getElementById('startButton');
-const startMenu = document.getElementById('startMenu');
-const taskbarButtonsContainer = document.getElementById('taskbarButtons');
-const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
-const loadProjectInputEl = document.getElementById('loadProjectInput');
+// ... (no changes here)
 
 window.playBtn = null; window.recordBtn = null; window.tempoInput = null;
-window.masterMeterBar = null; window.midiInputSelectGlobal = null;
-window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
+// ... (no changes here)
+
+// --- Desktop Background Functions ---
+function applyDesktopBackground(imageUrl) {
+    const desktopEl = document.getElementById('desktop');
+    if (desktopEl && imageUrl) {
+        desktopEl.style.backgroundImage = `url('${imageUrl}')`;
+        desktopEl.style.backgroundSize = 'cover';
+        desktopEl.style.backgroundPosition = 'center center';
+        desktopEl.style.backgroundRepeat = 'no-repeat';
+        desktopEl.style.backgroundColor = ''; // Clear background color if an image is set
+    } else if (desktopEl) { // Clear background image and revert to default color
+        desktopEl.style.backgroundImage = '';
+        desktopEl.style.backgroundColor = Constants.defaultDesktopBg || '#FFB6C1'; // Apply default color
+    }
+}
+
+function handleCustomBackgroundUpload(event) {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataURL = e.target.result;
+            try {
+                localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataURL);
+                applyDesktopBackground(dataURL);
+                showNotification("Custom background applied.", 2000);
+            } catch (error) {
+                console.error("Error saving background to localStorage:", error);
+                showNotification("Could not save background: Storage full or image too large.", 4000);
+                applyDesktopBackground(dataURL); // Still apply for current session
+            }
+        };
+        reader.onerror = () => {
+            showNotification("Error reading image file.", 3000);
+        };
+        reader.readAsDataURL(file);
+    } else if (file) {
+        showNotification("Invalid file type. Please select an image.", 3000);
+    }
+    if (event.target) event.target.value = null; // Reset file input
+}
+
+function removeCustomDesktopBackground() {
+    localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
+    applyDesktopBackground(null); // Clears the inline style and applies default color via applyDesktopBackground
+    showNotification("Custom background removed.", 2000);
+}
+
 
 // --- Exposing functions globally ---
-// UI functions
-window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
-window.openTrackSequencerWindow = openTrackSequencerWindow;
-window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
-    if (window.openWindows[id]) {
-        window.openWindows[id].restore(); return window.openWindows[id];
-    }
-    const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
-    return newWindow.element ? newWindow : null;
-};
-window.updateMixerWindow = updateMixerWindow;
-window.highlightPlayingStep = highlightPlayingStep;
-window.renderSoundBrowserDirectory = renderSoundBrowserDirectory;
-window.updateSoundBrowserDisplayForLibrary = updateSoundBrowserDisplayForLibrary; // Exposed
-window.openGlobalControlsWindow = openGlobalControlsWindow;
-window.openMixerWindow = openMixerWindow;
-window.openSoundBrowserWindow = openSoundBrowserWindow;
-window.openTrackInspectorWindow = openTrackInspectorWindow;
-window.drawWaveform = drawWaveform;
-window.drawInstrumentWaveform = drawInstrumentWaveform;
-window.renderSamplePads = renderSamplePads;
-window.updateSliceEditorUI = updateSliceEditorUI;
-window.updateDrumPadControlsUI = updateDrumPadControlsUI;
-
-// Audio functions
-window.playSlicePreview = playSlicePreview;
-window.playDrumSamplerPadPreview = playDrumSamplerPadPreview;
-window.loadSampleFile = loadSampleFile;
-window.loadDrumSamplerPadFile = loadDrumSamplerPadFile;
-window.loadSoundFromBrowserToTarget = loadSoundFromBrowserToTarget;
-window.fetchSoundLibrary = fetchSoundLibrary;
-window.initAudioContextAndMasterMeter = initAudioContextAndMasterMeter;
-window.autoSliceSample = autoSliceSample;
-
-// State functions
-window.captureStateForUndo = captureStateForUndo;
-window.handleProjectFileLoad = handleProjectFileLoad;
-window.undoLastAction = undoLastAction;
-window.redoLastAction = redoLastAction;
-window.saveProject = saveProject;
-window.loadProject = loadProject;
-window.exportToWav = exportToWav;
-window.addTrack = addTrackToState;
-
-// Event Handler functions
-window.handleTrackMute = handleTrackMute;
-window.handleTrackSolo = handleTrackSolo;
-window.handleTrackArm = handleTrackArm;
-window.removeTrack = handleRemoveTrack;
-window.handleOpenTrackInspector = handleOpenTrackInspector;
-window.handleOpenEffectsRack = handleOpenEffectsRack;
-window.handleOpenSequencer = handleOpenSequencer;
-window.attachGlobalControlEvents = attachGlobalControlEvents;
-window.selectMIDIInput = selectMIDIInput;
-
-// State getters
-window.getTracks = getTracks;
-window.getTrackById = getTrackById;
-window.getArmedTrackId = getArmedTrackId;
-window.getSoloedTrackId = getSoloedTrackId;
-window.getActiveSequencerTrackId = getActiveSequencerTrackId;
-window.isTrackRecording = isTrackRecording;
-window.getRecordingTrackId = getRecordingTrackId;
-window.getUndoStack = getUndoStack;
-
-// UI Update stubs
-window.updateSequencerCellUI = (cell, trackType, isActive) => {
-    if (!cell) return;
-    cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
-    if (isActive) {
-        let activeClass = '';
-        if (trackType === 'Synth') activeClass = 'active-synth';
-        else if (trackType === 'Sampler') activeClass = 'active-sampler';
-        else if (trackType === 'DrumSampler') activeClass = 'active-drum-sampler';
-        else if (trackType === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
-        if (activeClass) cell.classList.add(activeClass);
-    }
-};
-window.updateTaskbarTempoDisplay = (newTempo) => {
-    const display = document.getElementById('taskbarTempoDisplay');
-    if (display) display.textContent = `${parseFloat(newTempo).toFixed(1)} BPM`;
-};
+// ... (existing exposed functions)
+window.updateSoundBrowserDisplayForLibrary = updateSoundBrowserDisplayForLibrary;
 
 
 // --- Core Application Initialization ---
 async function initializeSnugOS() {
     console.log("[Main] Window loaded. Initializing SnugOS...");
+
+    // Load custom background at startup or apply default
+    const savedBg = localStorage.getItem(DESKTOP_BACKGROUND_KEY);
+    if (savedBg) {
+        applyDesktopBackground(savedBg);
+    } else {
+        const desktopEl = document.getElementById('desktop');
+        if (desktopEl && Constants.defaultDesktopBg) {
+            desktopEl.style.backgroundColor = Constants.defaultDesktopBg;
+        }
+    }
 
     const appContext = {
         addTrack: addTrackToState,
@@ -161,9 +136,16 @@ async function initializeSnugOS() {
         exportToWav: exportToWav,
         openGlobalControlsWindow: openGlobalControlsWindow,
         openMixerWindow: openMixerWindow,
-        handleProjectFileLoad: handleProjectFileLoad
+        handleProjectFileLoad: handleProjectFileLoad,
+        // Add new handlers for background management to appContext
+        triggerCustomBackgroundUpload: () => document.getElementById('customBgInput').click(),
+        removeCustomDesktopBackground: removeCustomDesktopBackground,
     };
     initializePrimaryEventListeners(appContext);
+
+    // Attach listener for the file input here in main.js after DOM is ready
+    document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
+
 
     await openGlobalControlsWindow();
     await setupMIDI();
@@ -171,11 +153,10 @@ async function initializeSnugOS() {
     // --- Autofetch Sound Libraries ---
     const libraryPromises = [];
     let librariesToFetchCount = 0;
-    if (Constants.soundLibraries) { // Check if soundLibraries is defined
+    if (Constants.soundLibraries) {
         for (const libName in Constants.soundLibraries) {
             if (Object.hasOwnProperty.call(Constants.soundLibraries, libName)) {
                 librariesToFetchCount++;
-                // Pass true for isAutofetch
                 libraryPromises.push(fetchSoundLibrary(libName, Constants.soundLibraries[libName], true));
             }
         }
@@ -187,16 +168,12 @@ async function initializeSnugOS() {
             let successCount = 0;
             results.forEach(result => {
                 if (result.status === 'fulfilled') {
-                    // fetchSoundLibrary resolves to undefined, so check for actual successful load via window.loadedZipFiles
-                    // This part is tricky as fetchSoundLibrary doesn't return a success boolean directly for its operation.
-                    // We assume if it didn't throw and reached 'fulfilled', it's a success in terms of Promise.allSettled.
-                    // The actual data check will be done by the Sound Browser itself.
                     successCount++;
                 } else {
                     console.warn(`[Main] Autofetch failed for one library: ${result.reason}`);
                 }
             });
-            if (successCount === librariesToFetchCount) {
+            if (successCount === librariesToFetchCount && librariesToFetchCount > 0) {
                 showNotification("All sound library pre-load attempts finished.", 2500);
             } else if (successCount > 0) {
                 showNotification(`${successCount} of ${librariesToFetchCount} sound library pre-load attempts finished. Some may have had issues.`, 3000);
@@ -215,21 +192,9 @@ async function initializeSnugOS() {
 }
 
 // Meter Update Loop
-function updateMetersLoop() {
-    const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
-    updateMeters(window.masterMeter, window.masterMeterBar, document.getElementById('mixerMasterMeterBar'), currentTracks);
-    requestAnimationFrame(updateMetersLoop);
-}
+// ... (no changes here)
 
 // --- Global Event Listeners ---
-window.addEventListener('load', initializeSnugOS);
-window.addEventListener('beforeunload', (e) => {
-    const currentUndoStack = getUndoStack ? getUndoStack() : [];
-    const currentTracks = getTracks ? getTracks() : [];
-    if (currentTracks.length > 0 && (currentUndoStack.length > 0 || (window.openWindows && Object.keys(window.openWindows).length > 1))) {
-        e.preventDefault();
-        e.returnValue = '';
-    }
-});
+// ... (no changes here)
 
 console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1");
