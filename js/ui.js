@@ -514,7 +514,8 @@ function initializeSamplerSpecificControls(track, winEl) {
     if (dropZoneEl && fileInputEl) {
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
         fileInputEl.onchange = (e) => {
-            if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Load sample to ${track.name}`);
+            // Undo capture for file load is now handled within loadSampleFile/loadDrumSamplePadFile if they are called directly
+            // For this specific input, loadSampleFile will be called, and it should handle its own undo.
             window.loadSampleFile(e, track.id, 'Sampler');
         };
     }
@@ -525,12 +526,12 @@ function initializeSamplerSpecificControls(track, winEl) {
     });
 
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
-    if (canvas) { track.waveformCanvasCtx = canvas.getContext('2d'); drawWaveform(track); }
+    if (canvas) { track.waveformCanvasCtx = canvas.getContext('2d'); if(typeof drawWaveform === 'function') drawWaveform(track); }
     updateSliceEditorUI(track);
 
     ['sliceStart', 'sliceEnd'].forEach(idSuffix => {
         const inputEl = winEl.querySelector(`#${idSuffix}-${track.id}`);
-        if (inputEl) inputEl.addEventListener('change', () => {});
+        if (inputEl) inputEl.addEventListener('change', () => {}); // Listener for change, action handled by applySliceEdits
     });
 
     const sVolK = createKnob({ label: 'Vol', min:0, max:1, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceVolume(track.selectedSliceForEdit, val)});
@@ -556,7 +557,7 @@ function initializeSamplerSpecificControls(track, winEl) {
     const polyphonyToggleBtn = winEl.querySelector(`#slicerPolyphonyToggle-${track.id}`);
     if (polyphonyToggleBtn) {
         polyphonyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`;
-        polyphonyToggleBtn.classList.toggle('active', !track.slicerIsPolyphonic);
+        polyphonyToggleBtn.classList.toggle('active', !track.slicerIsPolyphonic); // Active class for MONO
         polyphonyToggleBtn.addEventListener('click', () => {
             if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Slicer Polyphony for ${track.name} to ${!track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`);
             track.slicerIsPolyphonic = !track.slicerIsPolyphonic;
@@ -576,8 +577,8 @@ function initializeSamplerSpecificControls(track, winEl) {
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
     const padLoadContainer = winEl.querySelector(`#drumPadLoadContainer-${track.id}`);
-    if (padLoadContainer) updateDrumPadControlsUI(track);
-    renderDrumSamplerPads(track);
+    if (padLoadContainer) updateDrumPadControlsUI(track); // This populates the load UI for the selected pad
+    renderDrumSamplerPads(track); // This renders the pad buttons themselves
 
     const pVolK = createKnob({ label: 'Pad Vol', min:0, max:1, step:0.01, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(track.selectedDrumPadForEdit, val)});
     winEl.querySelector(`#drumPadVolumeSlider-${track.id}`)?.appendChild(pVolK.element); track.inspectorControls.drumPadVolume = pVolK;
@@ -595,13 +596,13 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     if (dropZoneEl && fileInputEl) {
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
          fileInputEl.onchange = (e) => {
-            if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Load sample to Instrument Sampler ${track.name}`);
+            // Undo capture handled by loadSampleFile
             window.loadSampleFile(e, track.id, 'InstrumentSampler');
         };
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
-    if(iCanvas) { track.instrumentWaveformCanvasCtx = iCanvas.getContext('2d'); drawInstrumentWaveform(track); }
+    if(iCanvas) { track.instrumentWaveformCanvasCtx = iCanvas.getContext('2d'); if(typeof drawInstrumentWaveform === 'function') drawInstrumentWaveform(track); }
 
     winEl.querySelector(`#instrumentRootNote-${track.id}`)?.addEventListener('change', (e) => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set Root Note for ${track.name} to ${e.target.value}`);
@@ -622,7 +623,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const instPolyphonyToggleBtn = winEl.querySelector(`#instrumentSamplerPolyphonyToggle-${track.id}`);
     if (instPolyphonyToggleBtn) {
         instPolyphonyToggleBtn.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`;
-        instPolyphonyToggleBtn.classList.toggle('active', !track.instrumentSamplerIsPolyphonic);
+        instPolyphonyToggleBtn.classList.toggle('active', !track.instrumentSamplerIsPolyphonic); // Active class for MONO
         instPolyphonyToggleBtn.addEventListener('click', () => {
             if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Instrument Sampler Polyphony for ${track.name} to ${!track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`);
             track.instrumentSamplerIsPolyphonic = !track.instrumentSamplerIsPolyphonic;
@@ -671,12 +672,12 @@ export function openGlobalControlsWindow(savedState = null) {
     `;
     const winOptions = { width: 280, height: 250, x: 20, y: 20, initialContentKey: 'globalControls' };
     if (savedState) Object.assign(winOptions, savedState);
-    
+
     const globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
     if (!globalControlsWin || !globalControlsWin.element) {
         showNotification("Failed to create Global Controls window.", 5000); return null;
     }
-    
+
     window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal');
     window.recordBtn = globalControlsWin.element.querySelector('#recordBtnGlobal');
     window.tempoInput = globalControlsWin.element.querySelector('#tempoGlobalInput');
@@ -696,16 +697,18 @@ export function openGlobalControlsWindow(savedState = null) {
 export function openTrackInspectorWindow(trackId, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) { showNotification(`Track with ID ${trackId} not found. Cannot open inspector.`, 3000); return null; }
-    
+
     const inspectorId = `trackInspector-${track.id}`;
-    if (window.openWindows[inspectorId] && !savedState) {
+    if (window.openWindows[inspectorId] && !savedState) { // If exists and not restoring from saved state, just restore
         window.openWindows[inspectorId].restore(); return window.openWindows[inspectorId];
     }
+    // If restoring from saved state, or if it doesn't exist, we might need to close and recreate or just create.
+    // SnugWindow handles this by allowing options to override, but if content needs to be rebuilt, close/recreate is safer.
     if (window.openWindows[inspectorId] && savedState) {
-        window.openWindows[inspectorId].close();
+        window.openWindows[inspectorId].close(); // Close existing if restoring with new state
     }
 
-    track.inspectorControls = {};
+    track.inspectorControls = {}; // Reset inspector controls cache for this track
     const inspectorContentElement = buildTrackInspectorContentDOM(track);
 
     let windowHeight = 450;
@@ -717,7 +720,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     const winOptions = {
         width: Math.min(500, window.innerWidth - 40),
         height: Math.min(windowHeight, window.innerHeight - 80),
-        initialContentKey: `trackInspector-${track.id}`
+        initialContentKey: `trackInspector-${track.id}` // Store the key for reconstruction
     };
     if (savedState) Object.assign(winOptions, savedState);
 
@@ -725,11 +728,12 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     if (!inspectorWin || !inspectorWin.element) {
         showNotification(`Failed to create Inspector for track ${track.id}`, 5000); return null;
     }
-    track.inspectorWindow = inspectorWin;
-    
+    track.inspectorWindow = inspectorWin; // Link window to track object
+
     initializeCommonInspectorControls(track, inspectorWin.element);
     initializeTypeSpecificInspectorControls(track, inspectorWin.element);
 
+    // Refresh knob visuals after a short delay to ensure DOM is fully rendered
     setTimeout(() => {
         Object.values(track.inspectorControls).forEach(control => {
             if (control && control.type === 'knob' && typeof control.refreshVisuals === 'function') {
@@ -762,15 +766,21 @@ export function buildEffectsRackContentDOM(track) {
         titleEl.className = 'text-sm font-semibold'; titleEl.textContent = effectDef.title;
         effectGroupDiv.appendChild(titleEl);
         const controlsContainer = document.createElement('div');
-        if (effectDef.controls.length > 1 || ['distortion', 'saturation'].includes(effectKey)) {
-             controlsContainer.className = 'control-group';
+        if (effectDef.controls.length > 1 || ['distortion', 'saturation'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) {
+             controlsContainer.className = 'control-group'; // Use control-group for knobs for better layout
+        } else {
+            controlsContainer.className = 'single-control-container'; // For single select like filter type initially
         }
+
         effectDef.controls.forEach(controlDef => {
             if (controlDef.type === 'select') {
+                const selectContainer = document.createElement('div'); // Wrap select for consistent styling if needed
+                if(controlsContainer.className !== 'control-group') selectContainer.className = 'mb-1'; // Add margin if not in a group
                 const selectEl = document.createElement('select');
                 selectEl.id = `${controlDef.idPrefix}-${track.id}`;
-                selectEl.className = 'text-xs p-1 border w-full mb-1 bg-white text-black';
-                controlsContainer.appendChild(selectEl);
+                selectEl.className = 'text-xs p-1 border w-full bg-white text-black';
+                selectContainer.appendChild(selectEl)
+                controlsContainer.appendChild(selectContainer);
             } else if (controlDef.type === 'knob') {
                 const knobPlaceholder = document.createElement('div');
                 knobPlaceholder.id = `${controlDef.idPrefix}Knob-${track.id}`;
@@ -795,7 +805,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         window.openWindows[windowId].close();
     }
 
-    track.inspectorControls = track.inspectorControls || {};
+    track.inspectorControls = track.inspectorControls || {}; // Ensure effects controls can be cached here too
     const effectsRackContentElement = buildEffectsRackContentDOM(track);
     const winOptions = { width: 450, height: 600, initialContentKey: `effectsRack-${track.id}` };
     if (savedState) Object.assign(winOptions, savedState);
@@ -817,10 +827,12 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
                 const selectEl = winEl.querySelector(`#${controlIdBase}`);
                 if (selectEl) {
                     controlDef.options.forEach(opt => selectEl.add(new Option(opt, opt)));
-                    selectEl.value = initialValue;
+                    selectEl.value = initialValue !== undefined ? initialValue : controlDef.options[0];
                     selectEl.addEventListener('change', (e) => {
                         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set ${effectDef.title} ${controlDef.paramKey} for ${track.name} to ${e.target.value}`);
                         if (track[controlDef.setter]) track[controlDef.setter](e.target.value);
+                        else if (controlDef.customSetter) controlDef.customSetter(track, e.target.value);
+                        else if (track.effects[effectKey]) track.effects[effectKey][controlDef.paramKey] = e.target.value; // Generic fallback
                     });
                 }
             } else if (controlDef.type === 'knob') {
@@ -836,7 +848,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
                         }
                     });
                     knobPlaceholder.appendChild(knob.element);
-                    track.inspectorControls[controlDef.idPrefix] = knob;
+                    track.inspectorControls[`effect_${controlDef.idPrefix}`] = knob; // Prefix to avoid collision
                 }
             }
         });
@@ -844,8 +856,8 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
      setTimeout(() => {
         for (const effectKey in effectControlDefinitions) {
             effectControlDefinitions[effectKey].controls.forEach(controlDef => {
-                if (controlDef.type === 'knob' && track.inspectorControls[controlDef.idPrefix]) {
-                    track.inspectorControls[controlDef.idPrefix].refreshVisuals();
+                if (controlDef.type === 'knob' && track.inspectorControls[`effect_${controlDef.idPrefix}`]) {
+                    track.inspectorControls[`effect_${controlDef.idPrefix}`].refreshVisuals();
                 }
             });
         }
@@ -879,19 +891,17 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     for (let r = 0; r < rows; r++) {
         const labelCell = document.createElement('div');
         labelCell.className = 'sequencer-label-cell';
-        labelCell.title = rowLabels[r] || '';
-        labelCell.textContent = rowLabels[r] || '';
+        labelCell.title = rowLabels[r] || `Row ${r+1}`;
+        labelCell.textContent = rowLabels[r] || `R${r+1}`;
         gridDiv.appendChild(labelCell);
         for (let c = 0; c < track.sequenceLength; c++) {
             const stepCell = document.createElement('div');
             let cellClass = 'sequencer-step-cell';
             const beatInBar = (c % Constants.STEPS_PER_BAR);
-            if (Constants.STEPS_PER_BAR === 16) {
-                if (beatInBar <= 3) cellClass += ' beat-1';
-                else if (beatInBar <= 7) cellClass += ' beat-2';
-                else if (beatInBar <= 11) cellClass += ' beat-3';
-                else cellClass += ' beat-4';
-            } else {
+            if (Constants.STEPS_PER_BAR === 16) { // Common 4/4
+                if (beatInBar % 4 === 0) cellClass += ' beat-downbeat'; // Every 4th step (1, 5, 9, 13 in a bar)
+                else cellClass += ' beat-other';
+            } else { // Generic fallback
                 if (Math.floor(beatInBar / 4) % 2 === 0) cellClass += ' beat-1'; else cellClass += ' beat-2';
             }
             const stepData = track.sequenceData[r]?.[c];
@@ -923,7 +933,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         window.openWindows[windowId].restore(); return window.openWindows[windowId];
     }
     if (window.openWindows[windowId] && (forceRedraw || savedState)) {
-        window.openWindows[windowId].close();
+        window.openWindows[windowId].close(); // Close to ensure fresh content if forced or restoring
     }
 
     let rows = 0, rowLabels = [];
@@ -939,7 +949,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     const sequencerContentElement = buildSequencerContentDOM(track, rows, rowLabels, numBars);
     const winOptions = {
         width: Math.min(700, window.innerWidth - 50),
-        height: Math.min(420 + rows * 22, window.innerHeight - 100),
+        height: Math.min(420 + rows * 22, window.innerHeight - 100), // Dynamic height based on rows
         initialContentKey: `sequencerWin-${track.id}`
     };
     if (savedState) Object.assign(winOptions, savedState);
@@ -954,31 +964,20 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             const c = parseInt(cell.dataset.col);
             if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Sequencer Step (Track ${track.name}, ${rowLabels[r] || 'Row ' + (r+1)}, Step ${c+1})`);
             if (!track.sequenceData[r]) track.sequenceData[r] = Array(track.sequenceLength).fill(null);
-            if (!track.sequenceData[r][c] || !track.sequenceData[r][c].active) {
+
+            const currentlyActive = track.sequenceData[r][c] && track.sequenceData[r][c].active;
+            if (!currentlyActive) {
                 track.sequenceData[r][c] = { active: true, velocity: Constants.defaultVelocity };
-                let activeClass = '';
-                if (track.type === 'Synth') activeClass = 'active-synth';
-                else if (track.type === 'Sampler') activeClass = 'active-sampler';
-                else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler';
-                else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
-                cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
-                if(activeClass) cell.classList.add(activeClass);
+                // Update UI (call global function exposed from main.js)
+                if(typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, true);
             } else {
                 track.sequenceData[r][c].active = false;
-                cell.className = 'sequencer-step-cell';
-                const beatInBar = (c % Constants.STEPS_PER_BAR);
-                if (Constants.STEPS_PER_BAR === 16) {
-                    if (beatInBar <= 3) cell.classList.add('beat-1');
-                    else if (beatInBar <= 7) cell.classList.add('beat-2');
-                    else if (beatInBar <= 11) cell.classList.add('beat-3');
-                    else cell.classList.add('beat-4');
-                } else {
-                     if (Math.floor(beatInBar / 4) % 2 === 0) cell.classList.add('beat-1'); else cell.classList.add('beat-2');
-                }
+                // Update UI (call global function exposed from main.js)
+                if(typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, false);
             }
         });
     });
-    seqWin.onCloseCallback = () => { 
+    seqWin.onCloseCallback = () => {
         const currentActiveSeqId = typeof window.getActiveSequencerTrackId === 'function' ? window.getActiveSequencerTrackId() : null;
         if (currentActiveSeqId === track.id) {
             if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(null);
@@ -996,21 +995,21 @@ export function highlightPlayingStep(col, trackType, gridElement) {
 export function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
-    
-    const contentDiv = document.createElement('div'); 
-    contentDiv.className = 'mixer-window-content'; 
-    
-    const winOptions = { 
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'mixer-window-content'; // This will be a flex container for channel strips
+
+    const winOptions = {
         width: Math.max(500, Math.min(800, window.innerWidth - 60)), height: 350,
-        initialContentKey: 'mixer' 
+        initialContentKey: 'mixer'
     };
     if (savedState) Object.assign(winOptions, savedState);
 
     const mixerWin = new SnugWindow(windowId, 'Mixer', contentDiv, winOptions);
-    if (!mixerWin || !mixerWin.element) { 
-        showNotification("Failed to create Mixer window.", 5000); return null; 
+    if (!mixerWin || !mixerWin.element) {
+        showNotification("Failed to create Mixer window.", 5000); return null;
     }
-    renderMixer(contentDiv);
+    renderMixer(contentDiv); // Populate the content
     return mixerWin;
 }
 
@@ -1024,11 +1023,11 @@ export function updateMixerWindow() {
 
 export function renderMixer(container) {
     if (!container) { console.error("Mixer container not found for rendering."); return; }
-    container.innerHTML = '';
+    container.innerHTML = ''; // Clear previous content
     const currentTracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
 
     currentTracks.forEach(track => {
-        const strip = document.createElement('div'); 
+        const strip = document.createElement('div');
         strip.className = 'channel-strip';
         const trackNameDiv = document.createElement('div');
         trackNameDiv.className = 'track-name';
@@ -1038,10 +1037,10 @@ export function renderMixer(container) {
         strip.appendChild(trackNameDiv);
 
         const faderContainer = document.createElement('div');
-        faderContainer.className = 'fader-container'; 
-        faderContainer.id = `mixerVolumeSliderContainer-${track.id}`; 
+        faderContainer.className = 'fader-container'; // Will hold the knob
+        faderContainer.id = `mixerVolumeSliderContainer-${track.id}`;
         strip.appendChild(faderContainer);
-        
+
         const buttonsDiv = document.createElement('div');
         buttonsDiv.className = 'mixer-buttons flex gap-1 mb-1';
         const muteBtn = document.createElement('button');
@@ -1062,63 +1061,120 @@ export function renderMixer(container) {
 
         const meterDiv = document.createElement('div');
         meterDiv.id = `mixerTrackMeterContainer-${track.id}`;
-        meterDiv.className = 'mixer-meter-container h-3';
+        meterDiv.className = 'mixer-meter-container h-3'; // Use this class for consistent styling
         meterDiv.innerHTML = `<div id="mixerTrackMeterBar-${track.id}" class="meter-bar"></div>`;
         strip.appendChild(meterDiv);
         container.appendChild(strip);
 
+        // Create and append volume knob for this track strip
         const volKnobContainer = strip.querySelector(`#mixerVolumeSliderContainer-${track.id}`);
         if(volKnobContainer) {
-            const volKnob = createKnob({ 
+            const volKnob = createKnob({
                 label: '', min:0, max:1, step:0.01, initialValue: track.previousVolumeBeforeMute, decimals:2, sensitivity: 0.8,
-                trackRef: track, 
-                onValueChange: (val, oldVal, fromInteraction) => { 
-                    track.setVolume(val, fromInteraction); 
-                    if (track.inspectorControls?.volume?.type === 'knob') { 
-                        track.inspectorControls.volume.setValue(val, false); 
+                trackRef: track,
+                onValueChange: (val, oldVal, fromInteraction) => {
+                    track.setVolume(val, fromInteraction);
+                    // Sync with inspector knob if it exists
+                    if (track.inspectorControls?.volume?.type === 'knob') {
+                        track.inspectorControls.volume.setValue(val, false); // false to avoid callback loop
                     }
                 }
             });
-            volKnobContainer.innerHTML = ''; 
+            volKnobContainer.innerHTML = ''; // Clear placeholder
             volKnobContainer.appendChild(volKnob.element);
-            track.inspectorControls[`mixerVolume-${track.id}`] = volKnob;
+            if (!track.inspectorControls) track.inspectorControls = {};
+            track.inspectorControls[`mixerVolume-${track.id}`] = volKnob; // Cache knob for potential refresh
         }
     });
-    
-    const masterStrip = document.createElement('div'); 
-    masterStrip.className = 'channel-strip bg-gray-400';
+
+    // Master Strip
+    const masterStrip = document.createElement('div');
+    masterStrip.className = 'channel-strip bg-gray-400'; // Differentiate master
     masterStrip.innerHTML = `<div class="track-name">Master</div>
-                             <div class="fader-container" id="mixerMasterVolumeSliderContainer"></div> 
+                             <div class="fader-container" id="mixerMasterVolumeSliderContainer"></div>
                              <div id="mixerMasterMeterContainer" class="mixer-meter-container h-3 mt-auto">
                                 <div id="mixerMasterMeterBar" class="meter-bar"></div>
                              </div>`;
     container.appendChild(masterStrip);
-    
+
     const masterVolSliderCont = masterStrip.querySelector('#mixerMasterVolumeSliderContainer');
     if(masterVolSliderCont){
-        const masterVolKnob = createKnob({ 
-            label: '', min:-60, max:6, step:1, initialValue: Tone.getDestination().volume.value, 
+        const masterVolKnob = createKnob({
+            label: '', min:-60, max:6, step:1, initialValue: Tone.getDestination().volume.value,
             displaySuffix: 'dB', decimals:0, sensitivity: 0.3,
             onValueChange: (val) => { Tone.getDestination().volume.value = val; }
         });
-        masterVolSliderCont.innerHTML = ''; 
+        masterVolSliderCont.innerHTML = '';
         masterVolSliderCont.appendChild(masterVolKnob.element);
+        // Cache master volume knob if needed, e.g., window.masterVolumeKnob = masterVolKnob;
     }
+    // Refresh visuals for all newly created knobs after a short delay
     setTimeout(() => {
         currentTracks.forEach(track => {
             track.inspectorControls[`mixerVolume-${track.id}`]?.refreshVisuals?.();
         });
+        // masterVolKnob?.refreshVisuals?.(); // If cached
     }, 0);
+}
+
+
+export function updateSoundBrowserDisplayForLibrary(libraryName) {
+    const soundBrowserList = document.getElementById('soundBrowserList');
+    const pathDisplay = document.getElementById('soundBrowserPathDisplay');
+    const librarySelect = document.getElementById('soundBrowserLibrarySelect');
+
+    if (!soundBrowserList || !pathDisplay || !librarySelect) {
+        // Sound browser window might not be open or fully initialized
+        return;
+    }
+
+    // Ensure the dropdown reflects the library we are trying to display
+    if (librarySelect.value !== libraryName) {
+        librarySelect.value = libraryName; // This might trigger onchange again, be careful
+    }
+
+    window.currentLibraryName = libraryName;
+
+    if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) {
+        window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName];
+        window.currentSoundBrowserPath = []; // Reset path to root for the new library
+        renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree);
+    } else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") {
+        // Library is currently being fetched (e.g., by autofetch or a previous click)
+        soundBrowserList.innerHTML = `<div class="sound-browser-loading">Loading ${libraryName} sounds...</div>`;
+        pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`;
+    } else {
+        // Library not fetched yet, or fetch failed. Try to fetch it now (on-demand).
+        const zipUrl = Constants.soundLibraries[libraryName];
+        if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
+            // Pass false for isAutofetch, as this is a direct user/UI action
+            window.fetchSoundLibrary(libraryName, zipUrl, false);
+            // fetchSoundLibrary will call updateSoundBrowserDisplayForLibrary again once done
+        } else {
+            soundBrowserList.innerHTML = `<div class="sound-browser-loading">Library ${libraryName} configuration not found or fetch function unavailable.</div>`;
+            pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
+        }
+    }
 }
 
 export function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
-    if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
+    if (window.openWindows[windowId] && !savedState) {
+        window.openWindows[windowId].restore();
+        // If restoring an existing window, ensure its content reflects the current state
+        if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') {
+            updateSoundBrowserDisplayForLibrary(window.currentLibraryName);
+        }
+        return window.openWindows[windowId];
+    }
 
     let selectOptionsHTML = '';
-    for (const libName in Constants.soundLibraries) {
-        selectOptionsHTML += `<option value="${libName}">${libName}</option>`;
+    if (Constants.soundLibraries) {
+        for (const libName in Constants.soundLibraries) {
+            selectOptionsHTML += `<option value="${libName}">${libName}</option>`;
+        }
     }
+
     const contentHTML = `
         <div class="sound-browser-content">
             <select id="soundBrowserLibrarySelect" class="w-full mb-2 p-1 border border-gray-500 rounded-sm text-xs">
@@ -1130,55 +1186,56 @@ export function openSoundBrowserWindow(savedState = null) {
     `;
     const winOptions = { width: 350, height: 400, initialContentKey: 'soundBrowser' };
     if (savedState) Object.assign(winOptions, savedState);
-    
+
     const soundBrowserWin = new SnugWindow(windowId, 'Sound Browser', contentHTML, winOptions);
-    if (!soundBrowserWin) return null;
+    if (!soundBrowserWin || !soundBrowserWin.element) return null;
 
     const librarySelect = soundBrowserWin.element.querySelector('#soundBrowserLibrarySelect');
-    librarySelect.onchange = () => { // This listener ideally moves to eventHandlers.js or calls a handler from there
-        const selectedLibraryName = librarySelect.value;
-        const zipUrl = Constants.soundLibraries[selectedLibraryName];
-        if (zipUrl) {
-            if (window.loadedZipFiles[selectedLibraryName]) {
-                window.currentLibraryName = selectedLibraryName;
-                window.currentSoundFileTree = {};
-                window.loadedZipFiles[selectedLibraryName].forEach((relativePath, zipEntry) => {
-                    if (zipEntry.dir) return;
-                    const pathParts = relativePath.split('/').filter(p => p);
-                    let currentLevel = window.currentSoundFileTree;
-                    for (let i = 0; i < pathParts.length; i++) {
-                        const part = pathParts[i];
-                        if (i === pathParts.length - 1) {
-                            if (part.endsWith('.wav') || part.endsWith('.mp3') || part.endsWith('.ogg')) {
-                                currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
-                            }
-                        } else {
-                            if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
-                                currentLevel[part] = { type: 'folder', children: {} };
-                            }
-                            currentLevel = currentLevel[part].children;
-                        }
-                    }
-                });
-                window.currentSoundBrowserPath = [];
-                if(typeof renderSoundBrowserDirectory === 'function') renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree);
-            } else {
-                if(typeof window.fetchSoundLibrary === 'function') window.fetchSoundLibrary(selectedLibraryName, zipUrl);
+    if (librarySelect) {
+        librarySelect.onchange = () => {
+            const selectedLibraryName = librarySelect.value;
+            if (typeof updateSoundBrowserDisplayForLibrary === 'function') {
+                updateSoundBrowserDisplayForLibrary(selectedLibraryName);
             }
+        };
+
+        // Initial display: select the first library and update its content
+        if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) {
+            const firstLibraryName = Object.keys(Constants.soundLibraries)[0];
+            if (librarySelect.options.length > 0 && !Array.from(librarySelect.options).find(opt => opt.value === firstLibraryName)) {
+                // If firstLibraryName isn't in options, pick the first actual option
+                 librarySelect.value = librarySelect.options[0].value;
+            } else {
+                 librarySelect.value = firstLibraryName;
+            }
+            // Trigger update for the initially selected library
+            if (typeof updateSoundBrowserDisplayForLibrary === 'function') {
+                updateSoundBrowserDisplayForLibrary(librarySelect.value);
+            }
+        } else {
+            // No libraries defined
+             soundBrowserWin.element.querySelector('#soundBrowserList').innerHTML = "No sound libraries configured.";
         }
-    };
-    if (Object.keys(Constants.soundLibraries).length > 0) {
-        const firstLibraryName = Object.keys(Constants.soundLibraries)[0];
-        librarySelect.value = firstLibraryName;
-        if(typeof window.fetchSoundLibrary === 'function') window.fetchSoundLibrary(firstLibraryName, Constants.soundLibraries[firstLibraryName]);
     }
     return soundBrowserWin;
 }
 
+
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList');
     const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    if (!soundBrowserList || !pathDisplay || !treeNode) return;
+
+    if (!soundBrowserList || !pathDisplay ) {
+        console.warn("renderSoundBrowserDirectory: DOM elements missing.");
+        return;
+    }
+    if (!treeNode) { // Handles case where treeNode might be undefined (e.g. library still loading/failed)
+        console.warn("renderSoundBrowserDirectory: treeNode is undefined for library:", window.currentLibraryName);
+        soundBrowserList.innerHTML = `<div class="sound-browser-loading">Content for ${window.currentLibraryName || 'selected library'} is unavailable.</div>`;
+        pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Library Selected'})`;
+        return;
+    }
+
 
     soundBrowserList.innerHTML = '';
     pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Library Selected'})`;
@@ -1186,16 +1243,27 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     if (pathArray.length > 0) {
         const backButton = document.createElement('div');
         backButton.className = 'sound-browser-item font-semibold';
-        backButton.textContent = 'ç­®ï½¸.. (Up)';
-        backButton.addEventListener('click', () => { 
+        backButton.textContent = '⬆️.. (Up)';
+        backButton.addEventListener('click', () => {
             window.currentSoundBrowserPath.pop();
-            let newTreeNode = window.currentSoundFileTree;
+            let newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; // Start from root of current lib
+            if (!newTreeNode) { // Should not happen if currentLibraryName is valid
+                console.error("Current library tree not found for navigating up!");
+                window.currentSoundBrowserPath = []; // Reset path
+                renderSoundBrowserDirectory(window.currentSoundBrowserPath, null); // Show error/empty state
+                return;
+            }
             for (const segment of window.currentSoundBrowserPath) {
-                newTreeNode = newTreeNode[segment]?.children;
-                if (!newTreeNode) {
-                    window.currentSoundBrowserPath = []; newTreeNode = window.currentSoundFileTree; break;
+                if (newTreeNode[segment] && newTreeNode[segment].type === 'folder') {
+                    newTreeNode = newTreeNode[segment].children;
+                } else { // Path segment error
+                    console.warn("Error navigating up, path segment not found in tree:", segment);
+                    window.currentSoundBrowserPath = []; // Reset path
+                    newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; // Go to root
+                    break;
                 }
             }
+            window.currentSoundFileTree = newTreeNode; // Update global current tree view
             renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode);
         });
         soundBrowserList.appendChild(backButton);
@@ -1211,13 +1279,14 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         const div = document.createElement('div');
         div.className = 'sound-browser-item';
         if (item.type === 'folder') {
-            div.textContent = `î žåˆ€ ${name}`;
-            div.addEventListener('click', () => { 
+            div.textContent = `📁 ${name}`;
+            div.addEventListener('click', () => {
                 window.currentSoundBrowserPath.push(name);
+                window.currentSoundFileTree = item.children; // Update current view
                 renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children);
             });
         } else if (item.type === 'file') {
-            div.textContent = `î žä¸ƒ ${name}`;
+            div.textContent = `🎵 ${name}`;
             div.title = `Click to play. Drag to load: ${name}`;
             div.draggable = true;
             div.addEventListener('dragstart', (event) => {
@@ -1228,22 +1297,25 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
             });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
             div.addEventListener('click', async (event) => {
-                if (event.detail === 0) return; // Prevent dblclick issues
-                if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter();
+                if (event.detail === 0) return;
+                if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
                 if (window.previewPlayer && !window.previewPlayer.disposed) {
                     window.previewPlayer.stop(); window.previewPlayer.dispose();
                 }
                 try {
-                    if (!window.loadedZipFiles[window.currentLibraryName]) throw new Error("Current ZIP library not loaded.");
+                    if (!window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") {
+                         throw new Error(`Current ZIP library "${window.currentLibraryName}" not fully loaded.`);
+                    }
                     const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath);
-                    if (!zipEntry) throw new Error(`File ${item.fullPath} not found.`);
+                    if (!zipEntry) throw new Error(`File ${item.fullPath} not found in ${window.currentLibraryName}.`);
                     const fileBlob = await zipEntry.async("blob");
-                    const buffer = await new Tone.Buffer().load(URL.createObjectURL(fileBlob));
+                    const buffer = await new Tone.Buffer().load(URL.createObjectURL(fileBlob)); // Create URL for blob
                     window.previewPlayer = new Tone.Player(buffer).toDestination();
                     window.previewPlayer.autostart = true;
                     window.previewPlayer.onstop = () => {
                         if (window.previewPlayer && !window.previewPlayer.disposed) window.previewPlayer.dispose();
                         window.previewPlayer = null;
+                        URL.revokeObjectURL(buffer.url); // Clean up blob URL after use
                     };
                 } catch (error) {
                     console.error(`Error previewing sound ${name}:`, error);
@@ -1322,16 +1394,32 @@ export function applySliceEdits(trackId) {
         showNotification(`Slice ${track.selectedSliceForEdit + 1} updated.`, 1500);
     } else {
         showNotification("Invalid slice start/end times.", 2000);
-        updateSliceEditorUI(track);
+        updateSliceEditorUI(track); // Revert to current slice values in UI
     }
 }
 
 export function drawWaveform(track) {
-    if (!track || (track.type !== 'Sampler' && track.type !== 'InstrumentSampler') || !track.audioBuffer || !track.audioBuffer.loaded) return;
-    const ctx = track.type === 'Sampler' ? track.waveformCanvasCtx : track.instrumentWaveformCanvasCtx;
-    if (!ctx) return;
+    if (!track || (track.type !== 'Sampler' && track.type !== 'InstrumentSampler') ) return;
+
+    const isSampler = track.type === 'Sampler';
+    const audioBufferToDraw = isSampler ? track.audioBuffer : track.instrumentSamplerSettings.audioBuffer;
+    const ctx = isSampler ? track.waveformCanvasCtx : track.instrumentWaveformCanvasCtx;
+
+    if (!audioBufferToDraw || !audioBufferToDraw.loaded || !ctx) {
+        if (ctx) { // Clear canvas if no buffer or not loaded
+            const canvas = ctx.canvas;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#e0e0e0'; // Light grey for empty/loading
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#888';
+            ctx.textAlign = 'center';
+            ctx.fillText(isSampler ? 'No Sample Loaded' : 'No Instrument Sample', canvas.width / 2, canvas.height / 2);
+        }
+        return;
+    }
+
     const canvas = ctx.canvas; const width = canvas.width; const height = canvas.height;
-    const channelData = track.audioBuffer.getChannelData(0);
+    const channelData = audioBufferToDraw.getChannelData(0);
     ctx.clearRect(0, 0, width, height); ctx.fillStyle = '#a0a0a0'; ctx.fillRect(0, 0, width, height);
     ctx.lineWidth = 1; ctx.strokeStyle = '#333'; ctx.beginPath();
     const sliceWidth = width / channelData.length;
@@ -1343,21 +1431,33 @@ export function drawWaveform(track) {
     if (track.type === 'Sampler') {
         ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1;
         track.slices.forEach((slice, index) => {
-            const startX = (slice.offset / track.audioBuffer.duration) * width;
-            ctx.beginPath(); ctx.moveTo(startX, 0); ctx.lineTo(startX, height); ctx.stroke();
-            if (index === track.selectedSliceForEdit) {
-                ctx.strokeStyle = 'rgba(0, 0, 255, 0.9)'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(startX,0); ctx.lineTo(startX,height); ctx.stroke();
-                ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1;
+            if (slice.duration > 0) { // Only draw valid slices
+                const startX = (slice.offset / audioBufferToDraw.duration) * width;
+                const endX = ((slice.offset + slice.duration) / audioBufferToDraw.duration) * width;
+                ctx.beginPath(); ctx.moveTo(startX, 0); ctx.lineTo(startX, height); ctx.stroke();
+                // Optionally draw end marker for slice
+                // ctx.beginPath(); ctx.moveTo(endX, 0); ctx.lineTo(endX, height); ctx.stroke();
+
+                if (index === track.selectedSliceForEdit) {
+                    ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'; // Highlight selected slice region
+                    ctx.fillRect(startX, 0, endX - startX, height);
+                    // Thicker line for start of selected slice
+                    ctx.strokeStyle = 'rgba(0, 0, 255, 0.9)'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(startX,0); ctx.lineTo(startX,height); ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1; // Reset for next slice
+                }
             }
         });
     }
     if (track.type === 'InstrumentSampler' && track.instrumentSamplerSettings.loop) {
         ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)'; ctx.lineWidth = 1;
-        const loopStartX = (track.instrumentSamplerSettings.loopStart / track.audioBuffer.duration) * width;
-        const loopEndX = (track.instrumentSamplerSettings.loopEnd / track.audioBuffer.duration) * width;
+        const loopStartX = (track.instrumentSamplerSettings.loopStart / audioBufferToDraw.duration) * width;
+        const loopEndX = (track.instrumentSamplerSettings.loopEnd / audioBufferToDraw.duration) * width;
         ctx.beginPath(); ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, height); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, height); ctx.stroke();
+        // Optionally shade loop region
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.1)';
+        ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, height);
     }
 }
 export function drawInstrumentWaveform(track) { drawWaveform(track); }
@@ -1373,11 +1473,11 @@ export function updateDrumPadControlsUI(track) {
     if (loadContainer) {
         const inputId = `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`;
         loadContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', track.selectedDrumPadForEdit) +
-                                  `<span id="drumPadFileName-${track.id}" class="text-xs ml-2 block truncate" style="max-width: 150px;">${selectedPad.originalFileName || 'No file'}</span>`;
+                                  `<span id="drumPadFileName-${track.id}" class="text-xs ml-2 block truncate" style="max-width: 150px;" title="${selectedPad.originalFileName || 'No file'}">${selectedPad.originalFileName || 'No file'}</span>`;
         const fileInputEl = loadContainer.querySelector(`#${inputId}`);
         if (fileInputEl) {
             fileInputEl.addEventListener('change', (e) => {
-                if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Load sample to Drum Pad ${track.selectedDrumPadForEdit + 1} on ${track.name}`);
+                // Undo captured by loadDrumSamplerPadFile
                 window.loadDrumSamplerPadFile(e, track.id, track.selectedDrumPadForEdit);
             });
         }
@@ -1398,16 +1498,17 @@ export function renderDrumSamplerPads(track) {
     track.drumSamplerPads.forEach((padData, index) => {
         const padEl = document.createElement('button');
         padEl.className = `pad-button ${index === track.selectedDrumPadForEdit ? 'selected-for-edit' : ''}`;
-        padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 50px;">${padData.originalFileName || 'Empty'}</span>`;
-        padEl.title = `Select Pad ${index + 1}. Click to preview.`;
+        const fileNameDisplay = padData.originalFileName ? padData.originalFileName.substring(0, 10) + (padData.originalFileName.length > 10 ? '...' : '') : 'Empty';
+        padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 60px;" title="${padData.originalFileName || 'Empty'}">${fileNameDisplay}</span>`;
+        padEl.title = `Select Pad ${index + 1}. Click to preview. Sample: ${padData.originalFileName || 'Empty'}`;
         padEl.dataset.trackId = track.id;
         padEl.dataset.trackType = "DrumSampler";
-        padEl.dataset.padSliceIndex = index;
+        padEl.dataset.padSliceIndex = index; // Keep consistent naming with sampler
         padEl.addEventListener('click', async () => {
             track.selectedDrumPadForEdit = index;
             if(typeof window.playDrumSamplerPadPreview === 'function') await window.playDrumSamplerPadPreview(track.id, index);
-            renderDrumSamplerPads(track);
-            updateDrumPadControlsUI(track);
+            renderDrumSamplerPads(track); // Re-render to update selection style
+            updateDrumPadControlsUI(track); // Update controls for the newly selected pad
         });
         padsContainer.appendChild(padEl);
     });
