@@ -198,7 +198,13 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
             await loadSampleFile(blobUrl, track.id, 'InstrumentSampler', fileName);
         }
         // The revokeObjectURL for blobUrl passed to loadSampleFile/loadDrumSamplerPadFile will be handled
-        // within those functions (in their finally blocks).
+        // within those functions (in their finally blocks if they create their own from the input blobUrl).
+        // If blobUrl is passed directly and used, the final revoke should happen here.
+        // However, loadSampleFile and loadDrumSamplerPadFile now create their own internal blob URLs for loading
+        // and revoke them. The original blobUrl from the ZIP entry should be revoked here.
+        URL.revokeObjectURL(blobUrl);
+        console.log(`[Audio] Revoked blob URL from ZIP entry after processing: ${blobUrl}`);
+
     } catch (error) {
         console.error(`[Audio] Error loading sound "${fileName}" from browser:`, error);
         showNotification(`Error loading "${fileName}": ${error.message}`, 3000);
@@ -290,6 +296,7 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
 
     if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) {
         console.warn(`[Audio] playDrumSamplerPadPreview: Conditions not met for track ${trackId}, pad ${padIndex}.`);
+        console.log(`[Audio] Details: track exists: ${!!track}, is DrumSampler: ${track?.type === 'DrumSampler'}, player exists: ${!!track?.drumPadPlayers[padIndex]}, player loaded: ${track?.drumPadPlayers[padIndex]?.loaded}`);
         return;
     }
 
@@ -306,41 +313,43 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
     const track = tracksArray.find(t => t.id === trackId);
 
-    if (!track) { /* ... error handling ... */ return; }
-    if (trackTypeHint !== 'Sampler' && trackTypeHint !== 'InstrumentSampler') { /* ... error handling ... */ return; }
+    if (!track) { showNotification(`Track ID ${trackId} not found for sample load.`, 3000); return; }
+    if (trackTypeHint !== 'Sampler' && trackTypeHint !== 'InstrumentSampler') {
+        showNotification(`Cannot load sample into ${trackTypeHint} track type.`, 3000); return;
+    }
 
     const audioReady = await initAudioContextAndMasterMeter(true);
-    if (!audioReady) { /* ... error handling ... */ return; }
+    if (!audioReady) { showNotification("Audio system not ready. Click Play or interact.", 3000); return; }
 
     let fileObject;
     let sourceName;
     const isUrlSource = typeof eventOrUrl === 'string';
-    let sourceBlobUrlToRevoke = null; // To manage blob URLs created from fetch
 
     if (isUrlSource) {
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample_from_url";
         try {
-            // If eventOrUrl is already a blob URL (e.g., from loadSoundFromBrowserToTarget), use it directly
-            if (eventOrUrl.startsWith('blob:')) {
-                const response = await fetch(eventOrUrl); // Fetch to get the blob and its type
-                if (!response.ok) throw new Error(`Failed to fetch existing blob URL: ${response.status}`);
-                const blob = await response.blob();
-                fileObject = new File([blob], sourceName, { type: blob.type });
-                // Don't set sourceBlobUrlToRevoke here, the original creator of this blob URL should revoke it.
-            } else { // If it's a regular URL, fetch and create a new blob URL
-                const response = await fetch(eventOrUrl);
-                if (!response.ok) throw new Error(`Failed to fetch blob URL: ${response.status}`);
-                const blob = await response.blob();
-                fileObject = new File([blob], sourceName, { type: blob.type });
-                // sourceBlobUrlToRevoke = URL.createObjectURL(fileObject); // This line is redundant if fileObject is already from a blob
-            }
-        } catch (e) { /* ... error handling ... */ return; }
+            // If eventOrUrl is already a blob URL (e.g., from loadSoundFromBrowserToTarget), fetch its content to make a File object
+            const response = await fetch(eventOrUrl);
+            if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status} ${eventOrUrl}`);
+            const blob = await response.blob();
+            fileObject = new File([blob], sourceName, { type: blob.type });
+        } catch (e) {
+            console.error(`[Audio] Error fetching sample from URL "${eventOrUrl}":`, e);
+            showNotification(`Error fetching sample: ${e.message}`, 3000);
+            return;
+        }
     } else if (eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
         fileObject = eventOrUrl.target.files[0];
         sourceName = fileObject.name;
-    } else { /* ... error handling ... */ return; }
+    } else {
+        showNotification("No file selected or provided for sample load.", 3000);
+        return;
+    }
 
-    if (!fileObject || !fileObject.type || !fileObject.type.startsWith('audio/')) { /* ... error handling ... */ return; }
+    if (!fileObject || !fileObject.type || !fileObject.type.startsWith('audio/')) {
+        showNotification(`Invalid file type: "${fileObject.type}". Please select an audio file.`, 3000);
+        return;
+    }
 
     console.log(`[Audio] loadSampleFile: Processing file "${sourceName}" for track ${track.id} (Type: ${trackTypeHint})`);
     if(typeof window.captureStateForUndo === 'function') {
@@ -351,11 +360,8 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     let base64DataURLForSaving = null;
 
     try {
-        // Create Blob URL for efficient loading by Tone.Buffer
         blobUrlForLoading = URL.createObjectURL(fileObject);
 
-        // Generate Data URL for saving in the project file (can be slow for large files)
-        // This is potentially memory intensive and could be deferred or handled differently for very large files.
         base64DataURLForSaving = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
@@ -363,7 +369,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
                 console.error("[Audio] FileReader error for DataURL in loadSampleFile:", err);
                 reject(err);
             };
-            reader.readAsDataURL(fileObject); // This reads the fileObject (which could be from any source)
+            reader.readAsDataURL(fileObject);
         });
 
 
@@ -380,10 +386,10 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         }
 
         const newBuffer = await new Tone.Buffer().load(blobUrlForLoading);
-        console.log(`[Audio] Sample "${sourceName}" loaded into Tone.Buffer for track ${track.id}. Duration: ${newBuffer.duration}`);
+        console.log(`[Audio] Sample "${sourceName}" loaded into Tone.Buffer for track ${track.id}. Duration: ${newBuffer.duration}, Loaded: ${newBuffer.loaded}`);
 
         if (trackTypeHint === 'Sampler') {
-            track.audioBufferDataURL = base64DataURLForSaving; // For project saving
+            track.audioBufferDataURL = base64DataURLForSaving;
             track.audioBuffer = newBuffer;
             track.originalFileName = sourceName;
             if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) {
@@ -396,12 +402,12 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
                  if (dropZone) dropZone.innerHTML = `Loaded: ${sourceName.substring(0,25)}${sourceName.length > 25 ? '...' : ''}<br>Drag/Click to replace.`;
             }
         } else if (trackTypeHint === 'InstrumentSampler') {
-            track.instrumentSamplerSettings.audioBufferDataURL = base64DataURLForSaving; // For project saving
+            track.instrumentSamplerSettings.audioBufferDataURL = base64DataURLForSaving;
             track.instrumentSamplerSettings.audioBuffer = newBuffer;
             track.instrumentSamplerSettings.originalFileName = sourceName;
             track.instrumentSamplerSettings.loopStart = 0;
             track.instrumentSamplerSettings.loopEnd = newBuffer.duration;
-            track.setupToneSampler();
+            track.setupToneSampler(); // This will use the newBuffer and new rootNote if changed
             if (typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track);
             if (track.inspectorWindow?.element) {
                 const dropZone = track.inspectorWindow.element.querySelector(`#dropZone-${track.id}-instrumentsampler`);
@@ -420,15 +426,8 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     } finally {
         if (blobUrlForLoading) {
             URL.revokeObjectURL(blobUrlForLoading);
-            console.log(`[Audio] Revoked blob URL (for loading): ${blobUrlForLoading}`);
+            console.log(`[Audio] Revoked blob URL (for loading sample file): ${blobUrlForLoading}`);
         }
-        // If eventOrUrl was a blob URL passed in (e.g. from loadSoundFromBrowserToTarget), it means it was created there.
-        // That function's finally block should handle its own created blob URLs.
-        // This function (loadSampleFile) should only revoke blob URLs it *creates* for loading.
-        // If eventOrUrl was the *source* and it was a blob url, it's handled differently now.
-        // The initial source blob URL (if `eventOrUrl` was one) doesn't need to be revoked here
-        // as it's either passed through or a new File object is made from it.
-        // The `sourceBlobUrlToRevoke` logic was a bit complex, simplifying.
     }
 }
 
@@ -436,38 +435,40 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
     const track = tracksArray.find(t => t.id === trackId);
 
-    if (!track || track.type !== 'DrumSampler') { /* ... */ return; }
-    if (padIndex < 0 || padIndex >= track.drumSamplerPads.length) { /* ... */ return; }
+    if (!track || track.type !== 'DrumSampler') { showNotification("Invalid track for drum sample.", 3000); return; }
+    if (padIndex < 0 || padIndex >= track.drumSamplerPads.length) { showNotification("Invalid pad index.", 3000); return; }
 
     const audioReady = await initAudioContextAndMasterMeter(true);
-    if (!audioReady) { /* ... */ return; }
+    if (!audioReady) { showNotification("Audio system not ready. Click Play or interact.", 3000); return; }
 
     let fileObject;
     let sourceName;
     const isUrlSource = typeof eventOrUrl === 'string';
-    // let sourceBlobUrlToRevoke = null; // Similar to loadSampleFile
 
     if (isUrlSource) {
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_pad_sample_url";
         try {
-            if (eventOrUrl.startsWith('blob:')) {
-                const response = await fetch(eventOrUrl);
-                if (!response.ok) throw new Error(`Failed to fetch existing blob URL: ${response.status}`);
-                const blob = await response.blob();
-                fileObject = new File([blob], sourceName, { type: blob.type });
-            } else {
-                const response = await fetch(eventOrUrl);
-                if (!response.ok) throw new Error(`Failed to fetch blob URL: ${response.status}`);
-                const blob = await response.blob();
-                fileObject = new File([blob], sourceName, { type: blob.type });
-            }
-        } catch (e) { /* ... */ return; }
+            const response = await fetch(eventOrUrl);
+            if (!response.ok) throw new Error(`Failed to fetch URL: ${response.status} ${eventOrUrl}`);
+            const blob = await response.blob();
+            fileObject = new File([blob], sourceName, { type: blob.type });
+        } catch (e) {
+            console.error(`[Audio] Error fetching drum sample from URL "${eventOrUrl}":`, e);
+            showNotification(`Error fetching drum sample: ${e.message}`, 3000);
+            return;
+        }
     } else if (eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
         fileObject = eventOrUrl.target.files[0];
         sourceName = fileObject.name;
-    } else { /* ... */ return; }
+    } else {
+        showNotification("No file selected or provided for drum pad.", 3000);
+        return;
+    }
 
-    if (!fileObject || !fileObject.type || !fileObject.type.startsWith('audio/')) { /* ... */ return; }
+    if (!fileObject || !fileObject.type || !fileObject.type.startsWith('audio/')) {
+        showNotification(`Invalid file type: "${fileObject.type}". Please select an audio file for the drum pad.`, 3000);
+        return;
+    }
 
     if(typeof window.captureStateForUndo === 'function') {
         window.captureStateForUndo(`Load sample ${sourceName} to Pad ${padIndex + 1} on ${track.name}`);
@@ -492,16 +493,36 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         });
 
         const newAudioBuffer = await new Tone.Buffer().load(blobUrlForLoading);
-        console.log(`[Audio] Sample "${sourceName}" loaded into Tone.Buffer for track ${track.id}, pad ${padIndex}. Duration: ${newAudioBuffer.duration}`);
+        console.log(`[Audio] Sample "${sourceName}" loaded into Tone.Buffer for track ${track.id}, pad ${padIndex}. Duration: ${newAudioBuffer.duration}, Loaded: ${newAudioBuffer.loaded}`);
 
         if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
         if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
 
-        padData.audioBuffer = newAudioBuffer;
-        padData.audioBufferDataURL = base64DataURLForSaving; // For project saving
+        padData.audioBuffer = newAudioBuffer; // This is a Tone.Buffer instance
+        padData.audioBufferDataURL = base64DataURLForSaving;
         padData.originalFileName = sourceName;
-        track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.distortionNode);
+
+        // Ensure distortionNode is valid before connecting
+        if (!track.distortionNode || track.distortionNode.disposed) {
+            console.warn(`[Audio] Track ${track.id} distortionNode is invalid. Re-initializing audio nodes for safety.`);
+            await track.initializeAudioNodes(); // Attempt to re-initialize if something went wrong
+            if (!track.distortionNode) { // Still no distortion node
+                console.error(`[Audio] CRITICAL: Track ${track.id} distortionNode still invalid after re-init. Connecting player to destination.`);
+                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).toDestination();
+            } else {
+                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.distortionNode);
+            }
+        } else {
+            track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.distortionNode);
+        }
+        
         console.log(`[Audio] Drum pad ${padIndex} for track ${track.id} player created and connected.`);
+        if (track.drumPadPlayers[padIndex]) {
+            console.log(`[Audio] Player for pad ${padIndex} (track ${track.id}) exists. Loaded state immediately after creation: ${track.drumPadPlayers[padIndex].loaded}`);
+        } else {
+            console.error(`[Audio] Player for pad ${padIndex} (track ${track.id}) is NULL after creation attempt!`);
+        }
+
 
         showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1} on track ${track.name}.`, 2000);
         if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
@@ -510,16 +531,21 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     } catch (error) {
         console.error(`[Audio] Error loading sample "${sourceName}" for drum pad ${padIndex} of track ${track.id}:`, error);
         showNotification(`Error loading sample "${sourceName}": ${error.message}`, 3000);
+        // Clear potentially corrupted state
+        if (track.drumSamplerPads[padIndex]) {
+            track.drumSamplerPads[padIndex].audioBuffer = null;
+            track.drumSamplerPads[padIndex].audioBufferDataURL = null;
+            track.drumSamplerPads[padIndex].originalFileName = null;
+        }
+        if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) {
+            track.drumPadPlayers[padIndex].dispose();
+        }
+        track.drumPadPlayers[padIndex] = null;
+
     } finally {
         if (blobUrlForLoading) {
             URL.revokeObjectURL(blobUrlForLoading);
-            console.log(`[Audio] Revoked blob URL (for loading): ${blobUrlForLoading}`);
-        }
-        // Similar logic as loadSampleFile for revoking original source if it was a blob URL
-        // not created by this function itself.
-        if (isUrlSource && eventOrUrl.startsWith('blob:') && eventOrUrl !== blobUrlForLoading) {
-             URL.revokeObjectURL(eventOrUrl);
-             console.log(`[Audio] Revoked original source blob URL for drum pad (passed in): ${eventOrUrl}`);
+            console.log(`[Audio] Revoked blob URL (for loading drum pad file): ${blobUrlForLoading}`);
         }
     }
 }
