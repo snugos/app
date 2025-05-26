@@ -338,10 +338,11 @@ function buildSynthEngineControls(track, container, engineType) {
         if (engineType === 'BasicPoly') paramsKey = 'basicPoly';
         else if (engineType === 'AMSynth') paramsKey = 'amSynth';
         else if (engineType === 'FMSynth') paramsKey = 'fmSynth';
-        else paramsKey = engineType.toLowerCase(); 
+        else paramsKey = engineType.toLowerCase(); // Should not happen if engineType is one of the above
 
         let currentEngineParams = track.synthParams[paramsKey];
         if (!currentEngineParams) { 
+            console.warn(`[ui.js] Params for engine ${engineType} (key: ${paramsKey}) not found in track.synthParams. Using defaults. track.synthParams:`, JSON.parse(JSON.stringify(track.synthParams)));
             currentEngineParams = track.getDefaultSynthParams(engineType);
             track.synthParams[paramsKey] = currentEngineParams; 
         }
@@ -361,10 +362,12 @@ function buildSynthEngineControls(track, container, engineType) {
         let initialValue = getNestedValue(currentEngineParams, controlDef.paramPath);
         
         if (initialValue === undefined) {
+            console.warn(`[ui.js] Initial value for ${controlDef.paramPath} not found in currentEngineParams for ${engineType}. Trying defaults. currentEngineParams:`, JSON.parse(JSON.stringify(currentEngineParams)));
             const defaultEngineParams = track.getDefaultSynthParams(engineType);
             initialValue = getNestedValue(defaultEngineParams, controlDef.paramPath);
             if(initialValue === undefined && controlDef.type === 'knob') initialValue = controlDef.min; 
             if(initialValue === undefined && controlDef.type === 'select') initialValue = controlDef.options[0];
+            console.log(`[ui.js] Fallback initialValue for ${controlDef.paramPath}:`, initialValue);
         }
 
         if (controlDef.type === 'select') {
@@ -564,7 +567,66 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
     console.log(`[ui.js] buildDrumSamplerSpecificInspectorDOM returning panel for track ${track.id}:`, panel); 
     return panel;
 }
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
+
+function buildInstrumentSamplerSpecificInspectorDOM(track) {
+    console.log(`[ui.js] buildInstrumentSamplerSpecificInspectorDOM called for track ${track.id}`); 
+    const panel = document.createElement('div');
+    panel.className = 'panel instrument-sampler-panel';
+    const dropZoneContainer = document.createElement('div');
+    dropZoneContainer.id = `dropZoneContainer-${track.id}-instrumentsampler`;
+    const dropZoneHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
+    dropZoneContainer.innerHTML = dropZoneHTML;
+    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone');
+
+    if (actualDropZoneElement) {
+        panel.appendChild(dropZoneContainer);
+         console.log(`[ui.js] Instrument Sampler drop zone container created for track ${track.id}`);
+    } else {
+        console.error(`[UI] buildInstrumentSampler: Failed to create/find drop-zone element for track ${track.id}.`);
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.id = `instrumentWaveformCanvas-${track.id}`;
+    canvas.className = 'waveform-canvas w-full mb-1';
+    canvas.width = 380; canvas.height = 70;
+    panel.appendChild(canvas);
+    const controlsContainer = document.createElement('div');
+    const rootLoopGroup = document.createElement('div');
+    rootLoopGroup.className = 'control-group mb-2 items-center';
+    const rootNoteDiv = document.createElement('div');
+    rootNoteDiv.innerHTML = `<label class="knob-label text-xs">Root Note</label><input type="text" id="instrumentRootNote-${track.id}" value="${track.instrumentSamplerSettings.rootNote}" class="bg-white text-black w-12 p-0.5 text-xs text-center border">`;
+    rootLoopGroup.appendChild(rootNoteDiv);
+    const loopToggleDiv = document.createElement('div');
+    loopToggleDiv.innerHTML = `<label class="knob-label text-xs">Loop</label><button id="instrumentLoopToggle-${track.id}" class="slice-toggle-button text-xs p-1">${track.instrumentSamplerSettings.loop ? 'Loop: ON' : 'Loop: OFF'}</button>`;
+    rootLoopGroup.appendChild(loopToggleDiv);
+    const loopStartDiv = document.createElement('div');
+    loopStartDiv.innerHTML = `<label class="knob-label text-xs">Start</label><input type="number" id="instrumentLoopStart-${track.id}" value="${track.instrumentSamplerSettings.loopStart.toFixed(3)}" step="0.001" class="bg-white text-black w-16 p-0.5 text-xs text-center border">`;
+    rootLoopGroup.appendChild(loopStartDiv);
+    const loopEndDiv = document.createElement('div');
+    loopEndDiv.innerHTML = `<label class="knob-label text-xs">End</label><input type="number" id="instrumentLoopEnd-${track.id}" value="${track.instrumentSamplerSettings.loopEnd.toFixed(3)}" step="0.001" class="bg-white text-black w-16 p-0.5 text-xs text-center border">`;
+    rootLoopGroup.appendChild(loopEndDiv);
+    controlsContainer.appendChild(rootLoopGroup);
+    const polyBtn = document.createElement('button');
+    polyBtn.id = `instrumentSamplerPolyphonyToggle-${track.id}`;
+    polyBtn.className = 'slice-toggle-button text-xs p-1 mb-2 w-full';
+    polyBtn.textContent = 'Mode: Poly';
+    controlsContainer.appendChild(polyBtn);
+    const envTitle = document.createElement('h4');
+    envTitle.className = 'text-sm font-semibold';
+    envTitle.textContent = 'Envelope (ADSR)';
+    controlsContainer.appendChild(envTitle);
+    const envGroup = document.createElement('div');
+    envGroup.className = 'control-group';
+    ['instrumentEnvAttackSlider', 'instrumentEnvDecaySlider', 'instrumentEnvSustainSlider', 'instrumentEnvReleaseSlider'].forEach(id => {
+        const knobPlaceholder = document.createElement('div');
+        knobPlaceholder.id = `${id}-${track.id}`;
+        envGroup.appendChild(knobPlaceholder);
+    });
+    controlsContainer.appendChild(envGroup);
+    panel.appendChild(controlsContainer);
+    console.log(`[ui.js] buildInstrumentSamplerSpecificInspectorDOM returning panel for track ${track.id}:`, panel);
+    return panel;
+}
 
 export function initializeCommonInspectorControls(track, winEl) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
 
@@ -630,8 +692,8 @@ function initializeSamplerSpecificControls(track, winEl) {
     } else {
          console.error(`[ui.js] updateSliceEditorUI function not found!`);
     }
-    // ... (rest of sampler controls initialization like knobs, buttons)
-     const sVolK = createKnob({ label: 'Vol', min:0, max:1, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceVolume(track.selectedSliceForEdit, val)});
+    // ... (rest of sampler controls initialization as in daw_ui_js_sampler_debug_v1) ...
+    const sVolK = createKnob({ label: 'Vol', min:0, max:1, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceVolume(track.selectedSliceForEdit, val)});
     const volPlaceholder = winEl.querySelector(`#sliceVolumeSlider-${track.id}`);
     if(volPlaceholder) volPlaceholder.appendChild(sVolK.element); else console.warn(`[ui.js] Placeholder #sliceVolumeSlider-${track.id} not found.`);
     track.inspectorControls.sliceVolume = sVolK;
@@ -646,9 +708,22 @@ function initializeSamplerSpecificControls(track, winEl) {
     if(attackEnvPlaceholder) attackEnvPlaceholder.appendChild(sEAK.element); else console.warn(`[ui.js] Placeholder #sliceEnvAttackSlider-${track.id} not found.`);
     track.inspectorControls.sliceEnvAttack = sEAK;
 
-    // ... continue for Decay, Sustain, Release for Slice Envelope
-    // Loop, Reverse, Polyphony toggles
-     winEl.querySelector(`#sliceLoopToggle-${track.id}`)?.addEventListener('click', (e) => {
+    const sEDK = createKnob({ label: 'Decay', min:0.01, max:1, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.envelope.decay || 0.1, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceEnvelopeParam(track.selectedSliceForEdit, 'decay', val)});
+    const decayEnvPlaceholder = winEl.querySelector(`#sliceEnvDecaySlider-${track.id}`);
+    if(decayEnvPlaceholder) decayEnvPlaceholder.appendChild(sEDK.element); else console.warn(`[ui.js] Placeholder #sliceEnvDecaySlider-${track.id} not found.`);
+    track.inspectorControls.sliceEnvDecay = sEDK;
+
+    const sESK = createKnob({ label: 'Sustain', min:0, max:1, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.envelope.sustain || 1.0, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceEnvelopeParam(track.selectedSliceForEdit, 'sustain', val)});
+    const sustainEnvPlaceholder = winEl.querySelector(`#sliceEnvSustainSlider-${track.id}`);
+    if(sustainEnvPlaceholder) sustainEnvPlaceholder.appendChild(sESK.element); else console.warn(`[ui.js] Placeholder #sliceEnvSustainSlider-${track.id} not found.`);
+    track.inspectorControls.sliceEnvSustain = sESK;
+    
+    const sERK = createKnob({ label: 'Release', min:0.01, max:2, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.envelope.release || 0.1, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceEnvelopeParam(track.selectedSliceForEdit, 'release', val)});
+    const releaseEnvPlaceholder = winEl.querySelector(`#sliceEnvReleaseSlider-${track.id}`);
+    if(releaseEnvPlaceholder) releaseEnvPlaceholder.appendChild(sERK.element); else console.warn(`[ui.js] Placeholder #sliceEnvReleaseSlider-${track.id} not found.`);
+    track.inspectorControls.sliceEnvRelease = sERK;
+
+    winEl.querySelector(`#sliceLoopToggle-${track.id}`)?.addEventListener('click', (e) => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Loop for Slice ${track.selectedSliceForEdit + 1} on ${track.name}`);
         track.setSliceLoop(track.selectedSliceForEdit, !track.slices[track.selectedSliceForEdit].loop); e.target.textContent = track.slices[track.selectedSliceForEdit].loop ? 'Loop: ON' : 'Loop: OFF'; e.target.classList.toggle('active', track.slices[track.selectedSliceForEdit].loop); });
     winEl.querySelector(`#sliceReverseToggle-${track.id}`)?.addEventListener('click', (e) => {
@@ -729,10 +804,10 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
     if(releasePlaceholder) releasePlaceholder.appendChild(pERK.element); else console.warn(`[ui.js] Placeholder #drumPadEnvReleaseSlider-${track.id} not found.`);
     track.inspectorControls.drumPadEnvRelease = pERK;
 }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_ui_js_sampler_debug_v1) ... */ }
+function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
 
 export function openGlobalControlsWindow(savedState = null) {
-    console.log("[ui.js] openGlobalControlsWindow STARTING..."); // Keep this log
+    console.log("[ui.js] openGlobalControlsWindow STARTING..."); 
     const windowId = 'globalControls';
 
     if (typeof SnugWindow !== 'function') {
@@ -749,8 +824,7 @@ export function openGlobalControlsWindow(savedState = null) {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'global-controls-window p-2 space-y-3';
     try {
-        // Full content for Global Controls window
-        let tempoValue = 120.0; // Default
+        let tempoValue = 120.0; 
         if (typeof Tone !== 'undefined' && Tone.Transport) {
             tempoValue = Tone.Transport.bpm.value.toFixed(1);
         } else {
@@ -832,7 +906,94 @@ export function openGlobalControlsWindow(savedState = null) {
     return globalControlsWin;
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1, with detailed SnugWindow checks) ... */ }
+export function openTrackInspectorWindow(trackId, savedState = null) {
+    console.log(`[ui.js] openTrackInspectorWindow called for trackId: ${trackId}`);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
+    if (!track) { 
+        showNotification(`Track with ID ${trackId} not found. Cannot open inspector.`, 3000); 
+        console.error(`[ui.js] Track not found for ID ${trackId} in openTrackInspectorWindow.`);
+        return null; 
+    }
+
+    const inspectorId = `trackInspector-${track.id}`;
+    if (window.openWindows[inspectorId] && !savedState) {
+        console.log(`[ui.js] Restoring existing inspector window: ${inspectorId}`);
+        window.openWindows[inspectorId].restore(); 
+        return window.openWindows[inspectorId];
+    }
+    if (window.openWindows[inspectorId] && savedState) {
+        console.log(`[ui.js] Closing existing inspector window ${inspectorId} before recreating from saved state.`);
+        window.openWindows[inspectorId].close();
+    }
+
+    track.inspectorControls = {}; 
+    console.log(`[ui.js] Building inspector content for track ${track.id} (${track.type})`);
+    const inspectorContentElement = buildTrackInspectorContentDOM(track);
+    if (!inspectorContentElement) {
+        console.error(`[ui.js] buildTrackInspectorContentDOM returned null for track ${track.id}. Cannot create inspector.`);
+        showNotification(`Failed to build content for Inspector (Track ${track.id}).`, 4000);
+        return null;
+    }
+
+    let windowHeight = 450; 
+    if (track.type === 'Synth') windowHeight = 580; 
+    else if (track.type === 'Sampler') windowHeight = 620;
+    else if (track.type === 'DrumSampler') windowHeight = 580;
+    else if (track.type === 'InstrumentSampler') windowHeight = 620;
+
+    const winOptions = {
+        width: Math.min(500, window.innerWidth - 40),
+        height: Math.min(windowHeight, window.innerHeight - 80),
+        initialContentKey: `trackInspector-${track.id}`
+    };
+    if (savedState) Object.assign(winOptions, savedState);
+
+    console.log(`[ui.js] About to create SnugWindow for inspector: ${inspectorId}. SnugWindow class is:`, SnugWindow);
+    let inspectorWin = null;
+    try {
+        inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions);
+        console.log(`[ui.js] SnugWindow instance for inspector ${inspectorId} created (or attempted):`, inspectorWin);
+    } catch (e) {
+        console.error(`[ui.js] CRITICAL ERROR during \`new SnugWindow()\` for inspector ${inspectorId}:`, e);
+        showNotification("CRITICAL: Error creating inspector window object. Check console.", 6000);
+        return null;
+    }
+    
+    console.log(`[ui.js] DETAILED CHECK for inspectorWin (${inspectorId}):`);
+    const isInspectorWinValid = inspectorWin instanceof SnugWindow;
+    const inspectorHasElementProp = inspectorWin && inspectorWin.hasOwnProperty('element');
+    const inspectorElementValue = inspectorWin ? inspectorWin.element : undefined;
+    const isInspectorElementTruthy = !!inspectorElementValue;
+
+    console.log(`[ui.js] typeof inspectorWin: ${typeof inspectorWin}`);
+    console.log(`[ui.js] inspectorWin instanceof SnugWindow: ${isInspectorWinValid}`);
+    console.log(`[ui.js] inspectorWin.hasOwnProperty('element'): ${inspectorHasElementProp}`);
+    console.log(`[ui.js] inspectorWin.element value:`, inspectorElementValue);
+    console.log(`[ui.js] inspectorWin.element is TRUTHY: ${isInspectorElementTruthy}`);
+
+    if (!inspectorWin || !inspectorElementValue) {
+        console.error(`[ui.js] CRITICAL CHECK FAILED for inspector ${inspectorId}: inspectorWin is falsy OR inspectorWin.element is falsy.`);
+        showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000);
+        return null;
+    }
+    
+    track.inspectorWindow = inspectorWin;
+    console.log(`[ui.js] Inspector window for track ${track.id} assigned.`);
+
+    initializeCommonInspectorControls(track, inspectorWin.element);
+    initializeTypeSpecificInspectorControls(track, inspectorWin.element);
+    
+    setTimeout(() => {
+        Object.values(track.inspectorControls).forEach(control => {
+            if (control && control.type === 'knob' && typeof control.refreshVisuals === 'function') {
+                control.refreshVisuals();
+            }
+        });
+    }, 50); 
+    console.log(`[ui.js] Inspector window for track ${track.id} fully initialized and controls set up.`);
+    return inspectorWin;
+}
+
 const effectControlDefinitions = { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ };
 export function buildEffectsRackContentDOM(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
 export function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
@@ -845,10 +1006,158 @@ export function renderMixer(container) { /* ... (same as daw_ui_js_sampler_debug
 export function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
 export function openSoundBrowserWindow(savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
 export function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function renderSamplePads(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function updateSliceEditorUI(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function applySliceEdits(trackId) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function drawWaveform(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function drawInstrumentWaveform(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function updateDrumPadControlsUI(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function renderDrumSamplerPads(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
+
+export function renderSamplePads(track) {
+    console.log(`[ui.js] renderSamplePads called for track ${track.id}. Slices count: ${track.slices?.length}`);
+    if (!track || !track.inspectorWindow?.element) {
+        console.warn(`[ui.js] renderSamplePads: Track ${track.id} or inspector window element not found.`);
+        return;
+    }
+    const padsContainer = track.inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
+    if (!padsContainer) {
+        console.warn(`[ui.js] renderSamplePads: Pads container '#samplePadsContainer-${track.id}' not found for track ${track.id}. Searched within:`, track.inspectorWindow.element);
+        return;
+    }
+    padsContainer.innerHTML = ''; 
+    if (!track.slices || track.slices.length === 0) {
+        console.warn(`[ui.js] renderSamplePads: No slices to render for track ${track.id}`);
+        padsContainer.textContent = 'No slices available. Load a sample.';
+        return;
+    }
+    track.slices.forEach((slice, index) => {
+        const pad = document.createElement('button');
+        pad.className = `pad-button ${index === track.selectedSliceForEdit ? 'selected-for-edit' : ''}`;
+        pad.textContent = `Slice ${index + 1}`;
+        pad.title = `Select Slice ${index + 1}. Click to preview.`;
+        pad.dataset.trackId = track.id;
+        pad.dataset.trackType = "Sampler";
+        pad.dataset.padSliceIndex = index;
+        pad.addEventListener('click', async () => {
+            track.selectedSliceForEdit = index;
+            console.log(`[ui.js] Sampler pad ${index + 1} clicked for track ${track.id}`);
+            if(typeof window.playSlicePreview === 'function') await window.playSlicePreview(track.id, index);
+            renderSamplePads(track); 
+            updateSliceEditorUI(track);
+        });
+        padsContainer.appendChild(pad);
+    });
+    console.log(`[ui.js] renderSamplePads finished for track ${track.id}. ${track.slices.length} pads rendered into:`, padsContainer);
+}
+
+export function updateSliceEditorUI(track) {
+    console.log(`[ui.js] updateSliceEditorUI called for track ${track.id}, selected slice: ${track.selectedSliceForEdit}`); 
+    if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) {
+        console.warn(`[ui.js] updateSliceEditorUI: Pre-conditions not met for track ${track.id}`);
+        return;
+    }
+    const inspectorEl = track.inspectorWindow.element;
+    const selectedSlice = track.slices[track.selectedSliceForEdit];
+    if (!selectedSlice) {
+        console.warn(`[ui.js] updateSliceEditorUI: Selected slice ${track.selectedSliceForEdit} not found for track ${track.id}`);
+        return;
+    }
+    inspectorEl.querySelector(`#selectedSliceLabel-${track.id}`).textContent = track.selectedSliceForEdit + 1;
+    const startInput = inspectorEl.querySelector(`#sliceStart-${track.id}`);
+    const endInput = inspectorEl.querySelector(`#sliceEnd-${track.id}`);
+    if (startInput) startInput.value = selectedSlice.offset.toFixed(3);
+    if (endInput) endInput.value = (selectedSlice.offset + selectedSlice.duration).toFixed(3);
+
+    track.inspectorControls.sliceVolume?.setValue(selectedSlice.volume, false);
+    track.inspectorControls.slicePitch?.setValue(selectedSlice.pitchShift, false);
+    track.inspectorControls.sliceEnvAttack?.setValue(selectedSlice.envelope.attack, false);
+    track.inspectorControls.sliceEnvDecay?.setValue(selectedSlice.envelope.decay, false);
+    track.inspectorControls.sliceEnvSustain?.setValue(selectedSlice.envelope.sustain, false);
+    track.inspectorControls.sliceEnvRelease?.setValue(selectedSlice.envelope.release, false);
+
+    const loopToggle = inspectorEl.querySelector(`#sliceLoopToggle-${track.id}`);
+    if (loopToggle) { loopToggle.textContent = selectedSlice.loop ? 'Loop: ON' : 'Loop: OFF'; loopToggle.classList.toggle('active', selectedSlice.loop); }
+    const reverseToggle = inspectorEl.querySelector(`#sliceReverseToggle-${track.id}`);
+    if (reverseToggle) { reverseToggle.textContent = selectedSlice.reverse ? 'Rev: ON' : 'Rev: OFF'; reverseToggle.classList.toggle('active', selectedSlice.reverse); }
+}
+export function applySliceEdits(trackId) { /* ... (remains the same as daw_ui_js_sampler_debug_v1) ... */ }
+export function drawWaveform(track) { /* ... (remains the same as daw_ui_js_sampler_debug_v1) ... */ }
+export function drawInstrumentWaveform(track) { /* ... (remains the same as daw_ui_js_sampler_debug_v1) ... */ }
+
+export function updateDrumPadControlsUI(track) {
+    console.log(`[ui.js] updateDrumPadControlsUI for track ${track.id}, selected pad: ${track.selectedDrumPadForEdit}`);
+    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) {
+        console.warn(`[ui.js] updateDrumPadControlsUI: Preconditions not met for track ${track.id}`);
+        return;
+    }
+    const inspectorEl = track.inspectorWindow.element;
+    const selectedPad = track.drumSamplerPads[track.selectedDrumPadForEdit];
+    if (!selectedPad) {
+        console.warn(`[ui.js] updateDrumPadControlsUI: Selected drum pad ${track.selectedDrumPadForEdit} not found for track ${track.id}`);
+        return;
+    }
+    
+    const loadContainer = inspectorEl.querySelector(`#drumPadLoadContainer-${track.id}`); 
+    if (loadContainer) {
+        console.log(`[ui.js] Drum pad load container FOUND for track ${track.id} in updateDrumPadControlsUI.`);
+        const inputId = `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`;
+        const dropZoneId = `dropZone-${track.id}-drumsampler-${track.selectedDrumPadForEdit}`; // ID used in createDropZoneHTML
+
+        loadContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', track.selectedDrumPadForEdit) +
+                                  `<span id="drumPadFileName-${track.id}-${track.selectedDrumPadForEdit}" class="text-xs ml-2 block truncate" style="max-width: 150px;" title="${selectedPad.originalFileName || 'No file'}">${selectedPad.originalFileName || 'No file'}</span>`;
+        
+        const fileInputEl = loadContainer.querySelector(`#${inputId}`); 
+        if (fileInputEl) {
+            fileInputEl.addEventListener('change', (e) => {
+                window.loadDrumSamplerPadFile(e, track.id, track.selectedDrumPadForEdit);
+            });
+        } else {
+            console.warn(`[ui.js] Drum pad file input #${inputId} NOT FOUND within loadContainer.`);
+        }
+        const dropZoneEl = loadContainer.querySelector(`#${dropZoneId}`); // Use the ID from createDropZoneHTML
+        if (dropZoneEl) {
+            console.log(`[ui.js] Drum pad drop zone #${dropZoneId} FOUND. Setting up listeners.`);
+            utilSetupDropZoneListeners(dropZoneEl, track.id, 'DrumSampler', track.selectedDrumPadForEdit, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
+        } else {
+            console.warn(`[ui.js] Drum pad drop zone #${dropZoneId} NOT FOUND within loadContainer. LoadContainer HTML:`, loadContainer.innerHTML);
+        }
+    } else {
+        console.warn(`[ui.js] updateDrumPadControlsUI: #drumPadLoadContainer-${track.id} NOT FOUND in inspectorEl for track ${track.id}.`);
+    }
+
+    track.inspectorControls.drumPadVolume?.setValue(selectedPad.volume, false);
+    track.inspectorControls.drumPadPitch?.setValue(selectedPad.pitchShift, false);
+    track.inspectorControls.drumPadEnvAttack?.setValue(selectedPad.envelope.attack, false);
+    track.inspectorControls.drumPadEnvRelease?.setValue(selectedPad.envelope.release, false);
+}
+export function renderDrumSamplerPads(track) {
+    console.log(`[ui.js] renderDrumSamplerPads called for track ${track.id}. Pads count: ${track.drumSamplerPads?.length}`);
+    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) {
+        console.warn(`[ui.js] renderDrumSamplerPads: Preconditions not met for track ${track.id}`);
+        return;
+    }
+    const padsContainer = track.inspectorWindow.element.querySelector(`#drumSamplerPadsContainer-${track.id}`);
+    if (!padsContainer) {
+        console.warn(`[ui.js] renderDrumSamplerPads: Pads container '#drumSamplerPadsContainer-${track.id}' not found for track ${track.id}. Searched within:`, track.inspectorWindow.element);
+        return;
+    }
+    padsContainer.innerHTML = '';
+    if (!track.drumSamplerPads || track.drumSamplerPads.length === 0) {
+        console.warn(`[ui.js] renderDrumSamplerPads: No drum pads to render for track ${track.id}`);
+        padsContainer.textContent = 'No pads available.'; 
+        return;
+    }
+    track.drumSamplerPads.forEach((padData, index) => {
+        const padEl = document.createElement('button');
+        padEl.className = `pad-button ${index === track.selectedDrumPadForEdit ? 'selected-for-edit' : ''}`;
+        const fileNameDisplay = padData.originalFileName ? padData.originalFileName.substring(0, 10) + (padData.originalFileName.length > 10 ? '...' : '') : 'Empty';
+        padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 60px;" title="${padData.originalFileName || 'Empty'}">${fileNameDisplay}</span>`;
+        padEl.title = `Select Pad ${index + 1}. Click to preview. Sample: ${padData.originalFileName || 'Empty'}`;
+        padEl.dataset.trackId = track.id;
+        padEl.dataset.trackType = "DrumSampler";
+        padEl.dataset.padSliceIndex = index; 
+        padEl.addEventListener('click', async () => {
+            track.selectedDrumPadForEdit = index;
+            console.log(`[ui.js] Drum pad ${index + 1} clicked for track ${track.id}`);
+            if(typeof window.playDrumSamplerPadPreview === 'function') await window.playDrumSamplerPadPreview(track.id, index);
+            renderDrumSamplerPads(track); 
+            updateDrumPadControlsUI(track);
+        });
+        padsContainer.appendChild(padEl);
+    });
+     console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered into:`, padsContainer);
+}
