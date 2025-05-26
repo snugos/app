@@ -406,11 +406,11 @@ function buildSynthEngineControls(track, container, engineType) {
     container.appendChild(controlGroup);
 }
 
-function buildSamplerSpecificInspectorDOM(track) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
+function buildSamplerSpecificInspectorDOM(track) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
+function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
+function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
 
-export function initializeCommonInspectorControls(track, winEl) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
+export function initializeCommonInspectorControls(track, winEl) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
 
 export function initializeTypeSpecificInspectorControls(track, winEl) {
     if (track.type === 'Synth') {
@@ -467,9 +467,9 @@ function initializeSynthSpecificControls(track, winEl) {
 }
 
 
-function initializeSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
+function initializeSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
+function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
+function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (remains the same as daw_advanced_synth_ui_js) ... */ }
 
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
@@ -502,46 +502,32 @@ export function openGlobalControlsWindow(savedState = null) {
     if (savedState) Object.assign(winOptions, savedState);
 
     console.log(`[ui.js] About to create SnugWindow for globalControls. SnugWindow class is:`, SnugWindow); 
-    let globalControlsWin = null; // Initialize to null
+    let globalControlsWin = null;
     try {
         globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
         console.log('[ui.js] SnugWindow instance for globalControls created (or attempted):', globalControlsWin);
     } catch (e) {
-        console.error('[ui.js] CRITICAL ERROR during `new SnugWindow()` instantiation:', e);
-        showNotification("CRITICAL: Error creating window object. Check console.", 6000);
+        console.error('[ui.js] CRITICAL ERROR during `new SnugWindow()` instantiation for globalControls:', e);
+        showNotification("CRITICAL: Error creating Global Controls window object. Check console.", 6000);
         return null; 
     }
     
-    // --- DETAILED CHECK ---
-    console.log('[ui.js] After new SnugWindow call (and potential catch):');
-    console.log('[ui.js] typeof globalControlsWin:', typeof globalControlsWin);
-    let isGlobalControlsWinValid = false;
-    let isElementValid = false;
+    console.log('[ui.js] DETAILED CHECK for globalControlsWin:');
+    const isInstanceValid = globalControlsWin instanceof SnugWindow;
+    const hasElementProp = globalControlsWin && globalControlsWin.hasOwnProperty('element');
+    const elementValue = globalControlsWin ? globalControlsWin.element : undefined;
+    const isElementTruthy = !!elementValue;
 
-    if (globalControlsWin) {
-        console.log('[ui.js] globalControlsWin is TRUTHY (not null/undefined).');
-        isGlobalControlsWinValid = true;
-        console.log('[ui.js] globalControlsWin instanceof SnugWindow:', globalControlsWin instanceof SnugWindow);
-        console.log('[ui.js] globalControlsWin.hasOwnProperty(\'element\'):', globalControlsWin.hasOwnProperty('element'));
-        console.log('[ui.js] globalControlsWin.element value:', globalControlsWin.element);
-        
-        if (globalControlsWin.element) {
-            console.log('[ui.js] globalControlsWin.element is TRUTHY.');
-            isElementValid = true;
-        } else {
-            console.warn('[ui.js] globalControlsWin.element is FALSY (null, undefined, etc.).');
-            isElementValid = false;
-        }
-    } else {
-        console.log('[ui.js] globalControlsWin is NULL or UNDEFINED after new SnugWindow() and catch block');
-        isGlobalControlsWinValid = false;
-        isElementValid = false; // If globalControlsWin is null, element cannot be valid
-    }
-    // --- END DETAILED CHECK ---
+    console.log(`[ui.js] typeof globalControlsWin: ${typeof globalControlsWin}`);
+    console.log(`[ui.js] globalControlsWin instanceof SnugWindow: ${isInstanceValid}`);
+    console.log(`[ui.js] globalControlsWin.hasOwnProperty('element'): ${hasElementProp}`);
+    console.log(`[ui.js] globalControlsWin.element value:`, elementValue);
+    console.log(`[ui.js] globalControlsWin.element is TRUTHY: ${isElementTruthy}`);
     
-    if (!isGlobalControlsWinValid || !isElementValid) {
-        console.error("[ui.js] CRITICAL CHECK FAILED (based on boolean vars): globalControlsWin is falsy OR globalControlsWin.element is falsy.");
-        showNotification("Failed to create Global Controls window (ui.js).", 5000); 
+    if (!globalControlsWin || !elementValue) { // Check elementValue directly
+        console.error("[ui.js] CRITICAL CHECK FAILED (the main one): globalControlsWin is falsy OR globalControlsWin.element is falsy.");
+        console.error(`[ui.js] Values for check: !globalControlsWin = ${!globalControlsWin}, !elementValue = ${!elementValue}`);
+        showNotification("Failed to create Global Controls window (ui.js check).", 5000); 
         return null;
     }
 
@@ -561,7 +547,95 @@ export function openGlobalControlsWindow(savedState = null) {
     return globalControlsWin;
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
+export function openTrackInspectorWindow(trackId, savedState = null) {
+    console.log(`[ui.js] openTrackInspectorWindow called for trackId: ${trackId}`);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
+    if (!track) { 
+        showNotification(`Track with ID ${trackId} not found. Cannot open inspector.`, 3000); 
+        console.error(`[ui.js] Track not found for ID ${trackId} in openTrackInspectorWindow.`);
+        return null; 
+    }
+
+    const inspectorId = `trackInspector-${track.id}`;
+    if (window.openWindows[inspectorId] && !savedState) {
+        console.log(`[ui.js] Restoring existing inspector window: ${inspectorId}`);
+        window.openWindows[inspectorId].restore(); 
+        return window.openWindows[inspectorId];
+    }
+    if (window.openWindows[inspectorId] && savedState) {
+        console.log(`[ui.js] Closing existing inspector window ${inspectorId} before recreating from saved state.`);
+        window.openWindows[inspectorId].close();
+    }
+
+    track.inspectorControls = {}; // Reset inspector controls object for this track
+    console.log(`[ui.js] Building inspector content for track ${track.id} (${track.type})`);
+    const inspectorContentElement = buildTrackInspectorContentDOM(track);
+    if (!inspectorContentElement) {
+        console.error(`[ui.js] buildTrackInspectorContentDOM returned null for track ${track.id}. Cannot create inspector.`);
+        showNotification(`Failed to build content for Inspector (Track ${track.id}).`, 4000);
+        return null;
+    }
+
+    let windowHeight = 450; // Default height
+    if (track.type === 'Synth') windowHeight = 580; // Increased for more synth controls
+    else if (track.type === 'Sampler') windowHeight = 620;
+    else if (track.type === 'DrumSampler') windowHeight = 580;
+    else if (track.type === 'InstrumentSampler') windowHeight = 620;
+
+    const winOptions = {
+        width: Math.min(500, window.innerWidth - 40),
+        height: Math.min(windowHeight, window.innerHeight - 80),
+        initialContentKey: `trackInspector-${track.id}` // Used for restoring type
+    };
+    if (savedState) Object.assign(winOptions, savedState);
+
+    console.log(`[ui.js] About to create SnugWindow for inspector: ${inspectorId}. SnugWindow class is:`, SnugWindow);
+    let inspectorWin = null;
+    try {
+        inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions);
+        console.log(`[ui.js] SnugWindow instance for inspector ${inspectorId} created (or attempted):`, inspectorWin);
+    } catch (e) {
+        console.error(`[ui.js] CRITICAL ERROR during \`new SnugWindow()\` for inspector ${inspectorId}:`, e);
+        showNotification("CRITICAL: Error creating inspector window object. Check console.", 6000);
+        return null;
+    }
+    
+    console.log(`[ui.js] DETAILED CHECK for inspectorWin (${inspectorId}):`);
+    const isInspectorWinValid = inspectorWin instanceof SnugWindow;
+    const inspectorHasElementProp = inspectorWin && inspectorWin.hasOwnProperty('element');
+    const inspectorElementValue = inspectorWin ? inspectorWin.element : undefined;
+    const isInspectorElementTruthy = !!inspectorElementValue;
+
+    console.log(`[ui.js] typeof inspectorWin: ${typeof inspectorWin}`);
+    console.log(`[ui.js] inspectorWin instanceof SnugWindow: ${isInspectorWinValid}`);
+    console.log(`[ui.js] inspectorWin.hasOwnProperty('element'): ${inspectorHasElementProp}`);
+    console.log(`[ui.js] inspectorWin.element value:`, inspectorElementValue);
+    console.log(`[ui.js] inspectorWin.element is TRUTHY: ${isInspectorElementTruthy}`);
+
+    if (!inspectorWin || !inspectorElementValue) {
+        console.error(`[ui.js] CRITICAL CHECK FAILED for inspector ${inspectorId}: inspectorWin is falsy OR inspectorWin.element is falsy.`);
+        showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000);
+        return null;
+    }
+    
+    track.inspectorWindow = inspectorWin;
+    console.log(`[ui.js] Inspector window for track ${track.id} assigned.`);
+
+    initializeCommonInspectorControls(track, inspectorWin.element);
+    initializeTypeSpecificInspectorControls(track, inspectorWin.element);
+
+    // Refresh knob visuals after a short delay to ensure DOM is fully ready
+    setTimeout(() => {
+        Object.values(track.inspectorControls).forEach(control => {
+            if (control && control.type === 'knob' && typeof control.refreshVisuals === 'function') {
+                control.refreshVisuals();
+            }
+        });
+    }, 50); // Increased delay slightly
+    console.log(`[ui.js] Inspector window for track ${track.id} fully initialized and controls set up.`);
+    return inspectorWin;
+}
+
 
 const effectControlDefinitions = { /* ... (remains the same as daw_autowah_ui_js, includes AutoWah) ... */ };
 export function buildEffectsRackContentDOM(track) { /* ... (remains the same as daw_autowah_ui_js) ... */ }
