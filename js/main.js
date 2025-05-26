@@ -1,13 +1,12 @@
 // js/main.js - Main Application Logic Orchestrator
-// SnugOS Version 5.5.1 (Modularized)
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js';
-import { // Ensure this block is correct
+import { 
     initializePrimaryEventListeners,
     setupMIDI,
-    attachGlobalControlEvents, // This was the function causing the previous error
+    attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
     selectMIDIInput
@@ -30,11 +29,11 @@ import {
     openMixerWindow, updateMixerWindow,
     openSoundBrowserWindow, renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary,
     highlightPlayingStep,
-    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI
+    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads
 } from './ui.js';
 
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS v5.5.1 (Modularized - main.js)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)");
 
 // --- Global Variables & Initialization ---
 window.loadedZipFiles = {};
@@ -47,22 +46,24 @@ window.midiAccess = null;
 window.activeMIDIInput = null;
 window.transportEventsInitialized = false;
 window.masterMeter = null;
-window.openWindows = {};
-window.highestZIndex = 100;
+window.openWindows = {}; // Critical for SnugWindow
+window.highestZIndex = 100; // Critical for SnugWindow
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
 
 // --- DOM Elements ---
-const desktop = document.getElementById('desktop');
-const startButton = document.getElementById('startButton');
-const startMenu = document.getElementById('startMenu');
-const taskbarButtonsContainer = document.getElementById('taskbarButtons');
-const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
-const loadProjectInputEl = document.getElementById('loadProjectInput');
+// These are generally not needed as globals if accessed within functions after DOM load
+// const desktop = document.getElementById('desktop'); 
+// ... other elements
 
-window.playBtn = null; window.recordBtn = null; window.tempoInput = null;
-window.masterMeterBar = null; window.midiInputSelectGlobal = null;
-window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
+// Globals for controls that might be accessed frequently from various places
+window.playBtn = null; 
+window.recordBtn = null; 
+window.tempoInput = null;
+window.masterMeterBar = null; 
+window.midiInputSelectGlobal = null;
+window.midiIndicatorGlobalEl = null; 
+window.keyboardIndicatorGlobalEl = null;
 
 
 // --- Desktop Background Functions ---
@@ -113,11 +114,18 @@ function removeCustomDesktopBackground() {
 }
 
 // --- Exposing functions globally ---
+// This section makes functions available on the window object, which is often necessary
+// for event handlers set in HTML or for calls between loosely coupled modules if not using ES6 module system fully.
+// Given you are using ES6 modules, direct export/import is preferred, but some might be for legacy or specific interop.
 window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
 window.openTrackSequencerWindow = openTrackSequencerWindow;
 window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
-    if (window.openWindows[id]) {
+    if (window.openWindows[id] && !window.openWindows[id].element.classList.contains('minimized')) { // Check if not minimized
         window.openWindows[id].restore(); return window.openWindows[id];
+    }
+    // If minimized or not existing, create new or restore if it exists but was closed/problematic
+    if (window.openWindows[id]) { // If it exists but was problematic or closed, try to re-init
+        try { window.openWindows[id].close(); } catch(e) { /* ignore error if already removed */ }
     }
     const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
     return newWindow.element ? newWindow : null;
@@ -135,6 +143,8 @@ window.drawInstrumentWaveform = drawInstrumentWaveform;
 window.renderSamplePads = renderSamplePads;
 window.updateSliceEditorUI = updateSliceEditorUI;
 window.updateDrumPadControlsUI = updateDrumPadControlsUI;
+window.renderDrumSamplerPads = renderDrumSamplerPads;
+
 
 window.playSlicePreview = playSlicePreview;
 window.playDrumSamplerPadPreview = playDrumSamplerPadPreview;
@@ -152,7 +162,7 @@ window.redoLastAction = redoLastAction;
 window.saveProject = saveProject;
 window.loadProject = loadProject;
 window.exportToWav = exportToWav;
-window.addTrack = addTrackToState;
+window.addTrack = addTrackToState; // Exposing the async version
 
 window.handleTrackMute = handleTrackMute;
 window.handleTrackSolo = handleTrackSolo;
@@ -161,7 +171,7 @@ window.removeTrack = handleRemoveTrack;
 window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
-window.attachGlobalControlEvents = attachGlobalControlEvents; // This is used when opening Global Controls
+window.attachGlobalControlEvents = attachGlobalControlEvents;
 window.selectMIDIInput = selectMIDIInput;
 
 window.getTracks = getTracks;
@@ -195,6 +205,11 @@ window.updateTaskbarTempoDisplay = (newTempo) => {
 async function initializeSnugOS() {
     console.log("[Main] Window loaded. Initializing SnugOS...");
 
+    // Ensure critical globals for SnugWindow are set, though they are already at top level
+    if (typeof window.openWindows === 'undefined') window.openWindows = {};
+    if (typeof window.highestZIndex === 'undefined') window.highestZIndex = 100;
+
+
     const savedBg = localStorage.getItem(DESKTOP_BACKGROUND_KEY);
     if (savedBg) {
         applyDesktopBackground(savedBg);
@@ -206,7 +221,7 @@ async function initializeSnugOS() {
     }
 
     const appContext = {
-        addTrack: addTrackToState,
+        addTrack: addTrackToState, // Pass the async version
         openSoundBrowserWindow: openSoundBrowserWindow,
         undoLastAction: undoLastAction,
         redoLastAction: redoLastAction,
@@ -216,15 +231,46 @@ async function initializeSnugOS() {
         openGlobalControlsWindow: openGlobalControlsWindow,
         openMixerWindow: openMixerWindow,
         handleProjectFileLoad: handleProjectFileLoad,
-        triggerCustomBackgroundUpload: () => document.getElementById('customBgInput').click(),
+        triggerCustomBackgroundUpload: () => {
+            const bgInput = document.getElementById('customBgInput');
+            if (bgInput) bgInput.click(); else console.error("Custom background input not found.");
+        },
         removeCustomDesktopBackground: removeCustomDesktopBackground,
     };
     initializePrimaryEventListeners(appContext);
 
     document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
 
-    await openGlobalControlsWindow(); // This function will use window.attachGlobalControlEvents
-    await setupMIDI();
+    // Attempt to open global controls and make it more robust
+    try {
+        const globalControlsWindowInstance = await openGlobalControlsWindow();
+        if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
+            console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited.");
+            showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000);
+            // Depending on how critical this window is, you might return here or try to continue
+        } else {
+            console.log("[Main] Global Controls Window initialized successfully.");
+            // Assign to window globals only if the window and its element exist
+            window.playBtn = globalControlsWindowInstance.element.querySelector('#playBtnGlobal');
+            window.recordBtn = globalControlsWindowInstance.element.querySelector('#recordBtnGlobal');
+            window.tempoInput = globalControlsWindowInstance.element.querySelector('#tempoGlobalInput');
+            window.masterMeterBar = globalControlsWindowInstance.element.querySelector('#masterMeterBarGlobal');
+            window.midiInputSelectGlobal = globalControlsWindowInstance.element.querySelector('#midiInputSelectGlobal');
+            window.midiIndicatorGlobalEl = globalControlsWindowInstance.element.querySelector('#midiIndicatorGlobal');
+            window.keyboardIndicatorGlobalEl = globalControlsWindowInstance.element.querySelector('#keyboardIndicatorGlobal');
+        }
+    } catch (error) {
+        console.error("[Main] Error during openGlobalControlsWindow call:", error);
+        showNotification("Error initializing global controls. Please check console.", 5000);
+    }
+    
+    // Setup MIDI (should ideally happen after global controls UI elements are confirmed)
+    if (window.midiInputSelectGlobal) { // Check if MIDI select is available before setting up
+        await setupMIDI();
+    } else {
+        console.warn("[Main] MIDI input select element not found, skipping MIDI setup for now.");
+    }
+
 
     const libraryPromises = [];
     let librariesToFetchCount = 0;
@@ -277,8 +323,8 @@ window.addEventListener('beforeunload', (e) => {
     const currentTracks = getTracks ? getTracks() : [];
     if (currentTracks.length > 0 && (currentUndoStack.length > 0 || (window.openWindows && Object.keys(window.openWindows).length > 1))) {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = ''; // Standard for most browsers
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS v5.5.1");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
