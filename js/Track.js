@@ -77,16 +77,9 @@ export class Track {
         this.effects.chorus = this.effects.chorus || { wet: 0, frequency: 1.5, delayTime: 3.5, depth: 0.7 };
         this.effects.saturation = this.effects.saturation || { wet: 0, amount: 2 };
         this.effects.phaser = this.effects.phaser || { frequency: 0.5, octaves: 3, baseFrequency: 350, Q: 1, wet: 0 };
-        // Add Flanger defaults
         this.effects.flanger = this.effects.flanger || {
-            wet: 0,
-            frequency: 0.5, // LFO rate (Hz)
-            delayTime: 0.005, // Base delay time (s)
-            depth: 0.002, // LFO sweep depth (s)
-            feedback: 0.1, // Feedback amount (0-1)
-            type: 'sine' // LFO waveform
+            wet: 0, frequency: 0.5, delayTime: 0.005, depth: 0.002, feedback: 0.1, type: 'sine'
         };
-
 
         // Create Tone.js effect nodes
         this.distortionNode = new Tone.Distortion(this.effects.distortion.amount);
@@ -103,14 +96,32 @@ export class Track {
             baseFrequency: this.effects.phaser.baseFrequency, Q: this.effects.phaser.Q,
             wet: this.effects.phaser.wet
         });
-        this.flangerNode = new Tone.Flanger({ // Initialize Flanger node
-            frequency: this.effects.flanger.frequency,
-            delayTime: this.effects.flanger.delayTime,
-            depth: this.effects.flanger.depth,
-            feedback: this.effects.flanger.feedback,
-            type: this.effects.flanger.type,
-            wet: this.effects.flanger.wet
-        });
+
+        // Initialize Flanger node with error handling
+        this.flangerNode = null; // Initialize as null
+        try {
+            if (typeof Tone !== 'undefined' && typeof Tone.Flanger === 'function') {
+                this.flangerNode = new Tone.Flanger({
+                    frequency: this.effects.flanger.frequency,
+                    delayTime: this.effects.flanger.delayTime,
+                    depth: this.effects.flanger.depth,
+                    feedback: this.effects.flanger.feedback,
+                    type: this.effects.flanger.type,
+                    wet: this.effects.flanger.wet
+                });
+                console.log(`[Track ${this.id}] Flanger node created successfully.`);
+            } else {
+                console.error(`[Track ${this.id}] Tone.Flanger is not a constructor or Tone is undefined.`);
+                console.log('[Track Debug] Tone object:', Tone);
+                if (Tone) {
+                    console.log('[Track Debug] Tone.Flanger:', Tone.Flanger);
+                }
+            }
+        } catch (e) {
+            console.error(`[Track ${this.id}] Error creating Tone.Flanger:`, e);
+            // this.flangerNode remains null
+        }
+
         this.eq3Node = new Tone.EQ3(this.effects.eq3);
         this.compressorNode = new Tone.Compressor(this.effects.compressor);
         this.delayNode = new Tone.FeedbackDelay(this.effects.delay.time, this.effects.delay.feedback);
@@ -119,13 +130,22 @@ export class Track {
         this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
 
-        // Connect effects chain (Flanger inserted after Phaser, before EQ3)
-        this.distortionNode.chain(
+        // Connect effects chain conditionally
+        const effectChainNodes = [
+            this.distortionNode,
             this.filterNode,
             this.chorusNode,
             this.saturationNode,
-            this.phaserNode,
-            this.flangerNode, // Flanger added here
+            this.phaserNode
+        ];
+
+        if (this.flangerNode) { // Only add flanger to chain if it was successfully created
+            effectChainNodes.push(this.flangerNode);
+        } else {
+            console.warn(`[Track ${this.id}] Flanger node not available, skipping from effects chain.`);
+        }
+
+        effectChainNodes.push(
             this.eq3Node,
             this.compressorNode,
             this.delayNode,
@@ -134,6 +154,8 @@ export class Track {
             this.trackMeter,
             Tone.getDestination()
         );
+        Tone.connectSeries(...effectChainNodes);
+
 
         this.instrument = null;
         this.sequenceLength = initialData?.sequenceLength || defaultStepsPerBar;
@@ -584,9 +606,13 @@ export class Track {
             this.gainNode, this.reverbNode, this.delayNode,
             this.compressorNode, this.eq3Node, this.filterNode,
             this.distortionNode, this.chorusNode, this.saturationNode,
-            this.phaserNode, this.flangerNode, // FlangerNode added
+            this.phaserNode, 
+            // this.flangerNode, // Conditionally handled below
             this.trackMeter
         ];
+        if (this.flangerNode && !this.flangerNode.disposed) { // Check if flangerNode exists and is not disposed
+            nodesToDispose.push(this.flangerNode);
+        }
         nodesToDispose.forEach(node => { if (node && !node.disposed) node.dispose(); });
 
         if (this.sequence && !this.sequence.disposed) {
