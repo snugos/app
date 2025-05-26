@@ -1,4 +1,47 @@
 // js/main.js - Main Application Logic Orchestrator
+// js/main.js - Main Application Logic Orchestrator
+
+import { SnugWindow } from './SnugWindow.js';
+import * as Constants from './constants.js';
+// ... (all your other imports for main.js) ...
+import { 
+    openTrackEffectsRackWindow, openTrackSequencerWindow, 
+    openGlobalControlsWindow, /* ... other ui.js imports ... */ 
+    highlightPlayingStep 
+} from './ui.js';
+
+
+// --- IMMEDIATE TEST AT THE VERY TOP ---
+console.log('[Main.js Direct Test] Attempting to create a test SnugWindow immediately after imports.');
+try {
+    if (typeof SnugWindow === 'function' && document.getElementById('desktop')) {
+        const testContent = document.createElement('div');
+        testContent.innerHTML = '<p>Test Window Content</p>';
+        const testWin = new SnugWindow('__testWin', 'Test Window', testContent, {width: 200, height: 100});
+        if (testWin && testWin.element) {
+            console.log('[Main.js Direct Test] Test SnugWindow instance created successfully:', testWin);
+        } else {
+            console.error('[Main.js Direct Test] Test SnugWindow created, but instance or element is invalid:', testWin);
+        }
+    } else {
+        if (typeof SnugWindow !== 'function') {
+            console.error('[Main.js Direct Test] SnugWindow class is NOT a function here.');
+        }
+        if (!document.getElementById('desktop')) {
+            console.error('[Main.js Direct Test] #desktop element is NOT available here (this is unexpected).');
+        }
+    }
+} catch (e) {
+    console.error('[Main.js Direct Test] CRITICAL ERROR during direct SnugWindow instantiation:', e);
+}
+console.log('[Main.js Direct Test] Finished immediate test.');
+// --- END IMMEDIATE TEST ---
+
+
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)"); // Your existing log
+
+// --- Global Variables & Initialization ---
+// ... (rest of your main.js file as it was in daw_main_js_window_robustness) ...
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
