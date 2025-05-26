@@ -58,21 +58,32 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
 
     if (isBrandNewUserTrack) {
         newTrack.fullyInitializeAudioResources().then(() => {
-            console.log(`[State] Audio resources initialized for new track ${newTrack.id} (${newTrack.name}).`);
+            console.log(`[State] Audio resources initialized for new track ${newTrack.id} (${newTrack.name}).`); // We see this log
             showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
+            
             if (typeof window.openTrackInspectorWindow === 'function') {
+                console.log(`[State] About to call openTrackInspectorWindow for track ${newTrack.id}`); // ADDED THIS LOG
                 window.openTrackInspectorWindow(newTrack.id);
+            } else {
+                console.error("[State] window.openTrackInspectorWindow is NOT a function!"); 
             }
+
             if (typeof window.updateMixerWindow === 'function') {
+                console.log(`[State] About to call updateMixerWindow after adding track ${newTrack.id}`); // Optional: good to see this too
                 window.updateMixerWindow();
+            } else {
+                console.warn("[State] window.updateMixerWindow is NOT a function!");
             }
         }).catch(error => {
-            console.error(`[State] Error initializing audio resources for new track ${newTrack.id}:`, error);
-            showNotification(`Error setting up new ${type} track "${newTrack.name}". Audio may not work.`, 5000);
+            console.error(`[State] Error in fullyInitializeAudioResources promise for new track ${newTrack.id}:`, error);
+            showNotification(`Error fully setting up new ${type} track "${newTrack.name}". Inspector/Mixer might not update.`, 5000);
+            // Still attempt to open inspector and update mixer if the error wasn't critical for them
             if (typeof window.openTrackInspectorWindow === 'function') {
+                console.warn(`[State] Attempting to open inspector for track ${newTrack.id} despite earlier error.`);
                 window.openTrackInspectorWindow(newTrack.id);
             }
             if (typeof window.updateMixerWindow === 'function') {
+                 console.warn(`[State] Attempting to update mixer despite earlier error.`);
                 window.updateMixerWindow();
             }
         });
@@ -190,7 +201,7 @@ export async function redoLastAction() {
 
 export function gatherProjectData() {
     const projectData = {
-        version: "5.5.4", // Updated version for advanced synth engines
+        version: "5.5.4", 
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: Tone.getDestination().volume.value,
@@ -208,20 +219,16 @@ export function gatherProjectData() {
                 sequenceLength: track.sequenceLength,
                 sequenceData: JSON.parse(JSON.stringify(track.sequenceData)),
                 automation: JSON.parse(JSON.stringify(track.automation)),
-                // Sampler specific
                 selectedSliceForEdit: track.selectedSliceForEdit,
                 waveformZoom: track.waveformZoom,
                 waveformScrollOffset: track.waveformScrollOffset,
                 slicerIsPolyphonic: track.slicerIsPolyphonic,
-                // Drum Sampler specific
                 selectedDrumPadForEdit: track.selectedDrumPadForEdit,
-                // Instrument Sampler specific
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
             };
-            // Type-specific data
             if (track.type === 'Synth') {
-                trackData.synthEngineType = track.synthEngineType; // Save engine type
-                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams)); // Save all synth params
+                trackData.synthEngineType = track.synthEngineType; 
+                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams)); 
             } else if (track.type === 'Sampler') {
                 trackData.samplerAudioData = { 
                     fileName: track.originalFileName, 
@@ -306,8 +313,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     const trackCreationPromises = [];
     if (projectData.tracks && Array.isArray(projectData.tracks)) {
         projectData.tracks.forEach(trackData => {
-            // Pass the full trackData to the Track constructor.
-            // The Track constructor will handle synthEngineType and synthParams.
             const newTrack = new Track(trackData.id, trackData.type, trackData); 
             tracks.push(newTrack);
             if (newTrack.id > trackIdCounter) trackIdCounter = newTrack.id;
