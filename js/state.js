@@ -57,6 +57,8 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
     }
 
     if (isBrandNewUserTrack) {
+        // For brand new tracks, fullyInitializeAudioResources (which includes instrument setup)
+        // is called after audio nodes are ready.
         newTrack.fullyInitializeAudioResources().then(() => {
             console.log(`[State] Audio resources initialized for new track ${newTrack.id} (${newTrack.name}).`);
             showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
@@ -69,6 +71,7 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         }).catch(error => {
             console.error(`[State] Error initializing audio resources for new track ${newTrack.id}:`, error);
             showNotification(`Error setting up new ${type} track "${newTrack.name}". Audio may not work.`, 5000);
+            // Still attempt to open inspector and update mixer so UI is consistent
             if (typeof window.openTrackInspectorWindow === 'function') {
                 window.openTrackInspectorWindow(newTrack.id);
             }
@@ -190,7 +193,7 @@ export async function redoLastAction() {
 
 export function gatherProjectData() {
     const projectData = {
-        version: "5.5.3", // Updated version for AutoWah addition
+        version: "5.5.4", // Updated version for advanced synth engines
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: Tone.getDestination().volume.value,
@@ -204,19 +207,24 @@ export function gatherProjectData() {
                 id: track.id, type: track.type, name: track.name,
                 isMuted: track.isMuted, 
                 volume: track.previousVolumeBeforeMute,
-                effects: JSON.parse(JSON.stringify(track.effects)), // Includes autoWah
+                effects: JSON.parse(JSON.stringify(track.effects)),
                 sequenceLength: track.sequenceLength,
                 sequenceData: JSON.parse(JSON.stringify(track.sequenceData)),
                 automation: JSON.parse(JSON.stringify(track.automation)),
+                // Sampler specific
                 selectedSliceForEdit: track.selectedSliceForEdit,
                 waveformZoom: track.waveformZoom,
                 waveformScrollOffset: track.waveformScrollOffset,
                 slicerIsPolyphonic: track.slicerIsPolyphonic,
+                // Drum Sampler specific
                 selectedDrumPadForEdit: track.selectedDrumPadForEdit,
+                // Instrument Sampler specific
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
             };
+            // Type-specific data
             if (track.type === 'Synth') {
-                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams));
+                trackData.synthEngineType = track.synthEngineType; // Save engine type
+                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams)); // Save all synth params
             } else if (track.type === 'Sampler') {
                 trackData.samplerAudioData = { 
                     fileName: track.originalFileName, 
@@ -301,6 +309,8 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     const trackCreationPromises = [];
     if (projectData.tracks && Array.isArray(projectData.tracks)) {
         projectData.tracks.forEach(trackData => {
+            // Pass the full trackData to the Track constructor.
+            // The Track constructor will handle synthEngineType and synthParams.
             const newTrack = new Track(trackData.id, trackData.type, trackData); 
             tracks.push(newTrack);
             if (newTrack.id > trackIdCounter) trackIdCounter = newTrack.id;
