@@ -8,7 +8,7 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-// console.log("UI.JS FILE LOADED - Phaser Effect Add");
+// console.log("UI.JS FILE LOADED - Adding Phaser Effect Controls");
 
 export function createKnob(options) {
     const container = document.createElement('div');
@@ -548,7 +548,7 @@ function initializeSynthSpecificControls(track, winEl) {
     winEl.querySelector(`#envReleaseSlider-${track.id}`)?.appendChild(envRKnob.element); track.inspectorControls.envRelease = envRKnob;
 }
 
-function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
+function initializeSamplerSpecificControls(track, winEl) {
     const dropZoneId = `dropZone-${track.id}-sampler`;
     const fileInputId = `fileInput-${track.id}`;
 
@@ -562,21 +562,14 @@ function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
         console.warn(`[UI] Slicer Sampler (Track ID: ${track.id}): File input element NOT FOUND using ID: ${fileInputId}`);
     }
 
-    // Check if the elements found by ID are actually children of winEl
-    // This is an important check to ensure we're not accidentally attaching listeners to elements from other closed/reopened windows.
     if (dropZoneEl && winEl.contains(dropZoneEl) && fileInputEl && winEl.contains(fileInputEl)) {
-        // console.log(`[UI] Slicer Sampler: Both drop zone and file input FOUND for track ${track.id} and are within winEl. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
         fileInputEl.onchange = (e) => {
             window.loadSampleFile(e, track.id, 'Sampler');
         };
     } else {
-        if (dropZoneEl && !winEl.contains(dropZoneEl)) {
-            console.error(`[UI] Slicer Sampler (Track ID: ${track.id}): Drop zone ${dropZoneId} found in document, but NOT within the current inspector window. This is a problem!`);
-        }
-        if (fileInputEl && !winEl.contains(fileInputEl)) {
-            console.error(`[UI] Slicer Sampler (Track ID: ${track.id}): File input ${fileInputId} found in document, but NOT within the current inspector window. This is a problem!`);
-        }
+        if (dropZoneEl && !winEl.contains(dropZoneEl)) console.error(`[UI] Slicer Sampler (Track ID: ${track.id}): Drop zone ${dropZoneId} found globally but NOT in winEl.`);
+        if (fileInputEl && !winEl.contains(fileInputEl)) console.error(`[UI] Slicer Sampler (Track ID: ${track.id}): File input ${fileInputId} found globally but NOT in winEl.`);
     }
 
     renderSamplePads(track);
@@ -654,7 +647,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const dropZoneId = `dropZone-${track.id}-instrumentsampler`;
     const fileInputId = `instrumentFileInput-${track.id}`;
 
-    // Use document.getElementById as it's more reliable if elements are guaranteed unique
     const dropZoneEl = document.getElementById(dropZoneId);
     const fileInputEl = document.getElementById(fileInputId);
 
@@ -665,8 +657,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         console.warn(`[UI] InstrumentSampler (Track ID: ${track.id}): File input element NOT FOUND using ID: ${fileInputId}`);
     }
 
-    // Now, ensure these elements are indeed children of the current window element (winEl)
-    // This prevents attaching listeners to elements from old, closed (but perhaps not fully removed from DOM if there was an issue) windows.
     if (dropZoneEl && winEl.contains(dropZoneEl) && fileInputEl && winEl.contains(fileInputEl)) {
         // console.log(`[UI] InstrumentSampler: Both drop zone and file input FOUND for track ${track.id} and are within winEl. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
@@ -675,12 +665,11 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         };
     } else {
         if (dropZoneEl && !winEl.contains(dropZoneEl)) {
-            console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): Drop zone ${dropZoneId} found in document, but NOT within the current inspector window. This is a DOM structure or timing problem.`);
+            console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): Drop zone ${dropZoneId} found globally but NOT in winEl.`);
         }
         if (fileInputEl && !winEl.contains(fileInputEl)) {
-             console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): File input ${fileInputId} found in document, but NOT within the current inspector window. This is a DOM structure or timing problem.`);
+             console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): File input ${fileInputId} found globally but NOT in winEl.`);
         }
-        // If elements weren't found by ID at all, the earlier logs would have caught that.
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
@@ -725,7 +714,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentEnvReleaseSlider-${track.id}`)?.appendChild(iERK.element); track.inspectorControls.instEnvRelease = iERK;
 }
 
-// ... (Rest of the ui.js file)
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -827,6 +815,16 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
 const effectControlDefinitions = {
     distortion: { title: 'Distortion', controls: [ { idPrefix: 'distAmount', type: 'knob', label: 'Amount', min:0, max:1, step:0.01, paramKey: 'amount', decimals:2, setter: 'setDistortionAmount' } ]},
     saturation: { title: 'Saturation', controls: [ { idPrefix: 'satWet', type: 'knob', label: 'Sat Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setSaturationWet' }, { idPrefix: 'satAmount', type: 'knob', label: 'Sat Amt', min:0, max:20, step:1, paramKey: 'amount', decimals:0, setter: 'setSaturationAmount' } ]},
+    phaser: { // Phaser Definition
+        title: 'Phaser',
+        controls: [
+            { idPrefix: 'phaserFreq', type: 'knob', label: 'Freq', min: 0.1, max: 10, step: 0.1, paramKey: 'frequency', decimals:1, displaySuffix:'Hz', setter: 'setPhaserFrequency' },
+            { idPrefix: 'phaserOct', type: 'knob', label: 'Octaves', min: 1, max: 8, step: 1, paramKey: 'octaves', decimals:0, setter: 'setPhaserOctaves' },
+            { idPrefix: 'phaserBaseFreq', type: 'knob', label: 'Base Freq', min: 100, max: 1500, step: 10, paramKey: 'baseFrequency', decimals:0, displaySuffix:'Hz', setter: 'setPhaserBaseFrequency' },
+            { idPrefix: 'phaserQ', type: 'knob', label: 'Q', min: 0.1, max: 10, step: 0.1, paramKey: 'Q', decimals:1, setter: 'setPhaserQ' },
+            { idPrefix: 'phaserWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setPhaserWet' }
+        ]
+    },
     filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); track.filterNode.Q.value = parseFloat(val); } } ]},
     chorus: { title: 'Chorus', controls: [ { idPrefix: 'chorusWet', type: 'knob', label: 'Chorus Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setChorusWet' }, { idPrefix: 'chorusFreq', type: 'knob', label: 'Chorus Freq', min:0.1, max:20, step:0.1, paramKey: 'frequency', decimals:1, displaySuffix:'Hz', setter: 'setChorusFrequency' }, { idPrefix: 'chorusDelayTime', type: 'knob', label: 'Chorus Delay', min:1, max:20, step:0.1, paramKey: 'delayTime', decimals:1, displaySuffix:'ms', setter: 'setChorusDelayTime' }, { idPrefix: 'chorusDepth', type: 'knob', label: 'Chorus Depth', min:0, max:1, step:0.01, paramKey: 'depth', decimals:2, setter: 'setChorusDepth' } ]},
     eq3: { title: 'EQ3', controls: [ { idPrefix: 'eqLow', type: 'knob', label: 'Low', min:-24, max:24, step:1, paramKey: 'low', decimals:0, displaySuffix:'dB', setter: 'setEQ3Low' }, { idPrefix: 'eqMid', type: 'knob', label: 'Mid', min:-24, max:24, step:1, paramKey: 'mid', decimals:0, displaySuffix:'dB', setter: 'setEQ3Mid' }, { idPrefix: 'eqHigh', type: 'knob', label: 'High', min:-24, max:24, step:1, paramKey: 'high', decimals:0, displaySuffix:'dB', setter: 'setEQ3High' } ]},
@@ -846,7 +844,7 @@ export function buildEffectsRackContentDOM(track) {
         titleEl.className = 'text-sm font-semibold'; titleEl.textContent = effectDef.title;
         effectGroupDiv.appendChild(titleEl);
         const controlsContainer = document.createElement('div');
-        if (effectDef.controls.length > 1 || ['distortion', 'saturation'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) {
+        if (effectDef.controls.length > 1 || ['distortion', 'saturation', 'phaser'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) { // Added phaser here
              controlsContainer.className = 'control-group';
         } else {
             controlsContainer.className = 'single-control-container';
@@ -887,7 +885,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
 
     track.inspectorControls = track.inspectorControls || {};
     const effectsRackContentElement = buildEffectsRackContentDOM(track);
-    const winOptions = { width: 450, height: 600, initialContentKey: `effectsRack-${track.id}` };
+    const winOptions = { width: 450, height: 600, initialContentKey: `effectsRack-${track.id}` }; // Height might need adjustment for more effects
     if (savedState) Object.assign(winOptions, savedState);
 
     const effectsWin = new SnugWindow(windowId, `Effects: ${track.name}`, effectsRackContentElement, winOptions);
@@ -901,7 +899,10 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         const effectDef = effectControlDefinitions[effectKey];
         effectDef.controls.forEach(controlDef => {
             const controlIdBase = `${controlDef.idPrefix}-${track.id}`;
-            const initialValue = track.effects[effectKey] ? track.effects[effectKey][controlDef.paramKey] : controlDef.min;
+            // Ensure track.effects[effectKey] exists before accessing paramKey
+            const initialValue = (track.effects[effectKey] && track.effects[effectKey][controlDef.paramKey] !== undefined)
+                                 ? track.effects[effectKey][controlDef.paramKey]
+                                 : controlDef.min; // Fallback to min if not defined
 
             if (controlDef.type === 'select') {
                 const selectEl = winEl.querySelector(`#${controlIdBase}`);
@@ -925,6 +926,10 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
                         onValueChange: (val) => {
                             if (controlDef.customSetter) controlDef.customSetter(track, val);
                             else if (track[controlDef.setter]) track[controlDef.setter](val);
+                            // Ensure the generic update for non-custom setters
+                            else if (track.effects[effectKey] && track.effects[effectKey][controlDef.paramKey] !== undefined) {
+                                track.effects[effectKey][controlDef.paramKey] = val;
+                            }
                         }
                     });
                     knobPlaceholder.appendChild(knob.element);
