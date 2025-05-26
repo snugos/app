@@ -8,7 +8,7 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-console.log("UI.JS FILE LOADED - DEBUG DRAG DROP (v5 - Using getElementById)");
+// console.log("UI.JS FILE LOADED - Phaser Effect Add");
 
 export function createKnob(options) {
     const container = document.createElement('div');
@@ -269,7 +269,7 @@ function buildSynthSpecificInspectorDOM(track) {
     return panel;
 }
 
-function buildSamplerSpecificInspectorDOM(track) { // This is for Slicer Sampler (type: 'Sampler')
+function buildSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
     panel.className = 'panel sampler-panel';
     const dropZoneContainer = document.createElement('div');
@@ -420,12 +420,10 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     panel.className = 'panel instrument-sampler-panel';
     const dropZoneContainer = document.createElement('div');
     const dropZoneHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
-    // console.log(`[UI] buildInstrumentSampler: Generated dropZoneHTML for track ${track.id}:`, dropZoneHTML);
     dropZoneContainer.innerHTML = dropZoneHTML;
-    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone'); // More robust selection
+    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone');
 
     if (actualDropZoneElement) {
-        // console.log(`[UI] buildInstrumentSampler: Successfully created drop-zone element for track ${track.id}:`, actualDropZoneElement);
         panel.appendChild(actualDropZoneElement);
     } else {
         console.error(`[UI] buildInstrumentSampler: Failed to create/find drop-zone element from HTML for track ${track.id}. HTML was:`, dropZoneHTML);
@@ -564,12 +562,23 @@ function initializeSamplerSpecificControls(track, winEl) { // For Slicer Sampler
         console.warn(`[UI] Slicer Sampler (Track ID: ${track.id}): File input element NOT FOUND using ID: ${fileInputId}`);
     }
 
-    if (dropZoneEl && fileInputEl) {
+    // Check if the elements found by ID are actually children of winEl
+    // This is an important check to ensure we're not accidentally attaching listeners to elements from other closed/reopened windows.
+    if (dropZoneEl && winEl.contains(dropZoneEl) && fileInputEl && winEl.contains(fileInputEl)) {
+        // console.log(`[UI] Slicer Sampler: Both drop zone and file input FOUND for track ${track.id} and are within winEl. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
         fileInputEl.onchange = (e) => {
             window.loadSampleFile(e, track.id, 'Sampler');
         };
+    } else {
+        if (dropZoneEl && !winEl.contains(dropZoneEl)) {
+            console.error(`[UI] Slicer Sampler (Track ID: ${track.id}): Drop zone ${dropZoneId} found in document, but NOT within the current inspector window. This is a problem!`);
+        }
+        if (fileInputEl && !winEl.contains(fileInputEl)) {
+            console.error(`[UI] Slicer Sampler (Track ID: ${track.id}): File input ${fileInputId} found in document, but NOT within the current inspector window. This is a problem!`);
+        }
     }
+
     renderSamplePads(track);
     winEl.querySelector(`#applySliceEditsBtn-${track.id}`)?.addEventListener('click', () => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Apply Slice Edits for ${track.name}`);
@@ -645,7 +654,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const dropZoneId = `dropZone-${track.id}-instrumentsampler`;
     const fileInputId = `instrumentFileInput-${track.id}`;
 
-    // Use document.getElementById as a more reliable way to find elements if winEl.querySelector fails
+    // Use document.getElementById as it's more reliable if elements are guaranteed unique
     const dropZoneEl = document.getElementById(dropZoneId);
     const fileInputEl = document.getElementById(fileInputId);
 
@@ -656,31 +665,22 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         console.warn(`[UI] InstrumentSampler (Track ID: ${track.id}): File input element NOT FOUND using ID: ${fileInputId}`);
     }
 
-    // Check if the found elements are indeed within the current window's content area
-    // This is an extra sanity check. If getElementById finds them, they exist.
-    // The issue might be if they are somehow outside winEl, which would be strange.
-    const dropZoneIsInWindow = winEl.contains(dropZoneEl);
-    const fileInputIsInWindow = winEl.contains(fileInputEl);
-
-    if (!dropZoneIsInWindow && dropZoneEl) {
-        console.warn(`[UI] InstrumentSampler: Drop zone ${dropZoneId} was found in document, but NOT within winEl!`, winEl);
-    }
-    if (!fileInputIsInWindow && fileInputEl) {
-        console.warn(`[UI] InstrumentSampler: File input ${fileInputId} was found in document, but NOT within winEl!`, winEl);
-    }
-
-
-    if (dropZoneEl && fileInputEl && dropZoneIsInWindow && fileInputIsInWindow) {
+    // Now, ensure these elements are indeed children of the current window element (winEl)
+    // This prevents attaching listeners to elements from old, closed (but perhaps not fully removed from DOM if there was an issue) windows.
+    if (dropZoneEl && winEl.contains(dropZoneEl) && fileInputEl && winEl.contains(fileInputEl)) {
         // console.log(`[UI] InstrumentSampler: Both drop zone and file input FOUND for track ${track.id} and are within winEl. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
          fileInputEl.onchange = (e) => {
             window.loadSampleFile(e, track.id, 'InstrumentSampler');
         };
     } else {
-        if (dropZoneEl && fileInputEl) { // They were found globally but not in winEl
-             console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): Elements found globally but not within the expected window panel. This indicates a DOM structure issue.`);
+        if (dropZoneEl && !winEl.contains(dropZoneEl)) {
+            console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): Drop zone ${dropZoneId} found in document, but NOT within the current inspector window. This is a DOM structure or timing problem.`);
         }
-        // Previous logs for not found by ID cover other cases.
+        if (fileInputEl && !winEl.contains(fileInputEl)) {
+             console.error(`[UI] InstrumentSampler (Track ID: ${track.id}): File input ${fileInputId} found in document, but NOT within the current inspector window. This is a DOM structure or timing problem.`);
+        }
+        // If elements weren't found by ID at all, the earlier logs would have caught that.
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
@@ -725,6 +725,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentEnvReleaseSlider-${track.id}`)?.appendChild(iERK.element); track.inspectorControls.instEnvRelease = iERK;
 }
 
+// ... (Rest of the ui.js file)
 export function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
@@ -823,14 +824,6 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     return inspectorWin;
 }
 
-// ... (effectControlDefinitions, buildEffectsRackContentDOM, openTrackEffectsRackWindow) ...
-// ... (buildSequencerContentDOM, openTrackSequencerWindow, highlightPlayingStep) ...
-// ... (openMixerWindow, updateMixerWindow, renderMixer) ...
-// ... (updateSoundBrowserDisplayForLibrary, openSoundBrowserWindow, renderSoundBrowserDirectory) ...
-// ... (renderSamplePads, updateSliceEditorUI, applySliceEdits) ...
-// ... (drawWaveform, drawInstrumentWaveform) ...
-// ... (updateDrumPadControlsUI, renderDrumSamplerPads) ...
-// (Make sure all the functions from the previous ui.js are here, including highlightPlayingStep)
 const effectControlDefinitions = {
     distortion: { title: 'Distortion', controls: [ { idPrefix: 'distAmount', type: 'knob', label: 'Amount', min:0, max:1, step:0.01, paramKey: 'amount', decimals:2, setter: 'setDistortionAmount' } ]},
     saturation: { title: 'Saturation', controls: [ { idPrefix: 'satWet', type: 'knob', label: 'Sat Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setSaturationWet' }, { idPrefix: 'satAmount', type: 'knob', label: 'Sat Amt', min:0, max:20, step:1, paramKey: 'amount', decimals:0, setter: 'setSaturationAmount' } ]},
