@@ -123,6 +123,7 @@ export function initializePrimaryEventListeners(appContext) {
         });
         Tone.Transport.on('stop', () => {
             if (window.playBtn) window.playBtn.textContent = 'Play';
+            // Clear all playing highlights on explicit stop
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
             if (isTrackRecording()) {
                 setIsRecording(false);
@@ -147,9 +148,13 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
             }
 
             if (Tone.Transport.state !== 'started') {
-                if (Tone.Transport.state !== 'paused') Tone.Transport.position = 0;
+                // If not started (i.e., stopped or paused), always reset position to 0 before starting
+                Tone.Transport.position = 0;
+                // Clear any existing playing highlights before restarting
+                document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 Tone.Transport.start("+0.1");
             } else {
+                // If already started, then pause
                 Tone.Transport.pause();
             }
         } catch (error) {
@@ -180,7 +185,9 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                 showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
                 captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
                 if (Tone.Transport.state !== 'started') {
-                    if (Tone.Transport.state !== 'paused') Tone.Transport.position = 0;
+                    // If transport is not started, reset position and start it for recording
+                    Tone.Transport.position = 0;
+                    document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                     Tone.Transport.start("+0.1");
                 }
             } else {
@@ -202,7 +209,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
     globalControlsWindowElement.querySelector('#tempoGlobalInput')?.addEventListener('change', (e) => {
         const newTempo = parseFloat(e.target.value);
         const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
-        if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) { // Hardcoded tempo range
+        if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) { 
             if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
             Tone.Transport.bpm.value = newTempo;
             if(typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
@@ -328,7 +335,7 @@ export async function handleMIDIMessage(message) {
                 if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
             } else if (track.type === 'DrumSampler') {
                 rowIndex = note - Constants.samplerMIDINoteStart;
-                if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
+                if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1; // Use constant if not dynamic yet
             }
 
             if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
@@ -360,7 +367,7 @@ export async function handleMIDIMessage(message) {
             }
         } else if (currentArmedTrack.type === 'DrumSampler') {
             const padIndex = note - Constants.samplerMIDINoteStart;
-            if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
+            if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') { // Use constant
                 window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
             }
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
@@ -383,19 +390,17 @@ export async function handleMIDIMessage(message) {
 }
 
 async function handleComputerKeyDown(e) {
-    // Spacebar for Play/Pause - Placed at the top to intercept before other checks
     if (e.code === 'Space') {
-        e.preventDefault(); // Prevent default browser action like scrolling
-        // Only trigger play/pause if not focusing on an input field where space is for typing
+        e.preventDefault(); 
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
             const playBtnGlobal = document.getElementById('playBtnGlobal');
             if (playBtnGlobal && typeof playBtnGlobal.click === 'function') {
                 playBtnGlobal.click();
-            } else if (window.playBtn && typeof window.playBtn.click === 'function') { // Fallback if global one not found
+            } else if (window.playBtn && typeof window.playBtn.click === 'function') {
                  window.playBtn.click();
             }
         }
-        return; // Spacebar handled, do not process further as a musical key
+        return; 
     }
     
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
@@ -467,7 +472,7 @@ async function handleComputerKeyDown(e) {
 
             let rowIndex = -1;
             if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && Constants.computerKeySynthMap[e.code]) {
-                const pitchName = Tone.Frequency(baseComputerKeyNote, "midi").toNote(); // Use baseComputerKeyNote for correct row index
+                const pitchName = Tone.Frequency(baseComputerKeyNote, "midi").toNote();
                 rowIndex = Constants.synthPitches.indexOf(pitchName);
             } else if ((track.type === 'Sampler' || track.type === 'DrumSampler') && Constants.computerKeySamplerMap[e.code]) {
                 if (track.type === 'Sampler') {
@@ -475,7 +480,7 @@ async function handleComputerKeyDown(e) {
                      if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
                 } else { 
                      rowIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
-                     if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
+                     if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1; // Use constant
                 }
             }
 
@@ -504,7 +509,7 @@ async function handleComputerKeyDown(e) {
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const padIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart; 
-        if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
+        if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') { // Use constant
             window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
         }
     } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
@@ -519,7 +524,6 @@ async function handleComputerKeyDown(e) {
 
 function handleComputerKeyUp(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-    // Spacebar doesn't need a keyUp action for play/pause toggle
     if (e.code === 'Space') return;
 
     if (e.code === 'KeyZ' || e.code === 'KeyX') {
