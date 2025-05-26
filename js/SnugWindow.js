@@ -1,15 +1,17 @@
 // js/SnugWindow.js - SnugWindow Class Module
 
-import { captureStateForUndo, getTracks } from './state.js'; // Import getTracks
+console.log('[SnugWindow.js EXECUTION START] This file is being parsed.'); // NEW DEBUG LOG
+
+import { captureStateForUndo, getTracks } from './state.js';
+console.log('[SnugWindow.js] Imports (captureStateForUndo, getTracks) loaded.'); // NEW DEBUG LOG
 
 // Default theme colors (can be overridden by user settings in future)
 const defaultWindowBg = '#c0c0c0';
 const defaultWindowContentBg = '#c0c0c0';
 
-
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}) {
-        console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`);
+        console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`); // This is the key log we are looking for
         console.log('[SnugWindow] Initial options:', JSON.parse(JSON.stringify(options)));
         console.log('[SnugWindow] Checking window.openWindows at constructor start:', window.openWindows);
         console.log('[SnugWindow] Checking window.highestZIndex at constructor start:', window.highestZIndex);
@@ -24,11 +26,10 @@ export class SnugWindow {
         const desktopEl = document.getElementById('desktop');
         if (!desktopEl) {
             console.error(`[SnugWindow CRITICAL] Desktop element with ID 'desktop' not found for window ID: ${this.id}. Window will not be created.`);
-            this.element = null; // Ensure element is null if desktop isn't found
-            return; // Stop constructor
+            this.element = null; 
+            return; 
         }
         console.log(`[SnugWindow] Desktop element (#desktop) found:`, desktopEl);
-
 
         const defaultWidth = options.width || Math.min(350, desktopEl.offsetWidth - 40);
         const defaultHeight = options.height || Math.min(250, desktopEl.offsetHeight - 80);
@@ -83,7 +84,6 @@ export class SnugWindow {
         } else {
             console.warn(`[SnugWindow ${this.id}] Content is not a string or HTMLElement. Type: ${typeof contentHTMLOrElement}`);
         }
-
 
         this.element.appendChild(this.titleBar);
         this.element.appendChild(this.contentArea);
@@ -167,10 +167,7 @@ export class SnugWindow {
             const resizeHandleSize = 15; 
             const isBottomRightCorner = e.clientX > rect.right - resizeHandleSize && e.clientY > rect.bottom - resizeHandleSize;
 
-            // A basic check to see if the mousedown is on the window frame for resize.
-            // More sophisticated would be to check if it's on specific resize handles if you add them.
-            // For now, assuming CSS 'resize: both' or similar might be used.
-            if (isBottomRightCorner && e.target === this.element) { // Only if mousedown is on the window itself, not its content
+            if (isBottomRightCorner && e.target === this.element) { 
                 initialWidth = this.element.offsetWidth;
                 initialHeight = this.element.offsetHeight;
             } else {
@@ -179,7 +176,6 @@ export class SnugWindow {
             }
         });
         
-        // This mouseup is generic. If resize happens via CSS, this might capture state after.
         document.addEventListener('mouseup', () => { 
             if (this.element && initialWidth !== null && initialHeight !== null) {
                 if (this.element.offsetWidth !== initialWidth || this.element.offsetHeight !== initialHeight) {
