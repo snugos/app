@@ -76,13 +76,15 @@ export class Track {
         this.effects.distortion = this.effects.distortion || { amount: 0 };
         this.effects.chorus = this.effects.chorus || { wet: 0, frequency: 1.5, delayTime: 3.5, depth: 0.7 };
         this.effects.saturation = this.effects.saturation || { wet: 0, amount: 2 };
-        // Add Phaser defaults
-        this.effects.phaser = this.effects.phaser || {
-            frequency: 0.5, // LFO frequency for the phase modulation (Hz)
-            octaves: 3,     // The number of octaves the phase modulation spans
-            baseFrequency: 350, // The base frequency of the filter (Hz)
-            Q: 1,           // The Q factor of the filter
-            wet: 0          // Wet/dry mix (0 to 1)
+        this.effects.phaser = this.effects.phaser || { frequency: 0.5, octaves: 3, baseFrequency: 350, Q: 1, wet: 0 };
+        // Add Flanger defaults
+        this.effects.flanger = this.effects.flanger || {
+            wet: 0,
+            frequency: 0.5, // LFO rate (Hz)
+            delayTime: 0.005, // Base delay time (s)
+            depth: 0.002, // LFO sweep depth (s)
+            feedback: 0.1, // Feedback amount (0-1)
+            type: 'sine' // LFO waveform
         };
 
 
@@ -96,12 +98,18 @@ export class Track {
         this.chorusNode.wet.value = this.effects.chorus.wet;
         this.saturationNode = new Tone.Chebyshev(Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1));
         this.saturationNode.wet.value = this.effects.saturation.wet;
-        this.phaserNode = new Tone.Phaser({ // Initialize Phaser node
-            frequency: this.effects.phaser.frequency,
-            octaves: this.effects.phaser.octaves,
-            baseFrequency: this.effects.phaser.baseFrequency,
-            Q: this.effects.phaser.Q,
+        this.phaserNode = new Tone.Phaser({
+            frequency: this.effects.phaser.frequency, octaves: this.effects.phaser.octaves,
+            baseFrequency: this.effects.phaser.baseFrequency, Q: this.effects.phaser.Q,
             wet: this.effects.phaser.wet
+        });
+        this.flangerNode = new Tone.Flanger({ // Initialize Flanger node
+            frequency: this.effects.flanger.frequency,
+            delayTime: this.effects.flanger.delayTime,
+            depth: this.effects.flanger.depth,
+            feedback: this.effects.flanger.feedback,
+            type: this.effects.flanger.type,
+            wet: this.effects.flanger.wet
         });
         this.eq3Node = new Tone.EQ3(this.effects.eq3);
         this.compressorNode = new Tone.Compressor(this.effects.compressor);
@@ -111,12 +119,13 @@ export class Track {
         this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
 
-        // Connect effects chain (Phaser inserted after saturationNode, before eq3Node)
+        // Connect effects chain (Flanger inserted after Phaser, before EQ3)
         this.distortionNode.chain(
             this.filterNode,
             this.chorusNode,
             this.saturationNode,
-            this.phaserNode, // Phaser added here
+            this.phaserNode,
+            this.flangerNode, // Flanger added here
             this.eq3Node,
             this.compressorNode,
             this.delayNode,
@@ -321,12 +330,18 @@ export class Track {
         this.effects.saturation.amount = parseFloat(value) || 0;
         this.saturationNode.order = Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1);
     }
-    // Phaser Setters
     setPhaserFrequency(value) { this.effects.phaser.frequency = parseFloat(value); if(this.phaserNode) this.phaserNode.frequency.value = this.effects.phaser.frequency; }
     setPhaserOctaves(value) { this.effects.phaser.octaves = parseInt(value, 10); if(this.phaserNode) this.phaserNode.octaves = this.effects.phaser.octaves; }
     setPhaserBaseFrequency(value) { this.effects.phaser.baseFrequency = parseFloat(value); if(this.phaserNode) this.phaserNode.baseFrequency = this.effects.phaser.baseFrequency; }
     setPhaserQ(value) { this.effects.phaser.Q = parseFloat(value); if(this.phaserNode) this.phaserNode.Q.value = this.effects.phaser.Q; }
     setPhaserWet(value) { this.effects.phaser.wet = parseFloat(value); if(this.phaserNode) this.phaserNode.wet.value = this.effects.phaser.wet; }
+    // Flanger Setters
+    setFlangerWet(value) { this.effects.flanger.wet = parseFloat(value); if(this.flangerNode) this.flangerNode.wet.value = this.effects.flanger.wet; }
+    setFlangerFrequency(value) { this.effects.flanger.frequency = parseFloat(value); if(this.flangerNode) this.flangerNode.frequency.value = this.effects.flanger.frequency; }
+    setFlangerDelayTime(value) { this.effects.flanger.delayTime = parseFloat(value); if(this.flangerNode) this.flangerNode.delayTime = this.effects.flanger.delayTime; }
+    setFlangerDepth(value) { this.effects.flanger.depth = parseFloat(value); if(this.flangerNode) this.flangerNode.depth = this.effects.flanger.depth; }
+    setFlangerFeedback(value) { this.effects.flanger.feedback = parseFloat(value); if(this.flangerNode) this.flangerNode.feedback.value = this.effects.flanger.feedback; }
+    setFlangerType(value) { this.effects.flanger.type = value; if(this.flangerNode) this.flangerNode.type = this.effects.flanger.type; }
 
 
     // Synth Param Setters
@@ -569,7 +584,7 @@ export class Track {
             this.gainNode, this.reverbNode, this.delayNode,
             this.compressorNode, this.eq3Node, this.filterNode,
             this.distortionNode, this.chorusNode, this.saturationNode,
-            this.phaserNode, // PhaserNode added
+            this.phaserNode, this.flangerNode, // FlangerNode added
             this.trackMeter
         ];
         nodesToDispose.forEach(node => { if (node && !node.disposed) node.dispose(); });
