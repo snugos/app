@@ -501,11 +501,13 @@ export function openGlobalControlsWindow(savedState = null) {
     const winOptions = { width: 280, height: 250, x: 20, y: 20, initialContentKey: 'globalControls' };
     if (savedState) Object.assign(winOptions, savedState);
 
-    console.log(`[ui.js] About to create SnugWindow for globalControls. SnugWindow is:`, SnugWindow); // DEBUG
+    console.log(`[ui.js] About to create SnugWindow for globalControls. SnugWindow class is:`, SnugWindow); 
     const globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
+    console.log('[ui.js] SnugWindow instance for globalControls created (or attempted):', globalControlsWin); // NEW DEBUG LOG
+    console.log('[ui.js] globalControlsWin.element is:', globalControlsWin ? globalControlsWin.element : 'globalControlsWin is null/undefined'); // NEW DEBUG LOG
     
     if (!globalControlsWin || !globalControlsWin.element) {
-        console.error("[ui.js] Failed to create Global Controls window instance or its element.");
+        console.error("[ui.js] Failed to create Global Controls window instance OR its element is null.");
         showNotification("Failed to create Global Controls window (ui.js).", 5000); 
         return null;
     }
