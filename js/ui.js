@@ -1,227 +1,78 @@
-// js/ui.js - UI Creation and Management Module
+// js/ui.js - MINIMAL TEST VERSION
 
-import { SnugWindow } from './SnugWindow.js';
-console.log('[ui.js] SnugWindow imported as:', SnugWindow); // Keep this
-import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners } from './utils.js';
-import * as Constants from './constants.js';
-import {
-    handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
-    handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
-} from './eventHandlers.js';
-
-// ... (createKnob, synthEngineControlDefinitions, buildTrackInspectorContentDOM, etc. remain the same as daw_ui_js_sampler_debug_v1)
-
-export function createKnob(options) {
-    const container = document.createElement('div');
-    container.className = 'knob-container';
-    const labelEl = document.createElement('div');
-    labelEl.className = 'knob-label';
-    labelEl.textContent = options.label || '';
-    labelEl.title = options.label || '';
-    container.appendChild(labelEl);
-    const knobEl = document.createElement('div');
-    knobEl.className = 'knob';
-    const handleEl = document.createElement('div');
-    handleEl.className = 'knob-handle';
-    knobEl.appendChild(handleEl);
-    container.appendChild(knobEl);
-    const valueEl = document.createElement('div');
-    valueEl.className = 'knob-value';
-    container.appendChild(valueEl);
-
-    let currentValue = options.initialValue || 0;
-    const min = options.min === undefined ? 0 : options.min;
-    const max = options.max === undefined ? 100 : options.max;
-    const step = options.step || 1;
-    const range = max - min;
-    const maxDegrees = options.maxDegrees || 270;
-    const BASE_PIXELS_PER_FULL_RANGE_MOUSE = 300;
-    const BASE_PIXELS_PER_FULL_RANGE_TOUCH = 450;
-    let initialValueBeforeInteraction = currentValue;
-
-    function updateKnobVisual() {
-        const percentage = range === 0 ? 0 : (currentValue - min) / range;
-        const rotation = (percentage * maxDegrees) - (maxDegrees / 2);
-        handleEl.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
-        valueEl.textContent = typeof currentValue === 'number' ? currentValue.toFixed(options.decimals !== undefined ? options.decimals : (step < 1 ? 2 : 0)) : currentValue;
-        if (options.displaySuffix) valueEl.textContent += options.displaySuffix;
-    }
-
-    function setValue(newValue, triggerCallback = true, fromInteraction = false) {
-        const numValue = parseFloat(newValue);
-        if (isNaN(numValue)) return;
-        let boundedValue = Math.min(max, Math.max(min, numValue));
-        if (step !== 0) {
-            boundedValue = Math.round(boundedValue / step) * step;
-        }
-        const oldValue = currentValue;
-        currentValue = Math.min(max, Math.max(min, boundedValue));
-        updateKnobVisual();
-        if (triggerCallback && options.onValueChange) {
-            options.onValueChange(currentValue, oldValue, fromInteraction);
-        }
-    }
-
-    function handleInteraction(e, isTouch = false) {
-        e.preventDefault();
-        initialValueBeforeInteraction = currentValue;
-        const startY = isTouch ? e.touches[0].clientY : e.clientY;
-        const startValue = currentValue;
-        const pixelsForFullRange = isTouch ? BASE_PIXELS_PER_FULL_RANGE_TOUCH : BASE_PIXELS_PER_FULL_RANGE_MOUSE;
-        const currentSensitivity = options.sensitivity === undefined ? 1 : options.sensitivity;
-
-        function onMove(moveEvent) {
-            const currentY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
-            const deltaY = startY - currentY;
-            let valueChange = (deltaY / pixelsForFullRange) * range * currentSensitivity;
-            let newValue = startValue + valueChange;
-            setValue(newValue, true, true);
-        }
-
-        function onEnd() {
-            document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove);
-            document.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
-            if (currentValue !== initialValueBeforeInteraction && typeof window.captureStateForUndo === 'function') {
-                let description = `Change ${options.label || 'knob'} to ${valueEl.textContent}`;
-                if (options.trackRef && options.trackRef.name) {
-                    description = `Change ${options.label || 'knob'} for ${options.trackRef.name} to ${valueEl.textContent}`;
-                }
-                window.captureStateForUndo(description);
-            }
-        }
-        document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: !isTouch });
-        document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
-    }
-
-    knobEl.addEventListener('mousedown', (e) => handleInteraction(e, false));
-    knobEl.addEventListener('touchstart', (e) => handleInteraction(e, true), { passive: false });
-    setValue(currentValue, false);
-    return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
-}
-
-const synthEngineControlDefinitions = { /* ... same as daw_ui_js_sampler_debug_v1 ... */ };
-export function buildTrackInspectorContentDOM(track) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function buildSynthSpecificInspectorDOM(track) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function buildSynthEngineControls(track, container, engineType) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function buildSamplerSpecificInspectorDOM(track) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-export function initializeCommonInspectorControls(track, winEl) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-export function initializeTypeSpecificInspectorControls(track, winEl) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function initializeSynthSpecificControls(track, winEl) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function initializeSamplerSpecificControls(track, winEl) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... same as daw_ui_js_sampler_debug_v1 ... */ }
-
+// Attempt to import SnugWindow, but don't critically depend on it for the first log
+import { SnugWindow } from './SnugWindow.js'; 
+console.log('[ui.js Minimal Test] SnugWindow imported (or import attempted):', SnugWindow);
 
 export function openGlobalControlsWindow(savedState = null) {
-    console.log("[ui.js] openGlobalControlsWindow STARTING..."); // <-- NEW LOG
-    const windowId = 'globalControls';
+    console.log('[ui.js Minimal Test] openGlobalControlsWindow STARTING...'); // Check if this function is even entered
 
-    if (typeof SnugWindow !== 'function') {
-        console.error("[ui.js] SnugWindow is NOT a function in openGlobalControlsWindow!");
-        return null;
-    }
-
-    if (window.openWindows && window.openWindows[windowId] && !savedState) {
-        console.log("[ui.js] Restoring existing Global Controls window.");
-        window.openWindows[windowId].restore(); 
-        return window.openWindows[windowId];
-    }
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'global-controls-window p-2 space-y-3';
+    // Try to create a very simple div to see if basic DOM operations work here
     try {
-        // Simplified content, temporarily removing Tone.Transport.bpm.value access
-        contentDiv.innerHTML = ` 
-            <div class="flex items-center gap-2">
-                <button id="playBtnGlobal">Play</button>
-                <button id="recordBtnGlobal">Record</button>
-            </div>
-            <div>Tempo: <span id="tempoDisplayValue">120.0</span> BPM</div>
-            <div>MIDI In: <select id="midiInputSelectGlobal"></select></div>
-        `;
-        // Set tempo display after DOM creation if Tone is ready
-        if (typeof Tone !== 'undefined' && Tone.Transport) {
-            const tempoDisplay = contentDiv.querySelector('#tempoDisplayValue');
-            if (tempoDisplay) tempoDisplay.textContent = Tone.Transport.bpm.value.toFixed(1);
+        const testDiv = document.createElement('div');
+        testDiv.id = "testGlobalControlsContent";
+        testDiv.innerHTML = "<p>Test Content for Global Controls</p>";
+        console.log('[ui.js Minimal Test] Test content div created:', testDiv);
+
+        // Even simpler SnugWindow call, or bypass it entirely for now
+        if (typeof SnugWindow === 'function') {
+            console.log('[ui.js Minimal Test] Attempting to create SnugWindow for globalControls...');
+            const globalControlsWin = new SnugWindow('globalControls', 'Global Controls (Test)', testDiv, {width: 200, height: 100});
+            
+            if (globalControlsWin && globalControlsWin.element) {
+                console.log('[ui.js Minimal Test] Test SnugWindow CREATED:', globalControlsWin);
+                // Manually assign to window globals for main.js to pick up, bypassing some logic for test
+                window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal'); // This ID won't exist in testDiv
+                return globalControlsWin;
+            } else {
+                console.error('[ui.js Minimal Test] Test SnugWindow creation FAILED or element is null.');
+                return null;
+            }
+        } else {
+            console.error('[ui.js Minimal Test] SnugWindow is NOT a function here!');
+            return null;
         }
 
     } catch (e) {
-        console.error("[ui.js] Error setting innerHTML for globalControls contentDiv:", e);
-        showNotification("Error creating global controls content.", 5000);
+        console.error('[ui.js Minimal Test] Error within openGlobalControlsWindow:', e);
         return null;
     }
-    
-    const winOptions = { width: 280, height: 200, x: 20, y: 20, initialContentKey: 'globalControls' }; // Reduced height
-    if (savedState) Object.assign(winOptions, savedState);
-
-    console.log(`[ui.js] About to call 'new SnugWindow' for globalControls. SnugWindow class is:`, SnugWindow);
-    let globalControlsWin = null;
-    try {
-        globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
-        console.log('[ui.js] SnugWindow instance for globalControls created (or attempted):', globalControlsWin);
-    } catch (e) {
-        console.error('[ui.js] CRITICAL ERROR during `new SnugWindow()` instantiation for globalControls:', e);
-        showNotification("CRITICAL: Error creating window object. Check console.", 6000);
-        return null; 
-    }
-    
-    console.log('[ui.js] DETAILED CHECK for globalControlsWin:');
-    const isInstanceValid = globalControlsWin instanceof SnugWindow;
-    const hasElementProp = globalControlsWin && globalControlsWin.hasOwnProperty('element');
-    const elementValue = globalControlsWin ? globalControlsWin.element : undefined;
-    const isElementTruthy = !!elementValue;
-
-    console.log(`[ui.js] typeof globalControlsWin: ${typeof globalControlsWin}`);
-    console.log(`[ui.js] globalControlsWin instanceof SnugWindow: ${isInstanceValid}`);
-    console.log(`[ui.js] globalControlsWin.hasOwnProperty('element'): ${hasElementProp}`);
-    console.log(`[ui.js] globalControlsWin.element value:`, elementValue);
-    console.log(`[ui.js] globalControlsWin.element is TRUTHY: ${isElementTruthy}`);
-    
-    if (!globalControlsWin || !elementValue) { 
-        console.error("[ui.js] CRITICAL CHECK FAILED (the main one): globalControlsWin is falsy OR globalControlsWin.element is falsy.");
-        console.error(`[ui.js] Values for check: !globalControlsWin = ${!globalControlsWin}, !elementValue = ${!elementValue}`);
-        showNotification("Failed to create Global Controls window (ui.js check).", 5000); 
-        return null;
-    }
-
-    // Assign to window globals only if element is valid
-    window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal');
-    window.recordBtn = globalControlsWin.element.querySelector('#recordBtnGlobal');
-    // Note: tempoInput is no longer an input field in this simplified version
-    // window.tempoInput = globalControlsWin.element.querySelector('#tempoGlobalInput'); 
-    window.masterMeterBar = globalControlsWin.element.querySelector('#masterMeterBarGlobal'); // This ID is not in simplified HTML
-    window.midiInputSelectGlobal = globalControlsWin.element.querySelector('#midiInputSelectGlobal');
-    window.midiIndicatorGlobalEl = globalControlsWin.element.querySelector('#midiIndicatorGlobal'); // Not in simplified HTML
-    window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal'); // Not in simplified HTML
-
-    if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
-        window.attachGlobalControlEvents(globalControlsWin.element);
-    } else {
-        console.warn("attachGlobalControlEvents not found or window element missing. Global controls might not work.");
-    }
-    console.log("[ui.js] openGlobalControlsWindow FINISHED SUCCESSFULLY."); // <-- NEW LOG
-    return globalControlsWin;
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-const effectControlDefinitions = { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ };
-export function buildEffectsRackContentDOM(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function highlightPlayingStep(col, trackType, gridElement) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function openMixerWindow(savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function updateMixerWindow() { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function renderMixer(container) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function openSoundBrowserWindow(savedState = null) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function renderSamplePads(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function updateSliceEditorUI(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function applySliceEdits(trackId) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function drawWaveform(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function drawInstrumentWaveform(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function updateDrumPadControlsUI(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
-export function renderDrumSamplerPads(track) { /* ... (same as daw_ui_js_sampler_debug_v1) ... */ }
+// Add dummy exports for other functions main.js might try to import from ui.js
+// to prevent immediate "import not found" errors from main.js,
+// even though these functions won't do anything useful yet.
+export function createKnob(options) { console.warn("createKnob called in minimal ui.js"); return {element: document.createElement('div'), setValue: ()=>{}}; }
+export const synthEngineControlDefinitions = {};
+export function buildTrackInspectorContentDOM(track) { console.warn("buildTrackInspectorContentDOM called in minimal ui.js"); return document.createElement('div'); }
+function buildSynthSpecificInspectorDOM(track) { console.warn("buildSynthSpecificInspectorDOM called in minimal ui.js"); return document.createElement('div'); }
+function buildSynthEngineControls(track, container, engineType) { console.warn("buildSynthEngineControls called in minimal ui.js"); }
+function buildSamplerSpecificInspectorDOM(track) { console.warn("buildSamplerSpecificInspectorDOM called in minimal ui.js"); return document.createElement('div'); }
+function buildDrumSamplerSpecificInspectorDOM(track) { console.warn("buildDrumSamplerSpecificInspectorDOM called in minimal ui.js"); return document.createElement('div'); }
+function buildInstrumentSamplerSpecificInspectorDOM(track) { console.warn("buildInstrumentSamplerSpecificInspectorDOM called in minimal ui.js"); return document.createElement('div'); }
+export function initializeCommonInspectorControls(track, winEl) { console.warn("initializeCommonInspectorControls called in minimal ui.js"); }
+export function initializeTypeSpecificInspectorControls(track, winEl) { console.warn("initializeTypeSpecificInspectorControls called in minimal ui.js"); }
+function initializeSynthSpecificControls(track, winEl) { console.warn("initializeSynthSpecificControls called in minimal ui.js"); }
+function initializeSamplerSpecificControls(track, winEl) { console.warn("initializeSamplerSpecificControls called in minimal ui.js"); }
+function initializeDrumSamplerSpecificControls(track, winEl) { console.warn("initializeDrumSamplerSpecificControls called in minimal ui.js"); }
+function initializeInstrumentSamplerSpecificControls(track, winEl) { console.warn("initializeInstrumentSamplerSpecificControls called in minimal ui.js"); }
+export function openTrackInspectorWindow(trackId, savedState = null) { console.warn("openTrackInspectorWindow called in minimal ui.js"); return null;}
+export const effectControlDefinitions = {};
+export function buildEffectsRackContentDOM(track) { console.warn("buildEffectsRackContentDOM called in minimal ui.js"); return document.createElement('div');}
+export function openTrackEffectsRackWindow(trackId, savedState = null) { console.warn("openTrackEffectsRackWindow called in minimal ui.js"); return null;}
+export function buildSequencerContentDOM(track, rows, rowLabels, numBars) { console.warn("buildSequencerContentDOM called in minimal ui.js"); return document.createElement('div');}
+export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { console.warn("openTrackSequencerWindow called in minimal ui.js"); return null;}
+export function highlightPlayingStep(col, trackType, gridElement) { console.warn("highlightPlayingStep called in minimal ui.js");}
+export function openMixerWindow(savedState = null) { console.warn("openMixerWindow called in minimal ui.js"); return null;}
+export function updateMixerWindow() { console.warn("updateMixerWindow called in minimal ui.js");}
+export function renderMixer(container) { console.warn("renderMixer called in minimal ui.js");}
+export function updateSoundBrowserDisplayForLibrary(libraryName) { console.warn("updateSoundBrowserDisplayForLibrary called in minimal ui.js");}
+export function openSoundBrowserWindow(savedState = null) { console.warn("openSoundBrowserWindow called in minimal ui.js"); return null;}
+export function renderSoundBrowserDirectory(pathArray, treeNode) { console.warn("renderSoundBrowserDirectory called in minimal ui.js");}
+export function renderSamplePads(track) { console.warn("renderSamplePads called in minimal ui.js");}
+export function updateSliceEditorUI(track) { console.warn("updateSliceEditorUI called in minimal ui.js");}
+export function applySliceEdits(trackId) { console.warn("applySliceEdits called in minimal ui.js");}
+export function drawWaveform(track) { console.warn("drawWaveform called in minimal ui.js");}
+export function drawInstrumentWaveform(track) { console.warn("drawInstrumentWaveform called in minimal ui.js");}
+export function updateDrumPadControlsUI(track) { console.warn("updateDrumPadControlsUI called in minimal ui.js");}
+export function renderDrumSamplerPads(track) { console.warn("renderDrumSamplerPads called in minimal ui.js");}
