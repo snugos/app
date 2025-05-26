@@ -234,7 +234,7 @@ async function initializeSnugOS() {
     try {
         const globalControlsWindowInstance = await openGlobalControlsWindow();
         if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
-            console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited.");
+            console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited."); // This is line 237 in your log
             showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000);
         } else {
             console.log("[Main] Global Controls Window initialized successfully.");
@@ -254,7 +254,7 @@ async function initializeSnugOS() {
     if (window.midiInputSelectGlobal) { 
         await setupMIDI();
     } else {
-        console.warn("[Main] MIDI input select element not found, skipping MIDI setup for now.");
+        console.warn("[Main] MIDI input select element not found, skipping MIDI setup for now."); // This is line 257 in your log
     }
 
     const libraryPromises = [];
@@ -293,7 +293,7 @@ async function initializeSnugOS() {
     updateUndoRedoButtons();
 
     showNotification("Welcome to SnugOS!", 2500);
-    console.log("[Main] SnugOS Initialized.");
+    console.log("[Main] SnugOS Initialized."); // This is line 296 in your log
 }
 
 function updateMetersLoop() {
@@ -312,4 +312,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)"); // This is line 315 in your log
