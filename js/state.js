@@ -30,12 +30,12 @@ export function setRecordingTrackId(id) { recordingTrackId = id; }
 export function setRecordingStartTime(time) { recordingStartTime = time; }
 export function setActiveSequencerTrackId(id) { activeSequencerTrackId = id; }
 
-export async function addTrackToState(type, initialData = null, isUserAction = true) { // Made async
+export async function addTrackToState(type, initialData = null, isUserAction = true) {
     const isBrandNewUserTrack = isUserAction && (!initialData || initialData._isUserActionPlaceholder);
 
     if (isBrandNewUserTrack) {
         captureStateForUndo(`Add ${type} Track`);
-        if (initialData && initialData._isUserActionPlaceholder) initialData = null; // Clear placeholder
+        if (initialData && initialData._isUserActionPlaceholder) initialData = null;
     }
 
     let newTrackId;
@@ -50,16 +50,14 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
     const newTrack = new Track(newTrackId, type, initialData);
     tracks.push(newTrack);
 
-    // Initialize audio nodes first
     if (typeof newTrack.initializeAudioNodes === 'function') {
         await newTrack.initializeAudioNodes();
     } else {
         console.warn(`[State] Track ${newTrack.id} does not have initializeAudioNodes method.`);
     }
 
-
     if (isBrandNewUserTrack) {
-        newTrack.fullyInitializeAudioResources().then(() => { // This can remain a promise
+        newTrack.fullyInitializeAudioResources().then(() => {
             console.log(`[State] Audio resources initialized for new track ${newTrack.id} (${newTrack.name}).`);
             showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
             if (typeof window.openTrackInspectorWindow === 'function') {
@@ -192,7 +190,7 @@ export async function redoLastAction() {
 
 export function gatherProjectData() {
     const projectData = {
-        version: "5.5.2", 
+        version: "5.5.3", // Updated version for AutoWah addition
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: Tone.getDestination().volume.value,
@@ -206,7 +204,7 @@ export function gatherProjectData() {
                 id: track.id, type: track.type, name: track.name,
                 isMuted: track.isMuted, 
                 volume: track.previousVolumeBeforeMute,
-                effects: JSON.parse(JSON.stringify(track.effects)),
+                effects: JSON.parse(JSON.stringify(track.effects)), // Includes autoWah
                 sequenceLength: track.sequenceLength,
                 sequenceData: JSON.parse(JSON.stringify(track.sequenceData)),
                 automation: JSON.parse(JSON.stringify(track.automation)),
@@ -303,11 +301,10 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     const trackCreationPromises = [];
     if (projectData.tracks && Array.isArray(projectData.tracks)) {
         projectData.tracks.forEach(trackData => {
-            const newTrack = new Track(trackData.id, trackData.type, trackData); // Pass full trackData
+            const newTrack = new Track(trackData.id, trackData.type, trackData); 
             tracks.push(newTrack);
             if (newTrack.id > trackIdCounter) trackIdCounter = newTrack.id;
             
-            // Add promise for audio node initialization
             if (typeof newTrack.initializeAudioNodes === 'function') {
                 trackCreationPromises.push(newTrack.initializeAudioNodes());
             } else {
@@ -325,7 +322,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         showNotification("Error initializing some track audio nodes during load. Project may not be fully functional.", 5000);
     }
 
-    // Now initialize audio resources (buffers, sequences)
     const trackResourcePromises = [];
     for (const track of tracks) {
         if (typeof track.fullyInitializeAudioResources === 'function') {
