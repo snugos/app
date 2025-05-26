@@ -271,7 +271,7 @@ export class Track {
                 } else {
                     if (this.instrumentSamplerSettings.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) this.instrumentSamplerSettings.audioBuffer.dispose();
                     this.instrumentSamplerSettings.audioBuffer = null;
-                    this.setupToneSampler();
+                    this.setupToneSampler(); // Still call to ensure sampler is created/cleared
                 }
             } else if (this.type === 'DrumSampler') {
                 const padPromises = this.drumSamplerPads.map(async (padData, i) => {
@@ -308,39 +308,62 @@ export class Track {
             this.slicerMonoPlayer.buffer = this.audioBuffer;
         }
     }
-    disposeSlicerMonoNodes() { 
+    disposeSlicerMonoNodes() {
         if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed) this.slicerMonoPlayer.dispose();
         if (this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed) this.slicerMonoEnvelope.dispose();
         if (this.slicerMonoGain && !this.slicerMonoGain.disposed) this.slicerMonoGain.dispose();
         this.slicerMonoPlayer = null; this.slicerMonoEnvelope = null; this.slicerMonoGain = null;
     }
-    setupToneSampler() { 
+
+    setupToneSampler() {
         if (!this.distortionNode) {
             console.error(`[Track ${this.id}] Distortion node not initialized for ToneSampler.`);
             return;
         }
-        if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.dispose();
+        if (this.toneSampler && !this.toneSampler.disposed) {
+            this.toneSampler.dispose();
+        }
+
+        console.log(`[Track ${this.id}] setupToneSampler: rootNote = "${this.instrumentSamplerSettings.rootNote}"`);
         const urls = {};
         if (this.instrumentSamplerSettings.audioBuffer && this.instrumentSamplerSettings.audioBuffer.loaded) {
-            urls[this.instrumentSamplerSettings.rootNote] = this.instrumentSamplerSettings.audioBuffer;
+            if (this.instrumentSamplerSettings.rootNote && this.instrumentSamplerSettings.rootNote.trim() !== "") {
+                urls[this.instrumentSamplerSettings.rootNote] = this.instrumentSamplerSettings.audioBuffer;
+            } else {
+                console.warn(`[Track ${this.id}] setupToneSampler: Root note is empty or invalid. Using 'C4' as fallback for URLs map, but this might not be what the user intended if they cleared the field.`);
+                urls['C4'] = this.instrumentSamplerSettings.audioBuffer; // Fallback for the urls map
+            }
         }
+        console.log(`[Track ${this.id}] setupToneSampler: urls object for Tone.Sampler:`, urls);
+
+
         this.toneSampler = new Tone.Sampler({
             urls: urls,
             attack: this.instrumentSamplerSettings.envelope.attack,
             release: this.instrumentSamplerSettings.envelope.release,
-            baseUrl: "",
+            baseUrl: "", // Explicitly empty if not using relative string paths in 'urls'
+            onload: () => {
+                 console.log(`[Track ${this.id}] Tone.Sampler finished loading samples (onload callback). Root note used for mapping: ${Object.keys(urls)[0] || 'None'}`);
+            }
         }).connect(this.distortionNode);
+
         this.toneSampler.loop = this.instrumentSamplerSettings.loop;
         this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart;
         this.toneSampler.loopEnd = this.instrumentSamplerSettings.loopEnd;
+
+        if (Object.keys(urls).length === 0) {
+            console.warn(`[Track ${this.id}] setupToneSampler: Tone.Sampler initialized with an empty 'urls' object. It will not be able to play notes.`);
+        } else {
+            console.log(`[Track ${this.id}] setupToneSampler: Tone.Sampler initialized. Loaded state: ${this.toneSampler.loaded}`);
+        }
     }
 
 
-    setVolume(volume, fromInteraction = false) { 
+    setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = parseFloat(volume);
         if (this.gainNode && !this.isMuted) { this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05); }
     }
-    applyMuteState() { 
+    applyMuteState() {
         if (!this.gainNode) return;
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
         if (this.isMuted) {
@@ -353,7 +376,7 @@ export class Track {
             }
         }
     }
-    applySoloState() { 
+    applySoloState() {
         if (!this.gainNode) return;
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
         if (this.isMuted) {
@@ -392,17 +415,17 @@ export class Track {
     setPhaserQ(value) { this.effects.phaser.Q = parseFloat(value); if(this.phaserNode) this.phaserNode.Q.value = this.effects.phaser.Q; }
     setPhaserWet(value) { this.effects.phaser.wet = parseFloat(value); if(this.phaserNode) this.phaserNode.wet.value = this.effects.phaser.wet; }
     setAutoWahWet(value) { this.effects.autoWah.wet = parseFloat(value); if(this.autoWahNode) this.autoWahNode.wet.value = this.effects.autoWah.wet; }
-    setAutoWahBaseFrequency(value) { this.effects.autoWah.baseFrequency = parseFloat(value); if(this.autoWahNode) this.autoWahNode.baseFrequency.value = this.effects.autoWah.baseFrequency; } 
+    setAutoWahBaseFrequency(value) { this.effects.autoWah.baseFrequency = parseFloat(value); if(this.autoWahNode) this.autoWahNode.baseFrequency.value = this.effects.autoWah.baseFrequency; }
     setAutoWahOctaves(value) { this.effects.autoWah.octaves = parseInt(value, 10); if(this.autoWahNode) this.autoWahNode.octaves = this.effects.autoWah.octaves; }
-    setAutoWahSensitivity(value) { this.effects.autoWah.sensitivity = parseFloat(value); if(this.autoWahNode) this.autoWahNode.sensitivity = this.effects.autoWah.sensitivity; } 
+    setAutoWahSensitivity(value) { this.effects.autoWah.sensitivity = parseFloat(value); if(this.autoWahNode) this.autoWahNode.sensitivity = this.effects.autoWah.sensitivity; }
     setAutoWahQ(value) { this.effects.autoWah.Q = parseFloat(value); if(this.autoWahNode) this.autoWahNode.Q.value = this.effects.autoWah.Q; }
     setAutoWahGain(value) { this.effects.autoWah.gain = parseFloat(value); if(this.autoWahNode) this.autoWahNode.gain.value = this.effects.autoWah.gain; }
     setAutoWahFollower(value) {
         this.effects.autoWah.follower = parseFloat(value);
-        if(this.autoWahNode && this.autoWahNode.follower) { 
+        if(this.autoWahNode && this.autoWahNode.follower) {
              if (this.autoWahNode.follower.attack && typeof this.autoWahNode.follower.attack.value !== 'undefined') { // Check if follower has signal-like properties
                 this.autoWahNode.follower.attack = this.effects.autoWah.follower;
-                this.autoWahNode.follower.release = this.effects.autoWah.follower; 
+                this.autoWahNode.follower.release = this.effects.autoWah.follower;
             } else if (typeof this.autoWahNode.follower === 'object' && 'attack' in this.autoWahNode.follower) { // If it's an options object
                  this.autoWahNode.follower.set({ attack: this.effects.autoWah.follower, release: this.effects.autoWah.follower });
             } else { // Fallback if follower is just a number (less likely for component)
@@ -418,13 +441,13 @@ export class Track {
             console.warn(`[Track ${this.id}] setSynthParam called on non-synth track or uninitialized instrument.`);
             return;
         }
-        
+
         const setNestedParam = (obj, path, val) => {
             const keys = path.split('.');
             let current = obj;
             for (let i = 0; i < keys.length - 1; i++) {
                 if (!current[keys[i]] || typeof current[keys[i]] !== 'object') {
-                    current[keys[i]] = {}; 
+                    current[keys[i]] = {};
                 }
                 current = current[keys[i]];
             }
@@ -448,7 +471,7 @@ export class Track {
                 console.warn(`[Track ${this.id}] Unknown synth engine type for setSynthParam: ${this.synthEngineType}`);
                 return;
         }
-        
+
         // Ensure the specific params object exists on this.synthParams
         this.synthParams[targetParamsObjectKey] = this.synthParams[targetParamsObjectKey] || this.getDefaultSynthParams(this.synthEngineType);
         setNestedParam(this.synthParams[targetParamsObjectKey], paramPath, value);
@@ -469,7 +492,7 @@ export class Track {
             // e.g. harmonicity -> { harmonicity: value }
             paramsForToneSet[paramPath] = value;
         }
-        
+
         try {
             this.instrument.set(paramsForToneSet);
         } catch (e) {
@@ -485,7 +508,38 @@ export class Track {
     setDrumSamplerPadVolume(padIndex, volume) { if (this.type !== 'DrumSampler' || !this.drumSamplerPads[padIndex]) return; this.drumSamplerPads[padIndex].volume = parseFloat(volume); }
     setDrumSamplerPadPitch(padIndex, pitch) { if (this.type !== 'DrumSampler' || !this.drumSamplerPads[padIndex]) return; this.drumSamplerPads[padIndex].pitchShift = parseFloat(pitch); }
     setDrumSamplerPadEnv(padIndex, param, value) { if (this.type !== 'DrumSampler' || !this.drumSamplerPads[padIndex]) return; this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value); }
-    setInstrumentSamplerRootNote(noteName) { if (this.type !== 'InstrumentSampler') return; this.instrumentSamplerSettings.rootNote = noteName; this.setupToneSampler(); }
+
+    setInstrumentSamplerRootNote(noteName) {
+        if (this.type !== 'InstrumentSampler') return;
+
+        let validNoteName = noteName;
+        // Validate the noteName
+        if (!noteName || typeof noteName !== 'string' || noteName.trim() === "") {
+            validNoteName = 'C4'; // Default if empty or invalid string
+            console.warn(`[Track ${this.id}] InstrumentSampler: Received empty or invalid root note "${noteName}". Defaulting to '${validNoteName}'.`);
+        } else {
+            try {
+                Tone.Frequency(validNoteName.trim()).toMidi(); // Test if Tone.js can parse it
+                validNoteName = validNoteName.trim(); // Use trimmed version if valid
+            } catch (e) {
+                console.warn(`[Track ${this.id}] InstrumentSampler: Root note "${noteName}" is not recognized by Tone.Frequency. Defaulting to 'C4'. Error:`, e);
+                validNoteName = 'C4';
+            }
+        }
+
+        this.instrumentSamplerSettings.rootNote = validNoteName;
+
+        // Attempt to update the UI input field if it was changed to default or trimmed
+        if (this.inspectorWindow && this.inspectorWindow.element) {
+            const rootNoteInput = this.inspectorWindow.element.querySelector(`#instrumentRootNote-${this.id}`);
+            if (rootNoteInput && rootNoteInput.value !== validNoteName) {
+                rootNoteInput.value = validNoteName;
+            }
+        }
+        // Re-setup the Tone.Sampler with the (potentially corrected) root note
+        this.setupToneSampler();
+    }
+
     setInstrumentSamplerLoop(loop) { if (this.type !== 'InstrumentSampler') return; this.instrumentSamplerSettings.loop = Boolean(loop); if (this.toneSampler) this.toneSampler.loop = this.instrumentSamplerSettings.loop; }
     setInstrumentSamplerLoopStart(time) { if (this.type !== 'InstrumentSampler' || !this.instrumentSamplerSettings.audioBuffer) return; this.instrumentSamplerSettings.loopStart = Math.min(this.instrumentSamplerSettings.audioBuffer.duration, Math.max(0, parseFloat(time))); if (this.toneSampler) this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart; }
     setInstrumentSamplerLoopEnd(time) { if (this.type !== 'InstrumentSampler' || !this.instrumentSamplerSettings.audioBuffer) return; this.instrumentSamplerSettings.loopEnd = Math.min(this.instrumentSamplerSettings.audioBuffer.duration, Math.max(this.instrumentSamplerSettings.loopStart, parseFloat(time))); if (this.toneSampler) this.toneSampler.loopEnd = this.instrumentSamplerSettings.loopEnd; }
@@ -529,7 +583,7 @@ export class Track {
         this.sequence = new Tone.Sequence((time, col) => {
             const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
             const isSoloedOut = currentGlobalSoloId && currentGlobalSoloId !== this.id;
-            
+
             if (this.sequencerWindow && !this.sequencerWindow.isMinimized) {
                 const grid = this.sequencerWindow.element?.querySelector('.sequencer-grid');
                 if (grid && typeof window.highlightPlayingStep === 'function') {
@@ -540,15 +594,15 @@ export class Track {
             if (!this.gainNode || this.isMuted || isSoloedOut) {
                 return;
             }
-            
+
              if (this.type === 'Synth') {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
                     if (step && step.active && this.instrument && typeof this.instrument.triggerAttackRelease === 'function') {
                         this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity);
-                    } 
+                    }
                 });
-            } else if (this.type === 'Sampler') { 
+            } else if (this.type === 'Sampler') {
                 this.slices.forEach((sliceData, sliceIndex) => {
                     const step = this.sequenceData[sliceIndex]?.[col];
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
@@ -606,7 +660,7 @@ export class Track {
                     }
                 });
             }
-            else if (this.type === 'DrumSampler') { 
+            else if (this.type === 'DrumSampler') {
                 this.drumSamplerPads.forEach((padData, padIndex) => {
                     const step = this.sequenceData[padIndex]?.[col];
                     if (step?.active && this.drumPadPlayers[padIndex] && this.drumPadPlayers[padIndex].loaded) {
@@ -617,14 +671,18 @@ export class Track {
                     }
                 });
             }
-            else if (this.type === 'InstrumentSampler') { 
+            else if (this.type === 'InstrumentSampler') {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
                     if (step?.active && this.toneSampler && this.toneSampler.loaded) {
-                        const midiNote = Tone.Frequency(pitchName).toMidi();
-                        const shiftedNote = Tone.Frequency(midiNote, "midi").toNote();
-                        this.toneSampler.triggerAttackRelease(shiftedNote, "8n", time, step.velocity);
-                    } 
+                        // const midiNote = Tone.Frequency(pitchName).toMidi(); // Not directly used for triggerAttack with note name
+                        // const shiftedNote = Tone.Frequency(midiNote, "midi").toNote(); // This is redundant if pitchName is already a note string like "C4"
+                        this.toneSampler.triggerAttackRelease(pitchName, "8n", time, step.velocity);
+                    } else if (step?.active && this.toneSampler && !this.toneSampler.loaded) {
+                        console.warn(`[Track ${this.id}] Sequencer: InstrumentSampler not loaded, cannot play step for ${pitchName}`);
+                    } else if (step?.active && !this.toneSampler) {
+                        console.warn(`[Track ${this.id}] Sequencer: InstrumentSampler (this.toneSampler) is null, cannot play step for ${pitchName}`);
+                    }
                 });
             }
 
@@ -637,7 +695,7 @@ export class Track {
              }
         }
     }
-    dispose() { 
+    dispose() {
         if (this.instrument && !this.instrument.disposed) {this.instrument.dispose();}
         if (this.audioBuffer && !this.audioBuffer.disposed) {this.audioBuffer.dispose();}
 
@@ -662,8 +720,8 @@ export class Track {
             this.phaserNode, this.autoWahNode,
             this.trackMeter
         ];
-        
-        nodesToDispose.forEach(node => { 
+
+        nodesToDispose.forEach(node => {
             if (node && typeof node.dispose === 'function' && !node.disposed) {
                 node.dispose();
             }
