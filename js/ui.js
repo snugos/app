@@ -8,8 +8,6 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-// console.log("UI.JS FILE LOADED - Adding Phaser Effect Controls");
-
 export function createKnob(options) {
     const container = document.createElement('div');
     container.className = 'knob-container';
@@ -658,7 +656,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     }
 
     if (dropZoneEl && winEl.contains(dropZoneEl) && fileInputEl && winEl.contains(fileInputEl)) {
-        // console.log(`[UI] InstrumentSampler: Both drop zone and file input FOUND for track ${track.id} and are within winEl. Setting up listeners.`);
         utilSetupDropZoneListeners(dropZoneEl, track.id, 'InstrumentSampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
          fileInputEl.onchange = (e) => {
             window.loadSampleFile(e, track.id, 'InstrumentSampler');
@@ -825,23 +822,24 @@ const effectControlDefinitions = {
             { idPrefix: 'phaserWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setPhaserWet' }
         ]
     },
-    flanger: { // Flanger Definition
-        title: 'Flanger',
+    autoWah: { // AutoWah Definition
+        title: 'AutoWah',
         controls: [
-            { idPrefix: 'flangerWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setFlangerWet' },
-            { idPrefix: 'flangerFreq', type: 'knob', label: 'LFO Freq', min: 0.05, max: 10, step: 0.01, paramKey: 'frequency', decimals:2, displaySuffix:'Hz', setter: 'setFlangerFrequency' },
-            { idPrefix: 'flangerDelay', type: 'knob', label: 'Delay', min: 0.001, max: 0.02, step: 0.0001, paramKey: 'delayTime', decimals:4, displaySuffix:'s', setter: 'setFlangerDelayTime' },
-            { idPrefix: 'flangerDepth', type: 'knob', label: 'Depth', min: 0.0005, max: 0.01, step: 0.0001, paramKey: 'depth', decimals:4, displaySuffix:'s', setter: 'setFlangerDepth' },
-            { idPrefix: 'flangerFb', type: 'knob', label: 'Feedback', min: 0, max: 0.95, step: 0.01, paramKey: 'feedback', decimals:2, setter: 'setFlangerFeedback' },
-            { idPrefix: 'flangerType', type: 'select', options: ['sine', 'square', 'triangle', 'sawtooth'], paramKey: 'type', setter: 'setFlangerType' }
+            { idPrefix: 'awWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setAutoWahWet' },
+            { idPrefix: 'awBaseFreq', type: 'knob', label: 'Base Freq', min: 20, max: 1500, step: 1, paramKey: 'baseFrequency', decimals:0, displaySuffix:'Hz', setter: 'setAutoWahBaseFrequency' },
+            { idPrefix: 'awOctaves', type: 'knob', label: 'Octaves', min: 1, max: 8, step: 0.1, paramKey: 'octaves', decimals:1, setter: 'setAutoWahOctaves' },
+            { idPrefix: 'awSens', type: 'knob', label: 'Sensitivity', min: -40, max: 0, step: 1, paramKey: 'sensitivity', decimals:0, displaySuffix:'dB', setter: 'setAutoWahSensitivity' },
+            { idPrefix: 'awQ', type: 'knob', label: 'Q', min: 0.1, max: 20, step: 0.1, paramKey: 'Q', decimals:1, setter: 'setAutoWahQ' },
+            { idPrefix: 'awGain', type: 'knob', label: 'Gain', min: -24, max: 24, step: 1, paramKey: 'gain', decimals:0, displaySuffix:'dB', setter: 'setAutoWahGain' },
+            { idPrefix: 'awFollower', type: 'knob', label: 'Follower', min: 0.01, max: 1, step: 0.01, paramKey: 'follower', decimals:2, displaySuffix:'s', setter: 'setAutoWahFollower' }
         ]
     },
-    filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); track.filterNode.Q.value = parseFloat(val); } } ]},
+    filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); if(track.filterNode) track.filterNode.Q.value = parseFloat(val); } } ]},
     chorus: { title: 'Chorus', controls: [ { idPrefix: 'chorusWet', type: 'knob', label: 'Chorus Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setChorusWet' }, { idPrefix: 'chorusFreq', type: 'knob', label: 'Chorus Freq', min:0.1, max:20, step:0.1, paramKey: 'frequency', decimals:1, displaySuffix:'Hz', setter: 'setChorusFrequency' }, { idPrefix: 'chorusDelayTime', type: 'knob', label: 'Chorus Delay', min:1, max:20, step:0.1, paramKey: 'delayTime', decimals:1, displaySuffix:'ms', setter: 'setChorusDelayTime' }, { idPrefix: 'chorusDepth', type: 'knob', label: 'Chorus Depth', min:0, max:1, step:0.01, paramKey: 'depth', decimals:2, setter: 'setChorusDepth' } ]},
     eq3: { title: 'EQ3', controls: [ { idPrefix: 'eqLow', type: 'knob', label: 'Low', min:-24, max:24, step:1, paramKey: 'low', decimals:0, displaySuffix:'dB', setter: 'setEQ3Low' }, { idPrefix: 'eqMid', type: 'knob', label: 'Mid', min:-24, max:24, step:1, paramKey: 'mid', decimals:0, displaySuffix:'dB', setter: 'setEQ3Mid' }, { idPrefix: 'eqHigh', type: 'knob', label: 'High', min:-24, max:24, step:1, paramKey: 'high', decimals:0, displaySuffix:'dB', setter: 'setEQ3High' } ]},
     compressor: { title: 'Compressor', controls: [ { idPrefix: 'compThresh', type: 'knob', label: 'Thresh', min:-60, max:0, step:1, paramKey: 'threshold', decimals:0, displaySuffix:'dB', setter: 'setCompressorThreshold' }, { idPrefix: 'compRatio', type: 'knob', label: 'Ratio', min:1, max:20, step:1, paramKey: 'ratio', decimals:0, setter: 'setCompressorRatio' }, { idPrefix: 'compAttack', type: 'knob', label: 'Attack', min:0.001, max:0.1, step:0.001, paramKey: 'attack', decimals:3, displaySuffix:'s', setter: 'setCompressorAttack' }, { idPrefix: 'compRelease', type: 'knob', label: 'Release', min:0.01, max:1, step:0.01, paramKey: 'release', decimals:2, displaySuffix:'s', setter: 'setCompressorRelease' }, { idPrefix: 'compKnee', type: 'knob', label: 'Knee', min:0, max:40, step:1, paramKey: 'knee', decimals:0, displaySuffix:'dB', setter: 'setCompressorKnee' } ]},
     delay: { title: 'Delay', controls: [ { idPrefix: 'delayWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setDelayWet' }, { idPrefix: 'delayTime', type: 'knob', label: 'Time', min:0, max:1, step:0.01, paramKey: 'time', decimals:2, displaySuffix:'s', setter: 'setDelayTime' }, { idPrefix: 'delayFeedback', type: 'knob', label: 'Feedback', min:0, max:0.99, step:0.01, paramKey: 'feedback', decimals:2, setter: 'setDelayFeedback' } ]},
-    reverb: { title: 'Reverb', controls: [ { idPrefix: 'reverbWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setReverbWet' }, { idPrefix: 'reverbDecay', type: 'knob', label: 'Decay', min:0.1, max:10, step:0.1, paramKey: 'decay', decimals:1, displaySuffix:'s', customSetter: (track, val) => { track.effects.reverb.decay = parseFloat(val); track.reverbNode.decay = parseFloat(val);} }, { idPrefix: 'reverbPreDelay', type: 'knob', label: 'PreDelay', min:0, max:0.1, step:0.001, paramKey: 'preDelay', decimals:3, displaySuffix:'s', customSetter: (track, val) => { track.effects.reverb.preDelay = parseFloat(val); track.reverbNode.preDelay = parseFloat(val);} } ]}
+    reverb: { title: 'Reverb', controls: [ { idPrefix: 'reverbWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setReverbWet' }, { idPrefix: 'reverbDecay', type: 'knob', label: 'Decay', min:0.1, max:10, step:0.1, paramKey: 'decay', decimals:1, displaySuffix:'s', customSetter: (track, val) => { track.effects.reverb.decay = parseFloat(val); if(track.reverbNode) track.reverbNode.decay = parseFloat(val);} }, { idPrefix: 'reverbPreDelay', type: 'knob', label: 'PreDelay', min:0, max:0.1, step:0.001, paramKey: 'preDelay', decimals:3, displaySuffix:'s', customSetter: (track, val) => { track.effects.reverb.preDelay = parseFloat(val); if(track.reverbNode) track.reverbNode.preDelay = parseFloat(val);} } ]}
 };
 
 export function buildEffectsRackContentDOM(track) {
@@ -855,7 +853,7 @@ export function buildEffectsRackContentDOM(track) {
         titleEl.className = 'text-sm font-semibold'; titleEl.textContent = effectDef.title;
         effectGroupDiv.appendChild(titleEl);
         const controlsContainer = document.createElement('div');
-        if (effectDef.controls.length > 1 || ['distortion', 'saturation', 'phaser', 'flanger'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) { // Added flanger here
+        if (effectDef.controls.length > 1 || ['distortion', 'saturation', 'phaser', 'autoWah'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) { // Added autoWah here
              controlsContainer.className = 'control-group';
         } else {
             controlsContainer.className = 'single-control-container';
@@ -896,7 +894,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
 
     track.inspectorControls = track.inspectorControls || {};
     const effectsRackContentElement = buildEffectsRackContentDOM(track);
-    const winOptions = { width: 450, height: 600, initialContentKey: `effectsRack-${track.id}` }; // Height might need adjustment for more effects
+    const winOptions = { width: 450, height: 600, initialContentKey: `effectsRack-${track.id}` };
     if (savedState) Object.assign(winOptions, savedState);
 
     const effectsWin = new SnugWindow(windowId, `Effects: ${track.name}`, effectsRackContentElement, winOptions);
@@ -910,16 +908,16 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         const effectDef = effectControlDefinitions[effectKey];
         effectDef.controls.forEach(controlDef => {
             const controlIdBase = `${controlDef.idPrefix}-${track.id}`;
-            // Ensure track.effects[effectKey] exists before accessing paramKey
             const initialValue = (track.effects[effectKey] && track.effects[effectKey][controlDef.paramKey] !== undefined)
                                  ? track.effects[effectKey][controlDef.paramKey]
-                                 : controlDef.min; // Fallback to min if not defined
+                                 : (controlDef.min !== undefined ? controlDef.min : (controlDef.options ? controlDef.options[0] : 0));
+
 
             if (controlDef.type === 'select') {
                 const selectEl = winEl.querySelector(`#${controlIdBase}`);
                 if (selectEl) {
                     controlDef.options.forEach(opt => selectEl.add(new Option(opt, opt)));
-                    selectEl.value = initialValue !== undefined ? initialValue : controlDef.options[0];
+                    selectEl.value = initialValue;
                     selectEl.addEventListener('change', (e) => {
                         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set ${effectDef.title} ${controlDef.paramKey} for ${track.name} to ${e.target.value}`);
                         if (track[controlDef.setter]) track[controlDef.setter](e.target.value);
@@ -937,7 +935,6 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
                         onValueChange: (val) => {
                             if (controlDef.customSetter) controlDef.customSetter(track, val);
                             else if (track[controlDef.setter]) track[controlDef.setter](val);
-                            // Ensure the generic update for non-custom setters
                             else if (track.effects[effectKey] && track.effects[effectKey][controlDef.paramKey] !== undefined) {
                                 track.effects[effectKey][controlDef.paramKey] = val;
                             }
@@ -960,6 +957,14 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     }, 0);
     return effectsWin;
 }
+
+// ... (rest of ui.js remains the same) ...
+// buildSequencerContentDOM, openTrackSequencerWindow, highlightPlayingStep,
+// openMixerWindow, updateMixerWindow, renderMixer,
+// updateSoundBrowserDisplayForLibrary, openSoundBrowserWindow, renderSoundBrowserDirectory,
+// renderSamplePads, updateSliceEditorUI, applySliceEdits, drawWaveform,
+// drawInstrumentWaveform, updateDrumPadControlsUI, renderDrumSamplerPads
+// remain unchanged from daw_flanger_ui_js
 
 export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const mainContentDiv = document.createElement('div');
