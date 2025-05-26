@@ -65,7 +65,6 @@ export class Track {
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         this.drumPadPlayers = Array(numDrumSamplerPads).fill(null);
 
-        // Define Effects Parameters
         this.effects = initialData?.effects ? JSON.parse(JSON.stringify(initialData.effects)) : {};
         this.effects.reverb = this.effects.reverb || { wet: 0, decay: 2.5, preDelay: 0.02 };
         this.effects.delay = this.effects.delay || { wet: 0, time: 0.5, feedback: 0.3 };
@@ -76,20 +75,12 @@ export class Track {
         this.effects.chorus = this.effects.chorus || { wet: 0, frequency: 1.5, delayTime: 3.5, depth: 0.7 };
         this.effects.saturation = this.effects.saturation || { wet: 0, amount: 2 };
         this.effects.phaser = this.effects.phaser || { frequency: 0.5, octaves: 3, baseFrequency: 350, Q: 1, wet: 0 };
-        // Add AutoWah defaults
         this.effects.autoWah = this.effects.autoWah || {
-            wet: 0,
-            baseFrequency: 100,
-            octaves: 6,
-            sensitivity: 0, // dB
-            Q: 2,
-            gain: 2, // dB
-            follower: 0.1 // seconds
+            wet: 0, baseFrequency: 100, octaves: 6, sensitivity: 0, Q: 2, gain: 2, follower: 0.1
         };
 
-        // Initialize Tone.js node properties to null
         this.distortionNode = null; this.filterNode = null; this.chorusNode = null;
-        this.saturationNode = null; this.phaserNode = null; this.autoWahNode = null; // Was flangerNode
+        this.saturationNode = null; this.phaserNode = null; this.autoWahNode = null;
         this.eq3Node = null; this.compressorNode = null; this.delayNode = null;
         this.reverbNode = null; this.gainNode = null; this.trackMeter = null;
 
@@ -137,7 +128,6 @@ export class Track {
                 wet: this.effects.phaser.wet
             });
 
-            // Initialize AutoWah node
             if (typeof Tone !== 'undefined' && typeof Tone.AutoWah === 'function') {
                 this.autoWahNode = new Tone.AutoWah({
                     baseFrequency: this.effects.autoWah.baseFrequency,
@@ -145,26 +135,20 @@ export class Track {
                     sensitivity: this.effects.autoWah.sensitivity,
                     Q: this.effects.autoWah.Q,
                     gain: this.effects.autoWah.gain,
-                    follower: this.effects.autoWah.follower, // follower is an options parameter
+                    follower: this.effects.autoWah.follower,
                     wet: this.effects.autoWah.wet
                 });
-                // For AutoWah, follower settings might need separate handling if not direct constructor options.
-                // In v14, follower is usually a Time or an object {attack, release}
-                // Let's assume it's a single Time value for simplicity, matching Tone.Follower constructor
-                if (this.autoWahNode.follower && typeof this.autoWahNode.follower.set === 'function') { // If follower is a Tone.Follower instance
-                     this.autoWahNode.follower.attack = this.effects.autoWah.follower; // Or adjust based on how follower is structured
+                 if (this.autoWahNode.follower && typeof this.autoWahNode.follower.set === 'function') {
+                     this.autoWahNode.follower.attack = this.effects.autoWah.follower;
                      this.autoWahNode.follower.release = this.effects.autoWah.follower;
                 } else if (this.autoWahNode.follower && typeof this.effects.autoWah.follower === 'number') {
-                    // If follower is just a Time property on AutoWah itself
                     this.autoWahNode.follower = this.effects.autoWah.follower;
                 }
-
-
                 console.log(`[Track ${this.id}] AutoWah node created successfully.`);
             } else {
                 console.error(`[Track ${this.id}] Tone.AutoWah is not a constructor or Tone is undefined during initializeAudioNodes.`);
                 if (typeof Tone !== 'undefined') console.log('[Track Debug] Tone.AutoWah in initializeAudioNodes:', Tone.AutoWah); else console.log('[Track Debug] Tone object is undefined in initializeAudioNodes');
-                this.autoWahNode = null; // Ensure it's null if creation fails
+                this.autoWahNode = null;
             }
 
             this.eq3Node = new Tone.EQ3(this.effects.eq3);
@@ -393,40 +377,35 @@ export class Track {
     setPhaserBaseFrequency(value) { this.effects.phaser.baseFrequency = parseFloat(value); if(this.phaserNode) this.phaserNode.baseFrequency = this.effects.phaser.baseFrequency; }
     setPhaserQ(value) { this.effects.phaser.Q = parseFloat(value); if(this.phaserNode) this.phaserNode.Q.value = this.effects.phaser.Q; }
     setPhaserWet(value) { this.effects.phaser.wet = parseFloat(value); if(this.phaserNode) this.phaserNode.wet.value = this.effects.phaser.wet; }
-    // AutoWah Setters
     setAutoWahWet(value) { this.effects.autoWah.wet = parseFloat(value); if(this.autoWahNode) this.autoWahNode.wet.value = this.effects.autoWah.wet; }
-    setAutoWahBaseFrequency(value) { this.effects.autoWah.baseFrequency = parseFloat(value); if(this.autoWahNode) this.autoWahNode.baseFrequency = this.effects.autoWah.baseFrequency; }
+    setAutoWahBaseFrequency(value) { this.effects.autoWah.baseFrequency = parseFloat(value); if(this.autoWahNode) this.autoWahNode.baseFrequency.value = this.effects.autoWah.baseFrequency; } // .value for Signals
     setAutoWahOctaves(value) { this.effects.autoWah.octaves = parseInt(value, 10); if(this.autoWahNode) this.autoWahNode.octaves = this.effects.autoWah.octaves; }
-    setAutoWahSensitivity(value) { this.effects.autoWah.sensitivity = parseFloat(value); if(this.autoWahNode) this.autoWahNode.sensitivity = this.effects.autoWah.sensitivity; }
+    setAutoWahSensitivity(value) { this.effects.autoWah.sensitivity = parseFloat(value); if(this.autoWahNode) this.autoWahNode.sensitivity = this.effects.autoWah.sensitivity; } // direct property
     setAutoWahQ(value) { this.effects.autoWah.Q = parseFloat(value); if(this.autoWahNode) this.autoWahNode.Q.value = this.effects.autoWah.Q; }
     setAutoWahGain(value) { this.effects.autoWah.gain = parseFloat(value); if(this.autoWahNode) this.autoWahNode.gain.value = this.effects.autoWah.gain; }
     setAutoWahFollower(value) {
         this.effects.autoWah.follower = parseFloat(value);
-        if(this.autoWahNode && this.autoWahNode.follower) {
-            if (typeof this.autoWahNode.follower.set === 'function') { // If it's a Tone.Follower instance
+        if(this.autoWahNode && this.autoWahNode.follower) { // AutoWah's follower is a component
+             if (typeof this.autoWahNode.follower.attack !== 'undefined' && typeof this.autoWahNode.follower.release !== 'undefined') {
                 this.autoWahNode.follower.attack = this.effects.autoWah.follower;
-                this.autoWahNode.follower.release = this.effects.autoWah.follower;
-            } else if (typeof this.autoWahNode.follower === 'number' || typeof this.autoWahNode.follower === 'string') { // if it's a direct Time property
-                 this.autoWahNode.follower = this.effects.autoWah.follower;
+                this.autoWahNode.follower.release = this.effects.autoWah.follower; // Simplistic: use same for attack/release
+            } else { // If follower is just a time value (less likely for AutoWah component)
+                this.autoWahNode.follower = this.effects.autoWah.follower;
             }
         }
     }
 
 
-    // Synth Param Setters
     setSynthOscillatorType(type) { if (this.type !== 'Synth' || !this.instrument) return; this.synthParams.oscillator.type = type; this.instrument.set({ oscillator: { type: type } }); }
     setSynthEnvelope(param, value) { if (this.type !== 'Synth' || !this.instrument) return; const val = parseFloat(value); if (isNaN(val)) return; this.synthParams.envelope[param] = val; this.instrument.set({ envelope: this.synthParams.envelope }); }
-    // Sampler Slice Param Setters
     setSliceVolume(sliceIndex, volume) { if (this.type !== 'Sampler' || !this.slices[sliceIndex]) return; this.slices[sliceIndex].volume = parseFloat(volume) || 0; }
     setSlicePitchShift(sliceIndex, semitones) { if (this.type !== 'Sampler' || !this.slices[sliceIndex]) return; this.slices[sliceIndex].pitchShift = parseFloat(semitones) || 0; }
     setSliceLoop(sliceIndex, loop) { if (this.type !== 'Sampler' || !this.slices[sliceIndex]) return; this.slices[sliceIndex].loop = Boolean(loop); }
     setSliceReverse(sliceIndex, reverse) { if (this.type !== 'Sampler' || !this.slices[sliceIndex]) return; this.slices[sliceIndex].reverse = Boolean(reverse); }
     setSliceEnvelopeParam(sliceIndex, param, value) { if (this.type !== 'Sampler' || !this.slices[sliceIndex] || !this.slices[sliceIndex].envelope) return; this.slices[sliceIndex].envelope[param] = parseFloat(value) || 0; }
-    // Drum Sampler Pad Param Setters
     setDrumSamplerPadVolume(padIndex, volume) { if (this.type !== 'DrumSampler' || !this.drumSamplerPads[padIndex]) return; this.drumSamplerPads[padIndex].volume = parseFloat(volume); }
     setDrumSamplerPadPitch(padIndex, pitch) { if (this.type !== 'DrumSampler' || !this.drumSamplerPads[padIndex]) return; this.drumSamplerPads[padIndex].pitchShift = parseFloat(pitch); }
     setDrumSamplerPadEnv(padIndex, param, value) { if (this.type !== 'DrumSampler' || !this.drumSamplerPads[padIndex]) return; this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value); }
-    // Instrument Sampler Param Setters
     setInstrumentSamplerRootNote(noteName) { if (this.type !== 'InstrumentSampler') return; this.instrumentSamplerSettings.rootNote = noteName; this.setupToneSampler(); }
     setInstrumentSamplerLoop(loop) { if (this.type !== 'InstrumentSampler') return; this.instrumentSamplerSettings.loop = Boolean(loop); if (this.toneSampler) this.toneSampler.loop = this.instrumentSamplerSettings.loop; }
     setInstrumentSamplerLoopStart(time) { if (this.type !== 'InstrumentSampler' || !this.instrumentSamplerSettings.audioBuffer) return; this.instrumentSamplerSettings.loopStart = Math.min(this.instrumentSamplerSettings.audioBuffer.duration, Math.max(0, parseFloat(time))); if (this.toneSampler) this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart; }
@@ -525,11 +504,19 @@ export class Track {
         this.sequence = new Tone.Sequence((time, col) => {
             const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
             const isSoloedOut = currentGlobalSoloId && currentGlobalSoloId !== this.id;
+            
+            // Playhead update logic (moved to affect all visible sequencers for this track)
+            if (this.sequencerWindow && !this.sequencerWindow.isMinimized) {
+                const grid = this.sequencerWindow.element?.querySelector('.sequencer-grid');
+                if (grid && typeof window.highlightPlayingStep === 'function') {
+                    window.highlightPlayingStep(col, this.type, grid);
+                }
+            }
 
             if (!this.gainNode || this.isMuted || isSoloedOut) {
                 return;
             }
-
+            // ... (rest of note playing logic for different track types) ...
             if (this.type === 'Synth') {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
@@ -616,13 +603,14 @@ export class Track {
                     }
                 });
             }
-            const currentActiveSequencerTrackId = typeof window.getActiveSequencerTrackId === 'function' ? window.getActiveSequencerTrackId() : window.activeSequencerTrackId;
-            if (this.sequencerWindow && !this.sequencerWindow.isMinimized && currentActiveSequencerTrackId === this.id) {
-                const grid = this.sequencerWindow.element?.querySelector('.sequencer-grid');
-                if (grid && typeof window.highlightPlayingStep === 'function') {
-                    window.highlightPlayingStep(col, this.type, grid);
-                }
-            }
+            // This highlighting was moved up
+            // const currentActiveSequencerTrackId = typeof window.getActiveSequencerTrackId === 'function' ? window.getActiveSequencerTrackId() : window.activeSequencerTrackId;
+            // if (this.sequencerWindow && !this.sequencerWindow.isMinimized /* && currentActiveSequencerTrackId === this.id */ ) {
+            //     const grid = this.sequencerWindow.element?.querySelector('.sequencer-grid');
+            //     if (grid && typeof window.highlightPlayingStep === 'function') {
+            //         window.highlightPlayingStep(col, this.type, grid);
+            //     }
+            // }
 
         }, Array.from(Array(this.sequenceLength).keys()), "16n").start(0);
 
@@ -655,7 +643,7 @@ export class Track {
             this.gainNode, this.reverbNode, this.delayNode,
             this.compressorNode, this.eq3Node, this.filterNode,
             this.distortionNode, this.chorusNode, this.saturationNode,
-            this.phaserNode, this.autoWahNode, // Was flangerNode
+            this.phaserNode, this.autoWahNode,
             this.trackMeter
         ];
         
