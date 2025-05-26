@@ -503,11 +503,21 @@ export function openGlobalControlsWindow(savedState = null) {
 
     console.log(`[ui.js] About to create SnugWindow for globalControls. SnugWindow class is:`, SnugWindow); 
     const globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
-    console.log('[ui.js] SnugWindow instance for globalControls created (or attempted):', globalControlsWin); // NEW DEBUG LOG
-    console.log('[ui.js] globalControlsWin.element is:', globalControlsWin ? globalControlsWin.element : 'globalControlsWin is null/undefined'); // NEW DEBUG LOG
+    
+    // --- DETAILED CHECK ---
+    console.log('[ui.js] After new SnugWindow call:');
+    console.log('[ui.js] typeof globalControlsWin:', typeof globalControlsWin);
+    if (globalControlsWin) {
+        console.log('[ui.js] globalControlsWin instanceof SnugWindow:', globalControlsWin instanceof SnugWindow);
+        console.log('[ui.js] globalControlsWin.hasOwnProperty(\'element\'):', globalControlsWin.hasOwnProperty('element'));
+        console.log('[ui.js] globalControlsWin.element value:', globalControlsWin.element);
+    } else {
+        console.log('[ui.js] globalControlsWin is null or undefined immediately after new SnugWindow()');
+    }
+    // --- END DETAILED CHECK ---
     
     if (!globalControlsWin || !globalControlsWin.element) {
-        console.error("[ui.js] Failed to create Global Controls window instance OR its element is null.");
+        console.error("[ui.js] CRITICAL CHECK FAILED: globalControlsWin is falsy OR globalControlsWin.element is falsy.");
         showNotification("Failed to create Global Controls window (ui.js).", 5000); 
         return null;
     }
