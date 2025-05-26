@@ -1,7 +1,6 @@
 // js/Track.js - Track Class Module
 
 import { STEPS_PER_BAR, defaultStepsPerBar, synthPitches, numSlices, numDrumSamplerPads } from './constants.js';
-// showNotification is a UI concern, typically not called directly from a data model class.
 
 export class Track {
     constructor(id, type, initialData = null) {
@@ -66,7 +65,7 @@ export class Track {
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         this.drumPadPlayers = Array(numDrumSamplerPads).fill(null);
 
-        // Effects initialization
+        // Define Effects Parameters (without creating Tone.js nodes yet)
         this.effects = initialData?.effects ? JSON.parse(JSON.stringify(initialData.effects)) : {};
         this.effects.reverb = this.effects.reverb || { wet: 0, decay: 2.5, preDelay: 0.02 };
         this.effects.delay = this.effects.delay || { wet: 0, time: 0.5, feedback: 0.3 };
@@ -81,81 +80,11 @@ export class Track {
             wet: 0, frequency: 0.5, delayTime: 0.005, depth: 0.002, feedback: 0.1, type: 'sine'
         };
 
-        // Create Tone.js effect nodes
-        this.distortionNode = new Tone.Distortion(this.effects.distortion.amount);
-        this.filterNode = new Tone.Filter({
-            frequency: this.effects.filter.frequency, type: this.effects.filter.type,
-            rolloff: this.effects.filter.rolloff, Q: this.effects.filter.Q
-        });
-        this.chorusNode = new Tone.Chorus(this.effects.chorus.frequency, this.effects.chorus.delayTime, this.effects.chorus.depth);
-        this.chorusNode.wet.value = this.effects.chorus.wet;
-        this.saturationNode = new Tone.Chebyshev(Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1));
-        this.saturationNode.wet.value = this.effects.saturation.wet;
-        this.phaserNode = new Tone.Phaser({
-            frequency: this.effects.phaser.frequency, octaves: this.effects.phaser.octaves,
-            baseFrequency: this.effects.phaser.baseFrequency, Q: this.effects.phaser.Q,
-            wet: this.effects.phaser.wet
-        });
-
-        // Initialize Flanger node with error handling
-        this.flangerNode = null; // Initialize as null
-        try {
-            if (typeof Tone !== 'undefined' && typeof Tone.Flanger === 'function') {
-                this.flangerNode = new Tone.Flanger({
-                    frequency: this.effects.flanger.frequency,
-                    delayTime: this.effects.flanger.delayTime,
-                    depth: this.effects.flanger.depth,
-                    feedback: this.effects.flanger.feedback,
-                    type: this.effects.flanger.type,
-                    wet: this.effects.flanger.wet
-                });
-                console.log(`[Track ${this.id}] Flanger node created successfully.`);
-            } else {
-                console.error(`[Track ${this.id}] Tone.Flanger is not a constructor or Tone is undefined.`);
-                console.log('[Track Debug] Tone object:', Tone);
-                if (Tone) {
-                    console.log('[Track Debug] Tone.Flanger:', Tone.Flanger);
-                }
-            }
-        } catch (e) {
-            console.error(`[Track ${this.id}] Error creating Tone.Flanger:`, e);
-            // this.flangerNode remains null
-        }
-
-        this.eq3Node = new Tone.EQ3(this.effects.eq3);
-        this.compressorNode = new Tone.Compressor(this.effects.compressor);
-        this.delayNode = new Tone.FeedbackDelay(this.effects.delay.time, this.effects.delay.feedback);
-        this.delayNode.wet.value = this.effects.delay.wet;
-        this.reverbNode = new Tone.Reverb(this.effects.reverb);
-        this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
-        this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
-
-        // Connect effects chain conditionally
-        const effectChainNodes = [
-            this.distortionNode,
-            this.filterNode,
-            this.chorusNode,
-            this.saturationNode,
-            this.phaserNode
-        ];
-
-        if (this.flangerNode) { // Only add flanger to chain if it was successfully created
-            effectChainNodes.push(this.flangerNode);
-        } else {
-            console.warn(`[Track ${this.id}] Flanger node not available, skipping from effects chain.`);
-        }
-
-        effectChainNodes.push(
-            this.eq3Node,
-            this.compressorNode,
-            this.delayNode,
-            this.reverbNode,
-            this.gainNode,
-            this.trackMeter,
-            Tone.getDestination()
-        );
-        Tone.connectSeries(...effectChainNodes);
-
+        // Initialize Tone.js node properties to null
+        this.distortionNode = null; this.filterNode = null; this.chorusNode = null;
+        this.saturationNode = null; this.phaserNode = null; this.flangerNode = null;
+        this.eq3Node = null; this.compressorNode = null; this.delayNode = null;
+        this.reverbNode = null; this.gainNode = null; this.trackMeter = null;
 
         this.instrument = null;
         this.sequenceLength = initialData?.sequenceLength || defaultStepsPerBar;
@@ -183,9 +112,80 @@ export class Track {
         this.inspectorControls = {};
     }
 
+    async initializeAudioNodes() {
+        console.log(`[Track ${this.id}] Initializing audio nodes...`);
+        // Create Tone.js effect nodes
+        try {
+            this.distortionNode = new Tone.Distortion(this.effects.distortion.amount);
+            this.filterNode = new Tone.Filter({
+                frequency: this.effects.filter.frequency, type: this.effects.filter.type,
+                rolloff: this.effects.filter.rolloff, Q: this.effects.filter.Q
+            });
+            this.chorusNode = new Tone.Chorus(this.effects.chorus.frequency, this.effects.chorus.delayTime, this.effects.chorus.depth);
+            this.chorusNode.wet.value = this.effects.chorus.wet;
+            this.saturationNode = new Tone.Chebyshev(Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1));
+            this.saturationNode.wet.value = this.effects.saturation.wet;
+            this.phaserNode = new Tone.Phaser({
+                frequency: this.effects.phaser.frequency, octaves: this.effects.phaser.octaves,
+                baseFrequency: this.effects.phaser.baseFrequency, Q: this.effects.phaser.Q,
+                wet: this.effects.phaser.wet
+            });
+
+            if (typeof Tone !== 'undefined' && typeof Tone.Flanger === 'function') {
+                this.flangerNode = new Tone.Flanger({
+                    frequency: this.effects.flanger.frequency,
+                    delayTime: this.effects.flanger.delayTime,
+                    depth: this.effects.flanger.depth,
+                    feedback: this.effects.flanger.feedback,
+                    type: this.effects.flanger.type,
+                    wet: this.effects.flanger.wet
+                });
+                console.log(`[Track ${this.id}] Flanger node created successfully.`);
+            } else {
+                console.error(`[Track ${this.id}] Tone.Flanger is not a constructor or Tone is undefined during initializeAudioNodes.`);
+                if (typeof Tone !== 'undefined') console.log('[Track Debug] Tone.Flanger in initializeAudioNodes:', Tone.Flanger); else console.log('[Track Debug] Tone object is undefined in initializeAudioNodes');
+                this.flangerNode = null; // Ensure it's null if creation fails
+            }
+
+            this.eq3Node = new Tone.EQ3(this.effects.eq3);
+            this.compressorNode = new Tone.Compressor(this.effects.compressor);
+            this.delayNode = new Tone.FeedbackDelay(this.effects.delay.time, this.effects.delay.feedback);
+            this.delayNode.wet.value = this.effects.delay.wet;
+            this.reverbNode = new Tone.Reverb(this.effects.reverb); // Consider making Reverb async if it uses Convolver
+            this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
+            this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
+
+            // Connect effects chain conditionally
+            const effectChainNodes = [
+                this.distortionNode, this.filterNode, this.chorusNode,
+                this.saturationNode, this.phaserNode
+            ];
+
+            if (this.flangerNode) {
+                effectChainNodes.push(this.flangerNode);
+            } else {
+                console.warn(`[Track ${this.id}] Flanger node not available for effects chain.`);
+            }
+
+            effectChainNodes.push(
+                this.eq3Node, this.compressorNode, this.delayNode,
+                this.reverbNode, this.gainNode, this.trackMeter, Tone.getDestination()
+            );
+            Tone.connectSeries(...effectChainNodes);
+            console.log(`[Track ${this.id}] Audio nodes initialized and chained.`);
+
+        } catch (error) {
+            console.error(`[Track ${this.id}] Critical error during audio node initialization:`, error);
+            // If any core node fails, it might be better to flag the track as unusable
+            // or provide more specific feedback. For now, log and potentially leave nodes as null.
+        }
+    }
+
+
     async fullyInitializeAudioResources() {
-        await this.initializeInstrumentFromInitialData();
-        this.setSequenceLength(this.sequenceLength, true);
+        // This method now assumes core audio nodes (effects, gain, meter) are already created by initializeAudioNodes()
+        await this.initializeInstrumentFromInitialData(); // This connects the instrument to distortionNode
+        this.setSequenceLength(this.sequenceLength, true); // This sets up the Tone.Sequence
         if (this.waveformCanvasCtx && this.type === 'Sampler' && this.audioBuffer && this.audioBuffer.loaded) {
             if (typeof window.drawWaveform === 'function') window.drawWaveform(this);
         }
@@ -197,6 +197,12 @@ export class Track {
     }
 
     async initializeInstrumentFromInitialData() {
+        // Ensure distortionNode is created before connecting to it
+        if (!this.distortionNode) {
+            console.error(`[Track ${this.id}] Distortion node not initialized. Cannot connect instrument.`);
+            return;
+        }
+
         if (this.type === 'Synth') {
             if (this.instrument && !this.instrument.disposed) this.instrument.dispose();
             this.instrument = new Tone.PolySynth(Tone.Synth, {
@@ -208,7 +214,7 @@ export class Track {
                     if (this.audioBuffer && !this.audioBuffer.disposed) this.audioBuffer.dispose();
                     this.audioBuffer = await new Tone.Buffer().load(this.audioBufferDataURL);
                     if (!this.slicerIsPolyphonic && this.audioBuffer.loaded) {
-                        this.setupSlicerMonoNodes();
+                        this.setupSlicerMonoNodes(); // Connects to distortionNode
                     }
                 } catch (e) {
                     console.error(`[Track ${this.id}] Error loading Slicer audio buffer:`, e);
@@ -223,7 +229,7 @@ export class Track {
                 try {
                     if (this.instrumentSamplerSettings.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) this.instrumentSamplerSettings.audioBuffer.dispose();
                     this.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(this.instrumentSamplerSettings.audioBufferDataURL);
-                    this.setupToneSampler();
+                    this.setupToneSampler(); // Connects to distortionNode
                 } catch (e) {
                     console.error(`[Track ${this.id}] Error loading InstrumentSampler audio buffer:`, e);
                     this.instrumentSamplerSettings.audioBufferDataURL = null; this.instrumentSamplerSettings.audioBuffer = null;
@@ -231,7 +237,7 @@ export class Track {
             } else {
                  if (this.instrumentSamplerSettings.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) this.instrumentSamplerSettings.audioBuffer.dispose();
                  this.instrumentSamplerSettings.audioBuffer = null;
-                this.setupToneSampler();
+                this.setupToneSampler(); // Connects to distortionNode
             }
         } else if (this.type === 'DrumSampler') {
             const padPromises = this.drumSamplerPads.map(async (padData, i) => {
@@ -240,7 +246,12 @@ export class Track {
                         if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
                         padData.audioBuffer = await new Tone.Buffer().load(padData.audioBufferDataURL);
                         if (this.drumPadPlayers[i] && !this.drumPadPlayers[i].disposed) this.drumPadPlayers[i].dispose();
-                        this.drumPadPlayers[i] = new Tone.Player(padData.audioBuffer).connect(this.distortionNode);
+                        if (this.distortionNode) { // Check if distortionNode exists
+                           this.drumPadPlayers[i] = new Tone.Player(padData.audioBuffer).connect(this.distortionNode);
+                        } else {
+                            console.error(`[Track ${this.id}] Distortion node not available for DrumSampler pad ${i}.`);
+                            this.drumPadPlayers[i] = new Tone.Player(padData.audioBuffer).toDestination(); // Fallback
+                        }
                     } catch (e) {
                         console.error(`[Track ${this.id}] Error loading DrumSampler pad ${i} audio:`, e);
                         padData.audioBufferDataURL = null; padData.audioBuffer = null;
@@ -257,6 +268,10 @@ export class Track {
     }
 
     setupSlicerMonoNodes() {
+        if (!this.distortionNode) {
+            console.error(`[Track ${this.id}] Distortion node not initialized for SlicerMonoNodes.`);
+            return;
+        }
         if (!this.slicerMonoPlayer || this.slicerMonoPlayer.disposed) {
             this.slicerMonoPlayer = new Tone.Player();
             this.slicerMonoEnvelope = new Tone.AmplitudeEnvelope();
@@ -276,6 +291,10 @@ export class Track {
     }
 
     setupToneSampler() {
+        if (!this.distortionNode) {
+            console.error(`[Track ${this.id}] Distortion node not initialized for ToneSampler.`);
+            return;
+        }
         if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.dispose();
         const urls = {};
         if (this.instrumentSamplerSettings.audioBuffer && this.instrumentSamplerSettings.audioBuffer.loaded) {
@@ -294,10 +313,11 @@ export class Track {
 
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = parseFloat(volume);
-        if (!this.isMuted) { this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05); }
+        if (this.gainNode && !this.isMuted) { this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05); }
     }
 
     applyMuteState() {
+        if (!this.gainNode) return;
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
         if (this.isMuted) {
             this.gainNode.gain.rampTo(0, 0.01);
@@ -311,6 +331,7 @@ export class Track {
     }
 
     applySoloState() {
+        if (!this.gainNode) return;
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
         if (this.isMuted) {
             this.gainNode.gain.rampTo(0, 0.01);
@@ -327,37 +348,36 @@ export class Track {
         }
     }
 
-    // Effect Setters
-    setReverbWet(value) { this.effects.reverb.wet = parseFloat(value) || 0; this.reverbNode.wet.value = this.effects.reverb.wet; }
-    setDelayWet(value) { this.effects.delay.wet = parseFloat(value) || 0; this.delayNode.wet.value = this.effects.delay.wet; }
-    setDelayTime(value) { this.effects.delay.time = parseFloat(value) || 0; this.delayNode.delayTime.value = this.effects.delay.time; }
-    setDelayFeedback(value) { this.effects.delay.feedback = parseFloat(value) || 0; this.delayNode.feedback.value = this.effects.delay.feedback; }
-    setFilterFrequency(value) { this.effects.filter.frequency = parseFloat(value) || 20000; this.filterNode.frequency.value = this.effects.filter.frequency; }
-    setFilterType(value) { this.effects.filter.type = value; this.filterNode.type = this.effects.filter.type; }
-    setCompressorThreshold(value) { this.effects.compressor.threshold = parseFloat(value) || -24; this.compressorNode.threshold.value = this.effects.compressor.threshold; }
-    setCompressorRatio(value) { this.effects.compressor.ratio = parseFloat(value) || 12; this.compressorNode.ratio.value = this.effects.compressor.ratio; }
-    setCompressorAttack(value) { this.effects.compressor.attack = parseFloat(value) || 0.003; this.compressorNode.attack.value = this.effects.compressor.attack; }
-    setCompressorRelease(value) { this.effects.compressor.release = parseFloat(value) || 0.25; this.compressorNode.release.value = this.effects.compressor.release; }
-    setCompressorKnee(value) { this.effects.compressor.knee = parseFloat(value) || 30; this.compressorNode.knee.value = this.effects.compressor.knee; }
-    setEQ3Low(value) { this.effects.eq3.low = parseFloat(value) || 0; this.eq3Node.low.value = this.effects.eq3.low; }
-    setEQ3Mid(value) { this.effects.eq3.mid = parseFloat(value) || 0; this.eq3Node.mid.value = this.effects.eq3.mid; }
-    setEQ3High(value) { this.effects.eq3.high = parseFloat(value) || 0; this.eq3Node.high.value = this.effects.eq3.high; }
-    setDistortionAmount(value) { this.effects.distortion.amount = parseFloat(value) || 0; this.distortionNode.distortion = this.effects.distortion.amount; }
-    setChorusWet(value) { this.effects.chorus.wet = parseFloat(value) || 0; this.chorusNode.wet.value = this.effects.chorus.wet; }
-    setChorusFrequency(value) { this.effects.chorus.frequency = parseFloat(value) || 1.5; this.chorusNode.frequency.value = this.effects.chorus.frequency; }
-    setChorusDelayTime(value) { this.effects.chorus.delayTime = parseFloat(value) || 3.5; this.chorusNode.delayTime = this.effects.chorus.delayTime; }
-    setChorusDepth(value) { this.effects.chorus.depth = parseFloat(value) || 0.7; this.chorusNode.depth = this.effects.chorus.depth; }
-    setSaturationWet(value) { this.effects.saturation.wet = parseFloat(value) || 0; this.saturationNode.wet.value = this.effects.saturation.wet; }
+    // Effect Setters - Ensure node exists before accessing its properties
+    setReverbWet(value) { this.effects.reverb.wet = parseFloat(value) || 0; if(this.reverbNode) this.reverbNode.wet.value = this.effects.reverb.wet; }
+    setDelayWet(value) { this.effects.delay.wet = parseFloat(value) || 0; if(this.delayNode) this.delayNode.wet.value = this.effects.delay.wet; }
+    setDelayTime(value) { this.effects.delay.time = parseFloat(value) || 0; if(this.delayNode) this.delayNode.delayTime.value = this.effects.delay.time; }
+    setDelayFeedback(value) { this.effects.delay.feedback = parseFloat(value) || 0; if(this.delayNode) this.delayNode.feedback.value = this.effects.delay.feedback; }
+    setFilterFrequency(value) { this.effects.filter.frequency = parseFloat(value) || 20000; if(this.filterNode) this.filterNode.frequency.value = this.effects.filter.frequency; }
+    setFilterType(value) { this.effects.filter.type = value; if(this.filterNode) this.filterNode.type = this.effects.filter.type; }
+    setCompressorThreshold(value) { this.effects.compressor.threshold = parseFloat(value) || -24; if(this.compressorNode) this.compressorNode.threshold.value = this.effects.compressor.threshold; }
+    setCompressorRatio(value) { this.effects.compressor.ratio = parseFloat(value) || 12; if(this.compressorNode) this.compressorNode.ratio.value = this.effects.compressor.ratio; }
+    setCompressorAttack(value) { this.effects.compressor.attack = parseFloat(value) || 0.003; if(this.compressorNode) this.compressorNode.attack.value = this.effects.compressor.attack; }
+    setCompressorRelease(value) { this.effects.compressor.release = parseFloat(value) || 0.25; if(this.compressorNode) this.compressorNode.release.value = this.effects.compressor.release; }
+    setCompressorKnee(value) { this.effects.compressor.knee = parseFloat(value) || 30; if(this.compressorNode) this.compressorNode.knee.value = this.effects.compressor.knee; }
+    setEQ3Low(value) { this.effects.eq3.low = parseFloat(value) || 0; if(this.eq3Node) this.eq3Node.low.value = this.effects.eq3.low; }
+    setEQ3Mid(value) { this.effects.eq3.mid = parseFloat(value) || 0; if(this.eq3Node) this.eq3Node.mid.value = this.effects.eq3.mid; }
+    setEQ3High(value) { this.effects.eq3.high = parseFloat(value) || 0; if(this.eq3Node) this.eq3Node.high.value = this.effects.eq3.high; }
+    setDistortionAmount(value) { this.effects.distortion.amount = parseFloat(value) || 0; if(this.distortionNode) this.distortionNode.distortion = this.effects.distortion.amount; }
+    setChorusWet(value) { this.effects.chorus.wet = parseFloat(value) || 0; if(this.chorusNode) this.chorusNode.wet.value = this.effects.chorus.wet; }
+    setChorusFrequency(value) { this.effects.chorus.frequency = parseFloat(value) || 1.5; if(this.chorusNode) this.chorusNode.frequency.value = this.effects.chorus.frequency; }
+    setChorusDelayTime(value) { this.effects.chorus.delayTime = parseFloat(value) || 3.5; if(this.chorusNode) this.chorusNode.delayTime = this.effects.chorus.delayTime; }
+    setChorusDepth(value) { this.effects.chorus.depth = parseFloat(value) || 0.7; if(this.chorusNode) this.chorusNode.depth = this.effects.chorus.depth; }
+    setSaturationWet(value) { this.effects.saturation.wet = parseFloat(value) || 0; if(this.saturationNode) this.saturationNode.wet.value = this.effects.saturation.wet; }
     setSaturationAmount(value) {
         this.effects.saturation.amount = parseFloat(value) || 0;
-        this.saturationNode.order = Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1);
+        if(this.saturationNode) this.saturationNode.order = Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1);
     }
     setPhaserFrequency(value) { this.effects.phaser.frequency = parseFloat(value); if(this.phaserNode) this.phaserNode.frequency.value = this.effects.phaser.frequency; }
     setPhaserOctaves(value) { this.effects.phaser.octaves = parseInt(value, 10); if(this.phaserNode) this.phaserNode.octaves = this.effects.phaser.octaves; }
     setPhaserBaseFrequency(value) { this.effects.phaser.baseFrequency = parseFloat(value); if(this.phaserNode) this.phaserNode.baseFrequency = this.effects.phaser.baseFrequency; }
     setPhaserQ(value) { this.effects.phaser.Q = parseFloat(value); if(this.phaserNode) this.phaserNode.Q.value = this.effects.phaser.Q; }
     setPhaserWet(value) { this.effects.phaser.wet = parseFloat(value); if(this.phaserNode) this.phaserNode.wet.value = this.effects.phaser.wet; }
-    // Flanger Setters
     setFlangerWet(value) { this.effects.flanger.wet = parseFloat(value); if(this.flangerNode) this.flangerNode.wet.value = this.effects.flanger.wet; }
     setFlangerFrequency(value) { this.effects.flanger.frequency = parseFloat(value); if(this.flangerNode) this.flangerNode.frequency.value = this.effects.flanger.frequency; }
     setFlangerDelayTime(value) { this.effects.flanger.delayTime = parseFloat(value); if(this.flangerNode) this.flangerNode.delayTime = this.effects.flanger.delayTime; }
@@ -479,7 +499,7 @@ export class Track {
             const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
             const isSoloedOut = currentGlobalSoloId && currentGlobalSoloId !== this.id;
 
-            if (this.isMuted || isSoloedOut) {
+            if (!this.gainNode || this.isMuted || isSoloedOut) { // Check if gainNode exists
                 return;
             }
 
@@ -503,7 +523,9 @@ export class Track {
                             const tempPlayer = new Tone.Player(this.audioBuffer);
                             const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
                             const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * step.velocity);
-                            tempPlayer.chain(tempEnv, tempGain, this.distortionNode);
+                            if (this.distortionNode) tempPlayer.chain(tempEnv, tempGain, this.distortionNode);
+                            else tempPlayer.chain(tempEnv, tempGain, Tone.getDestination()); // Fallback
+
                             tempPlayer.playbackRate = playbackRate;
                             tempPlayer.reverse = sliceData.reverse;
                             tempPlayer.loop = sliceData.loop;
@@ -606,14 +628,14 @@ export class Track {
             this.gainNode, this.reverbNode, this.delayNode,
             this.compressorNode, this.eq3Node, this.filterNode,
             this.distortionNode, this.chorusNode, this.saturationNode,
-            this.phaserNode, 
-            // this.flangerNode, // Conditionally handled below
-            this.trackMeter
+            this.phaserNode, this.flangerNode, this.trackMeter
         ];
-        if (this.flangerNode && !this.flangerNode.disposed) { // Check if flangerNode exists and is not disposed
-            nodesToDispose.push(this.flangerNode);
-        }
-        nodesToDispose.forEach(node => { if (node && !node.disposed) node.dispose(); });
+        
+        nodesToDispose.forEach(node => { 
+            if (node && typeof node.dispose === 'function' && !node.disposed) {
+                node.dispose();
+            }
+        });
 
         if (this.sequence && !this.sequence.disposed) {
             this.sequence.stop(); this.sequence.clear(); this.sequence.dispose();
