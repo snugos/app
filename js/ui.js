@@ -343,7 +343,7 @@ function buildSynthEngineControls(track, container, engineType) {
         let currentEngineParams = track.synthParams[paramsKey];
         if (!currentEngineParams) { 
             console.warn(`[ui.js] Params for engine ${engineType} (key: ${paramsKey}) not found in track.synthParams. Using defaults. track.synthParams:`, JSON.parse(JSON.stringify(track.synthParams)));
-            currentEngineParams = track.getDefaultSynthParams(engineType);
+            currentEngineParams = track.getDefaultSynthParams(engineType); // Ensure track.getDefaultSynthParams is accessible
             track.synthParams[paramsKey] = currentEngineParams; 
         }
         
@@ -418,15 +418,11 @@ function buildSamplerSpecificInspectorDOM(track) {
     dropZoneContainer.id = `dropZoneContainer-${track.id}-sampler`; 
     const dropZoneHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler');
     dropZoneContainer.innerHTML = dropZoneHTML;
-    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone');
+    // const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone'); // Not strictly needed to check here
 
-    if (actualDropZoneElement) {
-        panel.appendChild(dropZoneContainer); 
-         console.log(`[ui.js] Sampler drop zone container created and appended for track ${track.id}`); 
-    } else {
-        console.error(`[UI] buildSamplerSpecific: Failed to create/find drop-zone element from HTML for track ${track.id}.`);
-    }
-
+    panel.appendChild(dropZoneContainer); 
+    console.log(`[ui.js] Sampler drop zone container created and appended for track ${track.id}`); 
+    
     const editorPanel = document.createElement('div');
     editorPanel.className = 'sampler-editor-panel mt-1 flex flex-wrap md:flex-nowrap gap-3';
     const leftSide = document.createElement('div');
@@ -537,6 +533,7 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
     const loadContainer = document.createElement('div'); 
     loadContainer.id = `drumPadLoadContainer-${track.id}`; 
     loadContainer.className = 'mb-2';
+    // Dropzone HTML will be injected by updateDrumPadControlsUI
     controlsContainer.appendChild(loadContainer); 
 
     const volPitchGroup = document.createElement('div');
@@ -576,14 +573,11 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     dropZoneContainer.id = `dropZoneContainer-${track.id}-instrumentsampler`;
     const dropZoneHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
     dropZoneContainer.innerHTML = dropZoneHTML;
-    const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone');
+    // const actualDropZoneElement = dropZoneContainer.querySelector('.drop-zone'); // Not strictly needed to check here
 
-    if (actualDropZoneElement) {
-        panel.appendChild(dropZoneContainer);
-         console.log(`[ui.js] Instrument Sampler drop zone container created for track ${track.id}`);
-    } else {
-        console.error(`[UI] buildInstrumentSampler: Failed to create/find drop-zone element for track ${track.id}.`);
-    }
+    panel.appendChild(dropZoneContainer);
+    console.log(`[ui.js] Instrument Sampler drop zone container created for track ${track.id}`);
+    
 
     const canvas = document.createElement('canvas');
     canvas.id = `instrumentWaveformCanvas-${track.id}`;
@@ -705,14 +699,22 @@ function initializeSynthSpecificControls(track, winEl) {
             if (newEngineType === 'BasicPoly') paramsKey = 'basicPoly';
             else if (newEngineType === 'AMSynth') paramsKey = 'amSynth';
             else if (newEngineType === 'FMSynth') paramsKey = 'fmSynth';
-            else paramsKey = newEngineType.toLowerCase();
+            else paramsKey = newEngineType.toLowerCase(); // Fallback
 
+            // Ensure params for the new engine type exist or are defaulted
             if (paramsKey && !track.synthParams[paramsKey]) { 
+                 console.log(`[ui.js] Synth params for ${newEngineType} (key: ${paramsKey}) not found, initializing with defaults.`);
                  track.synthParams[paramsKey] = track.getDefaultSynthParams(newEngineType);
+            } else if (!paramsKey) {
+                console.warn(`[ui.js] Unknown paramsKey derived for engineType ${newEngineType}`);
             }
 
+
             if (typeof track.initializeInstrument === 'function') {
+                console.log(`[ui.js] Calling track.initializeInstrument() for engine ${newEngineType}`);
                 await track.initializeInstrument(); 
+            } else {
+                console.error(`[ui.js] track.initializeInstrument is not a function for track ${track.id}`);
             }
 
             buildSynthEngineControls(track, controlsContainer, newEngineType);
@@ -720,7 +722,7 @@ function initializeSynthSpecificControls(track, winEl) {
             setTimeout(() => {
                 const currentControls = synthEngineControlDefinitions[newEngineType] || [];
                 currentControls.forEach(controlDef => {
-                    if (controlDef.type === 'knob' && track.inspectorControls[controlDef.idPrefix]) {
+                    if (controlDef.type === 'knob' && track.inspectorControls && track.inspectorControls[controlDef.idPrefix]) {
                         track.inspectorControls[controlDef.idPrefix].refreshVisuals();
                     }
                 });
@@ -734,10 +736,10 @@ function initializeSynthSpecificControls(track, winEl) {
 function initializeSamplerSpecificControls(track, winEl) {
     console.log(`[ui.js] initializeSamplerSpecificControls for track ${track.id} (Slicer Sampler). winEl:`, winEl);
     const dropZoneContainerEl = winEl.querySelector(`#dropZoneContainer-${track.id}-sampler`); 
-    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`); // This ID is from createDropZoneHTML
+    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`);
 
     if (dropZoneContainerEl && fileInputEl) { 
-        const dropZoneEl = dropZoneContainerEl.querySelector('.drop-zone'); // The actual drop zone
+        const dropZoneEl = dropZoneContainerEl.querySelector('.drop-zone');
         if (dropZoneEl) {
             console.log(`[ui.js] Sampler drop zone FOUND via container for track ${track.id}. Setting up listeners.`);
             utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
@@ -841,12 +843,10 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
     console.log(`[ui.js] initializeDrumSamplerSpecificControls for track ${track.id}. winEl:`, winEl);
 
     const targetId = `drumPadLoadContainer-${track.id}`;
-    // const padLoadContainerById = document.getElementById(targetId); // Global search for debugging if needed
     const padLoadContainerToUse = winEl.querySelector(`#${targetId}`); 
 
     console.log(`[ui.js] DrumSampler - Target ID for load container: #${targetId}`);
-    // console.log(`[ui.js] DrumSampler - document.getElementById result:`, padLoadContainerById);
-    console.log(`[ui.js] DrumSampler - winEl.querySelector result:`, padLoadContainerToUse);
+    console.log(`[ui.js] DrumSampler - winEl.querySelector for #${targetId} result:`, padLoadContainerToUse);
     
     if (padLoadContainerToUse && typeof updateDrumPadControlsUI === 'function') {
         console.log(`[ui.js] Calling updateDrumPadControlsUI for drum track ${track.id} using found container:`, padLoadContainerToUse);
@@ -1674,7 +1674,7 @@ export function openSoundBrowserWindow(savedState = null) {
             }
 
             librarySelect.value = targetLibrary;
-            if (typeof updateSoundBrowserDisplayForLibrary === 'function' && targetLibrary) { // Ensure targetLibrary is not empty
+            if (typeof updateSoundBrowserDisplayForLibrary === 'function' && targetLibrary) { 
                 updateSoundBrowserDisplayForLibrary(targetLibrary); 
             }
         } else {
