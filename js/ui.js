@@ -363,7 +363,7 @@ function buildSynthEngineControls(track, container, engineType) {
         
         if (initialValue === undefined) {
             console.warn(`[ui.js] Initial value for ${controlDef.paramPath} not found in currentEngineParams for ${engineType}. Trying defaults. currentEngineParams:`, JSON.parse(JSON.stringify(currentEngineParams)));
-            const defaultEngineParams = track.getDefaultSynthParams(engineType);
+            const defaultEngineParams = track.getDefaultSynthParams(engineType); // Ensure track.getDefaultSynthParams is accessible
             initialValue = getNestedValue(defaultEngineParams, controlDef.paramPath);
             if(initialValue === undefined && controlDef.type === 'knob') initialValue = controlDef.min; 
             if(initialValue === undefined && controlDef.type === 'select') initialValue = controlDef.options[0];
@@ -707,11 +707,9 @@ function initializeSynthSpecificControls(track, winEl) {
             else if (newEngineType === 'FMSynth') paramsKey = 'fmSynth';
             else paramsKey = newEngineType.toLowerCase();
 
-
             if (paramsKey && !track.synthParams[paramsKey]) { 
                  track.synthParams[paramsKey] = track.getDefaultSynthParams(newEngineType);
             }
-
 
             if (typeof track.initializeInstrument === 'function') {
                 await track.initializeInstrument(); 
@@ -736,10 +734,10 @@ function initializeSynthSpecificControls(track, winEl) {
 function initializeSamplerSpecificControls(track, winEl) {
     console.log(`[ui.js] initializeSamplerSpecificControls for track ${track.id} (Slicer Sampler). winEl:`, winEl);
     const dropZoneContainerEl = winEl.querySelector(`#dropZoneContainer-${track.id}-sampler`); 
-    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`);
+    const fileInputEl = winEl.querySelector(`#fileInput-${track.id}`); // This ID is from createDropZoneHTML
 
     if (dropZoneContainerEl && fileInputEl) { 
-        const dropZoneEl = dropZoneContainerEl.querySelector('.drop-zone');
+        const dropZoneEl = dropZoneContainerEl.querySelector('.drop-zone'); // The actual drop zone
         if (dropZoneEl) {
             console.log(`[ui.js] Sampler drop zone FOUND via container for track ${track.id}. Setting up listeners.`);
             utilSetupDropZoneListeners(dropZoneEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
@@ -843,24 +841,18 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
     console.log(`[ui.js] initializeDrumSamplerSpecificControls for track ${track.id}. winEl:`, winEl);
 
     const targetId = `drumPadLoadContainer-${track.id}`;
-    const padLoadContainerById = document.getElementById(targetId); 
-    const padLoadContainerByQuery = winEl.querySelector(`#${targetId}`); 
+    // const padLoadContainerById = document.getElementById(targetId); // Global search for debugging if needed
+    const padLoadContainerToUse = winEl.querySelector(`#${targetId}`); 
 
     console.log(`[ui.js] DrumSampler - Target ID for load container: #${targetId}`);
-    console.log(`[ui.js] DrumSampler - document.getElementById result:`, padLoadContainerById);
-    console.log(`[ui.js] DrumSampler - winEl.querySelector result:`, padLoadContainerByQuery);
-
-    let padLoadContainerToUse = padLoadContainerByQuery; 
-    if (!padLoadContainerToUse && padLoadContainerById) {
-        console.warn(`[ui.js] DrumSampler - Querying within winEl failed for ${targetId}, but found globally. Using global result. This might indicate a DOM structure issue or timing.`);
-        padLoadContainerToUse = padLoadContainerById;
-    }
+    // console.log(`[ui.js] DrumSampler - document.getElementById result:`, padLoadContainerById);
+    console.log(`[ui.js] DrumSampler - winEl.querySelector result:`, padLoadContainerToUse);
     
     if (padLoadContainerToUse && typeof updateDrumPadControlsUI === 'function') {
         console.log(`[ui.js] Calling updateDrumPadControlsUI for drum track ${track.id} using found container:`, padLoadContainerToUse);
         updateDrumPadControlsUI(track); 
     } else if (!padLoadContainerToUse) {
-        console.warn(`[ui.js] Drum pad load container ('${targetId}') not found for track ${track.id} using either querySelector or getElementById.`);
+        console.warn(`[ui.js] Drum pad load container ('${targetId}') not found for track ${track.id} using querySelector within winEl.`);
     } else {
         console.error(`[ui.js] updateDrumPadControlsUI function not found!`);
     }
@@ -971,7 +963,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     if(iReleasePlaceholder) { iReleasePlaceholder.innerHTML = ''; iReleasePlaceholder.appendChild(iERK.element); } else console.warn(`[ui.js] Placeholder #instrumentEnvReleaseSlider-${track.id} not found.`);
     track.inspectorControls.instEnvRelease = iERK;
 }
-
 
 export function openGlobalControlsWindow(savedState = null) {
     console.log("[ui.js] openGlobalControlsWindow STARTING..."); 
@@ -1343,10 +1334,10 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             const stepCell = document.createElement('div');
             let cellClass = 'sequencer-step-cell';
             const beatInBar = (c % Constants.STEPS_PER_BAR);
-            if (Constants.STEPS_PER_BAR === 16) { // Typical 4/4 with 16th notes
-                if (beatInBar % 4 === 0) cellClass += ' beat-downbeat'; // Every 4th step (1, 5, 9, 13)
+            if (Constants.STEPS_PER_BAR === 16) { 
+                if (beatInBar % 4 === 0) cellClass += ' beat-downbeat'; 
                 else cellClass += ' beat-other';
-            } else { // Generic fallback
+            } else { 
                 if (Math.floor(beatInBar / 4) % 2 === 0) cellClass += ' beat-1'; else cellClass += ' beat-2';
             }
             const stepData = track.sequenceData[r]?.[c];
@@ -1601,7 +1592,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
     } else {
         const zipUrl = Constants.soundLibraries[libraryName];
         if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
-            window.fetchSoundLibrary(libraryName, zipUrl, false); // Trigger fetch if not loaded/loading
+            window.fetchSoundLibrary(libraryName, zipUrl, false); 
         } else {
             soundBrowserList.innerHTML = `<div class="sound-browser-loading">Library ${libraryName} configuration not found.</div>`;
             pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
@@ -1615,14 +1606,13 @@ export function openSoundBrowserWindow(savedState = null) {
     if (window.openWindows[windowId] && !savedState) {
         console.log("[ui.js] Restoring existing Sound Browser window.");
         window.openWindows[windowId].restore();
-        // Re-trigger display update in case library content changed or was being loaded
         if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') {
             updateSoundBrowserDisplayForLibrary(window.currentLibraryName);
         }
         return window.openWindows[windowId];
     }
      if (window.openWindows[windowId] && savedState) {
-        window.openWindows[windowId].close(); // Close and recreate if restoring from saved state
+        window.openWindows[windowId].close(); 
     }
 
     let selectOptionsHTML = '';
@@ -1676,16 +1666,15 @@ export function openSoundBrowserWindow(savedState = null) {
 
         if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) {
             const firstLibraryName = Object.keys(Constants.soundLibraries)[0];
-             // Ensure the selected value is valid or default to first if not
             const currentSelectedValue = librarySelect.value;
             let targetLibrary = Array.from(librarySelect.options).find(opt => opt.value === currentSelectedValue) ? currentSelectedValue : firstLibraryName;
             
             if (!Array.from(librarySelect.options).find(opt => opt.value === targetLibrary) && librarySelect.options.length > 0) {
-                targetLibrary = librarySelect.options[0].value; // Fallback if even first choice is bad
+                targetLibrary = librarySelect.options[0].value; 
             }
 
             librarySelect.value = targetLibrary;
-            if (typeof updateSoundBrowserDisplayForLibrary === 'function') {
+            if (typeof updateSoundBrowserDisplayForLibrary === 'function' && targetLibrary) { // Ensure targetLibrary is not empty
                 updateSoundBrowserDisplayForLibrary(targetLibrary); 
             }
         } else {
@@ -1712,10 +1701,9 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         return;
     }
     if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
-        // Still loading, message is already set by fetchSoundLibrary or updateSoundBrowserDisplayForLibrary
         return;
     }
-     if (!treeNode) { // No library selected or tree is genuinely empty
+     if (!treeNode) { 
         soundBrowserList.innerHTML = `<div class="sound-browser-loading">Select a library.</div>`;
         pathDisplay.textContent = `Path: /`;
         return;
@@ -1781,7 +1769,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
             });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
             div.addEventListener('click', async (event) => {
-                if (event.detail === 0) return; // Prevent dblclick issues if any
+                if (event.detail === 0) return; 
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
                 if (window.previewPlayer && !window.previewPlayer.disposed) {
                     window.previewPlayer.stop(); window.previewPlayer.dispose();
@@ -1800,7 +1788,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                     window.previewPlayer.onstop = () => {
                         if (window.previewPlayer && !window.previewPlayer.disposed) window.previewPlayer.dispose();
                         window.previewPlayer = null;
-                        URL.revokeObjectURL(objectURL); // Important to free memory
+                        URL.revokeObjectURL(objectURL); 
                     };
                 } catch (error) {
                     console.error(`Error previewing sound ${name}:`, error);
@@ -1897,7 +1885,7 @@ export function applySliceEdits(trackId) {
         showNotification(`Slice ${track.selectedSliceForEdit + 1} updated.`, 1500);
     } else {
         showNotification("Invalid slice start/end times.", 2000);
-        updateSliceEditorUI(track); // Revert UI to actual values
+        updateSliceEditorUI(track); 
     }
 }
 export function drawWaveform(track) {
@@ -1943,7 +1931,7 @@ export function drawWaveform(track) {
                     ctx.fillRect(startX, 0, endX - startX, height);
                     ctx.strokeStyle = 'rgba(0, 0, 255, 0.9)'; ctx.lineWidth = 2;
                     ctx.beginPath(); ctx.moveTo(startX,0); ctx.lineTo(startX,height); ctx.stroke();
-                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1; // Reset for next slice lines
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1; 
                 }
             }
         });
@@ -2048,28 +2036,3 @@ export function renderDrumSamplerPads(track) {
     });
      console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered into:`, padsContainer);
 }
-```
-</div>
-
-This version contains the complete UI logic, including:
-* The fully functional `openGlobalControlsWindow` (with its complete HTML content and robust `SnugWindow` creation).
-* The advanced synth inspector with engine selection and dynamic controls.
-* The UI building and initialization for all sampler types (Slicer, Drum, Instrument), including the detailed debugging logs we added for them.
-* The `openMixerWindow` and `openSoundBrowserWindow` functions with their respective UI building logic.
-
-After replacing `js/ui.js` with this content, please:
-1.  **Ensure your other core files are the latest correct versions:**
-    * `SnugWindow.js`: `daw_snugwindow_js_debug_v2`
-    * `main.js`: `daw_main_js_clean_v1`
-    * `Track.js`: `daw_advanced_synth_track_js_v2`
-    * `state.js`: `daw_advanced_synth_state_js`
-    * And your `audio.js`, `constants.js`, `eventHandlers.js`, `utils.js` should be their last known good versions.
-2.  **Perform a very thorough cache clear and hard refresh.**
-3.  **Test all the functionalities again:**
-    * Global Controls window appearance.
-    * Adding Synth tracks, changing engines (both visually and audibly), and adjusting parameters.
-    * Adding Sampler, Drum Sampler, and Instrument Sampler tracks, and checking if their specific UI (pads, drop zones, waveform areas) appears correctly.
-    * Opening the Mixer and Sound Browser windows.
-4.  **Carefully examine the console output** for any errors or the specific debug logs we've placed, especially within the functions for the UI components that are still problematic.
-
-This should get all the UI components to at least attempt to render fully. The console logs will be our guide for any remaining issu
