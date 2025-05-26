@@ -815,7 +815,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
 const effectControlDefinitions = {
     distortion: { title: 'Distortion', controls: [ { idPrefix: 'distAmount', type: 'knob', label: 'Amount', min:0, max:1, step:0.01, paramKey: 'amount', decimals:2, setter: 'setDistortionAmount' } ]},
     saturation: { title: 'Saturation', controls: [ { idPrefix: 'satWet', type: 'knob', label: 'Sat Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setSaturationWet' }, { idPrefix: 'satAmount', type: 'knob', label: 'Sat Amt', min:0, max:20, step:1, paramKey: 'amount', decimals:0, setter: 'setSaturationAmount' } ]},
-    phaser: { // Phaser Definition
+    phaser: {
         title: 'Phaser',
         controls: [
             { idPrefix: 'phaserFreq', type: 'knob', label: 'Freq', min: 0.1, max: 10, step: 0.1, paramKey: 'frequency', decimals:1, displaySuffix:'Hz', setter: 'setPhaserFrequency' },
@@ -823,6 +823,17 @@ const effectControlDefinitions = {
             { idPrefix: 'phaserBaseFreq', type: 'knob', label: 'Base Freq', min: 100, max: 1500, step: 10, paramKey: 'baseFrequency', decimals:0, displaySuffix:'Hz', setter: 'setPhaserBaseFrequency' },
             { idPrefix: 'phaserQ', type: 'knob', label: 'Q', min: 0.1, max: 10, step: 0.1, paramKey: 'Q', decimals:1, setter: 'setPhaserQ' },
             { idPrefix: 'phaserWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setPhaserWet' }
+        ]
+    },
+    flanger: { // Flanger Definition
+        title: 'Flanger',
+        controls: [
+            { idPrefix: 'flangerWet', type: 'knob', label: 'Wet', min:0, max:1, step:0.01, paramKey: 'wet', decimals:2, setter: 'setFlangerWet' },
+            { idPrefix: 'flangerFreq', type: 'knob', label: 'LFO Freq', min: 0.05, max: 10, step: 0.01, paramKey: 'frequency', decimals:2, displaySuffix:'Hz', setter: 'setFlangerFrequency' },
+            { idPrefix: 'flangerDelay', type: 'knob', label: 'Delay', min: 0.001, max: 0.02, step: 0.0001, paramKey: 'delayTime', decimals:4, displaySuffix:'s', setter: 'setFlangerDelayTime' },
+            { idPrefix: 'flangerDepth', type: 'knob', label: 'Depth', min: 0.0005, max: 0.01, step: 0.0001, paramKey: 'depth', decimals:4, displaySuffix:'s', setter: 'setFlangerDepth' },
+            { idPrefix: 'flangerFb', type: 'knob', label: 'Feedback', min: 0, max: 0.95, step: 0.01, paramKey: 'feedback', decimals:2, setter: 'setFlangerFeedback' },
+            { idPrefix: 'flangerType', type: 'select', options: ['sine', 'square', 'triangle', 'sawtooth'], paramKey: 'type', setter: 'setFlangerType' }
         ]
     },
     filter: { title: 'Filter', controls: [ { idPrefix: 'filterType', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramKey: 'type', setter: 'setFilterType' }, { idPrefix: 'filterFreq', type: 'knob', label: 'Freq', min:20, max:20000, step:1, paramKey: 'frequency', decimals:0, displaySuffix:'Hz', setter: 'setFilterFrequency' }, { idPrefix: 'filterQ', type: 'knob', label: 'Q', min:0.1, max:20, step:0.1, paramKey: 'Q', decimals:1, customSetter: (track, val) => { track.effects.filter.Q = parseFloat(val); track.filterNode.Q.value = parseFloat(val); } } ]},
@@ -844,7 +855,7 @@ export function buildEffectsRackContentDOM(track) {
         titleEl.className = 'text-sm font-semibold'; titleEl.textContent = effectDef.title;
         effectGroupDiv.appendChild(titleEl);
         const controlsContainer = document.createElement('div');
-        if (effectDef.controls.length > 1 || ['distortion', 'saturation', 'phaser'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) { // Added phaser here
+        if (effectDef.controls.length > 1 || ['distortion', 'saturation', 'phaser', 'flanger'].includes(effectKey) || effectDef.controls.some(c => c.type === 'knob')) { // Added flanger here
              controlsContainer.className = 'control-group';
         } else {
             controlsContainer.className = 'single-control-container';
