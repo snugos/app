@@ -200,7 +200,7 @@ export async function redoLastAction() {
 
 export function gatherProjectData() {
     const projectData = {
-        version: "5.5.1", // Update if data structure changes significantly
+        version: "5.5.2", // Updated version for Flanger addition
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: Tone.getDestination().volume.value,
@@ -214,7 +214,7 @@ export function gatherProjectData() {
                 id: track.id, type: track.type, name: track.name,
                 isMuted: track.isMuted, 
                 volume: track.previousVolumeBeforeMute, // Save the pre-mute volume
-                effects: JSON.parse(JSON.stringify(track.effects)), // Deep copy
+                effects: JSON.parse(JSON.stringify(track.effects)), // Deep copy, includes flanger
                 sequenceLength: track.sequenceLength,
                 sequenceData: JSON.parse(JSON.stringify(track.sequenceData)), // Deep copy
                 automation: JSON.parse(JSON.stringify(track.automation)), // Deep copy
