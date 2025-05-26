@@ -57,8 +57,6 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
     }
 
     if (isBrandNewUserTrack) {
-        // For brand new tracks, fullyInitializeAudioResources (which includes instrument setup)
-        // is called after audio nodes are ready.
         newTrack.fullyInitializeAudioResources().then(() => {
             console.log(`[State] Audio resources initialized for new track ${newTrack.id} (${newTrack.name}).`);
             showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
@@ -71,7 +69,6 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         }).catch(error => {
             console.error(`[State] Error initializing audio resources for new track ${newTrack.id}:`, error);
             showNotification(`Error setting up new ${type} track "${newTrack.name}". Audio may not work.`, 5000);
-            // Still attempt to open inspector and update mixer so UI is consistent
             if (typeof window.openTrackInspectorWindow === 'function') {
                 window.openTrackInspectorWindow(newTrack.id);
             }
