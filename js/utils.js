@@ -64,6 +64,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
         dialog.appendChild(buttonsDiv);
     }
     overlay.appendChild(dialog);
+    modalContainer.appendChild(overlay); // Append overlay to the DOM
     const firstButton = dialog.querySelector('.modal-buttons button');
     if (firstButton) firstButton.focus();
     return { overlay, dialog, contentDiv };
@@ -78,13 +79,15 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
 }
 
 export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOrSliceIndex = null) {
-    const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${padOrSliceIndex !== null ? '-' + padOrSliceIndex : ''}`;
+    // Ensure padOrSliceIndex results in a clean ID string part, even if it's 0
+    const indexString = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '';
+    const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${indexString}`;
+
     let dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHintForLoad}"`;
-    if (padOrSliceIndex !== null) {
+    if (padOrSliceIndex !== null && padOrSliceIndex !== undefined) { // Check for null or undefined specifically
         dataAttributes += ` data-pad-slice-index="${padOrSliceIndex}"`;
     }
 
-    // Ensure the returned string is trimmed to remove leading/trailing whitespace
     return `
         <div class="drop-zone" id="${dropZoneId}" ${dataAttributes}>
             Drag & Drop Audio File or <br>
@@ -95,7 +98,7 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
 
 export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
     if (!dropZoneElement) {
-        console.error("[Utils] setupDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint);
+        console.error("[Utils] setupDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint, "pad/slice:", padIndexOrSliceId);
         return;
     }
 
@@ -116,22 +119,34 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         event.preventDefault();
         event.stopPropagation();
         dropZoneElement.classList.remove('dragover');
+        
+        console.log(`[Utils] Drop event TRIGGERED on element ID: ${dropZoneElement.id}, Classes: ${dropZoneElement.className}. Dataset:`, JSON.parse(JSON.stringify(dropZoneElement.dataset)));
 
         const dzTrackId = dropZoneElement.dataset.trackId ? parseInt(dropZoneElement.dataset.trackId) : trackId;
-        const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint; // This is fine, used for logic within the callbacks
-        const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex;
-        // dzPadSliceIndex should be a number if the attribute exists and is numeric, or null/original padIndexOrSliceId
-        const dzPadSliceIndex = dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" ? parseInt(dzPadSliceIndexStr) : padIndexOrSliceId;
+        const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint;
+        const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex; // String from dataset ("0", "1", etc. or undefined)
+
+        // Determine the numeric index:
+        // If data-pad-slice-index is present and a valid number string, parse it.
+        // Otherwise, use the padIndexOrSliceId passed as an argument (which should be a number if it's for a specific pad/slice).
+        let numericIndexForCallback = null;
+        if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
+            numericIndexForCallback = parseInt(dzPadSliceIndexStr);
+        } else if (typeof padIndexOrSliceId === 'number' && !isNaN(padIndexOrSliceId)) {
+            numericIndexForCallback = padIndexOrSliceId;
+        }
+        console.log(`[Utils] Drop effective params: trackId=${dzTrackId}, type=${dzTrackType}, indexForCallback=${numericIndexForCallback} (Original dzPadSliceIndexStr: "${dzPadSliceIndexStr}", arg padIndexOrSliceId: ${padIndexOrSliceId})`);
+
 
         const soundDataString = event.dataTransfer.getData("application/json");
 
-        if (soundDataString) {
+        if (soundDataString) { // From Sound Browser
+            console.log("[Utils] Dropped JSON data (from sound browser):", soundDataString);
             try {
                 const soundData = JSON.parse(soundDataString);
-                if (loadSoundCallback) {
-                    // loadSoundCallback is loadSoundFromBrowserToTarget
-                    // It expects: (soundData, targetTrackId, targetTrackType, targetPadOrSliceIndex)
-                    await loadSoundCallback(soundData, dzTrackId, dzTrackType, dzPadSliceIndex);
+                if (loadSoundCallback) { // This is loadSoundFromBrowserToTarget
+                    console.log(`[Utils] Calling loadSoundCallback for Sound Browser drop. Target index: ${numericIndexForCallback}`);
+                    await loadSoundCallback(soundData, dzTrackId, dzTrackType, numericIndexForCallback);
                 } else {
                     console.warn("[Utils] loadSoundCallback not provided for sound browser drop.");
                 }
@@ -139,20 +154,21 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
                 console.error("[Utils] Error parsing dropped sound data:", e);
                 showNotification("Error processing dropped sound.", 3000);
             }
-        } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+        } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) { // OS File Drop
             const file = event.dataTransfer.files[0];
-            const simulatedEvent = { target: { files: [file] } }; // To mimic file input event structure
+            console.log("[Utils] Dropped OS file:", file.name, "Type:", file.type);
+            const simulatedEvent = { target: { files: [file] } };
             if (loadFileCallback) {
-                // loadFileCallback is typically loadDrumSamplerPadFile or loadSampleFile
-                // loadDrumSamplerPadFile expects: (eventOrUrl, trackId, padIndex, fileNameForUrl = null)
-                // loadSampleFile expects: (eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null)
-
+                console.log("[Utils] Calling loadFileCallback for OS file drop. Callback name:", loadFileCallback.name);
                 if (dzTrackType === 'DrumSampler') {
-                     // Ensure dzPadSliceIndex is a number for DrumSampler context
-                    const numericPadIndex = (typeof dzPadSliceIndex === 'number' && !isNaN(dzPadSliceIndex)) ? dzPadSliceIndex : (track ? track.selectedDrumPadForEdit : 0);
-                    await loadFileCallback(simulatedEvent, dzTrackId, numericPadIndex, file.name);
+                    const trackForFallback = typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
+                    const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
+                        ? numericIndexForCallback
+                        : (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0); // Fallback if numericIndexForCallback wasn't determined
+                    console.log(`[Utils] OS Drop on DrumSampler: trackId=${dzTrackId}, finalPadIndex=${finalPadIndex}, fileName=${file.name}`);
+                    await loadFileCallback(simulatedEvent, dzTrackId, finalPadIndex, file.name);
                 } else if (dzTrackType === 'Sampler' || dzTrackType === 'InstrumentSampler') {
-                    // loadSampleFile uses its 3rd arg as trackTypeHint
+                    console.log(`[Utils] OS Drop on ${dzTrackType}: trackId=${dzTrackId}, trackTypeHint=${dzTrackType}, fileName=${file.name}`);
                     await loadFileCallback(simulatedEvent, dzTrackId, dzTrackType, file.name);
                 } else {
                     console.warn(`[Utils] Unhandled trackType "${dzTrackType}" for OS file drop with loadFileCallback.`);
