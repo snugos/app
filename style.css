@@ -1,4 +1,417 @@
+/* --- SnugOS Window Styling --- */
+#desktop {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* To contain windows if they go off-screen */
+    position: relative; /* Important for absolute positioning of windows within it */
+    /* background-color is set by JS or can be defaulted here if needed */
+}
+
+.window {
+    position: absolute; /* Positioned by JavaScript */
+    border: 1px solid #000000; /* Black border to define the window edge */
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5); /* Basic shadow for depth */
+    background-color: #c0c0c0; /* Default background, can be overridden by JS */
+    display: flex; /* Crucial for arranging title bar and content area */
+    flex-direction: column; /* Stack title bar on top of content */
+    overflow: hidden; /* Prevent content from spilling if not handled by .window-content */
+    min-width: 150px; /* Prevent windows from becoming too small */
+    min-height: 100px;
+}
+
+.window.minimized {
+    display: none !important; /* Hide when minimized */
+}
+
+.window-title-bar {
+    background-color: #000080; /* Classic dark blue for title bar */
+    color: white;
+    padding: 3px 5px;
+    cursor: grab;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 24px; /* Fixed height for the title bar */
+    flex-shrink: 0; /* Prevent the title bar from shrinking */
+    font-size: 0.8rem;
+    font-weight: bold;
+    user-select: none; /* Prevent text selection when dragging */
+}
+
+.window-title-bar span { /* For the title text itself */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 5px; /* Space before buttons */
+}
+
+.window-title-buttons {
+    display: flex;
+}
+
+.window-title-buttons button {
+    background: #c0c0c0; /* Standard button grey */
+    border: 1px solid black;
+    border-color: #ffffff #808080 #808080 #ffffff; /* 3D border */
+    box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
+    color: black;
+    width: 18px;
+    height: 18px;
+    line-height: 16px; /* Adjust for visual centering */
+    text-align: center;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 2px;
+    padding: 0;
+    cursor: default; /* Standard cursor for window buttons */
+    flex-shrink: 0;
+}
+
+.window-title-buttons button:active {
+    border-color: #808080 #ffffff #ffffff #808080; /* Inverted 3D border */
+    box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #808080 inset;
+}
+
+.window-content {
+    flex-grow: 1; /* Allow content area to fill remaining vertical space */
+    padding: 8px; /* Padding inside the content area */
+    background-color: var(--window-content-bg, #c0c0c0); /* Matches SnugWindow.js default */
+    overflow: auto; /* Add scrollbars if content exceeds window size */
+    /* Ensure content background is distinct if needed, or inherits from .window */
+}
+
+
+/* --- Taskbar Styling (Basic) --- */
+#taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px; /* Adjust as needed */
+    background-color: #c0c0c0; /* Classic grey */
+    border-top: 2px solid #ffffff; /* Lighter top border for 3D effect */
+    z-index: 10000; /* High z-index */
+    display: flex;
+    align-items: center;
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+#startButton {
+    background-color: #c0c0c0;
+    border: 1px solid black;
+    border-color: #ffffff #808080 #808080 #ffffff; /* 3D border */
+    box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
+    padding: 2px 8px;
+    font-weight: bold;
+    margin-right: 5px;
+}
+#startButton:active {
+    border-color: #808080 #ffffff #ffffff #808080; /* Inverted 3D border */
+    box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #808080 inset;
+}
+
+#taskbarButtons .taskbar-button {
+    background-color: #c0c0c0;
+    border: 1px solid black;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
+    padding: 2px 5px;
+    margin: 0 2px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+}
+#taskbarButtons .taskbar-button.active,
+#taskbarButtons .taskbar-button:active {
+    border-color: #808080 #ffffff #ffffff #808080;
+    box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #808080 inset;
+    background-color: #b0b0b0; /* Slightly darker when active/pressed */
+}
+#taskbarButtons .taskbar-button.minimized-on-taskbar {
+    /* Optionally different style for minimized, though often same as inactive */
+    background-color: #d0d0d0;
+}
+
+
+#taskbarTempoDisplay {
+    margin-left: auto; /* Pushes it to the right */
+    padding: 2px 8px;
+    border: 1px solid #808080;
+    border-top-color: #707070;
+    border-left-color: #707070;
+    box-shadow: inset 1px 1px #c0c0c0, inset -1px -1px #f0f0f0;
+    font-size: 0.8rem;
+    background-color: #c0c0c0;
+    cursor: pointer;
+}
+
+
+/* --- Start Menu Styling (Basic) --- */
+#startMenu {
+    position: absolute;
+    bottom: 30px; /* Just above taskbar */
+    left: 0;
+    background: #c0c0c0;
+    border: 1px solid black;
+    border-color: #ffffff #808080 #808080 #ffffff; /* 3D border */
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.3);
+    z-index: 10001; /* Above taskbar */
+    padding: 2px;
+    min-width: 180px;
+}
+
+#startMenu.hidden {
+    display: none;
+}
+
+#startMenu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#startMenu li {
+    padding: 4px 20px 4px 8px; /* More padding for easier clicking */
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+#startMenu li:hover, #startMenu li.disabled:hover {
+    background: #000080; /* Dark blue highlight */
+    color: white;
+}
+
+#startMenu li.disabled {
+    color: #808080; /* Grey out disabled items */
+    cursor: default;
+}
+
+#startMenu hr {
+    border: none;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #ffffff;
+    margin: 2px 0;
+}
+
+/* --- Existing styles from your file below this line --- */
 /* General App Styles (Ensure these are loaded or adapt as needed) */
+body {
+    font-family: 'Inter', sans-serif; /* From your index.html */
+    font-size: 14px;
+    /* ... other body styles ... */
+}
+
+/* Taskbar and Window styles (assuming they exist and are satisfactory) */
+
+/* --- Pad Button Styling --- */
+.pad-button {
+    padding: 8px;
+    border: 1px solid #888; /* Slightly darker border for definition */
+    background-color: #d4d0c8; /* Classic OS-like button color */
+    color: #000;
+    cursor: pointer;
+    text-align: center;
+    min-width: 70px; /* Ensure a decent tap/click target */
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset -1px -1px 0px #707070, inset 1px 1px 0px #ffffff; /* Subtle inset shadow */
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    overflow: hidden; /* To contain the pad-label */
+    position: relative; /* For positioning internal elements if needed */
+}
+
+.pad-button:hover {
+    background-color: #e0e0e0; /* Lighter on hover */
+}
+
+.pad-button:active, .pad-button.selected-for-edit {
+    background-color: #c0c0c0; /* Slightly darker when active/selected */
+    box-shadow: inset 1px 1px 0px #707070, inset -1px -1px 0px #ffffff; /* Inverted inset shadow for pressed look */
+    border-color: #555;
+}
+
+.pad-button.selected-for-edit {
+    border-color: #000080; /* Navy blue border for selected pad */
+    border-width: 2px;
+    padding: 7px; /* Adjust padding to account for thicker border */
+}
+
+.pad-label {
+    font-size: 0.65rem; /* Smaller text for the sample name */
+    color: #333;
+    display: block;
+    margin-top: 5px;
+    word-break: break-all; /* Break long words */
+    line-height: 1.2;
+    max-height: 2.4em; /* Approx 2 lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* --- Styling for Pad Buttons as Drop Targets --- */
+.drop-zone-pad {
+    /* The .pad-button style already provides a good base.
+       You might not need much here unless you want a default visual hint
+       that it's *always* a drop target, even when not dragging.
+       For example, a very subtle border or icon.
+    */
+    border-style: solid; /* Default to solid */
+}
+
+/* Visual feedback when dragging over an individual pad button */
+.drop-zone-pad.dragover {
+    background-color: #b0c4de; /* Light steel blue - indicates droppable area */
+    border-color: #4682b4;   /* Steel blue */
+    border-style: dashed;
+    opacity: 0.9;
+    box-shadow: 0 0 8px rgba(70, 130, 180, 0.5); /* Subtle glow */
+}
+
+
+/* --- General Drop Zone Styling (for the area below selected pad controls) --- */
+.drop-zone {
+    border: 2px dashed #a0a0a0; /* Dashed border */
+    padding: 20px;              /* More padding */
+    text-align: center;
+    background-color: #f0f0f0;  /* Lighter background */
+    color: #555;                /* Text color */
+    font-size: 0.9em;
+    border-radius: 4px;         /* Rounded corners */
+    margin-bottom: 10px;        /* Space below */
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.drop-zone.dragover {
+    background-color: #d8e8ff; /* Light blue highlight on drag over */
+    border-color: #77aaff;     /* Stronger blue border */
+    color: #333;
+}
+
+.drop-zone label {
+    color: #007bff;             /* Standard link blue */
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.drop-zone label:hover {
+    color: #0056b3;             /* Darker blue on hover */
+}
+
+
+/* --- Pads Container --- */
+/* This ensures the pad buttons are laid out nicely */
+.pads-container {
+    display: grid;
+    /* Creates as many columns as fit, each at least 70px wide, taking equal space */
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px; /* Space between pads */
+    padding: 5px 0; /* Some padding around the grid */
+}
+
+/* Style for the notification messages */
+#notification-area {
+    position: fixed;
+    bottom: 40px; /* Above taskbar */
+    right: 20px;
+    z-index: 20000; /* High z-index to be on top of other elements */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Notifications align to the right */
+}
+
+.notification-message {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    opacity: 0;
+    transform: translateX(100%); /* Start off-screen */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.notification-message.show {
+    opacity: 1;
+    transform: translateX(0); /* Slide in */
+}
+
+/* --- Knob Styling (Example) --- */
+.knob-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 5px;
+    min-width: 60px; /* Ensure some minimum width */
+}
+
+.knob-label {
+    font-size: 0.7rem;
+    color: #333;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: center;
+}
+
+.knob {
+    width: 36px; /* Smaller knob */
+    height: 36px;
+    background-color: #B0B0B0; /* Knob color */
+    border-radius: 50%;
+    position: relative;
+    border: 1px solid #707070;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
+    cursor: ns-resize;
+}
+
+.knob-handle {
+    width: 4px;
+    height: 10px; /* Shorter handle for smaller knob */
+    background-color: #333;
+    position: absolute;
+    top: 3px; /* Adjusted for shorter handle */
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    border-radius: 2px;
+}
+
+.knob-value {
+    font-size: 0.65rem; /* Smaller value text */
+    color: #333;
+    margin-top: 2px;
+    min-height: 1em; /* Prevent layout shift if value is empty */
+    text-align: center;
+}
+
+/* Control group for knobs, etc. */
+.control-group {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    justify-content: space-around; /* Distribute items */
+    align-items: flex-start; /* Align items to the top */
+    padding: 5px 0;
+    gap: 5px; /* Small gap between controls */
+}
+
+/* Specific styling for single control containers if needed */
+.single-control-container {
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+}
 body {
     font-family: 'Inter', sans-serif; /* From your index.html */
     font-size: 14px;
