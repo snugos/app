@@ -136,6 +136,7 @@ export function initializePrimaryEventListeners(appContext) {
 
 export function attachGlobalControlEvents(globalControlsWindowElement) {
     globalControlsWindowElement.querySelector('#playBtnGlobal')?.addEventListener('click', async () => {
+        console.log("[EventHandlers] Play/Pause button clicked."); // DEBUG
         try {
             const audioReady = await window.initAudioContextAndMasterMeter(true);
             if (!audioReady) {
@@ -145,11 +146,15 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
             }
 
             if (Tone.Transport.state !== 'started') {
+                console.log("[EventHandlers] Transport state is not 'started'. Resetting position and starting transport."); // DEBUG
                 Tone.Transport.position = 0;
                 document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 Tone.Transport.start("+0.1");
+                console.log("[EventHandlers] Tone.Transport.start() called. Current state:", Tone.Transport.state); // DEBUG
             } else {
+                console.log("[EventHandlers] Transport state is 'started'. Pausing transport."); // DEBUG
                 Tone.Transport.pause();
+                console.log("[EventHandlers] Tone.Transport.pause() called. Current state:", Tone.Transport.state); // DEBUG
             }
         } catch (error) {
             console.error("[EventHandlers] Error in play/pause click:", error);
@@ -223,12 +228,13 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
             if (oldMidiName !== newMidiName) {
                  captureStateForUndo(`Change MIDI Input to ${newMidiName}`);
             }
-            selectMIDIInput();
+            selectMIDIInput(); // Let selectMIDIInput handle notification if it's not a skipUndo call
         };
     } else {
         console.warn("[EventHandlers] attachGlobalControlEvents: window.midiInputSelectGlobal not found.");
     }
 }
+
 
 export async function setupMIDI() {
     console.log("[EventHandlers] setupMIDI called."); // DEBUG
@@ -238,8 +244,8 @@ export async function setupMIDI() {
             window.midiAccess = await navigator.requestMIDIAccess();
             console.log("[EventHandlers] MIDI Access Granted:", window.midiAccess); // DEBUG
             populateMIDIInputs();
-            window.midiAccess.onstatechange = populateMIDIInputs;
-            showNotification("MIDI ready.", 2000);
+            window.midiAccess.onstatechange = populateMIDIInputs; // Listen for changes (device plug/unplug)
+            // No general "MIDI ready" notification here, as populateMIDIInputs will handle specific device selection notices
         } catch (e) {
             console.error("[EventHandlers] Could not access MIDI devices.", e);
             showNotification(`Could not access MIDI: ${e.message}. Ensure permissions.`, 6000);
@@ -263,14 +269,14 @@ function populateMIDIInputs() {
 
     const previouslySelectedId = window.activeMIDIInput ? window.activeMIDIInput.id : window.midiInputSelectGlobal.value;
     console.log(`[EventHandlers] populateMIDIInputs: Previously selected MIDI ID: ${previouslySelectedId}`); // DEBUG
-    window.midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>';
+    window.midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>'; // Clear existing
 
     const inputs = window.midiAccess.inputs;
     if (inputs.size === 0) {
         console.log("[EventHandlers] No MIDI input devices found."); // DEBUG
     } else {
         inputs.forEach(input => {
-            console.log(`[EventHandlers] Found MIDI Input: ID=${input.id}, Name=${input.name}`); // DEBUG
+            console.log(`[EventHandlers] Found MIDI Input: ID=${input.id}, Name=${input.name}, State=${input.state}, Connection=${input.connection}`); // DEBUG
             const option = document.createElement('option');
             option.value = input.id;
             option.textContent = input.name;
@@ -278,30 +284,29 @@ function populateMIDIInputs() {
         });
     }
 
-    // Attempt to restore previous selection
-    if (previouslySelectedId && Array.from(window.midiInputSelectGlobal.options).some(opt => opt.value === previouslySelectedId)) {
+    // Attempt to restore previous selection if that device is still available
+    if (previouslySelectedId && window.midiAccess.inputs.get(previouslySelectedId)) {
         window.midiInputSelectGlobal.value = previouslySelectedId;
-        console.log(`[EventHandlers] Restored MIDI selection to: ${previouslySelectedId}`); // DEBUG
+        console.log(`[EventHandlers] Restored MIDI selection to: ${previouslySelectedId} (${window.midiAccess.inputs.get(previouslySelectedId).name})`); // DEBUG
     } else {
         window.midiInputSelectGlobal.value = ""; // Default to "No MIDI Input"
         if (previouslySelectedId) {
-            console.log(`[EventHandlers] Previously selected MIDI ID ${previouslySelectedId} not found. Defaulting to 'No MIDI Input'.`); // DEBUG
+            console.log(`[EventHandlers] Previously selected MIDI ID ${previouslySelectedId} not found or no longer valid. Defaulting to 'No MIDI Input'.`); // DEBUG
         }
     }
-
     selectMIDIInput(true); // Re-apply selection and update listeners without triggering undo/notification for this populate call
 }
 
-export function selectMIDIInput(skipUndoCapture = false) {
-    console.log(`[EventHandlers] selectMIDIInput called. skipUndoCapture: ${skipUndoCapture}`); // DEBUG
-    if (window.activeMIDIInput && typeof window.activeMIDIInput.close === 'function') {
-        // It's generally better not to explicitly close, as it might prevent reopening.
-        // Removing the onmidimessage listener is the key part.
-        // window.activeMIDIInput.close();
-    }
+export function selectMIDIInput(skipUndoCaptureAndNotification = false) {
+    console.log(`[EventHandlers] selectMIDIInput called. skipUndoCaptureAndNotification: ${skipUndoCaptureAndNotification}`); // DEBUG
+    // Remove listener from previously active input
     if (window.activeMIDIInput) {
         console.log(`[EventHandlers] Removing onmidimessage from old input: ${window.activeMIDIInput.name}`); // DEBUG
         window.activeMIDIInput.onmidimessage = null;
+        // It's often not necessary to explicitly close MIDI inputs, and can sometimes cause issues with reopening.
+        // if (typeof window.activeMIDIInput.close === 'function') {
+        //     window.activeMIDIInput.close();
+        // }
     }
     window.activeMIDIInput = null;
 
@@ -314,15 +319,23 @@ export function selectMIDIInput(skipUndoCapture = false) {
             window.activeMIDIInput = inputDevice;
             console.log(`[EventHandlers] Setting onmidimessage for new input: ${window.activeMIDIInput.name}`); // DEBUG
             window.activeMIDIInput.onmidimessage = handleMIDIMessage;
-            if (!skipUndoCapture) {
+            // Some implementations might require explicit open, though usually not.
+            // if (typeof window.activeMIDIInput.open === 'function') {
+            //     window.activeMIDIInput.open().then(() => {
+            //         console.log(`[EventHandlers] MIDI Input ${window.activeMIDIInput.name} opened successfully.`);
+            //     }).catch(err => {
+            //         console.error(`[EventHandlers] Error opening MIDI Input ${window.activeMIDIInput.name}:`, err);
+            //     });
+            // }
+            if (!skipUndoCaptureAndNotification) {
                 showNotification(`MIDI Input: ${window.activeMIDIInput.name} selected.`, 2000);
             }
         } else {
-             if (!skipUndoCapture) showNotification("Selected MIDI input not found or unavailable.", 2000);
+             if (!skipUndoCaptureAndNotification) showNotification("Selected MIDI input not found or unavailable.", 2000);
              console.warn(`[EventHandlers] Selected MIDI device ID "${selectedId}" not found in available inputs.`); // DEBUG
         }
     } else {
-        if (!skipUndoCapture && selectedId === "") showNotification("MIDI Input deselected.", 1500);
+        if (!skipUndoCaptureAndNotification && selectedId === "") showNotification("MIDI Input deselected.", 1500);
         console.log("[EventHandlers] No MIDI input selected or midiAccess not available."); // DEBUG
     }
     if (window.midiIndicatorGlobalEl) window.midiIndicatorGlobalEl.classList.toggle('active', !!window.activeMIDIInput);
@@ -437,7 +450,7 @@ async function handleComputerKeyDown(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
     if (e.code === 'KeyZ') {
-        if (!currentlyPressedComputerKeys[e.code]) { // Process only on first press
+        if (!currentlyPressedComputerKeys[e.code]) {
             if (currentOctaveShift > MIN_OCTAVE_SHIFT) {
                 currentOctaveShift--;
                 showNotification(`Octave: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 1000);
@@ -445,12 +458,12 @@ async function handleComputerKeyDown(e) {
                 showNotification(`Min Octave (${MIN_OCTAVE_SHIFT}) Reached`, 1000);
             }
         }
-        currentlyPressedComputerKeys[e.code] = true; // Mark as pressed
+        currentlyPressedComputerKeys[e.code] = true;
         if(window.keyboardIndicatorGlobalEl) window.keyboardIndicatorGlobalEl.classList.add('active');
         return;
     }
     if (e.code === 'KeyX') {
-        if (!currentlyPressedComputerKeys[e.code]) { // Process only on first press
+        if (!currentlyPressedComputerKeys[e.code]) {
             if (currentOctaveShift < MAX_OCTAVE_SHIFT) {
                 currentOctaveShift++;
                 showNotification(`Octave: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 1000);
@@ -458,12 +471,12 @@ async function handleComputerKeyDown(e) {
                 showNotification(`Max Octave (${MAX_OCTAVE_SHIFT}) Reached`, 1000);
             }
         }
-        currentlyPressedComputerKeys[e.code] = true; // Mark as pressed
+        currentlyPressedComputerKeys[e.code] = true;
         if(window.keyboardIndicatorGlobalEl) window.keyboardIndicatorGlobalEl.classList.add('active');
         return;
     }
 
-    if (e.repeat || currentlyPressedComputerKeys[e.code]) return; // Ignore repeats for note-on, and if already pressed
+    if (e.repeat || currentlyPressedComputerKeys[e.code]) return;
 
     currentlyPressedComputerKeys[e.code] = true;
     if(window.keyboardIndicatorGlobalEl) window.keyboardIndicatorGlobalEl.classList.add('active');
@@ -504,12 +517,12 @@ async function handleComputerKeyDown(e) {
 
             let rowIndex = -1;
             if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && Constants.computerKeySynthMap[e.code]) {
-                const pitchName = Tone.Frequency(computerKeyNote, "midi").toNote(); // Use the octave-shifted note
+                const pitchName = Tone.Frequency(computerKeyNote, "midi").toNote();
                 rowIndex = Constants.synthPitches.indexOf(pitchName);
-            } else if (track.type === 'Sampler' && Constants.computerKeySamplerMap[e.code]) { // Slicer
-                 rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices); // Shift slice index by octaves too
+            } else if (track.type === 'Sampler' && Constants.computerKeySamplerMap[e.code]) {
+                 rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
                  if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-            } else if (track.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code]) { // Pad Sampler
+            } else if (track.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code]) {
                  rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
                  if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
             }
@@ -532,17 +545,15 @@ async function handleComputerKeyDown(e) {
 
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
         currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, computerKeyVelocity);
-    } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) { // Slicer
+    } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const sliceIdx = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-            // For slicer, the octave shift is handled by selecting a different slice, pitch within slice is separate
-            window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, 0);
+            window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, 0); // Octave shift handled by slice index
         }
-    } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) { // Pad Sampler
+    } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const padIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
         if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-            // For drum pads, the octave shift is handled by selecting a different pad, pitch within pad is separate
-            window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, 0);
+            window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, 0); // Octave shift handled by pad index
         }
     } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
         if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
