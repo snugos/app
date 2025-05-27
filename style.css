@@ -475,22 +475,34 @@ button.armed {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-/* Ensure first column and first row have left/top borders */
-.sequencer-grid > div:nth-child(-n+${/* steps_per_bar_plus_one */ 17}) { /* Adjust if label column changes */
-    border-top: 1px solid #cbd5e0;
-}
-.sequencer-grid > div:nth-child(1), /* Top-left */
-.sequencer-grid > div[style*="grid-column: 1;"] { /* All label cells */
+
+/* Left border for the first column elements */
+.sequencer-grid > .empty-top-left,
+.sequencer-grid > .sequencer-label-cell {
     border-left: 1px solid #cbd5e0;
 }
 
+/* Top border for the header row elements and the first row of step cells */
+.sequencer-grid > .sequencer-header-cell, /* Catches top-left and bar numbers */
+.sequencer-grid > .sequencer-step-cell[style*="grid-row: 2;"] { /* Catches first row of step cells */
+    border-top: 1px solid #cbd5e0;
+}
+/* Explicitly ensure top-left has top border if .sequencer-header-cell isn't sufficient due to class name changes */
+.sequencer-grid > .empty-top-left {
+    border-top: 1px solid #cbd5e0;
+}
 
-.sequencer-header-cell {
+
+.sequencer-header-cell { /* General style for header cells (top-left, bar numbers) */
     background-color: #e2e8f0;
     font-weight: bold;
     padding: 2px 4px;
-    /* border-top is handled by the general rule above */
 }
+/* Specific class for top-left if needed, but .sequencer-header-cell should cover it */
+/* .empty-top-left {} */
+/* Specific class for bar numbers if needed, but .sequencer-header-cell should cover it */
+/* .bar-number-header {} */
+
 
 .sequencer-label-cell {
     background-color: #edf2f7;
@@ -499,7 +511,7 @@ button.armed {
     justify-content: flex-start;
     position: sticky;
     left: 0;
-    z-index: 1;
+    z-index: 1; /* Keep labels on top when scrolling horizontally */
 }
 
 .sequencer-step-cell {
@@ -530,7 +542,7 @@ button.armed {
 .sequencer-step-cell.playing {
     outline: 2px solid #e53e3e;
     outline-offset: -2px;
-    z-index: 2;
+    z-index: 2; /* Ensure playing highlight is above other cells, but below labels if they overlap */
 }
 
 /* --- Panel and Control Group --- */
