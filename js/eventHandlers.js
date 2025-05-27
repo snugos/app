@@ -13,10 +13,10 @@ import {
 } from './state.js';
 
 export let currentlyPressedComputerKeys = {};
-let currentOctaveShift = 0; // Initialize octave shift
-const MAX_OCTAVE_SHIFT = 2;  // Max 2 octaves up
-const MIN_OCTAVE_SHIFT = -2;  // Max 2 octaves down
-const OCTAVE_SHIFT_AMOUNT = 12; // 12 semitones per octave
+let currentOctaveShift = 0;
+const MAX_OCTAVE_SHIFT = 2;
+const MIN_OCTAVE_SHIFT = -2;
+const OCTAVE_SHIFT_AMOUNT = 12;
 
 export function initializePrimaryEventListeners(appContext) {
     const {
@@ -24,8 +24,8 @@ export function initializePrimaryEventListeners(appContext) {
         saveProject, loadProject, exportToWav,
         openGlobalControlsWindow, openMixerWindow,
         handleProjectFileLoad,
-        triggerCustomBackgroundUpload, 
-        removeCustomDesktopBackground  
+        triggerCustomBackgroundUpload,
+        removeCustomDesktopBackground
     } = appContext;
 
     const startButton = document.getElementById('startButton');
@@ -40,13 +40,12 @@ export function initializePrimaryEventListeners(appContext) {
         }
     });
 
-    // Menu item listeners
     document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => { addTrack('Synth', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
     document.getElementById('menuAddInstrumentSamplerTrack')?.addEventListener('click', () => { addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
 
-    document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => { openSoundBrowserWindow(); startMenu?.classList.add('hidden'); });
+    document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => { if(typeof openSoundBrowserWindow === 'function') openSoundBrowserWindow(); else console.error("openSoundBrowserWindow is not defined"); startMenu?.classList.add('hidden'); });
 
     document.getElementById('menuUndo')?.addEventListener('click', () => {
         if (!document.getElementById('menuUndo').classList.contains('disabled')) {
@@ -67,8 +66,8 @@ export function initializePrimaryEventListeners(appContext) {
     });
     document.getElementById('menuExportWav')?.addEventListener('click', () => { exportToWav(); startMenu?.classList.add('hidden'); });
 
-    document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { openGlobalControlsWindow(); startMenu?.classList.add('hidden'); });
-    document.getElementById('menuOpenMixer')?.addEventListener('click', () => { openMixerWindow(); startMenu?.classList.add('hidden'); });
+    document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { if(typeof openGlobalControlsWindow === 'function') openGlobalControlsWindow(); else console.error("openGlobalControlsWindow is not defined"); startMenu?.classList.add('hidden'); });
+    document.getElementById('menuOpenMixer')?.addEventListener('click', () => { if(typeof openMixerWindow === 'function') openMixerWindow(); else console.error("openMixerWindow is not defined"); startMenu?.classList.add('hidden'); });
 
     document.getElementById('menuUploadCustomBg')?.addEventListener('click', () => {
         if (triggerCustomBackgroundUpload) triggerCustomBackgroundUpload();
@@ -91,7 +90,7 @@ export function initializePrimaryEventListeners(appContext) {
     });
 
     document.getElementById('taskbarTempoDisplay')?.addEventListener('click', () => {
-        openGlobalControlsWindow();
+        if(typeof openGlobalControlsWindow === 'function') openGlobalControlsWindow(); else console.error("openGlobalControlsWindow is not defined");
     });
 
     const loadProjectInputEl = document.getElementById('loadProjectInput');
@@ -102,7 +101,6 @@ export function initializePrimaryEventListeners(appContext) {
     } else if (!loadProjectInputEl) {
         console.warn("[EventHandlers] loadProjectInput element not found.");
     }
-
 
     document.addEventListener('keydown', handleComputerKeyDown);
     document.addEventListener('keyup', handleComputerKeyUp);
@@ -123,7 +121,6 @@ export function initializePrimaryEventListeners(appContext) {
         });
         Tone.Transport.on('stop', () => {
             if (window.playBtn) window.playBtn.textContent = 'Play';
-            // Clear all playing highlights on explicit stop
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
             if (isTrackRecording()) {
                 setIsRecording(false);
@@ -148,13 +145,10 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
             }
 
             if (Tone.Transport.state !== 'started') {
-                // If not started (i.e., stopped or paused), always reset position to 0 before starting
                 Tone.Transport.position = 0;
-                // Clear any existing playing highlights before restarting
                 document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 Tone.Transport.start("+0.1");
             } else {
-                // If already started, then pause
                 Tone.Transport.pause();
             }
         } catch (error) {
@@ -185,7 +179,6 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                 showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
                 captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
                 if (Tone.Transport.state !== 'started') {
-                    // If transport is not started, reset position and start it for recording
                     Tone.Transport.position = 0;
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                     Tone.Transport.start("+0.1");
@@ -209,7 +202,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
     globalControlsWindowElement.querySelector('#tempoGlobalInput')?.addEventListener('change', (e) => {
         const newTempo = parseFloat(e.target.value);
         const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
-        if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) { 
+        if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
             if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
             Tone.Transport.bpm.value = newTempo;
             if(typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
@@ -233,7 +226,6 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
         };
     }
 }
-
 
 export async function setupMIDI() {
     if (navigator.requestMIDIAccess) {
@@ -269,15 +261,15 @@ function populateMIDIInputs() {
         window.midiInputSelectGlobal.value = previouslySelectedId;
     }
 
-    if (!window.midiInputSelectGlobal.onchange) {
+    if (!window.midiInputSelectGlobal.onchange) { // Should already be set in attachGlobalControlEvents
         window.midiInputSelectGlobal.onchange = () => selectMIDIInput();
     }
-    selectMIDIInput(true);
+    selectMIDIInput(true); // Initialize/re-apply selection
 }
 
 export function selectMIDIInput(skipUndoCapture = false) {
     if (window.activeMIDIInput && window.activeMIDIInput.onmidimessage) {
-        window.activeMIDIInput.onmidimessage = null;
+        window.activeMIDIInput.onmidimessage = null; // Remove old listener
     }
     window.activeMIDIInput = null;
 
@@ -288,7 +280,7 @@ export function selectMIDIInput(skipUndoCapture = false) {
         if (inputDevice) {
             window.activeMIDIInput = inputDevice;
             window.activeMIDIInput.onmidimessage = handleMIDIMessage;
-            if (!skipUndoCapture) {
+            if (!skipUndoCapture) { // Only show notification and capture undo if it's a direct user change
                 showNotification(`MIDI Input: ${window.activeMIDIInput.name} selected.`, 2000);
             }
         } else {
@@ -310,7 +302,7 @@ export async function handleMIDIMessage(message) {
         setTimeout(() => window.midiIndicatorGlobalEl.classList.remove('active'), 100);
     }
 
-    if (command === 144 && velocity > 0) { 
+    if (command === 144 && velocity > 0) {
         const audioReady = await window.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             console.warn("[EventHandlers] Audio context not ready for MIDI Note On.");
@@ -335,7 +327,7 @@ export async function handleMIDIMessage(message) {
                 if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
             } else if (track.type === 'DrumSampler') {
                 rowIndex = note - Constants.samplerMIDINoteStart;
-                if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1; // Use constant if not dynamic yet
+                if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
             }
 
             if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
@@ -357,7 +349,7 @@ export async function handleMIDIMessage(message) {
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
-    if (command === 144 && velocity > 0) { 
+    if (command === 144 && velocity > 0) {
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
             currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
         } else if (currentArmedTrack.type === 'Sampler') {
@@ -367,7 +359,7 @@ export async function handleMIDIMessage(message) {
             }
         } else if (currentArmedTrack.type === 'DrumSampler') {
             const padIndex = note - Constants.samplerMIDINoteStart;
-            if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') { // Use constant
+            if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
                 window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
             }
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
@@ -378,7 +370,7 @@ export async function handleMIDIMessage(message) {
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && !currentArmedTrack.toneSampler.loaded) {
             console.warn(`[EventHandlers] InstrumentSampler on track ${currentArmedTrack.id} not loaded, cannot play MIDI note.`);
         }
-    } else if (command === 128 || (command === 144 && velocity === 0)) { 
+    } else if (command === 128 || (command === 144 && velocity === 0)) {
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
             currentArmedTrack.instrument.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
@@ -391,7 +383,7 @@ export async function handleMIDIMessage(message) {
 
 async function handleComputerKeyDown(e) {
     if (e.code === 'Space') {
-        e.preventDefault(); 
+        e.preventDefault();
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
             const playBtnGlobal = document.getElementById('playBtnGlobal');
             if (playBtnGlobal && typeof playBtnGlobal.click === 'function') {
@@ -400,9 +392,9 @@ async function handleComputerKeyDown(e) {
                  window.playBtn.click();
             }
         }
-        return; 
+        return;
     }
-    
+
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
     if (e.code === 'KeyZ') {
@@ -440,7 +432,7 @@ async function handleComputerKeyDown(e) {
     const time = Tone.now();
     const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
 
-    if (baseComputerKeyNote === undefined) { 
+    if (baseComputerKeyNote === undefined) {
         return;
     }
 
@@ -449,13 +441,13 @@ async function handleComputerKeyDown(e) {
 
     if (computerKeyNote < 0 || computerKeyNote > 127) {
         console.warn(`Octave shifted note ${computerKeyNote} (Base: ${baseComputerKeyNote}, Shift: ${currentOctaveShift}) is out of MIDI range.`);
-        return; 
+        return;
     }
 
     const audioReady = await window.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
         console.warn("[EventHandlers] Audio context not ready for Computer Key Down note playing.");
-        delete currentlyPressedComputerKeys[e.code]; 
+        delete currentlyPressedComputerKeys[e.code];
         if(window.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).length === 0) {
             window.keyboardIndicatorGlobalEl.classList.remove('active');
         }
@@ -472,15 +464,15 @@ async function handleComputerKeyDown(e) {
 
             let rowIndex = -1;
             if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && Constants.computerKeySynthMap[e.code]) {
-                const pitchName = Tone.Frequency(baseComputerKeyNote, "midi").toNote();
+                const pitchName = Tone.Frequency(baseComputerKeyNote, "midi").toNote(); // Use base note for pitch name
                 rowIndex = Constants.synthPitches.indexOf(pitchName);
             } else if ((track.type === 'Sampler' || track.type === 'DrumSampler') && Constants.computerKeySamplerMap[e.code]) {
                 if (track.type === 'Sampler') {
                      rowIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
                      if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-                } else { 
+                } else { // DrumSampler
                      rowIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
-                     if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1; // Use constant
+                     if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
                 }
             }
 
@@ -496,20 +488,20 @@ async function handleComputerKeyDown(e) {
     }
 
     const currentArmedTrackId = getArmedTrackId();
-    if (!currentArmedTrackId) return; 
+    if (!currentArmedTrackId) return;
     const currentArmedTrack = getTrackById(currentArmedTrackId);
-    if (!currentArmedTrack) return; 
+    if (!currentArmedTrack) return;
 
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
         currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, computerKeyVelocity);
     } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
-        const sliceIdx = baseComputerKeyNote - Constants.samplerMIDINoteStart; 
+        const sliceIdx = baseComputerKeyNote - Constants.samplerMIDINoteStart;
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
             window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
-        const padIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart; 
-        if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') { // Use constant
+        const padIndex = baseComputerKeyNote - Constants.samplerMIDINoteStart;
+        if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
             window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
         }
     } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
@@ -540,10 +532,10 @@ function handleComputerKeyUp(e) {
         if (currentArmedTrackId) {
             const track = getTrackById(currentArmedTrackId);
             if (track) {
-                const baseComputerKeyNote = Constants.computerKeySynthMap[e.code]; 
-                if (baseComputerKeyNote !== undefined) { 
+                const baseComputerKeyNote = Constants.computerKeySynthMap[e.code];
+                if (baseComputerKeyNote !== undefined) {
                     const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-                     if (computerKeyNote >= 0 && computerKeyNote <= 127) { 
+                     if (computerKeyNote >= 0 && computerKeyNote <= 127) {
                         if (track.type === 'Synth' && track.instrument) {
                             track.instrument.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
                         } else if (track.type === 'InstrumentSampler' && track.toneSampler && track.toneSampler.loaded) {
@@ -564,11 +556,14 @@ function handleComputerKeyUp(e) {
 }
 
 export function handleTrackMute(trackId) {
+    console.log(`[EventHandlers] handleTrackMute called for trackId: ${trackId}`); // DEBUG
     const track = getTrackById(trackId);
+    console.log(`[EventHandlers] Track found for mute:`, track); // DEBUG
     if (!track) return;
     captureStateForUndo(`${track.isMuted ? "Unmute" : "Mute"} Track "${track.name}"`);
     track.isMuted = !track.isMuted;
     track.applyMuteState();
+    console.log(`[EventHandlers] Track ${track.id} isMuted state: ${track.isMuted}`); // DEBUG
 
     const inspectorMuteBtn = track.inspectorWindow?.element?.querySelector(`#muteBtn-${track.id}`);
     if (inspectorMuteBtn) inspectorMuteBtn.classList.toggle('muted', track.isMuted);
@@ -577,7 +572,9 @@ export function handleTrackMute(trackId) {
 }
 
 export function handleTrackSolo(trackId) {
+    console.log(`[EventHandlers] handleTrackSolo called for trackId: ${trackId}`); // DEBUG
     const track = getTrackById(trackId);
+    console.log(`[EventHandlers] Track found for solo:`, track); // DEBUG
     if (!track) return;
 
     const currentGlobalSoloId = getSoloedTrackId();
@@ -590,10 +587,11 @@ export function handleTrackSolo(trackId) {
     } else {
         setSoloedTrackId(track.id);
     }
+    console.log(`[EventHandlers] Global soloedTrackId is now: ${getSoloedTrackId()}`); // DEBUG
 
     getTracks().forEach(t => {
         t.isSoloed = (getSoloedTrackId() === t.id);
-        t.applySoloState();
+        t.applySoloState(); // This function should handle the gain changes
 
         const inspectorSoloBtn = t.inspectorWindow?.element?.querySelector(`#soloBtn-${t.id}`);
         if (inspectorSoloBtn) inspectorSoloBtn.classList.toggle('soloed', t.isSoloed);
@@ -603,7 +601,9 @@ export function handleTrackSolo(trackId) {
 }
 
 export function handleTrackArm(trackId) {
+    console.log(`[EventHandlers] handleTrackArm called for trackId: ${trackId}`); // DEBUG
     const track = getTrackById(trackId);
+    console.log(`[EventHandlers] Track found for arm:`, track); // DEBUG
     if (!track) return;
 
     const currentArmedId = getArmedTrackId();
@@ -616,6 +616,7 @@ export function handleTrackArm(trackId) {
     } else {
         setArmedTrackId(track.id);
     }
+    console.log(`[EventHandlers] Global armedTrackId is now: ${getArmedTrackId()}`); // DEBUG
 
     getTracks().forEach(t => {
         const inspectorArmBtn = t.inspectorWindow?.element?.querySelector(`#armInputBtn-${t.id}`);
@@ -627,6 +628,7 @@ export function handleTrackArm(trackId) {
 }
 
 export function handleRemoveTrack(trackId) {
+    console.log(`[EventHandlers] handleRemoveTrack called for trackId: ${trackId}`); // DEBUG
     const track = getTrackById(trackId);
     if (!track) return;
     showConfirmationDialog(
@@ -639,25 +641,28 @@ export function handleRemoveTrack(trackId) {
 }
 
 export function handleOpenTrackInspector(trackId) {
+    console.log(`[EventHandlers] handleOpenTrackInspector called for trackId: ${trackId}`); // DEBUG
     if (typeof window.openTrackInspectorWindow === 'function') {
         window.openTrackInspectorWindow(trackId);
     } else {
-        console.warn("openTrackInspectorWindow function not available on window object.");
+        console.warn("[EventHandlers] openTrackInspectorWindow function not available on window object.");
     }
 }
 
 export function handleOpenEffectsRack(trackId) {
+    console.log(`[EventHandlers] handleOpenEffectsRack called for trackId: ${trackId}`); // DEBUG
     if (typeof window.openTrackEffectsRackWindow === 'function') {
         window.openTrackEffectsRackWindow(trackId);
     } else {
-        console.warn("openTrackEffectsRackWindow function not available on window object.");
+        console.warn("[EventHandlers] openTrackEffectsRackWindow function not available on window object.");
     }
 }
 
 export function handleOpenSequencer(trackId) {
+    console.log(`[EventHandlers] handleOpenSequencer called for trackId: ${trackId}`); // DEBUG
     if (typeof window.openTrackSequencerWindow === 'function') {
         window.openTrackSequencerWindow(trackId);
     } else {
-        console.warn("openTrackSequencerWindow function not available on window object.");
+        console.warn("[EventHandlers] openTrackSequencerWindow function not available on window object.");
     }
 }
