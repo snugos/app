@@ -197,15 +197,13 @@
     margin: 2px 0;
 }
 
-/* --- Existing styles from your file below this line --- */
-/* General App Styles (Ensure these are loaded or adapt as needed) */
+/* --- General App Styles (Ensure these are loaded or adapt as needed) --- */
 body {
     font-family: 'Inter', sans-serif; /* From your index.html */
     font-size: 14px;
-    /* ... other body styles ... */
+    margin: 0; /* Added to remove default body margin */
+    overflow: hidden; /* Prevent body scrollbars if desktop is 100vh/vw */
 }
-
-/* Taskbar and Window styles (assuming they exist and are satisfactory) */
 
 /* --- Pad Button Styling --- */
 .pad-button {
@@ -258,11 +256,7 @@ body {
 
 /* --- Styling for Pad Buttons as Drop Targets --- */
 .drop-zone-pad {
-    /* The .pad-button style already provides a good base.
-       You might not need much here unless you want a default visual hint
-       that it's *always* a drop target, even when not dragging.
-       For example, a very subtle border or icon.
-    */
+    /* The .pad-button style already provides a good base. */
     border-style: solid; /* Default to solid */
 }
 
@@ -373,7 +367,7 @@ body {
     position: relative;
     border: 1px solid #707070;
     box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-    cursor: ns-resize;
+    cursor: ns-resize; /* Vertical drag cursor for knobs */
 }
 
 .knob-handle {
@@ -383,8 +377,8 @@ body {
     position: absolute;
     top: 3px; /* Adjusted for shorter handle */
     left: 50%;
-    transform: translateX(-50%);
-    transform-origin: bottom center;
+    transform: translateX(-50%); /* Center the handle */
+    transform-origin: bottom center; /* Rotate around the bottom center of the handle */
     border-radius: 2px;
 }
 
@@ -401,7 +395,7 @@ body {
     display: flex;
     flex-wrap: wrap; /* Allow wrapping */
     justify-content: space-around; /* Distribute items */
-    align-items: flex-start; /* Align items to the top */
+    align-items: flex-end; /* Align items by their bottom edge, good for knobs with labels */
     padding: 5px 0;
     gap: 5px; /* Small gap between controls */
 }
@@ -412,252 +406,35 @@ body {
     display: flex;
     justify-content: center;
 }
-body {
-    font-family: 'Inter', sans-serif; /* From your index.html */
-    font-size: 14px;
-    /* ... other body styles ... */
-}
 
-/* Taskbar and Window styles (assuming they exist and are satisfactory) */
-
-/* --- Pad Button Styling --- */
-.pad-button {
-    padding: 8px;
-    border: 1px solid #888; /* Slightly darker border for definition */
-    background-color: #d4d0c8; /* Classic OS-like button color */
-    color: #000;
-    cursor: pointer;
-    text-align: center;
-    min-width: 70px; /* Ensure a decent tap/click target */
-    min-height: 70px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset -1px -1px 0px #707070, inset 1px 1px 0px #ffffff; /* Subtle inset shadow */
-    transition: background-color 0.15s ease, box-shadow 0.15s ease;
-    overflow: hidden; /* To contain the pad-label */
-    position: relative; /* For positioning internal elements if needed */
-}
-
-.pad-button:hover {
-    background-color: #e0e0e0; /* Lighter on hover */
-}
-
-.pad-button:active, .pad-button.selected-for-edit {
-    background-color: #c0c0c0; /* Slightly darker when active/selected */
-    box-shadow: inset 1px 1px 0px #707070, inset -1px -1px 0px #ffffff; /* Inverted inset shadow for pressed look */
-    border-color: #555;
-}
-
-.pad-button.selected-for-edit {
-    border-color: #000080; /* Navy blue border for selected pad */
-    border-width: 2px;
-    padding: 7px; /* Adjust padding to account for thicker border */
-}
-
-.pad-label {
-    font-size: 0.65rem; /* Smaller text for the sample name */
-    color: #333;
-    display: block;
-    margin-top: 5px;
-    word-break: break-all; /* Break long words */
-    line-height: 1.2;
-    max-height: 2.4em; /* Approx 2 lines */
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-
-/* --- Styling for Pad Buttons as Drop Targets --- */
-.drop-zone-pad {
-    /* The .pad-button style already provides a good base.
-       You might not need much here unless you want a default visual hint
-       that it's *always* a drop target, even when not dragging.
-       For example, a very subtle border or icon.
-    */
-    border-style: solid; /* Default to solid */
-}
-
-/* Visual feedback when dragging over an individual pad button */
-.drop-zone-pad.dragover {
-    background-color: #b0c4de; /* Light steel blue - indicates droppable area */
-    border-color: #4682b4;   /* Steel blue */
-    border-style: dashed;
-    opacity: 0.9;
-    box-shadow: 0 0 8px rgba(70, 130, 180, 0.5); /* Subtle glow */
-}
-
-
-/* --- General Drop Zone Styling (for the area below selected pad controls) --- */
-.drop-zone {
-    border: 2px dashed #a0a0a0; /* Dashed border */
-    padding: 20px;              /* More padding */
-    text-align: center;
-    background-color: #f0f0f0;  /* Lighter background */
-    color: #555;                /* Text color */
-    font-size: 0.9em;
-    border-radius: 4px;         /* Rounded corners */
-    margin-bottom: 10px;        /* Space below */
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.drop-zone.dragover {
-    background-color: #d8e8ff; /* Light blue highlight on drag over */
-    border-color: #77aaff;     /* Stronger blue border */
-    color: #333;
-}
-
-.drop-zone label {
-    color: #007bff;             /* Standard link blue */
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.drop-zone label:hover {
-    color: #0056b3;             /* Darker blue on hover */
-}
-
-
-/* --- Pads Container --- */
-/* This ensures the pad buttons are laid out nicely */
-.pads-container {
-    display: grid;
-    /* Creates as many columns as fit, each at least 70px wide, taking equal space */
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 10px; /* Space between pads */
-    padding: 5px 0; /* Some padding around the grid */
-}
-
-/* Style for the notification messages */
-#notification-area {
-    position: fixed;
-    bottom: 40px; /* Above taskbar */
-    right: 20px;
-    z-index: 20000; /* High z-index to be on top of other elements */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end; /* Notifications align to the right */
-}
-
-.notification-message {
-    background-color: rgba(0, 0, 0, 0.75);
-    color: white;
-    padding: 10px 15px;
-    margin-top: 10px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    opacity: 0;
-    transform: translateX(100%); /* Start off-screen */
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.notification-message.show {
-    opacity: 1;
-    transform: translateX(0); /* Slide in */
-}
-
-/* --- Knob Styling (Example) --- */
-.knob-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 5px;
-    min-width: 60px; /* Ensure some minimum width */
-}
-
-.knob-label {
-    font-size: 0.7rem;
-    color: #333;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    text-align: center;
-}
-
-.knob {
-    width: 36px; /* Smaller knob */
-    height: 36px;
-    background-color: #B0B0B0; /* Knob color */
-    border-radius: 50%;
-    position: relative;
-    border: 1px solid #707070;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
-    cursor: ns-resize;
-}
-
-.knob-handle {
-    width: 4px;
-    height: 10px; /* Shorter handle for smaller knob */
-    background-color: #333;
-    position: absolute;
-    top: 3px; /* Adjusted for shorter handle */
-    left: 50%;
-    transform: translateX(-50%);
-    transform-origin: bottom center;
-    border-radius: 2px;
-}
-
-.knob-value {
-    font-size: 0.65rem; /* Smaller value text */
-    color: #333;
-    margin-top: 2px;
-    min-height: 1em; /* Prevent layout shift if value is empty */
-    text-align: center;
-}
-
-/* Control group for knobs, etc. */
-.control-group {
-    display: flex;
-    flex-wrap: wrap; /* Allow wrapping */
-    justify-content: space-around; /* Distribute items */
-    align-items: flex-start; /* Align items to the top */
-    padding: 5px 0;
-    gap: 5px; /* Small gap between controls */
-}
-
-/* Specific styling for single control containers if needed */
-.single-control-container {
-    padding: 5px;
-    display: flex;
-    justify-content: center;
-}
-/* style.css - Additions for improved visuals */
 
 /* --- General Button Active States (Mute, Solo, Arm, Toggles) --- */
-/* These styles will provide visual feedback when buttons are active. */
-/* You can customize the colors and styles further. */
-
 .mute-button.muted,
-button.muted { /* General fallback if only .muted is applied */
-    background-color: #f56565 !important; /* Reddish, !important to override base if needed */
+button.muted {
+    background-color: #f56565 !important;
     color: white !important;
-    border-color: #c53030 #f56565 #f56565 #c53030 !important; /* Darker red border */
-    box-shadow: inset 1px 1px 0 #c53030, inset -1px -1px 0 #fca5a5 !important; /* Inset shadow for pressed look */
+    border-color: #c53030 #f56565 #f56565 #c53030 !important;
+    box-shadow: inset 1px 1px 0 #c53030, inset -1px -1px 0 #fca5a5 !important;
 }
 
 .solo-button.soloed,
 button.soloed {
-    background-color: #ecc94b !important; /* Yellowish */
+    background-color: #ecc94b !important;
     color: black !important;
-    border-color: #d69e2e #ecc94b #ecc94b #d69e2e !important; /* Darker yellow border */
+    border-color: #d69e2e #ecc94b #ecc94b #d69e2e !important;
     box-shadow: inset 1px 1px 0 #d69e2e, inset -1px -1px 0 #fefcbf !important;
 }
 
 .arm-input-button.armed,
 button.armed {
-    background-color: #ed8936 !important; /* Orangish */
+    background-color: #ed8936 !important;
     color: white !important;
-    border-color: #c05621 #ed8936 #ed8936 #c05621 !important; /* Darker orange border */
+    border-color: #c05621 #ed8936 #ed8936 #c05621 !important;
     box-shadow: inset 1px 1px 0 #c05621, inset -1px -1px 0 #fed7aa !important;
 }
 
-/* For toggle buttons like Loop, Reverse, Polyphony in samplers */
-.slice-toggle-button.active {
-    background-color: #4299e1 !important; /* Blueish */
+.slice-toggle-button.active { /* For Loop, Reverse, Polyphony toggles */
+    background-color: #4299e1 !important;
     color: white !important;
     border-color: #2b6cb0 #4299e1 #4299e1 #2b6cb0 !important;
     box-shadow: inset 1px 1px 0 #2b6cb0, inset -1px -1px 0 #bee3f8 !important;
@@ -665,196 +442,232 @@ button.armed {
 
 
 /* --- Sequencer Grid Styling --- */
-/* This is crucial for the sequencer to be visible and usable. */
-
 .sequencer-window-content {
-    /* Ensure it has some basic styling if not already covered */
-    /* background-color: #e2e8f0; */ /* Example: light gray background for the window content */
+    /* background-color: #e2e8f0; */ /* Example */
 }
 
 .sequencer-grid-container {
     width: 100%;
-    max-height: 500px; /* Adjust as needed, enables vertical scroll */
-    overflow: auto;    /* Enables both horizontal and vertical scroll for the grid */
-    border: 1px solid #a0aec0; /* Border around the scrollable container */
-    background-color: #f7fafc; /* Light background for the grid area */
+    max-height: 500px;
+    overflow: auto;
+    border: 1px solid #a0aec0;
+    background-color: #f7fafc;
 }
 
 .sequencer-grid {
     /* display: grid; is set by JS */
-    /* grid-template-columns and grid-template-rows are set by JS */
-    /* --steps-per-bar is set by JS */
-    min-width: fit-content; /* Allow grid to expand horizontally with content */
-    border-spacing: 0; /* Remove any default spacing if table-like */
-    border-collapse: collapse; /* For a tight grid */
+    min-width: fit-content;
+    border-spacing: 0;
+    border-collapse: collapse;
 }
 
 .sequencer-header-cell,
 .sequencer-label-cell,
 .sequencer-step-cell {
-    border-right: 1px solid #cbd5e0;  /* Vertical grid lines */
-    border-bottom: 1px solid #cbd5e0; /* Horizontal grid lines */
+    border-right: 1px solid #cbd5e0;
+    border-bottom: 1px solid #cbd5e0;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7rem; /* Smaller text for grid cells */
+    font-size: 0.7rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.sequencer-grid > div:first-child { /* Top-left empty cell */
-    border-left: 1px solid #cbd5e0;
+/* Ensure first column and first row have left/top borders */
+.sequencer-grid > div:nth-child(-n+${/* steps_per_bar_plus_one */ 17}) { /* Adjust if label column changes */
     border-top: 1px solid #cbd5e0;
 }
-.sequencer-header-cell { /* For Bar Numbers and top-left empty cell */
-    background-color: #e2e8f0; /* Light gray for headers */
+.sequencer-grid > div:nth-child(1), /* Top-left */
+.sequencer-grid > div[style*="grid-column: 1;"] { /* All label cells */
+    border-left: 1px solid #cbd5e0;
+}
+
+
+.sequencer-header-cell {
+    background-color: #e2e8f0;
     font-weight: bold;
     padding: 2px 4px;
-    border-top: 1px solid #cbd5e0; /* Top border for header row */
-}
-.sequencer-header-cell.empty-top-left {
-    /* Specific style for the very top-left cell if needed */
-}
-.sequencer-header-cell.bar-number-header {
-    /* Spans multiple columns, JS handles grid-column */
-    text-align: center;
+    /* border-top is handled by the general rule above */
 }
 
 .sequencer-label-cell {
-    background-color: #edf2f7; /* Slightly different gray for row labels */
-    font-weight: normal;
+    background-color: #edf2f7;
     padding: 2px 5px;
     text-align: left;
-    justify-content: flex-start; /* Align text to the left for labels */
-    border-left: 1px solid #cbd5e0; /* Left border for label column */
-    position: sticky; /* Make row labels sticky on horizontal scroll */
+    justify-content: flex-start;
+    position: sticky;
     left: 0;
-    z-index: 1; /* Ensure labels are above step cells during scroll */
+    z-index: 1;
 }
 
 .sequencer-step-cell {
-    min-width: 20px;  /* Minimum width for a step */
-    height: 25px; /* Fixed height for a step, matches grid-template-rows */
-    background-color: #ffffff; /* White background for steps */
+    min-width: 20px;
+    height: 25px; /* Should match JS grid-template-rows for steps */
+    background-color: #ffffff;
     cursor: pointer;
     transition: background-color 0.1s ease;
 }
 
 .sequencer-step-cell:hover {
-    background-color: #ebf8ff; /* Light blue on hover */
+    background-color: #ebf8ff;
 }
 
-/* Beat Emphasis */
 .sequencer-step-cell.beat-downbeat {
-    background-color: #f0f0f0; /* Slightly darker for downbeats */
-}
-.sequencer-step-cell.beat-other {
-    /* background-color: #ffffff; */ /* Default white */
-}
-/* Alternative beat emphasis (if STEPS_PER_BAR is not 16) */
-.sequencer-step-cell.beat-1 {
     background-color: #f0f0f0;
 }
-.sequencer-step-cell.beat-2 {
-    /* background-color: #ffffff; */
+.sequencer-step-cell.beat-1 { /* Alternative beat emphasis */
+    background-color: #f0f0f0;
 }
 
 
-/* Active Step Styles */
-.sequencer-step-cell.active-synth {
-    background-color: #63b3ed; /* Blue for synth */
-}
-.sequencer-step-cell.active-sampler {
-    background-color: #48bb78; /* Green for sampler */
-}
-.sequencer-step-cell.active-drum-sampler {
-    background-color: #f6ad55; /* Orange for drum sampler */
-}
-.sequencer-step-cell.active-instrument-sampler {
-    background-color: #d53f8c; /* Pink for instrument sampler */
-}
+.sequencer-step-cell.active-synth { background-color: #63b3ed; }
+.sequencer-step-cell.active-sampler { background-color: #48bb78; }
+.sequencer-step-cell.active-drum-sampler { background-color: #f6ad55; }
+.sequencer-step-cell.active-instrument-sampler { background-color: #d53f8c; }
 
-/* Playing Step Highlight */
 .sequencer-step-cell.playing {
-    outline: 2px solid #e53e3e; /* Red outline for playing steps */
-    outline-offset: -2px; /* Outline inside the cell */
-    z-index: 2; /* Ensure playing highlight is on top */
+    outline: 2px solid #e53e3e;
+    outline-offset: -2px;
+    z-index: 2;
 }
 
-
-/* --- Knob Alignment Adjustments (If still needed after checking transform-origin) --- */
-/* Your existing .knob and .knob-handle CSS seems mostly correct with transform-origin. */
-/* If the handle still looks off, ensure the .knob itself is sized and padded appropriately, */
-/* and the .knob-handle's `top` and `height` position it visually where the rotation should pivot. */
-/* Example: if the handle graphic has a pointer at its very tip, transform-origin: center top; might be better. */
-/* If it's a line from the center, transform-origin: center center; and adjust positioning. */
-
-.knob-handle {
-    /* ... your existing styles ... */
-    transform-origin: bottom center; /* This is usually correct for a line pointing up */
-    /* If your handle is a dot or different shape, you might need to adjust this and its top/left/translateX */
-}
-
-/* --- Ensure Panel and Control Group have some basic layout --- */
+/* --- Panel and Control Group --- */
 .panel {
-    border: 1px solid #a0aec0; /* Example border */
+    border: 1px solid #a0aec0;
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 4px;
-    background-color: #fdfdfe; /* Off-white background for panels */
+    background-color: #fdfdfe;
 }
 
-.control-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px; /* Space between controls in a group */
-    align-items: flex-end; /* Align items by their bottom edge, good for knobs with labels */
-    justify-content: space-around; /* Distribute controls within the group */
-}
-
-/* Ensure that the containers for knobs in specific inspectors are allowing flex/grid layout if needed */
-.synth-engine-controls-container .control-group,
-.slice-edit-group .control-group,
-.drum-sampler-panel .control-group,
-.instrument-sampler-panel .control-group {
-    /* These already have .control-group, so the above style applies. */
-    /* You can add more specific layout rules here if necessary. */
-}
-
-/* Ensure waveform canvas has a border or background to be visible if no waveform is drawn */
+/* --- Waveform Canvas --- */
 .waveform-canvas {
     border: 1px solid #cbd5e0;
-    background-color: #f7fafc; /* Light background if empty */
+    background-color: #f7fafc;
+    width: 100%; /* Ensure it takes available width */
+    height: 70px; /* Default height, can be adjusted */
+    display: block; /* Remove extra space below if inline */
 }
 
-
-/* Ensure meter bars are visible */
+/* --- Meter Bar Styling --- */
 .meter-bar-container {
-    background-color: #e2e8f0; /* Background for the meter track */
+    background-color: #e2e8f0;
     border-radius: 3px;
     overflow: hidden;
     border: 1px solid #b8c2cc;
-    height: 10px; /* Default height if not overridden */
+    height: 10px; /* Default height, can be overridden by specific meter containers */
+    box-sizing: border-box;
 }
 
 .meter-bar {
-    background-color: #48bb78; /* Green for the meter level */
+    background-color: #48bb78; /* Green */
     height: 100%;
-    width: 0%; /* Initial width */
-    transition: width 0.05s linear; /* Smooth transition for meter */
+    width: 0%;
+    transition: width 0.05s linear;
 }
 
 .meter-bar.clipping {
-    background-color: #f56565; /* Red when clipping */
+    background-color: #f56565; /* Red */
 }
 
-/* Ensure track meter containers in inspector and mixer have defined height */
-.track-meter-container { /* For inspector */
-    height: 16px; /* Or match your design */
+.track-meter-container { /* Inspector track meter */
+    height: 16px;
+    margin-top: 2px; /* Align with buttons better */
 }
-.mixer-meter-container { /* For mixer */
-    height: 12px; /* Or match your design */
+.mixer-meter-container { /* Mixer track meter */
+    height: 12px;
     margin-top: 4px;
 }
+#masterMeterContainerGlobal, #mixerMasterMeterContainer { /* Global and Mixer Master meters */
+    height: 15px;
+}
 
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 15000; /* Very high z-index */
+}
+
+.modal-dialog {
+    background-color: #c0c0c0; /* Classic grey */
+    border: 1px solid black;
+    border-color: #ffffff #808080 #808080 #ffffff; /* 3D border */
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    min-width: 300px;
+    max-width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-title-bar {
+    background-color: #000080; /* Dark blue */
+    color: white;
+    padding: 5px 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    user-select: none;
+}
+
+.modal-content {
+    padding: 15px;
+    overflow-y: auto; /* Scroll if content is too tall */
+    flex-grow: 1;
+    background-color: #c0c0c0; /* Match dialog background or set to white if preferred */
+    color: black; /* Ensure text is readable */
+}
+.modal-content p {
+    margin-bottom: 10px;
+}
+.modal-content p:last-child {
+    margin-bottom: 0;
+}
+
+
+.modal-buttons {
+    padding: 10px 15px;
+    text-align: right;
+    border-top: 1px solid #808080; /* Separator line */
+    background-color: #c0c0c0;
+}
+
+.modal-buttons button {
+    background-color: #c0c0c0;
+    border: 1px solid black;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
+    padding: 5px 15px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.modal-buttons button:active {
+    border-color: #808080 #ffffff #ffffff #808080;
+    box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #808080 inset;
+}
+
+.window-resizer {
+    width: 10px;
+    height: 10px;
+    background-color: #808080; /* Dark grey for resizer */
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    cursor: nwse-resize;
+    border-left: 1px solid #c0c0c0; /* Lighter inner border */
+    border-top: 1px solid #c0c0c0;
+    border-right: 1px solid #404040; /* Darker outer border */
+    border-bottom: 1px solid #404040;
+    z-index: 1; /* Ensure it's above window content but below other windows */
+}
