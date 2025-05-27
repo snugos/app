@@ -1,9 +1,9 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Version with visual improvements');
+console.log('[ui.js] TOP OF FILE PARSING - MonoSynth Version');
 
 import { SnugWindow } from './SnugWindow.js';
 console.log('[ui.js] SnugWindow imported as:', SnugWindow);
-import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners } from './utils.js'; // Imported correctly
+import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners } from './utils.js';
 import * as Constants from './constants.js';
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
@@ -12,7 +12,7 @@ import {
 
 export function createKnob(options) {
     const container = document.createElement('div');
-    container.className = 'knob-container'; // Ensure CSS for .knob-container, .knob, .knob-handle, .knob-label, .knob-value exists
+    container.className = 'knob-container';
 
     const labelEl = document.createElement('div');
     labelEl.className = 'knob-label';
@@ -21,9 +21,9 @@ export function createKnob(options) {
     container.appendChild(labelEl);
 
     const knobEl = document.createElement('div');
-    knobEl.className = 'knob'; // Needs CSS for appearance, size, and positioning context for the handle
+    knobEl.className = 'knob';
     const handleEl = document.createElement('div');
-    handleEl.className = 'knob-handle'; // Needs CSS for appearance, size, and crucially, transform-origin for correct rotation
+    handleEl.className = 'knob-handle';
     knobEl.appendChild(handleEl);
     container.appendChild(knobEl);
 
@@ -101,44 +101,32 @@ export function createKnob(options) {
     return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
 }
 
+// Updated for MonoSynth
 const synthEngineControlDefinitions = {
-    'BasicPoly': [
-        { idPrefix: 'basicOscType', type: 'select', label: 'Osc Type', options: ['sine', 'square', 'sawtooth', 'triangle', 'pwm', 'pulse'], paramPath: 'oscillator.type' },
-        { idPrefix: 'basicEnvAttack', type: 'knob', label: 'Attack', min: 0.005, max: 2, step: 0.001, paramPath: 'envelope.attack', decimals: 3 },
-        { idPrefix: 'basicEnvDecay', type: 'knob', label: 'Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'envelope.decay', decimals: 2 },
-        { idPrefix: 'basicEnvSustain', type: 'knob', label: 'Sustain', min: 0, max: 1, step: 0.01, paramPath: 'envelope.sustain', decimals: 2 },
-        { idPrefix: 'basicEnvRelease', type: 'knob', label: 'Release', min: 0.01, max: 5, step: 0.01, paramPath: 'envelope.release', decimals: 2 }
-    ],
-    'AMSynth': [
-        { idPrefix: 'amHarmonicity', type: 'knob', label: 'Harmonicity', min: 0.1, max: 20, step: 0.1, paramPath: 'harmonicity', decimals: 1 },
-        { idPrefix: 'amDetune', type: 'knob', label: 'Detune', min: -1200, max: 1200, step: 1, paramPath: 'detune', decimals: 0, displaySuffix: 'c' },
-        { idPrefix: 'amOscType', type: 'select', label: 'Carrier Type', options: ['sine', 'square', 'sawtooth', 'triangle'], paramPath: 'oscillator.type' },
-        { idPrefix: 'amEnvAttack', type: 'knob', label: 'Carr. Attack', min: 0.005, max: 2, step: 0.001, paramPath: 'envelope.attack', decimals: 3 },
-        { idPrefix: 'amEnvDecay', type: 'knob', label: 'Carr. Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'envelope.decay', decimals: 2 },
-        { idPrefix: 'amEnvSustain', type: 'knob', label: 'Carr. Sustain', min: 0, max: 1, step: 0.01, paramPath: 'envelope.sustain', decimals: 2 },
-        { idPrefix: 'amEnvRelease', type: 'knob', label: 'Carr. Release', min: 0.01, max: 5, step: 0.01, paramPath: 'envelope.release', decimals: 2 },
-        { idPrefix: 'amModType', type: 'select', label: 'Mod Type', options: ['sine', 'square', 'sawtooth', 'triangle'], paramPath: 'modulation.type' },
-        { idPrefix: 'amModEnvAttack', type: 'knob', label: 'Mod Attack', min: 0.005, max: 2, step: 0.001, paramPath: 'modulationEnvelope.attack', decimals: 3 },
-        { idPrefix: 'amModEnvDecay', type: 'knob', label: 'Mod Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'modulationEnvelope.decay', decimals: 2 },
-        { idPrefix: 'amModEnvSustain', type: 'knob', label: 'Mod Sustain', min: 0, max: 1, step: 0.01, paramPath: 'modulationEnvelope.sustain', decimals: 2 },
-        { idPrefix: 'amModEnvRelease', type: 'knob', label: 'Mod Release', min: 0.01, max: 5, step: 0.01, paramPath: 'modulationEnvelope.release', decimals: 2 }
-    ],
-    'FMSynth': [
-        { idPrefix: 'fmHarmonicity', type: 'knob', label: 'Harmonicity', min: 0.1, max: 20, step: 0.1, paramPath: 'harmonicity', decimals: 1 },
-        { idPrefix: 'fmModIndex', type: 'knob', label: 'Mod Index', min: 0.1, max: 100, step: 0.1, paramPath: 'modulationIndex', decimals: 1 },
-        { idPrefix: 'fmDetune', type: 'knob', label: 'Detune', min: -1200, max: 1200, step: 1, paramPath: 'detune', decimals: 0, displaySuffix: 'c' },
-        { idPrefix: 'fmOscType', type: 'select', label: 'Carrier Type', options: ['sine', 'square', 'sawtooth', 'triangle', 'pwm', 'pulse'], paramPath: 'oscillator.type' },
-        { idPrefix: 'fmEnvAttack', type: 'knob', label: 'Carr. Attack', min: 0.005, max: 2, step: 0.001, paramPath: 'envelope.attack', decimals: 3 },
-        { idPrefix: 'fmEnvDecay', type: 'knob', label: 'Carr. Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'envelope.decay', decimals: 2 },
-        { idPrefix: 'fmEnvSustain', type: 'knob', label: 'Carr. Sustain', min: 0, max: 1, step: 0.01, paramPath: 'envelope.sustain', decimals: 2 },
-        { idPrefix: 'fmEnvRelease', type: 'knob', label: 'Carr. Release', min: 0.01, max: 5, step: 0.01, paramPath: 'envelope.release', decimals: 2 },
-        { idPrefix: 'fmModType', type: 'select', label: 'Mod Type', options: ['sine', 'square', 'sawtooth', 'triangle'], paramPath: 'modulation.type' },
-        { idPrefix: 'fmModEnvAttack', type: 'knob', label: 'Mod Attack', min: 0.005, max: 2, step: 0.001, paramPath: 'modulationEnvelope.attack', decimals: 3 },
-        { idPrefix: 'fmModEnvDecay', type: 'knob', label: 'Mod Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'modulationEnvelope.decay', decimals: 2 },
-        { idPrefix: 'fmModEnvSustain', type: 'knob', label: 'Mod Sustain', min: 0, max: 1, step: 0.01, paramPath: 'modulationEnvelope.sustain', decimals: 2 },
-        { idPrefix: 'fmModEnvRelease', type: 'knob', label: 'Mod Release', min: 0.01, max: 5, step: 0.01, paramPath: 'modulationEnvelope.release', decimals: 2 }
+    'MonoSynth': [
+        // Oscillator
+        { idPrefix: 'msOscType', type: 'select', label: 'Osc Type', options: ['sine', 'square', 'sawtooth', 'triangle', 'pwm', 'pulse'], paramPath: 'oscillator.type' },
+        { idPrefix: 'msPortamento', type: 'knob', label: 'Portamento', min: 0, max: 0.5, step: 0.001, paramPath: 'portamento', decimals: 3, displaySuffix: 's' },
+        // Main Envelope (Amplitude)
+        { idPrefix: 'msEnvAttack', type: 'knob', label: 'Amp Attack', min: 0.005, max: 2, step: 0.001, paramPath: 'envelope.attack', decimals: 3, displaySuffix: 's' },
+        { idPrefix: 'msEnvDecay', type: 'knob', label: 'Amp Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'envelope.decay', decimals: 2, displaySuffix: 's' },
+        { idPrefix: 'msEnvSustain', type: 'knob', label: 'Amp Sustain', min: 0, max: 1, step: 0.01, paramPath: 'envelope.sustain', decimals: 2 },
+        { idPrefix: 'msEnvRelease', type: 'knob', label: 'Amp Release', min: 0.01, max: 5, step: 0.01, paramPath: 'envelope.release', decimals: 2, displaySuffix: 's' },
+        // Filter
+        { idPrefix: 'msFiltType', type: 'select', label: 'Filt Type', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], paramPath: 'filter.type' },
+        { idPrefix: 'msFiltRolloff', type: 'select', label: 'Filt Rolloff', options: ['-12', '-24', '-48', '-96'], paramPath: 'filter.rolloff' },
+        { idPrefix: 'msFiltQ', type: 'knob', label: 'Filt Q', min: 0.1, max: 20, step: 0.1, paramPath: 'filter.Q', decimals: 1 },
+        // Filter Envelope
+        { idPrefix: 'msFiltEnvAttack', type: 'knob', label: 'Filt Attack', min: 0.001, max: 2, step: 0.001, paramPath: 'filterEnvelope.attack', decimals: 3, displaySuffix: 's' },
+        { idPrefix: 'msFiltEnvDecay', type: 'knob', label: 'Filt Decay', min: 0.01, max: 2, step: 0.01, paramPath: 'filterEnvelope.decay', decimals: 2, displaySuffix: 's' },
+        { idPrefix: 'msFiltEnvSustain', type: 'knob', label: 'Filt Sustain', min: 0, max: 1, step: 0.01, paramPath: 'filterEnvelope.sustain', decimals: 2 },
+        { idPrefix: 'msFiltEnvRelease', type: 'knob', label: 'Filt Release', min: 0.01, max: 5, step: 0.01, paramPath: 'filterEnvelope.release', decimals: 2, displaySuffix: 's' },
+        { idPrefix: 'msFiltEnvBaseFreq', type: 'knob', label: 'Filt Base Freq', min: 20, max: 10000, step: 1, paramPath: 'filterEnvelope.baseFrequency', decimals: 0, displaySuffix: 'Hz' },
+        { idPrefix: 'msFiltEnvOctaves', type: 'knob', label: 'Filt Octaves', min: 0, max: 10, step: 0.1, paramPath: 'filterEnvelope.octaves', decimals: 1 },
+        { idPrefix: 'msFiltEnvExponent', type: 'knob', label: 'Filt Exp', min: 0.1, max: 4, step: 0.1, paramPath: 'filterEnvelope.exponent', decimals: 1 },
     ]
 };
+
 
 export function buildTrackInspectorContentDOM(track) {
     const contentDiv = document.createElement('div');
@@ -236,37 +224,27 @@ export function buildTrackInspectorContentDOM(track) {
     doubleSeqButton.id = `doubleSeqBtn-${track.id}`;
     doubleSeqButton.className = 'bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded w-full mt-1';
     doubleSeqButton.title = 'Double sequence length and content';
-    doubleSeqButton.textContent = 'Double'; // ADDED TEXT CONTENT
+    doubleSeqButton.textContent = 'Double';
     doubleSeqButton.addEventListener('click', async () => {
         if (track && typeof track.doubleSequence === 'function') {
-            const result = await track.doubleSequence(); // This updates track.sequenceLength internally
+            const result = await track.doubleSequence();
             if (result && typeof showNotification === 'function') {
                 showNotification(result.message, result.success ? 2000 : 3000);
             }
             if (result && result.success) {
-                // === BEGIN FIX: Update UI elements in the inspector ===
                 const inspectorEl = track.inspectorWindow?.element;
                 if (inspectorEl) {
                     const seqLenBarsInput = inspectorEl.querySelector(`#sequenceLengthBars-${track.id}`);
                     const seqLenDisplaySpan = inspectorEl.querySelector(`#sequenceLengthDisplay-${track.id}`);
                     const newNumBars = track.sequenceLength / Constants.STEPS_PER_BAR;
 
-                    if (seqLenBarsInput) {
-                        seqLenBarsInput.value = newNumBars; // Update the number input
-                    }
-                    if (seqLenDisplaySpan) {
-                        seqLenDisplaySpan.textContent = `${newNumBars} bars (${track.sequenceLength} steps)`; // Update the text display
-                    }
+                    if (seqLenBarsInput) seqLenBarsInput.value = newNumBars;
+                    if (seqLenDisplaySpan) seqLenDisplaySpan.textContent = `${newNumBars} bars (${track.sequenceLength} steps)`;
                 }
-                // Note: Track.setSequenceLength, called by track.doubleSequence,
-                // already handles redrawing the sequencer window if it's open.
-                // === END FIX ===
             }
         } else {
             console.error("Could not find track or doubleSequence method for track ID:", track.id);
-            if (typeof showNotification === 'function') {
-                showNotification("Error: Could not double sequence.", 3000);
-            }
+            if (typeof showNotification === 'function') showNotification("Error: Could not double sequence.", 3000);
         }
     });
     seqLengthContainer.appendChild(doubleSeqButton);
@@ -306,65 +284,47 @@ export function buildTrackInspectorContentDOM(track) {
 
 function buildSynthSpecificInspectorDOM(track) {
     const panel = document.createElement('div');
-    panel.className = 'panel synth-panel';
+    panel.className = 'panel synth-panel'; // Keep class for general styling if needed
 
-    const engineSelectLabel = document.createElement('label');
-    engineSelectLabel.htmlFor = `synthEngineType-${track.id}`;
-    engineSelectLabel.className = 'text-sm font-semibold block mb-1';
-    engineSelectLabel.textContent = 'Synth Engine:';
-    panel.appendChild(engineSelectLabel);
-
-    const engineSelect = document.createElement('select');
-    engineSelect.id = `synthEngineType-${track.id}`;
-    engineSelect.className = 'text-xs p-1 border w-full mb-2 bg-white text-black rounded-sm';
-    ['BasicPoly', 'AMSynth', 'FMSynth'].forEach(engine => {
-        const option = document.createElement('option');
-        option.value = engine;
-        let friendlyName = engine;
-        if (engine === 'BasicPoly') friendlyName = 'Basic Poly';
-        else if (engine === 'AMSynth') friendlyName = 'AM Synth';
-        else if (engine === 'FMSynth') friendlyName = 'FM Synth';
-        option.textContent = friendlyName;
-        engineSelect.appendChild(option);
-    });
-    engineSelect.value = track.synthEngineType;
-    panel.appendChild(engineSelect);
+    const engineTitle = document.createElement('h4');
+    engineTitle.className = 'text-sm font-semibold mb-1';
+    engineTitle.textContent = 'MonoSynth Controls'; // Title reflects the fixed engine
+    panel.appendChild(engineTitle);
 
     const engineControlsContainer = document.createElement('div');
     engineControlsContainer.id = `synthEngineControls-${track.id}`;
     engineControlsContainer.className = 'synth-engine-controls-container mt-2';
     panel.appendChild(engineControlsContainer);
 
-    buildSynthEngineControls(track, engineControlsContainer, track.synthEngineType);
+    // Directly build controls for MonoSynth
+    buildSynthEngineControls(track, engineControlsContainer, 'MonoSynth');
 
     return panel;
 }
 
-function buildSynthEngineControls(track, container, engineType) {
-    container.innerHTML = '';
-    const controls = synthEngineControlDefinitions[engineType];
+
+function buildSynthEngineControls(track, container, engineType) { // engineType will always be 'MonoSynth' now
+    container.innerHTML = ''; // Clear previous controls
+    const controls = synthEngineControlDefinitions[engineType]; // Get MonoSynth controls
+
     if (!controls) {
         container.textContent = `Controls for ${engineType} not defined.`;
+        console.error(`[ui.js] buildSynthEngineControls: No control definitions found for ${engineType}`);
         return;
     }
 
     const controlGroup = document.createElement('div');
-    controlGroup.className = 'control-group';
+    controlGroup.className = 'control-group'; // For consistent knob layout
 
     controls.forEach(controlDef => {
         const controlId = `${controlDef.idPrefix}-${track.id}`;
 
-        let paramsKey;
-        if (engineType === 'BasicPoly') paramsKey = 'basicPoly';
-        else if (engineType === 'AMSynth') paramsKey = 'amSynth';
-        else if (engineType === 'FMSynth') paramsKey = 'fmSynth';
-        else paramsKey = engineType.toLowerCase(); // Should not be hit with current engines
-
-        let currentEngineParams = track.synthParams[paramsKey];
-        if (!currentEngineParams) {
-            console.warn(`[ui.js] Params for engine ${engineType} (key: ${paramsKey}) not found in track.synthParams. Using defaults. track.synthParams:`, JSON.parse(JSON.stringify(track.synthParams)));
-            currentEngineParams = track.getDefaultSynthParams(engineType);
-            track.synthParams[paramsKey] = currentEngineParams;
+        // For MonoSynth, params are directly on track.synthParams
+        let currentEngineParams = track.synthParams;
+        if (!currentEngineParams || Object.keys(currentEngineParams).length === 0) {
+            console.warn(`[ui.js] Params for MonoSynth not found in track.synthParams. Using defaults. track.synthParams:`, JSON.parse(JSON.stringify(track.synthParams)));
+            currentEngineParams = track.getDefaultSynthParams(); // Get MonoSynth defaults
+            track.synthParams = currentEngineParams; // Store defaults back if they were missing
         }
 
         const getNestedValue = (obj, path) => {
@@ -382,8 +342,8 @@ function buildSynthEngineControls(track, container, engineType) {
         let initialValue = getNestedValue(currentEngineParams, controlDef.paramPath);
 
         if (initialValue === undefined) {
-            console.warn(`[ui.js] Initial value for ${controlDef.paramPath} not found in currentEngineParams for ${engineType}. Trying defaults. currentEngineParams:`, JSON.parse(JSON.stringify(currentEngineParams)));
-            const defaultEngineParams = track.getDefaultSynthParams(engineType); // These are the direct params, not nested under engineKey
+            console.warn(`[ui.js] Initial value for ${controlDef.paramPath} not found in currentEngineParams for ${engineType}. Trying defaults again.`);
+            const defaultEngineParams = track.getDefaultSynthParams(); // Get fresh defaults
             initialValue = getNestedValue(defaultEngineParams, controlDef.paramPath);
 
             if(initialValue === undefined && controlDef.type === 'knob') initialValue = controlDef.min;
@@ -430,6 +390,7 @@ function buildSynthEngineControls(track, container, engineType) {
     });
     container.appendChild(controlGroup);
 }
+
 
 function buildSamplerSpecificInspectorDOM(track) {
     console.log(`[ui.js] buildSamplerSpecificInspectorDOM called for track ${track.id}`);
@@ -708,58 +669,26 @@ export function initializeTypeSpecificInspectorControls(track, winEl) {
 }
 
 function initializeSynthSpecificControls(track, winEl) {
-    console.log(`[ui.js] initializeSynthSpecificControls for track ${track.id}`);
-    const engineSelect = winEl.querySelector(`#synthEngineType-${track.id}`);
+    console.log(`[ui.js] initializeSynthSpecificControls for track ${track.id} (MonoSynth)`);
     const controlsContainer = winEl.querySelector(`#synthEngineControls-${track.id}`);
 
-    if (engineSelect && controlsContainer) {
-        engineSelect.addEventListener('change', async (e) => {
-            const newEngineType = e.target.value;
-            console.log(`[ui.js] Synth engine changed for track ${track.id} to: ${newEngineType}`);
-            if (typeof window.captureStateForUndo === 'function') {
-                window.captureStateForUndo(`Change ${track.name} Synth Engine to ${newEngineType}`);
-            }
-            track.synthEngineType = newEngineType;
-
-            let paramsKey;
-            if (newEngineType === 'BasicPoly') paramsKey = 'basicPoly';
-            else if (newEngineType === 'AMSynth') paramsKey = 'amSynth';
-            else if (newEngineType === 'FMSynth') paramsKey = 'fmSynth';
-            // Removed else case as engine types are fixed
-
-            if (paramsKey && !track.synthParams[paramsKey]) {
-                 console.log(`[ui.js] Synth params for ${newEngineType} (key: ${paramsKey}) not found, initializing with defaults.`);
-                 track.synthParams[paramsKey] = track.getDefaultSynthParams(newEngineType);
-            } else if (!paramsKey) { // Should ideally not happen
-                console.warn(`[ui.js] Unknown paramsKey derived for engineType ${newEngineType}`);
-            }
-
-
-            if (typeof track.initializeInstrument === 'function') {
-                console.log(`[ui.js] Calling track.initializeInstrument() for engine ${newEngineType}`);
-                await track.initializeInstrument(); // This will now use the updated track.synthParams[paramsKey]
-            } else {
-                console.error(`[ui.js] track.initializeInstrument is not a function for track ${track.id}`);
-            }
-
-            // Rebuild controls based on the new engine type and its (potentially new) default params
-            buildSynthEngineControls(track, controlsContainer, newEngineType);
-
-            // Refresh visuals for any knobs that might have been re-created or whose values might change
-            // due to new defaults.
-            setTimeout(() => {
-                const currentControls = synthEngineControlDefinitions[newEngineType] || [];
-                currentControls.forEach(controlDef => {
-                    if (controlDef.type === 'knob' && track.inspectorControls && track.inspectorControls[controlDef.idPrefix]) {
-                        track.inspectorControls[controlDef.idPrefix].refreshVisuals();
-                    }
-                });
-            }, 50);
-        });
+    if (controlsContainer) {
+        // Since there's no engine select, we just ensure the MonoSynth controls are built and refreshed.
+        // buildSynthEngineControls was already called by buildSynthSpecificInspectorDOM.
+        // We might need to refresh visuals if values could have changed programmatically before inspector opening.
+        setTimeout(() => {
+            const currentControls = synthEngineControlDefinitions['MonoSynth'] || [];
+            currentControls.forEach(controlDef => {
+                if (controlDef.type === 'knob' && track.inspectorControls && track.inspectorControls[controlDef.idPrefix]) {
+                    track.inspectorControls[controlDef.idPrefix].refreshVisuals();
+                }
+            });
+        }, 50); // Small delay to ensure DOM is fully ready
     } else {
-        console.error(`[ui.js] Synth engine select or controls container not found for track ${track.id}`);
+        console.error(`[ui.js] Synth engine controls container not found for track ${track.id}`);
     }
 }
+
 
 function initializeSamplerSpecificControls(track, winEl) {
     console.log(`[ui.js] initializeSamplerSpecificControls for track ${track.id} (Slicer Sampler). winEl:`, winEl);
@@ -1098,7 +1027,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     }
 
     let windowHeight = 450;
-    if (track.type === 'Synth') windowHeight = 580;
+    if (track.type === 'Synth') windowHeight = 620; // Increased height for MonoSynth controls
     else if (track.type === 'Sampler') windowHeight = 620;
     else if (track.type === 'DrumSampler') windowHeight = 580;
     else if (track.type === 'InstrumentSampler') windowHeight = 620;
@@ -1309,14 +1238,14 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     gridDiv.style.setProperty('--steps-per-bar', Constants.STEPS_PER_BAR.toString());
 
     const topLeftEmptyCell = document.createElement('div');
-    topLeftEmptyCell.className = 'sequencer-header-cell empty-top-left'; // Added specific class
+    topLeftEmptyCell.className = 'sequencer-header-cell empty-top-left';
     topLeftEmptyCell.style.gridColumn = '1';
     topLeftEmptyCell.style.gridRow = '1';
     gridDiv.appendChild(topLeftEmptyCell);
 
     for (let bar = 0; bar < numBars; bar++) {
         const barNumCell = document.createElement('div');
-        barNumCell.className = 'sequencer-header-cell bar-number-header'; // Added specific class
+        barNumCell.className = 'sequencer-header-cell bar-number-header';
         barNumCell.textContent = `Bar ${bar + 1}`;
         barNumCell.style.gridRow = '1';
         const startColForBar = (bar * Constants.STEPS_PER_BAR) + 2;
@@ -1783,7 +1712,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
             });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
             div.addEventListener('click', async (event) => {
-                if (event.detail === 0) return;
+                if (event.detail === 0) return; // Prevent accidental double-clicks from triggering twice quickly
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
                 if (window.previewPlayer && !window.previewPlayer.disposed) {
                     window.previewPlayer.stop(); window.previewPlayer.dispose();
@@ -1996,7 +1925,6 @@ export function updateDrumPadControlsUI(track) {
         } else {
             console.warn(`[ui.js] Drum pad file input #${inputId} NOT FOUND within loadContainer.`);
         }
-        // Corrected: Call utilSetupDropZoneListeners directly
         if (dropZoneEl && typeof utilSetupDropZoneListeners === 'function') {
             console.log(`[ui.js] Drum pad drop zone (selected pad area) #${dropZoneId} FOUND. Setting up listeners.`);
             utilSetupDropZoneListeners(dropZoneEl, track.id, 'DrumSampler', track.selectedDrumPadForEdit, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
@@ -2051,7 +1979,6 @@ export function renderDrumSamplerPads(track) {
             updateDrumPadControlsUI(track);
         });
 
-        // Corrected: Call utilSetupDropZoneListeners directly
         if (typeof utilSetupDropZoneListeners === 'function') {
              utilSetupDropZoneListeners(
                 padEl,
@@ -2061,31 +1988,27 @@ export function renderDrumSamplerPads(track) {
                 window.loadSoundFromBrowserToTarget,
                 window.loadDrumSamplerPadFile
             );
-            // console.log(`[ui.js] renderDrumSamplerPads: Drop listeners SET UP for Pad ${index + 1} (Element:`, padEl, `Dataset:`, JSON.parse(JSON.stringify(padEl.dataset)), `)`);
         } else {
             console.warn(`[ui.js] renderDrumSamplerPads: utilSetupDropZoneListeners (imported) is not defined for pad ${index}.`);
         }
         padsContainer.appendChild(padEl);
     });
-     // console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered with drop zone listeners.`);
 }
 
-export function highlightPlayingStep(col, trackType, gridElement) { // trackType is not directly used but good for context
+export function highlightPlayingStep(col, trackType, gridElement) {
     if (!gridElement) return;
 
-    const lastPlayingCol = gridElement._lastPlayingCol; // Retrieve the last highlighted column
+    const lastPlayingCol = gridElement._lastPlayingCol;
 
-    // Remove 'playing' class from previously highlighted column's cells if it's different from current
     if (lastPlayingCol !== undefined && lastPlayingCol !== col) {
         const prevCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${lastPlayingCol}"]`);
         prevCells.forEach(cell => cell.classList.remove('playing'));
     }
 
-    // Add 'playing' class to current column's cells if the column has changed or it's the first highlight
     if (lastPlayingCol !== col) {
         const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`);
         currentCells.forEach(cell => cell.classList.add('playing'));
     }
 
-    gridElement._lastPlayingCol = col; // Store current column as the last played
+    gridElement._lastPlayingCol = col;
 }
