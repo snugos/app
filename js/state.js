@@ -335,22 +335,18 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     // Reconstruct Master Effects (using audioAddMasterEffect to avoid name clash if this file had its own addMasterEffect)
     if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
         projectData.masterEffects.forEach(effectData => {
-            // The addMasterEffect function in audio.js will create the Tone node and add to window.masterEffectsChain
             if (typeof audioAddMasterEffect === 'function') {
-                 audioAddMasterEffect(effectData.type); // This will use default params
-                 // Now, find the added effect and update its params. This is a bit indirect.
-                 // A better `audioAddMasterEffect` would take initialParams.
-                 // For now, let's assume it's added and we update it:
-                 const addedEffect = window.masterEffectsChain.find(e => e.type === effectData.type && !e.paramsRestored); // Temp flag
-                 if(addedEffect) {
-                    Object.assign(addedEffect.params, effectData.params);
-                    if(addedEffect.toneNode && typeof addedEffect.toneNode.set === 'function') {
-                        addedEffect.toneNode.set(effectData.params);
+                 const addedEffectId = audioAddMasterEffect(effectData.type); // This will use default params
+                 if(addedEffectId){
+                    const addedEffect = window.masterEffectsChain.find(e => e.id === addedEffectId);
+                    if(addedEffect) {
+                        Object.assign(addedEffect.params, effectData.params);
+                        if(addedEffect.toneNode && typeof addedEffect.toneNode.set === 'function') {
+                            addedEffect.toneNode.set(effectData.params);
+                        }
                     }
-                    addedEffect.paramsRestored = true; // Mark as restored
                  }
-            } else {
-                // Fallback: Manually recreate and add to chain if audio.js one isn't available
+            } else { // Fallback
                 const toneNode = createEffectInstance(effectData.type, effectData.params);
                 if (toneNode) {
                     window.masterEffectsChain.push({
@@ -363,7 +359,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         if (window.masterEffectsChain.length > 0 && typeof rebuildMasterEffectChain === 'function') {
              rebuildMasterEffectChain();
         }
-         window.masterEffectsChain.forEach(ef => delete ef.paramsRestored); // Clean up temp flag
     }
 
 
@@ -371,7 +366,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     if (projectData.tracks && Array.isArray(projectData.tracks)) {
         for (const trackData of projectData.tracks) {
             if (trackData.type === 'Synth') trackData.synthEngineType = 'MonoSynth';
-            // Track constructor now handles initialData.activeEffects
             trackInitPromises.push(addTrackToState(trackData.type, trackData, false));
         }
     }
@@ -380,7 +374,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
     const finalResourcePromises = tracks.map(track => {
         if (typeof track.fullyInitializeAudioResources === 'function') {
-            return track.fullyInitializeAudioResources(); // This calls rebuildEffectChain internally for the track
+            return track.fullyInitializeAudioResources();
         }
         return Promise.resolve();
     });
@@ -599,5 +593,4 @@ export async function exportToWav() {
     }
 }
 
-// Ensure this log appears if the file is parsed
 console.log("[State.js] Parsed and exports should be available.");
