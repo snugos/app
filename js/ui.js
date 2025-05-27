@@ -2024,15 +2024,3 @@ export function renderDrumSamplerPads(track) {
     });
      console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered into:`, padsContainer);
 }
-
-// END OF FILE - Ensure highlightPlayingStep is added before the final closing brace if it's missing.
-// Based on the user's previous file, it was missing. I should add it back.
-
-// --- ADDED FUNCTION: highlightPlayingStep ---
-export function highlightPlayingStep(col, trackType, gridElement) {
-    if (!gridElement) return;
-    // Clear previous playing step highlights within this specific grid
-    gridElement.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-    // Highlight all cells in the current column
-    gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`).forEach(cell => cell.classList.add('playing'));
-}
