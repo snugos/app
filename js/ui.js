@@ -236,7 +236,7 @@ export function buildTrackInspectorContentDOM(track) {
     doubleSeqButton.id = `doubleSeqBtn-${track.id}`;
     doubleSeqButton.className = 'bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded w-full mt-1';
     doubleSeqButton.title = 'Double sequence length and content';
-    doubleSeqButton.textContent = 'Double';
+    doubleSeqButton.textContent = 'Double'; // ADDED TEXT CONTENT
     doubleSeqButton.addEventListener('click', async () => {
         if (track && typeof track.doubleSequence === 'function') {
             const result = await track.doubleSequence(); // This updates track.sequenceLength internally
@@ -2070,8 +2070,22 @@ export function renderDrumSamplerPads(track) {
      // console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered with drop zone listeners.`);
 }
 
-export function highlightPlayingStep(col, trackType, gridElement) {
+export function highlightPlayingStep(col, trackType, gridElement) { // trackType is not directly used but good for context
     if (!gridElement) return;
-    gridElement.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-    gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`).forEach(cell => cell.classList.add('playing'));
+
+    const lastPlayingCol = gridElement._lastPlayingCol; // Retrieve the last highlighted column
+
+    // Remove 'playing' class from previously highlighted column's cells if it's different from current
+    if (lastPlayingCol !== undefined && lastPlayingCol !== col) {
+        const prevCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${lastPlayingCol}"]`);
+        prevCells.forEach(cell => cell.classList.remove('playing'));
+    }
+
+    // Add 'playing' class to current column's cells if the column has changed or it's the first highlight
+    if (lastPlayingCol !== col) {
+        const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`);
+        currentCells.forEach(cell => cell.classList.add('playing'));
+    }
+
+    gridElement._lastPlayingCol = col; // Store current column as the last played
 }
