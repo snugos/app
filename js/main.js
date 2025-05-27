@@ -24,22 +24,28 @@ import {
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample
 } from './audio.js';
 
-// --- FOCUSED DEBUG IMPORT ---
-// Temporarily comment out the full ui.js import
-/*
+// --- RESTORED UI.JS IMPORTS ---
 import {
-    openTrackEffectsRackWindow, openTrackSequencerWindow,
-    openGlobalControlsWindow, openTrackInspectorWindow,
-    openMixerWindow, updateMixerWindow,
-    openSoundBrowserWindow, renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary,
+    openTrackEffectsRackWindow,
+    openTrackSequencerWindow,
+    openGlobalControlsWindow,
+    openTrackInspectorWindow,
+    openMixerWindow,
+    updateMixerWindow,
+    openSoundBrowserWindow,
+    renderSoundBrowserDirectory,
+    updateSoundBrowserDisplayForLibrary,
     highlightPlayingStep,
-    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
-    createKnob // Assuming you also export createKnob
+    drawWaveform,
+    drawInstrumentWaveform,
+    renderSamplePads,
+    updateSliceEditorUI,
+    updateDrumPadControlsUI,
+    renderDrumSamplerPads,
+    createKnob, // Assuming createKnob is exported from ui.js as it's used by other ui.js functions that might be exposed globally
+    veryUniqueTestExport // Kept for one more test, can be removed if all is well
 } from './ui.js';
-*/
 
-// Try importing only these two:
-import { highlightPlayingStep, veryUniqueTestExport } from './ui.js';
 console.log('[main.js] Attempting to verify imports from ui.js');
 if (typeof veryUniqueTestExport === 'function') {
     console.log('[main.js] veryUniqueTestExport was imported successfully.');
@@ -51,8 +57,12 @@ if (typeof highlightPlayingStep === 'function') {
 } else {
     console.error('[main.js] FAILED to import highlightPlayingStep from ui.js.');
 }
-// --- END OF FOCUSED DEBUG IMPORT ---
-
+if (typeof openGlobalControlsWindow === 'function') {
+    console.log('[main.js] openGlobalControlsWindow was imported successfully.');
+} else {
+    console.error('[main.js] FAILED to import openGlobalControlsWindow from ui.js.');
+}
+// --- END OF RESTORED UI.JS IMPORTS ---
 
 console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)");
 
@@ -67,12 +77,11 @@ window.midiAccess = null;
 window.activeMIDIInput = null;
 window.transportEventsInitialized = false;
 window.masterMeter = null;
-window.openWindows = {}; // Critical for SnugWindow
-window.highestZIndex = 100; // Critical for SnugWindow
+window.openWindows = {};
+window.highestZIndex = 100;
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
 
-// Globals for controls that might be accessed frequently from various places
 window.playBtn = null;
 window.recordBtn = null;
 window.tempoInput = null;
@@ -81,8 +90,6 @@ window.midiInputSelectGlobal = null;
 window.midiIndicatorGlobalEl = null;
 window.keyboardIndicatorGlobalEl = null;
 
-
-// --- Desktop Background Functions ---
 function applyDesktopBackground(imageUrl) {
     const desktopEl = document.getElementById('desktop');
     if (desktopEl && imageUrl) {
@@ -130,10 +137,9 @@ function removeCustomDesktopBackground() {
 }
 
 // --- Exposing functions globally ---
-// Many of these will be undefined if their original imports from ui.js are commented out.
-// This is okay for this specific test.
-window.openTrackEffectsRackWindow = typeof openTrackEffectsRackWindow !== 'undefined' ? openTrackEffectsRackWindow : () => console.error("openTrackEffectsRackWindow not imported");
-window.openTrackSequencerWindow = typeof openTrackSequencerWindow !== 'undefined' ? openTrackSequencerWindow : () => console.error("openTrackSequencerWindow not imported");
+// Ensure these are assigned after successful import
+window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
+window.openTrackSequencerWindow = openTrackSequencerWindow;
 window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
     if (window.openWindows[id] && window.openWindows[id].element && !window.openWindows[id].element.classList.contains('minimized')) {
         window.openWindows[id].restore(); return window.openWindows[id];
@@ -144,28 +150,20 @@ window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
     const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
     return newWindow.element ? newWindow : null;
 };
-window.updateMixerWindow = typeof updateMixerWindow !== 'undefined' ? updateMixerWindow : () => console.error("updateMixerWindow not imported");
-
-// Assign highlightPlayingStep to window if it was imported successfully
-if (typeof highlightPlayingStep === 'function') {
-    window.highlightPlayingStep = highlightPlayingStep;
-} else {
-    window.highlightPlayingStep = () => console.error("highlightPlayingStep was not imported from ui.js");
-}
-
-window.renderSoundBrowserDirectory = typeof renderSoundBrowserDirectory !== 'undefined' ? renderSoundBrowserDirectory : () => console.error("renderSoundBrowserDirectory not imported");
-window.updateSoundBrowserDisplayForLibrary = typeof updateSoundBrowserDisplayForLibrary !== 'undefined' ? updateSoundBrowserDisplayForLibrary : () => console.error("updateSoundBrowserDisplayForLibrary not imported");
-window.openGlobalControlsWindow = typeof openGlobalControlsWindow !== 'undefined' ? openGlobalControlsWindow : () => { console.error("openGlobalControlsWindow not imported"); return Promise.resolve(null); };
-window.openMixerWindow = typeof openMixerWindow !== 'undefined' ? openMixerWindow : () => console.error("openMixerWindow not imported");
-window.openSoundBrowserWindow = typeof openSoundBrowserWindow !== 'undefined' ? openSoundBrowserWindow : () => console.error("openSoundBrowserWindow not imported");
-window.openTrackInspectorWindow = typeof openTrackInspectorWindow !== 'undefined' ? openTrackInspectorWindow : () => console.error("openTrackInspectorWindow not imported");
-window.drawWaveform = typeof drawWaveform !== 'undefined' ? drawWaveform : () => console.error("drawWaveform not imported");
-window.drawInstrumentWaveform = typeof drawInstrumentWaveform !== 'undefined' ? drawInstrumentWaveform : () => console.error("drawInstrumentWaveform not imported");
-window.renderSamplePads = typeof renderSamplePads !== 'undefined' ? renderSamplePads : () => console.error("renderSamplePads not imported");
-window.updateSliceEditorUI = typeof updateSliceEditorUI !== 'undefined' ? updateSliceEditorUI : () => console.error("updateSliceEditorUI not imported");
-window.updateDrumPadControlsUI = typeof updateDrumPadControlsUI !== 'undefined' ? updateDrumPadControlsUI : () => console.error("updateDrumPadControlsUI not imported");
-window.renderDrumSamplerPads = typeof renderDrumSamplerPads !== 'undefined' ? renderDrumSamplerPads : () => console.error("renderDrumSamplerPads not imported");
-
+window.updateMixerWindow = updateMixerWindow;
+window.highlightPlayingStep = highlightPlayingStep; // Now directly from import
+window.renderSoundBrowserDirectory = renderSoundBrowserDirectory;
+window.updateSoundBrowserDisplayForLibrary = updateSoundBrowserDisplayForLibrary;
+window.openGlobalControlsWindow = openGlobalControlsWindow; // Now directly from import
+window.openMixerWindow = openMixerWindow;
+window.openSoundBrowserWindow = openSoundBrowserWindow;
+window.openTrackInspectorWindow = openTrackInspectorWindow;
+window.drawWaveform = drawWaveform;
+window.drawInstrumentWaveform = drawInstrumentWaveform;
+window.renderSamplePads = renderSamplePads;
+window.updateSliceEditorUI = updateSliceEditorUI;
+window.updateDrumPadControlsUI = updateDrumPadControlsUI;
+window.renderDrumSamplerPads = renderDrumSamplerPads;
 
 window.playSlicePreview = playSlicePreview;
 window.playDrumSamplerPadPreview = playDrumSamplerPadPreview;
@@ -221,21 +219,15 @@ window.updateTaskbarTempoDisplay = (newTempo) => {
     if (display) display.textContent = `${parseFloat(newTempo).toFixed(1)} BPM`;
 };
 
-
-// --- Core Application Initialization ---
 async function initializeSnugOS() {
     console.log("[Main] Window loaded. Initializing SnugOS...");
 
-    // Call the unique test export
     if (typeof veryUniqueTestExport === 'function') {
-        veryUniqueTestExport();
-    } else {
-        // This log would have already appeared if the import failed at the top level
+        veryUniqueTestExport(); // Call the test function
     }
 
     if (typeof window.openWindows === 'undefined') window.openWindows = {};
     if (typeof window.highestZIndex === 'undefined') window.highestZIndex = 100;
-
 
     const savedBg = localStorage.getItem(DESKTOP_BACKGROUND_KEY);
     if (savedBg) {
@@ -249,14 +241,14 @@ async function initializeSnugOS() {
 
     const appContext = {
         addTrack: addTrackToState,
-        openSoundBrowserWindow: window.openSoundBrowserWindow, // Use the potentially guarded version
+        openSoundBrowserWindow: window.openSoundBrowserWindow,
         undoLastAction: undoLastAction,
         redoLastAction: redoLastAction,
         saveProject: saveProject,
         loadProject: loadProject,
         exportToWav: exportToWav,
-        openGlobalControlsWindow: window.openGlobalControlsWindow, // Use the potentially guarded version
-        openMixerWindow: window.openMixerWindow, // Use the potentially guarded version
+        openGlobalControlsWindow: window.openGlobalControlsWindow,
+        openMixerWindow: window.openMixerWindow,
         handleProjectFileLoad: handleProjectFileLoad,
         triggerCustomBackgroundUpload: () => {
             const bgInput = document.getElementById('customBgInput');
@@ -269,14 +261,12 @@ async function initializeSnugOS() {
     document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
 
     try {
-        // The actual openGlobalControlsWindow might be undefined if not imported
-        const globalControlsWindowInstance = await window.openGlobalControlsWindow();
+        const globalControlsWindowInstance = await window.openGlobalControlsWindow(); // Uses the directly imported function now
         if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
             console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited.");
-            // showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000); // showNotification might not be defined if utils isn't fully loaded
+            showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000);
         } else {
-            console.log("[Main] Global Controls Window initialized successfully (or attempted).");
-            // These assignments might fail if globalControlsWindowInstance.element is null
+            console.log("[Main] Global Controls Window initialized successfully.");
             window.playBtn = globalControlsWindowInstance.element.querySelector('#playBtnGlobal');
             window.recordBtn = globalControlsWindowInstance.element.querySelector('#recordBtnGlobal');
             window.tempoInput = globalControlsWindowInstance.element.querySelector('#tempoGlobalInput');
@@ -287,13 +277,13 @@ async function initializeSnugOS() {
         }
     } catch (error) {
         console.error("[Main] Error during openGlobalControlsWindow call:", error);
-        // showNotification("Error initializing global controls. Check console.", 5000);
+        showNotification("Error initializing global controls. Check console.", 5000);
     }
 
     if (window.midiInputSelectGlobal) {
         await setupMIDI();
     } else {
-        console.warn("[Main] MIDI input select element not found, skipping MIDI setup for now.");
+        console.warn("[Main] MIDI input select element not found after Global Controls Window attempt, skipping MIDI setup for now.");
     }
 
     const libraryPromises = [];
