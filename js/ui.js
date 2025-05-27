@@ -1,3 +1,12 @@
+// js/ui.js
+console.log('[ui.js] TOP OF FILE PARSING - Version with veryUniqueTestExport'); // Add this line
+
+export function veryUniqueTestExport() {
+    console.log("veryUniqueTestExport from ui.js was called!");
+}
+
+// ... rest of your existing ui.js content, including the single highlightPlayingStep export ...
+
 // js/ui.js - UI Creation and Management Module
 
 import { SnugWindow } from './SnugWindow.js';
