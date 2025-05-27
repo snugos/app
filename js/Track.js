@@ -5,8 +5,15 @@ import { STEPS_PER_BAR, defaultStepsPerBar, synthPitches, numSlices, numDrumSamp
 export class Track {
     constructor(id, type, initialData = null) {
         this.id = initialData?.id || id;
-        this.type = type;
-        this.name = initialData?.name || `${type} Track ${this.id}`;
+        this.type = type; // Internal type remains "DrumSampler"
+
+        if (type === 'DrumSampler') {
+            // UI Display Name Change
+            this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
+        } else {
+            this.name = initialData?.name || `${type} Track ${this.id}`;
+        }
+
         this.isMuted = initialData?.isMuted || false;
         this.isSoloed = (typeof window.getSoloedTrackId === 'function' && window.getSoloedTrackId() === this.id);
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
@@ -16,7 +23,7 @@ export class Track {
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams(this.synthEngineType);
         } else {
             this.synthEngineType = null;
-            this.synthParams = {}; // Not a synth track
+            this.synthParams = {};
         }
 
         this.originalFileName = initialData?.samplerAudioData?.fileName || null;
@@ -92,8 +99,8 @@ export class Track {
 
         let numRowsForGrid;
         if (type === 'Synth' || type === 'InstrumentSampler') numRowsForGrid = synthPitches.length;
-        else if (type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : numSlices;
-        else if (type === 'DrumSampler') numRowsForGrid = numDrumSamplerPads;
+        else if (type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : numSlices; // Slicer
+        else if (type === 'DrumSampler') numRowsForGrid = numDrumSamplerPads; // Pad Sampler
         else numRowsForGrid = 0;
 
         const loadedSequenceData = initialData?.sequenceData;
@@ -117,32 +124,28 @@ export class Track {
         switch (engineType) {
             case 'AMSynth':
                 return {
-                    // For Tone.AMSynth directly
                     harmonicity: 3,
                     detune: 0,
-                    oscillator: { type: 'sine' }, // Options for the carrier oscillator
-                    envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.5 }, // For the carrier
-                    modulation: { type: 'square' }, // Options for the modulator oscillator
-                    modulationEnvelope: { attack: 0.5, decay: 0.01, sustain: 1, release: 0.5 } // For the modulator
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.5 },
+                    modulation: { type: 'square' },
+                    modulationEnvelope: { attack: 0.5, decay: 0.01, sustain: 1, release: 0.5 }
                 };
             case 'FMSynth':
                 return {
-                    // For Tone.FMSynth directly
                     harmonicity: 3,
                     modulationIndex: 10,
                     detune: 0,
-                    oscillator: { type: 'sine' }, // Carrier oscillator options
-                    envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.5 }, // Carrier envelope
-                    modulation: { type: 'square' }, // Modulator oscillator options
-                    modulationEnvelope: { attack: 0.5, decay: 0.01, sustain: 1, release: 0.5 } // Modulator envelope
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 1, release: 0.5 },
+                    modulation: { type: 'square' },
+                    modulationEnvelope: { attack: 0.5, decay: 0.01, sustain: 1, release: 0.5 }
                 };
             case 'BasicPoly':
             default:
                 return {
-                    // For Tone.Synth wrapped in PolySynth
                     oscillator: { type: 'triangle8' },
                     envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.5 }
-                    // PolySynth options like 'polyphony' are handled at PolySynth instantiation
                 };
         }
     }
@@ -151,23 +154,23 @@ export class Track {
         console.log(`[Track ${this.id}] Initializing audio nodes...`);
         try {
             this.distortionNode = new Tone.Distortion(this.effects.distortion.amount);
-            this.filterNode = new Tone.Filter(this.effects.filter); // Pass full options object
+            this.filterNode = new Tone.Filter(this.effects.filter);
             this.chorusNode = new Tone.Chorus(this.effects.chorus.frequency, this.effects.chorus.delayTime, this.effects.chorus.depth).set({wet: this.effects.chorus.wet});
             this.saturationNode = new Tone.Chebyshev(Math.max(1, Math.floor(this.effects.saturation.amount) * 2 + 1)).set({wet: this.effects.saturation.wet});
-            this.phaserNode = new Tone.Phaser(this.effects.phaser); // Pass full options object
+            this.phaserNode = new Tone.Phaser(this.effects.phaser);
 
             if (typeof Tone !== 'undefined' && typeof Tone.AutoWah === 'function') {
-                this.autoWahNode = new Tone.AutoWah(this.effects.autoWah); // Pass full options object
+                this.autoWahNode = new Tone.AutoWah(this.effects.autoWah);
                 console.log(`[Track ${this.id}] AutoWah node created successfully.`);
             } else {
                 console.error(`[Track ${this.id}] Tone.AutoWah is not a constructor or Tone is undefined during initializeAudioNodes.`);
                 this.autoWahNode = null;
             }
 
-            this.eq3Node = new Tone.EQ3(this.effects.eq3); // Pass full options object
-            this.compressorNode = new Tone.Compressor(this.effects.compressor); // Pass full options object
+            this.eq3Node = new Tone.EQ3(this.effects.eq3);
+            this.compressorNode = new Tone.Compressor(this.effects.compressor);
             this.delayNode = new Tone.FeedbackDelay(this.effects.delay.time, this.effects.delay.feedback).set({wet: this.effects.delay.wet});
-            this.reverbNode = new Tone.Reverb(this.effects.reverb.decay).set({ // Decay is main arg, others via set
+            this.reverbNode = new Tone.Reverb(this.effects.reverb.decay).set({
                 preDelay: this.effects.reverb.preDelay,
                 wet: this.effects.reverb.wet
             });
@@ -204,10 +207,8 @@ export class Track {
     }
 
     async initializeInstrument() {
-        if (!this.distortionNode && this.type !== 'Sampler' && this.type !== 'InstrumentSampler' && this.type !== 'DrumSampler') {
+        if (!this.distortionNode && this.type !== 'Sampler' && this.type !== 'InstrumentSampler' && this.type !== 'DrumSampler') { // Added DrumSampler here
             console.error(`[Track ${this.id}] Distortion node not initialized. Cannot connect instrument for type ${this.type}.`);
-            // For non-synth types that connect to distortionNode, this check is also important
-            // For Sampler/DrumSampler/InstrumentSampler, they might connect to distortionNode or have their own handling
         }
         if (this.instrument && typeof this.instrument.dispose === 'function' && !this.instrument.disposed) {
             this.instrument.dispose();
@@ -217,13 +218,13 @@ export class Track {
         try {
             if (this.type === 'Synth') {
                 let synthEngineConstructor;
-                let engineParamsToSet; // Params to be passed to .set() after PolySynth creation
+                let engineParamsToSet;
 
                 switch (this.synthEngineType) {
                     case 'AMSynth':
                         synthEngineConstructor = Tone.AMSynth;
                         engineParamsToSet = this.synthParams.amSynth || this.getDefaultSynthParams('AMSynth');
-                        this.synthParams.amSynth = engineParamsToSet; // Ensure params are in track state
+                        this.synthParams.amSynth = engineParamsToSet;
                         break;
                     case 'FMSynth':
                         synthEngineConstructor = Tone.FMSynth;
@@ -237,24 +238,20 @@ export class Track {
                         this.synthParams.basicPoly = engineParamsToSet;
                         break;
                 }
-
-                // All synth types are wrapped in PolySynth for polyphony
                 this.instrument = new Tone.PolySynth(synthEngineConstructor, {
-                    polyphony: 8, // Default polyphony, can be made configurable
-                    // Pass parameters to the underlying synth voice
-                    voice: synthEngineConstructor // This ensures PolySynth uses the correct voice type
+                    polyphony: 8,
+                    voice: synthEngineConstructor
                 });
-                this.instrument.set(engineParamsToSet); // Apply specific params to the voices
-
+                this.instrument.set(engineParamsToSet);
                 if (this.distortionNode) {
                     this.instrument.connect(this.distortionNode);
                 } else {
                      console.warn(`[Track ${this.id}] Distortion node not available for synth, connecting to destination.`);
-                    this.instrument.toDestination(); // Fallback
+                    this.instrument.toDestination();
                 }
                 console.log(`[Track ${this.id}] Initialized ${this.synthEngineType} (as PolySynth)`);
 
-            } else if (this.type === 'Sampler') {
+            } else if (this.type === 'Sampler') { // Slicer
                 if (this.audioBufferDataURL) {
                     if (this.audioBuffer && !this.audioBuffer.disposed) this.audioBuffer.dispose();
                     this.audioBuffer = await new Tone.Buffer().load(this.audioBufferDataURL);
@@ -271,20 +268,22 @@ export class Track {
                 } else {
                     if (this.instrumentSamplerSettings.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) this.instrumentSamplerSettings.audioBuffer.dispose();
                     this.instrumentSamplerSettings.audioBuffer = null;
-                    this.setupToneSampler(); // Still call to ensure sampler is created/cleared
+                    this.setupToneSampler();
                 }
-            } else if (this.type === 'DrumSampler') {
+            } else if (this.type === 'DrumSampler') { // Pad Sampler
                 const padPromises = this.drumSamplerPads.map(async (padData, i) => {
                     if (padData.audioBufferDataURL) {
                         if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
                         padData.audioBuffer = await new Tone.Buffer().load(padData.audioBufferDataURL);
                         if (this.drumPadPlayers[i] && !this.drumPadPlayers[i].disposed) this.drumPadPlayers[i].dispose();
+
                         if (this.distortionNode) {
                            this.drumPadPlayers[i] = new Tone.Player(padData.audioBuffer).connect(this.distortionNode);
                         } else {
+                            console.warn(`[Track ${this.id}] Distortion node not available for DrumSampler pad ${i}, connecting to destination.`);
                             this.drumPadPlayers[i] = new Tone.Player(padData.audioBuffer).toDestination();
                         }
-                    } // else: no audio data URL, pad remains empty or player null
+                    }
                 });
                 await Promise.all(padPromises);
             }
@@ -330,8 +329,8 @@ export class Track {
             if (this.instrumentSamplerSettings.rootNote && this.instrumentSamplerSettings.rootNote.trim() !== "") {
                 urls[this.instrumentSamplerSettings.rootNote] = this.instrumentSamplerSettings.audioBuffer;
             } else {
-                console.warn(`[Track ${this.id}] setupToneSampler: Root note is empty or invalid. Using 'C4' as fallback for URLs map, but this might not be what the user intended if they cleared the field.`);
-                urls['C4'] = this.instrumentSamplerSettings.audioBuffer; // Fallback for the urls map
+                console.warn(`[Track ${this.id}] setupToneSampler: Root note is empty or invalid. Using 'C4' as fallback for URLs map.`);
+                urls['C4'] = this.instrumentSamplerSettings.audioBuffer;
             }
         }
         console.log(`[Track ${this.id}] setupToneSampler: urls object for Tone.Sampler:`, urls);
@@ -341,7 +340,7 @@ export class Track {
             urls: urls,
             attack: this.instrumentSamplerSettings.envelope.attack,
             release: this.instrumentSamplerSettings.envelope.release,
-            baseUrl: "", // Explicitly empty if not using relative string paths in 'urls'
+            baseUrl: "",
             onload: () => {
                  console.log(`[Track ${this.id}] Tone.Sampler finished loading samples (onload callback). Root note used for mapping: ${Object.keys(urls)[0] || 'None'}`);
             }
@@ -357,7 +356,6 @@ export class Track {
             console.log(`[Track ${this.id}] setupToneSampler: Tone.Sampler initialized. Loaded state: ${this.toneSampler.loaded}`);
         }
     }
-
 
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = parseFloat(volume);
@@ -394,7 +392,6 @@ export class Track {
         }
     }
 
-    // Effect Setters
     setReverbWet(value) { this.effects.reverb.wet = parseFloat(value) || 0; if(this.reverbNode) this.reverbNode.wet.value = this.effects.reverb.wet; }
     setDelayWet(value) { this.effects.delay.wet = parseFloat(value) || 0; if(this.delayNode) this.delayNode.wet.value = this.effects.delay.wet; }
     setFilterFrequency(value) { this.effects.filter.frequency = parseFloat(value) || 20000; if(this.filterNode) this.filterNode.frequency.value = this.effects.filter.frequency; }
@@ -423,25 +420,22 @@ export class Track {
     setAutoWahFollower(value) {
         this.effects.autoWah.follower = parseFloat(value);
         if(this.autoWahNode && this.autoWahNode.follower) {
-             if (this.autoWahNode.follower.attack && typeof this.autoWahNode.follower.attack.value !== 'undefined') { // Check if follower has signal-like properties
+             if (this.autoWahNode.follower.attack && typeof this.autoWahNode.follower.attack.value !== 'undefined') {
                 this.autoWahNode.follower.attack = this.effects.autoWah.follower;
                 this.autoWahNode.follower.release = this.effects.autoWah.follower;
-            } else if (typeof this.autoWahNode.follower === 'object' && 'attack' in this.autoWahNode.follower) { // If it's an options object
+            } else if (typeof this.autoWahNode.follower === 'object' && 'attack' in this.autoWahNode.follower) {
                  this.autoWahNode.follower.set({ attack: this.effects.autoWah.follower, release: this.effects.autoWah.follower });
-            } else { // Fallback if follower is just a number (less likely for component)
+            } else {
                 this.autoWahNode.follower = this.effects.autoWah.follower;
             }
         }
     }
 
-
-    // Generic Synth Param Setter
     setSynthParam(paramPath, value) {
         if (this.type !== 'Synth' || !this.instrument) {
             console.warn(`[Track ${this.id}] setSynthParam called on non-synth track or uninitialized instrument.`);
             return;
         }
-
         const setNestedParam = (obj, path, val) => {
             const keys = path.split('.');
             let current = obj;
@@ -453,35 +447,18 @@ export class Track {
             }
             current[keys[keys.length - 1]] = val;
         };
-
-        let targetParamsObjectKey; // e.g., 'basicPoly', 'amSynth'
+        let targetParamsObjectKey;
         let paramsForToneSet = {};
-
         switch (this.synthEngineType) {
-            case 'BasicPoly':
-                targetParamsObjectKey = 'basicPoly';
-                break;
-            case 'AMSynth':
-                targetParamsObjectKey = 'amSynth';
-                break;
-            case 'FMSynth':
-                targetParamsObjectKey = 'fmSynth';
-                break;
-            default:
-                console.warn(`[Track ${this.id}] Unknown synth engine type for setSynthParam: ${this.synthEngineType}`);
-                return;
+            case 'BasicPoly': targetParamsObjectKey = 'basicPoly'; break;
+            case 'AMSynth': targetParamsObjectKey = 'amSynth'; break;
+            case 'FMSynth': targetParamsObjectKey = 'fmSynth'; break;
+            default: console.warn(`[Track ${this.id}] Unknown synth engine type for setSynthParam: ${this.synthEngineType}`); return;
         }
-
-        // Ensure the specific params object exists on this.synthParams
         this.synthParams[targetParamsObjectKey] = this.synthParams[targetParamsObjectKey] || this.getDefaultSynthParams(this.synthEngineType);
         setNestedParam(this.synthParams[targetParamsObjectKey], paramPath, value);
-
-        // Prepare the object for this.instrument.set()
-        // For PolySynth, .set() applies to the options of the *voice* synth.
-        // The structure of paramsForToneSet needs to match what the specific voice (Synth, AMSynth, FMSynth) expects.
         const pathParts = paramPath.split('.');
         if (pathParts.length > 1) {
-            // e.g., oscillator.type -> { oscillator: { type: value } }
             let tempObj = paramsForToneSet;
             for(let i=0; i < pathParts.length -1; i++) {
                 tempObj[pathParts[i]] = tempObj[pathParts[i]] || {};
@@ -489,10 +466,8 @@ export class Track {
             }
             tempObj[pathParts[pathParts.length -1]] = value;
         } else {
-            // e.g. harmonicity -> { harmonicity: value }
             paramsForToneSet[paramPath] = value;
         }
-
         try {
             this.instrument.set(paramsForToneSet);
         } catch (e) {
@@ -511,32 +486,26 @@ export class Track {
 
     setInstrumentSamplerRootNote(noteName) {
         if (this.type !== 'InstrumentSampler') return;
-
         let validNoteName = noteName;
-        // Validate the noteName
         if (!noteName || typeof noteName !== 'string' || noteName.trim() === "") {
-            validNoteName = 'C4'; // Default if empty or invalid string
+            validNoteName = 'C4';
             console.warn(`[Track ${this.id}] InstrumentSampler: Received empty or invalid root note "${noteName}". Defaulting to '${validNoteName}'.`);
         } else {
             try {
-                Tone.Frequency(validNoteName.trim()).toMidi(); // Test if Tone.js can parse it
-                validNoteName = validNoteName.trim(); // Use trimmed version if valid
+                Tone.Frequency(validNoteName.trim()).toMidi();
+                validNoteName = validNoteName.trim();
             } catch (e) {
                 console.warn(`[Track ${this.id}] InstrumentSampler: Root note "${noteName}" is not recognized by Tone.Frequency. Defaulting to 'C4'. Error:`, e);
                 validNoteName = 'C4';
             }
         }
-
         this.instrumentSamplerSettings.rootNote = validNoteName;
-
-        // Attempt to update the UI input field if it was changed to default or trimmed
         if (this.inspectorWindow && this.inspectorWindow.element) {
             const rootNoteInput = this.inspectorWindow.element.querySelector(`#instrumentRootNote-${this.id}`);
             if (rootNoteInput && rootNoteInput.value !== validNoteName) {
                 rootNoteInput.value = validNoteName;
             }
         }
-        // Re-setup the Tone.Sampler with the (potentially corrected) root note
         this.setupToneSampler();
     }
 
@@ -558,8 +527,8 @@ export class Track {
 
         let numRows;
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = synthPitches.length;
-        else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : numSlices;
-        else if (this.type === 'DrumSampler') numRows = numDrumSamplerPads;
+        else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : numSlices; // Slicer
+        else if (this.type === 'DrumSampler') numRows = numDrumSamplerPads; // Pad Sampler
         else numRows = (this.sequenceData && this.sequenceData.length > 0) ? this.sequenceData.length : 0;
 
         const currentSequenceData = this.sequenceData || [];
@@ -572,7 +541,6 @@ export class Track {
             return newRow;
         });
         this.sequenceData = newGridDataArray;
-
 
         if (this.sequence && !this.sequence.disposed) {
             this.sequence.stop();
@@ -602,7 +570,7 @@ export class Track {
                         this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity);
                     }
                 });
-            } else if (this.type === 'Sampler') {
+            } else if (this.type === 'Sampler') { // Slicer
                 this.slices.forEach((sliceData, sliceIndex) => {
                     const step = this.sequenceData[sliceIndex]?.[col];
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
@@ -660,7 +628,7 @@ export class Track {
                     }
                 });
             }
-            else if (this.type === 'DrumSampler') {
+            else if (this.type === 'DrumSampler') { // Pad Sampler
                 this.drumSamplerPads.forEach((padData, padIndex) => {
                     const step = this.sequenceData[padIndex]?.[col];
                     if (step?.active && this.drumPadPlayers[padIndex] && this.drumPadPlayers[padIndex].loaded) {
@@ -675,8 +643,6 @@ export class Track {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
                     if (step?.active && this.toneSampler && this.toneSampler.loaded) {
-                        // const midiNote = Tone.Frequency(pitchName).toMidi(); // Not directly used for triggerAttack with note name
-                        // const shiftedNote = Tone.Frequency(midiNote, "midi").toNote(); // This is redundant if pitchName is already a note string like "C4"
                         this.toneSampler.triggerAttackRelease(pitchName, "8n", time, step.velocity);
                     } else if (step?.active && this.toneSampler && !this.toneSampler.loaded) {
                         console.warn(`[Track ${this.id}] Sequencer: InstrumentSampler not loaded, cannot play step for ${pitchName}`);
@@ -685,8 +651,6 @@ export class Track {
                     }
                 });
             }
-
-
         }, Array.from(Array(this.sequenceLength).keys()), "16n").start(0);
 
         if (this.sequencerWindow && !this.sequencerWindow.isMinimized && window.openWindows[`sequencerWin-${this.id}`]) {
@@ -697,12 +661,12 @@ export class Track {
     }
     dispose() {
         if (this.instrument && !this.instrument.disposed) {this.instrument.dispose();}
-        if (this.audioBuffer && !this.audioBuffer.disposed) {this.audioBuffer.dispose();}
+        if (this.audioBuffer && !this.audioBuffer.disposed) {this.audioBuffer.dispose();} // For Slicer
 
-        this.drumSamplerPads.forEach((pad) => {
+        this.drumSamplerPads.forEach((pad) => { // For Pad Sampler
             if (pad.audioBuffer && !pad.audioBuffer.disposed) { pad.audioBuffer.dispose(); }
         });
-        this.drumPadPlayers.forEach((player) => {
+        this.drumPadPlayers.forEach((player) => { // For Pad Sampler
             if (player && !player.disposed) { player.dispose(); }
         });
 
