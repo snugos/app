@@ -46,7 +46,7 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         trackIdCounter++;
         newTrackId = trackIdCounter;
     }
-    
+
     const newTrack = new Track(newTrackId, type, initialData);
     tracks.push(newTrack);
 
@@ -56,33 +56,34 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         console.warn(`[State] Track ${newTrack.id} does not have initializeAudioNodes method.`);
     }
 
-    if (isBrandNewUserTrack) {
+    // This block should run after audio nodes are initialized,
+    // especially if fullyInitializeAudioResources depends on those nodes.
+    if (isBrandNewUserTrack || (initialData && !isUserAction)) { // Also run for project reconstruction
         newTrack.fullyInitializeAudioResources().then(() => {
-            console.log(`[State] Audio resources initialized for new track ${newTrack.id} (${newTrack.name}).`); // This log is present in user's console output
-            showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
-            
-            if (typeof window.openTrackInspectorWindow === 'function') {
-                console.log(`[State] About to call openTrackInspectorWindow for track ${newTrack.id}`); // This log is present in user's console output
-                window.openTrackInspectorWindow(newTrack.id);
-            } else {
-                console.error("[State] window.openTrackInspectorWindow is NOT a function!"); 
+            console.log(`[State] Audio resources initialized for track ${newTrack.id} (${newTrack.name}).`);
+            if (isBrandNewUserTrack) { // Only show notification & open windows for new user actions
+                showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
+                if (typeof window.openTrackInspectorWindow === 'function') {
+                    console.log(`[State] About to call openTrackInspectorWindow for new track ${newTrack.id}`);
+                    window.openTrackInspectorWindow(newTrack.id);
+                } else {
+                    console.error("[State] window.openTrackInspectorWindow is NOT a function!");
+                }
             }
-
             if (typeof window.updateMixerWindow === 'function') {
-                console.log(`[State] About to call updateMixerWindow after adding track ${newTrack.id}`); // This log is present in user's console output
+                console.log(`[State] About to call updateMixerWindow after track init/add ${newTrack.id}`);
                 window.updateMixerWindow();
             } else {
                 console.warn("[State] window.updateMixerWindow is NOT a function!");
             }
         }).catch(error => {
-            console.error(`[State] Error in fullyInitializeAudioResources promise for new track ${newTrack.id}:`, error);
-            showNotification(`Error fully setting up new ${type} track "${newTrack.name}". Inspector/Mixer might not update.`, 5000);
-            if (typeof window.openTrackInspectorWindow === 'function') {
-                console.warn(`[State] Attempting to open inspector for track ${newTrack.id} despite earlier error.`);
+            console.error(`[State] Error in fullyInitializeAudioResources promise for track ${newTrack.id}:`, error);
+            showNotification(`Error fully setting up ${type} track "${newTrack.name}".`, 5000);
+            // Fallback UI updates even if resource init fails for some reason
+            if (isBrandNewUserTrack && typeof window.openTrackInspectorWindow === 'function') {
                 window.openTrackInspectorWindow(newTrack.id);
             }
             if (typeof window.updateMixerWindow === 'function') {
-                 console.warn(`[State] Attempting to update mixer despite earlier error.`);
                 window.updateMixerWindow();
             }
         });
@@ -98,21 +99,21 @@ export function removeTrackFromState(trackId) {
     }
     const track = tracks[trackIndex];
     captureStateForUndo(`Remove Track "${track.name}"`);
-    
-    track.dispose(); 
-    
+
+    track.dispose();
+
     tracks.splice(trackIndex, 1);
 
     if (armedTrackId === trackId) armedTrackId = null;
     if (soloedTrackId === trackId) {
         soloedTrackId = null;
-        tracks.forEach(t => { 
-            t.isSoloed = false; 
-            t.applySoloState(); 
+        tracks.forEach(t => {
+            t.isSoloed = false;
+            t.applySoloState();
         });
     }
     if (activeSequencerTrackId === trackId) activeSequencerTrackId = null;
-    
+
     showNotification(`Track "${track.name}" removed.`, 2000);
     if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow();
     updateUndoRedoButtons();
@@ -134,15 +135,15 @@ export function updateUndoRedoButtons() {
 }
 
 export function captureStateForUndo(description = "Unknown action") {
-    console.log("[State] Capturing state for undo:", description); // This log is present in user's console output
+    console.log("[State] Capturing state for undo:", description);
     try {
         const currentState = gatherProjectData();
-        currentState.description = description; 
-        undoStack.push(JSON.parse(JSON.stringify(currentState))); 
+        currentState.description = description;
+        undoStack.push(JSON.parse(JSON.stringify(currentState)));
         if (undoStack.length > Constants.MAX_HISTORY_STATES) {
             undoStack.shift();
         }
-        redoStack = []; 
+        redoStack = [];
         updateUndoRedoButtons();
     } catch (error) {
         console.error("[State] Error capturing state for undo:", error);
@@ -151,33 +152,36 @@ export function captureStateForUndo(description = "Unknown action") {
 }
 
 export async function undoLastAction() {
-    if (undoStack.length === 0) { 
-        showNotification("Nothing to undo.", 1500); 
-        return; 
+    if (undoStack.length === 0) {
+        showNotification("Nothing to undo.", 1500);
+        return;
     }
     try {
         const stateToRestore = undoStack.pop();
         const currentStateForRedo = gatherProjectData();
-        currentStateForRedo.description = stateToRestore.description; 
-        redoStack.push(JSON.parse(JSON.stringify(currentStateForRedo))); 
+        currentStateForRedo.description = stateToRestore.description;
+        redoStack.push(JSON.parse(JSON.stringify(currentStateForRedo)));
         if (redoStack.length > Constants.MAX_HISTORY_STATES) {
             redoStack.shift();
         }
-        
+
         showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
-        await reconstructDAW(stateToRestore, true); 
+        window.isReconstructingDAW = true; // Flag to prevent certain actions during reconstruct
+        await reconstructDAW(stateToRestore, true);
+        window.isReconstructingDAW = false;
         updateUndoRedoButtons();
     } catch (error) {
+        window.isReconstructingDAW = false;
         console.error("[State] Error during undo:", error);
         showNotification("Error during undo operation. Project may be unstable.", 4000);
-        updateUndoRedoButtons(); 
+        updateUndoRedoButtons();
     }
 }
 
 export async function redoLastAction() {
-    if (redoStack.length === 0) { 
-        showNotification("Nothing to redo.", 1500); 
-        return; 
+    if (redoStack.length === 0) {
+        showNotification("Nothing to redo.", 1500);
+        return;
     }
     try {
         const stateToRestore = redoStack.pop();
@@ -189,9 +193,12 @@ export async function redoLastAction() {
         }
 
         showNotification(`Redoing: ${stateToRestore.description || 'last action'}...`, 2000);
+        window.isReconstructingDAW = true; // Flag
         await reconstructDAW(stateToRestore, true);
+        window.isReconstructingDAW = false;
         updateUndoRedoButtons();
     } catch (error) {
+        window.isReconstructingDAW = false;
         console.error("[State] Error during redo:", error);
         showNotification("Error during redo operation. Project may be unstable.", 4000);
         updateUndoRedoButtons();
@@ -200,7 +207,7 @@ export async function redoLastAction() {
 
 export function gatherProjectData() {
     const projectData = {
-        version: "5.5.4", 
+        version: "5.5.5", // Increment version if format changes
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: Tone.getDestination().volume.value,
@@ -212,7 +219,7 @@ export function gatherProjectData() {
         tracks: tracks.map(track => {
             const trackData = {
                 id: track.id, type: track.type, name: track.name,
-                isMuted: track.isMuted, 
+                isMuted: track.isMuted,
                 volume: track.previousVolumeBeforeMute,
                 effects: JSON.parse(JSON.stringify(track.effects)),
                 sequenceLength: track.sequenceLength,
@@ -226,20 +233,20 @@ export function gatherProjectData() {
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
             };
             if (track.type === 'Synth') {
-                trackData.synthEngineType = track.synthEngineType; 
-                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams)); 
+                trackData.synthEngineType = track.synthEngineType;
+                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams));
             } else if (track.type === 'Sampler') {
-                trackData.samplerAudioData = { 
-                    fileName: track.originalFileName, 
+                trackData.samplerAudioData = {
+                    fileName: track.originalFileName,
                     audioBufferDataURL: track.audioBufferDataURL
                 };
                 trackData.slices = JSON.parse(JSON.stringify(track.slices));
             } else if (track.type === 'DrumSampler') {
                 trackData.drumSamplerPads = track.drumSamplerPads.map(p => ({
-                    originalFileName: p.originalFileName, 
+                    originalFileName: p.originalFileName,
                     audioBufferDataURL: p.audioBufferDataURL,
-                    volume: p.volume, 
-                    pitchShift: p.pitchShift, 
+                    volume: p.volume,
+                    pitchShift: p.pitchShift,
                     envelope: JSON.parse(JSON.stringify(p.envelope))
                 }));
             } else if (track.type === 'InstrumentSampler') {
@@ -271,6 +278,7 @@ export function gatherProjectData() {
 }
 
 export async function reconstructDAW(projectData, isUndoRedo = false) {
+    window.isReconstructingDAW = true; // Set flag
     console.log("[State] Reconstructing DAW. Is Undo/Redo:", isUndoRedo);
     if (Tone.Transport.state === 'started') Tone.Transport.stop();
     Tone.Transport.cancel();
@@ -281,26 +289,18 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
     Object.values(window.openWindows).forEach(win => {
         if (win && typeof win.close === 'function') {
-            let originalCaptureUndo;
-            if (win.constructor.name === 'SnugWindow') {
-                originalCaptureUndo = window.captureStateForUndo;
-                window.captureStateForUndo = () => {};
-            }
-            win.close();
-            if (originalCaptureUndo) {
-                window.captureStateForUndo = originalCaptureUndo;
-            }
+            win.close(); // SnugWindow's close should handle removing from window.openWindows
         } else if (win && win.element && win.element.remove) {
             win.element.remove();
         }
     });
-    window.openWindows = {};
+    window.openWindows = {}; // Ensure it's cleared
     window.highestZIndex = 100;
 
     armedTrackId = null; soloedTrackId = null; activeSequencerTrackId = null;
     isRecording = false; recordingTrackId = null;
     if (window.recordBtn) { window.recordBtn.classList.remove('recording'); window.recordBtn.textContent = 'Record';}
-    
+
     const gs = projectData.globalSettings;
     if (gs) {
         Tone.Transport.bpm.value = gs.tempo || 120;
@@ -309,47 +309,35 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         window.highestZIndex = gs.highestZIndex || 100;
     }
 
-    const trackCreationPromises = [];
+    const trackInitPromises = [];
     if (projectData.tracks && Array.isArray(projectData.tracks)) {
-        projectData.tracks.forEach(trackData => {
-            const newTrack = new Track(trackData.id, trackData.type, trackData); 
-            tracks.push(newTrack);
-            if (newTrack.id > trackIdCounter) trackIdCounter = newTrack.id;
-            
-            if (typeof newTrack.initializeAudioNodes === 'function') {
-                trackCreationPromises.push(newTrack.initializeAudioNodes());
-            } else {
-                 console.warn(`[State] Track ${newTrack.id} does not have initializeAudioNodes method during reconstruct.`);
-            }
-        });
-    }
-    
-    try {
-        console.log(`[State] Waiting for ${trackCreationPromises.length} track audio nodes to initialize (reconstruct)...`);
-        await Promise.all(trackCreationPromises);
-        console.log("[State] All track audio nodes initialized during reconstruct.");
-    } catch (error) {
-        console.error("[State] Error during track audio node initialization (reconstruct):", error);
-        showNotification("Error initializing some track audio nodes during load. Project may not be fully functional.", 5000);
-    }
-
-    const trackResourcePromises = [];
-    for (const track of tracks) {
-        if (typeof track.fullyInitializeAudioResources === 'function') {
-            trackResourcePromises.push(track.fullyInitializeAudioResources());
+        for (const trackData of projectData.tracks) {
+            // Pass false for isUserAction to prevent new undo states during reconstruction
+            trackInitPromises.push(addTrackToState(trackData.type, trackData, false));
         }
     }
-    try {
-        await Promise.all(trackResourcePromises);
-        console.log("[State] All track audio resources (buffers, sequences) initialized during reconstruct.");
-    } catch (error) {
-        console.error("[State] Error initializing track audio resources (reconstruct):", error);
-    }
     
+    await Promise.all(trackInitPromises); // Wait for all tracks to be added and basic nodes initialized by addTrackToState
+
+    // Ensure all tracks are fully set up (audio resources specifically) AFTER they are all in the `tracks` array
+    // This is because fullyInitializeAudioResources might depend on the global tracks array or other states
+    const finalResourcePromises = tracks.map(track => {
+        if (typeof track.fullyInitializeAudioResources === 'function') {
+            return track.fullyInitializeAudioResources();
+        }
+        return Promise.resolve();
+    });
+    try {
+        await Promise.all(finalResourcePromises);
+        console.log("[State] All track audio resources (buffers, sequences) finalized during reconstruct.");
+    } catch (error) {
+        console.error("[State] Error finalizing track audio resources (reconstruct):", error);
+    }
+
     if (gs) {
         soloedTrackId = gs.soloedTrackId || null;
         armedTrackId = gs.armedTrackId || null;
-        tracks.forEach(t => {
+        tracks.forEach(t => { // Tracks array is now populated
             t.isSoloed = (t.id === soloedTrackId);
             t.applyMuteState();
             t.applySoloState();
@@ -369,7 +357,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         const sortedWindowStates = projectData.windowStates.sort((a, b) => a.zIndex - b.zIndex);
         for (const winState of sortedWindowStates) {
             if (!winState || !winState.id) continue;
-            let newWin = null;
+            // let newWin = null; // This variable seems unused after this block
             const key = winState.initialContentKey || winState.id;
             try {
                 let trackForWindow = null;
@@ -387,18 +375,18 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                         continue;
                     }
                 }
-                if (key === 'globalControls' && typeof window.openGlobalControlsWindow === 'function') newWin = window.openGlobalControlsWindow(winState);
-                else if (key === 'mixer' && typeof window.openMixerWindow === 'function') newWin = window.openMixerWindow(winState);
-                else if (key === 'soundBrowser' && typeof window.openSoundBrowserWindow === 'function') newWin = window.openSoundBrowserWindow(winState);
-                else if (trackForWindow && key.startsWith('trackInspector-') && typeof window.openTrackInspectorWindow === 'function') newWin = window.openTrackInspectorWindow(trackForWindow.id, winState);
-                else if (trackForWindow && key.startsWith('effectsRack-') && typeof window.openTrackEffectsRackWindow === 'function') newWin = window.openTrackEffectsRackWindow(trackForWindow.id, winState);
-                else if (trackForWindow && key.startsWith('sequencerWin-') && typeof window.openTrackSequencerWindow === 'function') newWin = window.openTrackSequencerWindow(trackForWindow.id, true, winState); 
-                
-                if (newWin && newWin.element && typeof newWin.applyState === 'function') newWin.applyState(winState);
+
+                if (key === 'globalControls' && typeof window.openGlobalControlsWindow === 'function') window.openGlobalControlsWindow(winState);
+                else if (key === 'mixer' && typeof window.openMixerWindow === 'function') window.openMixerWindow(winState);
+                else if (key === 'soundBrowser' && typeof window.openSoundBrowserWindow === 'function') window.openSoundBrowserWindow(winState);
+                else if (trackForWindow && key.startsWith('trackInspector-') && typeof window.openTrackInspectorWindow === 'function') window.openTrackInspectorWindow(trackForWindow.id, winState);
+                else if (trackForWindow && key.startsWith('effectsRack-') && typeof window.openTrackEffectsRackWindow === 'function') window.openTrackEffectsRackWindow(trackForWindow.id, winState);
+                else if (trackForWindow && key.startsWith('sequencerWin-') && typeof window.openTrackSequencerWindow === 'function') window.openTrackSequencerWindow(trackForWindow.id, true, winState);
+
             } catch (e) { console.error(`[State] Error reconstructing window ${winState.id} (Key: ${key}):`, e); }
         }
     }
-    
+
     if(typeof window.updateMixerWindow === 'function') window.updateMixerWindow();
     tracks.forEach(track => {
         if (track.inspectorWindow && track.inspectorWindow.element) {
@@ -411,10 +399,10 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         }
         if(typeof window.drawWaveform === 'function' && (track.type === 'Sampler') && track.audioBuffer && track.audioBuffer.loaded) window.drawWaveform(track);
         if(typeof window.drawInstrumentWaveform === 'function' && (track.type === 'InstrumentSampler') && track.instrumentSamplerSettings.audioBuffer && track.instrumentSamplerSettings.audioBuffer.loaded) window.drawInstrumentWaveform(track);
-
     });
     updateUndoRedoButtons();
 
+    window.isReconstructingDAW = false; // Clear flag
     if (!isUndoRedo) showNotification(`Project loaded successfully.`, 3500);
     console.log("[State] DAW Reconstructed successfully.");
 }
@@ -456,10 +444,10 @@ export async function handleProjectFileLoad(event) {
         reader.onload = async (e) => {
             try {
                 const projectData = JSON.parse(e.target.result);
-                undoStack = []; 
+                undoStack = [];
                 redoStack = [];
                 await reconstructDAW(projectData, false);
-                captureStateForUndo("Load Project"); 
+                captureStateForUndo("Load Project");
             } catch (error) {
                 console.error("[State] Error loading project from file:", error);
                 showNotification(`Error loading project: ${error.message}. File might be corrupt or invalid.`, 5000);
