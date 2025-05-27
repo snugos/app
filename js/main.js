@@ -23,8 +23,6 @@ import {
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample
 } from './audio.js';
-
-// --- RESTORED UI.JS IMPORTS ---
 import {
     openTrackEffectsRackWindow,
     openTrackSequencerWindow,
@@ -42,18 +40,18 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob,
+    createKnob, // Assuming createKnob is exported from ui.js as it's used by other ui.js functions that might be exposed globally
     veryUniqueTestExport // Kept for one more test, can be removed if all is well
 } from './ui.js';
 
-console.log('[main.js] Attempting to verify imports from ui.js');
+console.log('[main.js] Attempting to verify imports from ui.js'); // This log is present in your console output
 if (typeof veryUniqueTestExport === 'function') {
-    console.log('[main.js] veryUniqueTestExport was imported successfully.');
+    console.log('[main.js] veryUniqueTestExport was imported successfully.'); // This log is present in your console output
 } else {
     console.error('[main.js] FAILED to import veryUniqueTestExport from ui.js.');
 }
 if (typeof highlightPlayingStep === 'function') {
-    console.log('[main.js] highlightPlayingStep was imported successfully.');
+    console.log('[main.js] highlightPlayingStep was imported successfully.'); // This log is present in your console output
 } else {
     console.error('[main.js] FAILED to import highlightPlayingStep from ui.js.');
 }
@@ -62,9 +60,8 @@ if (typeof openGlobalControlsWindow === 'function') {
 } else {
     console.error('[main.js] FAILED to import openGlobalControlsWindow from ui.js.');
 }
-// --- END OF RESTORED UI.JS IMPORTS ---
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)"); // This log is present in your console output
 
 // --- Global Variables & Initialization ---
 window.loadedZipFiles = {};
@@ -219,7 +216,7 @@ window.updateTaskbarTempoDisplay = (newTempo) => {
 };
 
 async function initializeSnugOS() {
-    console.log("[Main] Window loaded. Initializing SnugOS...");
+    console.log("[Main] Window loaded. Initializing SnugOS..."); // This log is present in your console output
 
     if (typeof veryUniqueTestExport === 'function') {
         veryUniqueTestExport(); // Call the test function
@@ -263,15 +260,15 @@ async function initializeSnugOS() {
 
     try {
         if (typeof window.openGlobalControlsWindow !== 'function') {
-            console.error("[Main] openGlobalControlsWindow is not a function before calling it!");
+            console.error("[Main] openGlobalControlsWindow is not a function before calling it!"); // This log path not hit in last console
             showNotification("CRITICAL Error: Global controls cannot be opened.", 8000);
         } else {
             const globalControlsWindowInstance = await window.openGlobalControlsWindow();
             if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
-                console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited.");
+                console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited."); // This log IS present
                 showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000);
             } else {
-                console.log("[Main] Global Controls Window initialized successfully.");
+                console.log("[Main] Global Controls Window initialized successfully."); // This log IS present
                 window.playBtn = globalControlsWindowInstance.element.querySelector('#playBtnGlobal');
                 window.recordBtn = globalControlsWindowInstance.element.querySelector('#recordBtnGlobal');
                 window.tempoInput = globalControlsWindowInstance.element.querySelector('#tempoGlobalInput');
@@ -289,7 +286,7 @@ async function initializeSnugOS() {
     if (window.midiInputSelectGlobal) {
         await setupMIDI();
     } else {
-        console.warn("[Main] MIDI input select element not found after Global Controls Window attempt, skipping MIDI setup for now.");
+        console.warn("[Main] MIDI input select element not found after Global Controls Window attempt, skipping MIDI setup for now."); // This log IS present
     }
 
     const libraryPromises = [];
@@ -328,7 +325,7 @@ async function initializeSnugOS() {
     updateUndoRedoButtons();
 
     showNotification("Welcome to SnugOS!", 2500);
-    console.log("[Main] SnugOS Initialized.");
+    console.log("[Main] SnugOS Initialized."); // This log IS present
 }
 
 function updateMetersLoop() {
@@ -347,4 +344,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)"); // This log is present in your console output
