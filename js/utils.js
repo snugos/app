@@ -64,7 +64,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
         dialog.appendChild(buttonsDiv);
     }
     overlay.appendChild(dialog);
-    modalContainer.appendChild(overlay); // Append overlay to the DOM
+    modalContainer.appendChild(overlay);
     const firstButton = dialog.querySelector('.modal-buttons button');
     if (firstButton) firstButton.focus();
     return { overlay, dialog, contentDiv };
@@ -84,7 +84,7 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
     const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${indexString}`;
 
     let dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHintForLoad}"`;
-    if (padOrSliceIndex !== null && padOrSliceIndex !== undefined) { // Check for null or undefined specifically
+    if (padOrSliceIndex !== null && padOrSliceIndex !== undefined) {
         dataAttributes += ` data-pad-slice-index="${padOrSliceIndex}"`;
     }
 
@@ -124,11 +124,8 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
 
         const dzTrackId = dropZoneElement.dataset.trackId ? parseInt(dropZoneElement.dataset.trackId) : trackId;
         const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint;
-        const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex; // String from dataset ("0", "1", etc. or undefined)
-
-        // Determine the numeric index:
-        // If data-pad-slice-index is present and a valid number string, parse it.
-        // Otherwise, use the padIndexOrSliceId passed as an argument (which should be a number if it's for a specific pad/slice).
+        const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex;
+        
         let numericIndexForCallback = null;
         if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
             numericIndexForCallback = parseInt(dzPadSliceIndexStr);
@@ -164,7 +161,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
                     const trackForFallback = typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
                     const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
                         ? numericIndexForCallback
-                        : (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0); // Fallback if numericIndexForCallback wasn't determined
+                        : (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0); 
                     console.log(`[Utils] OS Drop on DrumSampler: trackId=${dzTrackId}, finalPadIndex=${finalPadIndex}, fileName=${file.name}`);
                     await loadFileCallback(simulatedEvent, dzTrackId, finalPadIndex, file.name);
                 } else if (dzTrackType === 'Sampler' || dzTrackType === 'InstrumentSampler') {
