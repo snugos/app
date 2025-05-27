@@ -1,9 +1,7 @@
 // js/ui.js
 console.log('[ui.js] TOP OF FILE PARSING - Version with visual improvements');
 
-// export function veryUniqueTestExport() { // This was for debugging, can be removed
-//     console.log("veryUniqueTestExport from ui.js was called!");
-// }
+// veryUniqueTestExport function was removed
 
 import { SnugWindow } from './SnugWindow.js';
 console.log('[ui.js] SnugWindow imported as:', SnugWindow);
