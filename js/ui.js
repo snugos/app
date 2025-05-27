@@ -236,12 +236,31 @@ export function buildTrackInspectorContentDOM(track) {
     doubleSeqButton.id = `doubleSeqBtn-${track.id}`;
     doubleSeqButton.className = 'bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded w-full mt-1';
     doubleSeqButton.title = 'Double sequence length and content';
-    doubleSeqButton.textContent = 'Double'; // ADDED TEXT CONTENT
+    doubleSeqButton.textContent = 'Double';
     doubleSeqButton.addEventListener('click', async () => {
         if (track && typeof track.doubleSequence === 'function') {
-            const result = await track.doubleSequence();
+            const result = await track.doubleSequence(); // This updates track.sequenceLength internally
             if (result && typeof showNotification === 'function') {
                 showNotification(result.message, result.success ? 2000 : 3000);
+            }
+            if (result && result.success) {
+                // === BEGIN FIX: Update UI elements in the inspector ===
+                const inspectorEl = track.inspectorWindow?.element;
+                if (inspectorEl) {
+                    const seqLenBarsInput = inspectorEl.querySelector(`#sequenceLengthBars-${track.id}`);
+                    const seqLenDisplaySpan = inspectorEl.querySelector(`#sequenceLengthDisplay-${track.id}`);
+                    const newNumBars = track.sequenceLength / Constants.STEPS_PER_BAR;
+
+                    if (seqLenBarsInput) {
+                        seqLenBarsInput.value = newNumBars; // Update the number input
+                    }
+                    if (seqLenDisplaySpan) {
+                        seqLenDisplaySpan.textContent = `${newNumBars} bars (${track.sequenceLength} steps)`; // Update the text display
+                    }
+                }
+                // Note: Track.setSequenceLength, called by track.doubleSequence,
+                // already handles redrawing the sequencer window if it's open.
+                // === END FIX ===
             }
         } else {
             console.error("Could not find track or doubleSequence method for track ID:", track.id);
