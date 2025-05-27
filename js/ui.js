@@ -1414,16 +1414,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     return seqWin;
 }
 
-// --- FUNCTION TO ADD BACK ---
-export function highlightPlayingStep(col, trackType, gridElement) {
-    if (!gridElement) return;
-    // Clear previous playing step highlights within this specific grid
-    gridElement.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-    // Highlight all cells in the current column
-    gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`).forEach(cell => cell.classList.add('playing'));
-}
-// --- END OF FUNCTION TO ADD BACK ---
-
 export function openMixerWindow(savedState = null) {
     console.log("[ui.js] openMixerWindow called.");
     const windowId = 'mixer';
