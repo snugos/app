@@ -1,14 +1,13 @@
 // js/Track.js - Track Class Module
 
 import { STEPS_PER_BAR, defaultStepsPerBar, synthPitches, numSlices, numDrumSamplerPads, samplerMIDINoteStart, defaultVelocity } from './constants.js';
-import { createEffectInstance, getEffectDefaultParams } from './effectsRegistry.js'; // NEW: Central place for effect info
+import { createEffectInstance, getEffectDefaultParams } from './effectsRegistry.js';
 
 export class Track {
     constructor(id, type, initialData = null) {
         this.id = initialData?.id || id;
         this.type = type;
 
-        // ... (existing name, mute, solo, volume logic) ...
         this.name = initialData?.name || `${type} Track ${this.id}`;
         if (type === 'DrumSampler') {
             this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
@@ -29,7 +28,6 @@ export class Track {
             this.synthParams = {};
         }
 
-        // ... (sampler, drum sampler, instrument sampler properties remain largely the same) ...
         this.originalFileName = initialData?.samplerAudioData?.fileName || null;
         this.audioBuffer = null;
         this.audioBufferDataURL = initialData?.samplerAudioData?.audioBufferDataURL || null;
@@ -79,8 +77,7 @@ export class Track {
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         this.drumPadPlayers = Array(numDrumSamplerPads).fill(null);
 
-        // --- NEW: Modular Effects ---
-        this.activeEffects = []; // Stores { id: string, type: string, toneNode: Tone.Effect, params: {} }
+        this.activeEffects = [];
         if (initialData && initialData.activeEffects) {
             initialData.activeEffects.forEach(effectData => {
                 const toneNode = createEffectInstance(effectData.type, effectData.params);
@@ -94,17 +91,13 @@ export class Track {
                 }
             });
         }
-        // --- END NEW ---
 
-        // Audio nodes that are always present per track (Gain, Meter)
-        // Effect nodes are now dynamic.
         this.gainNode = null;
         this.trackMeter = null;
-        this.outputNode = null; // Represents the last node in the track's chain before connecting to master
+        this.outputNode = null;
 
-        this.instrument = null; // For Synths
+        this.instrument = null;
         this.sequenceLength = initialData?.sequenceLength || defaultStepsPerBar;
-        // ... (sequenceData, sequence, window references, automation, etc. as before) ...
         let numRowsForGrid;
         if (type === 'Synth' || type === 'InstrumentSampler') numRowsForGrid = synthPitches.length;
         else if (type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : numSlices;
@@ -129,7 +122,7 @@ export class Track {
     }
 
     getDefaultSynthParams() {
-        return { /* ... as before ... */
+        return {
             portamento: 0.01,
             oscillator: { type: 'sawtooth' },
             envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 1 },
@@ -140,99 +133,111 @@ export class Track {
 
     async initializeAudioNodes() {
         console.log(`[Track ${this.id}] Initializing core audio nodes (Gain, Meter)...`);
+        if (this.gainNode && !this.gainNode.disposed) this.gainNode.dispose();
+        if (this.trackMeter && !this.trackMeter.disposed) this.trackMeter.dispose();
+
         this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
-        this.outputNode = this.gainNode; // Initially, gain node is the output
+        // this.outputNode will be set by rebuildEffectChain
 
-        this.rebuildEffectChain(); // Connects effects and then to master
-
-        // Connect meter
-        this.gainNode.connect(this.trackMeter);
-        // The trackMeter will connect to Tone.getDestination() if no master bus,
-        // OR to a special meter bus if master bus exists. For now, let's assume master bus handles overall metering.
-        // Or, it could just be for this track's visual, not affecting main audio path beyond its tap.
-        // For simplicity now, let's not connect trackMeter to destination here, assuming master bus will exist.
-        // If there's no master bus yet, this track's output (this.outputNode) connects to destination.
-        // This part will be refined when master bus is implemented in audio.js
-        // This will be `this.outputNode.connect(window.masterEffectsBusInput);`
+        this.rebuildEffectChain();
     }
 
     rebuildEffectChain() {
         console.log(`[Track ${this.id}] Rebuilding effect chain.`);
-        // Disconnect existing chain from instrument/player output onwards
-        // This is complex as the "source" node varies (synth, sampler player, drum pad players)
 
-        // For Synths, InstrumentSampler (Tone.Sampler), Slicer (Mono Player)
-        const mainSourceNode = this.instrument || this.toneSampler || this.slicerMonoPlayer;
-        if (mainSourceNode && !mainSourceNode.disposed) {
-            mainSourceNode.disconnect();
+        const sourceNode = this.instrument || this.toneSampler || this.slicerMonoPlayer;
+
+        // 1. Disconnect the main source (synth, main sampler player)
+        if (sourceNode && !sourceNode.disposed) {
+            try { sourceNode.disconnect(); } catch(e) { console.warn(`[Track ${this.id}] Minor error disconnecting sourceNode:`, e); }
         }
-
-        // For DrumSampler, each drumPadPlayer connects to the start of the effect chain.
-        // We need to disconnect all of them and reconnect them to the new chain head.
+        // Disconnect drum pad players
         if (this.type === 'DrumSampler') {
             this.drumPadPlayers.forEach(player => {
-                if (player && !player.disposed) player.disconnect();
-            });
-        }
-
-        // Dispose previous effect nodes in the chain IF they are not part of activeEffects
-        // For simplicity, activeEffects manages its own nodes' lifecycle (add/remove).
-        // Here, we just rebuild connections.
-
-        let chain = [];
-        this.activeEffects.forEach(effect => {
-            if (effect.toneNode && !effect.toneNode.disposed) {
-                chain.push(effect.toneNode);
-            }
-        });
-        chain.push(this.gainNode); // Gain node is always last in the track's controllable chain
-
-        this.outputNode = this.gainNode; // Default output is gainNode if no effects
-
-        if (chain.length > 1) { // More than just the gainNode
-            if (mainSourceNode && !mainSourceNode.disposed) {
-                mainSourceNode.chain(...chain, window.masterEffectsBusInput || Tone.getDestination());
-            } else if (this.type === 'DrumSampler') {
-                const firstEffectInChain = chain[0];
-                this.drumPadPlayers.forEach(player => {
-                    if (player && !player.disposed) {
-                        player.chain(...chain, window.masterEffectsBusInput || Tone.getDestination());
-                    }
-                });
-            } else if (this.type === 'Sampler' && this.slicerIsPolyphonic) {
-                // Polyphonic sampler players are temporary, created on demand.
-                // They will need to connect to chain[0] or masterEffectsBusInput if chain is empty (excluding gainNode).
-                // This logic is handled in playSlicePreview / sequence playback.
-            }
-            this.outputNode = chain[chain.length - 1]; // The last node in this setup is the gainNode
-        } else if (mainSourceNode && !mainSourceNode.disposed) { // Only gainNode in chain array
-            mainSourceNode.connect(this.gainNode);
-            this.gainNode.connect(window.masterEffectsBusInput || Tone.getDestination());
-        } else if (this.type === 'DrumSampler') { // Only gainNode
-             this.drumPadPlayers.forEach(player => {
                 if (player && !player.disposed) {
-                    player.connect(this.gainNode);
+                    try { player.disconnect(); } catch(e) { console.warn(`[Track ${this.id}] Minor error disconnecting drum player:`, e); }
                 }
             });
-            this.gainNode.connect(window.masterEffectsBusInput || Tone.getDestination());
         }
 
-
-        // Ensure GainNode always connects to the master bus (or destination if no master bus yet)
-        // And connect the meter from the gainNode
-        if (this.gainNode) {
-            this.gainNode.disconnect(this.trackMeter); // Disconnect old meter connection if any
-            this.gainNode.connect(this.trackMeter); // Meter taps from gainNode output
-
-            // The actual output of the track (after all effects and gain) goes to the master bus
-            if (window.masterEffectsBusInput) {
-                 if(this.outputNode !== window.masterEffectsBusInput) this.outputNode.connect(window.masterEffectsBusInput);
-            } else {
-                 if(this.outputNode !== Tone.getDestination()) this.outputNode.connect(Tone.getDestination());
+        // 2. Disconnect internal chain effects from gainNode and gainNode from its previous outputs
+        if (this.activeEffects.length > 0) {
+            const lastEffect = this.activeEffects[this.activeEffects.length - 1].toneNode;
+            if (lastEffect && !lastEffect.disposed && this.gainNode && !this.gainNode.disposed) {
+                try { lastEffect.disconnect(this.gainNode); } catch(e) { console.warn(`[Track ${this.id}] Minor error disconnecting last effect from gainNode:`, e); }
             }
         }
-        console.log(`[Track ${this.id}] Effect chain rebuilt. Outputting to: ${window.masterEffectsBusInput ? 'Master Bus' : 'Tone Destination'}`);
+        if (this.gainNode && !this.gainNode.disposed) {
+            try { this.gainNode.disconnect(); } catch(e) { console.warn(`[Track ${this.id}] Minor error disconnecting gainNode:`, e); }
+        }
+
+        // 3. Construct the new chain: Source -> Effects -> GainNode
+        let currentConnectableOutput = sourceNode;
+
+        if (this.type === 'DrumSampler') {
+            currentConnectableOutput = null; // For drums, players connect individually
+        }
+
+        const effectNodesInOrder = this.activeEffects
+            .map(e => e.toneNode)
+            .filter(n => n && !n.disposed);
+
+        // The full chain for a single source, or the effects part for multi-source (drums)
+        const chainToGainNode = [...effectNodesInOrder];
+        if (this.gainNode && !this.gainNode.disposed) {
+            chainToGainNode.push(this.gainNode);
+        } else {
+            console.error(`[Track ${this.id}] GainNode is invalid. Cannot complete chain.`);
+            // Potentially connect to Tone.getDestination() directly if gainNode is missing and effects exist
+            if (effectNodesInOrder.length > 0) {
+                 if(currentConnectableOutput) currentConnectableOutput.chain(...effectNodesInOrder, window.masterEffectsBusInput || Tone.getDestination());
+                 this.outputNode = effectNodesInOrder[effectNodesInOrder.length -1];
+            } else if (currentConnectableOutput) {
+                 currentConnectableOutput.connect(window.masterEffectsBusInput || Tone.getDestination());
+                 this.outputNode = currentConnectableOutput;
+            }
+            return; // Cannot proceed with gainNode-dependent connections
+        }
+
+
+        if (currentConnectableOutput) { // For Synth, Slicer (mono), InstrumentSampler
+            if (chainToGainNode.length > 0) {
+                 try { currentConnectableOutput.chain(...chainToGainNode); } catch(e) { console.error(`[Track ${this.id}] Error chaining single source: `, e); }
+            }
+        } else if (this.type === 'DrumSampler') {
+            this.drumPadPlayers.forEach(player => {
+                if (player && !player.disposed) {
+                    if (chainToGainNode.length > 0) {
+                         try { player.chain(...chainToGainNode); } catch(e) { console.error(`[Track ${this.id}] Error chaining drum player: `, e); }
+                    }
+                }
+            });
+        }
+        // At this point, all sources are chained through effects (if any) and end at this.gainNode.
+
+        // 4. Connect GainNode outputs
+        if (this.gainNode && !this.gainNode.disposed && this.trackMeter && !this.trackMeter.disposed) {
+            try {
+                this.gainNode.connect(this.trackMeter);
+
+                const finalDestination = window.masterEffectsBusInput || Tone.getDestination();
+                this.gainNode.connect(finalDestination);
+                this.outputNode = this.gainNode;
+                console.log(`[Track ${this.id}] GainNode connected to Meter and ${finalDestination === window.masterEffectsBusInput ? 'Master Bus Input' : 'Tone Destination'}.`);
+            } catch (e) {
+                 console.error(`[Track ${this.id}] Error connecting GainNode outputs: `, e);
+                 this.outputNode = null; // Or some other fallback
+            }
+        } else {
+            console.warn(`[Track ${this.id}] GainNode or TrackMeter is null/disposed in rebuildEffectChain. Output connections skipped.`);
+            this.outputNode = effectNodesInOrder.length > 0 ? effectNodesInOrder[effectNodesInOrder.length -1] : (sourceNode || null);
+            if (this.outputNode && (window.masterEffectsBusInput || Tone.getDestination())) { // Try to connect last known node if gain fails
+                try { this.outputNode.connect(window.masterEffectsBusInput || Tone.getDestination()); }
+                catch(e) { console.error("Error connecting fallback output node:", e); }
+            }
+        }
+        console.log(`[Track ${this.id}] Effect chain rebuilt.`);
     }
 
 
@@ -272,31 +277,53 @@ export class Track {
         }
     }
 
-    updateEffectParam(effectId, paramName, value) {
+    updateEffectParam(effectId, paramPath, value) {
         const effect = this.activeEffects.find(e => e.id === effectId);
         if (effect && effect.toneNode) {
-            effect.params[paramName] = value;
+            // Update stored params, handling nesting
+            const keys = paramPath.split('.');
+            let currentStoredParamLevel = effect.params;
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (!currentStoredParamLevel[keys[i]]) currentStoredParamLevel[keys[i]] = {};
+                currentStoredParamLevel = currentStoredParamLevel[keys[i]];
+            }
+            currentStoredParamLevel[keys[keys.length - 1]] = value;
+
+            // Update Tone.js node
             try {
-                // Tone.js parameters can be direct properties or Tone.Signal/Tone.Param objects with a .value
-                let targetParam = effect.toneNode[paramName];
-                if (targetParam && typeof targetParam.value !== 'undefined') { // It's a Tone.Param or Signal-like object
-                    if (typeof targetParam.rampTo === 'function') {
-                        targetParam.rampTo(value, 0.05);
+                let targetNodeProperty = effect.toneNode;
+                for (let i = 0; i < keys.length - 1; i++) {
+                    targetNodeProperty = targetNodeProperty[keys[i]];
+                    if (!targetNodeProperty) throw new Error(`Nested property ${keys.slice(0,i+1).join('.')} not found on Tone node.`);
+                }
+                const finalKey = keys[keys.length - 1];
+
+                if (targetNodeProperty && typeof targetNodeProperty[finalKey] !== 'undefined') {
+                    if (targetNodeProperty[finalKey] && typeof targetNodeProperty[finalKey].value !== 'undefined' && typeof targetNodeProperty[finalKey].rampTo === 'function') {
+                        targetNodeProperty[finalKey].rampTo(value, 0.05);
+                    } else if (targetNodeProperty[finalKey] && typeof targetNodeProperty[finalKey].value !== 'undefined') {
+                        targetNodeProperty[finalKey].value = value;
                     } else {
-                        targetParam.value = value;
+                        targetNodeProperty[finalKey] = value;
                     }
-                } else if (typeof effect.toneNode[paramName] !== 'undefined') { // Direct property
-                    effect.toneNode[paramName] = value;
-                } else { // Try with .set() for nested or complex params
-                    const Hparam = {};
-                    Hparam[paramName] = value;
-                    effect.toneNode.set(Hparam);
+                } else if (typeof effect.toneNode.set === 'function') { // Fallback to .set() for complex/nested objects
+                    const updateObj = {};
+                    let currentLevelForSet = updateObj;
+                    for(let i=0; i < keys.length -1; i++){
+                        currentLevelForSet[keys[i]] = {};
+                        currentLevelForSet = currentLevelForSet[keys[i]];
+                    }
+                    currentLevelForSet[keys[keys.length -1]] = value;
+                    effect.toneNode.set(updateObj);
+                } else {
+                     console.warn(`[Track ${this.id}] Could not set param ${paramPath} on ${effect.type} node directly or via .set().`);
                 }
             } catch (err) {
-                console.error(`[Track ${this.id}] Error updating param ${paramName} for ${effect.type}:`, err);
+                console.error(`[Track ${this.id}] Error updating param ${paramPath} for ${effect.type}:`, err);
             }
         }
     }
+
 
     reorderEffect(effectId, newIndex) {
         const oldIndex = this.activeEffects.findIndex(e => e.id === effectId);
@@ -311,7 +338,6 @@ export class Track {
         this.rebuildEffectChain();
     }
 
-
     async fullyInitializeAudioResources() {
         console.log(`[Track ${this.id}] fullyInitializeAudioResources called for type: ${this.type}`);
         try {
@@ -322,7 +348,7 @@ export class Track {
                     this.audioBuffer = await new Tone.Buffer().load(this.audioBufferDataURL);
                 }
                 if (!this.slicerIsPolyphonic && this.audioBuffer?.loaded) {
-                    this.setupSlicerMonoNodes(); // Connects to the start of the effect chain internally
+                    this.setupSlicerMonoNodes();
                 }
             } else if (this.type === 'DrumSampler') {
                 for (let i = 0; i < this.drumSamplerPads.length; i++) {
@@ -335,17 +361,15 @@ export class Track {
                             this.drumPadPlayers[i].dispose();
                         }
                         this.drumPadPlayers[i] = new Tone.Player(pad.audioBuffer);
-                        // Drum pad players connect to the start of the track's effect chain
-                        // This connection is handled/updated in rebuildEffectChain
                     }
                 }
             } else if (this.type === 'InstrumentSampler') {
                 if (this.instrumentSamplerSettings.audioBufferDataURL && (!this.instrumentSamplerSettings.audioBuffer || !this.instrumentSamplerSettings.audioBuffer.loaded)) {
                     this.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(this.instrumentSamplerSettings.audioBufferDataURL);
                 }
-                this.setupToneSampler(); // Connects to the start of the effect chain internally
+                this.setupToneSampler();
             }
-            this.rebuildEffectChain(); // Ensure chain is correct after resources are loaded
+            this.rebuildEffectChain(); // Crucial: Rebuild chain after all resources are potentially set up
             this.setSequenceLength(this.sequenceLength, true);
             console.log(`[Track ${this.id}] fullyInitializeAudioResources completed.`);
         } catch (error) {
@@ -363,12 +387,14 @@ export class Track {
         }
         try {
             this.instrument = new Tone.MonoSynth(this.synthParams);
-            // Connection to effect chain is handled by rebuildEffectChain
         } catch (error) {
             console.error(`[Track ${this.id}] Error creating MonoSynth instrument:`, error);
-            this.instrument = new Tone.Synth(); // Fallback
+            this.instrument = new Tone.Synth();
         }
-        this.rebuildEffectChain();
+        // Connection to effect chain is handled by rebuildEffectChain, which is called after this in fullyInitializeAudioResources
+        // or directly if this is called standalone (though it shouldn't be currently)
+        // For safety, if called standalone, ensure chain is rebuilt:
+        // this.rebuildEffectChain(); // Commented out as fullyInitializeAudioResources handles it
     }
 
     setupSlicerMonoNodes() {
@@ -376,16 +402,12 @@ export class Track {
             this.disposeSlicerMonoNodes();
             this.slicerMonoPlayer = new Tone.Player();
             this.slicerMonoEnvelope = new Tone.AmplitudeEnvelope();
-            this.slicerMonoGain = new Tone.Gain(); // This gain is part of the mono player setup, not the main track gain.
-            
-            // The slicerMonoPlayer itself will be the "source" for the effect chain.
-            // Its chain (env, gain) is internal to its playback logic.
-            // rebuildEffectChain will handle connecting slicerMonoPlayer to the effects.
+            this.slicerMonoGain = new Tone.Gain();
+            // Rebuild chain will connect slicerMonoPlayer to effects
             console.log(`[Track ${this.id}] Slicer mono nodes set up.`);
-            this.rebuildEffectChain();
+            // this.rebuildEffectChain(); // Called by fullyInitializeAudioResources
         }
     }
-    // ... (disposeSlicerMonoNodes remains similar)
     disposeSlicerMonoNodes() {
         if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed) this.slicerMonoPlayer.dispose();
         if (this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed) this.slicerMonoEnvelope.dispose();
@@ -393,39 +415,36 @@ export class Track {
         this.slicerMonoPlayer = null; this.slicerMonoEnvelope = null; this.slicerMonoGain = null;
     }
 
-
-    setupToneSampler() { // For InstrumentSampler type
+    setupToneSampler() {
         if (this.toneSampler && !this.toneSampler.disposed) {
             this.toneSampler.dispose();
         }
         if (this.instrumentSamplerSettings.audioBuffer && this.instrumentSamplerSettings.audioBuffer.loaded) {
             const urls = {};
             urls[this.instrumentSamplerSettings.rootNote] = this.instrumentSamplerSettings.audioBuffer;
-            const samplerOptions = { /* ... as before ... */
+            const samplerOptions = {
                 urls: urls,
                 attack: this.instrumentSamplerSettings.envelope.attack,
                 release: this.instrumentSamplerSettings.envelope.release,
                 onload: () => console.log(`[Track ${this.id}] Tone.Sampler loaded for InstrumentSampler.`),
-                onerror: (e) => console.error(`[Track ${this.id}] Error loading Tone.Sampler for InstrumentSampler:`, e)
+                onerror: (e) => console.error(`[Track ${this.id}] Error loading Tone.Sampler:`, e)
             };
             this.toneSampler = new Tone.Sampler(samplerOptions);
-            // Connection handled by rebuildEffectChain
         } else {
             console.warn(`[Track ${this.id}] InstrumentSampler audioBuffer not loaded, cannot setup Tone.Sampler.`);
         }
-        this.rebuildEffectChain();
+        // this.rebuildEffectChain(); // Called by fullyInitializeAudioResources
     }
 
-    // ... (setVolume, applyMuteState, applySoloState remain similar, ensure they use this.gainNode)
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = Math.max(0, Math.min(1, parseFloat(volume) || 0));
-        if (this.gainNode && !this.isMuted) {
+        if (this.gainNode && !this.gainNode.disposed && !this.isMuted) {
             this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05);
         }
     }
 
     applyMuteState() {
-        if (!this.gainNode) { console.warn(`[Track ${this.id}] applyMuteState: gainNode is null.`); return; }
+        if (!this.gainNode || this.gainNode.disposed) { console.warn(`[Track ${this.id}] applyMuteState: gainNode is null/disposed.`); return; }
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
         if (this.isMuted) {
             this.gainNode.gain.rampTo(0, 0.01);
@@ -439,59 +458,66 @@ export class Track {
     }
 
     applySoloState() {
-        if (!this.gainNode) { console.warn(`[Track ${this.id}] applySoloState: gainNode is null.`); return; }
+        if (!this.gainNode || this.gainNode.disposed) { console.warn(`[Track ${this.id}] applySoloState: gainNode is null/disposed.`); return; }
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
-        if (this.isMuted) {
-            this.gainNode.gain.rampTo(0, 0.01);
-            return;
-        }
+        if (this.isMuted) { this.gainNode.gain.rampTo(0, 0.01); return; }
         if (currentGlobalSoloId) {
-            if (this.id === currentGlobalSoloId) {
-                this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05);
-            } else {
-                this.gainNode.gain.rampTo(0, 0.01);
-            }
+            this.gainNode.gain.rampTo(this.id === currentGlobalSoloId ? this.previousVolumeBeforeMute : 0, 0.01);
         } else {
             this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05);
         }
     }
 
-    // Synth param setters, slice setters, drum pad setters, instrument sampler setters remain similar
-    // ... setSynthParam, setSliceVolume, etc. ...
+    setSynthParam(paramPath, value) {
+        if (this.type !== 'Synth' || !this.instrument || this.instrument.disposed) { return; }
+        if (!this.synthParams) this.synthParams = this.getDefaultSynthParams();
+        const keys = paramPath.split('.');
+        let currentParamLevel = this.synthParams;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (!currentParamLevel[keys[i]]) currentParamLevel[keys[i]] = {};
+            currentParamLevel = currentParamLevel[keys[i]];
+        }
+        currentParamLevel[keys[keys.length - 1]] = value;
+        try { this.instrument.set({ [paramPath]: value }); }
+        catch (e) { console.error(`Error setting synth param ${paramPath}:`, e); }
+    }
 
-    // Sequence playback logic in setSequenceLength needs to be aware of the new effect chain.
-    // For polyphonic sampler playback, temporary players must connect to the *start* of this track's effect chain.
+    setSliceVolume(sliceIndex, volume) { if (this.slices[sliceIndex]) this.slices[sliceIndex].volume = parseFloat(volume); }
+    setSlicePitchShift(sliceIndex, semitones) { if (this.slices[sliceIndex]) this.slices[sliceIndex].pitchShift = parseInt(semitones); }
+    setSliceLoop(sliceIndex, loop) { if (this.slices[sliceIndex]) this.slices[sliceIndex].loop = !!loop; }
+    setSliceReverse(sliceIndex, reverse) { if (this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!reverse; }
+    setSliceEnvelopeParam(sliceIndex, param, value) { if (this.slices[sliceIndex]?.envelope) this.slices[sliceIndex].envelope[param] = parseFloat(value); }
+    setDrumSamplerPadVolume(padIndex, volume) { if (this.drumSamplerPads[padIndex]) this.drumSamplerPads[padIndex].volume = parseFloat(volume); }
+    setDrumSamplerPadPitch(padIndex, pitch) { if (this.drumSamplerPads[padIndex]) this.drumSamplerPads[padIndex].pitchShift = parseInt(pitch); }
+    setDrumSamplerPadEnv(padIndex, param, value) { if (this.drumSamplerPads[padIndex]?.envelope) this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value); }
+    setInstrumentSamplerRootNote(noteName) { if (Tone.Frequency(noteName).toMidi() > 0) { this.instrumentSamplerSettings.rootNote = noteName; this.setupToneSampler(); this.rebuildEffectChain(); }}
+    setInstrumentSamplerLoop(loop) { this.instrumentSamplerSettings.loop = !!loop; this.setupToneSampler(); this.rebuildEffectChain(); }
+    setInstrumentSamplerLoopStart(time) { this.instrumentSamplerSettings.loopStart = Math.max(0, parseFloat(time)); this.setupToneSampler(); this.rebuildEffectChain(); }
+    setInstrumentSamplerLoopEnd(time) { this.instrumentSamplerSettings.loopEnd = Math.max(this.instrumentSamplerSettings.loopStart, parseFloat(time)); this.setupToneSampler(); this.rebuildEffectChain(); }
+    setInstrumentSamplerEnv(param, value) { if (this.instrumentSamplerSettings.envelope) { this.instrumentSamplerSettings.envelope[param] = parseFloat(value); if (this.toneSampler && !this.toneSampler.disposed) { if (param === 'attack' && this.toneSampler.attack !== undefined) this.toneSampler.attack = parseFloat(value); if (param === 'release' && this.toneSampler.release !== undefined) this.toneSampler.release = parseFloat(value); } } }
+
+
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
-        // ... (length adjustment and sequenceData resizing as before) ...
         const oldActualLength = this.sequenceLength;
         newLengthInSteps = Math.max(STEPS_PER_BAR, parseInt(newLengthInSteps) || defaultStepsPerBar);
         newLengthInSteps = Math.ceil(newLengthInSteps / STEPS_PER_BAR) * STEPS_PER_BAR;
-
         if (!skipUndoCapture && oldActualLength !== newLengthInSteps && typeof window.captureStateForUndo === 'function') {
             window.captureStateForUndo(`Set Seq Length for ${this.name} to ${newLengthInSteps / STEPS_PER_BAR} bars`);
         }
         this.sequenceLength = newLengthInSteps;
-
         let numRows;
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = synthPitches.length;
         else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : numSlices;
         else if (this.type === 'DrumSampler') numRows = numDrumSamplerPads;
         else numRows = (this.sequenceData && this.sequenceData.length > 0) ? this.sequenceData.length : 0;
-
         const currentSequenceData = this.sequenceData || [];
-        const newGridDataArray = Array(numRows).fill(null).map((_, rIndex) => {
+        this.sequenceData = Array(numRows).fill(null).map((_, rIndex) => {
             const currentRow = currentSequenceData[rIndex] || [];
             const newRow = Array(this.sequenceLength).fill(null);
-            for (let c = 0; c < Math.min(currentRow.length, this.sequenceLength); c++) {
-                newRow[c] = currentRow[c];
-            }
+            for (let c = 0; c < Math.min(currentRow.length, this.sequenceLength); c++) newRow[c] = currentRow[c];
             return newRow;
         });
-        this.sequenceData = newGridDataArray;
-
-        if (this.sequence && !this.sequence.disposed) {
-            this.sequence.stop(); this.sequence.clear(); this.sequence.dispose(); this.sequence = null;
-        }
+        if (this.sequence && !this.sequence.disposed) { this.sequence.stop(); this.sequence.clear(); this.sequence.dispose(); this.sequence = null; }
 
         this.sequence = new Tone.Sequence((time, col) => {
             const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
@@ -499,98 +525,67 @@ export class Track {
             if (this.sequencerWindow && !this.sequencerWindow.isMinimized && typeof window.highlightPlayingStep === 'function') {
                 window.highlightPlayingStep(col, this.type, this.sequencerWindow.element?.querySelector('.sequencer-grid'));
             }
-            if (!this.gainNode || this.isMuted || isSoloedOut) return;
+            if (!this.gainNode || this.gainNode.disposed || this.isMuted || isSoloedOut) return;
 
-            // Determine the first node in the effect chain (or gainNode if no effects)
-            const firstEffectNode = this.activeEffects.length > 0 ? this.activeEffects[0].toneNode : this.gainNode;
+            const firstNodeInOutChain = this.activeEffects.length > 0 ? this.activeEffects[0].toneNode : this.gainNode;
 
-            if (this.type === 'Synth' && this.instrument) { /* ... as before, instrument already connected ... */
+            if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
                  synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
-                    if (step && step.active && this.instrument && typeof this.instrument.triggerAttackRelease === 'function') {
-                        this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity);
-                    }
+                    if (step?.active) this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity);
                 });
             } else if (this.type === 'Sampler') {
                 this.slices.forEach((sliceData, sliceIndex) => {
                     const step = this.sequenceData[sliceIndex]?.[col];
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
-                        const totalPitchShift = sliceData.pitchShift;
-                        const playbackRate = Math.pow(2, totalPitchShift / 12);
+                        const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                         let playDuration = sliceData.duration / playbackRate;
                         if (sliceData.loop) playDuration = Tone.Time("8n").toSeconds();
-
-                        if (this.slicerIsPolyphonic) { // Create temp player and connect to start of THIS TRACK'S effect chain
+                        if (this.slicerIsPolyphonic) {
                             const tempPlayer = new Tone.Player(this.audioBuffer);
                             const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
                             const tempGain = new Tone.Gain(step.velocity * sliceData.volume);
-                            
-                            // Connect to the first actual effect, or the track's gain node if no effects
-                            const destinationForTempPlayer = firstEffectNode || (window.masterEffectsBusInput || Tone.getDestination());
-                            tempPlayer.chain(tempEnv, tempGain, destinationForTempPlayer);
-                            // ... rest of tempPlayer setup and start/stop ...
-                            tempPlayer.playbackRate = playbackRate;
-                            tempPlayer.reverse = sliceData.reverse;
-                            tempPlayer.loop = sliceData.loop;
-                            tempPlayer.loopStart = sliceData.offset;
-                            tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
+                            const dest = firstNodeInOutChain || (window.masterEffectsBusInput || Tone.getDestination());
+                            tempPlayer.chain(tempEnv, tempGain, dest);
+                            tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse; tempPlayer.loop = sliceData.loop;
+                            tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
                             tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
                             tempEnv.triggerAttack(time);
                             if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
-                            Tone.Transport.scheduleOnce(() => {
-                                if (tempPlayer && !tempPlayer.disposed) { tempPlayer.stop(); tempPlayer.dispose(); }
-                                if (tempEnv && !tempEnv.disposed) tempEnv.dispose();
-                                if (tempGain && !tempGain.disposed) tempGain.dispose();
-                            }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
-
-                        } else { // Monophonic slicer playback (slicerMonoPlayer is already connected in the chain)
-                            if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && this.slicerMonoGain) {
-                                if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
-                                if (this.slicerMonoEnvelope.getValueAtTime(time) > 0.001) this.slicerMonoEnvelope.triggerRelease(time);
-                                this.slicerMonoPlayer.buffer = this.audioBuffer;
-                                this.slicerMonoEnvelope.set(sliceData.envelope);
-                                this.slicerMonoGain.gain.value = step.velocity * sliceData.volume;
-                                // ... rest of mono player setup ...
-                                this.slicerMonoPlayer.playbackRate = playbackRate;
-                                this.slicerMonoPlayer.reverse = sliceData.reverse;
-                                this.slicerMonoPlayer.loop = sliceData.loop;
-                                this.slicerMonoPlayer.loopStart = sliceData.offset;
-                                this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
-                                this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
-                                this.slicerMonoEnvelope.triggerAttack(time);
-                                if (!sliceData.loop) {
-                                    const releaseTime = time + playDuration - (sliceData.envelope.release || 0.1);
-                                    this.slicerMonoEnvelope.triggerRelease(Math.max(time, releaseTime));
-                                }
-                            }
+                            Tone.Transport.scheduleOnce(() => { if(!tempPlayer.disposed) tempPlayer.dispose(); if(!tempEnv.disposed) tempEnv.dispose(); if(!tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
+                        } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed) {
+                            if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
+                            if (this.slicerMonoEnvelope.getValueAtTime(time) > 0.001) this.slicerMonoEnvelope.triggerRelease(time);
+                            this.slicerMonoPlayer.buffer = this.audioBuffer; this.slicerMonoEnvelope.set(sliceData.envelope);
+                            this.slicerMonoGain.gain.value = step.velocity * sliceData.volume;
+                            this.slicerMonoPlayer.playbackRate = playbackRate; this.slicerMonoPlayer.reverse = sliceData.reverse; this.slicerMonoPlayer.loop = sliceData.loop;
+                            this.slicerMonoPlayer.loopStart = sliceData.offset; this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
+                            this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
+                            this.slicerMonoEnvelope.triggerAttack(time);
+                            if (!sliceData.loop) this.slicerMonoEnvelope.triggerRelease(Math.max(time, time + playDuration - (sliceData.envelope.release || 0.1)));
                         }
                     }
                 });
-            } else if (this.type === 'DrumSampler') { /* ... as before, players already connected ... */
+            } else if (this.type === 'DrumSampler') {
                 Array.from({ length: numDrumSamplerPads }).forEach((_, padIndex) => {
                     const step = this.sequenceData[padIndex]?.[col];
                     const padData = this.drumSamplerPads[padIndex];
-                    if (step?.active && padData && this.drumPadPlayers[padIndex] && this.drumPadPlayers[padIndex].loaded) {
+                    if (step?.active && padData && this.drumPadPlayers[padIndex]?.loaded) {
                         const player = this.drumPadPlayers[padIndex];
                         player.volume.value = Tone.gainToDb(padData.volume * step.velocity);
-                        player.playbackRate = Math.pow(2, (padData.pitchShift) / 12);
+                        player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
                     }
                 });
-            } else if (this.type === 'InstrumentSampler' && this.toneSampler && this.toneSampler.loaded) { /* ... as before, sampler already connected ... */
+            } else if (this.type === 'InstrumentSampler' && this.toneSampler?.loaded) {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
-                    if (step?.active && this.toneSampler && this.toneSampler.loaded) {
-                        this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "8n", time, step.velocity);
-                    }
+                    if (step?.active) this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "8n", time, step.velocity);
                 });
             }
         }, Array.from(Array(this.sequenceLength).keys()), "16n").start(0);
-
-        if (this.sequencerWindow && !this.sequencerWindow.isMinimized && window.openWindows[`sequencerWin-${this.id}`]) {
-             if (typeof window.openTrackSequencerWindow === 'function') {
-                window.openTrackSequencerWindow(this.id, true);
-             }
+        if (this.sequencerWindow && !this.sequencerWindow.isMinimized && window.openWindows[`sequencerWin-${this.id}`] && typeof window.openTrackSequencerWindow === 'function') {
+             window.openTrackSequencerWindow(this.id, true);
         }
     }
 
@@ -604,27 +599,15 @@ export class Track {
         if (this.instrumentSamplerSettings.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) this.instrumentSamplerSettings.audioBuffer.dispose();
         this.drumSamplerPads.forEach(pad => { if (pad.audioBuffer && !pad.audioBuffer.disposed) pad.audioBuffer.dispose(); });
         this.drumPadPlayers.forEach(player => { if (player && !player.disposed) player.dispose(); });
-
-        // --- NEW: Dispose active effects ---
-        this.activeEffects.forEach(effect => {
-            if (effect.toneNode && !effect.toneNode.disposed) {
-                effect.toneNode.dispose();
-            }
-        });
+        this.activeEffects.forEach(effect => { if (effect.toneNode && !effect.toneNode.disposed) effect.toneNode.dispose(); });
         this.activeEffects = [];
-        // --- END NEW ---
-
         if (this.gainNode && !this.gainNode.disposed) this.gainNode.dispose();
         if (this.trackMeter && !this.trackMeter.disposed) this.trackMeter.dispose();
-
-        if (this.inspectorWindow && typeof this.inspectorWindow.close === 'function') this.inspectorWindow.close();
-        if (this.effectsRackWindow && typeof this.effectsRackWindow.close === 'function') this.effectsRackWindow.close();
-        if (this.sequencerWindow && typeof this.sequencerWindow.close === 'function') this.sequencerWindow.close();
-
-        this.sequence = null; this.instrument = null; this.audioBuffer = null;
-        this.toneSampler = null; this.drumSamplerPads = []; this.drumPadPlayers = [];
-        this.gainNode = null; this.trackMeter = null; this.outputNode = null;
-        this.inspectorWindow = null; this.effectsRackWindow = null; this.sequencerWindow = null;
-        console.log(`[Track ${this.id}] Finished disposing track ${this.name}`);
+        if (this.inspectorWindow?.close) this.inspectorWindow.close();
+        if (this.effectsRackWindow?.close) this.effectsRackWindow.close();
+        if (this.sequencerWindow?.close) this.sequencerWindow.close();
+        // Nullify references
+        Object.keys(this).forEach(key => { if (key !== 'id' && key !== 'name' /* keep some identifiers for logging if needed */ ) this[key] = null; });
+        console.log(`[Track ${this.id}] Finished disposing track.`);
     }
 }
