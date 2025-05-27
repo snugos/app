@@ -79,7 +79,6 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
 }
 
 export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOrSliceIndex = null) {
-    // Ensure padOrSliceIndex results in a clean ID string part, even if it's 0
     const indexString = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '';
     const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${indexString}`;
 
@@ -141,7 +140,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             console.log("[Utils] Dropped JSON data (from sound browser):", soundDataString);
             try {
                 const soundData = JSON.parse(soundDataString);
-                if (loadSoundCallback) { // This is loadSoundFromBrowserToTarget
+                if (loadSoundCallback) { 
                     console.log(`[Utils] Calling loadSoundCallback for Sound Browser drop. Target index: ${numericIndexForCallback}`);
                     await loadSoundCallback(soundData, dzTrackId, dzTrackType, numericIndexForCallback);
                 } else {
