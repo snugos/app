@@ -260,10 +260,22 @@ export class Track {
         }
 
         let paramsToUse = {};
-        if (this.synthEngineType === 'BasicPoly' && this.synthParams.basicPoly) paramsToUse = this.synthParams.basicPoly;
-        else if (this.synthEngineType === 'AMSynth' && this.synthParams.amSynth) paramsToUse = this.synthParams.amSynth;
-        else if (this.synthEngineType === 'FMSynth' && this.synthParams.fmSynth) paramsToUse = this.synthParams.fmSynth;
-        else paramsToUse = this.getDefaultSynthParams(this.synthEngineType); // Fallback
+        let engineKey;
+
+        if (this.synthEngineType === 'BasicPoly') engineKey = 'basicPoly';
+        else if (this.synthEngineType === 'AMSynth') engineKey = 'amSynth';
+        else if (this.synthEngineType === 'FMSynth') engineKey = 'fmSynth';
+
+        if (engineKey && this.synthParams && this.synthParams[engineKey]) {
+            paramsToUse = this.synthParams[engineKey];
+        } else {
+            paramsToUse = this.getDefaultSynthParams(this.synthEngineType);
+            // Ensure this default is stored if it wasn't there
+            if (engineKey && this.synthParams) {
+                this.synthParams[engineKey] = paramsToUse;
+            }
+        }
+
 
         try {
             if (this.synthEngineType === 'BasicPoly') {
@@ -276,6 +288,7 @@ export class Track {
                 console.warn(`[Track ${this.id}] Unknown synth engine type: ${this.synthEngineType}. Defaulting to BasicPoly.`);
                 this.instrument = new Tone.PolySynth(Tone.Synth, this.getDefaultSynthParams('BasicPoly'));
                 this.synthEngineType = 'BasicPoly'; // Correct the type
+                if(this.synthParams) this.synthParams['basicPoly'] = this.getDefaultSynthParams('BasicPoly');
             }
 
             if (this.instrument && this.distortionNode && !this.distortionNode.disposed) {
@@ -288,7 +301,7 @@ export class Track {
         } catch (error) {
             console.error(`[Track ${this.id}] Error creating synth instrument (${this.synthEngineType}):`, error);
             // Fallback to a basic synth if specific one fails
-            this.instrument = new Tone.PolySynth(Tone.Synth).toDestination();
+            this.instrument = new Tone.PolySynth(Tone.Synth);
             if (this.distortionNode && !this.distortionNode.disposed) this.instrument.connect(this.distortionNode);
             else this.instrument.toDestination();
             console.warn(`[Track ${this.id}] Fell back to basic Tone.Synth due to error.`);
@@ -334,12 +347,12 @@ export class Track {
                 onerror: (e) => console.error(`[Track ${this.id}] Error loading Tone.Sampler for InstrumentSampler:`, e)
             };
             this.toneSampler = new Tone.Sampler(samplerOptions);
-            this.toneSampler.set({
+            this.toneSampler.set({ // Ensure all envelope parameters are set
                 attack: this.instrumentSamplerSettings.envelope.attack,
-                decay: this.instrumentSamplerSettings.envelope.decay, // Tone.Sampler uses release for both decay and release phases of ADSR if only attack/release provided.
-                sustain: this.instrumentSamplerSettings.envelope.sustain, // This might not directly map if sampler is simpler.
+                decay: this.instrumentSamplerSettings.envelope.decay,
+                sustain: this.instrumentSamplerSettings.envelope.sustain,
                 release: this.instrumentSamplerSettings.envelope.release,
-                curve: "exponential"
+                curve: "exponential" // or "linear" or an explicit curve array
             });
             if (this.distortionNode && !this.distortionNode.disposed) {
                 this.toneSampler.connect(this.distortionNode);
@@ -423,48 +436,52 @@ export class Track {
     setAutoWahFollower(value) { this.effects.autoWah.follower = parseFloat(value); if(this.autoWahNode && this.autoWahNode.follower) this.autoWahNode.follower.value = this.effects.autoWah.follower; }
 
     setSynthParam(paramPath, value) {
-        if (!this.instrument || !this.synthParams) return;
+        if (!this.synthParams) { // Check synthParams existence first
+            console.warn(`[Track ${this.id}] synthParams object not found.`);
+            return;
+        }
+
         let engineKey;
         if (this.synthEngineType === 'BasicPoly') engineKey = 'basicPoly';
         else if (this.synthEngineType === 'AMSynth') engineKey = 'amSynth';
         else if (this.synthEngineType === 'FMSynth') engineKey = 'fmSynth';
-        else { console.warn(`[Track ${this.id}] Unknown synth engine type for setSynthParam: ${this.synthEngineType}`); return; }
+        else {
+            console.warn(`[Track ${this.id}] Unknown synth engine type for setSynthParam: ${this.synthEngineType}`);
+            return;
+        }
 
+        // Ensure the specific engine's parameter object exists
         if (!this.synthParams[engineKey]) {
-            console.warn(`[Track ${this.id}] Synth params for engine ${engineKey} not initialized.`);
+            console.warn(`[Track ${this.id}] Synth params for engine ${engineKey} not initialized. Initializing with defaults.`);
             this.synthParams[engineKey] = this.getDefaultSynthParams(this.synthEngineType);
         }
 
         const keys = paramPath.split('.');
         let currentParamLevel = this.synthParams[engineKey];
-        let currentInstrumentLevel = this.instrument;
 
+        // Traverse and update the internal synthParams object
         for (let i = 0; i < keys.length - 1; i++) {
-            if (!currentParamLevel[keys[i]]) currentParamLevel[keys[i]] = {};
-            currentParamLevel = currentParamLevel[keys[i]];
-            if (currentInstrumentLevel && typeof currentInstrumentLevel.get === 'function' && currentInstrumentLevel.get(keys[i])) {
-                 currentInstrumentLevel = currentInstrumentLevel.get(keys[i]);
-            } else if (currentInstrumentLevel && currentInstrumentLevel[keys[i]]) {
-                 currentInstrumentLevel = currentInstrumentLevel[keys[i]];
-            } else {
-                console.warn(`[Track ${this.id}] Cannot find path ${keys.slice(0, i+1).join('.')} in instrument for setSynthParam.`);
-                return;
+            if (!currentParamLevel[keys[i]]) {
+                currentParamLevel[keys[i]] = {};
             }
+            currentParamLevel = currentParamLevel[keys[i]];
         }
-        const finalKey = keys[keys.length - 1];
-        currentParamLevel[finalKey] = value;
+        currentParamLevel[keys[keys.length - 1]] = value;
 
-        if (currentInstrumentLevel && typeof currentInstrumentLevel.set === 'function') {
-            const paramToSet = {}; paramToSet[finalKey] = value;
-            currentInstrumentLevel.set(paramToSet);
-        } else if (currentInstrumentLevel && currentInstrumentLevel[finalKey] !== undefined) {
-             if (currentInstrumentLevel[finalKey] && typeof currentInstrumentLevel[finalKey].setValueAtTime === 'function') {
-                currentInstrumentLevel[finalKey].setValueAtTime(value, Tone.now());
-             } else {
-                currentInstrumentLevel[finalKey] = value;
-             }
+        // For updating the Tone.js instrument:
+        // Construct the nested object that PolySynth.set() expects
+        if (this.instrument && typeof this.instrument.set === 'function') {
+            const updateObject = {};
+            let currentLevelForUpdate = updateObject;
+            for (let i = 0; i < keys.length - 1; i++) {
+                currentLevelForUpdate[keys[i]] = {};
+                currentLevelForUpdate = currentLevelForUpdate[keys[i]];
+            }
+            currentLevelForUpdate[keys[keys.length - 1]] = value;
+            this.instrument.set(updateObject);
         } else {
-             console.warn(`[Track ${this.id}] Cannot set param ${paramPath} on instrument. Final key or set method not found.`);
+            // This case is fine if the instrument isn't initialized yet; params will be applied then.
+            // console.warn(`[Track ${this.id}] Instrument not available or .set is not a function for ${paramPath}. Params will be applied on next instrument init.`);
         }
     }
 
@@ -563,7 +580,7 @@ export class Track {
 
         console.log(`[Track ${this.id}] Creating new Tone.Sequence with length ${this.sequenceLength}.`);
         this.sequence = new Tone.Sequence((time, col) => {
-            console.log(`[Track ${this.id} Sequencer Tick] col: ${col}, time: ${time.toFixed(4)}, transport state: ${Tone.Transport.state}`);
+            // console.log(`[Track ${this.id} Sequencer Tick] col: ${col}, time: ${time.toFixed(4)}, transport state: ${Tone.Transport.state}`);
 
             const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
             const isSoloedOut = currentGlobalSoloId && currentGlobalSoloId !== this.id;
@@ -584,7 +601,7 @@ export class Track {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
                     if (step && step.active && this.instrument && typeof this.instrument.triggerAttackRelease === 'function') {
-                        console.log(`[Track ${this.id} Sequencer] Playing Synth note: ${pitchName} at time ${time.toFixed(4)}, col ${col}, velocity: ${step.velocity}`);
+                        // console.log(`[Track ${this.id} Sequencer] Playing Synth note: ${pitchName} at time ${time.toFixed(4)}, col ${col}, velocity: ${step.velocity}`);
                         this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity);
                     }
                 });
@@ -592,7 +609,7 @@ export class Track {
                 this.slices.forEach((sliceData, sliceIndex) => {
                     const step = this.sequenceData[sliceIndex]?.[col];
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
-                        console.log(`[Track ${this.id} Sequencer] Playing Slicer slice: ${sliceIndex + 1} at time ${time.toFixed(4)}, col ${col}`);
+                        // console.log(`[Track ${this.id} Sequencer] Playing Slicer slice: ${sliceIndex + 1} at time ${time.toFixed(4)}, col ${col}`);
                         const totalPitchShift = sliceData.pitchShift;
                         const playbackRate = Math.pow(2, totalPitchShift / 12);
                         let playDuration = sliceData.duration / playbackRate;
@@ -651,7 +668,7 @@ export class Track {
                     const step = this.sequenceData[padIndex]?.[col];
                     const padData = this.drumSamplerPads[padIndex];
                     if (step?.active && padData && this.drumPadPlayers[padIndex] && this.drumPadPlayers[padIndex].loaded) {
-                        console.log(`[Track ${this.id} Sequencer] Playing Pad ${padIndex + 1} at time ${time.toFixed(4)}, col ${col}`);
+                        // console.log(`[Track ${this.id} Sequencer] Playing Pad ${padIndex + 1} at time ${time.toFixed(4)}, col ${col}`);
                         const player = this.drumPadPlayers[padIndex];
                         player.volume.value = Tone.gainToDb(padData.volume * step.velocity);
                         player.playbackRate = Math.pow(2, (padData.pitchShift) / 12);
@@ -664,7 +681,7 @@ export class Track {
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
                     if (step?.active && this.toneSampler && this.toneSampler.loaded) {
-                        console.log(`[Track ${this.id} Sequencer] Playing InstrumentSampler note: ${pitchName} at time ${time.toFixed(4)}, col ${col}`);
+                        // console.log(`[Track ${this.id} Sequencer] Playing InstrumentSampler note: ${pitchName} at time ${time.toFixed(4)}, col ${col}`);
                         this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "8n", time, step.velocity);
                     }
                 });
