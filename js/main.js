@@ -16,7 +16,9 @@ import {
     addTrackToState,
     updateUndoRedoButtons, captureStateForUndo, undoLastAction, redoLastAction,
     gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav,
-    getArmedTrackId, getSoloedTrackId, getActiveSequencerTrackId, isTrackRecording, getRecordingTrackId, getUndoStack
+    getArmedTrackId, getSoloedTrackId, getActiveSequencerTrackId, isTrackRecording, getRecordingTrackId, getUndoStack,
+    setRecordingTrackId, // Added for clearing recording state on transport stop/pause
+    setIsRecording // Added for clearing recording state on transport stop/pause
 } from './state.js';
 import {
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
@@ -42,8 +44,7 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob // Assuming createKnob is exported from ui.js as it's used by other ui.js functions
-    // veryUniqueTestExport was removed here
+    createKnob
 } from './ui.js';
 
 console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)");
@@ -125,11 +126,11 @@ window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
     if (window.openWindows[id] && window.openWindows[id].element && !window.openWindows[id].element.classList.contains('minimized')) {
         window.openWindows[id].restore(); return window.openWindows[id];
     }
-    if (window.openWindows[id]) { // If exists but minimized or for re-creation
+    if (window.openWindows[id]) {
         try { window.openWindows[id].close(); } catch(e) { /* ignore error during close if any */ }
     }
     const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
-    return newWindow.element ? newWindow : null; // Return window instance only if element was created
+    return newWindow.element ? newWindow : null;
 };
 window.updateMixerWindow = updateMixerWindow;
 window.highlightPlayingStep = highlightPlayingStep;
@@ -156,26 +157,24 @@ window.initAudioContextAndMasterMeter = initAudioContextAndMasterMeter;
 window.autoSliceSample = autoSliceSample;
 
 window.captureStateForUndo = captureStateForUndo;
-window.handleProjectFileLoad = handleProjectFileLoad; // From state.js, exposed for input element
+window.handleProjectFileLoad = handleProjectFileLoad;
 window.undoLastAction = undoLastAction;
 window.redoLastAction = redoLastAction;
 window.saveProject = saveProject;
 window.loadProject = loadProject;
 window.exportToWav = exportToWav;
-window.addTrack = addTrackToState; // Alias for addTrackToState
+window.addTrack = addTrackToState;
 
-// Exposing event handlers that might be called from dynamically created UI or for direct use
 window.handleTrackMute = handleTrackMute;
 window.handleTrackSolo = handleTrackSolo;
 window.handleTrackArm = handleTrackArm;
-window.removeTrack = handleRemoveTrack; // Alias for the event handler version
+window.removeTrack = handleRemoveTrack;
 window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
-window.attachGlobalControlEvents = attachGlobalControlEvents; // For global controls window
-window.selectMIDIInput = selectMIDIInput; // For MIDI input selection
+window.attachGlobalControlEvents = attachGlobalControlEvents;
+window.selectMIDIInput = selectMIDIInput;
 
-// Exposing state getters
 window.getTracks = getTracks;
 window.getTrackById = getTrackById;
 window.getArmedTrackId = getArmedTrackId;
@@ -183,7 +182,7 @@ window.getSoloedTrackId = getSoloedTrackId;
 window.getActiveSequencerTrackId = getActiveSequencerTrackId;
 window.isTrackRecording = isTrackRecording;
 window.getRecordingTrackId = getRecordingTrackId;
-window.getUndoStack = getUndoStack; // For beforeunload warning
+window.getUndoStack = getUndoStack;
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -205,8 +204,6 @@ window.updateTaskbarTempoDisplay = (newTempo) => {
 async function initializeSnugOS() {
     console.log("[Main] Window loaded. Initializing SnugOS...");
 
-    // veryUniqueTestExport call was removed
-
     if (typeof window.openWindows === 'undefined') window.openWindows = {};
     if (typeof window.highestZIndex === 'undefined') window.highestZIndex = 100;
 
@@ -221,7 +218,7 @@ async function initializeSnugOS() {
     }
 
     const appContext = {
-        addTrack: addTrackToState, // Pass the actual function from state.js
+        addTrack: addTrackToState,
         openSoundBrowserWindow: window.openSoundBrowserWindow,
         undoLastAction: undoLastAction,
         redoLastAction: redoLastAction,
@@ -230,7 +227,7 @@ async function initializeSnugOS() {
         exportToWav: exportToWav,
         openGlobalControlsWindow: window.openGlobalControlsWindow,
         openMixerWindow: window.openMixerWindow,
-        handleProjectFileLoad: handleProjectFileLoad, // Pass the function from state.js
+        handleProjectFileLoad: handleProjectFileLoad,
         triggerCustomBackgroundUpload: () => {
             const bgInput = document.getElementById('customBgInput');
             if (bgInput) bgInput.click(); else console.error("Custom background input not found.");
@@ -246,15 +243,10 @@ async function initializeSnugOS() {
             console.error("[Main] CRITICAL: openGlobalControlsWindow is not available to be called!");
             showNotification("CRITICAL Error: Global controls system unavailable.", 8000);
         } else {
-            const globalControlsWindowInstance = await window.openGlobalControlsWindow(); // Ensure this is awaited if it's async
+            const globalControlsWindowInstance = await window.openGlobalControlsWindow();
             if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
                 console.error("[Main] CRITICAL: Failed to initialize Global Controls Window (instance or element is null). App functionality will be severely limited.");
                 showNotification("CRITICAL Error: Global controls window failed to initialize. App may not function.", 8000);
-            } else {
-                console.log("[Main] Global Controls Window initialized successfully.");
-                // These are already assigned if openGlobalControlsWindow does its job correctly.
-                // window.playBtn = globalControlsWindowInstance.element.querySelector('#playBtnGlobal');
-                // ... and others
             }
         }
     } catch (error) {
@@ -263,13 +255,12 @@ async function initializeSnugOS() {
     }
 
 
-    if (window.midiInputSelectGlobal) { // Check if it was successfully assigned by openGlobalControlsWindow
+    if (window.midiInputSelectGlobal) {
         await setupMIDI();
     } else {
         console.warn("[Main] MIDI input select element not found after Global Controls Window attempt, skipping MIDI setup for now.");
     }
 
-    // Autofetch sound libraries
     const libraryPromises = [];
     let librariesToFetchCount = 0;
     if (Constants.soundLibraries) {
@@ -296,7 +287,7 @@ async function initializeSnugOS() {
                 showNotification("All sound library pre-load attempts finished.", 2500);
             } else if (successCount > 0) {
                 showNotification(`${successCount} of ${librariesToFetchCount} sound library pre-load attempts finished. Some may have had issues.`, 3000);
-            } else if (librariesToFetchCount > 0) { // Only show fail if there were libs to fetch
+            } else if (librariesToFetchCount > 0) {
                 showNotification("Failed to pre-load sound libraries. Check console.", 3000);
             }
         });
@@ -304,14 +295,14 @@ async function initializeSnugOS() {
 
 
     requestAnimationFrame(updateMetersLoop);
-    updateUndoRedoButtons(); // Initial state of undo/redo buttons
+    updateUndoRedoButtons();
 
     showNotification("Welcome to SnugOS!", 2500);
     console.log("[Main] SnugOS Initialized.");
 }
 
 function updateMetersLoop() {
-    const currentTracks = typeof getTracks === 'function' ? getTracks() : []; // Ensure getTracks is available
+    const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
     updateMeters(window.masterMeter, window.masterMeterBar, document.getElementById('mixerMasterMeterBar'), currentTracks);
     requestAnimationFrame(updateMetersLoop);
 }
@@ -320,9 +311,9 @@ window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
     const currentUndoStack = getUndoStack ? getUndoStack() : [];
     const currentTracks = getTracks ? getTracks() : [];
-    if (currentTracks.length > 0 && (currentUndoStack.length > 0 || (window.openWindows && Object.keys(window.openWindows).length > 1))) { // Check if any non-global window is open
+    if (currentTracks.length > 0 && (currentUndoStack.length > 0 || (window.openWindows && Object.keys(window.openWindows).length > 1))) {
         e.preventDefault();
-        e.returnValue = ''; // Standard for most browsers
+        e.returnValue = '';
     }
 });
 
