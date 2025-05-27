@@ -42,7 +42,7 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob, // Assuming createKnob is exported from ui.js as it's used by other ui.js functions that might be exposed globally
+    createKnob,
     veryUniqueTestExport // Kept for one more test, can be removed if all is well
 } from './ui.js';
 
@@ -137,7 +137,6 @@ function removeCustomDesktopBackground() {
 }
 
 // --- Exposing functions globally ---
-// Ensure these are assigned after successful import
 window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
 window.openTrackSequencerWindow = openTrackSequencerWindow;
 window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
@@ -151,10 +150,10 @@ window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
     return newWindow.element ? newWindow : null;
 };
 window.updateMixerWindow = updateMixerWindow;
-window.highlightPlayingStep = highlightPlayingStep; // Now directly from import
+window.highlightPlayingStep = highlightPlayingStep;
 window.renderSoundBrowserDirectory = renderSoundBrowserDirectory;
 window.updateSoundBrowserDisplayForLibrary = updateSoundBrowserDisplayForLibrary;
-window.openGlobalControlsWindow = openGlobalControlsWindow; // Now directly from import
+window.openGlobalControlsWindow = openGlobalControlsWindow;
 window.openMixerWindow = openMixerWindow;
 window.openSoundBrowserWindow = openSoundBrowserWindow;
 window.openTrackInspectorWindow = openTrackInspectorWindow;
@@ -224,6 +223,8 @@ async function initializeSnugOS() {
 
     if (typeof veryUniqueTestExport === 'function') {
         veryUniqueTestExport(); // Call the test function
+    } else {
+        console.error("[Main] veryUniqueTestExport is not available in initializeSnugOS. Check imports.");
     }
 
     if (typeof window.openWindows === 'undefined') window.openWindows = {};
@@ -261,19 +262,24 @@ async function initializeSnugOS() {
     document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
 
     try {
-        const globalControlsWindowInstance = await window.openGlobalControlsWindow(); // Uses the directly imported function now
-        if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
-            console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited.");
-            showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000);
+        if (typeof window.openGlobalControlsWindow !== 'function') {
+            console.error("[Main] openGlobalControlsWindow is not a function before calling it!");
+            showNotification("CRITICAL Error: Global controls cannot be opened.", 8000);
         } else {
-            console.log("[Main] Global Controls Window initialized successfully.");
-            window.playBtn = globalControlsWindowInstance.element.querySelector('#playBtnGlobal');
-            window.recordBtn = globalControlsWindowInstance.element.querySelector('#recordBtnGlobal');
-            window.tempoInput = globalControlsWindowInstance.element.querySelector('#tempoGlobalInput');
-            window.masterMeterBar = globalControlsWindowInstance.element.querySelector('#masterMeterBarGlobal');
-            window.midiInputSelectGlobal = globalControlsWindowInstance.element.querySelector('#midiInputSelectGlobal');
-            window.midiIndicatorGlobalEl = globalControlsWindowInstance.element.querySelector('#midiIndicatorGlobal');
-            window.keyboardIndicatorGlobalEl = globalControlsWindowInstance.element.querySelector('#keyboardIndicatorGlobal');
+            const globalControlsWindowInstance = await window.openGlobalControlsWindow();
+            if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
+                console.error("[Main] CRITICAL: Failed to initialize Global Controls Window. App functionality will be severely limited.");
+                showNotification("CRITICAL Error: Global controls window failed. App may not function.", 8000);
+            } else {
+                console.log("[Main] Global Controls Window initialized successfully.");
+                window.playBtn = globalControlsWindowInstance.element.querySelector('#playBtnGlobal');
+                window.recordBtn = globalControlsWindowInstance.element.querySelector('#recordBtnGlobal');
+                window.tempoInput = globalControlsWindowInstance.element.querySelector('#tempoGlobalInput');
+                window.masterMeterBar = globalControlsWindowInstance.element.querySelector('#masterMeterBarGlobal');
+                window.midiInputSelectGlobal = globalControlsWindowInstance.element.querySelector('#midiInputSelectGlobal');
+                window.midiIndicatorGlobalEl = globalControlsWindowInstance.element.querySelector('#midiIndicatorGlobal');
+                window.keyboardIndicatorGlobalEl = globalControlsWindowInstance.element.querySelector('#keyboardIndicatorGlobal');
+            }
         }
     } catch (error) {
         console.error("[Main] Error during openGlobalControlsWindow call:", error);
