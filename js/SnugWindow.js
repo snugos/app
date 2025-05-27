@@ -1,19 +1,20 @@
 // js/SnugWindow.js - SnugWindow Class Module
 
-console.log('[SnugWindow.js EXECUTION START] This file is being parsed.');
+console.log('[SnugWindow.js EXECUTION START] This file is being parsed.'); // This log is present in your console output
 
 import { captureStateForUndo, getTracks } from './state.js'; // Assuming getTracks might be used for context later
-console.log('[SnugWindow.js] Imports (captureStateForUndo, getTracks) loaded.');
+console.log('[SnugWindow.js] Imports (captureStateForUndo, getTracks) loaded.'); // This log is present in your console output
 
+// Default theme colors (can be overridden by user settings in future)
 const defaultWindowBg = '#c0c0c0';
 const defaultWindowContentBg = '#c0c0c0'; // Or a different default like '#ffffff' for content
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}) {
-        console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`);
-        console.log('[SnugWindow] Initial options:', JSON.parse(JSON.stringify(options))); // Log a copy
-        console.log('[SnugWindow] Checking window.openWindows at constructor start:', window.openWindows);
-        console.log('[SnugWindow] Checking window.highestZIndex at constructor start:', window.highestZIndex);
+        console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`); // This log is present in your console output
+        console.log('[SnugWindow] Initial options:', JSON.parse(JSON.stringify(options))); // This log is present in your console output
+        console.log('[SnugWindow] Checking window.openWindows at constructor start:', window.openWindows); // This log is present in your console output
+        console.log('[SnugWindow] Checking window.highestZIndex at constructor start:', window.highestZIndex); // This log is present in your console output
 
         this.id = id;
         this.title = title;
@@ -29,7 +30,7 @@ export class SnugWindow {
             this.element = null;
             return;
         }
-        console.log(`[SnugWindow] Desktop element (#desktop) found:`, desktopEl);
+        console.log(`[SnugWindow] Desktop element (#desktop) found:`, desktopEl); // This log is present in your console output
 
         const defaultWidth = options.width || Math.min(350, desktopEl.offsetWidth - 40);
         const defaultHeight = options.height || Math.min(250, desktopEl.offsetHeight - 80);
@@ -78,7 +79,7 @@ export class SnugWindow {
             window.highestZIndex = 100;
         }
         this.element.style.zIndex = options.zIndex !== undefined ? options.zIndex : ++window.highestZIndex;
-        console.log(`[SnugWindow ${this.id}] Set zIndex to ${this.element.style.zIndex}. Current global highestZIndex: ${window.highestZIndex}`);
+        console.log(`[SnugWindow ${this.id}] Set zIndex to ${this.element.style.zIndex}. Current global highestZIndex: ${window.highestZIndex}`); // This log is present in your console output
 
         this.element.style.backgroundColor = `var(--window-bg, ${defaultWindowBg})`; // Uses CSS variable or default
 
@@ -111,7 +112,7 @@ export class SnugWindow {
         this.element.appendChild(this.titleBar);
         this.element.appendChild(this.contentArea);
 
-        console.log(`[SnugWindow ${this.id}] Element constructed, about to append to desktopEl:`, this.element);
+        console.log(`[SnugWindow ${this.id}] Element constructed, about to append to desktopEl:`, this.element); // This log is present in your console output
         desktopEl.appendChild(this.element);
 
         if (typeof window.openWindows !== 'object' || window.openWindows === null) {
@@ -119,7 +120,7 @@ export class SnugWindow {
             window.openWindows = {};
         }
         window.openWindows[this.id] = this;
-        console.log(`[SnugWindow ${this.id}] Window element appended and registered in window.openWindows.`);
+        console.log(`[SnugWindow ${this.id}] Window element appended and registered in window.openWindows.`); // This log is present in your console output
 
 
         this.makeDraggable();
@@ -151,7 +152,7 @@ export class SnugWindow {
         if (options.isMinimized) {
             this.minimize(true); // true to skip undo capture for initial state
         }
-        console.log(`[SnugWindow CONSTRUCTOR END] ID: ${id} successfully initialized.`);
+        console.log(`[SnugWindow CONSTRUCTOR END] ID: ${id} successfully initialized.`); // This log is present in your console output
     }
 
     makeDraggable() {
@@ -161,9 +162,8 @@ export class SnugWindow {
         let initialX, initialY;
 
         this.titleBar.addEventListener('mousedown', (e) => {
-            // Prevent dragging if clicking on a button within the title bar
             if (e.target.tagName === 'BUTTON' || !desktopEl) return;
-            if (this.isMaximized) return; // Don't drag if maximized
+            if (this.isMaximized) return; 
 
             isDragging = true; this.focus();
             initialX = this.element.offsetLeft;
@@ -171,7 +171,7 @@ export class SnugWindow {
             offsetX = e.clientX - initialX;
             offsetY = e.clientY - initialY;
             this.titleBar.style.cursor = 'grabbing';
-            document.body.style.userSelect = 'none'; // Prevent text selection during drag
+            document.body.style.userSelect = 'none'; 
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -182,10 +182,8 @@ export class SnugWindow {
             const desktopRect = desktopEl.getBoundingClientRect();
             const taskbarHeightVal = document.getElementById('taskbar')?.offsetHeight || 30;
 
-            // Constrain to desktop, accounting for taskbar
             newX = Math.max(0, Math.min(newX, desktopRect.width - this.element.offsetWidth));
             newY = Math.max(0, Math.min(newY, desktopRect.height - this.element.offsetHeight - taskbarHeightVal));
-            // Prevent title bar from going under taskbar or above screen top
             newY = Math.max(0, Math.min(newY, desktopRect.height - taskbarHeightVal - this.titleBar.offsetHeight));
 
 
@@ -198,7 +196,6 @@ export class SnugWindow {
                 isDragging = false;
                 if (this.titleBar) this.titleBar.style.cursor = 'grab';
                 document.body.style.userSelect = '';
-                // Capture state for undo only if position actually changed
                 if (this.element.offsetLeft !== initialX || this.element.offsetTop !== initialY) {
                     if (typeof captureStateForUndo === 'function') captureStateForUndo(`Move window "${this.title}"`);
                 }
@@ -207,14 +204,13 @@ export class SnugWindow {
     }
 
     makeResizable() {
-        // More robust resizer creation
         const resizer = document.createElement('div');
-        resizer.className = 'window-resizer'; // Style this with CSS
+        resizer.className = 'window-resizer'; 
         this.element.appendChild(resizer);
-        this.element.style.overflow = 'hidden'; // Important for resizer to work well with content scroll
+        this.element.style.overflow = 'hidden'; 
 
         let initialWidth, initialHeight, initialMouseX, initialMouseY, isResizing = false;
-        let initialX, initialY; // For undo
+        let originalStyleWidth, originalStyleHeight; // For undo
 
         resizer.addEventListener('mousedown', (e) => {
             e.preventDefault(); e.stopPropagation();
@@ -224,8 +220,8 @@ export class SnugWindow {
             initialHeight = this.element.offsetHeight;
             initialMouseX = e.clientX;
             initialMouseY = e.clientY;
-            initialX = this.element.style.width; // Store for undo
-            initialY = this.element.style.height;
+            originalStyleWidth = this.element.style.width; 
+            originalStyleHeight = this.element.style.height;
 
             document.body.style.cursor = 'nwse-resize';
             document.body.style.userSelect = 'none';
@@ -246,7 +242,7 @@ export class SnugWindow {
                 isResizing = false;
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
-                if (this.element.style.width !== initialX || this.element.style.height !== initialY) {
+                if (this.element.style.width !== originalStyleWidth || this.element.style.height !== originalStyleHeight) {
                     if (typeof captureStateForUndo === 'function') captureStateForUndo(`Resize window "${this.title}"`);
                 }
             }
@@ -259,16 +255,14 @@ export class SnugWindow {
         if (!desktopEl || !taskbarEl) return;
 
         if (this.isMaximized) {
-            // Restore
             this.element.style.left = this.restoreState.left;
             this.element.style.top = this.restoreState.top;
             this.element.style.width = this.restoreState.width;
             this.element.style.height = this.restoreState.height;
             this.isMaximized = false;
-            if (this.titleBar.querySelector('.window-maximize-btn')) this.titleBar.querySelector('.window-maximize-btn').innerHTML = '□'; // Restore icon
+            if (this.titleBar.querySelector('.window-maximize-btn')) this.titleBar.querySelector('.window-maximize-btn').innerHTML = '□';
             if (typeof captureStateForUndo === 'function') captureStateForUndo(`Restore window "${this.title}"`);
         } else {
-            // Maximize
             this.restoreState = {
                 left: this.element.style.left,
                 top: this.element.style.top,
@@ -281,7 +275,7 @@ export class SnugWindow {
             this.element.style.width = `${desktopEl.clientWidth}px`;
             this.element.style.height = `${desktopEl.clientHeight - taskbarHeight}px`;
             this.isMaximized = true;
-            if (this.titleBar.querySelector('.window-maximize-btn')) this.titleBar.querySelector('.window-maximize-btn').innerHTML = '❐'; // Maximize icon (or use an actual restore icon)
+            if (this.titleBar.querySelector('.window-maximize-btn')) this.titleBar.querySelector('.window-maximize-btn').innerHTML = '❐';
             if (typeof captureStateForUndo === 'function') captureStateForUndo(`Maximize window "${this.title}"`);
         }
         this.focus();
@@ -304,10 +298,9 @@ export class SnugWindow {
         this.taskbarButton.addEventListener('click', () => {
             if (this.isMinimized) { this.restore(); }
             else {
-                // If window is already focused and not minimized, then minimize it
                 if (this.element && parseInt(this.element.style.zIndex) === window.highestZIndex) {
                     this.minimize();
-                } else { // Otherwise, bring to front
+                } else {
                     this.focus();
                 }
             }
@@ -319,49 +312,45 @@ export class SnugWindow {
         if (this.taskbarButton && this.element) {
             const isActive = !this.isMinimized && parseInt(this.element.style.zIndex) === window.highestZIndex;
             this.taskbarButton.classList.toggle('active', isActive);
-            this.taskbarButton.classList.toggle('minimized-on-taskbar', this.isMinimized && !isActive); // Style differently if minimized
+            this.taskbarButton.classList.toggle('minimized-on-taskbar', this.isMinimized && !isActive);
         }
     }
 
     minimize(skipUndo = false) {
         if (!this.isMinimized && this.element) {
             this.isMinimized = true;
-            this.element.classList.add('minimized'); // CSS should hide .window.minimized
+            this.element.classList.add('minimized');
             if (this.taskbarButton) {
                 this.taskbarButton.classList.add('minimized-on-taskbar');
                 this.taskbarButton.classList.remove('active');
             }
             if (!skipUndo && typeof captureStateForUndo === 'function') captureStateForUndo(`Minimize window "${this.title}"`);
-            // Focus next available window or desktop
-            // This logic can be complex, for now, just ensure no window appears active if all are minimized
-            if (Object.values(window.openWindows).every(win => !win || win.isMinimized)) {
-                // No specific window to focus, could clear 'active' from all taskbar buttons.
-            } else {
-                // Find the next highest z-index window that isn't minimized and focus it.
-                let nextHighestZ = -1;
-                let windowToFocus = null;
-                Object.values(window.openWindows).forEach(win => {
-                    if (win && win.element && !win.isMinimized) {
-                        const z = parseInt(win.element.style.zIndex);
-                        if (z > nextHighestZ) {
-                            nextHighestZ = z;
-                            windowToFocus = win;
-                        }
+            
+            let nextHighestZ = -1;
+            let windowToFocus = null;
+            Object.values(window.openWindows).forEach(win => {
+                if (win && win.element && !win.isMinimized && win.id !== this.id) { // Exclude the window being minimized
+                    const z = parseInt(win.element.style.zIndex);
+                    if (z > nextHighestZ) {
+                        nextHighestZ = z;
+                        windowToFocus = win;
                     }
-                });
-                if (windowToFocus) windowToFocus.focus(true); // true to skip undo for this auto-focus
+                }
+            });
+            if (windowToFocus) windowToFocus.focus(true);
+            else { // If no other window to focus, just update all taskbar buttons
+                 Object.values(window.openWindows).forEach(win => win?.updateTaskbarButtonActiveState?.());
             }
-
         }
     }
 
     restore(skipUndo = false) {
         if (this.isMinimized && this.element) {
             this.isMinimized = false;
-            this.element.classList.remove('minimized'); // CSS should show it again
-            this.focus(true); // Focus the window when restoring, skip undo for this auto-focus
+            this.element.classList.remove('minimized');
+            this.focus(true); 
             if (!skipUndo && typeof captureStateForUndo === 'function') captureStateForUndo(`Restore window "${this.title}"`);
-        } else if (this.element) { // If not minimized but called, just focus
+        } else if (this.element) {
             this.focus(skipUndo);
         }
     }
@@ -381,16 +370,15 @@ export class SnugWindow {
         }
 
 
-        const oldWindowTitle = this.title; // Capture title before potential modification or deletion
+        const oldWindowTitle = this.title;
         if (window.openWindows && typeof window.openWindows === 'object') {
             delete window.openWindows[this.id];
         } else {
             console.warn(`[SnugWindow ${this.id}] window.openWindows not available for cleanup during close.`);
         }
 
-        // Clean up track references
-        const trackIdStr = this.id.split('-')[1]; // Assumes format like "trackInspector-1"
-        if (trackIdStr && typeof getTracks === 'function') { // Ensure getTracks is defined
+        const trackIdStr = this.id.split('-')[1];
+        if (trackIdStr && typeof getTracks === 'function') {
             const trackIdNum = parseInt(trackIdStr);
             if (!isNaN(trackIdNum)) {
                 const tracksArray = getTracks();
@@ -404,16 +392,15 @@ export class SnugWindow {
                 }
             }
         }
-        // Capture undo state only if it's a user action (not part of reconstructDAW)
-        // This needs a more robust way to determine if it's a user action.
-        // For now, we might rely on an external flag or context if captureStateForUndo needs to be conditional here.
-        // Let's assume close via UI is a user action.
-        // if (typeof captureStateForUndo === 'function') {
-        //     captureStateForUndo(`Close window "${oldWindowTitle}"`);
-        // }
+        // Only capture undo if the window wasn't closed as part of a larger reconstructDAW operation
+        // This usually means it's a direct user action.
+        // This is a heuristic; a more robust way would be to pass a flag.
+        if (typeof captureStateForUndo === 'function' && !window.isReconstructingDAW) {
+            captureStateForUndo(`Close window "${oldWindowTitle}"`);
+        }
     }
 
-    focus(skipUndo = false) { // skipUndo might be used if focus is programmatic
+    focus(skipUndo = false) { 
         if (this.isMinimized) { this.restore(skipUndo); return; }
         if (!this.element) {
             console.warn(`[SnugWindow ${this.id}] Focus called but element is null.`);
@@ -421,18 +408,18 @@ export class SnugWindow {
         }
         
         const currentZ = parseInt(this.element.style.zIndex);
-        if (currentZ === window.highestZIndex) { // Already on top
-            if (this.taskbarButton) this.updateTaskbarButtonActiveState(); // Ensure taskbar button reflects active state
-            return;
+        // Only increment if it's not already the top window
+        if (currentZ < window.highestZIndex || Object.keys(window.openWindows).length === 1) {
+             if (typeof window.highestZIndex === 'undefined' || window.highestZIndex === null || isNaN(parseInt(window.highestZIndex))) {
+                 console.warn('[SnugWindow Focus] window.highestZIndex is invalid! Defaulting to 100 before increment.');
+                 window.highestZIndex = 100;
+            }
+            this.element.style.zIndex = ++window.highestZIndex;
+            console.log(`[SnugWindow ${this.id}] Focused. New zIndex: ${this.element.style.zIndex}. Global highestZIndex: ${window.highestZIndex}`);
+        } else if (currentZ > window.highestZIndex) { // Should not happen, but reset if it does
+            window.highestZIndex = currentZ;
+            console.warn(`[SnugWindow ${this.id}] Focused, but its zIndex ${currentZ} was already higher than global highestZIndex ${window.highestZIndex-1}. Adjusted global highestZIndex.`);
         }
-
-
-        if (typeof window.highestZIndex === 'undefined' || window.highestZIndex === null || isNaN(parseInt(window.highestZIndex))) {
-             console.warn('[SnugWindow Focus] window.highestZIndex is invalid! Defaulting to 100 before increment.');
-             window.highestZIndex = 100;
-        }
-        this.element.style.zIndex = ++window.highestZIndex;
-        console.log(`[SnugWindow ${this.id}] Focused. New zIndex: ${this.element.style.zIndex}. Global highestZIndex: ${window.highestZIndex}`);
 
 
         if (window.openWindows && typeof window.openWindows === 'object') {
