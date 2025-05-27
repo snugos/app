@@ -154,7 +154,7 @@ export function buildTrackInspectorContentDOM(track) {
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
     nameInput.id = `trackNameDisplay-${track.id}`;
-    nameInput.value = track.name;
+    nameInput.value = track.name; // Reflects "Sampler (Pads) X" if type is DrumSampler
     nameInput.className = 'text-md font-bold bg-transparent border-b w-full focus:ring-0 focus:border-blue-500';
     headerDiv.appendChild(nameInput);
     const meterContainer = document.createElement('div');
@@ -264,9 +264,9 @@ export function buildTrackInspectorContentDOM(track) {
     let specificContentElement;
     if (track.type === 'Synth') {
         specificContentElement = buildSynthSpecificInspectorDOM(track);
-    } else if (track.type === 'Sampler') {
+    } else if (track.type === 'Sampler') { // This is the Slicer Sampler
         specificContentElement = buildSamplerSpecificInspectorDOM(track);
-    } else if (track.type === 'DrumSampler') {
+    } else if (track.type === 'DrumSampler') { // This is our Pad Sampler
         specificContentElement = buildDrumSamplerSpecificInspectorDOM(track);
     } else if (track.type === 'InstrumentSampler') {
         specificContentElement = buildInstrumentSamplerSpecificInspectorDOM(track);
@@ -349,7 +349,7 @@ function buildSynthEngineControls(track, container, engineType) {
         let currentEngineParams = track.synthParams[paramsKey];
         if (!currentEngineParams) {
             console.warn(`[ui.js] Params for engine ${engineType} (key: ${paramsKey}) not found in track.synthParams. Using defaults. track.synthParams:`, JSON.parse(JSON.stringify(track.synthParams)));
-            currentEngineParams = track.getDefaultSynthParams(engineType); // Ensure track.getDefaultSynthParams is accessible
+            currentEngineParams = track.getDefaultSynthParams(engineType);
             track.synthParams[paramsKey] = currentEngineParams;
         }
 
@@ -369,7 +369,7 @@ function buildSynthEngineControls(track, container, engineType) {
 
         if (initialValue === undefined) {
             console.warn(`[ui.js] Initial value for ${controlDef.paramPath} not found in currentEngineParams for ${engineType}. Trying defaults. currentEngineParams:`, JSON.parse(JSON.stringify(currentEngineParams)));
-            const defaultEngineParams = track.getDefaultSynthParams(engineType); // Ensure track.getDefaultSynthParams is accessible
+            const defaultEngineParams = track.getDefaultSynthParams(engineType);
             initialValue = getNestedValue(defaultEngineParams, controlDef.paramPath);
             if(initialValue === undefined && controlDef.type === 'knob') initialValue = controlDef.min;
             if(initialValue === undefined && controlDef.type === 'select') initialValue = controlDef.options[0];
@@ -415,17 +415,17 @@ function buildSynthEngineControls(track, container, engineType) {
     container.appendChild(controlGroup);
 }
 
-function buildSamplerSpecificInspectorDOM(track) {
+function buildSamplerSpecificInspectorDOM(track) { // This is for the Slicer Sampler
     console.log(`[ui.js] buildSamplerSpecificInspectorDOM called for track ${track.id}`);
     const panel = document.createElement('div');
     panel.className = 'panel sampler-panel';
 
     const dropZoneContainer = document.createElement('div');
     dropZoneContainer.id = `dropZoneContainer-${track.id}-sampler`;
-    const dropZoneHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler');
+    const dropZoneHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler', null);
     dropZoneContainer.innerHTML = dropZoneHTML;
     panel.appendChild(dropZoneContainer);
-    console.log(`[ui.js] Sampler drop zone container created and appended for track ${track.id}`);
+    console.log(`[ui.js] Slicer Sampler drop zone container created and appended for track ${track.id}`);
 
     const editorPanel = document.createElement('div');
     editorPanel.className = 'sampler-editor-panel mt-1 flex flex-wrap md:flex-nowrap gap-3';
@@ -439,7 +439,7 @@ function buildSamplerSpecificInspectorDOM(track) {
     const padsContainer = document.createElement('div');
     padsContainer.id = `samplePadsContainer-${track.id}`;
     padsContainer.className = 'pads-container mt-2';
-    console.log(`[ui.js] Sampler padsContainer created for track ${track.id}:`, padsContainer);
+    console.log(`[ui.js] Slicer Sampler slice selector padsContainer created for track ${track.id}:`, padsContainer);
     leftSide.appendChild(padsContainer);
     editorPanel.appendChild(leftSide);
 
@@ -516,18 +516,18 @@ function buildSamplerSpecificInspectorDOM(track) {
     return panel;
 }
 
-function buildDrumSamplerSpecificInspectorDOM(track) {
+function buildDrumSamplerSpecificInspectorDOM(track) { // This is for the Pad Sampler
     console.log(`[ui.js] buildDrumSamplerSpecificInspectorDOM called for track ${track.id}`);
     const panel = document.createElement('div');
     panel.className = 'panel drum-sampler-panel';
     const title = document.createElement('h4');
     title.className = 'text-sm font-semibold mb-1';
-    title.innerHTML = `Drum Pads (Selected: <span id="selectedDrumPadLabel-${track.id}">${track.selectedDrumPadForEdit + 1}</span>)`;
+    title.innerHTML = `Sampler Pads (Selected: <span id="selectedDrumPadLabel-${track.id}">${track.selectedDrumPadForEdit + 1}</span>)`; // UI Text updated
     panel.appendChild(title);
     const padsContainer = document.createElement('div');
     padsContainer.id = `drumSamplerPadsContainer-${track.id}`;
     padsContainer.className = 'pads-container mb-2';
-    console.log(`[ui.js] Drum Sampler padsContainer created for track ${track.id}:`, padsContainer);
+    console.log(`[ui.js] Sampler (Pads) padsContainer created for track ${track.id}:`, padsContainer);
     panel.appendChild(padsContainer);
 
     const controlsContainer = document.createElement('div');
@@ -574,7 +574,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     panel.className = 'panel instrument-sampler-panel';
     const dropZoneContainer = document.createElement('div');
     dropZoneContainer.id = `dropZoneContainer-${track.id}-instrumentsampler`;
-    const dropZoneHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler');
+    const dropZoneHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler', null);
     dropZoneContainer.innerHTML = dropZoneHTML;
     panel.appendChild(dropZoneContainer);
     console.log(`[ui.js] Instrument Sampler drop zone container created for track ${track.id}`);
@@ -843,14 +843,14 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
     console.log(`[ui.js] initializeDrumSamplerSpecificControls for track ${track.id}. winEl:`, winEl);
 
     const targetId = `drumPadLoadContainer-${track.id}`;
-    const padLoadContainerToUse = winEl.querySelector(`#${targetId}`); 
+    const padLoadContainerToUse = winEl.querySelector(`#${targetId}`);
 
     console.log(`[ui.js] DrumSampler - Target ID for load container: #${targetId}`);
     console.log(`[ui.js] DrumSampler - winEl.querySelector for #${targetId} result:`, padLoadContainerToUse);
-    
+
     if (padLoadContainerToUse && typeof updateDrumPadControlsUI === 'function') {
         console.log(`[ui.js] Calling updateDrumPadControlsUI for drum track ${track.id} using found container:`, padLoadContainerToUse);
-        updateDrumPadControlsUI(track); 
+        updateDrumPadControlsUI(track);
     } else if (!padLoadContainerToUse) {
         console.warn(`[ui.js] Drum pad load container ('${targetId}') not found for track ${track.id} using querySelector within winEl.`);
     } else {
@@ -863,12 +863,12 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
     } else {
          console.error(`[ui.js] renderDrumSamplerPads function not found!`);
     }
-    
+
     const pVolK = createKnob({ label: 'Pad Vol', min:0, max:1, step:0.01, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(track.selectedDrumPadForEdit, val)});
     const volPlaceholder = winEl.querySelector(`#drumPadVolumeSlider-${track.id}`);
     if(volPlaceholder) { volPlaceholder.innerHTML = ''; volPlaceholder.appendChild(pVolK.element); } else console.warn(`[ui.js] Placeholder #drumPadVolumeSlider-${track.id} not found.`);
     track.inspectorControls.drumPadVolume = pVolK;
-    
+
     const pPitK = createKnob({ label: 'Pad Pitch', min:-24, max:24, step:1, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.pitchShift || 0, decimals:0, displaySuffix:'st', trackRef: track, onValueChange: (val) => track.setDrumSamplerPadPitch(track.selectedDrumPadForEdit, val)});
     const pitchPlaceholder = winEl.querySelector(`#drumPadPitchKnob-${track.id}`);
     if(pitchPlaceholder) { pitchPlaceholder.innerHTML = ''; pitchPlaceholder.appendChild(pPitK.element); } else console.warn(`[ui.js] Placeholder #drumPadPitchKnob-${track.id} not found.`);
@@ -906,14 +906,14 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     }
 
     const iCanvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
-    if(iCanvas) { 
-        track.instrumentWaveformCanvasCtx = iCanvas.getContext('2d'); 
+    if(iCanvas) {
+        track.instrumentWaveformCanvasCtx = iCanvas.getContext('2d');
         console.log(`[ui.js] Instrument waveform canvas context set for track ${track.id}`);
-        if(typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track); 
+        if(typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track);
     } else {
         console.warn(`[ui.js] Instrument waveform canvas not found for track ${track.id}`);
     }
-    
+
     winEl.querySelector(`#instrumentRootNote-${track.id}`)?.addEventListener('change', (e) => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set Root Note for ${track.name} to ${e.target.value}`);
         track.setInstrumentSamplerRootNote(e.target.value);
@@ -2021,20 +2021,47 @@ export function renderDrumSamplerPads(track) {
     track.drumSamplerPads.forEach((padData, index) => {
         const padEl = document.createElement('button');
         padEl.className = `pad-button ${index === track.selectedDrumPadForEdit ? 'selected-for-edit' : ''}`;
+        padEl.classList.add('drop-zone-pad'); // Added for individual pad drop styling
+
         const fileNameDisplay = padData.originalFileName ? padData.originalFileName.substring(0, 10) + (padData.originalFileName.length > 10 ? '...' : '') : 'Empty';
         padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 60px;" title="${padData.originalFileName || 'Empty'}">${fileNameDisplay}</span>`;
-        padEl.title = `Select Pad ${index + 1}. Click to preview. Sample: ${padData.originalFileName || 'Empty'}`;
-        padEl.dataset.trackId = track.id;
+        padEl.title = `Select Pad ${index + 1}. Click to preview. Drag audio here. Sample: ${padData.originalFileName || 'Empty'}`;
+
+        padEl.dataset.trackId = track.id.toString(); // Ensure it's a string
         padEl.dataset.trackType = "DrumSampler";
-        padEl.dataset.padSliceIndex = index;
+        padEl.dataset.padSliceIndex = index.toString(); // Ensure it's a string for dataset
+
         padEl.addEventListener('click', async () => {
             track.selectedDrumPadForEdit = index;
-            console.log(`[ui.js] Drum pad ${index + 1} clicked for track ${track.id}`);
+            console.log(`[ui.js] Drum pad ${index + 1} selected for track ${track.id}`);
             if(typeof window.playDrumSamplerPadPreview === 'function') await window.playDrumSamplerPadPreview(track.id, index);
             renderDrumSamplerPads(track);
             updateDrumPadControlsUI(track);
         });
+
+        // Make each pad button a drop target
+        if (typeof window.utilSetupDropZoneListeners === 'function') {
+             utilSetupDropZoneListeners(
+                padEl,
+                track.id,
+                "DrumSampler",
+                index, // Pass the numerical index
+                window.loadSoundFromBrowserToTarget,
+                window.loadDrumSamplerPadFile
+            );
+            // console.log(`[ui.js] renderDrumSamplerPads: Drop listeners SET UP for Pad ${index + 1}`); // Optional: per-pad log
+        } else {
+            console.warn(`[ui.js] renderDrumSamplerPads: utilSetupDropZoneListeners is not defined on window for pad ${index}.`);
+        }
         padsContainer.appendChild(padEl);
     });
-     console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered into:`, padsContainer);
+     console.log(`[ui.js] renderDrumSamplerPads finished for track ${track.id}. ${track.drumSamplerPads.length} pads rendered with drop zone listeners.`);
+}
+
+export function highlightPlayingStep(col, trackType, gridElement) {
+    if (!gridElement) return;
+    // Clear previous playing step highlights within this specific grid
+    gridElement.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+    // Highlight all cells in the current column
+    gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`).forEach(cell => cell.classList.add('playing'));
 }
