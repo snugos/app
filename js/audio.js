@@ -111,42 +111,54 @@ export function removeMasterEffect(effectId) {
     }
 }
 
-export function updateMasterEffectParam(effectId, paramName, value) {
+export function updateMasterEffectParam(effectId, paramPath, value) {
     if(!window.masterEffectsChain) window.masterEffectsChain = [];
     const effect = window.masterEffectsChain.find(e => e.id === effectId);
     if (effect && effect.toneNode) {
-        // Update the stored params first
-        const keys = paramName.split('.');
-        let currentParamObj = effect.params;
+        const keys = paramPath.split('.');
+        let currentStoredParamLevel = effect.params;
         for (let i = 0; i < keys.length - 1; i++) {
-            currentParamObj[keys[i]] = currentParamObj[keys[i]] || {};
-            currentParamObj = currentParamObj[keys[i]];
+            if (!currentStoredParamLevel[keys[i]]) currentStoredParamLevel[keys[i]] = {};
+            currentStoredParamLevel = currentStoredParamLevel[keys[i]];
         }
-        currentParamObj[keys[keys.length - 1]] = value;
+        currentStoredParamLevel[keys[keys.length - 1]] = value;
 
-        // Update the Tone.js node
         try {
-            let targetParam = effect.toneNode;
-            for (let i = 0; i < keys.length -1; i++) {
-                targetParam = targetParam[keys[i]];
+            let targetNodeProperty = effect.toneNode;
+            for (let i = 0; i < keys.length - 1; i++) {
+                targetNodeProperty = targetNodeProperty[keys[i]];
+                if (!targetNodeProperty) throw new Error(`Nested property ${keys.slice(0,i+1).join('.')} not found on Tone node.`);
             }
-            targetParam = targetParam[keys[keys.length-1]];
+            const finalKey = keys[keys.length - 1];
 
-
-            if (targetParam && typeof targetParam.value !== 'undefined') {
-                if (typeof targetParam.rampTo === 'function') targetParam.rampTo(value, 0.05);
-                else targetParam.value = value;
-            } else { // Direct property or nested object set
-                 effect.toneNode.set({ [paramName]: value });
+            if (targetNodeProperty && typeof targetNodeProperty[finalKey] !== 'undefined') {
+                if (targetNodeProperty[finalKey] && typeof targetNodeProperty[finalKey].value !== 'undefined' && typeof targetNodeProperty[finalKey].rampTo === 'function') {
+                    targetNodeProperty[finalKey].rampTo(value, 0.05);
+                } else if (targetNodeProperty[finalKey] && typeof targetNodeProperty[finalKey].value !== 'undefined') {
+                    targetNodeProperty[finalKey].value = value;
+                } else {
+                    targetNodeProperty[finalKey] = value;
+                }
+            } else if (typeof effect.toneNode.set === 'function') {
+                const updateObj = {};
+                let currentLevelForSet = updateObj;
+                for(let i=0; i < keys.length -1; i++){
+                    currentLevelForSet[keys[i]] = {};
+                    currentLevelForSet = currentLevelForSet[keys[i]];
+                }
+                currentLevelForSet[keys[keys.length -1]] = value;
+                effect.toneNode.set(updateObj);
+            } else {
+                 console.warn(`[Audio] Could not set param ${paramPath} on master effect ${effect.type} node directly or via .set().`);
             }
-        } catch (err) { console.error(`[Audio] Error updating param ${paramName} for master effect ${effect.type}:`, err); }
+        } catch (err) { console.error(`[Audio] Error updating param ${paramPath} for master effect ${effect.type}:`, err); }
     }
 }
 
 export function reorderMasterEffect(effectId, newIndex) {
     if(!window.masterEffectsChain) window.masterEffectsChain = [];
     const oldIndex = window.masterEffectsChain.findIndex(e => e.id === effectId);
-    if (oldIndex === -1 || oldIndex === newIndex || newIndex < 0 || newIndex > window.masterEffectsChain.length) { // Allow reordering to end
+    if (oldIndex === -1 || oldIndex === newIndex || newIndex < 0 || newIndex > window.masterEffectsChain.length) {
         return;
     }
     if (typeof window.captureStateForUndo === 'function') {
@@ -249,11 +261,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
         tempEnv.triggerAttack(time);
         if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
-        Tone.Transport.scheduleOnce(() => {
-            if (tempPlayer && !tempPlayer.disposed) { tempPlayer.stop(); tempPlayer.dispose(); }
-            if (tempEnv && !tempEnv.disposed) tempEnv.dispose();
-            if (tempGain && !tempGain.disposed) tempGain.dispose();
-        }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
+        Tone.Transport.scheduleOnce(() => { if(!tempPlayer.disposed) tempPlayer.dispose(); if(!tempEnv.disposed) tempEnv.dispose(); if(!tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
     }
 }
 
@@ -322,40 +330,47 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             reader.readAsDataURL(fileObject);
         });
 
+        const newAudioBuffer = await new Tone.Buffer().load(blobUrlForLoading);
+
         if (trackTypeHint === 'Sampler') {
             if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
-            track.disposeSlicerMonoNodes();
-            track.audioBuffer = await new Tone.Buffer().load(blobUrlForLoading);
+            track.disposeSlicerMonoNodes(); // Important to clean up old mono player if any
+            track.audioBuffer = newAudioBuffer;
             track.audioBufferDataURL = base64DataURL;
             track.originalFileName = sourceName;
             if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) track.setupSlicerMonoNodes();
-            autoSliceSample(track.id, Constants.numSlices); // autoSliceSample needs to be defined in this file
-             if (track.inspectorWindow?.element) {
+            if (typeof autoSliceSample === 'function') autoSliceSample(track.id, Constants.numSlices);
+            if (track.inspectorWindow?.element) {
                 const dz = track.inspectorWindow.element.querySelector(`#dropZoneContainer-${track.id}-sampler .drop-zone`);
                 if (dz) dz.innerHTML = `Loaded: ${sourceName.substring(0,25)}${sourceName.length > 25 ? '...' : ''}<br><label for="fileInput-${track.id}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Replace</label><input type="file" id="fileInput-${track.id}" accept="audio/*" class="hidden">`;
+                const fileInputEl = dz.querySelector(`#fileInput-${track.id}`);
+                if (fileInputEl) fileInputEl.onchange = (e) => loadSampleFile(e, track.id, 'Sampler');
             }
         } else if (trackTypeHint === 'InstrumentSampler') {
             if (track.instrumentSamplerSettings.audioBuffer && !track.instrumentSamplerSettings.audioBuffer.disposed) track.instrumentSamplerSettings.audioBuffer.dispose();
             if (track.toneSampler && !track.toneSampler.disposed) track.toneSampler.dispose();
-            track.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(blobUrlForLoading);
+            track.instrumentSamplerSettings.audioBuffer = newAudioBuffer;
             track.instrumentSamplerSettings.audioBufferDataURL = base64DataURL;
             track.instrumentSamplerSettings.originalFileName = sourceName;
             track.instrumentSamplerSettings.loopStart = 0;
-            track.instrumentSamplerSettings.loopEnd = track.instrumentSamplerSettings.audioBuffer.duration;
-            track.setupToneSampler();
+            track.instrumentSamplerSettings.loopEnd = newAudioBuffer.duration;
+            track.setupToneSampler(); // This will create the Tone.Sampler
             if (track.inspectorWindow?.element) {
                 const dz = track.inspectorWindow.element.querySelector(`#dropZoneContainer-${track.id}-instrumentsampler .drop-zone`);
                 if (dz) dz.innerHTML = `Loaded: ${sourceName.substring(0,25)}${sourceName.length > 25 ? '...' : ''}<br><label for="instrumentFileInput-${track.id}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Replace</label><input type="file" id="instrumentFileInput-${track.id}" accept="audio/*" class="hidden">`;
+                const fileInputEl = dz.querySelector(`#instrumentFileInput-${track.id}`);
+                if(fileInputEl) fileInputEl.onchange = (e) => loadSampleFile(e, track.id, 'InstrumentSampler');
                 const loopStartInput = track.inspectorWindow.element.querySelector(`#instrumentLoopStart-${track.id}`);
                 const loopEndInput = track.inspectorWindow.element.querySelector(`#instrumentLoopEnd-${track.id}`);
                 if(loopStartInput) loopStartInput.value = track.instrumentSamplerSettings.loopStart.toFixed(3);
                 if(loopEndInput) loopEndInput.value = track.instrumentSamplerSettings.loopEnd.toFixed(3);
             }
         }
-        // Common UI updates after successful load for both types
+        // Common UI updates
         if (trackTypeHint === 'Sampler' && typeof window.drawWaveform === 'function') window.drawWaveform(track);
         if (trackTypeHint === 'InstrumentSampler' && typeof window.drawInstrumentWaveform === 'function') window.drawInstrumentWaveform(track);
 
+        track.rebuildEffectChain(); // Ensure the new/updated audio source is connected
         showNotification(`Sample "${sourceName}" loaded for ${track.name}.`, 2000);
     } catch (error) {
         console.error(`Error loading sample "${sourceName}":`, error);
@@ -392,19 +407,21 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     try {
         const padData = track.drumSamplerPads[padIndex];
         blobUrl = URL.createObjectURL(fileObject);
-        base64Url = await new Promise((resolve, reject) => { /* FileReader */
+        base64Url = await new Promise((resolve, reject) => {
             const reader = new FileReader(); reader.onloadend = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(fileObject);
         });
         const newBuffer = await new Tone.Buffer().load(blobUrl);
         if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
         if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
         padData.audioBuffer = newBuffer; padData.audioBufferDataURL = base64Url; padData.originalFileName = sourceName;
-        track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer); // Connection handled by rebuildEffectChain
-        track.rebuildEffectChain(); // Reconnect chain after new player assigned
+        track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer);
+        track.rebuildEffectChain(); // Reconnect chain as player instance has changed
         showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1}.`, 2000);
         if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
         if (typeof window.renderDrumSamplerPads === 'function') window.renderDrumSamplerPads(track);
-    } catch (error) { /* ... */
+    } catch (error) {
+        console.error(`Error loading drum sample "${sourceName}":`, error);
+        showNotification(`Error loading drum sample: ${error.message}`, 3000);
     } finally { if (blobUrl) URL.revokeObjectURL(blobUrl); }
 }
 
@@ -412,11 +429,11 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     const { fullPath, libraryName, fileName } = soundData;
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
     const track = tracksArray.find(t => t.id === parseInt(targetTrackId));
-    if (!track) { /* ... */ return; }
+    if (!track) { showNotification("Target track not found.", 3000); return; }
     const isTargetSamplerType = ['Sampler', 'InstrumentSampler', 'DrumSampler'].includes(track.type);
-    if (!isTargetSamplerType) { /* ... */ return; }
+    if (!isTargetSamplerType) { showNotification(`Cannot load to ${track.type} track.`, 3000); return; }
     const audioReady = await initAudioContextAndMasterMeter(true);
-    if (!audioReady) { /* ... */ return; }
+    if (!audioReady) { showNotification("Audio not ready.", 3000); return; }
 
     showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
     let blobUrl = null;
@@ -435,7 +452,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
             if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
                 actualPadIndex = track.drumSamplerPads.findIndex(p => !p.audioBufferDataURL);
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;
-                if (actualPadIndex === -1) actualPadIndex = 0;
+                if (actualPadIndex === -1 || typeof actualPadIndex !== 'number') actualPadIndex = 0;
             }
             await loadDrumSamplerPadFile(blobUrl, track.id, actualPadIndex, fileName);
         } else if (track.type === 'Sampler') {
@@ -462,6 +479,10 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         const response = await fetch(zipUrl);
         if (!response.ok) throw new Error(`HTTP error ${response.status}`);
         const zipData = await response.arrayBuffer();
+        if (typeof JSZip === 'undefined') { // Ensure JSZip is loaded
+            console.error("JSZip is not loaded. Cannot process ZIP file.");
+            throw new Error("JSZip library not found.");
+        }
         const jszip = new JSZip();
         const loadedZip = await jszip.loadAsync(zipData);
         window.loadedZipFiles[libraryName] = loadedZip;
@@ -512,7 +533,7 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
         });
     }
     track.selectedSliceForEdit = 0;
-    track.setSequenceLength(track.sequenceLength, true);
+    track.setSequenceLength(track.sequenceLength, true); // This will also re-evaluate rows
     if (typeof window.renderSamplePads === 'function') window.renderSamplePads(track);
     if (typeof window.updateSliceEditorUI === 'function') window.updateSliceEditorUI(track);
     if (typeof window.drawWaveform === 'function') window.drawWaveform(track);
