@@ -47,6 +47,8 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         newTrackId = trackIdCounter;
     }
 
+    // If it's a synth track and no specific engine type is provided in initialData,
+    // it will default to 'MonoSynth' inside the Track constructor.
     const newTrack = new Track(newTrackId, type, initialData);
     tracks.push(newTrack);
 
@@ -56,22 +58,18 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         console.warn(`[State] Track ${newTrack.id} does not have initializeAudioNodes method.`);
     }
 
-    // This block should run after audio nodes are initialized,
-    // especially if fullyInitializeAudioResources depends on those nodes.
-    if (isBrandNewUserTrack || (initialData && !isUserAction)) { // Also run for project reconstruction
+    if (isBrandNewUserTrack || (initialData && !isUserAction)) {
         newTrack.fullyInitializeAudioResources().then(() => {
             console.log(`[State] Audio resources initialized for track ${newTrack.id} (${newTrack.name}).`);
-            if (isBrandNewUserTrack) { // Only show notification & open windows for new user actions
-                showNotification(`${type} Track "${newTrack.name}" added.`, 2000);
+            if (isBrandNewUserTrack) {
+                showNotification(`${newTrack.name} added.`, 2000); // Name now reflects MonoSynth
                 if (typeof window.openTrackInspectorWindow === 'function') {
-                    console.log(`[State] About to call openTrackInspectorWindow for new track ${newTrack.id}`);
                     window.openTrackInspectorWindow(newTrack.id);
                 } else {
                     console.error("[State] window.openTrackInspectorWindow is NOT a function!");
                 }
             }
             if (typeof window.updateMixerWindow === 'function') {
-                console.log(`[State] About to call updateMixerWindow after track init/add ${newTrack.id}`);
                 window.updateMixerWindow();
             } else {
                 console.warn("[State] window.updateMixerWindow is NOT a function!");
@@ -79,7 +77,6 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
         }).catch(error => {
             console.error(`[State] Error in fullyInitializeAudioResources promise for track ${newTrack.id}:`, error);
             showNotification(`Error fully setting up ${type} track "${newTrack.name}".`, 5000);
-            // Fallback UI updates even if resource init fails for some reason
             if (isBrandNewUserTrack && typeof window.openTrackInspectorWindow === 'function') {
                 window.openTrackInspectorWindow(newTrack.id);
             }
@@ -166,7 +163,7 @@ export async function undoLastAction() {
         }
 
         showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
-        window.isReconstructingDAW = true; // Flag to prevent certain actions during reconstruct
+        window.isReconstructingDAW = true;
         await reconstructDAW(stateToRestore, true);
         window.isReconstructingDAW = false;
         updateUndoRedoButtons();
@@ -193,7 +190,7 @@ export async function redoLastAction() {
         }
 
         showNotification(`Redoing: ${stateToRestore.description || 'last action'}...`, 2000);
-        window.isReconstructingDAW = true; // Flag
+        window.isReconstructingDAW = true;
         await reconstructDAW(stateToRestore, true);
         window.isReconstructingDAW = false;
         updateUndoRedoButtons();
@@ -207,7 +204,7 @@ export async function redoLastAction() {
 
 export function gatherProjectData() {
     const projectData = {
-        version: "5.5.5", // Increment version if format changes
+        version: "5.5.6", // Incremented version for MonoSynth change
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: Tone.getDestination().volume.value,
@@ -233,8 +230,8 @@ export function gatherProjectData() {
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
             };
             if (track.type === 'Synth') {
-                trackData.synthEngineType = track.synthEngineType;
-                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams));
+                trackData.synthEngineType = 'MonoSynth'; // Always MonoSynth now
+                trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams)); // Direct MonoSynth params
             } else if (track.type === 'Sampler') {
                 trackData.samplerAudioData = {
                     fileName: track.originalFileName,
@@ -278,8 +275,8 @@ export function gatherProjectData() {
 }
 
 export async function reconstructDAW(projectData, isUndoRedo = false) {
-    window.isReconstructingDAW = true; // Set flag
-    console.log("[State] Reconstructing DAW. Is Undo/Redo:", isUndoRedo);
+    window.isReconstructingDAW = true;
+    console.log("[State] Reconstructing DAW. Is Undo/Redo:", isUndoRedo, "Project Version:", projectData.version);
     if (Tone.Transport.state === 'started') Tone.Transport.stop();
     Tone.Transport.cancel();
 
@@ -289,12 +286,12 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
     Object.values(window.openWindows).forEach(win => {
         if (win && typeof win.close === 'function') {
-            win.close(); // SnugWindow's close should handle removing from window.openWindows
+            win.close();
         } else if (win && win.element && win.element.remove) {
             win.element.remove();
         }
     });
-    window.openWindows = {}; // Ensure it's cleared
+    window.openWindows = {};
     window.highestZIndex = 100;
 
     armedTrackId = null; soloedTrackId = null; activeSequencerTrackId = null;
@@ -312,15 +309,20 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     const trackInitPromises = [];
     if (projectData.tracks && Array.isArray(projectData.tracks)) {
         for (const trackData of projectData.tracks) {
-            // Pass false for isUserAction to prevent new undo states during reconstruction
+            // Ensure synthEngineType is 'MonoSynth' if it's a synth track being loaded
+            // This handles older project versions that might have different synth types.
+            if (trackData.type === 'Synth') {
+                trackData.synthEngineType = 'MonoSynth';
+                // If old project data had synthParams nested (e.g., projectData.synthParams.basicPoly),
+                // we might need a migration step here. For now, we assume track.js constructor handles it
+                // by using getDefaultSynthParams if trackData.synthParams is not in the direct MonoSynth format.
+            }
             trackInitPromises.push(addTrackToState(trackData.type, trackData, false));
         }
     }
     
-    await Promise.all(trackInitPromises); // Wait for all tracks to be added and basic nodes initialized by addTrackToState
+    await Promise.all(trackInitPromises);
 
-    // Ensure all tracks are fully set up (audio resources specifically) AFTER they are all in the `tracks` array
-    // This is because fullyInitializeAudioResources might depend on the global tracks array or other states
     const finalResourcePromises = tracks.map(track => {
         if (typeof track.fullyInitializeAudioResources === 'function') {
             return track.fullyInitializeAudioResources();
@@ -329,7 +331,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     });
     try {
         await Promise.all(finalResourcePromises);
-        console.log("[State] All track audio resources (buffers, sequences) finalized during reconstruct.");
+        console.log("[State] All track audio resources finalized during reconstruct.");
     } catch (error) {
         console.error("[State] Error finalizing track audio resources (reconstruct):", error);
     }
@@ -337,7 +339,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     if (gs) {
         soloedTrackId = gs.soloedTrackId || null;
         armedTrackId = gs.armedTrackId || null;
-        tracks.forEach(t => { // Tracks array is now populated
+        tracks.forEach(t => {
             t.isSoloed = (t.id === soloedTrackId);
             t.applyMuteState();
             t.applySoloState();
@@ -357,7 +359,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         const sortedWindowStates = projectData.windowStates.sort((a, b) => a.zIndex - b.zIndex);
         for (const winState of sortedWindowStates) {
             if (!winState || !winState.id) continue;
-            // let newWin = null; // This variable seems unused after this block
             const key = winState.initialContentKey || winState.id;
             try {
                 let trackForWindow = null;
@@ -402,7 +403,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     });
     updateUndoRedoButtons();
 
-    window.isReconstructingDAW = false; // Clear flag
+    window.isReconstructingDAW = false;
     if (!isUndoRedo) showNotification(`Project loaded successfully.`, 3500);
     console.log("[State] DAW Reconstructed successfully.");
 }
@@ -444,10 +445,10 @@ export async function handleProjectFileLoad(event) {
         reader.onload = async (e) => {
             try {
                 const projectData = JSON.parse(e.target.result);
-                undoStack = [];
+                undoStack = []; // Clear undo/redo for new project
                 redoStack = [];
-                await reconstructDAW(projectData, false);
-                captureStateForUndo("Load Project");
+                await reconstructDAW(projectData, false); // false for isUndoRedo
+                captureStateForUndo("Load Project"); // Initial undo state for the loaded project
             } catch (error) {
                 console.error("[State] Error loading project from file:", error);
                 showNotification(`Error loading project: ${error.message}. File might be corrupt or invalid.`, 5000);
@@ -461,7 +462,7 @@ export async function handleProjectFileLoad(event) {
     } else if (file) {
         showNotification("Invalid file type. Please select a .snug project file.", 3000);
     }
-    if (event.target) event.target.value = null;
+    if (event.target) event.target.value = null; // Reset file input
 }
 
 export async function exportToWav() {
@@ -477,7 +478,7 @@ export async function exportToWav() {
 
         if (Tone.Transport.state === 'started') {
             Tone.Transport.stop();
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 200)); // Short delay for transport to fully stop
         }
         Tone.Transport.position = 0;
 
@@ -489,8 +490,8 @@ export async function exportToWav() {
                 if (trackDuration > maxDuration) maxDuration = trackDuration;
             }
         });
-        if (maxDuration === 0) maxDuration = 5;
-        maxDuration += 1;
+        if (maxDuration === 0) maxDuration = 5; // Default duration if no sequences
+        maxDuration += 1; // Add a little buffer
 
         const recorder = new Tone.Recorder();
         Tone.getDestination().connect(recorder);
@@ -498,18 +499,20 @@ export async function exportToWav() {
         recorder.start();
         showNotification(`Recording for export (${maxDuration.toFixed(1)}s)... This may take a moment.`, Math.max(3000, maxDuration * 1000 + 1000));
 
+        // Start all sequences
         tracks.forEach(track => {
             if (track.sequence) {
-                track.sequence.start(0);
-                if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0;
+                track.sequence.start(0); // Start sequence from the beginning
+                if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0; // Reset progress
             }
         });
-        Tone.Transport.start("+0.1", 0);
+        Tone.Transport.start("+0.1", 0); // Start transport from the beginning with a slight offset
 
+        // Wait for the duration of the longest track
         await new Promise(resolve => setTimeout(resolve, maxDuration * 1000));
 
-        Tone.Transport.stop();
-        tracks.forEach(track => {
+        Tone.Transport.stop(); // Stop transport
+        tracks.forEach(track => { // Stop all sequences
             if (track.sequence) {
                 track.sequence.stop(0);
                  if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0;
@@ -517,8 +520,9 @@ export async function exportToWav() {
         });
 
         const recording = await recorder.stop();
-        recorder.dispose();
+        recorder.dispose(); // Clean up recorder
 
+        // Create a download link for the recording
         const url = URL.createObjectURL(recording);
         const a = document.createElement('a');
         a.href = url;
