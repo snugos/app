@@ -43,7 +43,11 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 }
 
 export function updateMeters(masterMeter, masterMeterBar, mixerMasterMeter, tracks) {
-    if (Tone.context.state !== 'running' && !audioContextInitialized) return;
+    if (Tone.context.state !== 'running' && !audioContextInitialized) {
+        // Optional: Log if meters are not updating due to audio context state
+        // console.log("[Audio] updateMeters: Audio context not running or not initialized. Skipping meter updates.");
+        return;
+    }
 
     if (masterMeter && masterMeterBar) {
         const level = Tone.dbToGain(masterMeter.getValue());
@@ -51,25 +55,29 @@ export function updateMeters(masterMeter, masterMeterBar, mixerMasterMeter, trac
         masterMeterBar.classList.toggle('clipping', masterMeter.getValue() > -0.1);
     }
 
-    if (masterMeter && mixerMasterMeter) {
+    if (masterMeter && mixerMasterMeter) { // For mixer window's master meter
         const level = Tone.dbToGain(masterMeter.getValue());
         mixerMasterMeter.style.width = `${Math.min(100, level * 100)}%`;
         mixerMasterMeter.classList.toggle('clipping', masterMeter.getValue() > -0.1);
     }
 
     (tracks || []).forEach(track => {
-        if (track && track.trackMeter) {
+        if (track && track.trackMeter && typeof track.trackMeter.getValue === 'function') { // Added check for getValue
             const level = Tone.dbToGain(track.trackMeter.getValue());
+            // Inspector Meter
             const inspectorMeterBar = track.inspectorWindow?.element?.querySelector(`#trackMeterBar-${track.id}`);
             if (inspectorMeterBar) {
                 inspectorMeterBar.style.width = `${Math.min(100, level * 100)}%`;
                 inspectorMeterBar.classList.toggle('clipping', track.trackMeter.getValue() > -0.1);
             }
+            // Mixer Meter
             const mixerMeterBar = window.openWindows['mixer']?.element?.querySelector(`#mixerTrackMeterBar-${track.id}`);
              if (mixerMeterBar) {
                 mixerMeterBar.style.width = `${Math.min(100, level * 100)}%`;
                 mixerMeterBar.classList.toggle('clipping', track.trackMeter.getValue() > -0.1);
             }
+        } else if (track && !track.trackMeter) {
+            // console.warn(`[Audio] updateMeters: Track ${track.id} has no trackMeter object.`);
         }
     });
 }
@@ -115,7 +123,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
             for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
                 if (i === pathParts.length - 1) {
-                    if (part.endsWith('.wav') || part.endsWith('.mp3') || part.endsWith('.ogg')) {
+                    if (part.endsWith('.wav') || part.endsWith('.mp3') || part.endsWith('.ogg')) { // Common audio types
                         currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
                     }
                 } else {
@@ -136,7 +144,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 
     } catch (error) {
         console.error(`[Audio] Error fetching or processing ${libraryName} ZIP:`, error);
-        if (window.loadedZipFiles) delete window.loadedZipFiles[libraryName];
+        if (window.loadedZipFiles) delete window.loadedZipFiles[libraryName]; // Clear loading state on error
         if (!isAutofetch) {
             showNotification(`Error with ${libraryName} library: ${error.message}`, 4000);
             const soundBrowserList = document.getElementById('soundBrowserList');
@@ -148,10 +156,12 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 }
 
 function getMimeTypeFromFilename(filename) {
+    if (!filename || typeof filename !== 'string') return null;
     if (filename.toLowerCase().endsWith(".wav")) return "audio/wav";
     if (filename.toLowerCase().endsWith(".mp3")) return "audio/mpeg";
     if (filename.toLowerCase().endsWith(".ogg")) return "audio/ogg";
-    return null; // Or a default like "application/octet-stream"
+    // Add more types as needed
+    return null;
 }
 
 export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetTrackType, targetPadOrSliceIndex = null) {
@@ -185,7 +195,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         if (!zipEntry) throw new Error(`File "${fullPath}" not found in "${libraryName}" ZIP.`);
 
         const fileBlob = await zipEntry.async("blob");
-        blobUrl = URL.createObjectURL(fileBlob);
+        blobUrl = URL.createObjectURL(fileBlob); // blobUrl is created from the ZIP entry's blob
 
         if(typeof window.captureStateForUndo === 'function') {
              window.captureStateForUndo(`Load ${fileName} to ${track.name}`);
@@ -193,12 +203,13 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
-            if (targetPadOrSliceIndex === null || targetPadOrSliceIndex === undefined || typeof targetPadOrSliceIndex !== 'number' || isNaN(targetPadOrSliceIndex)) {
+            // Validate targetPadOrSliceIndex or determine fallback
+            if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
                 console.warn(`[Audio] loadSoundFromBrowserToTarget: targetPadOrSliceIndex for DrumSampler is invalid (${targetPadOrSliceIndex}). Finding fallback.`);
-                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.audioBufferDataURL);
-                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;
-                if (actualPadIndex === -1 || typeof actualPadIndex !== 'number' || isNaN(actualPadIndex)) actualPadIndex = 0;
-                 console.log(`[Audio] loadSoundFromBrowserToTarget: Fallback actualPadIndex for DrumSampler: ${actualPadIndex}`);
+                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.audioBufferDataURL); // First empty
+                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;    // Current selection
+                if (actualPadIndex === -1 || typeof actualPadIndex !== 'number' || isNaN(actualPadIndex)) actualPadIndex = 0; // Default to 0
+                console.log(`[Audio] loadSoundFromBrowserToTarget: Fallback actualPadIndex for DrumSampler: ${actualPadIndex}`);
             }
             await loadDrumSamplerPadFile(blobUrl, track.id, actualPadIndex, fileName);
         } else if (track.type === 'Sampler') {
@@ -211,6 +222,9 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         console.error(`[Audio] Error loading sound "${fileName}" from browser:`, error);
         showNotification(`Error loading "${fileName}": ${error.message}`, 3000);
     } finally {
+        // This blobUrl was created from the ZIP entry, it should be revoked here
+        // The loadSampleFile/loadDrumSamplerPadFile functions will create *their own* blob URLs
+        // from the fileObject they derive from this blobUrl, and revoke those themselves.
         if (blobUrl) {
             URL.revokeObjectURL(blobUrl);
             console.log(`[Audio] Revoked blob URL from ZIP entry after processing in loadSoundFromBrowserToTarget: ${blobUrl}`);
@@ -301,11 +315,13 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : window.tracks;
     const track = tracksArray.find(t => t.id === trackId);
 
+    console.log(`[Audio] playDrumSamplerPadPreview attempt for track ${trackId}, pad ${padIndex}.`); // DEBUG
     if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) {
         console.warn(`[Audio] playDrumSamplerPadPreview: Conditions not met for track ${trackId}, pad ${padIndex}.`);
         console.log(`[Audio] Details: track exists: ${!!track}, is DrumSampler: ${track?.type === 'DrumSampler'}, player exists: ${!!track?.drumPadPlayers[padIndex]}, player loaded: ${track?.drumPadPlayers[padIndex]?.loaded}`);
         return;
     }
+    console.log(`[Audio] playDrumSamplerPadPreview: Conditions MET for track ${trackId}, pad ${padIndex}. Player:`, track.drumPadPlayers[padIndex]); // DEBUG
 
     const player = track.drumPadPlayers[padIndex];
     const padData = track.drumSamplerPads[padIndex];
@@ -343,7 +359,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             const blob = await response.blob();
             
             let explicitType = blob.type;
-            const inferredType = getMimeTypeFromFilename(sourceName);
+            const inferredType = getMimeTypeFromFilename(sourceName); // Use helper
             if ((!explicitType || explicitType === "application/octet-stream" || explicitType === "text/plain") && inferredType) {
                 explicitType = inferredType;
                 console.log(`[Audio] loadSampleFile: Blob type was "${blob.type}". Inferred and using type "${explicitType}" from filename "${sourceName}".`);
@@ -376,7 +392,6 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         return;
     }
 
-
     console.log(`[Audio] loadSampleFile: Processing file "${sourceName}" for track ${track.id} (Type: ${trackTypeHint})`);
     if(typeof window.captureStateForUndo === 'function') {
         window.captureStateForUndo(`Load sample ${sourceName} to ${track.name}`);
@@ -399,7 +414,6 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             reader.readAsDataURL(fileObject);
         });
         console.log(`[Audio] loadSampleFile: Generated base64DataURLForSaving (length: ${base64DataURLForSaving?.length})`);
-
 
         if (trackTypeHint === 'Sampler' && track.audioBuffer && !track.audioBuffer.disposed) {
             track.audioBuffer.dispose();
@@ -497,7 +511,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
             const blob = await response.blob();
 
             let explicitType = blob.type;
-            const inferredType = getMimeTypeFromFilename(sourceName);
+            const inferredType = getMimeTypeFromFilename(sourceName); // Use helper
             if ((!explicitType || explicitType === "application/octet-stream" || explicitType === "text/plain") && inferredType) {
                 explicitType = inferredType;
                 console.log(`[Audio] loadDrumSamplerPadFile: Blob type was "${blob.type}". Inferred and using type "${explicitType}" from filename "${sourceName}".`);
@@ -512,7 +526,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         }
     } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
         fileObject = eventOrUrl.target.files[0];
-        sourceName = fileObject.name; // Original MIME type from file input should be more reliable
+        sourceName = fileObject.name;
         console.log(`[Audio] loadDrumSamplerPadFile: Using File object from event. Name: ${fileObject.name}, Size: ${fileObject.size}, Type: ${fileObject.type}`);
     } else {
         console.error(`[Audio] loadDrumSamplerPadFile: No valid file source provided (eventOrUrl is problematic). eventOrUrl:`, eventOrUrl);
@@ -544,7 +558,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         const padData = track.drumSamplerPads[padIndex];
         if (!padData) {
             console.error(`[Audio] loadDrumSamplerPadFile: padData is undefined for padIndex ${padIndex} on track ${track.id}. This should not happen based on earlier checks.`);
-            return;
+            return; // Safeguard
         }
 
         blobUrlForLoadingToneBuffer = URL.createObjectURL(fileObject);
@@ -555,7 +569,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
             reader.onloadend = () => resolve(reader.result);
             reader.onerror = (err) => {
                 console.error("[Audio] FileReader error for DataURL in loadDrumSamplerPadFile:", err);
-                reject(err);
+                reject(err); // Propagate error
             };
             reader.readAsDataURL(fileObject);
         });
@@ -573,8 +587,8 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
 
         if (!track.distortionNode || track.distortionNode.disposed) {
             console.warn(`[Audio] Track ${track.id} distortionNode is invalid in loadDrumSamplerPadFile. Attempting to re-initialize audio nodes.`);
-            await track.initializeAudioNodes();
-            if (!track.distortionNode || track.distortionNode.disposed) {
+            await track.initializeAudioNodes(); // This is an async function
+            if (!track.distortionNode || track.distortionNode.disposed) { // Check again after attempt
                 console.error(`[Audio] CRITICAL: Track ${track.id} distortionNode still invalid after re-init. Connecting player to destination.`);
                 track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).toDestination();
             } else {
@@ -599,7 +613,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     } catch (error) {
         console.error(`[Audio] Error during main loading logic for sample "${sourceName}", pad ${padIndex}, track ${track.id}:`, error);
         showNotification(`Error loading sample "${sourceName}": ${error.message}`, 3000);
-        if (track.drumSamplerPads[padIndex]) {
+        if (track.drumSamplerPads[padIndex]) { // Ensure padData reference is still valid if error occurred after its definition
             track.drumSamplerPads[padIndex].audioBuffer = null;
             track.drumSamplerPads[padIndex].audioBufferDataURL = null;
             track.drumSamplerPads[padIndex].originalFileName = null;
