@@ -1,562 +1,214 @@
-/* Base Styles - Inspired by user's uploaded classic Windows theme */
-:root {
-    --classic-bg: #c0c0c0;
-    --classic-button-face: #c0c0c0;
-    --classic-button-text: #000000;
-    --classic-window-frame-light: #ffffff;
-    --classic-window-frame-shadow: #808080;
-    --classic-window-frame-darkshadow: #000000;
-    --classic-title-bar-active: #000080;
-    --classic-title-bar-inactive: #7f7f7f; /* As per user CSS, can be adjusted */
-    --classic-title-text: #ffffff;
-    --classic-highlight: #000080;
-    --classic-highlight-text: #ffffff;
-    --classic-text-disabled: #808080;
-    --classic-input-bg: #ffffff;
-    --classic-input-border: var(--classic-window-frame-shadow);
-    --classic-input-border-inset-dark: var(--classic-window-frame-darkshadow);
-    --classic-input-border-inset-light: var(--classic-window-frame-light);
-    --classic-desktop-bg: #008080; /* Teal, common classic default */
-    --body-bg: var(--classic-desktop-bg); /* From user CSS */
-    --window-bg: var(--classic-bg); /* From user CSS */
-    --window-content-bg: var(--classic-bg); /* From user CSS */
-    --taskbar-bg: var(--classic-bg); /* From user CSS */
-}
-
+/* General App Styles (Ensure these are loaded or adapt as needed) */
 body {
-    font-family: 'Inter', sans-serif;  /* User CSS specified Inter */
-    font-size: 12px; /* Common classic size */
-    overscroll-behavior: none;
-    background-color: var(--body-bg);
-    color: var(--classic-button-text);
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    user-select: none;
+    font-family: 'Inter', sans-serif; /* From your index.html */
+    font-size: 14px;
+    /* ... other body styles ... */
 }
 
-#desktop {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-    padding: 5px; /* From user CSS */
-    background-color: var(--desktop-bg, var(--classic-desktop-bg)); /* Allow override but default to classic */
-}
+/* Taskbar and Window styles (assuming they exist and are satisfactory) */
 
-/* Window Styles - Merging user styles with classic theme */
-.window {
-    position: absolute;
-    background-color: var(--window-bg);
-    border: 2px solid var(--classic-window-frame-light); /* User CSS had 2px */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    box-shadow: 2px 2px 0px var(--classic-window-frame-darkshadow); /* User CSS shadow */
-    min-width: 250px;
-    min-height: 150px;
-    display: flex;
-    flex-direction: column;
-    border-radius: 0; /* Sharp corners */
-    resize: both;
-    overflow: auto; /* User CSS had auto */
-    /* padding: 2px; /* Classic theme had this for inner frame, user CSS implies padding is for content */
-}
-
-.window.minimized {
-    display: none !important;
-}
-
-.window-title-bar {
-    background-color: var(--classic-title-bar-active);
-    color: var(--classic-title-text);
-    padding: 3px 5px;
-    font-weight: bold;
-    font-size: 0.9rem; /* From user CSS */
-    cursor: grab;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 22px; /* From user CSS */
-    flex-shrink: 0;
-}
-
-.window-title-bar:active { cursor: grabbing; }
-
-.window-title-buttons button {
-    background-color: var(--classic-button-face);
-    border: 1px solid var(--classic-window-frame-light); /* User CSS had 1px */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    color: var(--classic-button-text);
-    font-family: "Arial", sans-serif; /* From user CSS */
-    font-weight: bold;
-    width: 16px;
-    height: 16px;
-    line-height: 13px; /* From user CSS */
-    text-align: center;
-    margin-left: 2px;
-    padding: 0;
-    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS shadow */
-}
-
-.window-title-buttons button:active {
-    border-top-color: var(--classic-window-frame-shadow); /* User CSS active border */
-    border-left-color: var(--classic-window-frame-shadow);
-    border-right-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-light);
-    box-shadow: none;
-    padding-top: 1px; /* User CSS press effect */
-    padding-left: 1px;
-}
-/* Using text for now as per previous setup, Marlett/Webdings would be ideal if available */
-.window-minimize-btn::before { content: "_"; font-family: "Arial", sans-serif; font-weight: bolder; line-height: 14px;}
-.window-close-btn::before { content: "X"; font-family: "Arial", sans-serif; font-weight: normal; line-height: 14px;}
-
-
-.window-content {
+/* --- Pad Button Styling --- */
+.pad-button {
     padding: 8px;
-    flex-grow: 1;
-    overflow-y: auto;
-    background-color: var(--window-content-bg);
-    color: var(--classic-button-text);
-    font-size: 0.85rem; /* From user CSS */
-}
-.window-content input, .window-content select, .window-content button, .window-content textarea {
-     font-family: 'Inter', sans-serif; /* From user CSS */
-     font-size: 0.85rem; /* Match content font size */
-}
-.window-content .control-label { color: var(--classic-button-text); }
-
-/* Taskbar Styles */
-#taskbar {
-    background-color: var(--taskbar-bg);
-    border-top: 2px solid var(--classic-window-frame-light); /* User CSS */
-    padding: 2px 4px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    box-sizing: border-box;
-    z-index: 2000;
-    flex-shrink: 0;
-}
-
-#startButton {
-    background-color: var(--classic-button-face);
-    border: 2px solid var(--classic-window-frame-light); /* User CSS */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    padding: 1px 8px;
-    font-weight: bold;
-    font-size: 0.85rem; /* User CSS */
-    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS */
-    margin-right: 4px;
+    border: 1px solid #888; /* Slightly darker border for definition */
+    background-color: #d4d0c8; /* Classic OS-like button color */
+    color: #000;
     cursor: pointer;
-}
-
-#startButton:active {
-    border-top-color: var(--classic-window-frame-shadow); /* User CSS */
-    border-left-color: var(--classic-window-frame-shadow);
-    border-right-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-light);
-    box-shadow: none;
-}
-
-#taskbarButtons {
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    gap: 2px; /* User CSS */
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    margin-left: 0; /* User CSS has no margin-left here */
-}
-
-#taskbarTempoDisplay {
-    font-size: 0.8rem; /* User CSS */
-    padding: 2px 6px;
-    border: 1px inset var(--classic-window-frame-shadow); /* User CSS */
-    background-color: var(--classic-bg);
-    min-width: 60px;
     text-align: center;
-    margin-left: auto;
-    margin-right: 4px; /* User CSS */
+    min-width: 70px; /* Ensure a decent tap/click target */
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset -1px -1px 0px #707070, inset 1px 1px 0px #ffffff; /* Subtle inset shadow */
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    overflow: hidden; /* To contain the pad-label */
+    position: relative; /* For positioning internal elements if needed */
+}
+
+.pad-button:hover {
+    background-color: #e0e0e0; /* Lighter on hover */
+}
+
+.pad-button:active, .pad-button.selected-for-edit {
+    background-color: #c0c0c0; /* Slightly darker when active/selected */
+    box-shadow: inset 1px 1px 0px #707070, inset -1px -1px 0px #ffffff; /* Inverted inset shadow for pressed look */
+    border-color: #555;
+}
+
+.pad-button.selected-for-edit {
+    border-color: #000080; /* Navy blue border for selected pad */
+    border-width: 2px;
+    padding: 7px; /* Adjust padding to account for thicker border */
+}
+
+.pad-label {
+    font-size: 0.65rem; /* Smaller text for the sample name */
+    color: #333;
+    display: block;
+    margin-top: 5px;
+    word-break: break-all; /* Break long words */
+    line-height: 1.2;
+    max-height: 2.4em; /* Approx 2 lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* --- Styling for Pad Buttons as Drop Targets --- */
+.drop-zone-pad {
+    /* The .pad-button style already provides a good base.
+       You might not need much here unless you want a default visual hint
+       that it's *always* a drop target, even when not dragging.
+       For example, a very subtle border or icon.
+    */
+    border-style: solid; /* Default to solid */
+}
+
+/* Visual feedback when dragging over an individual pad button */
+.drop-zone-pad.dragover {
+    background-color: #b0c4de; /* Light steel blue - indicates droppable area */
+    border-color: #4682b4;   /* Steel blue */
+    border-style: dashed;
+    opacity: 0.9;
+    box-shadow: 0 0 8px rgba(70, 130, 180, 0.5); /* Subtle glow */
+}
+
+
+/* --- General Drop Zone Styling (for the area below selected pad controls) --- */
+.drop-zone {
+    border: 2px dashed #a0a0a0; /* Dashed border */
+    padding: 20px;              /* More padding */
+    text-align: center;
+    background-color: #f0f0f0;  /* Lighter background */
+    color: #555;                /* Text color */
+    font-size: 0.9em;
+    border-radius: 4px;         /* Rounded corners */
+    margin-bottom: 10px;        /* Space below */
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.drop-zone.dragover {
+    background-color: #d8e8ff; /* Light blue highlight on drag over */
+    border-color: #77aaff;     /* Stronger blue border */
+    color: #333;
+}
+
+.drop-zone label {
+    color: #007bff;             /* Standard link blue */
+    text-decoration: underline;
     cursor: pointer;
 }
-#taskbarTempoDisplay:hover {
-    background-color: #b0b0b0; /* User CSS */
+
+.drop-zone label:hover {
+    color: #0056b3;             /* Darker blue on hover */
 }
 
-/* Start Menu Styles */
-#startMenu {
-    position: absolute;
-    bottom: 28px;
-    left: 2px; /* User CSS */
-    background-color: var(--classic-bg);
-    border: 2px solid var(--classic-window-frame-light); /* User CSS */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    box-shadow: 2px 2px 0px var(--classic-window-frame-darkshadow); /* User CSS */
-    padding: 2px;
-    z-index: 2001;
-    min-width: 200px; /* User CSS */
-}
-#startMenu ul { list-style: none; margin: 0; padding: 0; }
-#startMenu li { padding: 5px 10px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; } /* User CSS padding & font */
-#startMenu li:hover { background-color: var(--classic-highlight); color: var(--classic-highlight-text); }
-#startMenu li.disabled { color: var(--classic-text-disabled); cursor: default; }
-#startMenu li.disabled:hover { background-color: var(--classic-bg); color: var(--classic-text-disabled); } /* User CSS */
-#startMenu hr { border: 0; border-top: 1px solid var(--classic-window-frame-shadow); border-bottom: 1px solid var(--classic-window-frame-light); margin: 2px 0; }
 
-/* Taskbar Button Styles */
-.taskbar-button {
-    background-color: var(--classic-button-face);
-    border: 2px solid var(--classic-window-frame-light); /* User CSS */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    padding: 2px 8px;
-    font-size: 0.8rem; /* User CSS */
+/* --- Pads Container --- */
+/* This ensures the pad buttons are laid out nicely */
+.pads-container {
+    display: grid;
+    /* Creates as many columns as fit, each at least 70px wide, taking equal space */
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px; /* Space between pads */
+    padding: 5px 0; /* Some padding around the grid */
+}
+
+/* Style for the notification messages */
+#notification-area {
+    position: fixed;
+    bottom: 40px; /* Above taskbar */
+    right: 20px;
+    z-index: 20000; /* High z-index to be on top of other elements */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Notifications align to the right */
+}
+
+.notification-message {
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    opacity: 0;
+    transform: translateX(100%); /* Start off-screen */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.notification-message.show {
+    opacity: 1;
+    transform: translateX(0); /* Slide in */
+}
+
+/* --- Knob Styling (Example) --- */
+.knob-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 5px;
+    min-width: 60px; /* Ensure some minimum width */
+}
+
+.knob-label {
+    font-size: 0.7rem;
+    color: #333;
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
-    min-width: 60px; /* User CSS */
-    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS */
-    cursor: pointer;
-    flex-shrink: 0;
-    text-align: left;
-}
-.taskbar-button.active {
-    border-top-color: var(--classic-window-frame-shadow); /* User CSS */
-    border-left-color: var(--classic-window-frame-shadow);
-    border-right-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-light);
-    box-shadow: none;
-    background-color: #a0a0a0; /* User CSS */
-}
-.taskbar-button.minimized-on-taskbar { /* From user CSS, ensures it looks like a non-active button */
-    background-color: var(--classic-button-face);
-    border-top-color: var(--classic-window-frame-light);
-    border-left-color: var(--classic-window-frame-light);
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-}
-
-
-/* Notification System Styles - Using user's positioning */
-#notification-area {
-    position: fixed;
-    top: 10px; /* User CSS */
-    left: 50%; /* User CSS */
-    transform: translateX(-50%); /* User CSS */
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* User CSS */
-    gap: 5px; /* User CSS */
-}
-.notification-message {
-    background-color: rgba(0,0,0,0.75); /* User CSS */
-    color: white;
-    padding: 10px 20px; /* User CSS */
-    border-radius: 5px; /* User CSS */
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2); /* User CSS */
-    font-size: 0.9rem; /* User CSS */
-    opacity: 0;
-    transform: translateY(-20px); /* User CSS */
-    transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* User CSS */
-}
-.notification-message.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Custom Modal Styles - Merging user styles */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0,0,0,0.5); /* User CSS */
-    display: flex; align-items: center; justify-content: center;
-    z-index: 10000;
-}
-.modal-dialog {
-    background-color: var(--classic-bg);
-    padding: 0; /* User CSS */
-    border: 2px solid var(--classic-window-frame-light); /* User CSS */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.3); /* User CSS */
-    min-width: 300px;
-    max-width: 90%;
-    display: flex;
-    flex-direction: column;
-}
-.modal-title-bar {
-    background-color: var(--classic-title-bar-active);
-    color: var(--classic-title-text);
-    padding: 3px 8px; /* User CSS */
-    font-weight: bold;
-    font-size: 0.9rem; /* User CSS */
-    text-align: center; /* User CSS */
-}
-.modal-content {
-    padding: 15px;
-    font-size: 0.9rem; /* User CSS */
-    color: var(--classic-button-text);
-    text-align: center; /* User CSS */
-    border-top: 1px solid var(--classic-window-frame-shadow); /* User CSS */
-    border-bottom: 1px solid var(--classic-window-frame-light); /* User CSS */
-}
-.modal-buttons {
-    padding: 8px 15px;
-    display: flex;
-    justify-content: center; /* User CSS */
-    gap: 10px; /* User CSS */
-    background-color: var(--classic-bg);
-    border-top: 1px solid var(--classic-window-frame-light); /* User CSS */
-}
-.modal-buttons button {
-    background-color: var(--classic-button-face);
-    border: 2px solid var(--classic-window-frame-light); /* User CSS */
-    border-right-color: var(--classic-window-frame-shadow);
-    border-bottom-color: var(--classic-window-frame-shadow);
-    padding: 4px 12px; /* User CSS */
-    font-size: 0.85rem; /* User CSS */
-    box-shadow: 1px 1px 0px var(--classic-window-frame-darkshadow); /* User CSS */
-    min-width: 70px;
-    cursor: pointer;
-}
-.modal-buttons button:active {
-    border-top-color: var(--classic-window-frame-shadow); /* User CSS */
-    border-left-color: var(--classic-window-frame-shadow);
-    border-right-color: var(--classic-window-frame-light);
-    border-bottom-color: var(--classic-window-frame-light);
-    box-shadow: none;
-}
-
-/* Component-Specific Styles from user CSS */
-.track-inspector-content .panel,
-.effects-rack-window .effect-group {
-    margin-top: 8px; padding-top: 8px;
-    border-top: 1px solid var(--classic-window-frame-shadow); /* User CSS */
-}
-.effects-rack-window .effect-group:first-child {
-    border-top: none; margin-top: 0; padding-top: 0;
-}
-.track-inspector-content .panel {
-     border-bottom: 1px solid var(--classic-window-frame-shadow); /* User CSS */
-     padding-bottom: 10px; margin-bottom: 10px;
-}
-/* Panel h4 (legend) for classic GroupBox look */
-.panel h4 {
-    position: relative; /* Or absolute if panel has padding-top */
-    top: -0.7em; /* Adjust to sit on border */
-    left: 8px;
-    background-color: var(--classic-bg);
-    padding: 0 4px;
-    display: inline-block; /* Important */
-    font-size: 11px;
-    font-weight: normal;
-    margin-bottom: 0; /* Adjust as needed */
-}
-
-
-/* Sequencer Styles - from user CSS */
-.sequencer-window-content { display: flex; height: 100%; flex-direction: column; }
-.sequencer-grid-container { flex-grow: 1; overflow: auto; }
-.sequencer-grid { display: grid; gap: 1px; width: 100%; margin-top: 8px; }
-.sequencer-row { display: contents; }
-.sequencer-label-cell {
-    font-size: 0.7rem; padding: 4px 2px; text-align: right;
-    background-color: #b0b0b0; border-right: 1px solid #808080; border-bottom: 1px solid #808080;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 50px;
-    position: sticky; left: 0; z-index: 10;
-}
-.sequencer-bar-header-cell {
-    font-size: 0.65rem; padding: 2px 0; text-align: center;
-    background-color: #a0a0a0; border-right: 1px solid #707070; border-bottom: 1px solid #707070;
-    font-weight: bold; color: #333; grid-column-start: span var(--steps-per-bar);
-}
-.sequencer-bar-header-placeholder {
-    background-color: #b0b0b0; border-right: 1px solid #808080; border-bottom: 1px solid #707070;
-}
-.sequencer-step-cell {
-    aspect-ratio: 1 / 1; border: 1px solid #404040; cursor: pointer;
-    transition: background-color 0.1s, opacity 0.1s; min-width: 20px;
-}
-.sequencer-step-cell.beat-1 { background-color: #909090; }
-.sequencer-step-cell.beat-2 { background-color: #a0a0a0; }
-.sequencer-step-cell.beat-3 { background-color: #909090; }
-.sequencer-step-cell.beat-4 { background-color: #a0a0a0; }
-.sequencer-step-cell.active-synth { background-color: #0000FF; }
-.sequencer-step-cell.active-sampler { background-color: #FFA500; }
-.sequencer-step-cell.active-drum-sampler { background-color: #FF69B4; }
-.sequencer-step-cell.active-instrument-sampler { background-color: #8A2BE2; }
-.sequencer-step-cell.playing { outline: 2px solid #FFFF00; z-index: 1; opacity: 0.7; }
-.sequencer-window-content .sequencer-grid { margin: 0 auto; }
-.sequencer-window-content p { text-align: center; margin-top: 8px; font-size: 0.8rem; }
-
-/* Pad Styles - from user CSS */
-.pads-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 8px; margin-top: 10px; }
-.pad-button {
-    background-color: #a0a0a0; color: black;
-    border: 2px solid #ffffff; border-right-color: #808080; border-bottom-color: #808080;
-    box-shadow: 1px 1px 0px #000000;
-    aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 0.7rem; text-align: center; padding: 2px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    cursor: pointer; user-select: none;
-}
-.pad-button:active, .pad-button.selected-for-edit {
-    background-color: #000080; color: white;
-    border-top-color: #808080; border-left-color: #808080;
-    border-right-color: #ffffff; border-bottom-color: #ffffff; box-shadow: none;
-}
-.pad-button .pad-label { font-size: 0.6rem; margin-top: 2px; color: #333; }
-.pad-button.selected-for-edit .pad-label { color: #ccc; }
-
-/* Button Styles for Track Controls (Mute, Solo, Arm, etc.) - from user CSS */
-.arm-input-button, .mute-button, .solo-button, .waveform-control-button, .slice-toggle-button, .automation-button, .effects-rack-button, .button-general {
-    background-color: #c0c0c0; border: 2px solid #ffffff; border-right-color: #808080; border-bottom-color: #808080;
-    color: black; box-shadow: 1px 1px 0px #000000; cursor: pointer;
-    padding: 3px 8px; font-size: 11px; border-radius: 2px; margin: 1px; /* Added from classic theme */
-}
-.slice-toggle-button:hover, .arm-input-button:hover, .mute-button:hover, .solo-button:hover, .automation-button:hover, .effects-rack-button:hover, .button-general:hover { background-color: #d0d0d0; }
-.slice-toggle-button.active, .arm-input-button.armed, .mute-button.muted, .solo-button.soloed { color: white; }
-.slice-toggle-button.active { background-color: #000080; }
-.arm-input-button.armed { background-color: #FF0000; border-color: #FF6347; }
-.mute-button.muted { background-color: #FF0000; border-color: #FF6347; }
-.solo-button.soloed { background-color: #FFFF00; color: black; border-color: #FFFACD;}
-
-/* MIDI and Keyboard Indicators - from user CSS */
-#midiIndicatorGlobal, #keyboardIndicatorGlobal { border: 1px solid black; width: 0.75rem; height: 0.75rem; display: inline-block; border-radius: 50%; transition: background-color 0.1s; }
-#midiIndicatorGlobal { background-color: #808080; }
-#midiIndicatorGlobal.active { background-color: #00FF00; }
-#keyboardIndicatorGlobal { background-color: #808080; }
-#keyboardIndicatorGlobal.active { background-color: #00FFFF; }
-
-/* Knob and Slider Styles - from user CSS */
-.knob-container { display: flex; flex-direction: column; align-items: center; margin: 2px 0; }
-.knob {
-    width: 40px; height: 40px; border-radius: 50%; background-color: #777;
-    border: 2px solid #555; position: relative; cursor: ns-resize;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
-}
-.knob-handle {
-    width: 4px; height: 12px; background-color: #ddd;
-    position: absolute; top: 3px; left: 50%; transform-origin: 50% 17px;
-    transform: translateX(-50%) rotate(0deg); border-radius: 2px;
-}
-.knob-label, .slider-label { font-size: 0.65rem; margin-top: 1px; text-align: center; color: #333; max-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-.knob-value, .slider-value { font-size: 0.6rem; color: #111; }
-.slider-container { display: flex; flex-direction: column; align-items: center; margin: 2px 5px; min-width: 30px; }
-.slider-track {
-    width: 12px; height: 100px; background-color: #555; border: 1px solid #333;
-    position: relative; cursor: ns-resize; border-radius: 3px; box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
-}
-.slider-thumb {
-    width: 20px; height: 8px; background-color: #bbb; border: 1px solid #999;
-    position: absolute; left: 50%; transform: translateX(-50%);
-    border-radius: 2px; box-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-}
-.slider-label { max-width: 50px; margin-bottom: 2px;}
-.slider-value { margin-top: 2px; }
-
-/* Slice Editor Styles - from user CSS */
-.slice-edit-group details > summary { cursor: pointer; font-size: 0.75rem; font-weight: 500; padding: 2px 0; }
-.slice-edit-group details > div { padding-left: 10px; }
-
-/* Waveform Canvas - from user CSS */
-.waveform-canvas { background-color: #a0a0a0; border: 1px solid #808080; display: block; width: 100%; }
-
-/* Meter Bar Styles - from user CSS */
-.meter-bar-container { background-color: #808080; border: 1px solid #404040;}
-.meter-bar { background-color: #00FF00; height: 100%; width: 0%; transition: width 0.05s linear; }
-.meter-bar.clipping { background-color: #FF0000; }
-
-/* Mixer Styles - from user CSS */
-.mixer-window-content { display: flex; gap: 10px; padding: 10px; overflow-x: auto; background-color: #b0b0b0; min-height: 280px; }
-.channel-strip {
-    display: flex; flex-direction: column; align-items: center;
-    background-color: #c0c0c0; padding: 8px; border: 2px solid #ffffff;
-    border-right-color: #808080; border-bottom-color: #808080; min-width: 80px;
-    flex-shrink: 0;
-}
-.channel-strip .track-name { font-size: 0.75rem; font-weight: bold; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; cursor: pointer;}
-.channel-strip .fader-container {
-     height: auto; margin-bottom: 5px; display: flex; justify-content: center; align-items: center;
-}
-.channel-strip .mixer-buttons button { font-size: 0.7rem; padding: 2px 4px; margin: 1px;}
-.channel-strip .mixer-meter-container { width: 50px; height: 15px; margin-top: 5px; background-color: #808080; border: 1px solid #404040;}
-.channel-strip .mixer-meter-container .meter-bar { background-color: #00FF00; height: 100%; width: 0%;}
-.channel-strip .mixer-meter-container .meter-bar.clipping { background-color: #FF0000; }
-
-/* Drag and Drop Zone Styles - from user CSS, with .dragover added */
-.drop-zone {
-    border: 2px dashed #888; /* User CSS */
-    padding: 10px;
+    max-width: 100%;
     text-align: center;
-    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-    font-size: 0.8rem; /* User CSS */
-    background-color: #d0d0d0; /* User CSS */
-    color: var(--classic-button-text); /* Ensure text is visible */
-}
-.drop-zone.dragover {
-    background-color: #e0e0e0; /* Slightly lighter gray for dragover, as per user CSS */
-    border-color: #555; /* Darker border for dragover, as per user CSS */
-}
-.drop-zone label { color: var(--classic-title-bar-active); text-decoration: underline; cursor: pointer; }
-
-
-/* Control Grouping Styles - from user CSS */
-.control-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-around; }
-.control-group-vertical { display: flex; flex-direction: column; gap: 5px; align-items: center; }
-
-/* Sound Browser Styles - from user CSS */
-.sound-browser-content { display: flex; flex-direction: column; height: 100%; }
-#soundBrowserLibrarySelect { margin-bottom: 5px; padding: 2px; font-size: 0.8rem; border: 1px solid #808080; background-color: #fff; }
-#soundBrowserPathDisplay { font-size: 0.75rem; padding: 2px 4px; background-color: #ddd; border-bottom: 1px solid #aaa; margin-bottom: 4px; }
-.sound-browser-list { flex-grow: 1; overflow-y: auto; border: 1px inset #808080; background-color: #fff; padding: 4px; }
-.sound-browser-item { padding: 3px 5px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.8rem;}
-.sound-browser-item:hover { background-color: #000080; color: #ffffff; }
-.sound-browser-item:last-child { border-bottom: none; }
-.sound-browser-loading { padding: 10px; text-align: center; font-style: italic; }
-
-/* Input fields - Merged from classic theme and user CSS */
-input[type="text"], input[type="number"], select, textarea {
-    background-color: var(--classic-input-bg);
-    border: 1px solid var(--classic-window-frame-darkshadow); /* From classic */
-    border-top-color: var(--classic-input-border); /* From classic */
-    border-left-color: var(--classic-input-border); /* From classic */
-    padding: 3px 4px; /* From classic */
-    font-family: 'Tahoma', 'Geneva', sans-serif; /* From classic */
-    font-size: 12px; /* From classic */
-    color: var(--classic-button-text);
-    box-shadow: inset 1px 1px 0px var(--classic-window-frame-shadow); /* From classic */
-    border-radius: 0; /* From classic */
-}
-input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-    outline: 1px dotted var(--classic-button-text); /* From classic */
-    outline-offset: -1px; /* From classic */
-}
-select {
-    padding-right: 15px; /* From classic */
 }
 
-/* Hidden utility */
-.hidden {
-    display: none !important;
+.knob {
+    width: 36px; /* Smaller knob */
+    height: 36px;
+    background-color: #B0B0B0; /* Knob color */
+    border-radius: 50%;
+    position: relative;
+    border: 1px solid #707070;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
+    cursor: ns-resize;
 }
 
-/* Record Button Animation - from user CSS */
-#recordBtnGlobal.recording {
-    background-color: #FF0000;
-    color: white;
-    animation: pulse 1s infinite; /* User CSS specified 'pulse' */
+.knob-handle {
+    width: 4px;
+    height: 10px; /* Shorter handle for smaller knob */
+    background-color: #333;
+    position: absolute;
+    top: 3px; /* Adjusted for shorter handle */
+    left: 50%;
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    border-radius: 2px;
 }
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255,0,0, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(255,0,0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255,0,0, 0); }
+
+.knob-value {
+    font-size: 0.65rem; /* Smaller value text */
+    color: #333;
+    margin-top: 2px;
+    min-height: 1em; /* Prevent layout shift if value is empty */
+    text-align: center;
+}
+
+/* Control group for knobs, etc. */
+.control-group {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
+    justify-content: space-around; /* Distribute items */
+    align-items: flex-start; /* Align items to the top */
+    padding: 5px 0;
+    gap: 5px; /* Small gap between controls */
+}
+
+/* Specific styling for single control containers if needed */
+.single-control-container {
+    padding: 5px;
+    display: flex;
+    justify-content: center;
 }
