@@ -284,14 +284,16 @@ export function gatherProjectData() {
                 trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams));
             } else if (track.type === 'Sampler') {
                 trackData.samplerAudioData = {
-                    fileName: track.originalFileName, // Or track.samplerAudioData.fileName if preferred
-                    audioDbKey: track.samplerAudioData?.audioDbKey || null
+                    fileName: track.originalFileName,
+                    audioDbKey: track.samplerAudioData?.audioDbKey || null,
+                    status: track.samplerAudioData?.status || (track.samplerAudioData?.audioDbKey ? 'pending' : 'empty')
                 };
                 trackData.slices = JSON.parse(JSON.stringify(track.slices));
             } else if (track.type === 'DrumSampler') {
                 trackData.drumSamplerPads = track.drumSamplerPads.map(p => ({
                     originalFileName: p.originalFileName,
                     audioDbKey: p.audioDbKey || null,
+                    status: p.status || (p.audioDbKey ? 'pending' : 'empty'),
                     volume: p.volume,
                     pitchShift: p.pitchShift,
                     envelope: JSON.parse(JSON.stringify(p.envelope))
@@ -300,6 +302,7 @@ export function gatherProjectData() {
                 trackData.instrumentSamplerSettings = {
                     originalFileName: track.instrumentSamplerSettings.originalFileName,
                     audioDbKey: track.instrumentSamplerSettings.audioDbKey || null,
+                    status: track.instrumentSamplerSettings.status || (track.instrumentSamplerSettings.audioDbKey ? 'pending' : 'empty'),
                     rootNote: track.instrumentSamplerSettings.rootNote,
                     loop: track.instrumentSamplerSettings.loop,
                     loopStart: track.instrumentSamplerSettings.loopStart,
@@ -355,7 +358,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
 
     Object.values(window.openWindows || {}).forEach(win => {
-        if (win && typeof win.close === 'function') win.close(true); // Pass true to skip undo capture for close
+        if (win && typeof win.close === 'function') win.close(true);
         else if (win && win.element && win.element.remove) win.element.remove();
     });
     window.openWindows = {};
@@ -395,7 +398,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                             try {
                                 if (typeof addedEffect.toneNode.set === 'function') {
                                     addedEffect.toneNode.set(addedEffect.params);
-                                } else { // Manual param setting if .set is not available
+                                } else {
                                     for (const paramKey in addedEffect.params) {
                                         if (Object.hasOwnProperty.call(addedEffect.params, paramKey)) {
                                             const value = addedEffect.params[paramKey];
@@ -447,6 +450,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                 const dbKey = track.samplerAudioData.audioDbKey;
                 const fileName = track.samplerAudioData.fileName;
                 console.log(`[State - reconstructDAW] Sampler track ${track.id} has audioDbKey: ${dbKey}, FileName: ${fileName}`);
+                track.samplerAudioData.status = 'pending'; // Set to pending before attempting load
                 const audioBlob = await getAudio(dbKey);
                 if (audioBlob) {
                     console.log(`[State - reconstructDAW] Sampler track ${track.id}: Retrieved Blob from DB for key ${dbKey}`, audioBlob);
@@ -459,21 +463,25 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                         }
                         track.audioBuffer = await new Tone.Buffer().load(objectURL);
                         track.originalFileName = fileName;
+                        track.samplerAudioData.status = 'loaded'; // Update status
                         console.log(`%c[State - reconstructDAW] Sampler track ${track.id}: SUCCESSFULLY loaded Tone.Buffer. Duration: ${track.audioBuffer.duration}s. Loaded: ${track.audioBuffer.loaded}`, "color: green");
                     } catch (loadError) {
                         console.error(`%c[State - reconstructDAW] Sampler track ${track.id}: FAILED to load Tone.Buffer from ObjectURL ${objectURL} for key ${dbKey}`, "color: red", loadError);
                         track.audioBuffer = null;
+                        track.samplerAudioData.status = 'missing'; // Update status
                     } finally {
                         URL.revokeObjectURL(objectURL);
                         console.log(`[State - reconstructDAW] Sampler track ${track.id}: Revoked ObjectURL ${objectURL}`);
                     }
                 } else {
                      console.warn(`%c[State - reconstructDAW] Sampler track ${track.id}: Audio Blob NOT FOUND in DB for key ${dbKey}. File: ${fileName}`, "color: orange");
+                     track.samplerAudioData.status = 'missing'; // Update status
                 }
             } else if (track.type === 'InstrumentSampler' && track.instrumentSamplerSettings?.audioDbKey) {
                 const dbKey = track.instrumentSamplerSettings.audioDbKey;
                 const fileName = track.instrumentSamplerSettings.originalFileName;
                 console.log(`[State - reconstructDAW] InstrumentSampler track ${track.id} has audioDbKey: ${dbKey}, FileName: ${fileName}`);
+                track.instrumentSamplerSettings.status = 'pending';
                 const audioBlob = await getAudio(dbKey);
                 if (audioBlob) {
                     console.log(`[State - reconstructDAW] InstrumentSampler track ${track.id}: Retrieved Blob from DB for key ${dbKey}`, audioBlob);
@@ -485,16 +493,19 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                             track.instrumentSamplerSettings.audioBuffer.dispose();
                         }
                         track.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(objectURL);
+                        track.instrumentSamplerSettings.status = 'loaded';
                         console.log(`%c[State - reconstructDAW] InstrumentSampler track ${track.id}: SUCCESSFULLY loaded Tone.Buffer. Duration: ${track.instrumentSamplerSettings.audioBuffer.duration}s. Loaded: ${track.instrumentSamplerSettings.audioBuffer.loaded}`, "color: green");
                     } catch (loadError) {
                         console.error(`%c[State - reconstructDAW] InstrumentSampler track ${track.id}: FAILED to load Tone.Buffer from ObjectURL ${objectURL} for key ${dbKey}`, "color: red", loadError);
                         track.instrumentSamplerSettings.audioBuffer = null;
+                        track.instrumentSamplerSettings.status = 'missing';
                     } finally {
                         URL.revokeObjectURL(objectURL);
                         console.log(`[State - reconstructDAW] InstrumentSampler track ${track.id}: Revoked ObjectURL ${objectURL}`);
                     }
                 } else {
                     console.warn(`%c[State - reconstructDAW] InstrumentSampler track ${track.id}: Audio Blob NOT FOUND in DB for key ${dbKey}. File: ${fileName}`, "color: orange");
+                    track.instrumentSamplerSettings.status = 'missing';
                 }
             } else if (track.type === 'DrumSampler') {
                 console.log(`[State - reconstructDAW] DrumSampler track ${track.id}: Processing ${track.drumSamplerPads.length} pads.`);
@@ -504,6 +515,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                         const dbKey = pad.audioDbKey;
                         const fileName = pad.originalFileName;
                         console.log(`[State - reconstructDAW] DrumSampler track ${track.id}, Pad ${i}: has audioDbKey: ${dbKey}, FileName: ${fileName}`);
+                        pad.status = 'pending';
                         const audioBlob = await getAudio(dbKey);
                         if (audioBlob) {
                             console.log(`[State - reconstructDAW] DrumSampler track ${track.id}, Pad ${i}: Retrieved Blob from DB for key ${dbKey}`, audioBlob);
@@ -515,23 +527,32 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                                     pad.audioBuffer.dispose();
                                 }
                                 pad.audioBuffer = await new Tone.Buffer().load(objectURL);
+                                pad.status = 'loaded';
                                 console.log(`%c[State - reconstructDAW] DrumSampler track ${track.id}, Pad ${i}: SUCCESSFULLY loaded Tone.Buffer. Duration: ${pad.audioBuffer.duration}s. Loaded: ${pad.audioBuffer.loaded}`, "color: green");
                             } catch (loadError) {
                                  console.error(`%c[State - reconstructDAW] DrumSampler track ${track.id}, Pad ${i}: FAILED to load Tone.Buffer from ObjectURL ${objectURL} for key ${dbKey}`, "color: red", loadError);
                                 pad.audioBuffer = null;
+                                pad.status = 'missing';
                             } finally {
                                 URL.revokeObjectURL(objectURL);
                                 console.log(`[State - reconstructDAW] DrumSampler track ${track.id}, Pad ${i}: Revoked ObjectURL ${objectURL}`);
                             }
                         } else {
                              console.warn(`%c[State - reconstructDAW] DrumSampler track ${track.id}, Pad ${i}: Audio Blob NOT FOUND in DB for key ${dbKey}. File: ${fileName}`, "color: orange");
+                             pad.status = 'missing';
                         }
+                    } else {
+                        pad.status = 'empty'; // Ensure status is 'empty' if no DbKey
                     }
                 }
             }
         } catch (e) {
             console.error(`%c[State - reconstructDAW] MAJOR ERROR processing audio for track ${track.id} (${track.name}):`, "color: red; font-size: 1.2em;", e);
             showNotification(`Error loading audio for ${track.name}. Some samples may be missing.`, 3000);
+            // Set status to missing for all relevant audio data on this track if a major error occurs
+            if (track.type === 'Sampler' && track.samplerAudioData) track.samplerAudioData.status = 'missing';
+            if (track.type === 'InstrumentSampler' && track.instrumentSamplerSettings) track.instrumentSamplerSettings.status = 'missing';
+            if (track.type === 'DrumSampler') track.drumSamplerPads.forEach(p => { if(p.audioDbKey) p.status = 'missing'; else p.status = 'empty';});
         }
     }
     console.log("%c[State - reconstructDAW] Finished loading audio from IndexedDB for all tracks.", "color: blue; font-weight: bold;");
@@ -632,9 +653,9 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     if (!isUndoRedo) {
         showNotification(`Project loaded successfully.`, 3500);
     } else {
-        const stateRestored = (undoStack.length >= redoStack.length && undoStack.length > 0) ? undoStack[undoStack.length-1] : (redoStack.length > 0 ? redoStack[redoStack.length-1] : null);
-        const actionDescription = stateRestored?.description || projectData?.description || 'last action';
-        const operationType = undoStack.length >= redoStack.length ? 'Undone' : 'Redone';
+        // Use projectData.description for redo, or the last popped state for undo (which is stateToRestore)
+        const actionDescription = projectData?.description || (undoStack.length > 0 ? undoStack[undoStack.length -1]?.description : 'last action');
+        const operationType = isUndoRedo && redoStack.length < undoStack.length ? 'Undone' : 'Redone'; // Heuristic
         showNotification(`${operationType}: ${actionDescription}.`, 2000);
     }
     console.log("%c[State] DAW Reconstructed successfully.", "color: green; font-weight: bold;");
