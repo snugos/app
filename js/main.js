@@ -47,9 +47,11 @@ import {
     createKnob,
     openMasterEffectsRackWindow
 } from './ui.js';
+import { AVAILABLE_EFFECTS } from './effectsRegistry.js'; // <<<<<<<<<<< ADDED THIS IMPORT
 
 console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)");
 
+// --- Global Variables & Initialization ---
 window.loadedZipFiles = {};
 window.soundLibraryFileTrees = {};
 window.currentLibraryName = null;
@@ -100,7 +102,7 @@ function handleCustomBackgroundUpload(event) {
             } catch (error) {
                 console.error("Error saving background to localStorage:", error);
                 showNotification("Could not save background: Storage full or image too large.", 4000);
-                applyDesktopBackground(dataURL);
+                applyDesktopBackground(dataURL); // Apply even if not saved, for current session
             }
         };
         reader.onerror = () => {
@@ -119,6 +121,7 @@ function removeCustomDesktopBackground() {
     showNotification("Custom background removed.", 2000);
 }
 
+// --- Exposing functions globally ---
 window.openTrackEffectsRackWindow = openTrackEffectsRackWindow;
 window.openMasterEffectsRackWindow = openMasterEffectsRackWindow;
 window.openTrackSequencerWindow = openTrackSequencerWindow;
@@ -190,7 +193,7 @@ window.addMasterEffect = addMasterEffect;
 window.removeMasterEffect = removeMasterEffect;
 window.updateMasterEffectParam = updateMasterEffectParam;
 window.reorderMasterEffect = reorderMasterEffect;
-window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS;
+window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS; // Now AVAILABLE_EFFECTS is defined due to the import
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -252,10 +255,10 @@ async function initializeSnugOS() {
             console.error("[Main] CRITICAL: openGlobalControlsWindow is not available to be called!");
             showNotification("CRITICAL Error: Global controls system unavailable.", 8000);
         } else {
-            console.log("[Main] Attempting to open Global Controls Window..."); // ADDED LOG
-            const globalControlsWindowInstance = window.openGlobalControlsWindow(); // Removed await as openGlobalControlsWindow is synchronous
-            console.log("[Main] globalControlsWindowInstance received:", globalControlsWindowInstance); // ADDED LOG
-            console.log("[Main] globalControlsWindowInstance.element:", globalControlsWindowInstance?.element); // ADDED LOG
+            console.log("[Main] Attempting to open Global Controls Window...");
+            const globalControlsWindowInstance = window.openGlobalControlsWindow(); // Removed await as it's sync
+            console.log("[Main] globalControlsWindowInstance received:", globalControlsWindowInstance);
+            console.log("[Main] globalControlsWindowInstance.element:", globalControlsWindowInstance?.element);
 
             if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
                 console.error("[Main] CRITICAL: Failed to initialize Global Controls Window (instance or element is null). App functionality will be severely limited.");
