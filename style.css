@@ -557,7 +557,6 @@ button.active { /* Generic active state for other toggles if needed */
 .global-controls-window label { /* ... unchanged ... */ }
 
 /* Input and Select for Dark Theme (High Contrast) */
-/* Remove .dark prefix if this is the only theme */
 select, input[type="text"], input[type="number"],
 .window-content select, .modal-content select,
 .window-content input[type="text"], .window-content input[type="number"],
@@ -574,9 +573,35 @@ input::placeholder,
     color: #777777; /* Lighter placeholder text */
 }
 
-/* Remove all .dark prefixed rules if this is the only theme */
-/* For example:
-.dark body becomes body
-.dark .window becomes .window
-etc.
-*/
+/* Custom Scrollbar Styling (Dark Theme Inspired) */
+::-webkit-scrollbar {
+    width: 10px; /* Width of the vertical scrollbar */
+    height: 10px; /* Height of the horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1e1e; /* Very dark track, matching window content areas */
+    border-radius: 0px; /* Keep it square like the UI */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4a4a4a; /* Dark grey thumb, lighter than track */
+    border-radius: 2px; /* Slightly rounded thumb */
+    border: 1px solid #5a5a5a; /* Subtle border for the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a; /* Lighter thumb on hover */
+}
+
+::-webkit-scrollbar-corner {
+    background: #1e1e1e; /* Match track background */
+}
+
+/* Firefox scrollbar styling (basic) */
+/* Note: Firefox scrollbar styling is less customizable than WebKit */
+* {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #4a4a4a #1e1e1e; /* thumb and track */
+}
+
