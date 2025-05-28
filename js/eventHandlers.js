@@ -101,11 +101,11 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
         return;
     }
 
-    try {
+    try { // OUTER TRY-CATCH FOR THE WHOLE FUNCTION
         const playBtn = globalControlsWindowElement.querySelector('#playBtnGlobal');
         const recordBtn = globalControlsWindowElement.querySelector('#recordBtnGlobal');
         const tempoInputEl = globalControlsWindowElement.querySelector('#tempoGlobalInput');
-        const midiSelect = globalControlsWindowElement.querySelector('#midiInputSelectGlobal');
+        const midiSelect = globalControlsWindowElement.querySelector('#midiInputSelectGlobal'); // This is window.midiInputSelectGlobal
 
         if (playBtn) {
             try {
@@ -130,7 +130,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                     }
                 });
             } catch (e) { console.error("[EventHandlers] Error attaching playBtn listener:", e); }
-        } else { console.warn("[EventHandlers - attachGlobalControlEvents] Play button not found."); }
+        } else { console.warn("[EventHandlers - attachGlobalControlEvents] Play button (#playBtnGlobal) not found."); }
 
         if (recordBtn) {
             try {
@@ -152,7 +152,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                     }
                 });
             } catch (e) { console.error("[EventHandlers] Error attaching recordBtn listener:", e); }
-        } else { console.warn("[EventHandlers - attachGlobalControlEvents] Record button not found."); }
+        } else { console.warn("[EventHandlers - attachGlobalControlEvents] Record button (#recordBtnGlobal) not found."); }
 
         if (tempoInputEl) {
             try {
@@ -168,12 +168,12 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                     }
                 });
             } catch (e) { console.error("[EventHandlers] Error attaching tempoInputEl listener:", e); }
-        } else { console.warn("[EventHandlers - attachGlobalControlEvents] Tempo input not found."); }
+        } else { console.warn("[EventHandlers - attachGlobalControlEvents] Tempo input (#tempoGlobalInput) not found."); }
 
-        if (midiSelect) {
+        if (midiSelect) { // This is window.midiInputSelectGlobal from ui.js's assignment
             try {
-                midiSelect.onchange = () => {
-                    console.log("[EventHandlers - attachGlobalControlEvents] midiInputSelectGlobal changed via Global Controls Window.");
+                midiSelect.onchange = () => { // Using onchange directly here
+                    console.log("[EventHandlers - attachGlobalControlEvents] midiInputSelectGlobal (element from GCW) changed.");
                     const oldMidiName = window.activeMIDIInput ? window.activeMIDIInput.name : "No MIDI Input";
                     const newMidiId = midiSelect.value;
                     const newMidiDevice = window.midiAccess && newMidiId ? window.midiAccess.inputs.get(newMidiId) : null;
@@ -184,26 +184,26 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                     selectMIDIInput();
                 };
             } catch (e) { console.error("[EventHandlers] Error attaching midiSelect listener:", e); }
-        } else { console.warn("[EventHandlers - attachGlobalControlEvents] MIDI select dropdown not found."); }
+        } else { console.warn("[EventHandlers - attachGlobalControlEvents] MIDI select dropdown (#midiInputSelectGlobal) not found."); }
 
-        console.log("[EventHandlers - attachGlobalControlEvents] All event listeners attempted.");
+        console.log("[EventHandlers - attachGlobalControlEvents] All event listeners in attachGlobalControlEvents attempted.");
 
     } catch (error) {
-        console.error("[EventHandlers - attachGlobalControlEvents] Outer error attaching events:", error);
-        showNotification("Critical error setting up global controls. Some buttons may not work.", 4000);
+        console.error("[EventHandlers - attachGlobalControlEvents] UNCAUGHT ERROR during event attachment:", error);
+        showNotification("Critical error setting up global control events. Functionality will be impaired.", 5000);
     }
 }
 
-export async function setupMIDI() { /* ... (no changes) ... */ }
-function populateMIDIInputs() { /* ... (no changes) ... */ }
-export function selectMIDIInput(skipUndoCaptureAndNotification = false) { /* ... (no changes) ... */ }
-export async function handleMIDIMessage(message) { /* ... (no changes) ... */ }
-async function handleComputerKeyDown(e) { /* ... (no changes) ... */ }
-function handleComputerKeyUp(e) { /* ... (no changes) ... */ }
-export function handleTrackMute(trackId) { /* ... (no changes) ... */ }
-export function handleTrackSolo(trackId) { /* ... (no changes) ... */ }
-export function handleTrackArm(trackId) { /* ... (no changes) ... */ }
-export function handleRemoveTrack(trackId) { /* ... (no changes) ... */ }
-export function handleOpenTrackInspector(trackId) { /* ... (no changes) ... */ }
-export function handleOpenEffectsRack(trackId) { /* ... (no changes) ... */ }
-export function handleOpenSequencer(trackId) { /* ... (no changes) ... */ }
+export async function setupMIDI() { /* ... (no changes from your uploaded version) ... */ }
+function populateMIDIInputs() { /* ... (no changes from your uploaded version) ... */ }
+export function selectMIDIInput(skipUndoCaptureAndNotification = false) { /* ... (no changes from your uploaded version) ... */ }
+export async function handleMIDIMessage(message) { /* ... (no changes from your uploaded version) ... */ }
+async function handleComputerKeyDown(e) { /* ... (no changes from your uploaded version) ... */ }
+function handleComputerKeyUp(e) { /* ... (no changes from your uploaded version) ... */ }
+export function handleTrackMute(trackId) { /* ... (no changes from your uploaded version) ... */ }
+export function handleTrackSolo(trackId) { /* ... (no changes from your uploaded version) ... */ }
+export function handleTrackArm(trackId) { /* ... (no changes from your uploaded version) ... */ }
+export function handleRemoveTrack(trackId) { /* ... (no changes from your uploaded version) ... */ }
+export function handleOpenTrackInspector(trackId) { /* ... (no changes from your uploaded version) ... */ }
+export function handleOpenEffectsRack(trackId) { /* ... (no changes from your uploaded version) ... */ }
+export function handleOpenSequencer(trackId) { /* ... (no changes from your uploaded version) ... */ }
