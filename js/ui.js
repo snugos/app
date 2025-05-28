@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Poly/Mono Fix Attempt v6 / Duplicate Export Fix v2');
+console.log('[ui.js] TOP OF FILE PARSING - Poly/Mono Fix Attempt v6 / Duplicate Export Fix v2 / Debug Log Update v1');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -7,7 +7,7 @@ import * as Constants from './constants.js';
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
-} from './eventHandlers.js';
+} from './eventHandlers.js'; // Assuming these are correctly exported from eventHandlers.js
 import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.js';
 import { getMimeTypeFromFilename } from './audio.js';
 
@@ -150,7 +150,6 @@ function buildSynthEngineControls(track, container, engineType) {
         }
         initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
         
-        // Special case for signal values like filter.frequency.value
         if (def.path.endsWith('.value') && track.instrument && track.instrument.get) {
             try {
                 const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
@@ -168,7 +167,6 @@ function buildSynthEngineControls(track, container, engineType) {
                 trackRef: track,
                 onValueChange: (val, oldVal, fromInteraction) => {
                     track.setSynthParam(def.path, val);
-                    // No undo capture here, it's done by the knob itself on interaction end
                 }
             });
             placeholder.replaceWith(knob.element);
@@ -206,15 +204,11 @@ function buildSynthEngineControls(track, container, engineType) {
 
 // --- Sampler Inspector Specifics ---
 function buildSamplerSpecificInspectorDOM(track) {
-    // Waveform display, slice editor, sample pads
     let html = `<div class="sampler-controls p-1 space-y-2">`;
-    // Drop Zone
     html += `<div id="dropZoneContainer-${track.id}-sampler" class="mb-2"></div>`;
-    // Waveform Canvas
     html += `<div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
                 <canvas id="waveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
              </div>`;
-    // Slice Editor Controls
     html += `<div class="slice-editor-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
                 <h4 class="text-xs font-semibold dark:text-slate-200">Slice Editor (Selected: <span id="selectedSliceInfo-${track.id}">1</span>)</h4>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1 items-center text-xs">
@@ -232,17 +226,15 @@ function buildSamplerSpecificInspectorDOM(track) {
                 </div>
                 <button id="applySliceEditsBtn-${track.id}" class="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Apply Edits to Slice</button>
              </div>`;
-    // Sample Pads Area
     html += `<div id="samplePadsContainer-${track.id}" class="grid grid-cols-4 gap-1 mt-2"></div>`;
     html += `<div><button id="slicerPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>`;
-    html += `</div>`; // End sampler-controls
+    html += `</div>`;
     return html;
 }
 
 // --- Drum Sampler Inspector Specifics ---
 function buildDrumSamplerSpecificInspectorDOM(track) {
     let html = `<div class="drum-sampler-controls p-1 space-y-2">`;
-    // Pad Controls Area (for selected pad)
     html += `<div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
                 <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
                 <div id="drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}" class="mb-1 text-xs"></div>
@@ -258,22 +250,18 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
                     <div id="drumPadEnvRelease-${track.id}-placeholder"></div>
                 </div>
              </div>`;
-    // Drum Pads Grid
     html += `<div id="drumPadsGridContainer-${track.id}" class="grid grid-cols-4 gap-1 mt-2"></div>`;
-    html += `</div>`; // End drum-sampler-controls
+    html += `</div>`;
     return html;
 }
 
 // --- Instrument Sampler Inspector Specifics ---
 function buildInstrumentSamplerSpecificInspectorDOM(track) {
     let html = `<div class="instrument-sampler-controls p-1 space-y-2">`;
-    // Drop Zone
     html += `<div id="dropZoneContainer-${track.id}-instrumentsampler" class="mb-2"></div>`;
-    // Waveform Canvas
     html += `<div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
                <canvas id="instrumentWaveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
              </div>`;
-    // Controls: Root Note, Loop, Envelope
     html += `<div class="instrument-params-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1 text-xs">
                 <div class="grid grid-cols-2 gap-2 items-center">
                     <div>
@@ -302,7 +290,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
                 </div>
                 <div><button id="instrumentPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>
             </div>`;
-    html += `</div>`; // End instrument-sampler-controls
+    html += `</div>`;
     return html;
 }
 
@@ -351,15 +339,15 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
     const windowId = `trackInspector-${trackId}`;
-    if (window.openWindows[windowId] && !savedState) { // If opening normally and window exists
-        window.openWindows[windowId].restore(); // Focus/restore
+    if (window.openWindows[windowId] && !savedState) { 
+        window.openWindows[windowId].restore(); 
         return window.openWindows[windowId];
     }
     
     const contentDOM = buildTrackInspectorContentDOM(track);
     const inspectorOptions = {
         width: 320, height: 450, minWidth: 280, minHeight: 350,
-        initialContentKey: windowId, // For state restoration
+        initialContentKey: windowId, 
         onCloseCallback: () => { if (track) track.inspectorWindow = null; }
     };
 
@@ -380,7 +368,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
         initializeTypeSpecificInspectorControls(track, inspectorWindow.element);
     } else {
         console.error(`[UI] Failed to create inspector window for track ${trackId}.`);
-        if (track) track.inspectorWindow = null; // Ensure it's nulled if creation failed
+        if (track) track.inspectorWindow = null; 
         return null;
     }
     return inspectorWindow;
@@ -398,10 +386,10 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     if (volumeKnobPlaceholder) {
         const volumeKnob = createKnob({
             label: 'Volume', min: 0, max: 1.2, step: 0.01,
-            initialValue: track.previousVolumeBeforeMute, // Use the actual gain value
+            initialValue: track.previousVolumeBeforeMute, 
             decimals: 2, trackRef: track,
             onValueChange: (val, oldVal, fromInteraction) => {
-                track.setVolume(val, fromInteraction); // fromInteraction will be true on mouseup/touchend
+                track.setVolume(val, fromInteraction); 
             }
         });
         volumeKnobPlaceholder.replaceWith(volumeKnob.element);
@@ -409,7 +397,6 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     }
 }
 
-// initializeTypeSpecificInspectorControls is defined below and exported once at the end.
 function initializeTypeSpecificInspectorControls(track, winEl) {
     if (track.type === 'Synth') initializeSynthSpecificControls(track, winEl);
     else if (track.type === 'Sampler') initializeSamplerSpecificControls(track, winEl);
@@ -421,7 +408,6 @@ function initializeSynthSpecificControls(track, winEl) {
     const controlsContainer = winEl.querySelector(`#synthEngineControls-${track.id}`);
     if (controlsContainer) {
         buildSynthEngineControls(track, controlsContainer, track.synthEngineType || 'MonoSynth');
-        // Refresh visuals after a short delay to ensure DOM is fully ready
         setTimeout(() => {
             const definitions = synthEngineControlDefinitions[track.synthEngineType || 'MonoSynth'] || [];
             definitions.forEach(def => {
@@ -511,13 +497,13 @@ function initializeSamplerSpecificControls(track, winEl) {
             polyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`;
             polyToggleBtn.classList.toggle('active', track.slicerIsPolyphonic);
             if (!track.slicerIsPolyphonic) {
-                track.setupSlicerMonoNodes(); // This also handles player buffer if audioBuffer is loaded
+                track.setupSlicerMonoNodes(); 
             } else {
                 track.disposeSlicerMonoNodes();
             }
             if (track && typeof track.rebuildEffectChain === 'function') {
                 console.log(`[UI - SlicerPolyToggle] Rebuilding effect chain for track ${track.id} after polyphony change.`);
-                track.rebuildEffectChain(); // Ensure effects chain is rebuilt correctly
+                track.rebuildEffectChain(); 
             }
             showNotification(`${track.name} slicer mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`, 2000);
         });
@@ -525,8 +511,8 @@ function initializeSamplerSpecificControls(track, winEl) {
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
-    if (typeof renderDrumSamplerPads === 'function') renderDrumSamplerPads(track); // Renders the grid of pads
-    if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); // Renders controls for the currently selected pad
+    if (typeof renderDrumSamplerPads === 'function') renderDrumSamplerPads(track); 
+    if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); 
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
@@ -551,7 +537,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 
     const rootNoteSelect = winEl.querySelector(`#instrumentRootNote-${track.id}`);
     if (rootNoteSelect) {
-        Constants.synthPitches.slice().reverse().forEach(pitch => { // Use a wider range, or a specific common range
+        Constants.synthPitches.slice().reverse().forEach(pitch => { 
             const option = document.createElement('option');
             option.value = pitch;
             option.textContent = pitch;
@@ -615,8 +601,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
             track.instrumentSamplerIsPolyphonic = !track.instrumentSamplerIsPolyphonic;
             polyToggleBtnInst.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`;
             polyToggleBtnInst.classList.toggle('active', track.instrumentSamplerIsPolyphonic);
-            // Re-setup sampler or adjust behavior if needed (e.g., releaseAll on note for mono)
-            if (track.toneSampler) { // If sampler exists, might need to reconfigure or just note the mode change
+            if (track.toneSampler) { 
                 console.log(`[UI] Instrument Sampler for ${track.name} polyphony set to: ${track.instrumentSamplerIsPolyphonic}`);
             }
             showNotification(`${track.name} instrument sampler mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`, 2000);
@@ -643,12 +628,12 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 
  function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     if (!listDiv) return;
-    listDiv.innerHTML = ''; // Clear previous list
+    listDiv.innerHTML = ''; 
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : window.masterEffectsChain;
 
     if (!effectsArray || effectsArray.length === 0) {
         listDiv.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
-        if (controlsContainer) controlsContainer.innerHTML = ''; // Clear controls if no effects
+        if (controlsContainer) controlsContainer.innerHTML = ''; 
         return;
     }
 
@@ -668,7 +653,6 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
         `;
         item.querySelector('.effect-name').addEventListener('click', () => {
             renderEffectControls(owner, ownerType, effect.id, controlsContainer);
-            // Highlight selected effect
             listDiv.querySelectorAll('.effect-item').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
             item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
         });
@@ -676,20 +660,20 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.reorderEffect(effect.id, index - 1);
             else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effect.id, index - 1);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render
+            renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
         });
         item.querySelector('.down-btn').addEventListener('click', () => {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.reorderEffect(effect.id, index + 1);
             else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effect.id, index + 1);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render
+            renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
         });
         item.querySelector('.remove-btn').addEventListener('click', () => {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Remove ${effect.type} from ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.removeEffect(effect.id);
             else if (typeof window.removeMasterEffect === 'function') window.removeMasterEffect(effect.id);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render
-            if (controlsContainer) controlsContainer.innerHTML = ''; // Clear controls
+            renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
+            if (controlsContainer) controlsContainer.innerHTML = ''; 
         });
         listDiv.appendChild(item);
     });
@@ -697,7 +681,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
-    controlsContainer.innerHTML = ''; // Clear previous controls
+    controlsContainer.innerHTML = ''; 
 
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : window.masterEffectsChain;
     const effectWrapper = effectsArray.find(e => e.id === effectId);
@@ -726,17 +710,14 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     } else {
         effectDef.params.forEach(paramDef => {
             const controlWrapper = document.createElement('div');
-            // controlWrapper.className = 'mb-1'; // Spacing for each control
-
             let currentValue;
-            // Get current value from effectWrapper.params, drilling down if path is nested
             const pathKeys = paramDef.key.split('.');
             let tempVal = effectWrapper.params;
             for (const key of pathKeys) {
                 if (tempVal && typeof tempVal === 'object' && key in tempVal) {
                     tempVal = tempVal[key];
                 } else {
-                    tempVal = undefined; // Path not found
+                    tempVal = undefined; 
                     break;
                 }
             }
@@ -749,11 +730,10 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     min: paramDef.min, max: paramDef.max, step: paramDef.step,
                     initialValue: currentValue,
                     decimals: paramDef.decimals, displaySuffix: paramDef.displaySuffix || '',
-                    trackRef: (ownerType === 'track' ? owner : null), // Pass track ref if applicable
+                    trackRef: (ownerType === 'track' ? owner : null), 
                     onValueChange: (val, oldVal, fromInteraction) => {
                         if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, val);
                         else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, val);
-                        // Undo capture is handled by the knob itself on interaction end
                     }
                 });
                 controlWrapper.appendChild(knob.element);
@@ -772,7 +752,6 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                 select.value = currentValue;
                 select.addEventListener('change', (e) => {
                     const newValue = e.target.value;
-                    // Convert to number if original default was a number (e.g. Filter rolloff)
                     const finalValue = (typeof paramDef.defaultValue === 'number' && !isNaN(parseFloat(newValue))) ? parseFloat(newValue) : newValue;
 
                     if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Change ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
@@ -782,7 +761,6 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                 controlWrapper.appendChild(label);
                 controlWrapper.appendChild(select);
             } else if (paramDef.type === 'toggle') {
-                // Basic toggle button for boolean params
                 const button = document.createElement('button');
                 button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${currentValue ? 'bg-blue-500 text-white dark:bg-blue-600' : 'bg-gray-200 dark:bg-slate-600'}`;
                 button.textContent = `${paramDef.label}: ${currentValue ? 'ON' : 'OFF'}`;
@@ -791,7 +769,6 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
                     if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue);
                     else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, newValue);
-                    // Re-render controls to update button state (or update button directly)
                     renderEffectControls(owner, ownerType, effectId, controlsContainer);
                 });
                 controlWrapper.appendChild(button);
@@ -829,15 +806,15 @@ function showAddEffectModal(owner, ownerType) {
                         renderEffectsList(owner, ownerType, listDiv, controlsContainer);
                     }
                 } else if (ownerType === 'master' && typeof window.addMasterEffect === 'function') {
-                    window.addMasterEffect(effectType); // This should handle adding to window.masterEffectsChain and rebuilding
+                    window.addMasterEffect(effectType); 
                      const masterRackWindow = window.openWindows['masterEffectsRack'];
                      if (masterRackWindow && masterRackWindow.element) {
                         const listDiv = masterRackWindow.element.querySelector(`#effectsList-master`);
                         const controlsContainer = masterRackWindow.element.querySelector(`#effectControlsContainer-master`);
-                        renderEffectsList(null, 'master', listDiv, controlsContainer); // Pass null for owner when master
+                        renderEffectsList(null, 'master', listDiv, controlsContainer); 
                      }
                 }
-                modal.overlay.remove(); // Close modal
+                modal.overlay.remove(); 
             });
         });
     }
@@ -887,7 +864,7 @@ function showAddEffectModal(owner, ownerType) {
         return window.openWindows[windowId];
     }
 
-    const contentDOM = buildModularEffectsRackDOM(null, 'master'); // Pass null for owner
+    const contentDOM = buildModularEffectsRackDOM(null, 'master'); 
     const rackOptions = {
         width: 350, height: 400, minWidth: 300, minHeight: 250,
         initialContentKey: windowId,
@@ -909,27 +886,23 @@ function showAddEffectModal(owner, ownerType) {
     return rackWindow;
 }
 
-// MODIFIED: Removed 'export' from function definition, kept in export block at the end
 function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
-    console.log(`[UI] Attempting to open/focus Global Controls Window. SavedState:`, savedState);
+    console.log(`[UI - openGlobalControlsWindow] Attempting to open/focus. SavedState:`, savedState);
 
-    // 1. Check if window already exists
     if (window.openWindows[windowId]) {
         const existingWindow = window.openWindows[windowId];
         if (!existingWindow.isMinimized) {
-            console.log(`[UI] Global Controls window '${windowId}' already open and not minimized. Focusing.`);
+            console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' already open and not minimized. Focusing.`);
             existingWindow.focus();
         } else {
-            console.log(`[UI] Global Controls window '${windowId}' already open but minimized. Restoring.`);
-            existingWindow.restore(); // This also focuses
+            console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' already open but minimized. Restoring.`);
+            existingWindow.restore();
         }
-        return existingWindow; // Return existing instance
+        return existingWindow;
     }
 
-    console.log(`[UI] Global Controls window '${windowId}' not found or was closed. Creating new instance.`);
-
-    // 2. Define content HTML for the Global Controls window
+    console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' not found or was closed. Creating new instance.`);
     const contentHTML = `
         <div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300">
             <div class="grid grid-cols-2 gap-2 items-center">
@@ -959,36 +932,29 @@ function openGlobalControlsWindow(savedState = null) {
         </div>
     `;
 
-    // 3. Define options for the SnugWindow
     const options = {
-        width: 280,
-        height: 290, 
-        minWidth: 250,
-        minHeight: 270,
-        closable: true, 
-        minimizable: true,
-        resizable: true,
+        width: 280, height: 290, minWidth: 250, minHeight: 270,
+        closable: true, minimizable: true, resizable: true,
         initialContentKey: windowId 
     };
 
     if (savedState && savedState.id === windowId) {
-        console.log(`[UI] Applying saved state to Global Controls window:`, savedState);
+        console.log(`[UI - openGlobalControlsWindow] Applying saved state:`, savedState);
         options.x = parseInt(savedState.left, 10);
         options.y = parseInt(savedState.top, 10);
         options.width = parseInt(savedState.width, 10);
         options.height = parseInt(savedState.height, 10);
         options.zIndex = savedState.zIndex; 
-        if (savedState.isMinimized) {
-            options.isMinimized = true;
-        }
+        if (savedState.isMinimized) options.isMinimized = true;
     } else {
-      console.log(`[UI] No valid saved state for Global Controls window, using defaults.`);
+      console.log(`[UI - openGlobalControlsWindow] No valid saved state, using defaults.`);
     }
 
     const newWindow = window.createWindow(windowId, 'Global Controls', contentHTML, options);
 
     if (newWindow && newWindow.element) {
-        console.log('[UI] Global Controls SnugWindow created successfully. Populating global element references for it.');
+        console.log('[UI - openGlobalControlsWindow] SnugWindow created successfully. Element exists.');
+
         window.playBtn = newWindow.element.querySelector('#playBtnGlobal');
         window.recordBtn = newWindow.element.querySelector('#recordBtnGlobal');
         window.tempoInput = newWindow.element.querySelector('#tempoGlobalInput');
@@ -996,15 +962,20 @@ function openGlobalControlsWindow(savedState = null) {
         window.midiInputSelectGlobal = newWindow.element.querySelector('#midiInputSelectGlobal');
         window.midiIndicatorGlobalEl = newWindow.element.querySelector('#midiIndicatorGlobal');
         window.keyboardIndicatorGlobalEl = newWindow.element.querySelector('#keyboardIndicatorGlobal');
-
-        if (!window.playBtn || !window.recordBtn || !window.tempoInput || !window.masterMeterBar || !window.midiInputSelectGlobal || !window.midiIndicatorGlobalEl || !window.keyboardIndicatorGlobalEl) {
-            console.error('[UI] CRITICAL: One or more essential controls NOT FOUND in Global Controls window HTML after creation. Check IDs in contentHTML.');
-        }
         
-        console.log(`[UI] Returning new Global Controls SnugWindow instance:`, newWindow);
+        console.log('[UI - openGlobalControlsWindow] Global element references populated.');
+        console.log('[UI - openGlobalControlsWindow] Type of window.attachGlobalControlEvents JUST BEFORE CHECK:', typeof window.attachGlobalControlEvents); // VERY IMPORTANT LOG
+
+        if (typeof window.attachGlobalControlEvents === 'function') {
+            console.log('[UI - openGlobalControlsWindow] ATTACHING global control events to element:', newWindow.element);
+            window.attachGlobalControlEvents(newWindow.element);
+        } else {
+            console.error('[UI - openGlobalControlsWindow] window.attachGlobalControlEvents IS NOT A FUNCTION! Value:', window.attachGlobalControlEvents);
+        }
+        console.log('[UI - openGlobalControlsWindow] Finished with attachGlobalControlEvents block.');
         return newWindow;
     } else {
-        console.error('[UI] CRITICAL: window.createWindow failed to return a valid instance or element for Global Controls.');
+        console.error('[UI - openGlobalControlsWindow] CRITICAL: window.createWindow failed to return a valid instance or element for Global Controls.');
         return null;
     }
 }
@@ -1351,19 +1322,12 @@ function openGlobalControlsWindow(savedState = null) {
             }
             let barDividerClass = (j % stepsPerBar === 0 && j > 0) ? 'bar-divider' : '';
             let beatDividerClass = (j % (stepsPerBar/4) === 0 && j > 0 && j % stepsPerBar !== 0) ? 'beat-divider' : ''; 
-
-            // **** START Change for 4-step coloring ****
             let beatBlockClass = '';
-            // This colors blocks of 4 steps within each bar, alternating.
             if (Math.floor((j % stepsPerBar) / 4) % 2 === 0) {
-                // Use Tailwind classes for alternating backgrounds
-                // Example: one shade for steps 0-3, 8-11 and another for 4-7, 12-15 within a 16-step bar
-                beatBlockClass = 'bg-white dark:bg-slate-800'; // "Darker" block
+                beatBlockClass = 'bg-white dark:bg-slate-800'; 
             } else {
-                beatBlockClass = 'bg-gray-100 dark:bg-slate-750'; // "Lighter" block
+                beatBlockClass = 'bg-gray-100 dark:bg-slate-750'; 
             }
-            // **** END Change for 4-step coloring ****
-
             html += `<div class="sequencer-step-cell w-[18px] h-[18px] border border-gray-300 dark:border-slate-600 ${activeClass} ${barDividerClass} ${beatDividerClass} ${beatBlockClass}"
                          data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}"></div>`;
         }
@@ -1467,7 +1431,7 @@ function openGlobalControlsWindow(savedState = null) {
     if (!inspector || track.type !== 'Sampler') return;
     const padsContainer = inspector.querySelector(`#samplePadsContainer-${track.id}`);
     if (!padsContainer) return;
-    padsContainer.innerHTML = ''; // Clear
+    padsContainer.innerHTML = ''; 
 
     track.slices.forEach((slice, index) => {
         const pad = document.createElement('button');
@@ -1533,9 +1497,9 @@ function openGlobalControlsWindow(savedState = null) {
         if (track && track.waveformCanvasCtx) { 
             const canvas = track.waveformCanvasCtx.canvas;
             track.waveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#334155' : '#e0e0e0'; // Dark/Light BG
+             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#334155' : '#e0e0e0'; 
              track.waveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0'; // Dark/Light Text
+             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0'; 
              track.waveformCanvasCtx.textAlign = 'center';
              track.waveformCanvasCtx.fillText('No audio loaded or processed', canvas.width / 2, canvas.height / 2);
         }
@@ -1548,10 +1512,10 @@ function openGlobalControlsWindow(savedState = null) {
     const step = Math.ceil(data.length / canvas.width);
     const amp = canvas.height / 2;
 
-    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0'; // Dark/Light Waveform BG
+    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6'; // Dark/Light Waveform Line
+    ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6'; 
 
     ctx.beginPath();
     ctx.moveTo(0, amp);
