@@ -303,7 +303,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         console.log("[State - reconstructDAW] Ensuring audio context and master bus are initialized before track creation...");
         await audioInitAudioContextAndMasterMeter(true); // Force initialization
         console.log("[State - reconstructDAW] Master bus input after init:", window.masterEffectsBusInput);
-        // Assuming masterGainNode is internal to audio.js or globally accessible as window.masterGainNode for this log
         console.log("[State - reconstructDAW] Master gain node after init:", (typeof window.masterGainNode !== 'undefined' ? window.masterGainNode : " (masterGainNode not global)")); 
     } else {
         console.error("[State - reconstructDAW] audioInitAudioContextAndMasterMeter (from audio.js) is not defined!");
@@ -337,13 +336,11 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     const gs = projectData.globalSettings;
     if (gs) {
         Tone.Transport.bpm.value = gs.tempo || 120;
-        // Access masterGainNode via a getter if it's not global, or ensure it's set up
-        // For now, assuming it's accessible or audio.js handles its own state
         if (window.masterGainNode && window.masterGainNode.gain && typeof window.masterGainNode.gain.value === 'number') {
             window.masterGainNode.gain.value = gs.masterVolume !== undefined ? gs.masterVolume : Tone.dbToGain(0);
              console.log(`[State - reconstructDAW] Set masterGainNode volume to: ${window.masterGainNode.gain.value}`);
         } else if (Tone.getDestination()?.volume) { 
-            Tone.getDestination().volume.value = gs.masterVolume !== undefined ? gs.masterVolume : Tone.dbToGain(0); // Fallback
+            Tone.getDestination().volume.value = gs.masterVolume !== undefined ? gs.masterVolume : Tone.dbToGain(0); 
             console.warn(`[State - reconstructDAW] masterGainNode not available or invalid, set Tone.Destination().volume to: ${Tone.getDestination().volume.value}`);
         }
 
@@ -351,7 +348,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         window.highestZIndex = gs.highestZIndex || 100;
     }
 
-    // Reconstruct Master Effects AFTER master bus is ensured to be stable
     if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
         console.log("[State - reconstructDAW] Reconstructing master effects:", projectData.masterEffects.length);
         projectData.masterEffects.forEach(effectData => {
@@ -360,16 +356,13 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                  if(addedEffectId){
                     const addedEffect = window.masterEffectsChain.find(e => e.id === addedEffectId);
                     if(addedEffect && effectData.params) { 
-                        // Deep copy params to avoid modifying original projectData if it's reused
                         addedEffect.params = JSON.parse(JSON.stringify(effectData.params));
                         
                         if(addedEffect.toneNode && !addedEffect.toneNode.disposed) {
                             try {
-                                // Attempt to set all params at once if the effect supports it
                                 if (typeof addedEffect.toneNode.set === 'function') {
                                     addedEffect.toneNode.set(addedEffect.params);
                                 } else {
-                                    // Fallback: Apply each param individually
                                     for (const paramKey in addedEffect.params) {
                                         if (Object.hasOwnProperty.call(addedEffect.params, paramKey)) {
                                             const value = addedEffect.params[paramKey];
@@ -383,14 +376,12 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
                                             if (currentParamObj && typeof currentParamObj[keys[keys.length -1]] !== 'undefined') {
                                                 if (currentParamObj[keys[keys.length -1]] && typeof currentParamObj[keys[keys.length -1]].value !== 'undefined') {
-                                                    // This is a Tone.Signal or Tone.Param
                                                     currentParamObj[keys[keys.length -1]].value = value;
                                                 } else {
-                                                    // This is a direct property
                                                     currentParamObj[keys[keys.length -1]] = value;
                                                 }
                                             } else {
-                                                 console.warn(`[State - reconstructDAW] Could not set nested param ${paramKey} on master effect ${effectData.type} as path was invalid.`);
+                                                 console.warn(`[State - reconstructDAW] Could not set nested param ${paramKey} on master effect ${effectData.type}`);
                                             }
                                         }
                                     }
@@ -406,9 +397,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                  }
             } 
         });
-        // audioAddMasterEffect calls rebuildMasterEffectChain internally.
-        // An explicit call here ensures the chain is correct after ALL master effects are loaded and params set.
-        if (typeof audioRebuildMasterEffectChain === 'function') {
+        if (window.masterEffectsChain.length > 0 && typeof audioRebuildMasterEffectChain === 'function') {
              console.log("[State - reconstructDAW] Explicitly rebuilding master effect chain after loading all master effects and their params.");
              audioRebuildMasterEffectChain();
         }
@@ -429,7 +418,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
     const finalResourcePromises = tracks.map(track => {
         if (typeof track.fullyInitializeAudioResources === 'function') {
-            return track.fullyInitializeAudioResources(); // This will also call track.rebuildEffectChain()
+            return track.fullyInitializeAudioResources();
         }
         return Promise.resolve();
     });
@@ -440,9 +429,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         console.error("[State - reconstructDAW] Error finalizing track audio resources:", error);
     }
 
-    // After tracks are fully initialized (including their own effect chains),
-    // one final rebuild of the master chain can ensure everything is correctly routed.
-    // This might be redundant if track.rebuildEffectChain already correctly connects to the stable master bus.
     if (typeof audioRebuildMasterEffectChain === 'function') {
         console.log("[State - reconstructDAW] Final rebuild of master effect chain after all tracks initialized.");
         audioRebuildMasterEffectChain();
@@ -455,9 +441,6 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         console.log(`[State - reconstructDAW] Restored global soloId: ${soloedTrackId}, armedId: ${armedTrackId}`);
         tracks.forEach(t => {
             t.isSoloed = (t.id === soloedTrackId);
-            // applyMuteState and applySoloState are called within fullyInitializeAudioResources or initializeAudioNodes
-            // if they correctly use the global soloed/muted state.
-            // However, an explicit call here ensures the UI reflects the loaded state.
             t.applyMuteState(); 
             t.applySoloState(); 
         });
@@ -597,10 +580,9 @@ export async function exportToWav() {
             }
         }
 
-
         if (Tone.Transport.state === 'started') {
             Tone.Transport.stop();
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 200)); 
         }
         Tone.Transport.position = 0;
         let maxDuration = 0;
@@ -611,21 +593,22 @@ export async function exportToWav() {
                 if (trackDuration > maxDuration) maxDuration = trackDuration;
             }
         });
-        if (maxDuration === 0) maxDuration = 5;
-        maxDuration += 1;
+        if (maxDuration === 0) maxDuration = 5; 
+        maxDuration += 1; // Add a little buffer
 
 
         const recorder = new Tone.Recorder();
         const recordSource = (window.masterGainNode && !window.masterGainNode.disposed) ? window.masterGainNode : Tone.getDestination(); 
         recordSource.connect(recorder);
         
+        console.log(`[State - exportToWav] Starting recording for ${maxDuration.toFixed(1)}s`);
         recorder.start();
         showNotification(`Recording for export (${maxDuration.toFixed(1)}s)...`, Math.max(3000, maxDuration * 1000 + 1000));
 
         tracks.forEach(track => {
             if (track.sequence) {
                 track.sequence.start(0);
-                if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0;
+                // Removed: if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0;
             }
         });
         Tone.Transport.start("+0.1", 0);
@@ -636,13 +619,18 @@ export async function exportToWav() {
         tracks.forEach(track => {
             if (track.sequence) {
                 track.sequence.stop(0);
-                 if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0;
             }
         });
+        console.log("[State - exportToWav] Stopped transport and sequences.");
 
         const recording = await recorder.stop();
+        console.log("[State - exportToWav] Recorder stopped.");
         recorder.dispose();
-        recordSource.disconnect(recorder);
+        
+        // It's good practice to disconnect after use, though dispose usually handles this.
+        if (recordSource.connected.includes(recorder)) { // Check if connected before trying to disconnect
+             try { recordSource.disconnect(recorder); } catch (e) { console.warn("Error disconnecting recorder from source", e); }
+        }
 
 
         const url = URL.createObjectURL(recording);
@@ -663,3 +651,4 @@ export async function exportToWav() {
 }
 
 console.log("[State.js] Parsed and exports should be available.");
+
