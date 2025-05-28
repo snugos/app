@@ -24,13 +24,13 @@ export function initializePrimaryEventListeners(appContext) {
         addTrack, openSoundBrowserWindow, undoLastAction, redoLastAction,
         saveProject, loadProject, exportToWav,
         openGlobalControlsWindow, openMixerWindow,
-        openMasterEffectsRackWindow, // Make sure this is destructured
+        openMasterEffectsRackWindow,
         handleProjectFileLoad,
         triggerCustomBackgroundUpload,
         removeCustomDesktopBackground
     } = appContext;
 
-    try { // Added try-catch for robustness
+    try {
         const startButton = document.getElementById('startButton');
         const startMenu = document.getElementById('startMenu');
         startButton?.addEventListener('click', (e) => {
@@ -73,17 +73,17 @@ export function initializePrimaryEventListeners(appContext) {
         document.getElementById('menuOpenMixer')?.addEventListener('click', () => { if(typeof openMixerWindow === 'function') openMixerWindow(); else console.error("openMixerWindow is not defined"); startMenu?.classList.add('hidden'); });
 
         document.getElementById('menuOpenMasterEffects')?.addEventListener('click', () => {
-            console.log("[EventHandlers] 'Master Effects Rack' menu item clicked."); // DEBUG
+            console.log("[EventHandlers] 'Master Effects Rack' menu item clicked.");
             if(typeof openMasterEffectsRackWindow === 'function') {
-                console.log("[EventHandlers] openMasterEffectsRackWindow IS a function. Calling it..."); // DEBUG
+                console.log("[EventHandlers] openMasterEffectsRackWindow IS a function. Calling it...");
                 openMasterEffectsRackWindow();
             } else {
-                console.error("[EventHandlers] openMasterEffectsRackWindow is NOT defined or not a function in appContext!"); // DEBUG
+                console.error("[EventHandlers] openMasterEffectsRackWindow is NOT defined or not a function in appContext!");
                 if (typeof window.openMasterEffectsRackWindow === 'function') {
-                    console.warn("[EventHandlers] Fallback: Found openMasterEffectsRackWindow on global window object. Calling it."); // DEBUG
+                    console.warn("[EventHandlers] Fallback: Found openMasterEffectsRackWindow on global window object. Calling it.");
                     window.openMasterEffectsRackWindow();
                 } else {
-                     console.error("[EventHandlers] Fallback: openMasterEffectsRackWindow is also NOT on global window object."); // DEBUG
+                     console.error("[EventHandlers] Fallback: openMasterEffectsRackWindow is also NOT on global window object.");
                 }
             }
             startMenu?.classList.add('hidden');
@@ -129,12 +129,20 @@ export function initializePrimaryEventListeners(appContext) {
         if (!window.transportEventsInitialized && typeof Tone !== 'undefined' && Tone.Transport) {
             Tone.Transport.on('start', () => {
                 if (window.playBtn) window.playBtn.textContent = 'Pause';
+                 // Also update global controls button if it exists
+                const globalPlayBtn = document.getElementById('playBtnGlobal');
+                if (globalPlayBtn) globalPlayBtn.textContent = 'Pause';
             });
             Tone.Transport.on('pause', () => {
                 if (window.playBtn) window.playBtn.textContent = 'Play';
+                const globalPlayBtn = document.getElementById('playBtnGlobal');
+                if (globalPlayBtn) globalPlayBtn.textContent = 'Play';
+
                 if (isTrackRecording()) {
                     setIsRecording(false);
                     if(window.recordBtn) { window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording'); }
+                    const globalRecordBtn = document.getElementById('recordBtnGlobal');
+                    if (globalRecordBtn) { globalRecordBtn.textContent = 'Record'; globalRecordBtn.classList.remove('recording');}
                     showNotification("Recording stopped due to transport pause.", 2000);
                     captureStateForUndo(`Stop Recording (transport paused)`);
                     setRecordingTrackId(null);
@@ -142,10 +150,15 @@ export function initializePrimaryEventListeners(appContext) {
             });
             Tone.Transport.on('stop', () => {
                 if (window.playBtn) window.playBtn.textContent = 'Play';
+                const globalPlayBtn = document.getElementById('playBtnGlobal');
+                if (globalPlayBtn) globalPlayBtn.textContent = 'Play';
+
                 document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 if (isTrackRecording()) {
                     setIsRecording(false);
                     if(window.recordBtn) { window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording'); }
+                    const globalRecordBtn = document.getElementById('recordBtnGlobal');
+                    if (globalRecordBtn) { globalRecordBtn.textContent = 'Record'; globalRecordBtn.classList.remove('recording');}
                     showNotification("Recording stopped due to transport stop.", 2000);
                     captureStateForUndo(`Stop Recording (transport stopped)`);
                     setRecordingTrackId(null);
@@ -159,17 +172,19 @@ export function initializePrimaryEventListeners(appContext) {
     }
 }
 
+// Ensure this function is EXPORTED
 export function attachGlobalControlEvents(globalControlsWindowElement) {
-    console.log("[EventHandlers] attachGlobalControlEvents called with element:", globalControlsWindowElement); // DEBUG
+    console.log("[EventHandlers] attachGlobalControlEvents called with element:", globalControlsWindowElement);
     if (!globalControlsWindowElement) {
         console.error("[EventHandlers] attachGlobalControlEvents: globalControlsWindowElement is null. Cannot attach events.");
         return;
     }
     try {
         const playButton = globalControlsWindowElement.querySelector('#playBtnGlobal');
+        console.log("[EventHandlers] Play button query result:", playButton); // DEBUG
         if (playButton) {
             playButton.addEventListener('click', async () => {
-                console.log("[EventHandlers] Play/Pause button clicked.");
+                console.log("[EventHandlers] Play/Pause button clicked. Current Tone.Transport.state:", Tone.Transport.state);
                 try {
                     const audioReady = await window.initAudioContextAndMasterMeter(true);
                     if (!audioReady) {
@@ -183,11 +198,11 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                         Tone.Transport.position = 0;
                         document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                         Tone.Transport.start("+0.1");
-                        console.log("[EventHandlers] Tone.Transport.start() called. Current state:", Tone.Transport.state);
+                        console.log("[EventHandlers] After Tone.Transport.start() call. New state:", Tone.Transport.state);
                     } else {
                         console.log("[EventHandlers] Transport state is 'started'. Pausing transport.");
                         Tone.Transport.pause();
-                        console.log("[EventHandlers] Tone.Transport.pause() called. Current state:", Tone.Transport.state);
+                        console.log("[EventHandlers] After Tone.Transport.pause() call. New state:", Tone.Transport.state);
                     }
                 } catch (error) {
                     console.error("[EventHandlers] Error in play/pause click:", error);
@@ -197,8 +212,12 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
         } else { console.warn("[EventHandlers] Play button (#playBtnGlobal) not found in global controls window."); }
 
         const recordButton = globalControlsWindowElement.querySelector('#recordBtnGlobal');
+        console.log("[EventHandlers] Record button query result:", recordButton); // DEBUG
         if (recordButton) {
             recordButton.addEventListener('click', async () => {
+                console.log("[EventHandlers] Record button clicked."); // DEBUG
+                console.log("Current armed track ID:", getArmedTrackId()); // DEBUG
+                console.log("Is currently recording (state):", isTrackRecording()); // DEBUG
                  try {
                     const audioReady = await window.initAudioContextAndMasterMeter(true);
                     if (!audioReady) {
@@ -216,7 +235,10 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                         setRecordingTrackId(currentArmedTrackId);
                         setRecordingStartTime(Tone.Transport.seconds);
 
+                        // Update both global and taskbar record buttons if they exist
                         if(window.recordBtn) {window.recordBtn.textContent = 'Stop Rec'; window.recordBtn.classList.add('recording');}
+                        recordButton.textContent = 'Stop Rec'; recordButton.classList.add('recording');
+
                         showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
                         captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
                         if (Tone.Transport.state !== 'started') {
@@ -227,6 +249,8 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                     } else {
                         setIsRecording(false);
                         if(window.recordBtn) {window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording');}
+                        recordButton.textContent = 'Record'; recordButton.classList.remove('recording');
+
                         const recordedTrack = getTrackById(getRecordingTrackId());
                         showNotification("Recording stopped.", 2000);
                         captureStateForUndo(`Stop Recording (Track: ${recordedTrack?.name || 'Unknown'})`);
@@ -236,19 +260,24 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                     console.error("[EventHandlers] Error in record button click:", error);
                     showNotification("Error during recording setup.", 3000);
                     if (window.recordBtn) { window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording');}
+                    recordButton.textContent = 'Record'; recordButton.classList.remove('recording');
                     setIsRecording(false); setRecordingTrackId(null);
                 }
             });
         } else { console.warn("[EventHandlers] Record button (#recordBtnGlobal) not found in global controls window."); }
 
         const tempoInputElement = globalControlsWindowElement.querySelector('#tempoGlobalInput');
+        console.log("[EventHandlers] Tempo input query result:", tempoInputElement); // DEBUG
         if (tempoInputElement) {
             tempoInputElement.addEventListener('change', (e) => {
+                console.log("[EventHandlers] Tempo input changed. Raw value:", e.target.value); // DEBUG
                 const newTempo = parseFloat(e.target.value);
+                console.log("[EventHandlers] Parsed newTempo:", newTempo); // DEBUG
                 const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
                 if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
                     if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
                     Tone.Transport.bpm.value = newTempo;
+                    console.log("[EventHandlers] Tone.Transport.bpm is now:", Tone.Transport.bpm.value); // DEBUG
                     if(typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
                     else if(taskbarTempoDisplay) taskbarTempoDisplay.textContent = `${newTempo.toFixed(1)} BPM`;
                 } else {
@@ -282,27 +311,26 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
 
 
 export async function setupMIDI() {
-    console.log("[EventHandlers] setupMIDI called."); // DEBUG
+    console.log("[EventHandlers] setupMIDI called.");
     if (navigator.requestMIDIAccess) {
         try {
-            console.log("[EventHandlers] Requesting MIDI access..."); // DEBUG
+            console.log("[EventHandlers] Requesting MIDI access...");
             window.midiAccess = await navigator.requestMIDIAccess();
-            console.log("[EventHandlers] MIDI Access Granted:", window.midiAccess); // DEBUG
+            console.log("[EventHandlers] MIDI Access Granted:", window.midiAccess);
             populateMIDIInputs();
-            window.midiAccess.onstatechange = populateMIDIInputs; // Listen for changes (device plug/unplug)
-            // No general "MIDI ready" notification here, as populateMIDIInputs will handle specific device selection notices
+            window.midiAccess.onstatechange = populateMIDIInputs;
         } catch (e) {
             console.error("[EventHandlers] Could not access MIDI devices.", e);
             showNotification(`Could not access MIDI: ${e.message}. Ensure permissions.`, 6000);
         }
     } else {
-        console.warn("[EventHandlers] Web MIDI API not supported in this browser."); // DEBUG
+        console.warn("[EventHandlers] Web MIDI API not supported in this browser.");
         showNotification("Web MIDI API not supported in this browser.", 3000);
     }
 }
 
 function populateMIDIInputs() {
-    console.log("[EventHandlers] populateMIDIInputs called."); // DEBUG
+    console.log("[EventHandlers] populateMIDIInputs called.");
     if (!window.midiAccess) {
         console.warn("[EventHandlers] populateMIDIInputs: window.midiAccess is null.");
         return;
@@ -313,15 +341,15 @@ function populateMIDIInputs() {
     }
 
     const previouslySelectedId = window.activeMIDIInput ? window.activeMIDIInput.id : window.midiInputSelectGlobal.value;
-    console.log(`[EventHandlers] populateMIDIInputs: Previously selected MIDI ID: ${previouslySelectedId}`); // DEBUG
-    window.midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>'; // Clear existing
+    console.log(`[EventHandlers] populateMIDIInputs: Previously selected MIDI ID: ${previouslySelectedId}`);
+    window.midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>';
 
     const inputs = window.midiAccess.inputs;
     if (inputs.size === 0) {
-        console.log("[EventHandlers] No MIDI input devices found."); // DEBUG
+        console.log("[EventHandlers] No MIDI input devices found.");
     } else {
         inputs.forEach(input => {
-            console.log(`[EventHandlers] Found MIDI Input: ID=${input.id}, Name=${input.name}, State=${input.state}, Connection=${input.connection}`); // DEBUG
+            console.log(`[EventHandlers] Found MIDI Input: ID=${input.id}, Name=${input.name}, State=${input.state}, Connection=${input.connection}`);
             const option = document.createElement('option');
             option.value = input.id;
             option.textContent = input.name;
@@ -329,47 +357,45 @@ function populateMIDIInputs() {
         });
     }
 
-    // Attempt to restore previous selection if that device is still available
     if (previouslySelectedId && window.midiAccess.inputs.get(previouslySelectedId)) {
         window.midiInputSelectGlobal.value = previouslySelectedId;
-        console.log(`[EventHandlers] Restored MIDI selection to: ${previouslySelectedId} (${window.midiAccess.inputs.get(previouslySelectedId).name})`); // DEBUG
+        console.log(`[EventHandlers] Restored MIDI selection to: ${previouslySelectedId} (${window.midiAccess.inputs.get(previouslySelectedId).name})`);
     } else {
-        window.midiInputSelectGlobal.value = ""; // Default to "No MIDI Input"
+        window.midiInputSelectGlobal.value = "";
         if (previouslySelectedId) {
-            console.log(`[EventHandlers] Previously selected MIDI ID ${previouslySelectedId} not found or no longer valid. Defaulting to 'No MIDI Input'.`); // DEBUG
+            console.log(`[EventHandlers] Previously selected MIDI ID ${previouslySelectedId} not found or no longer valid. Defaulting to 'No MIDI Input'.`);
         }
     }
-    selectMIDIInput(true); // Re-apply selection and update listeners without triggering undo/notification for this populate call
+    selectMIDIInput(true);
 }
 
 export function selectMIDIInput(skipUndoCaptureAndNotification = false) {
-    console.log(`[EventHandlers] selectMIDIInput called. skipUndoCaptureAndNotification: ${skipUndoCaptureAndNotification}`); // DEBUG
-    // Remove listener from previously active input
+    console.log(`[EventHandlers] selectMIDIInput called. skipUndoCaptureAndNotification: ${skipUndoCaptureAndNotification}`);
     if (window.activeMIDIInput) {
-        console.log(`[EventHandlers] Removing onmidimessage from old input: ${window.activeMIDIInput.name}`); // DEBUG
+        console.log(`[EventHandlers] Removing onmidimessage from old input: ${window.activeMIDIInput.name}`);
         window.activeMIDIInput.onmidimessage = null;
     }
     window.activeMIDIInput = null;
 
     const selectedId = window.midiInputSelectGlobal ? window.midiInputSelectGlobal.value : null;
-    console.log(`[EventHandlers] Selected MIDI ID in dropdown: ${selectedId}`); // DEBUG
+    console.log(`[EventHandlers] Selected MIDI ID in dropdown: ${selectedId}`);
 
     if (window.midiAccess && selectedId) {
         const inputDevice = window.midiAccess.inputs.get(selectedId);
         if (inputDevice) {
             window.activeMIDIInput = inputDevice;
-            console.log(`[EventHandlers] Setting onmidimessage for new input: ${window.activeMIDIInput.name}`); // DEBUG
+            console.log(`[EventHandlers] Setting onmidimessage for new input: ${window.activeMIDIInput.name}`);
             window.activeMIDIInput.onmidimessage = handleMIDIMessage;
             if (!skipUndoCaptureAndNotification) {
                 showNotification(`MIDI Input: ${window.activeMIDIInput.name} selected.`, 2000);
             }
         } else {
              if (!skipUndoCaptureAndNotification) showNotification("Selected MIDI input not found or unavailable.", 2000);
-             console.warn(`[EventHandlers] Selected MIDI device ID "${selectedId}" not found in available inputs.`); // DEBUG
+             console.warn(`[EventHandlers] Selected MIDI device ID "${selectedId}" not found in available inputs.`);
         }
     } else {
         if (!skipUndoCaptureAndNotification && selectedId === "") showNotification("MIDI Input deselected.", 1500);
-        console.log("[EventHandlers] No MIDI input selected or midiAccess not available."); // DEBUG
+        console.log("[EventHandlers] No MIDI input selected or midiAccess not available.");
     }
     if (window.midiIndicatorGlobalEl) window.midiIndicatorGlobalEl.classList.toggle('active', !!window.activeMIDIInput);
 }
@@ -765,4 +791,3 @@ export function handleOpenSequencer(trackId) {
         console.error("[EventHandlers] openTrackSequencerWindow function not available on window object.");
     }
 }
-
