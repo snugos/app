@@ -775,21 +775,5 @@ export function highlightPlayingStep(col, trackType, gridElement) {
 }
 // ... (at the end of ui.js)
 export {
-    openTrackEffectsRackWindow,
-    openTrackSequencerWindow,
-    openGlobalControlsWindow,
-    openTrackInspectorWindow,
-    openMixerWindow,
-    updateMixerWindow,
-    openSoundBrowserWindow,
-    renderSoundBrowserDirectory,
-    updateSoundBrowserDisplayForLibrary,
-    highlightPlayingStep,
-    drawWaveform,
-    drawInstrumentWaveform, // <<<<<<<< ADD OR UNCOMMENT THIS LINE
-    renderSamplePads,
-    updateSliceEditorUI,
-    updateDrumPadControlsUI,
-    renderDrumSamplerPads,
-    createKnob
+    drawInstrumentWaveform // <<<<<<<< ADD OR UNCOMMENT THIS LINE
 };
