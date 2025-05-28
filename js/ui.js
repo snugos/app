@@ -773,9 +773,3 @@ export function highlightPlayingStep(col, trackType, gridElement) {
     if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
     gridElement._lastPlayingCol = col;
 }
-// js/ui.js
-// ... lots of code ...
-
-export {
-    drawInstrumentWaveform // This was added in the last fix
-};
