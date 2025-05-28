@@ -773,3 +773,24 @@ export function highlightPlayingStep(col, trackType, gridElement) {
     if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
     gridElement._lastPlayingCol = col;
 }
+// ... (at the end of ui.js)
+export {
+    openTrackEffectsRackWindow,
+    openTrackSequencerWindow,
+    openGlobalControlsWindow,
+    openTrackInspectorWindow,
+    openMixerWindow,
+    updateMixerWindow,
+    openSoundBrowserWindow,
+    renderSoundBrowserDirectory,
+    updateSoundBrowserDisplayForLibrary,
+    highlightPlayingStep,
+    drawWaveform,
+    drawInstrumentWaveform, // <<<<<<<< ADD OR UNCOMMENT THIS LINE
+    renderSamplePads,
+    updateSliceEditorUI,
+    updateDrumPadControlsUI,
+    renderDrumSamplerPads,
+    createKnob,
+    openMasterEffectsRackWindow
+};
