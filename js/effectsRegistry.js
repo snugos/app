@@ -231,9 +231,6 @@ export const AVAILABLE_EFFECTS = {
         params: [
             { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -40, decimals: 0, displaySuffix: 'dB', isSignal: false }, // number (dB)
             { key: 'smoothing', label: 'Smoothing', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: false }, // number
-            // Tone.Gate also has attack and release, but they are not directly Signals.
-            // They are set in the constructor or via .set({ attack: ..., release: ... })
-            // For simplicity, we might omit them or need a custom setter in updateEffectParam if we want to control them post-instantiation.
         ]
     },
     Limiter: {
@@ -258,7 +255,6 @@ export function createEffectInstance(effectType, initialParams = {}) {
     }
 
     const paramsForInstance = {};
-    // Prepare parameters for constructor, respecting nesting from param keys
     if (definition.params) {
         definition.params.forEach(pDef => {
             const valueToUse = initialParams.hasOwnProperty(pDef.key) ? initialParams[pDef.key] : pDef.defaultValue;
@@ -274,26 +270,22 @@ export function createEffectInstance(effectType, initialParams = {}) {
             });
         });
     }
-    // Add wet if it's a common param and not explicitly defined (many effects have it)
     if (initialParams.wet !== undefined && !paramsForInstance.hasOwnProperty('wet') && definition.params.some(p => p.key === 'wet')) {
          paramsForInstance.wet = initialParams.wet;
     }
 
 
     try {
-        // Most Tone.js effects can be initialized with an object of parameters.
         const instance = new Tone[definition.toneClass](paramsForInstance);
         console.log(`[EffectsRegistry] Created ${effectType} with params:`, JSON.parse(JSON.stringify(paramsForInstance)), "Instance:", instance);
         return instance;
     } catch (e) {
         console.error(`Error instantiating Tone.${definition.toneClass} with params:`, paramsForInstance, e);
-        // Fallback: try instantiating without params if constructor supports it
         try {
             const instance = new Tone[definition.toneClass]();
-            // Manually set params if fallback instantiation worked
             if (typeof instance.set === 'function') {
                 instance.set(paramsForInstance);
-            } else { // Try setting one by one if no .set
+            } else { 
                 for (const key in paramsForInstance) {
                     if (Object.hasOwnProperty.call(paramsForInstance, key)) {
                          const value = paramsForInstance[key];
@@ -328,14 +320,11 @@ export function getEffectDefaultParams(effectType) {
     const defaults = {};
     if (definition.params) {
         definition.params.forEach(pDef => {
-            // For nested keys like 'filter.type', store them flat for initialParams object
             defaults[pDef.key] = pDef.defaultValue;
         });
     }
-    // Ensure 'wet' is included if the effect typically has it, even if not in its specific param list here.
-    // This is a heuristic. A more robust way would be to check if the Tone.js class has a 'wet' property.
     if (AVAILABLE_EFFECTS[effectType]?.params.some(p => p.key === 'wet') && defaults.wet === undefined) {
-        // defaults.wet = 1; // Default to fully wet if not specified, adjust as needed
+        // defaults.wet = 1;
     }
     return defaults;
 }
