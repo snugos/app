@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Minimal GlobalControlsWindow Return Test');
+console.log('[ui.js] TOP OF FILE PARSING - Minimal Inspector Content Test + GCW Fix');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -12,128 +12,167 @@ import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.
 import { getMimeTypeFromFilename } from './audio.js';
 
 // --- Knob UI ---
-function createKnob(options) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
+function createKnob(options) { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ }
 
 // --- Synth Inspector Specifics ---
-const synthEngineControlDefinitions = { /* ... (same as in ui_js_super_trycatch_gcw) ... */ };
-function buildSynthSpecificInspectorDOM(track) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
-function buildSynthEngineControls(track, container, engineType) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
+const synthEngineControlDefinitions = { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ };
+function buildSynthSpecificInspectorDOM(track) { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ }
+function buildSynthEngineControls(track, container, engineType) { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ }
 
 // --- Sampler Inspector Specifics ---
-function buildSamplerSpecificInspectorDOM(track) { /* ... (same as in ui_js_super_trycatch_gcw, with corrected createDropZoneHTML call) ... */ }
+function buildSamplerSpecificInspectorDOM(track) { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ }
 
 // --- Drum Sampler Inspector Specifics ---
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (same as in ui_js_super_trycatch_gcw, with corrected createDropZoneHTML call) ... */ }
+function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ }
 
 // --- Instrument Sampler Inspector Specifics ---
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (same as in ui_js_super_trycatch_gcw, with corrected createDropZoneHTML call) ... */ }
+function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (same as in ui_js_inspector_build_debug_may28_v3) ... */ }
 
 // --- Track Inspector Window & Controls Initialization ---
-function buildTrackInspectorContentDOM(track) { /* ... (same as in ui_js_inspector_build_debug, with detailed try-catch and logging) ... */ }
-function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same as in ui_js_inspector_build_debug, with detailed logging) ... */ }
-function initializeCommonInspectorControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
-function initializeTypeSpecificInspectorControls(track, winEl) { /* ... (same as in ui_js_inspector_build_debug, with detailed logs) ... */ }
-function initializeSynthSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
-function initializeSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw, with corrected ID logic) ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_inspector_build_debug, with detailed logs) ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw, with corrected ID logic) ... */ }
-
-// --- Modular Effects Rack UI ---
-function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
-function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
-function showAddEffectModal(owner, ownerType) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
-
-// --- Window Opening Functions ---
-function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
-function openMasterEffectsRackWindow(savedState = null) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
-
-function openGlobalControlsWindow(savedState = null) {
-    console.log(`[UI - openGlobalControlsWindow] Called. savedState:`, savedState);
-    const windowId = 'globalControls';
-
-    // No extensive try-catch for this minimal test, errors should be obvious if SnugWindow fails
-    if (typeof SnugWindow !== 'function') {
-        console.error("[UI - openGlobalControlsWindow] SnugWindow is NOT a function!");
-        return null;
-    }
-    if (window.openWindows && window.openWindows[windowId] && !savedState) {
-        console.log("[UI - openGlobalControlsWindow] Restoring existing window and returning immediately.");
-        window.openWindows[windowId].restore();
-        return window.openWindows[windowId];
-    }
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'global-controls-window p-2 space-y-3';
+/**
+ * SIMPLIFIED VERSION FOR DEBUGGING
+ * Creates the DOM content for a track's inspector window.
+ * @param {Track} track - The track object.
+ * @returns {HTMLElement|null} The main content element for the inspector or null on critical failure.
+ */
+function buildTrackInspectorContentDOM(track) {
+    console.log(`[UI - buildTrackInspectorContentDOM - MINIMAL TEST] Building content for track ${track.id} (${track.name}), type: ${track.type}`);
     try {
-        let tempoValue = 120.0;
-        if (typeof Tone !== 'undefined' && Tone.Transport) {
-            tempoValue = Tone.Transport.bpm.value.toFixed(1);
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'track-inspector-content p-2 space-y-1';
+        contentDiv.style.border = "2px solid red"; // Make it obvious
+        
+        const title = document.createElement('h3');
+        title.textContent = `Inspector for: ${track.name} (Type: ${track.type})`;
+        contentDiv.appendChild(title);
+
+        const placeholderText = document.createElement('p');
+        placeholderText.textContent = "Simplified inspector content for testing. Original content building is temporarily bypassed.";
+        placeholderText.className = "text-xs text-gray-600";
+        contentDiv.appendChild(placeholderText);
+
+        if (!track || !track.id || !track.name || !track.type) {
+            console.error("[UI - buildTrackInspectorContentDOM - MINIMAL TEST] Invalid track object received:", track);
+            const errorMsg = document.createElement('p');
+            errorMsg.textContent = "Error: Invalid track data for inspector.";
+            errorMsg.className = "text-red-500";
+            contentDiv.appendChild(errorMsg);
+            return contentDiv; // Still return the div with error
         }
-        contentDiv.innerHTML = `
-            <div class="flex items-center gap-2"><button id="playBtnGlobal" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-sm shadow">Play</button><button id="recordBtnGlobal" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded-sm shadow">Record</button></div>
-            <div class="flex items-center gap-2"><label for="tempoGlobalInput" class="control-label text-xs">Tempo:</label><input type="number" id="tempoGlobalInput" value="${tempoValue}" min="40" max="240" step="0.1" class="bg-white text-black w-16 p-1 rounded-sm text-center text-xs border border-gray-500"><span class="text-xs"> BPM</span></div>
-            <div class="flex items-center gap-2 mt-2"><label for="midiInputSelectGlobal" class="text-xs">MIDI In:</label><select id="midiInputSelectGlobal" class="bg-white text-black p-1 rounded-sm text-xs border border-gray-500 flex-grow"></select><span id="midiIndicatorGlobal" title="MIDI Activity" class="border border-black w-3 h-3 inline-block rounded-full bg-gray-400"></span><span id="keyboardIndicatorGlobal" title="Keyboard Input Activity" class="border border-black w-3 h-3 inline-block rounded-full bg-gray-400"></span></div>
-            <div id="masterMeterContainerGlobal" class="meter-bar-container mt-2" title="Master Output Level" style="height:15px;"><div id="masterMeterBarGlobal" class="meter-bar" style="width: 0%;"></div></div>
-        `;
-    } catch (e) {
-        console.error("[UI - openGlobalControlsWindow] Error setting innerHTML for globalControls:", e);
-        showNotification("Error creating global controls content.", 5000);
-        return null;
+        
+        console.log(`[UI - buildTrackInspectorContentDOM - MINIMAL TEST] Successfully built minimal contentDiv for track ${track.id}:`, contentDiv);
+        return contentDiv;
+
+    } catch (error) {
+        console.error(`[UI - buildTrackInspectorContentDOM - MINIMAL TEST] MAJOR ERROR building inspector for track ${track.id}:`, error);
+        showNotification(`Critical error building inspector for ${track.name || 'Unknown Track'}.`, 5000);
+        const errorDiv = document.createElement('div');
+        errorDiv.textContent = "Critical Error building inspector content. See console.";
+        errorDiv.className = 'p-2 text-red-500 text-lg font-bold';
+        return errorDiv; // Ensure an HTMLElement is returned
     }
-
-    const winOptions = { width: 280, height: 250, x: 20, y: 20, initialContentKey: 'globalControls' };
-    if (savedState) Object.assign(winOptions, savedState);
-
-    console.log("[UI - openGlobalControlsWindow] Attempting to create SnugWindow for globalControls...");
-    let globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
-    console.log("[UI - openGlobalControlsWindow] SnugWindow instance for globalControls (initial):", globalControlsWin);
-
-    if (!globalControlsWin || !globalControlsWin.element) {
-        console.error("[UI - openGlobalControlsWindow] CRITICAL CHECK FAILED IMMEDIATELY: globalControlsWin or element is falsy after SnugWindow construction.");
-        showNotification("Failed to create Global Controls window (instance/element invalid).", 5000);
-        return null;
-    }
-    
-    // ALL SUBSEQUENT LOGIC IS COMMENTED OUT FOR THIS TEST
-    console.log(`[UI - openGlobalControlsWindow] SnugWindow for ${windowId} seems valid.`);
-    console.log("[UI - openGlobalControlsWindow] Returning globalControlsWin IMMEDIATELY after creation for debugging.");
-    console.log("[UI - openGlobalControlsWindow] globalControlsWin.element before immediate return:", globalControlsWin?.element);
-    return globalControlsWin;
-
-    /*
-    // --- Start of Commmented Out Section ---
-    console.log(`[UI - openGlobalControlsWindow] SnugWindow for ${windowId} seems valid, proceeding to assign elements.`);
-    window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal');
-    window.recordBtn = globalControlsWin.element.querySelector('#recordBtnGlobal');
-    window.tempoInput = globalControlsWin.element.querySelector('#tempoGlobalInput');
-    window.masterMeterBar = globalControlsWin.element.querySelector('#masterMeterBarGlobal');
-    window.midiInputSelectGlobal = globalControlsWin.element.querySelector('#midiInputSelectGlobal');
-    window.midiIndicatorGlobalEl = globalControlsWin.element.querySelector('#midiIndicatorGlobal');
-    window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal');
-    console.log("[UI - openGlobalControlsWindow] Global element references assigned.");
-
-    if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
-        console.log("[UI - openGlobalControlsWindow] Attaching global control events...");
-        window.attachGlobalControlEvents(globalControlsWin.element); 
-        console.log("[UI - openGlobalControlsWindow] Global control events attached (or attempted).");
-    } else {
-        console.warn("[UI - openGlobalControlsWindow] attachGlobalControlEvents not found or window element missing for globalControlsWin.");
-    }
-    
-    console.log("[UI - openGlobalControlsWindow] Successfully returning globalControlsWin:", globalControlsWin);
-    console.log("[UI - openGlobalControlsWindow] globalControlsWin.element before return:", globalControlsWin?.element);
-    return globalControlsWin;
-    // --- End of Commmented Out Section ---
-    */
 }
 
-function openSoundBrowserWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function openMixerWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function updateMixerWindow() { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function renderMixer(container) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+
+function openTrackInspectorWindow(trackId, savedState = null) {
+    console.log(`[UI - openTrackInspectorWindow] Called for trackId: ${trackId}`);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
+    if (!track) {
+        showNotification(`Track ID ${trackId} not found. Cannot open inspector.`, 3000);
+        console.error(`[UI - openTrackInspectorWindow] Track object not found for ID: ${trackId}`);
+        return null;
+    }
+    console.log(`[UI - openTrackInspectorWindow] Track found: ${track.name}, Type: ${track.type}`);
+
+    const inspectorId = `trackInspector-${track.id}`;
+    if (window.openWindows[inspectorId] && !savedState) {
+        window.openWindows[inspectorId].restore();
+        return window.openWindows[inspectorId];
+    }
+    if (window.openWindows[inspectorId] && savedState) {
+        window.openWindows[inspectorId].close();
+    }
+
+    track.inspectorControls = {};
+    console.log(`[UI - openTrackInspectorWindow] Building content DOM for track ${track.id}`);
+    const inspectorContentElement = buildTrackInspectorContentDOM(track); // Call the debugged version
+    
+    if (!inspectorContentElement) {
+        showNotification(`Failed to build Inspector content for Track ${track.id}. See console.`, 4000);
+        console.error(`[UI - openTrackInspectorWindow] buildTrackInspectorContentDOM returned null for track ${track.id}. Cannot create window.`);
+        return null; 
+    }
+    console.log(`[UI - openTrackInspectorWindow] inspectorContentElement received from build:`, inspectorContentElement);
+
+    let windowHeight = 450; // Default, will be used if type-specific content is bypassed
+    // if (track.type === 'Synth') windowHeight = 620;
+    // else if (track.type === 'Sampler') windowHeight = 620;
+    // else if (track.type === 'DrumSampler') windowHeight = 580;
+    // else if (track.type === 'InstrumentSampler') windowHeight = 620;
+
+    const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` };
+    if (savedState) Object.assign(winOptions, savedState);
+
+    console.log(`[UI - openTrackInspectorWindow] Creating SnugWindow for inspector ${inspectorId}`);
+    let inspectorWin = null;
+    try {
+        inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions);
+    } catch (e) {
+        console.error(`[UI - openTrackInspectorWindow] CRITICAL ERROR during \`new SnugWindow()\` for inspector ${inspectorId}:`, e);
+        showNotification("CRITICAL: Error creating inspector window.", 6000);
+        return null;
+    }
+
+    if (!inspectorWin || !inspectorWin.element) {
+        showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000);
+         console.error(`[UI - openTrackInspectorWindow] SnugWindow instance or its element is null for inspector ${inspectorId}`);
+        return null;
+    }
+    track.inspectorWindow = inspectorWin;
+    console.log(`[UI - openTrackInspectorWindow] Inspector window created for ${track.id}. Element:`, inspectorWin.element);
+
+    // Temporarily skip these as buildTrackInspectorContentDOM is minimal
+    // console.log(`[UI - openTrackInspectorWindow] Calling initializeCommonInspectorControls for track ${track.id}`);
+    // initializeCommonInspectorControls(track, inspectorWin.element);
+    // console.log(`[UI - openTrackInspectorWindow] Calling initializeTypeSpecificInspectorControls for track ${track.id} of type ${track.type}`);
+    // initializeTypeSpecificInspectorControls(track, inspectorWin.element);
+    // console.log(`[UI - openTrackInspectorWindow] Scheduling knob refresh for track ${track.id}`);
+    // setTimeout(() => {
+    //     Object.values(track.inspectorControls).forEach(control => {
+    //         if (control?.type === 'knob' && typeof control.refreshVisuals === 'function') {
+    //             control.refreshVisuals();
+    //         }
+    //     });
+    // }, 50);
+    console.log(`[UI - openTrackInspectorWindow] SKIPPED common and type-specific controls initialization for minimal test.`);
+    
+    console.log(`[UI - openTrackInspectorWindow] Finished for track ${track.id}`);
+    return inspectorWin;
+}
+
+function initializeCommonInspectorControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
+function initializeTypeSpecificInspectorControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw, with detailed logs) ... */ }
+function initializeSynthSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
+function initializeSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
+function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw, with detailed logs) ... */ }
+function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_super_trycatch_gcw) ... */ }
+
+// --- Modular Effects Rack UI ---
+function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+function showAddEffectModal(owner, ownerType) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+
+// --- Window Opening Functions (with Debugging & GCW try...catch from ui_js_super_trycatch_gcw) ---
+function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+function openMasterEffectsRackWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+function openGlobalControlsWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw, with attachGlobalControlEvents call ACTIVE) ... */ }
+function openSoundBrowserWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
+function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
+function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
+function openMixerWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
+function updateMixerWindow() { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
+function renderMixer(container) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
 function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
 function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
 
