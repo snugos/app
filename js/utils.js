@@ -177,3 +177,42 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         }
     });
 }
+
+/**
+ * Converts seconds to "Bars:Beats:Sixteenths" string format.
+ * Example: 2.5 seconds at 120 BPM, 4/4 time might become "1:1:0" (Bar 1, Beat 1, 0 Sixteenths).
+ * @param {number} seconds - The time in seconds.
+ * @returns {string} Time in "B:B:S" format.
+ */
+export function secondsToBBSTime(seconds) {
+    if (typeof Tone === 'undefined' || seconds === null || seconds === undefined || isNaN(seconds)) {
+        return "0:0:0";
+    }
+    try {
+        // Tone.Time can take seconds as a number and convert it.
+        // .toBarsBeatsSixteenths() is a convenient method.
+        return Tone.Time(seconds).toBarsBeatsSixteenths();
+    } catch (e) {
+        console.error("Error converting seconds to B:B:S:", e);
+        return "0:0:0"; // Fallback
+    }
+}
+
+/**
+ * Converts a "Bars:Beats:Sixteenths" string (e.g., "1:2:0") to seconds.
+ * @param {string} bbsString - Time in "B:B:S" format.
+ * @returns {number} Time in seconds, or null if parsing fails.
+ */
+export function bbsTimeToSeconds(bbsString) {
+    if (typeof Tone === 'undefined' || !bbsString || typeof bbsString !== 'string') {
+        return null;
+    }
+    try {
+        // Tone.Time can parse "B:B:S" strings.
+        const seconds = Tone.Time(bbsString).toSeconds();
+        return isNaN(seconds) ? null : seconds;
+    } catch (e) {
+        console.error("Error converting B:B:S to seconds:", bbsString, e);
+        return null; // Parsing failed
+    }
+}
