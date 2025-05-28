@@ -6,8 +6,8 @@ import { captureStateForUndo, getTracks } from './state.js';
 console.log('[SnugWindow.js] Imports (captureStateForUndo, getTracks) loaded.'); // DEBUG
 
 // Default theme colors (can be overridden by user settings in future)
-const defaultWindowBg = '#c0c0c0';
-const defaultWindowContentBg = '#c0c0c0'; // Or a different default like '#ffffff' for content
+const defaultWindowBg = '#282828';
+const defaultWindowContentBg = '#282828'; // Or a different default like '#ffffff' for content
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}) {
