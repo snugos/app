@@ -19,7 +19,7 @@ const MIN_OCTAVE_SHIFT = -2;
 const OCTAVE_SHIFT_AMOUNT = 12;
 
 export function initializePrimaryEventListeners(appContext) {
-    console.log("[EventHandlers] initializePrimaryEventListeners called with appContext:", appContext); // DEBUG
+    console.log("[EventHandlers] initializePrimaryEventListeners called with appContext:", appContext);
     const {
         addTrack, openSoundBrowserWindow, undoLastAction, redoLastAction,
         saveProject, loadProject, exportToWav,
@@ -126,14 +126,16 @@ export function initializePrimaryEventListeners(appContext) {
         document.addEventListener('keydown', handleComputerKeyDown);
         document.addEventListener('keyup', handleComputerKeyUp);
 
+        // Transport Event Listeners with added logging
         if (!window.transportEventsInitialized && typeof Tone !== 'undefined' && Tone.Transport) {
             Tone.Transport.on('start', () => {
+                console.log("[EventHandlers] Tone.Transport 'start' EVENT FIRED. Current state:", Tone.Transport.state); // ADDED
                 if (window.playBtn) window.playBtn.textContent = 'Pause';
-                 // Also update global controls button if it exists
                 const globalPlayBtn = document.getElementById('playBtnGlobal');
                 if (globalPlayBtn) globalPlayBtn.textContent = 'Pause';
             });
             Tone.Transport.on('pause', () => {
+                console.log("[EventHandlers] Tone.Transport 'pause' EVENT FIRED. Current state:", Tone.Transport.state); // ADDED
                 if (window.playBtn) window.playBtn.textContent = 'Play';
                 const globalPlayBtn = document.getElementById('playBtnGlobal');
                 if (globalPlayBtn) globalPlayBtn.textContent = 'Play';
@@ -149,6 +151,7 @@ export function initializePrimaryEventListeners(appContext) {
                 }
             });
             Tone.Transport.on('stop', () => {
+                console.log("[EventHandlers] Tone.Transport 'stop' EVENT FIRED. Current state:", Tone.Transport.state); // ADDED
                 if (window.playBtn) window.playBtn.textContent = 'Play';
                 const globalPlayBtn = document.getElementById('playBtnGlobal');
                 if (globalPlayBtn) globalPlayBtn.textContent = 'Play';
@@ -172,7 +175,6 @@ export function initializePrimaryEventListeners(appContext) {
     }
 }
 
-// Ensure this function is EXPORTED
 export function attachGlobalControlEvents(globalControlsWindowElement) {
     console.log("[EventHandlers] attachGlobalControlEvents called with element:", globalControlsWindowElement);
     if (!globalControlsWindowElement) {
@@ -181,7 +183,7 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
     }
     try {
         const playButton = globalControlsWindowElement.querySelector('#playBtnGlobal');
-        console.log("[EventHandlers] Play button query result:", playButton); // DEBUG
+        console.log("[EventHandlers] Play button query result:", playButton);
         if (playButton) {
             playButton.addEventListener('click', async () => {
                 console.log("[EventHandlers] Play/Pause button clicked. Current Tone.Transport.state:", Tone.Transport.state);
@@ -197,7 +199,8 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                         console.log("[EventHandlers] Transport state is not 'started'. Resetting position and starting transport.");
                         Tone.Transport.position = 0;
                         document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                        Tone.Transport.start("+0.1");
+                        // Tone.Transport.start("+0.1"); // Original
+                        Tone.Transport.start(); // Simplified for testing
                         console.log("[EventHandlers] After Tone.Transport.start() call. New state:", Tone.Transport.state);
                     } else {
                         console.log("[EventHandlers] Transport state is 'started'. Pausing transport.");
@@ -212,12 +215,12 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
         } else { console.warn("[EventHandlers] Play button (#playBtnGlobal) not found in global controls window."); }
 
         const recordButton = globalControlsWindowElement.querySelector('#recordBtnGlobal');
-        console.log("[EventHandlers] Record button query result:", recordButton); // DEBUG
+        console.log("[EventHandlers] Record button query result:", recordButton);
         if (recordButton) {
             recordButton.addEventListener('click', async () => {
-                console.log("[EventHandlers] Record button clicked."); // DEBUG
-                console.log("Current armed track ID:", getArmedTrackId()); // DEBUG
-                console.log("Is currently recording (state):", isTrackRecording()); // DEBUG
+                console.log("[EventHandlers] Record button clicked.");
+                console.log("Current armed track ID:", getArmedTrackId());
+                console.log("Is currently recording (state):", isTrackRecording());
                  try {
                     const audioReady = await window.initAudioContextAndMasterMeter(true);
                     if (!audioReady) {
@@ -235,7 +238,6 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                         setRecordingTrackId(currentArmedTrackId);
                         setRecordingStartTime(Tone.Transport.seconds);
 
-                        // Update both global and taskbar record buttons if they exist
                         if(window.recordBtn) {window.recordBtn.textContent = 'Stop Rec'; window.recordBtn.classList.add('recording');}
                         recordButton.textContent = 'Stop Rec'; recordButton.classList.add('recording');
 
@@ -244,7 +246,8 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
                         if (Tone.Transport.state !== 'started') {
                             Tone.Transport.position = 0;
                             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                            Tone.Transport.start("+0.1");
+                            Tone.Transport.start(); // Using simplified start
+                            console.log("[EventHandlers] Record button started transport. New state:", Tone.Transport.state);
                         }
                     } else {
                         setIsRecording(false);
@@ -267,17 +270,17 @@ export function attachGlobalControlEvents(globalControlsWindowElement) {
         } else { console.warn("[EventHandlers] Record button (#recordBtnGlobal) not found in global controls window."); }
 
         const tempoInputElement = globalControlsWindowElement.querySelector('#tempoGlobalInput');
-        console.log("[EventHandlers] Tempo input query result:", tempoInputElement); // DEBUG
+        console.log("[EventHandlers] Tempo input query result:", tempoInputElement);
         if (tempoInputElement) {
             tempoInputElement.addEventListener('change', (e) => {
-                console.log("[EventHandlers] Tempo input changed. Raw value:", e.target.value); // DEBUG
+                console.log("[EventHandlers] Tempo input changed. Raw value:", e.target.value);
                 const newTempo = parseFloat(e.target.value);
-                console.log("[EventHandlers] Parsed newTempo:", newTempo); // DEBUG
+                console.log("[EventHandlers] Parsed newTempo:", newTempo);
                 const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
                 if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
                     if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
                     Tone.Transport.bpm.value = newTempo;
-                    console.log("[EventHandlers] Tone.Transport.bpm is now:", Tone.Transport.bpm.value); // DEBUG
+                    console.log("[EventHandlers] Tone.Transport.bpm is now:", Tone.Transport.bpm.value);
                     if(typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
                     else if(taskbarTempoDisplay) taskbarTempoDisplay.textContent = `${newTempo.toFixed(1)} BPM`;
                 } else {
@@ -459,23 +462,22 @@ export async function handleMIDIMessage(message) {
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
-    // Live MIDI playing (not recording to sequencer)
-    if (command === 144 && velocity > 0) { // Note On
+    if (command === 144 && velocity > 0) { 
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
             currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
-        } else if (currentArmedTrack.type === 'Sampler') { // Slicer Sampler
+        } else if (currentArmedTrack.type === 'Sampler') { 
             const sliceIdx = note - Constants.samplerMIDINoteStart;
             if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
                 window.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
             }
-        } else if (currentArmedTrack.type === 'DrumSampler') { // Pad Sampler
+        } else if (currentArmedTrack.type === 'DrumSampler') { 
             const padIndex = note - Constants.samplerMIDINoteStart;
             if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
                 window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
             }
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
             if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                currentArmedTrack.toneSampler.releaseAll(time); // Ensure mono behavior for live play
+                currentArmedTrack.toneSampler.releaseAll(time); 
             }
             currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && !currentArmedTrack.toneSampler.loaded) {
@@ -607,12 +609,12 @@ async function handleComputerKeyDown(e) {
     } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const sliceIdx = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-            window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, 0); // Octave shift handled by slice index
+            window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, 0); 
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
         const padIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
         if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-            window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, 0); // Octave shift handled by pad index
+            window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, 0); 
         }
     } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
         if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
