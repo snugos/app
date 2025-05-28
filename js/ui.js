@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Inspector Build Debug + Previous Fixes');
+console.log('[ui.js] TOP OF FILE PARSING - Inspector Build Debug v3 + Previous Fixes');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -12,29 +12,113 @@ import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.
 import { getMimeTypeFromFilename } from './audio.js';
 
 // --- Knob UI ---
-function createKnob(options) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+function createKnob(options) {
+    const container = document.createElement('div');
+    container.className = 'knob-container';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'knob-label';
+    labelEl.textContent = options.label || '';
+    labelEl.title = options.label || '';
+    container.appendChild(labelEl);
+    const knobEl = document.createElement('div');
+    knobEl.className = 'knob';
+    const handleEl = document.createElement('div');
+    handleEl.className = 'knob-handle';
+    knobEl.appendChild(handleEl);
+    container.appendChild(knobEl);
+    const valueEl = document.createElement('div');
+    valueEl.className = 'knob-value';
+    container.appendChild(valueEl);
+    let currentValue = options.initialValue === undefined ? (options.min !== undefined ? options.min : 0) : options.initialValue;
+    const min = options.min === undefined ? 0 : options.min;
+    const max = options.max === undefined ? 100 : options.max;
+    const step = options.step === undefined ? 1 : options.step;
+    const range = max - min;
+    const maxDegrees = options.maxDegrees || 270;
+    const BASE_PIXELS_PER_FULL_RANGE_MOUSE = 300;
+    const BASE_PIXELS_PER_FULL_RANGE_TOUCH = 450;
+    let initialValueBeforeInteraction = currentValue;
+
+    function updateKnobVisual() {
+        const percentage = range === 0 ? 0 : (currentValue - min) / range;
+        const rotation = (percentage * maxDegrees) - (maxDegrees / 2);
+        handleEl.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+        valueEl.textContent = typeof currentValue === 'number' ? currentValue.toFixed(options.decimals !== undefined ? options.decimals : (step < 1 && step !== 0 ? 2 : 0)) : currentValue;
+        if (options.displaySuffix) valueEl.textContent += options.displaySuffix;
+    }
+
+    function setValue(newValue, triggerCallback = true, fromInteraction = false) {
+        const numValue = parseFloat(newValue);
+        if (isNaN(numValue)) return;
+        let boundedValue = Math.min(max, Math.max(min, numValue));
+        if (step !== 0) {
+            boundedValue = Math.round(boundedValue / step) * step;
+        }
+        const oldValue = currentValue;
+        currentValue = Math.min(max, Math.max(min, boundedValue));
+        updateKnobVisual();
+        if (triggerCallback && options.onValueChange && (oldValue !== currentValue || fromInteraction) ) {
+            options.onValueChange(currentValue, oldValue, fromInteraction);
+        }
+    }
+
+    function handleInteraction(e, isTouch = false) {
+        e.preventDefault();
+        initialValueBeforeInteraction = currentValue;
+        const startY = isTouch ? e.touches[0].clientY : e.clientY;
+        const startValue = currentValue;
+        const pixelsForFullRange = isTouch ? BASE_PIXELS_PER_FULL_RANGE_TOUCH : BASE_PIXELS_PER_FULL_RANGE_MOUSE;
+        const currentSensitivity = options.sensitivity === undefined ? 1 : options.sensitivity;
+        function onMove(moveEvent) {
+            const currentY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
+            const deltaY = startY - currentY;
+            let valueChange = (deltaY / pixelsForFullRange) * range * currentSensitivity;
+            let newValue = startValue + valueChange;
+            setValue(newValue, true, true);
+        }
+        function onEnd() {
+            document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove);
+            document.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
+            if (currentValue !== initialValueBeforeInteraction && typeof window.captureStateForUndo === 'function') {
+                let description = `Change ${options.label || 'knob'} to ${valueEl.textContent}`;
+                if (options.trackRef && options.trackRef.name) {
+                    description = `Change ${options.label || 'knob'} for ${options.trackRef.name} to ${valueEl.textContent}`;
+                }
+                window.captureStateForUndo(description);
+            }
+        }
+        document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: !isTouch });
+        document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
+    }
+    knobEl.addEventListener('mousedown', (e) => handleInteraction(e, false));
+    knobEl.addEventListener('touchstart', (e) => handleInteraction(e, true), { passive: false });
+    setValue(currentValue, false);
+    return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
+}
+
 
 // --- Synth Inspector Specifics ---
-const synthEngineControlDefinitions = { /* ... (as in ui_js_super_trycatch_gcw) ... */ };
-function buildSynthSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
-function buildSynthEngineControls(track, container, engineType) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+const synthEngineControlDefinitions = { /* ... (content from previous ui_js_super_trycatch_gcw) ... */ };
+function buildSynthSpecificInspectorDOM(track) { /* ... (content from previous ui_js_super_trycatch_gcw) ... */ }
+function buildSynthEngineControls(track, container, engineType) { /* ... (content from previous ui_js_super_trycatch_gcw) ... */ }
 
 // --- Sampler Inspector Specifics ---
-function buildSamplerSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+function buildSamplerSpecificInspectorDOM(track) { /* ... (content from previous ui_js_super_trycatch_gcw, calls createDropZoneHTML correctly) ... */ }
 
 // --- Drum Sampler Inspector Specifics ---
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (content from previous ui_js_super_trycatch_gcw, calls createDropZoneHTML correctly) ... */ }
 
 // --- Instrument Sampler Inspector Specifics ---
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (content from previous ui_js_super_trycatch_gcw, calls createDropZoneHTML correctly) ... */ }
+
 
 // --- Track Inspector Window & Controls Initialization ---
 function buildTrackInspectorContentDOM(track) {
-    console.log(`[UI - buildTrackInspectorContentDOM] Building content for track ${track.id} (${track.name}), type: ${track.type}`); // LOG
+    console.log(`[UI - buildTrackInspectorContentDOM] Called for track ${track.id} (${track.name}), type: ${track.type}`);
     const contentDiv = document.createElement('div');
     contentDiv.className = 'track-inspector-content p-2 space-y-1';
 
-    try { // Wrap the main content building in a try-catch
+    try {
         const headerDiv = document.createElement('div');
         headerDiv.className = 'flex items-center justify-between mb-1';
         const nameInput = document.createElement('input');
@@ -48,6 +132,7 @@ function buildTrackInspectorContentDOM(track) {
         meterContainer.appendChild(meterBar);
         headerDiv.appendChild(meterContainer);
         contentDiv.appendChild(headerDiv);
+        console.log(`[UI - buildTrackInspectorContentDOM] Header built for track ${track.id}`);
 
         const actionsDiv = document.createElement('div'); actionsDiv.className = 'flex items-center gap-1 mb-1';
         const muteBtn = document.createElement('button'); muteBtn.id = `muteBtn-${track.id}`; muteBtn.className = `mute-button text-xs p-1 ${track.isMuted ? 'muted' : ''}`; muteBtn.textContent = 'M'; muteBtn.addEventListener('click', () => handleTrackMute(track.id)); actionsDiv.appendChild(muteBtn);
@@ -55,6 +140,7 @@ function buildTrackInspectorContentDOM(track) {
         const armBtn = document.createElement('button'); armBtn.id = `armInputBtn-${track.id}`; const currentArmedId = typeof window.getArmedTrackId === 'function' ? window.getArmedTrackId() : null; armBtn.className = `arm-input-button text-xs p-1 ${currentArmedId === track.id ? 'armed' : ''}`; armBtn.textContent = 'Arm'; armBtn.addEventListener('click', () => handleTrackArm(track.id)); actionsDiv.appendChild(armBtn);
         const removeBtn = document.createElement('button'); removeBtn.id = `removeTrackBtn-${track.id}`; removeBtn.className = 'bg-red-500 hover:bg-red-600 text-white text-xs py-0.5 px-1.5 rounded ml-auto'; removeBtn.textContent = 'Del'; removeBtn.addEventListener('click', () => handleRemoveTrack(track.id)); actionsDiv.appendChild(removeBtn);
         contentDiv.appendChild(actionsDiv);
+        console.log(`[UI - buildTrackInspectorContentDOM] Actions built for track ${track.id}`);
 
         const trackControlsPanel = document.createElement('div'); trackControlsPanel.className = 'panel';
         const panelTitle = document.createElement('h4'); panelTitle.className = 'text-sm font-semibold mb-1'; panelTitle.textContent = 'Track Controls'; trackControlsPanel.appendChild(panelTitle);
@@ -69,28 +155,29 @@ function buildTrackInspectorContentDOM(track) {
         doubleSeqButton.addEventListener('click', async () => { /* ... */ });
         seqLengthContainer.appendChild(doubleSeqButton); controlGroup.appendChild(seqLengthContainer); trackControlsPanel.appendChild(controlGroup);
         contentDiv.appendChild(trackControlsPanel);
+        console.log(`[UI - buildTrackInspectorContentDOM] Track controls panel built for track ${track.id}`);
 
         let specificContentElement = null;
-        console.log(`[UI - buildTrackInspectorContentDOM] About to call specific DOM builder for type: ${track.type}`); // LOG
+        console.log(`[UI - buildTrackInspectorContentDOM] About to call specific DOM builder for type: ${track.type}`);
         try {
             if (track.type === 'Synth') specificContentElement = buildSynthSpecificInspectorDOM(track);
             else if (track.type === 'Sampler') specificContentElement = buildSamplerSpecificInspectorDOM(track);
             else if (track.type === 'DrumSampler') specificContentElement = buildDrumSamplerSpecificInspectorDOM(track);
             else if (track.type === 'InstrumentSampler') specificContentElement = buildInstrumentSamplerSpecificInspectorDOM(track);
-            console.log(`[UI - buildTrackInspectorContentDOM] specificContentElement after build call:`, specificContentElement); // LOG
+            else console.warn(`[UI - buildTrackInspectorContentDOM] Unknown track type for specific content: ${track.type}`);
+            console.log(`[UI - buildTrackInspectorContentDOM] specificContentElement after build call:`, specificContentElement);
         } catch (specificBuildError) {
-            console.error(`[UI - buildTrackInspectorContentDOM] Error in specific DOM builder for type ${track.type}:`, specificBuildError); // LOG
+            console.error(`[UI - buildTrackInspectorContentDOM] Error in specific DOM builder for type ${track.type}:`, specificBuildError);
             const errorMsg = document.createElement('p');
             errorMsg.textContent = `Error building UI for ${track.type}: ${specificBuildError.message}. Check console.`;
             errorMsg.className = 'text-red-500 text-xs';
             contentDiv.appendChild(errorMsg);
-            // No explicit return null here, let the function proceed to return contentDiv
         }
 
         if (specificContentElement) {
             contentDiv.appendChild(specificContentElement);
+            console.log(`[UI - buildTrackInspectorContentDOM] Appended specific content for ${track.type}`);
         } else if (track.type === 'Synth' || track.type === 'Sampler' || track.type === 'DrumSampler' || track.type === 'InstrumentSampler') {
-            // This log might be redundant if the catch block above already logged an error.
             console.warn(`[UI - buildTrackInspectorContentDOM] specificContentElement for track type ${track.type} was null or undefined (and no error caught in its builder).`);
         }
 
@@ -100,82 +187,113 @@ function buildTrackInspectorContentDOM(track) {
         const sequencerButton = document.createElement('button'); sequencerButton.className = 'bg-indigo-500 hover:bg-indigo-600 text-white text-xs py-1 px-2 rounded mt-1 w-full'; sequencerButton.textContent = 'Sequencer'; sequencerButton.addEventListener('click', () => handleOpenSequencer(track.id));
         contentDiv.appendChild(sequencerButton);
 
-        console.log(`[UI - buildTrackInspectorContentDOM] Successfully built contentDiv for track ${track.id}:`, contentDiv); // LOG
+        console.log(`[UI - buildTrackInspectorContentDOM] Successfully built contentDiv for track ${track.id}:`, contentDiv);
         return contentDiv;
 
     } catch (error) {
-        console.error(`[UI - buildTrackInspectorContentDOM] MAJOR ERROR building inspector for track ${track.id}:`, error); // LOG
+        console.error(`[UI - buildTrackInspectorContentDOM] MAJOR ERROR building inspector for track ${track.id}:`, error);
         showNotification(`Critical error building inspector for ${track.name}.`, 5000);
-        // Fallback: return an empty div or a div with an error message to prevent returning undefined
         const errorDiv = document.createElement('div');
         errorDiv.textContent = "Error building inspector content. See console.";
         errorDiv.className = 'p-2 text-red-500';
-        return errorDiv; // Ensure an HTMLElement is returned
+        return errorDiv;
     }
 }
 
-function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same as in ui_js_latest_debug_May28_v2, with detailed logs around initialize calls) ... */ }
-function initializeCommonInspectorControls(track, winEl) { /* ... (same as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeTypeSpecificInspectorControls(track, winEl) { /* ... (same as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
-function initializeSynthSpecificControls(track, winEl) { /* ... (same as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (same as in ui_js_latest_debug_May28_v2) ... */ }
+function openTrackInspectorWindow(trackId, savedState = null) {
+    console.log(`[UI - openTrackInspectorWindow] Called for trackId: ${trackId}`);
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
+    if (!track) {
+        showNotification(`Track ID ${trackId} not found. Cannot open inspector.`, 3000);
+        console.error(`[UI - openTrackInspectorWindow] Track object not found for ID: ${trackId}`);
+        return null;
+    }
+    console.log(`[UI - openTrackInspectorWindow] Track found: ${track.name}, Type: ${track.type}`);
 
-// --- Modular Effects Rack UI ---
-function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function showAddEffectModal(owner, ownerType) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+    const inspectorId = `trackInspector-${track.id}`;
+    if (window.openWindows[inspectorId] && !savedState) {
+        window.openWindows[inspectorId].restore();
+        return window.openWindows[inspectorId];
+    }
+    if (window.openWindows[inspectorId] && savedState) {
+        window.openWindows[inspectorId].close();
+    }
 
-// --- Window Opening Functions (with Debugging & GCW try...catch from ui_js_super_trycatch_gcw) ---
-function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function openMasterEffectsRackWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
-function openGlobalControlsWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw, with attachGlobalControlEvents call ACTIVE) ... */ }
-function openSoundBrowserWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
-function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
-function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
-function openMixerWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
-function updateMixerWindow() { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
-function renderMixer(container) { /* ... (same content as in ui_js_super_trycatch_gcw, with debug logs) ... */ }
-function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+    track.inspectorControls = {};
+    console.log(`[UI - openTrackInspectorWindow] Building content DOM for track ${track.id}`);
+    const inspectorContentElement = buildTrackInspectorContentDOM(track); // Call the debugged version
+    
+    if (!inspectorContentElement) { // Check if null was returned
+        showNotification(`Failed to build Inspector content for Track ${track.id}. See console.`, 4000);
+        console.error(`[UI - openTrackInspectorWindow] buildTrackInspectorContentDOM returned null for track ${track.id}. Cannot create window.`);
+        return null; 
+    }
+    console.log(`[UI - openTrackInspectorWindow] inspectorContentElement received from build:`, inspectorContentElement);
 
-// --- Utility UI functions for samplers (Updated for Audio Status & Debugging) ---
-function renderSamplePads(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function updateSliceEditorUI(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function applySliceEdits(trackId) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function drawWaveform(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function drawInstrumentWaveform(track) { drawWaveform(track); }
-function updateDrumPadControlsUI(track) { /* ... (same content as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
-function renderDrumSamplerPads(track) { /* ... (same content as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
-function highlightPlayingStep(col, trackType, gridElement) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
 
-export {
-    createKnob,
-    buildTrackInspectorContentDOM,
-    openTrackInspectorWindow,
-    initializeCommonInspectorControls,
-    initializeTypeSpecificInspectorControls,
-    applySliceEdits,
-    drawWaveform,
-    drawInstrumentWaveform,
-    renderEffectsList,
-    renderEffectControls,
-    openTrackEffectsRackWindow,
-    openMasterEffectsRackWindow,
-    openGlobalControlsWindow,
-    openSoundBrowserWindow,
-    updateSoundBrowserDisplayForLibrary,
-    renderSoundBrowserDirectory,
-    openMixerWindow,
-    updateMixerWindow,
-    renderMixer,
-    buildSequencerContentDOM,
-    openTrackSequencerWindow,
-    renderSamplePads,
-    updateSliceEditorUI,
-    updateDrumPadControlsUI,
-    renderDrumSamplerPads,
-    highlightPlayingStep
-};
+    let windowHeight = 450;
+    if (track.type === 'Synth') windowHeight = 620;
+    else if (track.type === 'Sampler') windowHeight = 620;
+    else if (track.type === 'DrumSampler') windowHeight = 580;
+    else if (track.type === 'InstrumentSampler') windowHeight = 620;
+
+    const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` };
+    if (savedState) Object.assign(winOptions, savedState);
+
+    console.log(`[UI - openTrackInspectorWindow] Creating SnugWindow for inspector ${inspectorId}`);
+    let inspectorWin = null;
+    try {
+        inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions);
+    } catch (e) {
+        console.error(`[UI - openTrackInspectorWindow] CRITICAL ERROR during \`new SnugWindow()\` for inspector ${inspectorId}:`, e);
+        showNotification("CRITICAL: Error creating inspector window.", 6000);
+        return null;
+    }
+
+    if (!inspectorWin || !inspectorWin.element) {
+        showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000);
+         console.error(`[UI - openTrackInspectorWindow] SnugWindow instance or its element is null for inspector ${inspectorId}`);
+        return null;
+    }
+    track.inspectorWindow = inspectorWin;
+    console.log(`[UI - openTrackInspectorWindow] Inspector window created for ${track.id}. Element:`, inspectorWin.element);
+
+    console.log(`[UI - openTrackInspectorWindow] Calling initializeCommonInspectorControls for track ${track.id}`);
+    initializeCommonInspectorControls(track, inspectorWin.element);
+
+    console.log(`[UI - openTrackInspectorWindow] Calling initializeTypeSpecificInspectorControls for track ${track.id} of type ${track.type}`);
+    initializeTypeSpecificInspectorControls(track, inspectorWin.element);
+    
+    console.log(`[UI - openTrackInspectorWindow] Scheduling knob refresh for track ${track.id}`);
+    setTimeout(() => {
+        Object.values(track.inspectorControls).forEach(control => {
+            if (control?.type === 'knob' && typeof control.refreshVisuals === 'function') {
+                control.refreshVisuals();
+            }
+        });
+    }, 50);
+    
+    console.log(`[UI - openTrackInspectorWindow] Finished for track ${track.id}`);
+    return inspectorWin;
+}
+
+// ... (Rest of the file is identical to ui_js_super_trycatch_gcw:
+// initializeCommonInspectorControls, initializeTypeSpecificInspectorControls, 
+// initializeSynthSpecificControls, initializeSamplerSpecificControls, 
+// initializeDrumSamplerSpecificControls, initializeInstrumentSamplerSpecificControls,
+// Effect Rack functions, other Window Openers, Sampler UI utilities, export block) ...
+// Ensure the export block is complete and correct as in ui_js_super_trycatch_gcw or ui_js_latest_debug_May28_v2
+// For brevity, I'm not repeating all functions here if they were unchanged from ui_js_super_trycatch_gcw.
+// The key additions are the logs in openTrackInspectorWindow and buildTrackInspectorContentDOM.
+```
+**(Please make sure to copy the *entire content* of `ui_js_super_trycatch_gcw` or `ui_js_latest_debug_May28_v2` and then apply the specific logging changes shown above to `buildTrackInspectorContentDOM` and `openTrackInspectorWindow`. The parts marked `/* ... (as in ... */` should be filled from that known good version.)**
+
+**After updating `js/ui.js` with these detailed logs:**
+1.  Hard refresh.
+2.  Add a Drum Sampler track.
+3.  Examine the console. We need to see the logs from `buildTrackInspectorContentDOM`.
+    * Does it log `About to call specific DOM builder for type: DrumSampler`?
+    * Does it log `specificContentElement after build call:` and show a valid HTML element, or `null`?
+    * Does it log any errors from the `try...catch` around the specific builder, or the "MAJOR ERROR" catch?
+
+This should give us precise information about where `buildTrackInspectorContentDOM` is faili
