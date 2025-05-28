@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 5');
+console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 6');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -192,7 +192,21 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     panel.appendChild(controlsContainer); return panel;
 }
 
-// --- Inspector Initialization ---
+// --- Track Inspector Window & Controls Initialization ---
+export function openTrackInspectorWindow(trackId, savedState = null) {
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) { showNotification(`Track ID ${trackId} not found.`, 3000); return null; }
+    const inspectorId = `trackInspector-${track.id}`;
+    if (window.openWindows[inspectorId] && !savedState) { window.openWindows[inspectorId].restore(); return window.openWindows[inspectorId]; }
+    if (window.openWindows[inspectorId] && savedState) window.openWindows[inspectorId].close();
+    track.inspectorControls = {}; const inspectorContentElement = buildTrackInspectorContentDOM(track); if (!inspectorContentElement) { showNotification(`Failed to build Inspector content (Track ${track.id}).`, 4000); return null; }
+    let windowHeight = 450; if (track.type === 'Synth') windowHeight = 620; else if (track.type === 'Sampler') windowHeight = 620; else if (track.type === 'DrumSampler') windowHeight = 580; else if (track.type === 'InstrumentSampler') windowHeight = 620;
+    const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
+    let inspectorWin = null; try { inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions); } catch (e) { console.error(`CRITICAL ERROR \`new SnugWindow()\` for inspector ${inspectorId}:`, e); showNotification("CRITICAL: Error creating inspector window.", 6000); return null; }
+    if (!inspectorWin || !inspectorWin.element) { showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000); return null; }
+    track.inspectorWindow = inspectorWin; initializeCommonInspectorControls(track, inspectorWin.element); initializeTypeSpecificInspectorControls(track, inspectorWin.element);
+    setTimeout(() => { Object.values(track.inspectorControls).forEach(control => { if (control?.type === 'knob' && typeof control.refreshVisuals === 'function') control.refreshVisuals(); }); }, 50);
+    return inspectorWin;
+}
 export function initializeCommonInspectorControls(track, winEl) {
     winEl.querySelector(`#trackNameDisplay-${track.id}`)?.addEventListener('change', (e) => { const oldName = track.name; const newName = e.target.value; if (oldName !== newName && typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Rename Track "${oldName}" to "${newName}"`); track.name = newName; if (track.inspectorWindow?.titleBar) track.inspectorWindow.titleBar.querySelector('span').textContent = `Track: ${track.name}`; if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow(); });
     const volSliderContainer = winEl.querySelector(`#volumeSliderContainer-${track.id}`); if (volSliderContainer) { const volKnob = createKnob({ label: 'Volume', min: 0, max: 1, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, sensitivity: 0.8, trackRef: track, onValueChange: (val, oldVal, fromInteraction) => { track.setVolume(val, fromInteraction); if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow(); } }); volSliderContainer.innerHTML = ''; volSliderContainer.appendChild(volKnob.element); track.inspectorControls.volume = volKnob; }
@@ -306,16 +320,18 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
         if (oldEffectIndex < newVisualIndex) {
             finalSpliceIndex--; 
         }
-        finalSpliceIndex = Math.max(0, Math.min(finalSpliceIndex, effectsCurrentArray.length -1 ));
+        finalSpliceIndex = Math.max(0, Math.min(finalSpliceIndex, effectsCurrentArray.length > 0 ? effectsCurrentArray.length -1 : 0));
         
-        console.log(`[UI Drop] ID: ${droppedEffectId}, OldIdx: ${oldEffectIndex}, Target: ${targetElement?.dataset.effectId}, VisualNewIdx: ${newVisualIndex}, FinalSpliceIdx: ${finalSpliceIndex}`);
+        console.log(`[UI Drop] ID: ${droppedEffectId}, OldIdx: ${oldEffectIndex}, TargetElement: ${targetElement?.dataset.effectId}, VisualNewIdx: ${newVisualIndex}, FinalSpliceIdx: ${finalSpliceIndex}`);
 
         if (oldEffectIndex !== finalSpliceIndex || (oldEffectIndex === finalSpliceIndex && newVisualIndex === effectsCurrentArray.length && oldEffectIndex === effectsCurrentArray.length -1 && effectsCurrentArray.length > 0) ) {
              if (ownerType === 'track') owner.reorderEffect(droppedEffectId, finalSpliceIndex);
              else window.reorderMasterEffect(droppedEffectId, finalSpliceIndex);
         } else if (oldEffectIndex === finalSpliceIndex && newVisualIndex !== effectsCurrentArray.length) {
-            // This condition handles dragging an item to its own position when it's not the last item.
-            // No actual reorder needed, but list might need rerender if visual cues were involved.
+             // No actual reorder needed if dropping on itself not at the end.
+        } else if (oldEffectIndex !== finalSpliceIndex) { // Default case if above logic is too complex
+             if (ownerType === 'track') owner.reorderEffect(droppedEffectId, finalSpliceIndex);
+             else window.reorderMasterEffect(droppedEffectId, finalSpliceIndex);
         }
         
         const currentControlsContainer = document.getElementById(`${ownerType}-${owner?.id || 'master'}-effect-controls`);
@@ -383,17 +399,17 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     track.effectsRackWindow = effectsWin; return effectsWin;
 }
 export function openMasterEffectsRackWindow(savedState = null) {
-    console.log("[UI] Attempting to open Master Effects Rack Window. Saved state:", savedState); // DEBUG
+    console.log("[UI] openMasterEffectsRackWindow called. SavedState:", savedState);
     const windowId = 'masterEffectsRack';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
     if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
     const masterEffectsContentElement = buildModularEffectsRackDOM(null, 'master');
-    console.log("[UI] Master Effects Rack DOM built:", masterEffectsContentElement ? "Success" : "Failed"); // DEBUG
+    console.log("[UI] Master Effects Rack DOM built:", masterEffectsContentElement ? "Success" : "Failed");
     if (!masterEffectsContentElement) { showNotification("Failed to build Master Effects Rack content.", 5000); return null; }
     const winOptions = { width: 450, height: 550, initialContentKey: 'masterEffectsRack' }; if (savedState) Object.assign(winOptions, savedState);
     const masterEffectsWin = new SnugWindow(windowId, 'Master Effects Rack', masterEffectsContentElement, winOptions);
     if (!masterEffectsWin || !masterEffectsWin.element) { showNotification("Failed to create Master Effects Rack window object.", 5000); console.error("[UI] Failed to create SnugWindow for Master Effects Rack."); return null; }
-    console.log("[UI] Master Effects Rack Window created and should be visible:", masterEffectsWin); // DEBUG
+    console.log("[UI] Master Effects Rack Window created and should be visible:", masterEffectsWin);
     return masterEffectsWin;
 }
 
@@ -414,66 +430,6 @@ export function openGlobalControlsWindow(savedState = null) {
     window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal'); window.recordBtn = globalControlsWin.element.querySelector('#recordBtnGlobal'); window.tempoInput = globalControlsWin.element.querySelector('#tempoGlobalInput'); window.masterMeterBar = globalControlsWin.element.querySelector('#masterMeterBarGlobal'); window.midiInputSelectGlobal = globalControlsWin.element.querySelector('#midiInputSelectGlobal'); window.midiIndicatorGlobalEl = globalControlsWin.element.querySelector('#midiIndicatorGlobal'); window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal');
     if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) window.attachGlobalControlEvents(globalControlsWin.element); else console.warn("attachGlobalControlEvents not found or window element missing.");
     return globalControlsWin;
-}
-
-// --- Track Inspector Window ---
-export function openTrackInspectorWindow(trackId, savedState = null) {
-    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) { showNotification(`Track ID ${trackId} not found.`, 3000); return null; }
-    const inspectorId = `trackInspector-${track.id}`;
-    if (window.openWindows[inspectorId] && !savedState) { window.openWindows[inspectorId].restore(); return window.openWindows[inspectorId]; }
-    if (window.openWindows[inspectorId] && savedState) window.openWindows[inspectorId].close();
-    track.inspectorControls = {}; const inspectorContentElement = buildTrackInspectorContentDOM(track); if (!inspectorContentElement) { showNotification(`Failed to build Inspector content (Track ${track.id}).`, 4000); return null; }
-    let windowHeight = 450; if (track.type === 'Synth') windowHeight = 620; else if (track.type === 'Sampler') windowHeight = 620; else if (track.type === 'DrumSampler') windowHeight = 580; else if (track.type === 'InstrumentSampler') windowHeight = 620;
-    const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
-    let inspectorWin = null; try { inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions); } catch (e) { console.error(`CRITICAL ERROR \`new SnugWindow()\` for inspector ${inspectorId}:`, e); showNotification("CRITICAL: Error creating inspector window.", 6000); return null; }
-    if (!inspectorWin || !inspectorWin.element) { showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000); return null; }
-    track.inspectorWindow = inspectorWin; initializeCommonInspectorControls(track, inspectorWin.element); initializeTypeSpecificInspectorControls(track, inspectorWin.element);
-    setTimeout(() => { Object.values(track.inspectorControls).forEach(control => { if (control?.type === 'knob' && typeof control.refreshVisuals === 'function') control.refreshVisuals(); }); }, 50);
-    return inspectorWin;
-}
-
-// --- Sequencer Window ---
-export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
-    const mainContentDiv = document.createElement('div'); mainContentDiv.className = 'sequencer-window-content p-2';
-    const titleP = document.createElement('p'); titleP.className = 'text-xs mb-2'; titleP.textContent = `${track.name} - ${track.type} Sequencer (${rows} rows x ${track.sequenceLength} steps, ${numBars} Bars)`; mainContentDiv.appendChild(titleP);
-    const gridContainer = document.createElement('div'); gridContainer.className = 'sequencer-grid-container'; gridContainer.style.overflow = 'auto';
-    const gridDiv = document.createElement('div'); gridDiv.className = 'sequencer-grid'; gridDiv.style.display = 'grid'; gridDiv.style.gridTemplateColumns = `50px repeat(${track.sequenceLength}, minmax(20px, 1fr))`; gridDiv.style.gridTemplateRows = `25px repeat(${rows}, 25px)`; gridDiv.style.setProperty('--steps-per-bar', Constants.STEPS_PER_BAR.toString());
-    const topLeftEmptyCell = document.createElement('div'); topLeftEmptyCell.className = 'sequencer-header-cell empty-top-left'; topLeftEmptyCell.style.gridColumn = '1'; topLeftEmptyCell.style.gridRow = '1'; gridDiv.appendChild(topLeftEmptyCell);
-    for (let bar = 0; bar < numBars; bar++) { const barNumCell = document.createElement('div'); barNumCell.className = 'sequencer-header-cell bar-number-header'; barNumCell.textContent = `Bar ${bar + 1}`; barNumCell.style.gridRow = '1'; const startColForBar = (bar * Constants.STEPS_PER_BAR) + 2; barNumCell.style.gridColumn = `${startColForBar} / span ${Constants.STEPS_PER_BAR}`; barNumCell.style.textAlign = 'center'; barNumCell.style.overflow = 'hidden'; gridDiv.appendChild(barNumCell); }
-    for (let r = 0; r < rows; r++) { const labelCell = document.createElement('div'); labelCell.className = 'sequencer-label-cell'; labelCell.title = rowLabels[r] || `Row ${r+1}`; labelCell.textContent = rowLabels[r] || `R${r+1}`; labelCell.style.gridColumn = '1'; labelCell.style.gridRow = `${r + 2}`; labelCell.style.display = 'flex'; labelCell.style.alignItems = 'center'; labelCell.style.paddingLeft = '5px'; gridDiv.appendChild(labelCell); for (let c = 0; c < track.sequenceLength; c++) { const stepCell = document.createElement('div'); let cellClass = 'sequencer-step-cell'; const beatInBar = (c % Constants.STEPS_PER_BAR); if (Constants.STEPS_PER_BAR === 16) { if (beatInBar % 4 === 0) cellClass += ' beat-downbeat'; else cellClass += ' beat-other'; } else { if (Math.floor(beatInBar / (Constants.STEPS_PER_BAR / 4)) % 2 === 0) cellClass += ' beat-1'; else cellClass += ' beat-2'; } const stepData = track.sequenceData[r]?.[c]; if (stepData && stepData.active) { if (track.type === 'Synth') cellClass += ' active-synth'; else if (track.type === 'Sampler') cellClass += ' active-sampler'; else if (track.type === 'DrumSampler') cellClass += ' active-drum-sampler'; else if (track.type === 'InstrumentSampler') cellClass += ' active-instrument-sampler'; } stepCell.className = cellClass; stepCell.dataset.row = r; stepCell.dataset.col = c; stepCell.title = `${rowLabels[r] || ''} - Step ${c + 1}`; stepCell.style.gridColumn = `${c + 2}`; stepCell.style.gridRow = `${r + 2}`; gridDiv.appendChild(stepCell); } }
-    gridContainer.appendChild(gridDiv); mainContentDiv.appendChild(gridContainer); return mainContentDiv;
-}
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
-    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) return null;
-    const windowId = `sequencerWin-${track.id}`; if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(track.id); else window.activeSequencerTrackId = track.id;
-    if (window.openWindows[windowId] && !forceRedraw && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
-    if (window.openWindows[windowId] && (forceRedraw || savedState)) window.openWindows[windowId].close();
-    let rows = 0, rowLabels = []; if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; } else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({length: rows}, (_, i) => `Slice ${i + 1}`); } else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({length: rows}, (_, i) => `Pad ${i+1}`); }
-    if (rows === 0 && track.sequenceData && track.sequenceData.length > 0) { rows = track.sequenceData.length; rowLabels = Array.from({length: rows}, (_, i) => `Row ${i + 1}`); }
-    if (rows === 0) { showNotification(`Cannot determine rows for ${track.type} sequencer.`, 3000); return null; }
-    const numBars = Math.ceil(track.sequenceLength / Constants.STEPS_PER_BAR); const sequencerContentElement = buildSequencerContentDOM(track, rows, rowLabels, numBars);
-    const winOptions = { width: Math.min(700, window.innerWidth - 50), height: Math.min(420 + rows * 28, window.innerHeight - 100), initialContentKey: `sequencerWin-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
-    const seqWin = new SnugWindow(windowId, `Sequencer: ${track.name}`, sequencerContentElement, winOptions); if (!seqWin || !seqWin.element) { showNotification("Failed to create Sequencer window.", 5000); return null; } track.sequencerWindow = seqWin;
-    seqWin.element.querySelectorAll('.sequencer-step-cell').forEach(cell => { cell.addEventListener('click', () => { const r = parseInt(cell.dataset.row); const c = parseInt(cell.dataset.col); if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Sequencer Step (Track ${track.name}, ${rowLabels[r] || 'Row ' + (r+1)}, Step ${c+1})`); if (!track.sequenceData[r]) track.sequenceData[r] = Array(track.sequenceLength).fill(null); const currentlyActive = track.sequenceData[r][c] && track.sequenceData[r][c].active; if (!currentlyActive) { track.sequenceData[r][c] = { active: true, velocity: Constants.defaultVelocity }; if(typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, true); } else { track.sequenceData[r][c].active = false; if(typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, false); } }); });
-    seqWin.onCloseCallback = () => { const currentActiveSeqId = typeof window.getActiveSequencerTrackId === 'function' ? window.getActiveSequencerTrackId() : null; if (currentActiveSeqId === track.id) { if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(null); } };
-    return seqWin;
-}
-
-// --- Mixer Window ---
-export function openMixerWindow(savedState = null) {
-    const windowId = 'mixer'; if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; } if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
-    const contentDiv = document.createElement('div'); contentDiv.className = 'mixer-window-content p-2 overflow-x-auto flex flex-row gap-2';
-    const winOptions = { width: Math.max(500, Math.min(800, window.innerWidth - 60)), height: 350, initialContentKey: 'mixer' }; if (savedState) Object.assign(winOptions, savedState);
-    let mixerWin = null; try { mixerWin = new SnugWindow(windowId, 'Mixer', contentDiv, winOptions); } catch (e) { console.error('CRITICAL ERROR `new SnugWindow()` for Mixer:', e); showNotification("CRITICAL: Error creating Mixer window.", 6000); return null; }
-    if (!mixerWin || !mixerWin.element) { showNotification("Failed to create Mixer window.", 5000); return null; } renderMixer(contentDiv); return mixerWin;
-}
-export function updateMixerWindow() { const mixerWin = window.openWindows['mixer']; if (mixerWin && mixerWin.element && !mixerWin.isMinimized) { const mixerContentArea = mixerWin.element.querySelector('.mixer-window-content'); if (mixerContentArea) renderMixer(mixerContentArea); } }
-export function renderMixer(container) {
-    if (!container) { console.error("[ui.js] Mixer container not found for rendering."); return; } container.innerHTML = ''; const currentTracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
-    currentTracks.forEach(track => { const strip = document.createElement('div'); strip.className = 'channel-strip flex flex-col items-center p-2 border border-gray-400 bg-gray-200 rounded-md min-w-[100px]'; const trackNameDiv = document.createElement('div'); trackNameDiv.className = 'track-name text-xs font-semibold mb-1 truncate w-full text-center'; trackNameDiv.title = track.name; trackNameDiv.textContent = track.name.substring(0,10) + (track.name.length > 10 ? '...' : ''); trackNameDiv.addEventListener('click', () => handleOpenTrackInspector(track.id)); strip.appendChild(trackNameDiv); const faderContainer = document.createElement('div'); faderContainer.className = 'fader-container w-full flex justify-center my-1'; faderContainer.id = `mixerVolumeSliderContainer-${track.id}`; strip.appendChild(faderContainer); const buttonsDiv = document.createElement('div'); buttonsDiv.className = 'mixer-buttons flex gap-1 mb-1 justify-center'; const muteBtn = document.createElement('button'); muteBtn.id = `mixerMuteBtn-${track.id}`; muteBtn.className = `mute-button text-xs p-1 w-6 h-6 flex items-center justify-center rounded ${track.isMuted ? 'muted' : ''}`; muteBtn.textContent = 'M'; muteBtn.addEventListener('click', () => handleTrackMute(track.id)); buttonsDiv.appendChild(muteBtn); const soloBtn = document.createElement('button'); soloBtn.id = `mixerSoloBtn-${track.id}`; const currentSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null; soloBtn.className = `solo-button text-xs p-1 w-6 h-6 flex items-center justify-center rounded ${currentSoloId === track.id ? 'soloed' : ''}`; soloBtn.textContent = 'S'; soloBtn.addEventListener('click', () => handleTrackSolo(track.id)); buttonsDiv.appendChild(soloBtn); strip.appendChild(buttonsDiv); const meterDiv = document.createElement('div'); meterDiv.id = `mixerTrackMeterContainer-${track.id}`; meterDiv.className = 'mixer-meter-container meter-bar-container w-full h-3 bg-gray-300 rounded overflow-hidden'; meterDiv.innerHTML = `<div id="mixerTrackMeterBar-${track.id}" class="meter-bar h-full bg-green-500 transition-all duration-50 ease-linear"></div>`; strip.appendChild(meterDiv); container.appendChild(strip); const volKnobContainer = strip.querySelector(`#mixerVolumeSliderContainer-${track.id}`); if(volKnobContainer) { const volKnob = createKnob({ label: '', min:0, max:1, step:0.01, initialValue: track.previousVolumeBeforeMute, decimals:2, sensitivity: 0.8, trackRef: track, onValueChange: (val, oldVal, fromInteraction) => { track.setVolume(val, fromInteraction); if (track.inspectorControls?.volume?.type === 'knob') track.inspectorControls.volume.setValue(val, false); } }); volKnobContainer.innerHTML = ''; volKnobContainer.appendChild(volKnob.element); if (!track.inspectorControls) track.inspectorControls = {}; track.inspectorControls[`mixerVolume-${track.id}`] = volKnob; } });
-    const masterStrip = document.createElement('div'); masterStrip.className = 'channel-strip flex flex-col items-center p-2 border border-gray-500 bg-gray-300 rounded-md min-w-[100px]'; masterStrip.innerHTML = `<div class="track-name text-xs font-bold mb-1">Master</div><div class="fader-container w-full flex justify-center my-1" id="mixerMasterVolumeSliderContainer"></div><div id="mixerMasterMeterContainer" class="mixer-meter-container meter-bar-container w-full h-3 bg-gray-400 rounded overflow-hidden mt-auto"><div id="mixerMasterMeterBar" class="meter-bar h-full bg-green-500 transition-all duration-50 ease-linear"></div></div>`; container.appendChild(masterStrip);
-    const masterVolSliderCont = masterStrip.querySelector('#mixerMasterVolumeSliderContainer'); if(masterVolSliderCont){ let currentMasterVol = 0; if (window.masterGainNode?.gain) currentMasterVol = window.masterGainNode.gain.value; else if (Tone.getDestination()?.volume) currentMasterVol = Tone.getDestination().volume.value; const masterVolKnob = createKnob({ label: '', min:0, max:1.5, step:0.01, initialValue: currentMasterVol, displaySuffix: '', decimals:2, sensitivity: 0.8, onValueChange: (val) => { if (window.masterGainNode?.gain) window.masterGainNode.gain.value = val; else if (Tone.getDestination()?.volume) Tone.getDestination().volume.value = val; } }); masterVolSliderCont.innerHTML = ''; masterVolSliderCont.appendChild(masterVolKnob.element); }
-    setTimeout(() => { currentTracks.forEach(track => { track.inspectorControls[`mixerVolume-${track.id}`]?.refreshVisuals?.(); }); }, 50);
 }
 
 // --- Sound Browser UI ---
@@ -506,15 +462,15 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
 }
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    console.log(`[UI SoundBrowser] Rendering directory. Path: /${pathArray.join('/')}, Library: ${window.currentLibraryName}, TreeNode type: ${typeof treeNode}, Is empty obj: ${treeNode && Object.keys(treeNode).length === 0}`);
+    console.log(`[UI SoundBrowser] Rendering directory. Path: /${pathArray.join('/')}, Library: ${window.currentLibraryName}, TreeNode type: ${typeof treeNode}, Is empty obj: ${treeNode && Object.keys(treeNode).length === 0}, Keys:`, treeNode ? Object.keys(treeNode) : 'null');
     if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js] renderSoundBrowserDirectory: DOM elements missing."); return; }
     if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`; return; }
     if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") return;
-    if (!treeNode) { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library.</div>`; pathDisplay.textContent = `Path: /`; return; }
+    if (!treeNode) { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`; pathDisplay.textContent = `Path: /`; return; }
     soundBrowserList.innerHTML = ''; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
     if (pathArray.length > 0) { const backButton = document.createElement('div'); backButton.className = 'sound-browser-item font-semibold hover:bg-gray-100 cursor-pointer p-1 text-sm border-b border-gray-200'; backButton.textContent = '⬆️ .. (Up)'; backButton.addEventListener('click', () => { window.currentSoundBrowserPath.pop(); let newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; if (!newTreeNode) { window.currentSoundBrowserPath = []; renderSoundBrowserDirectory([], null); return; } for (const segment of window.currentSoundBrowserPath) { if (newTreeNode[segment]?.type === 'folder') newTreeNode = newTreeNode[segment].children; else { window.currentSoundBrowserPath = []; newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; break; } } window.currentSoundFileTree = newTreeNode; renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode); }); soundBrowserList.appendChild(backButton); }
     if (Object.keys(treeNode).length === 0 && pathArray.length > 0) { soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>'; }
-    else if (Object.keys(treeNode).length === 0 && pathArray.length === 0 && window.currentLibraryName) { soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or its structure was not recognized.</div>`; }
+    else if (Object.keys(treeNode).length === 0 && pathArray.length === 0 && window.currentLibraryName) { soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or structure not recognized.</div>`; }
 
     const sortedEntries = Object.entries(treeNode).sort(([nameA, itemA], [nameB, itemB]) => { if (itemA.type === 'folder' && itemB.type === 'file') return -1; if (itemA.type === 'file' && itemB.type === 'folder') return 1; return nameA.localeCompare(nameB); });
     sortedEntries.forEach(([name, item]) => {
@@ -527,14 +483,14 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
             div.addEventListener('click', async (event) => {
                 if (event.detail === 0) return;
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
-                if (window.previewPlayer && !window.previewPlayer.disposed) { window.previewPlayer.stop(); window.previewPlayer.dispose(); window.previewPlayer = null;}
+                if (window.previewPlayer && !window.previewPlayer.disposed) { try { window.previewPlayer.stop(); window.previewPlayer.dispose(); } catch(e) {console.warn("Error disposing old preview player", e)} window.previewPlayer = null;}
                 try {
                     if (!window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") throw new Error(`ZIP library "${window.currentLibraryName}" not loaded.`);
                     const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath); if (!zipEntry) throw new Error(`File ${item.fullPath} not in ${window.currentLibraryName}.`);
                     const fileBlob = await zipEntry.async("blob"); const objectURL = URL.createObjectURL(fileBlob);
                     const buffer = await new Tone.Buffer().load(objectURL);
                     window.previewPlayer = new Tone.Player(buffer).toDestination(); window.previewPlayer.autostart = true;
-                    window.previewPlayer.onstop = () => { if (window.previewPlayer && !window.previewPlayer.disposed) window.previewPlayer.dispose(); window.previewPlayer = null; URL.revokeObjectURL(objectURL); };
+                    window.previewPlayer.onstop = () => { if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){} window.previewPlayer = null; URL.revokeObjectURL(objectURL); };
                 } catch (error) { console.error(`Error previewing sound ${name}:`, error); showNotification(`Error previewing ${name}: ${error.message}`, 3000); }
             });
         }
@@ -542,7 +498,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     });
 }
 
-// --- Utility UI functions for samplers and sequencers ---
+// --- Other UI functions that were present in your original ui.js ---
 export function renderSamplePads(track) {
     if (!track || !track.inspectorWindow?.element) return;
     const padsContainer = track.inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
@@ -613,6 +569,3 @@ export function highlightPlayingStep(col, trackType, gridElement) {
     if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
     gridElement._lastPlayingCol = col;
 }
-
-// No longer need the large export block if all functions are individually exported as needed.
-// main.js will import them directly.
