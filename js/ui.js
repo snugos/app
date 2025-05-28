@@ -176,7 +176,7 @@ function buildSynthEngineControls(track, container, engineType) {
         } else if (def.type === 'select') {
             const selectEl = document.createElement('select');
             selectEl.id = `${def.idPrefix}-${track.id}`;
-            selectEl.className = 'synth-param-select w-full p-1 border rounded text-xs bg-gray-50';
+            selectEl.className = 'synth-param-select w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600';
             def.options.forEach(opt => {
                 const option = document.createElement('option');
                 option.value = typeof opt === 'object' ? opt.value : opt;
@@ -192,7 +192,7 @@ function buildSynthEngineControls(track, container, engineType) {
             const labelEl = document.createElement('label');
             labelEl.htmlFor = selectEl.id;
             labelEl.textContent = def.label + ':';
-            labelEl.className = 'text-xs block mb-0.5';
+            labelEl.className = 'text-xs block mb-0.5 dark:text-slate-300';
             
             const wrapperDiv = document.createElement('div');
             wrapperDiv.className = 'flex flex-col items-start';
@@ -211,30 +211,30 @@ function buildSamplerSpecificInspectorDOM(track) {
     // Drop Zone
     html += `<div id="dropZoneContainer-${track.id}-sampler" class="mb-2"></div>`;
     // Waveform Canvas
-    html += `<div class="waveform-section border rounded p-1 bg-gray-100">
-                <canvas id="waveformCanvas-${track.id}" class="w-full h-24 bg-white rounded shadow-inner"></canvas>
+    html += `<div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
+                <canvas id="waveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
              </div>`;
     // Slice Editor Controls
-    html += `<div class="slice-editor-controls mt-2 p-1 border rounded bg-gray-50 space-y-1">
-                <h4 class="text-xs font-semibold">Slice Editor (Selected: <span id="selectedSliceInfo-${track.id}">1</span>)</h4>
+    html += `<div class="slice-editor-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+                <h4 class="text-xs font-semibold dark:text-slate-200">Slice Editor (Selected: <span id="selectedSliceInfo-${track.id}">1</span>)</h4>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1 items-center text-xs">
                     <div id="sliceVolumeSlider-${track.id}-placeholder"></div>
                     <div id="slicePitchKnob-${track.id}-placeholder"></div>
-                    <button id="sliceLoopToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded">Loop: OFF</button>
-                    <button id="sliceReverseToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded">Rev: OFF</button>
+                    <button id="sliceLoopToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Loop: OFF</button>
+                    <button id="sliceReverseToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Rev: OFF</button>
                 </div>
-                <div class="text-xs font-medium mt-1">Envelope:</div>
+                <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1 items-center text-xs">
                     <div id="sliceEnvAttackSlider-${track.id}-placeholder"></div>
                     <div id="sliceEnvDecaySlider-${track.id}-placeholder"></div>
                     <div id="sliceEnvSustainSlider-${track.id}-placeholder"></div>
                     <div id="sliceEnvReleaseSlider-${track.id}-placeholder"></div>
                 </div>
-                <button id="applySliceEditsBtn-${track.id}" class="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">Apply Edits to Slice</button>
+                <button id="applySliceEditsBtn-${track.id}" class="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Apply Edits to Slice</button>
              </div>`;
     // Sample Pads Area
     html += `<div id="samplePadsContainer-${track.id}" class="grid grid-cols-4 gap-1 mt-2"></div>`;
-    html += `<div><button id="slicerPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1">Mode: Poly</button></div>`;
+    html += `<div><button id="slicerPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>`;
     html += `</div>`; // End sampler-controls
     return html;
 }
@@ -243,14 +243,14 @@ function buildSamplerSpecificInspectorDOM(track) {
 function buildDrumSamplerSpecificInspectorDOM(track) {
     let html = `<div class="drum-sampler-controls p-1 space-y-2">`;
     // Pad Controls Area (for selected pad)
-    html += `<div class="selected-pad-controls p-1 border rounded bg-gray-50 space-y-1">
-                <h4 class="text-xs font-semibold">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
+    html += `<div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+                <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
                 <div id="drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}" class="mb-1 text-xs"></div>
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
                     <div id="drumPadVolumeKnob-${track.id}-placeholder"></div>
                     <div id="drumPadPitchKnob-${track.id}-placeholder"></div>
                 </div>
-                <div class="text-xs font-medium mt-1">Envelope:</div>
+                <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1 items-center text-xs">
                     <div id="drumPadEnvAttack-${track.id}-placeholder"></div>
                     <div id="drumPadEnvDecay-${track.id}-placeholder"></div>
@@ -270,37 +270,37 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     // Drop Zone
     html += `<div id="dropZoneContainer-${track.id}-instrumentsampler" class="mb-2"></div>`;
     // Waveform Canvas
-    html += `<div class="waveform-section border rounded p-1 bg-gray-100">
-               <canvas id="instrumentWaveformCanvas-${track.id}" class="w-full h-24 bg-white rounded shadow-inner"></canvas>
+    html += `<div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
+               <canvas id="instrumentWaveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
              </div>`;
     // Controls: Root Note, Loop, Envelope
-    html += `<div class="instrument-params-controls mt-2 p-1 border rounded bg-gray-50 space-y-1 text-xs">
+    html += `<div class="instrument-params-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1 text-xs">
                 <div class="grid grid-cols-2 gap-2 items-center">
                     <div>
-                        <label for="instrumentRootNote-${track.id}" class="block text-xs font-medium">Root Note:</label>
-                        <select id="instrumentRootNote-${track.id}" class="w-full p-1 border rounded text-xs bg-gray-50"></select>
+                        <label for="instrumentRootNote-${track.id}" class="block text-xs font-medium dark:text-slate-300">Root Note:</label>
+                        <select id="instrumentRootNote-${track.id}" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500"></select>
                     </div>
                     <div>
-                        <label for="instrumentLoopToggle-${track.id}" class="block text-xs font-medium">Loop:</label>
-                        <button id="instrumentLoopToggle-${track.id}" class="px-2 py-1 text-xs border rounded w-full">Loop: OFF</button>
+                        <label for="instrumentLoopToggle-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop:</label>
+                        <button id="instrumentLoopToggle-${track.id}" class="px-2 py-1 text-xs border rounded w-full dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Loop: OFF</button>
                     </div>
                     <div>
-                        <label for="instrumentLoopStart-${track.id}" class="block text-xs font-medium">Loop Start (s):</label>
-                        <input type="number" id="instrumentLoopStart-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs">
+                        <label for="instrumentLoopStart-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop Start (s):</label>
+                        <input type="number" id="instrumentLoopStart-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                     </div>
                     <div>
-                        <label for="instrumentLoopEnd-${track.id}" class="block text-xs font-medium">Loop End (s):</label>
-                        <input type="number" id="instrumentLoopEnd-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs">
+                        <label for="instrumentLoopEnd-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop End (s):</label>
+                        <input type="number" id="instrumentLoopEnd-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                     </div>
                 </div>
-                 <div class="text-xs font-medium mt-1">Envelope:</div>
+                 <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1 items-center text-xs">
                     <div id="instrumentEnvAttack-${track.id}-placeholder"></div>
                     <div id="instrumentEnvDecay-${track.id}-placeholder"></div>
                     <div id="instrumentEnvSustain-${track.id}-placeholder"></div>
                     <div id="instrumentEnvRelease-${track.id}-placeholder"></div>
                 </div>
-                <div><button id="instrumentPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1">Mode: Poly</button></div>
+                <div><button id="instrumentPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>
             </div>`;
     html += `</div>`; // End instrument-sampler-controls
     return html;
@@ -322,25 +322,25 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     }
 
     return `
-        <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 overflow-y-auto h-full">
+        <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 dark:text-slate-300 overflow-y-auto h-full">
             <div class="common-controls grid grid-cols-3 gap-1 mb-1">
-                <button id="muteBtn-${track.id}" title="Mute Track" class="px-1 py-0.5 border rounded ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'Unmute' : 'Mute'}</button>
-                <button id="soloBtn-${track.id}" title="Solo Track" class="px-1 py-0.5 border rounded ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
-                <button id="armInputBtn-${track.id}" title="Arm for MIDI/Keyboard Input" class="px-1 py-0.5 border rounded ${window.getArmedTrackId && window.getArmedTrackId() === track.id ? 'armed' : ''}">Arm</button>
+                <button id="muteBtn-${track.id}" title="Mute Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'Unmute' : 'Mute'}</button>
+                <button id="soloBtn-${track.id}" title="Solo Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
+                <button id="armInputBtn-${track.id}" title="Arm for MIDI/Keyboard Input" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${window.getArmedTrackId && window.getArmedTrackId() === track.id ? 'armed' : ''}">Arm</button>
             </div>
             <div id="volumeKnob-${track.id}-placeholder" class="mb-1"></div>
-            <div id="trackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 rounded border border-gray-300 overflow-hidden my-1">
+            <div id="trackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden my-1">
                 <div id="trackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
 
-            <div class="type-specific-controls mt-1 border-t pt-1">
+            <div class="type-specific-controls mt-1 border-t dark:border-slate-600 pt-1">
                 ${specificControlsHTML}
             </div>
 
             <div class="inspector-nav grid grid-cols-3 gap-1 mt-2">
-                <button id="openEffectsBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300">Effects</button>
-                <button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300">Sequencer</button>
-                <button id="removeTrackBtn-${track.id}" class="px-1 py-0.5 border rounded bg-red-400 hover:bg-red-500 text-white">Remove</button>
+                <button id="openEffectsBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Effects</button>
+                <button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Sequencer</button>
+                <button id="removeTrackBtn-${track.id}" class="px-1 py-0.5 border rounded bg-red-400 hover:bg-red-500 text-white dark:bg-red-600 dark:hover:bg-red-700 dark:border-red-500">Remove</button>
             </div>
         </div>
     `;
@@ -631,10 +631,10 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
 
     let html = `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full">
-        <h3 class="text-sm font-semibold">Effects Rack: ${ownerName}</h3>
-        <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100">
+        <h3 class="text-sm font-semibold dark:text-slate-200">Effects Rack: ${ownerName}</h3>
+        <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
             </div>
-        <button id="addEffectBtn-${ownerId}" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Add Effect</button>
+        <button id="addEffectBtn-${ownerId}" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Add Effect</button>
         <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2">
             </div>
     </div>`;
@@ -647,7 +647,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : window.masterEffectsChain;
 
     if (!effectsArray || effectsArray.length === 0) {
-        listDiv.innerHTML = '<p class="text-xs text-gray-500 italic">No effects added.</p>';
+        listDiv.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
         if (controlsContainer) controlsContainer.innerHTML = ''; // Clear controls if no effects
         return;
     }
@@ -657,20 +657,20 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
         const displayName = effectDef ? effectDef.displayName : effect.type;
 
         const item = document.createElement('div');
-        item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white rounded-sm shadow-xs text-xs';
+        item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs';
         item.innerHTML = `
-            <span class="effect-name flex-grow cursor-pointer hover:text-blue-600" title="Edit ${displayName}">${displayName}</span>
+            <span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit ${displayName}">${displayName}</span>
             <div class="effect-actions">
-                <button class="up-btn text-xs px-0.5 ${index === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600'}" ${index === 0 ? 'disabled' : ''} title="Move Up">▲</button>
-                <button class="down-btn text-xs px-0.5 ${index === effectsArray.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600'}" ${index === effectsArray.length - 1 ? 'disabled' : ''} title="Move Down">▼</button>
-                <button class="remove-btn text-xs px-1 text-red-500 hover:text-red-700" title="Remove Effect">✕</button>
+                <button class="up-btn text-xs px-0.5 ${index === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600 dark:hover:text-green-400'} dark:text-slate-400" ${index === 0 ? 'disabled' : ''} title="Move Up">▲</button>
+                <button class="down-btn text-xs px-0.5 ${index === effectsArray.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600 dark:hover:text-green-400'} dark:text-slate-400" ${index === effectsArray.length - 1 ? 'disabled' : ''} title="Move Down">▼</button>
+                <button class="remove-btn text-xs px-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" title="Remove Effect">✕</button>
             </div>
         `;
         item.querySelector('.effect-name').addEventListener('click', () => {
             renderEffectControls(owner, ownerType, effect.id, controlsContainer);
             // Highlight selected effect
-            listDiv.querySelectorAll('.effect-item').forEach(el => el.classList.remove('bg-blue-100', 'border-blue-300'));
-            item.classList.add('bg-blue-100', 'border-blue-300');
+            listDiv.querySelectorAll('.effect-item').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
+            item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
         });
         item.querySelector('.up-btn').addEventListener('click', () => {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
@@ -703,7 +703,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     const effectWrapper = effectsArray.find(e => e.id === effectId);
 
     if (!effectWrapper) {
-        controlsContainer.innerHTML = '<p class="text-xs text-gray-500 italic">Select an effect to see its controls.</p>';
+        controlsContainer.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">Select an effect to see its controls.</p>';
         return;
     }
 
@@ -714,15 +714,15 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     }
 
     const titleEl = document.createElement('h4');
-    titleEl.className = 'text-xs font-semibold mb-1';
+    titleEl.className = 'text-xs font-semibold mb-1 dark:text-slate-200';
     titleEl.textContent = `Controls: ${effectDef.displayName}`;
     controlsContainer.appendChild(titleEl);
 
     const gridContainer = document.createElement('div');
-    gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 border rounded bg-gray-50 text-xs';
+    gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 text-xs';
 
     if (!effectDef.params || effectDef.params.length === 0) {
-        gridContainer.innerHTML = '<p class="text-xs text-gray-500 italic col-span-full">No adjustable parameters for this effect.</p>';
+        gridContainer.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic col-span-full">No adjustable parameters for this effect.</p>';
     } else {
         effectDef.params.forEach(paramDef => {
             const controlWrapper = document.createElement('div');
@@ -759,10 +759,10 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                 controlWrapper.appendChild(knob.element);
             } else if (paramDef.type === 'select') {
                 const label = document.createElement('label');
-                label.className = 'block text-xs font-medium mb-0.5';
+                label.className = 'block text-xs font-medium mb-0.5 dark:text-slate-300';
                 label.textContent = paramDef.label + ':';
                 const select = document.createElement('select');
-                select.className = 'w-full p-1 border rounded text-xs bg-white';
+                select.className = 'w-full p-1 border rounded text-xs bg-white dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500';
                 paramDef.options.forEach(opt => {
                     const option = document.createElement('option');
                     option.value = typeof opt === 'object' ? opt.value : opt;
@@ -784,7 +784,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
             } else if (paramDef.type === 'toggle') {
                 // Basic toggle button for boolean params
                 const button = document.createElement('button');
-                button.className = `w-full p-1 border rounded text-xs ${currentValue ? 'bg-blue-500 text-white' : 'bg-gray-200'}`;
+                button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${currentValue ? 'bg-blue-500 text-white dark:bg-blue-600' : 'bg-gray-200 dark:bg-slate-600'}`;
                 button.textContent = `${paramDef.label}: ${currentValue ? 'ON' : 'OFF'}`;
                 button.addEventListener('click', () => {
                     const newValue = !currentValue;
@@ -808,7 +808,7 @@ function showAddEffectModal(owner, ownerType) {
 
     let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
     for (const effectKey in AVAILABLE_EFFECTS) {
-        modalContentHTML += `<li class="p-1.5 hover:bg-blue-100 cursor-pointer border-b text-sm" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS[effectKey].displayName}</li>`;
+        modalContentHTML += `<li class="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS[effectKey].displayName}</li>`;
     }
     modalContentHTML += `</ul></div>`;
 
@@ -909,7 +909,8 @@ function showAddEffectModal(owner, ownerType) {
     return rackWindow;
 }
 
- function openGlobalControlsWindow(savedState = null) {
+// MODIFIED: Removed 'export' from function definition, kept in export block at the end
+function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     console.log(`[UI] Attempting to open/focus Global Controls Window. SavedState:`, savedState);
 
@@ -929,32 +930,31 @@ function showAddEffectModal(owner, ownerType) {
     console.log(`[UI] Global Controls window '${windowId}' not found or was closed. Creating new instance.`);
 
     // 2. Define content HTML for the Global Controls window
-    // Ensure all element IDs match what's expected by eventHandlers.js and main.js
     const contentHTML = `
-        <div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700">
+        <div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300">
             <div class="grid grid-cols-2 gap-2 items-center">
-                <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150">Play</button>
-                <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150">Record</button>
+                <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button>
+                <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button>
             </div>
             <div>
-                <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 mb-0.5">Tempo (BPM):</label>
-                <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label>
+                <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
             </div>
             <div>
-                <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 mb-0.5">MIDI Input:</label>
-                <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label>
+                <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                     <option value="">No MIDI Input</option>
                 </select>
             </div>
             <div class="pt-1">
-                <label class="block text-xs font-medium text-gray-600 mb-0.5">Master Level:</label>
-                <div class="h-5 w-full bg-gray-200 rounded border border-gray-300 overflow-hidden shadow-sm">
+                <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label>
+                <div class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm">
                      <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
                 </div>
             </div>
             <div class="flex justify-between items-center text-xs mt-1.5">
-                <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150">MIDI</span>
-                <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150">KBD</span>
+                <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span>
+                <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span>
             </div>
         </div>
     `;
@@ -962,13 +962,13 @@ function showAddEffectModal(owner, ownerType) {
     // 3. Define options for the SnugWindow
     const options = {
         width: 280,
-        height: 290, // Adjusted for more padding/content
+        height: 290, 
         minWidth: 250,
         minHeight: 270,
-        closable: true, // Or false if it should always be accessible via taskbar
+        closable: true, 
         minimizable: true,
         resizable: true,
-        initialContentKey: windowId // Important for project save/load state restoration
+        initialContentKey: windowId 
     };
 
     if (savedState && savedState.id === windowId) {
@@ -977,24 +977,18 @@ function showAddEffectModal(owner, ownerType) {
         options.y = parseInt(savedState.top, 10);
         options.width = parseInt(savedState.width, 10);
         options.height = parseInt(savedState.height, 10);
-        options.zIndex = savedState.zIndex; // Let SnugWindow handle default if undefined
+        options.zIndex = savedState.zIndex; 
         if (savedState.isMinimized) {
             options.isMinimized = true;
         }
     } else {
-      // Default position if no saved state (or mismatch) - SnugWindow will cascade
       console.log(`[UI] No valid saved state for Global Controls window, using defaults.`);
     }
 
-    // 4. Create the SnugWindow instance using the global createWindow wrapper
-    // window.createWindow is defined in main.js and wraps `new SnugWindow(...)`
     const newWindow = window.createWindow(windowId, 'Global Controls', contentHTML, options);
 
-    // 5. Populate global DOM element references IF window creation was successful
     if (newWindow && newWindow.element) {
         console.log('[UI] Global Controls SnugWindow created successfully. Populating global element references for it.');
-
-        // These global variables are used by eventHandlers.js and other parts of main.js
         window.playBtn = newWindow.element.querySelector('#playBtnGlobal');
         window.recordBtn = newWindow.element.querySelector('#recordBtnGlobal');
         window.tempoInput = newWindow.element.querySelector('#tempoGlobalInput');
@@ -1007,14 +1001,11 @@ function showAddEffectModal(owner, ownerType) {
             console.error('[UI] CRITICAL: One or more essential controls NOT FOUND in Global Controls window HTML after creation. Check IDs in contentHTML.');
         }
         
-        // The actual event listeners will be attached by main.js calling eventHandlers.attachGlobalControlEvents
-        // after this function returns and globalControlsWindowInstance.element is validated in main.js.
-
         console.log(`[UI] Returning new Global Controls SnugWindow instance:`, newWindow);
-        return newWindow; // Return the SnugWindow instance
+        return newWindow;
     } else {
         console.error('[UI] CRITICAL: window.createWindow failed to return a valid instance or element for Global Controls.');
-        return null; // Explicitly return null if SnugWindow creation failed
+        return null;
     }
 }
 
@@ -1027,19 +1018,19 @@ function showAddEffectModal(owner, ownerType) {
     }
 
     let contentHTML = `
-        <div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full">
+        <div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full dark:text-slate-300">
             <div class="flex space-x-1 mb-1">
-                <select id="librarySelect" class="flex-grow p-1 border rounded text-xs bg-gray-50">
+                <select id="librarySelect" class="flex-grow p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                     <option value="">Select Library...</option>
                 </select>
-                <button id="upDirectoryBtn" class="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300" title="Up Directory">↑</button>
+                <button id="upDirectoryBtn" class="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500" title="Up Directory">↑</button>
             </div>
-            <div id="currentPathDisplay" class="text-xs text-gray-600 truncate mb-1">/</div>
-            <div id="soundBrowserList" class="min-h-[100px] border rounded p-1 bg-gray-100 overflow-y-auto">
-                <p class="text-gray-500 italic">Select a library to browse sounds.</p>
+            <div id="currentPathDisplay" class="text-xs text-gray-600 dark:text-slate-400 truncate mb-1">/</div>
+            <div id="soundBrowserList" class="min-h-[100px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600 overflow-y-auto">
+                 <p class="text-gray-500 dark:text-slate-400 italic">Select a library to browse sounds.</p>
             </div>
             <div id="soundPreviewControls" class="mt-1 text-center">
-                <button id="previewSoundBtn" class="px-2 py-1 text-xs border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50" disabled>Preview</button>
+                <button id="previewSoundBtn" class="px-2 py-1 text-xs border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-slate-500" disabled>Preview</button>
             </div>
         </div>`;
 
@@ -1053,7 +1044,6 @@ function showAddEffectModal(owner, ownerType) {
         const upDirectoryBtn = browserWindow.element.querySelector('#upDirectoryBtn');
         const previewSoundBtn = browserWindow.element.querySelector('#previewSoundBtn');
 
-        // Populate library select
         if (Constants.soundLibraries) {
             for (const libName in Constants.soundLibraries) {
                 const option = document.createElement('option');
@@ -1065,9 +1055,9 @@ function showAddEffectModal(owner, ownerType) {
         librarySelect.addEventListener('change', (e) => {
             const libName = e.target.value;
             if (libName && typeof window.fetchSoundLibrary === 'function') {
-                window.fetchSoundLibrary(libName, Constants.soundLibraries[libName]); // This will also update display
+                window.fetchSoundLibrary(libName, Constants.soundLibraries[libName]);
             } else if (!libName) {
-                if (typeof window.updateSoundBrowserDisplayForLibrary === 'function') window.updateSoundBrowserDisplayForLibrary(null); // Clear display
+                if (typeof window.updateSoundBrowserDisplayForLibrary === 'function') window.updateSoundBrowserDisplayForLibrary(null);
             }
         });
 
@@ -1092,14 +1082,13 @@ function showAddEffectModal(owner, ownerType) {
                             const tempUrl = URL.createObjectURL(blob);
                             window.previewPlayer = new Tone.Player(tempUrl, () => {
                                 window.previewPlayer.start();
-                                URL.revokeObjectURL(tempUrl); // Revoke after loading
+                                URL.revokeObjectURL(tempUrl); 
                             }).toDestination();
                         }).catch(err => showNotification("Error loading preview: " + err.message, 2000));
                     }
                 }
             }
         });
-        // Initial display update if a library is pre-selected or auto-loaded
         if (window.currentLibraryName && typeof window.updateSoundBrowserDisplayForLibrary === 'function') {
             window.updateSoundBrowserDisplayForLibrary(window.currentLibraryName);
         }
@@ -1116,26 +1105,26 @@ function showAddEffectModal(owner, ownerType) {
     const currentPathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
 
     window.currentLibraryName = libraryName;
-    window.currentSoundBrowserPath = []; // Reset path
+    window.currentSoundBrowserPath = []; 
 
-    if (librarySelect && librarySelect.value !== libraryName) { // Sync dropdown if changed externally
+    if (librarySelect && librarySelect.value !== libraryName) { 
         librarySelect.value = libraryName || "";
     }
 
     if (!libraryName) {
-        listDiv.innerHTML = '<p class="text-gray-500 italic">Select a library to browse sounds.</p>';
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library to browse sounds.</p>';
         currentPathDisplay.textContent = '/';
         window.currentSoundFileTree = null;
         return;
     }
 
     if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") {
-        listDiv.innerHTML = '<p class="text-gray-500 italic">Loading library...</p>';
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Loading library...</p>';
         currentPathDisplay.textContent = `/${libraryName}/`;
         window.currentSoundFileTree = null;
     } else if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) {
         window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName];
-        if (typeof renderSoundBrowserDirectory === 'function') renderSoundBrowserDirectory([], window.currentSoundFileTree); // Start at root
+        if (typeof renderSoundBrowserDirectory === 'function') renderSoundBrowserDirectory([], window.currentSoundFileTree); 
     } else {
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" not found or failed to load.</p>`;
         currentPathDisplay.textContent = '/';
@@ -1151,7 +1140,7 @@ function showAddEffectModal(owner, ownerType) {
     const currentPathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
     const previewSoundBtn = browserWindowEl.querySelector('#previewSoundBtn');
 
-    listDiv.innerHTML = ''; // Clear previous
+    listDiv.innerHTML = ''; 
     currentPathDisplay.textContent = `/${window.currentLibraryName || ''}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
     window.selectedSoundForPreview = null;
     if(previewSoundBtn) previewSoundBtn.disabled = true;
@@ -1161,7 +1150,6 @@ function showAddEffectModal(owner, ownerType) {
     for (const name in treeNode) {
         items.push({ name, type: treeNode[name].type });
     }
-    // Sort folders first, then files, then alphabetically
     items.sort((a, b) => {
         if (a.type === 'folder' && b.type !== 'folder') return -1;
         if (a.type !== 'folder' && b.type === 'folder') return 1;
@@ -1170,7 +1158,7 @@ function showAddEffectModal(owner, ownerType) {
 
 
     if (items.length === 0) {
-        listDiv.innerHTML = '<p class="text-gray-500 italic">Empty folder.</p>';
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Empty folder.</p>';
         return;
     }
 
@@ -1178,8 +1166,8 @@ function showAddEffectModal(owner, ownerType) {
         const name = itemObj.name;
         const node = treeNode[name];
         const listItem = document.createElement('div');
-        listItem.className = 'p-1 hover:bg-blue-100 cursor-pointer border-b text-xs flex items-center';
-        listItem.draggable = node.type === 'file'; // Only files are draggable
+        listItem.className = 'p-1 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-xs flex items-center';
+        listItem.draggable = node.type === 'file'; 
 
         const icon = document.createElement('span');
         icon.className = 'mr-1.5';
@@ -1195,11 +1183,10 @@ function showAddEffectModal(owner, ownerType) {
                 window.currentSoundBrowserPath.push(name);
                 renderSoundBrowserDirectory(window.currentSoundBrowserPath, node.children);
             });
-        } else { // File
+        } else { 
             listItem.addEventListener('click', () => {
-                // Highlight selected file
-                listDiv.querySelectorAll('.bg-blue-200').forEach(el => el.classList.remove('bg-blue-200'));
-                listItem.classList.add('bg-blue-200');
+                listDiv.querySelectorAll('.bg-blue-200').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
+                listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
                 window.selectedSoundForPreview = {
                     fileName: name,
                     fullPath: [...pathArray, name].join('/'),
@@ -1212,7 +1199,7 @@ function showAddEffectModal(owner, ownerType) {
                     fileName: name,
                     fullPath: [...pathArray, name].join('/'),
                     libraryName: window.currentLibraryName,
-                    type: 'sound-browser-item' // Identifier for drop target
+                    type: 'sound-browser-item' 
                 };
                 event.dataTransfer.setData("application/json", JSON.stringify(soundData));
                 event.dataTransfer.effectAllowed = "copy";
@@ -1232,7 +1219,7 @@ function showAddEffectModal(owner, ownerType) {
 
     const contentContainer = document.createElement('div');
     contentContainer.id = 'mixerContentContainer';
-    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full'; // Allow horizontal scroll for many tracks
+    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800'; 
 
     const mixerOptions = {
         width: Math.min(800, (document.getElementById('desktop')?.offsetWidth || 800) - 40),
@@ -1244,7 +1231,7 @@ function showAddEffectModal(owner, ownerType) {
     const mixerWindow = window.createWindow(windowId, 'Mixer', contentContainer, mixerOptions);
 
     if (mixerWindow && mixerWindow.element) {
-        if (typeof updateMixerWindow === 'function') updateMixerWindow(); // Initial render
+        if (typeof updateMixerWindow === 'function') updateMixerWindow(); 
     } else { return null; }
     return mixerWindow;
 }
@@ -1256,19 +1243,19 @@ function showAddEffectModal(owner, ownerType) {
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (!container) return;
 
-    renderMixer(container); // Call the main render function
+    renderMixer(container); 
 }
 
  function renderMixer(container) {
-    container.innerHTML = ''; // Clear previous content
+    container.innerHTML = ''; 
     const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
 
     const masterTrackDiv = document.createElement('div');
-    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 shadow w-24 mr-2 text-xs';
+    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
     masterTrackDiv.innerHTML = `
-        <div class="track-name font-semibold truncate mb-1" title="Master">Master</div>
+        <div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="Master">Master</div>
         <div id="masterVolumeKnob-mixer-placeholder" class="h-16 mx-auto mb-1"></div>
-        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-gray-300 rounded border border-gray-400 overflow-hidden mt-1">
+        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden mt-1">
             <div id="mixerMasterMeterBar" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
         </div>
     `;
@@ -1292,15 +1279,15 @@ function showAddEffectModal(owner, ownerType) {
 
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white shadow w-24 mr-2 text-xs';
+        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
         trackDiv.innerHTML = `
-            <div class="track-name font-semibold truncate mb-1" title="${track.name}">${track.name}</div>
+            <div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
             <div class="grid grid-cols-2 gap-0.5 my-1">
-                <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button>
-                <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button>
+                <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button>
+                <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button>
             </div>
-            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 rounded border border-gray-300 overflow-hidden mt-0.5">
+            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5">
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
         `;
@@ -1323,17 +1310,16 @@ function showAddEffectModal(owner, ownerType) {
  function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const stepsPerBar = Constants.STEPS_PER_BAR;
     const totalSteps = numBars * stepsPerBar;
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full">`;
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-800 dark:text-slate-300">`;
     html += `<div class="controls mb-1 flex justify-between items-center">
                 <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span>
                 <div>
                     <label for="seqLengthInput-${track.id}">Bars: </label>
-                    <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="16" class="w-12 p-0.5 border rounded text-xs">
+                    <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="16" class="w-12 p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                 </div>
              </div>`;
-    html += `<div class="sequencer-grid-wrapper relative">`; // Wrapper for labels + grid
-    // Row Labels (Piano Roll for Synth/Instrument, Slices for Sampler, Pads for Drum Sampler)
-    html += `<div class="sequencer-row-labels absolute left-0 top-0 pt-[18px] pr-1 text-right text-[10px] leading-tight z-10 bg-gray-100 border-r">`;
+    html += `<div class="sequencer-grid-wrapper relative">`; 
+    html += `<div class="sequencer-row-labels absolute left-0 top-0 pt-[18px] pr-1 text-right text-[10px] leading-tight z-10 bg-gray-100 dark:bg-slate-700 border-r dark:border-slate-600 dark:text-slate-300">`; 
     for (let i = 0; i < rows; i++) {
         let labelText = rowLabels[i] || `R${i + 1}`;
         if (labelText.length > 5) labelText = labelText.substring(0,4) + "..";
@@ -1341,14 +1327,12 @@ function showAddEffectModal(owner, ownerType) {
     }
     html += `</div>`;
 
-    // Grid itself
-    html += `<div class="sequencer-grid inline-block ml-[50px]">`; // Margin for labels
-    // Header row for bar numbers / beat markers
-    html += `<div class="flex sticky top-0 bg-gray-100 z-20 border-b">`;
+    html += `<div class="sequencer-grid inline-block ml-[50px]">`; 
+    html += `<div class="flex sticky top-0 bg-gray-100 dark:bg-slate-700 z-20 border-b dark:border-slate-600">`; 
     for (let i = 0; i < totalSteps; i++) {
         let barMarkerClass = (i % stepsPerBar === 0) ? 'bar-marker' : '';
         let beatMarkerClass = (i % (stepsPerBar / 4) === 0) ? 'beat-marker' : '';
-        html += `<div class="sequencer-header-cell w-[18px] h-[18px] text-[9px] flex items-center justify-center ${barMarkerClass} ${beatMarkerClass}">
+        html += `<div class="sequencer-header-cell w-[18px] h-[18px] text-[9px] flex items-center justify-center ${barMarkerClass} ${beatMarkerClass} dark:text-slate-400">
                     ${i % stepsPerBar === 0 ? (i/stepsPerBar + 1) : ''}
                  </div>`;
     }
@@ -1366,16 +1350,29 @@ function showAddEffectModal(owner, ownerType) {
                 else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
             }
             let barDividerClass = (j % stepsPerBar === 0 && j > 0) ? 'bar-divider' : '';
-            let beatDividerClass = (j % (stepsPerBar/4) === 0 && j > 0) ? 'beat-divider' : '';
+            let beatDividerClass = (j % (stepsPerBar/4) === 0 && j > 0 && j % stepsPerBar !== 0) ? 'beat-divider' : ''; 
 
-            html += `<div class="sequencer-step-cell w-[18px] h-[18px] border border-gray-300 ${activeClass} ${barDividerClass} ${beatDividerClass}"
+            // **** START Change for 4-step coloring ****
+            let beatBlockClass = '';
+            // This colors blocks of 4 steps within each bar, alternating.
+            if (Math.floor((j % stepsPerBar) / 4) % 2 === 0) {
+                // Use Tailwind classes for alternating backgrounds
+                // Example: one shade for steps 0-3, 8-11 and another for 4-7, 12-15 within a 16-step bar
+                beatBlockClass = 'bg-white dark:bg-slate-800'; // "Darker" block
+            } else {
+                beatBlockClass = 'bg-gray-100 dark:bg-slate-750'; // "Lighter" block
+            }
+            // **** END Change for 4-step coloring ****
+
+            html += `<div class="sequencer-step-cell w-[18px] h-[18px] border border-gray-300 dark:border-slate-600 ${activeClass} ${barDividerClass} ${beatDividerClass} ${beatBlockClass}"
                          data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}"></div>`;
         }
         html += `</div>`;
     }
-    html += `</div></div></div>`; // End sequencer-grid, grid-wrapper, sequencer-container
+    html += `</div></div></div>`; 
     return html;
 }
+
 
  function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
@@ -1436,7 +1433,6 @@ function showAddEffectModal(owner, ownerType) {
                 if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Step (${row+1},${col+1}) on ${track.name}`);
                 track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
 
-                // Update cell UI directly
                 e.target.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
                 if (isActive) {
                     let activeClass = '';
@@ -1452,9 +1448,9 @@ function showAddEffectModal(owner, ownerType) {
         lengthInput.addEventListener('change', (e) => {
             const newNumBars = parseInt(e.target.value);
             if (!isNaN(newNumBars) && newNumBars >= 1 && newNumBars <= 16) {
-                track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); // This will re-render if needed
+                track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); 
             } else {
-                e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR; // Reset to current
+                e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR; 
             }
         });
 
@@ -1475,8 +1471,8 @@ function showAddEffectModal(owner, ownerType) {
 
     track.slices.forEach((slice, index) => {
         const pad = document.createElement('button');
-        pad.className = `sample-pad p-2 border rounded text-xs h-12 flex items-center justify-center 
-                         ${track.selectedSliceForEdit === index ? 'bg-blue-200 border-blue-400' : 'bg-gray-200 hover:bg-gray-300'}
+        pad.className = `sample-pad p-2 border rounded text-xs h-12 flex items-center justify-center dark:border-slate-500 dark:text-slate-300
+                         ${track.selectedSliceForEdit === index ? 'bg-blue-200 border-blue-400 dark:bg-blue-700 dark:border-blue-500' : 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500'}
                          ${(!track.audioBuffer || !track.audioBuffer.loaded || slice.duration <= 0) ? 'opacity-50' : ''}`;
         pad.textContent = `S${index + 1}`;
         pad.title = `Slice ${index + 1}`;
@@ -1487,8 +1483,8 @@ function showAddEffectModal(owner, ownerType) {
         pad.addEventListener('click', () => {
             track.selectedSliceForEdit = index;
             if (typeof window.playSlicePreview === 'function') window.playSlicePreview(track.id, index);
-            renderSamplePads(track); // Re-render to update selection highlight
-            if (typeof updateSliceEditorUI === 'function') updateSliceEditorUI(track); // Update knobs and toggles
+            renderSamplePads(track); 
+            if (typeof updateSliceEditorUI === 'function') updateSliceEditorUI(track); 
         });
         padsContainer.appendChild(pad);
     });
@@ -1502,7 +1498,7 @@ function showAddEffectModal(owner, ownerType) {
     if (selectedInfo) selectedInfo.textContent = track.selectedSliceForEdit + 1;
 
     const slice = track.slices[track.selectedSliceForEdit];
-    if (!slice) return; // Should not happen if selectedSliceForEdit is valid
+    if (!slice) return; 
 
     if (track.inspectorControls.sliceVolume) track.inspectorControls.sliceVolume.setValue(slice.volume || 0.7);
     if (track.inspectorControls.slicePitch) track.inspectorControls.slicePitch.setValue(slice.pitchShift || 0);
@@ -1526,25 +1522,20 @@ function showAddEffectModal(owner, ownerType) {
 }
 
  function applySliceEdits(trackId) {
-    // This function is somewhat conceptual now as knobs update directly.
-    // It could be used for more complex batch edits or if knobs only staged changes.
-    // For now, it's mainly a placeholder or for actions that aren't direct knob changes.
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track || track.type !== 'Sampler') return;
     showNotification(`Edits for Slice ${track.selectedSliceForEdit + 1} on ${track.name} applied (Note: Knobs apply live).`, 2000);
-    // If there were non-knob edits to apply, do it here.
-    // e.g., track.slices[track.selectedSliceForEdit].someOtherProperty = someValueFromUI;
-    if (typeof window.drawWaveform === 'function') window.drawWaveform(track); // Redraw if edits might affect visual representation of slices
+    if (typeof window.drawWaveform === 'function') window.drawWaveform(track); 
 }
 
  function drawWaveform(track) {
     if (!track || !track.waveformCanvasCtx || !track.audioBuffer || !track.audioBuffer.loaded) {
-        if (track && track.waveformCanvasCtx) { // Clear canvas if no buffer
+        if (track && track.waveformCanvasCtx) { 
             const canvas = track.waveformCanvasCtx.canvas;
             track.waveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-             track.waveformCanvasCtx.fillStyle = '#e0e0e0'; // Light grey background
+             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#334155' : '#e0e0e0'; // Dark/Light BG
              track.waveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-             track.waveformCanvasCtx.fillStyle = '#a0a0a0';
+             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0'; // Dark/Light Text
              track.waveformCanvasCtx.textAlign = 'center';
              track.waveformCanvasCtx.fillText('No audio loaded or processed', canvas.width / 2, canvas.height / 2);
         }
@@ -1552,15 +1543,15 @@ function showAddEffectModal(owner, ownerType) {
     }
     const canvas = track.waveformCanvasCtx.canvas;
     const ctx = track.waveformCanvasCtx;
-    const buffer = track.audioBuffer.get(); // Get the AudioBuffer
-    const data = buffer.getChannelData(0); // Use the first channel
+    const buffer = track.audioBuffer.get(); 
+    const data = buffer.getChannelData(0); 
     const step = Math.ceil(data.length / canvas.width);
     const amp = canvas.height / 2;
 
-    ctx.fillStyle = '#f0f0f0'; // Background
+    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0'; // Dark/Light Waveform BG
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#3b82f6'; // Waveform color (Tailwind blue-500)
+    ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6'; // Dark/Light Waveform Line
 
     ctx.beginPath();
     ctx.moveTo(0, amp);
@@ -1572,25 +1563,24 @@ function showAddEffectModal(owner, ownerType) {
             if (datum > max) max = datum;
         }
         ctx.lineTo(i, (1 + min) * amp);
-        ctx.lineTo(i, (1 + max) * amp); // Draw both min and max for better visual
+        ctx.lineTo(i, (1 + max) * amp); 
     }
     ctx.lineTo(canvas.width, amp);
     ctx.stroke();
 
-    // Draw slice markers
     track.slices.forEach((slice, index) => {
         if (slice.duration <= 0) return;
         const startX = (slice.offset / buffer.duration) * canvas.width;
         const endX = ((slice.offset + slice.duration) / buffer.duration) * canvas.width;
-        ctx.fillStyle = index === track.selectedSliceForEdit ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 0, 255, 0.15)';
+        ctx.fillStyle = index === track.selectedSliceForEdit ? 'rgba(255, 0, 0, 0.3)' : (ctx.canvas.classList.contains('dark') ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0, 0, 255, 0.15)');
         ctx.fillRect(startX, 0, endX - startX, canvas.height);
-        ctx.strokeStyle = index === track.selectedSliceForEdit ? 'rgba(255,0,0,0.7)' : 'rgba(0,0,255,0.4)';
+        ctx.strokeStyle = index === track.selectedSliceForEdit ? 'rgba(255,0,0,0.7)' : (ctx.canvas.classList.contains('dark') ? 'rgba(96, 165, 250, 0.5)' : 'rgba(0,0,255,0.4)');
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(startX, 0); ctx.lineTo(startX, canvas.height);
         ctx.moveTo(endX, 0); ctx.lineTo(endX, canvas.height);
         ctx.stroke();
-        ctx.fillStyle = index === track.selectedSliceForEdit ? '#cc0000' : '#0000cc';
+        ctx.fillStyle = index === track.selectedSliceForEdit ? '#cc0000' : (ctx.canvas.classList.contains('dark') ? '#93c5fd' : '#0000cc');
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'left';
         ctx.fillText(`S${index + 1}`, startX + 2, 10);
@@ -1599,12 +1589,12 @@ function showAddEffectModal(owner, ownerType) {
 
  function drawInstrumentWaveform(track) {
     if (!track || !track.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer || !track.instrumentSamplerSettings.audioBuffer.loaded) {
-         if (track && track.instrumentWaveformCanvasCtx) { // Clear canvas if no buffer
+         if (track && track.instrumentWaveformCanvasCtx) { 
             const canvas = track.instrumentWaveformCanvasCtx.canvas;
             track.instrumentWaveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-             track.instrumentWaveformCanvasCtx.fillStyle = '#e0e0e0';
+             track.instrumentWaveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#334155' : '#e0e0e0';
              track.instrumentWaveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-             track.instrumentWaveformCanvasCtx.fillStyle = '#a0a0a0';
+             track.instrumentWaveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0';
              track.instrumentWaveformCanvasCtx.textAlign = 'center';
              track.instrumentWaveformCanvasCtx.fillText('No audio loaded', canvas.width / 2, canvas.height / 2);
         }
@@ -1617,10 +1607,10 @@ function showAddEffectModal(owner, ownerType) {
     const step = Math.ceil(data.length / canvas.width);
     const amp = canvas.height / 2;
 
-    ctx.fillStyle = '#f0f0f0';
+    ctx.fillStyle = canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#10b981'; // Waveform color (Tailwind emerald-500)
+    ctx.strokeStyle = canvas.classList.contains('dark') ? '#34d399' : '#10b981'; 
     ctx.beginPath();
     ctx.moveTo(0, amp);
     for (let i = 0; i < canvas.width; i++) {
@@ -1636,13 +1626,12 @@ function showAddEffectModal(owner, ownerType) {
     ctx.lineTo(canvas.width, amp);
     ctx.stroke();
 
-    // Draw loop markers if loop is enabled
     if (track.instrumentSamplerSettings.loop) {
         const loopStartX = (track.instrumentSamplerSettings.loopStart / buffer.duration) * canvas.width;
         const loopEndX = (track.instrumentSamplerSettings.loopEnd / buffer.duration) * canvas.width;
-        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx.fillStyle = canvas.classList.contains('dark') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 255, 0, 0.2)';
         ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, canvas.height);
-        ctx.strokeStyle = 'rgba(0,200,0,0.6)';
+        ctx.strokeStyle = canvas.classList.contains('dark') ? 'rgba(52, 211, 153, 0.6)' : 'rgba(0,200,0,0.6)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, canvas.height);
@@ -1661,7 +1650,6 @@ function updateDrumPadControlsUI(track) {
     const selectedInfo = inspector.querySelector(`#selectedDrumPadInfo-${track.id}`);
     if (selectedInfo) selectedInfo.textContent = selectedPadIndex + 1;
 
-    // Update Drop Zone for the selected pad
     const dzContainer = inspector.querySelector(`#drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`);
     if (dzContainer) {
         const existingAudioData = {
@@ -1674,13 +1662,11 @@ function updateDrumPadControlsUI(track) {
         if (dzEl) utilSetupDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
         if (fileInputEl) fileInputEl.onchange = (e) => { window.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
     } else {
-         // If the specific dropzone for the pad isn't found, try to find the general placeholder and recreate it.
         const mainPadControlsArea = inspector.querySelector('.selected-pad-controls');
         if (mainPadControlsArea) {
             let generalDzPlaceholder = mainPadControlsArea.querySelector(`[id^="drumPadDropZoneContainer-${track.id}-"]`);
             if (generalDzPlaceholder) {
-                generalDzPlaceholder.id = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`; // Update ID
-                // Now re-run the population logic
+                generalDzPlaceholder.id = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`; 
                 const existingAudioData = {
                     originalFileName: padData.originalFileName,
                     status: padData.status || (padData.originalFileName ? 'missing' : 'empty')
@@ -1718,19 +1704,19 @@ function renderDrumSamplerPads(track) {
     if (!inspector || track.type !== 'DrumSampler') return;
     const padsContainer = inspector.querySelector(`#drumPadsGridContainer-${track.id}`);
     if (!padsContainer) return;
-    padsContainer.innerHTML = ''; // Clear
+    padsContainer.innerHTML = ''; 
 
     track.drumSamplerPads.forEach((padData, index) => {
         const padEl = document.createElement('button');
-        padEl.className = `drum-pad p-2 border rounded text-xs h-12 flex items-center justify-center 
-                         ${track.selectedDrumPadForEdit === index ? 'bg-blue-200 border-blue-400' : 'bg-gray-200 hover:bg-gray-300'}
-                         ${(!padData.audioBufferDataURL && !padData.dbKey && padData.status !== 'loaded') ? 'opacity-60' : ''}`; // Dim if no sample
+        padEl.className = `drum-pad p-2 border rounded text-xs h-12 flex items-center justify-center dark:border-slate-500 dark:text-slate-300
+                         ${track.selectedDrumPadForEdit === index ? 'bg-blue-200 border-blue-400 dark:bg-blue-700 dark:border-blue-500' : 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500'}
+                         ${(!padData.audioBufferDataURL && !padData.dbKey && padData.status !== 'loaded') ? 'opacity-60' : ''}`; 
         padEl.textContent = `Pad ${index + 1}`;
         padEl.title = padData.originalFileName || `Pad ${index + 1}`;
 
         if (padData.status === 'missing' || padData.status === 'error') {
             padEl.classList.add(padData.status === 'missing' ? 'border-yellow-500' : 'border-red-500');
-            padEl.classList.add('text-black'); // Ensure text is visible
+            padEl.classList.add('text-black', 'dark:text-white'); 
         }
 
 
@@ -1741,8 +1727,8 @@ function renderDrumSamplerPads(track) {
             } else if (padData.status !== 'loaded') {
                 showNotification(`Sample for Pad ${index+1} not loaded. Click to load.`, 2000);
             }
-            renderDrumSamplerPads(track); // Re-render to update selection highlight
-            if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); // Update knobs and dropzone
+            renderDrumSamplerPads(track); 
+            if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); 
         });
         padsContainer.appendChild(padEl);
     });
@@ -1750,11 +1736,9 @@ function renderDrumSamplerPads(track) {
 
 function highlightPlayingStep(col, trackType, gridElement) {
     if (!gridElement) return;
-    // Remove 'playing' from previously highlighted cell in this grid
     const previouslyPlaying = gridElement.querySelector('.sequencer-step-cell.playing');
     if (previouslyPlaying) previouslyPlaying.classList.remove('playing');
 
-    // Add 'playing' to current step cells in the column
     const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`);
     currentCells.forEach(cell => cell.classList.add('playing'));
 }
@@ -1764,12 +1748,12 @@ export {
     buildTrackInspectorContentDOM,
     openTrackInspectorWindow,
     initializeCommonInspectorControls,
-    initializeTypeSpecificInspectorControls, // Single export for this function
+    initializeTypeSpecificInspectorControls, 
     applySliceEdits,
     drawWaveform,
     drawInstrumentWaveform,
     renderEffectsList,
-    renderEffectControls, // Exporting the non-prefixed version
+    renderEffectControls, 
     openTrackEffectsRackWindow,
     openMasterEffectsRackWindow,
     openGlobalControlsWindow,
@@ -1787,10 +1771,3 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
-
-// --- Helper function definitions (ensure these are not exported if they were before, unless intended) ---
-// (Content of buildSynthSpecificInspectorDOM, buildSynthEngineControls, buildSamplerSpecificInspectorDOM, etc.)
-// (Content of buildDrumSamplerSpecificInspectorDOM, buildInstrumentSamplerSpecificInspectorDOM)
-// (Content of initializeSynthSpecificControls, initializeSamplerSpecificControls, etc.)
-// (Content of buildModularEffectsRackDOM, showAddEffectModal)
-// These are already defined above as non-exported, or exported via the block above.
