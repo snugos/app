@@ -2,13 +2,13 @@
 #desktop {
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
-    position: relative;
+    overflow: hidden; /* To contain windows if they go off-screen */
+    position: relative; /* Important for absolute positioning of windows within it */
     /* background-color is set by JS or var(--desktop-bg) in body */
 }
 
 .window {
-    position: absolute;
+    position: absolute; /* Positioned by JavaScript */
     border: 1px solid #000000; 
     box-shadow: 2px 2px 5px rgba(0,0,0,0.5); 
     background-color: #c0c0c0; 
@@ -366,37 +366,70 @@ body {
 .notification-message { /* ... unchanged ... */ }
 .notification-message.show { /* ... unchanged ... */ }
 
-.knob-container { /* ... unchanged ... */ }
+/* --- Knob Styling (Simplified for Visibility) --- */
+.knob-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 5px; /* Reverted */
+    min-width: 60px; /* Reverted */
+}
 
 .knob-label {
-    font-size: 0.65rem; 
-    color: #1f2937; /* slate-800 for better contrast */
-    margin-bottom: 1px;
+    font-size: 0.7rem; /* Reverted */
+    color: #000000; /* High contrast black */
+    margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
     text-align: center;
 }
-.dark .knob-label { color: #cbd5e1; } /* slate-300 */
+.dark .knob-label { 
+    color: #FFFFFF; /* High contrast white */
+}
 
+.knob {
+    width: 36px; /* Reverted */
+    height: 36px; /* Reverted */
+    background-color: #A0A0A0; /* Medium grey */
+    border-radius: 50%;
+    position: relative;
+    border: 1px solid #000000; /* Black border */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Simplified */
+    cursor: ns-resize; 
+}
+.dark .knob {
+    background-color: #505050; /* Darker grey */
+    border-color: #FFFFFF; /* White border */
+}
 
-.knob { /* ... unchanged ... */ }
-.dark .knob { /* ... unchanged ... */ }
-
-
-.knob-handle { /* ... unchanged ... */ }
-.dark .knob-handle { background-color: #e2e8f0; }
-
+.knob-handle {
+    width: 4px; /* Reverted */
+    height: 10px; /* Reverted */
+    background-color: #000000; /* Black handle */
+    position: absolute;
+    top: 3px; /* Reverted */
+    left: 50%;
+    transform: translateX(-50%); 
+    transform-origin: bottom center; 
+    border-radius: 2px; 
+}
+.dark .knob-handle { 
+    background-color: #FFFFFF; /* White handle */
+}
 
 .knob-value {
-    font-size: 0.6rem; 
-    color: #1f2937; /* slate-800 for better contrast */
-    margin-top: 1px;
+    font-size: 0.65rem; /* Reverted */
+    color: #000000; /* High contrast black */
+    margin-top: 2px;
     min-height: 1em; 
     text-align: center;
 }
-.dark .knob-value { color: #a0aec0; } /* slate-400, slightly brighter */
+.dark .knob-value { 
+    color: #FFFFFF; /* High contrast white */
+}
+/* --- End Knob Styling --- */
 
 .control-group { /* ... unchanged ... */ }
 .single-control-container { /* ... unchanged ... */ }
@@ -411,7 +444,7 @@ body {
 
 /* --- NEW SEQUENCER GRID STYLING --- */
 .sequencer-container {
-    /* overflow: auto; is on the .window-content which contains this */
+    /* Styles for the main scrollable container of the sequencer window */
 }
 
 .sequencer-container .controls { 
@@ -495,11 +528,10 @@ body {
 .sequencer-grid-layout .sequencer-step-cell {
     cursor: pointer;
     transition: background-color 0.1s ease;
-    /* Text color for step cells if they ever contain text */
-    color: #4b5563; /* Default dark text for steps */
+    color: #4b5563; 
 }
 .dark .sequencer-grid-layout .sequencer-step-cell {
-    color: #9ca3af; /* Default lighter text for steps in dark mode */
+    color: #9ca3af; 
 }
 
 /* Alternating background colors for 4-step blocks from ui.js classes */
