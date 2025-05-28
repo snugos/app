@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Audio Status, Relink & Debugging Version (Corrected Exports & Upload Click Fix + GCW Debug + Super GCW try...catch + NO ATTACH GLOBAL EVENTS)');
+console.log('[ui.js] TOP OF FILE PARSING - Inspector Init Debug + Previous Fixes');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -12,130 +12,162 @@ import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.
 import { getMimeTypeFromFilename } from './audio.js';
 
 // --- Knob UI ---
-function createKnob(options) {
-    const container = document.createElement('div');
-    container.className = 'knob-container';
-    const labelEl = document.createElement('div');
-    labelEl.className = 'knob-label';
-    labelEl.textContent = options.label || '';
-    labelEl.title = options.label || '';
-    container.appendChild(labelEl);
-    const knobEl = document.createElement('div');
-    knobEl.className = 'knob';
-    const handleEl = document.createElement('div');
-    handleEl.className = 'knob-handle';
-    knobEl.appendChild(handleEl);
-    container.appendChild(knobEl);
-    const valueEl = document.createElement('div');
-    valueEl.className = 'knob-value';
-    container.appendChild(valueEl);
-    let currentValue = options.initialValue === undefined ? (options.min !== undefined ? options.min : 0) : options.initialValue;
-    const min = options.min === undefined ? 0 : options.min;
-    const max = options.max === undefined ? 100 : options.max;
-    const step = options.step === undefined ? 1 : options.step;
-    const range = max - min;
-    const maxDegrees = options.maxDegrees || 270;
-    const BASE_PIXELS_PER_FULL_RANGE_MOUSE = 300;
-    const BASE_PIXELS_PER_FULL_RANGE_TOUCH = 450;
-    let initialValueBeforeInteraction = currentValue;
-
-    function updateKnobVisual() {
-        const percentage = range === 0 ? 0 : (currentValue - min) / range;
-        const rotation = (percentage * maxDegrees) - (maxDegrees / 2);
-        handleEl.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
-        valueEl.textContent = typeof currentValue === 'number' ? currentValue.toFixed(options.decimals !== undefined ? options.decimals : (step < 1 && step !== 0 ? 2 : 0)) : currentValue;
-        if (options.displaySuffix) valueEl.textContent += options.displaySuffix;
-    }
-
-    function setValue(newValue, triggerCallback = true, fromInteraction = false) {
-        const numValue = parseFloat(newValue);
-        if (isNaN(numValue)) return;
-        let boundedValue = Math.min(max, Math.max(min, numValue));
-        if (step !== 0) {
-            boundedValue = Math.round(boundedValue / step) * step;
-        }
-        const oldValue = currentValue;
-        currentValue = Math.min(max, Math.max(min, boundedValue));
-        updateKnobVisual();
-        if (triggerCallback && options.onValueChange && (oldValue !== currentValue || fromInteraction) ) {
-            options.onValueChange(currentValue, oldValue, fromInteraction);
-        }
-    }
-
-    function handleInteraction(e, isTouch = false) {
-        e.preventDefault();
-        initialValueBeforeInteraction = currentValue;
-        const startY = isTouch ? e.touches[0].clientY : e.clientY;
-        const startValue = currentValue;
-        const pixelsForFullRange = isTouch ? BASE_PIXELS_PER_FULL_RANGE_TOUCH : BASE_PIXELS_PER_FULL_RANGE_MOUSE;
-        const currentSensitivity = options.sensitivity === undefined ? 1 : options.sensitivity;
-        function onMove(moveEvent) {
-            const currentY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
-            const deltaY = startY - currentY;
-            let valueChange = (deltaY / pixelsForFullRange) * range * currentSensitivity;
-            let newValue = startValue + valueChange;
-            setValue(newValue, true, true);
-        }
-        function onEnd() {
-            document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove);
-            document.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
-            if (currentValue !== initialValueBeforeInteraction && typeof window.captureStateForUndo === 'function') {
-                let description = `Change ${options.label || 'knob'} to ${valueEl.textContent}`;
-                if (options.trackRef && options.trackRef.name) {
-                    description = `Change ${options.label || 'knob'} for ${options.trackRef.name} to ${valueEl.textContent}`;
-                }
-                window.captureStateForUndo(description);
-            }
-        }
-        document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: !isTouch });
-        document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
-    }
-    knobEl.addEventListener('mousedown', (e) => handleInteraction(e, false));
-    knobEl.addEventListener('touchstart', (e) => handleInteraction(e, true), { passive: false });
-    setValue(currentValue, false);
-    return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
-}
-
+function createKnob(options) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
 
 // --- Synth Inspector Specifics ---
-const synthEngineControlDefinitions = { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ };
-function buildSynthSpecificInspectorDOM(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function buildSynthEngineControls(track, container, engineType) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+const synthEngineControlDefinitions = { /* ... (as in ui_js_super_trycatch_gcw) ... */ };
+function buildSynthSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+function buildSynthEngineControls(track, container, engineType) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
 
 // --- Sampler Inspector Specifics ---
-function buildSamplerSpecificInspectorDOM(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+function buildSamplerSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
 
 // --- Drum Sampler Inspector Specifics ---
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
 
 // --- Instrument Sampler Inspector Specifics ---
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
 
 // --- Track Inspector Window & Controls Initialization ---
-function buildTrackInspectorContentDOM(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeCommonInspectorControls(track, winEl) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeTypeSpecificInspectorControls(track, winEl) { /* ... (same content as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
-function initializeSynthSpecificControls(track, winEl) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeSamplerSpecificControls(track, winEl) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+function buildTrackInspectorContentDOM(track) { /* ... (as in ui_js_super_trycatch_gcw) ... */ }
+
+function openTrackInspectorWindow(trackId, savedState = null) {
+    console.log(`[UI - openTrackInspectorWindow] Called for trackId: ${trackId}`); // LOG
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
+    if (!track) {
+        showNotification(`Track ID ${trackId} not found. Cannot open inspector.`, 3000);
+        console.error(`[UI - openTrackInspectorWindow] Track object not found for ID: ${trackId}`);
+        return null;
+    }
+    console.log(`[UI - openTrackInspectorWindow] Track found: ${track.name}, Type: ${track.type}`); // LOG
+
+    const inspectorId = `trackInspector-${track.id}`;
+    if (window.openWindows[inspectorId] && !savedState) {
+        window.openWindows[inspectorId].restore();
+        return window.openWindows[inspectorId];
+    }
+    if (window.openWindows[inspectorId] && savedState) {
+        window.openWindows[inspectorId].close();
+    }
+
+    track.inspectorControls = {}; // Reset controls reference
+    console.log(`[UI - openTrackInspectorWindow] Building content DOM for track ${track.id}`); // LOG
+    const inspectorContentElement = buildTrackInspectorContentDOM(track);
+    if (!inspectorContentElement) {
+        showNotification(`Failed to build Inspector content (Track ${track.id}).`, 4000);
+        console.error(`[UI - openTrackInspectorWindow] buildTrackInspectorContentDOM returned null for track ${track.id}`); // LOG
+        return null;
+    }
+
+    let windowHeight = 450;
+    if (track.type === 'Synth') windowHeight = 620;
+    else if (track.type === 'Sampler') windowHeight = 620;
+    else if (track.type === 'DrumSampler') windowHeight = 580;
+    else if (track.type === 'InstrumentSampler') windowHeight = 620;
+
+    const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` };
+    if (savedState) Object.assign(winOptions, savedState);
+
+    console.log(`[UI - openTrackInspectorWindow] Creating SnugWindow for inspector ${inspectorId}`); // LOG
+    let inspectorWin = null;
+    try {
+        inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions);
+    } catch (e) {
+        console.error(`[UI - openTrackInspectorWindow] CRITICAL ERROR during \`new SnugWindow()\` for inspector ${inspectorId}:`, e);
+        showNotification("CRITICAL: Error creating inspector window.", 6000);
+        return null;
+    }
+
+    if (!inspectorWin || !inspectorWin.element) {
+        showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000);
+         console.error(`[UI - openTrackInspectorWindow] SnugWindow instance or its element is null for inspector ${inspectorId}`); // LOG
+        return null;
+    }
+    track.inspectorWindow = inspectorWin;
+    console.log(`[UI - openTrackInspectorWindow] Inspector window created for ${track.id}. Element:`, inspectorWin.element); // LOG
+
+    console.log(`[UI - openTrackInspectorWindow] Calling initializeCommonInspectorControls for track ${track.id}`); // LOG
+    initializeCommonInspectorControls(track, inspectorWin.element);
+
+    console.log(`[UI - openTrackInspectorWindow] Calling initializeTypeSpecificInspectorControls for track ${track.id} of type ${track.type}`); // LOG
+    initializeTypeSpecificInspectorControls(track, inspectorWin.element);
+    
+    console.log(`[UI - openTrackInspectorWindow] Scheduling knob refresh for track ${track.id}`); // LOG
+    setTimeout(() => {
+        Object.values(track.inspectorControls).forEach(control => {
+            if (control?.type === 'knob' && typeof control.refreshVisuals === 'function') {
+                control.refreshVisuals();
+            }
+        });
+    }, 50);
+    
+    console.log(`[UI - openTrackInspectorWindow] Finished for track ${track.id}`); // LOG
+    return inspectorWin;
+}
+
+function initializeCommonInspectorControls(track, winEl) { /* ... (same as before) ... */ }
+
+function initializeTypeSpecificInspectorControls(track, winEl) {
+    console.log(`[UI - initializeTypeSpecificInspectorControls] START - Track ID: ${track.id}, Type: ${track.type}, winEl:`, winEl); // ADDED LOG
+    if (track.type === 'Synth') {
+        console.log(`[UI - initializeTypeSpecificInspectorControls] Initializing Synth controls for track ${track.id}`); // ADDED LOG
+        initializeSynthSpecificControls(track, winEl);
+    } else if (track.type === 'Sampler') {
+        console.log(`[UI - initializeTypeSpecificInspectorControls] Initializing Sampler controls for track ${track.id}`); // ADDED LOG
+        initializeSamplerSpecificControls(track, winEl);
+    } else if (track.type === 'DrumSampler') {
+        console.log(`[UI - initializeTypeSpecificInspectorControls] Initializing DrumSampler controls for track ${track.id}`); // ADDED LOG
+        initializeDrumSamplerSpecificControls(track, winEl);
+    } else if (track.type === 'InstrumentSampler') {
+        console.log(`[UI - initializeTypeSpecificInspectorControls] Initializing InstrumentSampler controls for track ${track.id}`); // ADDED LOG
+        initializeInstrumentSamplerSpecificControls(track, winEl);
+    } else {
+        console.warn(`[UI - initializeTypeSpecificInspectorControls] Unknown track type: ${track.type} for track ${track.id}`); // ADDED LOG
+    }
+    console.log(`[UI - initializeTypeSpecificInspectorControls] END - Track ID: ${track.id}`); // ADDED LOG
+}
+
+function initializeSynthSpecificControls(track, winEl) { /* ... (same as before) ... */ }
+function initializeSamplerSpecificControls(track, winEl) { /* ... (same as before) ... */ }
+
+function initializeDrumSamplerSpecificControls(track, winEl) {
+    console.log(`[UI - initializeDrumSamplerSpecificControls] START - Track ID: ${track.id}, winEl:`, winEl); // ADDED LOG
+    if (typeof renderDrumSamplerPads === 'function') {
+        console.log(`[UI - initializeDrumSamplerSpecificControls] Calling renderDrumSamplerPads for track ${track.id}`); // ADDED LOG
+        renderDrumSamplerPads(track);
+    } else {
+        console.error("[UI - initializeDrumSamplerSpecificControls] renderDrumSamplerPads is not a function");
+    }
+    if (typeof updateDrumPadControlsUI === 'function') {
+        console.log(`[UI - initializeDrumSamplerSpecificControls] Calling updateDrumPadControlsUI for track ${track.id}`); // ADDED LOG
+        updateDrumPadControlsUI(track);
+    } else {
+        console.error("[UI - initializeDrumSamplerSpecificControls] updateDrumPadControlsUI is not a function");
+    }
+
+    const pVolK = createKnob({ label: 'Pad Vol', min:0, max:1, step:0.01, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(track.selectedDrumPadForEdit, val)}); const volPh = winEl.querySelector(`#drumPadVolumeSlider-${track.id}`); if(volPh) { volPh.innerHTML = ''; volPh.appendChild(pVolK.element); } track.inspectorControls.drumPadVolume = pVolK;
+    const pPitK = createKnob({ label: 'Pad Pitch', min:-24, max:24, step:1, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.pitchShift || 0, decimals:0, displaySuffix:'st', trackRef: track, onValueChange: (val) => track.setDrumSamplerPadPitch(track.selectedDrumPadForEdit, val)}); const pitPh = winEl.querySelector(`#drumPadPitchKnob-${track.id}`); if(pitPh) { pitPh.innerHTML = ''; pitPh.appendChild(pPitK.element); } track.inspectorControls.drumPadPitch = pPitK;
+    const pEAK = createKnob({ label: 'Attack', min:0.001, max:1, step:0.001, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.envelope.attack || 0.005, decimals:3, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(track.selectedDrumPadForEdit, 'attack', val)}); const attPh = winEl.querySelector(`#drumPadEnvAttackSlider-${track.id}`); if(attPh) { attPh.innerHTML = ''; attPh.appendChild(pEAK.element); } track.inspectorControls.drumPadEnvAttack = pEAK;
+    const pERK = createKnob({ label: 'Release', min:0.01, max:2, step:0.01, initialValue: track.drumSamplerPads[track.selectedDrumPadForEdit]?.envelope.release || 0.1, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(track.selectedDrumPadForEdit, 'release', val)}); const relPh = winEl.querySelector(`#drumPadEnvReleaseSlider-${track.id}`); if(relPh) { relPh.innerHTML = ''; relPh.appendChild(pERK.element); } track.inspectorControls.drumPadEnvRelease = pERK;
+    console.log(`[UI - initializeDrumSamplerSpecificControls] END - Track ID: ${track.id}`); // ADDED LOG
+}
+
+function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (same as before) ... */ }
 
 // --- Modular Effects Rack UI ---
-function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function showAddEffectModal(owner, ownerType) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (same as before, with debug logs) ... */ }
+function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... (same as before, with debug logs) ... */ }
+function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... (same as before) ... */ }
+function showAddEffectModal(owner, ownerType) { /* ... (same as before) ... */ }
 
-// --- Window Opening Functions (with Debugging & GCW try...catch) ---
-function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-function openMasterEffectsRackWindow(savedState = null) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
-
-function openGlobalControlsWindow(savedState = null) {
+// --- Window Opening Functions (with Debugging & GCW try...catch from ui_js_super_trycatch_gcw) ---
+function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (same as before) ... */ }
+function openMasterEffectsRackWindow(savedState = null) { /* ... (same content as in ui_js_super_trycatch_gcw) ... */ }
+function openGlobalControlsWindow(savedState = null) { /* ... (same as in ui_js_super_trycatch_gcw, with attachGlobalControlEvents call now restored/active) ... */
     console.log(`[UI - openGlobalControlsWindow] Called. savedState:`, savedState);
     const windowId = 'globalControls';
 
-    try {
+    try { 
         if (typeof SnugWindow !== 'function') {
             console.error("[UI - openGlobalControlsWindow] SnugWindow is NOT a function!");
             return null;
@@ -188,15 +220,14 @@ function openGlobalControlsWindow(savedState = null) {
         window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal');
         console.log("[UI - openGlobalControlsWindow] Global element references assigned.");
 
-        // Temporarily comment out the call to attachGlobalControlEvents
-        // if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
-        //     console.log("[UI - openGlobalControlsWindow] Attaching global control events...");
-        //     window.attachGlobalControlEvents(globalControlsWin.element);
-        //     console.log("[UI - openGlobalControlsWindow] Global control events attached.");
-        // } else {
-        //     console.warn("[UI - openGlobalControlsWindow] attachGlobalControlEvents not found or window element missing for globalControlsWin.");
-        // }
-        console.log("[UI - openGlobalControlsWindow] SKIPPED attaching global control events for debugging.");
+        // Call to attachGlobalControlEvents is RESTORED
+        if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
+            console.log("[UI - openGlobalControlsWindow] Attaching global control events...");
+            window.attachGlobalControlEvents(globalControlsWin.element); 
+            console.log("[UI - openGlobalControlsWindow] Global control events attached (or attempted).");
+        } else {
+            console.warn("[UI - openGlobalControlsWindow] attachGlobalControlEvents not found or window element missing for globalControlsWin.");
+        }
         
         console.log("[UI - openGlobalControlsWindow] Successfully returning globalControlsWin:", globalControlsWin);
         console.log("[UI - openGlobalControlsWindow] globalControlsWin.element before return:", globalControlsWin?.element);
@@ -224,7 +255,7 @@ function updateSliceEditorUI(track) { /* ... (same content as in ui_js_latest_de
 function applySliceEdits(trackId) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
 function drawWaveform(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
 function drawInstrumentWaveform(track) { drawWaveform(track); }
-function updateDrumPadControlsUI(track) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
+function updateDrumPadControlsUI(track) { /* ... (same content as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
 function renderDrumSamplerPads(track) { /* ... (same content as in ui_js_latest_debug_May28_v2, with detailed logs) ... */ }
 function highlightPlayingStep(col, trackType, gridElement) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
 
