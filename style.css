@@ -202,13 +202,12 @@ body {
     font-size: 14px;
     margin: 0; 
     overflow: hidden; 
-    /* Tailwind dark mode applies to html element, so we can use these vars */
-    background-color: var(--desktop-bg, #FFB6C1); /* Default light pink if not overridden by JS */
+    background-color: var(--desktop-bg, #FFB6C1); 
     color: var(--text-color, #000000);
 }
 
-.dark body { /* Example if you want to set body defaults for dark mode here too */
-    background-color: var(--desktop-bg-dark, #1e293b); /* Example dark desktop */
+.dark body { 
+    background-color: var(--desktop-bg-dark, #1e293b); 
     color: var(--text-color-dark, #e2e8f0);
 }
 
@@ -276,13 +275,13 @@ body {
 /* --- General Drop Zone Styling --- */
 .drop-zone {
     border: 2px dashed #a0a0a0; 
-    padding: 10px;  /* Adjusted from 20px to be less tall */            
+    padding: 10px;          
     text-align: center;
     background-color: #f0f0f0;  
     color: #555;                
-    font-size: 0.8em; /* Slightly smaller font */
+    font-size: 0.8em; 
     border-radius: 4px;         
-    margin-bottom: 5px; /* Reduced margin */       
+    margin-bottom: 5px;     
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -342,14 +341,13 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 2px; /* Reduced margin */
-    min-width: 50px; /* Slightly smaller min-width */
+    margin: 2px; 
+    min-width: 50px; 
 }
 
 .knob-label {
-    font-size: 0.65rem; /* Smaller label */
+    font-size: 0.65rem; 
     color: #333;
-    /* dark:color-slate-300 if using Tailwind for dark mode directly */
     margin-bottom: 1px;
     white-space: nowrap;
     overflow: hidden;
@@ -371,13 +369,13 @@ body {
     cursor: ns-resize; 
 }
 .dark .knob {
-    background-color: #4a5568; /* Darker knob body */
+    background-color: #4a5568; 
     border-color: #2d3748;
 }
 
 
 .knob-handle {
-    width: 3px; /* Thinner handle */
+    width: 3px; 
     height: 9px; 
     background-color: #333;
     position: absolute;
@@ -391,9 +389,8 @@ body {
 
 
 .knob-value {
-    font-size: 0.6rem; /* Smaller value */
+    font-size: 0.6rem; 
     color: #333;
-    /* dark:color-slate-300 */
     margin-top: 1px;
     min-height: 1em; 
     text-align: center;
@@ -405,12 +402,12 @@ body {
     flex-wrap: wrap; 
     justify-content: space-around; 
     align-items: flex-end; 
-    padding: 2px 0; /* Reduced padding */
+    padding: 2px 0; 
     gap: 2px; 
 }
 
 .single-control-container {
-    padding: 2px; /* Reduced padding */
+    padding: 2px; 
     display: flex;
     justify-content: center;
 }
@@ -425,21 +422,17 @@ body {
 
 /* --- NEW SEQUENCER GRID STYLING --- */
 .sequencer-container {
-    /* overflow: auto; already set in JS-generated div */
-    /* dark:bg-slate-900 dark:text-slate-300; set in JS */
+    /* Styles for the main scrollable container of the sequencer window */
 }
 
-.sequencer-container .controls { /* The top bar with track name and bars input */
-    /* sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700; set by JS */
-    /* These are Tailwind classes, ensure they apply or define equivalent CSS */
-    /* Example non-Tailwind for sticky header: */
+.sequencer-container .controls { 
     position: sticky;
     top: 0;
-    left: 0; /* If the overall container scrolls, this needs to stick relative to that */
+    left: 0; 
     background-color: #e2e8f0; /* Light grey */
-    z-index: 30; /* Highest */
+    z-index: 30; 
     border-bottom: 1px solid #cbd5e0;
-    padding: 0.25rem; /* Tailwind p-1 */
+    padding: 0.25rem; 
 }
 .dark .sequencer-container .controls {
     background-color: #1e293b; /* slate-800 */
@@ -448,16 +441,14 @@ body {
 
 
 .sequencer-grid-layout {
-    /* display: grid; grid-template-columns: ...; grid-auto-rows: ...; gap: ...; width: fit-content; position: relative; top: 0; left: 0; set by JS */
-    /* Any additional overall grid container styles if needed */
-    background-color: #e5e7eb; /* A very light grey for the grid background itself */
+    /* display: grid; etc. are set by JS */
+    background-color: #e5e7eb; 
 }
 .dark .sequencer-grid-layout {
-    background-color: #0f172a; /* slate-900 or similar for dark grid background */
+    background-color: #0f172a; 
 }
 
 
-/* Common styles for all cells in the new grid */
 .sequencer-grid-layout > div {
     box-sizing: border-box;
     display: flex;
@@ -466,105 +457,92 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.65rem; /* Smaller text for labels/headers */
-    /* Default border for all grid cells, individual cells can override/add specific borders */
-    border: 1px solid #d1d5db; /* Tailwind gray-300 */
+    font-size: 0.65rem; 
+    border: 1px solid #d1d5db; 
 }
 .dark .sequencer-grid-layout > div {
-    border-color: #4b5563; /* Tailwind gray-600 */
+    border-color: #4b5563; 
 }
 
-/* Header cells (top-left empty & step numbers) */
 .sequencer-grid-layout .sequencer-header-cell {
-    /* sticky top-0 z-10/z-20 bg-gray-200 dark:bg-slate-800; set by JS */
-    /* These are Tailwind classes, ensure they apply or define equivalent CSS */
-    /* Example non-Tailwind: */
     position: sticky;
     top: 0;
-    background-color: #e5e7eb; /* Tailwind gray-200 */
+    background-color: #e5e7eb; 
     font-weight: 500;
-    color: #4b5563; /* Tailwind gray-600 */
-    z-index: 20; /* Above step cells, below controls bar */
+    color: #4b5563; 
+    z-index: 20; 
 }
 .dark .sequencer-grid-layout .sequencer-header-cell {
-    background-color: #1f2937; /* Tailwind slate-800 */
-    color: #9ca3af; /* Tailwind slate-400 */
+    background-color: #1f2937; 
+    color: #9ca3af; 
 }
-.sequencer-grid-layout .sequencer-header-cell:first-child { /* Top-left empty cell */
-    z-index: 25; /* Above other headers/labels if they overlap */
-    left: 0; /* Also sticky left */
+.sequencer-grid-layout .sequencer-header-cell:first-child { 
+    z-index: 25; 
+    left: 0; 
 }
 
 
-/* Row Label Cells */
 .sequencer-grid-layout .sequencer-label-cell {
-    /* sticky left-0 z-10 bg-gray-200 dark:bg-slate-800; set by JS */
-    /* These are Tailwind classes, ensure they apply or define equivalent CSS */
-    /* Example non-Tailwind: */
     position: sticky;
     left: 0;
-    background-color: #e5e7eb; /* Tailwind gray-200 */
+    background-color: #e5e7eb; 
     justify-content: flex-end;
-    padding-right: 0.25rem; /* Tailwind pr-1 */
+    padding-right: 0.25rem; 
     font-weight: 500;
-    color: #4b5563; /* Tailwind gray-600 */
-    z-index: 10; /* Above step cells */
+    color: #4b5563; 
+    z-index: 10; 
 }
 .dark .sequencer-grid-layout .sequencer-label-cell {
-    background-color: #1f2937; /* Tailwind slate-800 */
-    color: #9ca3af; /* Tailwind slate-400 */
+    background-color: #1f2937; 
+    color: #9ca3af; 
 }
 
-/* Step Cells */
 .sequencer-grid-layout .sequencer-step-cell {
     cursor: pointer;
     transition: background-color 0.1s ease;
-    /* Base background colors are set by beatBlockClass in JS via Tailwind */
 }
-/* Ensure beatBlockClass background colors take precedence if needed */
-.sequencer-step-cell.bg-gray-50 { background-color: #f9fafb; }
-.dark .sequencer-step-cell.dark\\:bg-slate-700 { background-color: #334155; }
-.sequencer-step-cell.bg-white { background-color: #ffffff; }
-.dark .sequencer-step-cell.dark\\:bg-slate-750 { background-color: #293548; } /* Custom slate-750 */
+
+/* Alternating background colors for 4-step blocks */
+/* These target the Tailwind classes added by ui.js */
+.sequencer-step-cell.bg-gray-50 { background-color: #e0e0e0; } /* Darker grey for light mode */
+.dark .sequencer-step-cell.dark\\:bg-slate-700 { background-color: #1f2937; } /* Darker grey for dark mode (slate-800 equivalent) */
+
+.sequencer-step-cell.bg-white { background-color: #f0f0f0; }  /* Lighter grey for light mode */
+.dark .sequencer-step-cell.dark\\:bg-slate-750 { background-color: #334155; } /* Lighter grey for dark mode (slate-700 equivalent) */
 
 
 .sequencer-step-cell:hover {
-    background-color: #dbeafe !important; /* Tailwind blue-100 */
+    background-color: #dbeafe !important; 
 }
 .dark .sequencer-step-cell:hover {
-    background-color: #1e40af !important; /* Tailwind blue-700 */
+    background-color: #1e40af !important; 
 }
 
 /* Active step colors */
-.sequencer-step-cell.active-synth { background-color: #60a5fa !important; } /* blue-400 */
-.sequencer-step-cell.active-sampler { background-color: #34d399 !important; } /* green-400 */
-.sequencer-step-cell.active-drum-sampler { background-color: #facc15 !important; } /* yellow-400 */
-.sequencer-step-cell.active-instrument-sampler { background-color: #f472b6 !important; } /* pink-400 */
-.dark .sequencer-step-cell.active-synth { background-color: #3b82f6 !important; } /* blue-500 */
-.dark .sequencer-step-cell.active-sampler { background-color: #10b981 !important; } /* green-500 */
-.dark .sequencer-step-cell.active-drum-sampler { background-color: #eab308 !important; } /* yellow-500 */
-.dark .sequencer-step-cell.active-instrument-sampler { background-color: #ec4899 !important; } /* pink-500 */
+.sequencer-step-cell.active-synth { background-color: #60a5fa !important; } 
+.sequencer-step-cell.active-sampler { background-color: #34d399 !important; } 
+.sequencer-step-cell.active-drum-sampler { background-color: #facc15 !important; } 
+.sequencer-step-cell.active-instrument-sampler { background-color: #f472b6 !important; } 
+.dark .sequencer-step-cell.active-synth { background-color: #3b82f6 !important; } 
+.dark .sequencer-step-cell.active-sampler { background-color: #10b981 !important; } 
+.dark .sequencer-step-cell.active-drum-sampler { background-color: #eab308 !important; } 
+.dark .sequencer-step-cell.active-instrument-sampler { background-color: #ec4899 !important; } 
 
 
 .sequencer-step-cell.playing {
-    outline: 2px solid #ef4444; /* red-500 */
+    outline: 2px solid #ef4444; 
     outline-offset: -2px;
     z-index: 5; 
 }
-
-/* Styling for bar/beat lines (applied via JS with Tailwind border classes) */
-/* Example: .border-l-2 .border-l-gray-400 .dark:border-l-slate-600 */
-/* Tailwind handles these, but you can add fallbacks or overrides here if needed */
-
 
 /* --- OLD SEQUENCER STYLES (Comment out or remove) ---
 .sequencer-window-content { ... }
 .sequencer-grid-container { ... }
 .sequencer-grid { ... }
-.sequencer-header-cell (old version) { ... }
-.sequencer-label-cell (old version) { ... }
-.sequencer-step-cell (old version) { ... }
---- END OLD SEQUENCER STYLES --- */
+/* .sequencer-header-cell (old version) { ... } */
+/* .sequencer-label-cell (old version) { ... } */
+/* .sequencer-step-cell (old version) { ... } */
+/* --- END OLD SEQUENCER STYLES --- */
 
 
 /* --- Panel and Control Group --- */
@@ -603,4 +581,3 @@ body {
 .window-content select, .modal-content select { /* ... unchanged ... */ }
 .window-content input[type="text"], .window-content input[type="number"],
 .modal-content input[type="text"], .modal-content input[type="number"] { /* ... unchanged ... */ }
-
