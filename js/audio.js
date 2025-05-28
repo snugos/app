@@ -25,8 +25,7 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
                 window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
                 masterGainNode.connect(window.masterMeter);
                  console.log("[Audio] Master meter connected to masterGainNode.");
-            } else if (window.masterMeter && masterGainNode && !masterGainNode.disposed && masterGainNode.numberOfOutputs === 1) { // Check if only connected to destination
-                // This case might occur if masterMeter was disposed or disconnected elsewhere
+            } else if (window.masterMeter && masterGainNode && !masterGainNode.disposed && masterGainNode.numberOfOutputs === 1) {
                 if (window.masterMeter.disposed) {
                     window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
                 }
@@ -56,13 +55,13 @@ function setupMasterBus() {
     console.log("[Audio] setupMasterBus called.");
     if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed && masterGainNode && !masterGainNode.disposed) {
         console.log("[Audio] Master bus appears to be already set up and valid.");
-        rebuildMasterEffectChain(); // Still rebuild to ensure connections are current
+        rebuildMasterEffectChain();
         return;
     }
 
     console.log("[Audio] Setting up Master Bus nodes (disposing if exist).");
-    if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) try {window.masterEffectsBusInput.dispose();} catch(e){console.warn("Error disposing old master bus input", e)}
-    if (masterGainNode && !masterGainNode.disposed) try {masterGainNode.dispose();} catch(e){console.warn("Error disposing old master gain node", e)}
+    if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) try {window.masterEffectsBusInput.dispose();} catch(e){console.warn("Error disposing old master bus input", e.message)}
+    if (masterGainNode && !masterGainNode.disposed) try {masterGainNode.dispose();} catch(e){console.warn("Error disposing old master gain node", e.message)}
 
     window.masterEffectsBusInput = new Tone.Gain();
     masterGainNode = new Tone.Gain();
@@ -84,13 +83,13 @@ export function rebuildMasterEffectChain() {
 
     console.log(`[Audio] Rebuilding Master Effect Chain. Effects count: ${(window.masterEffectsChain || []).length}`);
 
-    try { window.masterEffectsBusInput.disconnect(); } catch(e) { /* a */ }
+    try { window.masterEffectsBusInput.disconnect(); } catch(e) { /* ignore */ }
     (window.masterEffectsChain || []).forEach(effectWrapper => {
         if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
-            try { effectWrapper.toneNode.disconnect(); } catch (e) { /* b */ }
+            try { effectWrapper.toneNode.disconnect(); } catch (e) { /* ignore */ }
         }
     });
-    try { masterGainNode.disconnect(); } catch(e) { /* c */ }
+    try { masterGainNode.disconnect(); } catch(e) { /* ignore */ }
 
     let currentAudioPathEnd = window.masterEffectsBusInput;
     console.log(`[Audio] Master Chain Rebuild: Starting with masterEffectsBusInput`);
@@ -119,7 +118,7 @@ export function rebuildMasterEffectChain() {
             } catch (e) {
                 console.error(`[Audio] Error connecting master effects output (${currentAudioPathEnd.constructor.name}) to masterGainNode:`, e);
             }
-        } else { // No effects, or currentAudioPathEnd became invalid
+        } else {
              try {
                 console.log(`[Audio] Master Chain: Connecting MasterEffectsBusInput directly to MasterGainNode (no valid effects output).`);
                 window.masterEffectsBusInput.connect(masterGainNode);
@@ -211,13 +210,13 @@ export function updateMasterEffectParam(effectId, paramPath, value) {
         const paramInstance = targetObject[finalParamKey];
 
         if (typeof paramInstance !== 'undefined') {
-            if (paramInstance && typeof paramInstance.value !== 'undefined') { // Covers Tone.Signal, Tone.Param
+            if (paramInstance && typeof paramInstance.value !== 'undefined') {
                 if (typeof paramInstance.rampTo === 'function') {
                     paramInstance.rampTo(value, 0.02);
                 } else {
                     paramInstance.value = value;
                 }
-            } else { // Direct property assignment
+            } else {
                 targetObject[finalParamKey] = value;
             }
         } else if (typeof effectWrapper.toneNode.set === 'function' && keys.length > 0) {
@@ -242,7 +241,7 @@ export function reorderMasterEffect(effectId, newIndex) {
     const oldIndex = window.masterEffectsChain.findIndex(e => e.id === effectId);
      if (oldIndex === -1 || oldIndex === newIndex ) return;
 
-    const maxValidInsertIndex = window.masterEffectsChain.length; // Can insert at the very end
+    const maxValidInsertIndex = window.masterEffectsChain.length;
     const clampedNewIndex = Math.max(0, Math.min(newIndex, maxValidInsertIndex));
 
 
@@ -250,7 +249,6 @@ export function reorderMasterEffect(effectId, newIndex) {
         window.captureStateForUndo(`Reorder Master effect`);
     }
     const [effectToMove] = window.masterEffectsChain.splice(oldIndex, 1);
-    // If moving an item downwards, the target index for splice needs to be adjusted because the array is now shorter.
     const actualSpliceIndex = (oldIndex < clampedNewIndex) ? clampedNewIndex - 1 : clampedNewIndex;
     window.masterEffectsChain.splice(actualSpliceIndex, 0, effectToMove);
 
@@ -258,7 +256,119 @@ export function reorderMasterEffect(effectId, newIndex) {
     rebuildMasterEffectChain();
 }
 
-// --- Sample Loading and Utility Functions (Re-integrated and checked) ---
+export function updateMeters(masterMeterVisualElement, masterMeterBarVisualElement, mixerMasterMeterVisualElement, tracks) {
+    if (Tone.context.state !== 'running' || !audioContextInitialized) return;
+
+    if (window.masterMeter && typeof window.masterMeter.getValue === 'function') {
+        const masterLevelValue = window.masterMeter.getValue();
+        const level = Tone.dbToGain(masterLevelValue);
+        const isClipping = masterLevelValue > -0.1;
+        if (masterMeterBarVisualElement) {
+            masterMeterBarVisualElement.style.width = `${Math.min(100, level * 100)}%`;
+            masterMeterBarVisualElement.classList.toggle('clipping', isClipping);
+        }
+        const mixerWindow = window.openWindows ? window.openWindows['mixer'] : null;
+        if (mixerMasterMeterVisualElement && mixerWindow && mixerWindow.element && !mixerWindow.isMinimized) {
+            mixerMasterMeterVisualElement.style.width = `${Math.min(100, level * 100)}%`;
+            mixerMasterMeterVisualElement.classList.toggle('clipping', isClipping);
+        }
+    }
+
+    (tracks || []).forEach(track => {
+        if (track && track.trackMeter && typeof track.trackMeter.getValue === 'function') {
+            const meterValue = track.trackMeter.getValue();
+            const level = Tone.dbToGain(meterValue);
+            const isClipping = meterValue > -0.1;
+            if (track.inspectorWindow && track.inspectorWindow.element && !track.inspectorWindow.isMinimized) {
+                const inspectorMeterBar = track.inspectorWindow.element.querySelector(`#trackMeterBar-${track.id}`);
+                if (inspectorMeterBar) {
+                    inspectorMeterBar.style.width = `${Math.min(100, level * 100)}%`;
+                    inspectorMeterBar.classList.toggle('clipping', isClipping);
+                }
+            }
+            const mixerWindow = window.openWindows ? window.openWindows['mixer'] : null;
+            if (mixerWindow && mixerWindow.element && !mixerWindow.isMinimized) {
+                const mixerMeterBar = mixerWindow.element.querySelector(`#mixerTrackMeterBar-${track.id}`);
+                 if (mixerMeterBar) {
+                    mixerMeterBar.style.width = `${Math.min(100, level * 100)}%`;
+                    mixerMeterBar.classList.toggle('clipping', isClipping);
+                }
+            }
+        }
+    });
+}
+
+export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0) {
+    const audioReady = await initAudioContextAndMasterMeter(true);
+    if (!audioReady) { showNotification("Audio not ready for preview.", 2000); return; }
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
+    const track = tracksArray.find(t => t.id === trackId);
+
+    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded || !track.slices[sliceIndex]) {
+        console.warn(`[Audio] playSlicePreview: Conditions not met for track ${trackId}, slice ${sliceIndex}.`);
+        return;
+    }
+    const sliceData = track.slices[sliceIndex];
+    if (sliceData.duration <= 0) return;
+    const time = Tone.now();
+    const totalPitchShift = (sliceData.pitchShift || 0) + additionalPitchShiftInSemitones;
+    const playbackRate = Math.pow(2, totalPitchShift / 12);
+    let playDuration = sliceData.duration / playbackRate;
+    if (sliceData.loop) playDuration = Math.min(playDuration, 2);
+
+    const firstEffectNodeInTrack = track.activeEffects.length > 0 ? track.activeEffects[0].toneNode : track.gainNode;
+    const actualDestination = (firstEffectNodeInTrack && !firstEffectNodeInTrack.disposed) ? firstEffectNodeInTrack : (window.masterEffectsBusInput || Tone.getDestination());
+
+    if (!track.slicerIsPolyphonic) {
+        if (!track.slicerMonoPlayer || track.slicerMonoPlayer.disposed) {
+            track.setupSlicerMonoNodes();
+            if(!track.slicerMonoPlayer) { console.warn("[Audio] Mono player not set up."); return; }
+             if(track.audioBuffer && track.audioBuffer.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer;
+        }
+        const player = track.slicerMonoPlayer; const env = track.slicerMonoEnvelope; const gain = track.slicerMonoGain;
+        if (player.state === 'started') player.stop(time);
+        if (env.getValueAtTime(time) > 0.001) env.triggerRelease(time);
+        player.buffer = track.audioBuffer; env.set(sliceData.envelope);
+        gain.gain.value = Tone.dbToGain(-6) * sliceData.volume * velocity;
+        player.playbackRate = playbackRate; player.reverse = sliceData.reverse;
+        player.loop = sliceData.loop; player.loopStart = sliceData.offset; player.loopEnd = sliceData.offset + sliceData.duration;
+        player.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
+        env.triggerAttack(time);
+        if (!sliceData.loop) {
+            const releaseTime = time + playDuration - (sliceData.envelope.release || 0.1);
+            env.triggerRelease(Math.max(time, releaseTime));
+        }
+    } else {
+        const tempPlayer = new Tone.Player(track.audioBuffer);
+        const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
+        const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * velocity);
+        tempPlayer.chain(tempEnv, tempGain, actualDestination);
+        tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse;
+        tempPlayer.loop = sliceData.loop; tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
+        tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
+        tempEnv.triggerAttack(time);
+        if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
+        Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
+    }
+}
+
+export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0) {
+    const audioReady = await initAudioContextAndMasterMeter(true);
+    if (!audioReady) { showNotification("Audio not ready for preview.", 2000); return; }
+    const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
+    const track = tracksArray.find(t => t.id === trackId);
+
+    if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || !track.drumPadPlayers[padIndex].loaded) {
+        console.warn(`[Audio] playDrumSamplerPadPreview: Conditions not met. Track: ${!!track}, Type: ${track?.type}, Player ${padIndex} exists: ${!!track?.drumPadPlayers[padIndex]}, Player loaded: ${track?.drumPadPlayers[padIndex]?.loaded}`);
+        return;
+    }
+    const player = track.drumPadPlayers[padIndex];
+    const padData = track.drumSamplerPads[padIndex];
+    player.volume.value = Tone.gainToDb(padData.volume * velocity * 0.5); // Reduced preview volume
+    const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
+    player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
+    player.start(Tone.now());
+}
 
 export function getMimeTypeFromFilename(filename) {
     if (!filename || typeof filename !== 'string') return null;
@@ -519,6 +629,5 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
     showNotification(`Sample auto-sliced into ${numSlicesToCreate} parts.`, 2000);
 }
 
-// Ensure all functions from the previous version of audio.js that are used by main.js are present and exported
-// playSlicePreview, playDrumSamplerPadPreview are already here and updated.
-export { updateMeters, playSlicePreview, playDrumSamplerPadPreview }; // Ensure these are explicitly exported if not already
+// REMOVED the redundant export block:
+// export { updateMeters, playSlicePreview, playDrumSamplerPadPreview };
