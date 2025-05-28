@@ -4,8 +4,8 @@ body {
     font-size: 14px;
     margin: 0; 
     overflow: hidden; 
-    background-color: #121212; /* Very dark background for the desktop */
-    color: #cccccc; /* Light grey default text */
+    background-color: #101010; /* Very dark base background */
+    color: #e0e0e0; /* Light grey default text for the entire application */
 }
 
 #desktop {
@@ -13,21 +13,22 @@ body {
     height: 100vh;
     overflow: hidden; 
     position: relative; 
-    background-color: #121212; /* Desktop background */
+    background-color: #101010; /* Consistent very dark desktop */
 }
 
-/* --- Window Styling (Dark Theme Inspired) --- */
+/* --- Window Styling (Unified Dark Theme) --- */
 .window {
     position: absolute; 
-    border: 1px solid #3a3a3a; /* Slightly lighter border than pure black */
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.7); 
-    background-color: #282828; /* Main window background - dark grey */
+    border: 1px solid #383838; /* Dark border, slightly lighter than deepest blacks */
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.5); /* Softer, more modern shadow */
+    background-color: #1e1e1e; /* Main window background - very dark grey */
     display: flex; 
     flex-direction: column; 
     overflow: hidden; 
     min-width: 150px; 
     min-height: 100px;
-    color: #cccccc; /* Default text color for windows */
+    color: #e0e0e0; /* Default text color for windows */
+    border-radius: 3px; /* Subtle rounding for a more modern feel */
 }
 
 .window.minimized {
@@ -35,26 +36,28 @@ body {
 }
 
 .window-title-bar {
-    background-color: #1e1e1e; /* Very dark title bar, slightly different from window body */
-    color: #e0e0e0; /* Lighter text for title */
-    padding: 4px 6px; /* Slightly more padding */
+    background-color: #2a2a2a; /* Slightly lighter than window body for definition */
+    color: #f0f0f0; /* Bright white text for title */
+    padding: 5px 8px; 
     cursor: grab;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 26px; 
+    height: 28px; /* Slightly taller */
     flex-shrink: 0; 
-    font-size: 0.85rem; /* Slightly larger title font */
-    font-weight: bold;
+    font-size: 0.9rem; 
+    font-weight: 600; /* Semibold */
     user-select: none; 
-    border-bottom: 1px solid #3a3a3a; /* Separator line */
+    border-bottom: 1px solid #121212; /* Darker separator line */
+    border-top-left-radius: 2px; /* Match window rounding */
+    border-top-right-radius: 2px;
 }
 
 .window-title-bar span { 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 5px; 
+    padding-right: 8px; 
 }
 
 .window-title-buttons {
@@ -62,151 +65,153 @@ body {
 }
 
 .window-title-buttons button {
-    background: #3a3a3a; /* Dark grey button background */
-    border: 1px solid #1e1e1e; /* Border matching title bar for inset look */
-    /* Subtle 3D effect with shades of grey */
-    border-color: #484848 #2a2a2a #2a2a2a #484848; 
-    box-shadow: 1px 1px 0 #484848 inset, -1px -1px 0 #2a2a2a inset;
-    color: #cccccc; /* Light grey text */
-    width: 20px; /* Slightly larger buttons */
+    background: #383838; /* Dark grey button background */
+    border: 1px solid #1a1a1a; 
+    color: #d0d0d0; /* Light grey text */
+    width: 20px; 
     height: 20px;
     line-height: 18px; 
     text-align: center;
     font-size: 11px;
     font-weight: bold;
-    margin-left: 3px;
+    margin-left: 4px; /* Slightly more spacing */
     padding: 0;
     cursor: default; 
     flex-shrink: 0;
-    border-radius: 2px; /* Slight rounding */
+    border-radius: 3px; 
+    transition: background-color 0.15s ease;
 }
 
 .window-title-buttons button:hover {
-    background: #484848; /* Lighter on hover */
+    background: #4a4a4a; /* Lighter on hover */
+    color: #ffffff;
 }
 
 .window-title-buttons button:active {
-    border-color: #2a2a2a #484848 #484848 #2a2a2a; 
-    box-shadow: -1px -1px 0 #484848 inset, 1px 1px 0 #2a2a2a inset;
-    background: #303030; /* Darker when pressed */
+    background: #2a2a2a; /* Darker when pressed */
+    border-color: #121212;
 }
 
 .window-content {
     flex-grow: 1; 
-    padding: 8px; 
-    background-color: #181818; /* Very dark content area, slightly different from window chrome */
+    padding: 10px; /* More padding */
+    background-color: #181818; /* Main content area - very dark */
     overflow: auto; 
-    color: #cccccc; /* Light grey text for content */
+    color: #e0e0e0; /* Light grey text for content */
 }
 
-/* --- Taskbar Styling (Dark Theme Inspired) --- */
+/* --- Taskbar Styling (Unified Dark Theme) --- */
 #taskbar {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 30px; 
-    background-color: #1e1e1e; /* Very dark taskbar */
-    border-top: 1px solid #3a3a3a; /* Subtle top border */
+    height: 32px; /* Slightly taller */
+    background-color: #1a1a1a; /* Dark taskbar */
+    border-top: 1px solid #303030; /* Subtle top border */
     z-index: 10000; 
     display: flex;
     align-items: center;
-    padding: 0 5px;
+    padding: 0 6px;
     box-sizing: border-box;
-    color: #cccccc; 
+    color: #d0d0d0; 
 }
 
 #startButton {
-    background-color: #282828; /* Dark grey */
+    background-color: #2c2c2c; 
     border: 1px solid #121212;
-    border-color: #3a3a3a #1a1a1a #1a1a1a #3a3a3a; 
-    box-shadow: 1px 1px 0 #3a3a3a inset, -1px -1px 0 #1a1a1a inset;
-    padding: 2px 10px; /* More padding */
-    font-weight: bold;
-    margin-right: 5px;
-    color: #e0e0e0; /* Light text */
+    border-color: #3c3c3c #181818 #181818 #3c3c3c; 
+    box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
+    padding: 3px 12px; 
+    font-weight: 600; /* Semibold */
+    margin-right: 6px;
+    color: #e0e0e0; 
     border-radius: 3px;
+    transition: background-color 0.15s ease;
 }
 #startButton:hover {
     background-color: #3a3a3a;
 }
 #startButton:active {
-    border-color: #1a1a1a #3a3a3a #3a3a3a #1a1a1a; 
-    box-shadow: -1px -1px 0 #3a3a3a inset, 1px 1px 0 #1a1a1a inset;
+    border-color: #181818 #3c3c3c #3c3c3c #181818; 
+    box-shadow: -1px -1px 0 #3c3c3c inset, 1px 1px 0 #181818 inset;
     background-color: #202020;
 }
 
 #taskbarButtons .taskbar-button {
-    background-color: #282828; /* Dark grey */
+    background-color: #2c2c2c; 
     border: 1px solid #121212;
-    border-color: #3a3a3a #1a1a1a #1a1a1a #3a3a3a;
-    box-shadow: 1px 1px 0 #3a3a3a inset, -1px -1px 0 #1a1a1a inset;
-    padding: 2px 8px; /* More padding */
-    margin: 0 2px;
-    max-width: 150px;
+    border-color: #3c3c3c #181818 #181818 #3c3c3c;
+    box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
+    padding: 3px 10px; 
+    margin: 0 3px;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.8rem;
     flex-shrink: 0; 
-    color: #cccccc; /* Light grey text */
+    color: #d0d0d0; 
     border-radius: 3px;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 #taskbarButtons .taskbar-button:hover {
     background-color: #3a3a3a;
+    color: #ffffff;
 }
 #taskbarButtons .taskbar-button.active,
 #taskbarButtons .taskbar-button:active {
-    border-color: #1a1a1a #3a3a3a #3a3a3a #1a1a1a;
-    box-shadow: -1px -1px 0 #3a3a3a inset, 1px 1px 0 #1a1a1a inset;
-    background-color: #202020; /* Darker active */
-    color: #ffffff; /* Brighter text for active */
+    border-color: #181818 #3c3c3c #3c3c3c #181818;
+    box-shadow: -1px -1px 0 #3c3c3c inset, 1px 1px 0 #181818 inset;
+    background-color: #202020; 
+    color: #ffffff; 
 }
 #taskbarButtons .taskbar-button.minimized-on-taskbar {
-    background-color: #282828; /* Same as inactive or slightly different */
-    opacity: 0.7;
+    background-color: #282828; 
+    opacity: 0.65; /* More dim for minimized */
 }
 
 #taskbarTempoDisplay {
     margin-left: auto; 
-    padding: 2px 8px;
+    padding: 3px 10px;
     border: 1px solid #121212;
-    border-color: #3a3a3a #1a1a1a #1a1a1a #3a3a3a; 
-    box-shadow: 1px 1px 0 #3a3a3a inset, -1px -1px 0 #1a1a1a inset;
+    border-color: #3c3c3c #181818 #181818 #3c3c3c; 
+    box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
     font-size: 0.8rem;
-    background-color: #282828; 
+    background-color: #2c2c2c; 
     cursor: pointer;
-    color: #cccccc; 
+    color: #d0d0d0; 
     border-radius: 3px;
 }
 #taskbarTempoDisplay:hover {
     background-color: #3a3a3a;
 }
 
-/* --- Start Menu Styling (Dark Theme Inspired) --- */
+/* --- Start Menu Styling (Unified Dark Theme) --- */
 #startMenu {
     position: absolute;
-    bottom: 30px; 
+    bottom: 32px; /* Adjusted for slightly taller taskbar */
     left: 0;
-    background: #1e1e1e; /* Very dark */
+    background: #1e1e1e; 
     border: 1px solid #3a3a3a; 
     border-color: #484848 #2a2a2a #2a2a2a #484848; 
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
     z-index: 10001; 
-    padding: 3px;
-    min-width: 200px; /* Slightly wider */
-    color: #cccccc; 
+    padding: 4px; /* More padding */
+    min-width: 220px; 
+    color: #e0e0e0; 
+    border-radius: 3px;
 }
 
 #startMenu.hidden { display: none; }
 #startMenu ul { list-style: none; padding: 0; margin: 0; }
-#startMenu li { padding: 5px 20px 5px 10px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; color: #cccccc; }
-#startMenu li:hover, #startMenu li.disabled:hover { background: #0055A4; color: white; } /* Example blue hover */
-#startMenu li.disabled { color: #666666; cursor: default; }
-#startMenu hr { border: none; border-top: 1px solid #3a3a3a; margin: 3px 0; }
+#startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; color: #e0e0e0; border-radius: 2px; transition: background-color 0.1s ease;}
+#startMenu li:hover, #startMenu li.disabled:hover { background: #0060c0; color: white; } /* Brighter blue hover */
+#startMenu li.disabled { color: #555555; cursor: default; }
+#startMenu hr { border: none; border-top: 1px solid #3a3a3a; margin: 4px 0; }
 
 
-/* --- Pad Button Styling (Dark Theme Inspired) --- */
+/* --- Pad Button Styling (Unified Dark Theme) --- */
 .pad-button {
     padding: 8px;
     border: 1px solid #404040; 
@@ -220,7 +225,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: inset -1px -1px 0px #1a1a1a, inset 1px 1px 0px #3a3a3a; 
+    box-shadow: inset -1px -1px 1px #1a1a1a, inset 1px 1px 1px #3a3a3a; 
     transition: background-color 0.15s ease, box-shadow 0.15s ease;
     overflow: hidden; 
     position: relative; 
@@ -231,17 +236,17 @@ body {
 }
 .pad-button:active, .pad-button.selected-for-edit {
     background-color: #202020; 
-    box-shadow: inset 1px 1px 0px #1a1a1a, inset -1px -1px 0px #3a3a3a; 
+    box-shadow: inset 1px 1px 1px #1a1a1a, inset -1px -1px 1px #3a3a3a; 
     border-color: #505050;
 }
 .pad-button.selected-for-edit {
-    border-color: #77aaff; /* Light blue accent for selected */
+    border-color: #60a5fa; /* Lighter blue accent for selected */
     border-width: 2px;
     padding: 7px; 
 }
 .pad-label {
     font-size: 0.65rem; 
-    color: #b0b0b0; /* Slightly dimmer text for pad label */
+    color: #b0b0b0; 
     display: block;
     margin-top: 5px;
     word-break: break-all; 
@@ -251,13 +256,13 @@ body {
     text-overflow: ellipsis;
 }
 
-/* --- General Drop Zone Styling (Dark Theme Inspired) --- */
+/* --- General Drop Zone Styling (Unified Dark Theme) --- */
 .drop-zone {
     border: 2px dashed #4a4a4a; 
     padding: 10px;          
     text-align: center;
-    background-color: #1c1c1c;  /* Darker than content area */
-    color: #888888; /* Dimmer text for placeholder */              
+    background-color: #1c1c1c;  
+    color: #888888;            
     font-size: 0.8em; 
     border-radius: 4px;         
     margin-bottom: 5px;    
@@ -272,7 +277,7 @@ body {
 .drop-zone label:hover { color: #38bdf8; }
 
 
-/* --- Knob Styling (Dark Theme Inspired) --- */
+/* --- Knob Styling (Unified Dark Theme) --- */
 .knob-container {
     display: flex;
     flex-direction: column;
@@ -282,7 +287,7 @@ body {
 }
 .knob-label {
     font-size: 0.7rem; 
-    color: #b0b0b0; /* Light grey for label */
+    color: #b0b0b0; 
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -293,17 +298,17 @@ body {
 .knob {
     width: 36px; 
     height: 36px; 
-    background-color: #303030; /* Dark grey knob body */
+    background-color: #303030; 
     border-radius: 50%;
     position: relative;
-    border: 1px solid #1e1e1e; /* Darker border */
+    border: 1px solid #1e1e1e; 
     box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); 
     cursor: ns-resize; 
 }
 .knob-handle {
     width: 4px; 
     height: 10px; 
-    background-color: #909090; /* Lighter grey handle */
+    background-color: #909090; 
     position: absolute;
     top: 3px; 
     left: 50%;
@@ -313,48 +318,48 @@ body {
 }
 .knob-value {
     font-size: 0.65rem; 
-    color: #a0a0a0; /* Dimmer light grey for value */
+    color: #a0a0a0; 
     margin-top: 2px;
     min-height: 1em; 
     text-align: center;
 }
 
-/* --- General Button Active States (Dark Theme Inspired) --- */
-.mute-button.muted, button.muted { 
-    background-color: #991b1b !important; /* Darker red (red-800) */
-    color: #fecaca !important; /* Lighter red text (red-100) */
+/* --- General Button Active States (Unified Dark Theme) --- */
+button.muted { 
+    background-color: #991b1b !important; 
+    color: #fecaca !important; 
     border-color: #7f1d1d #991b1b #991b1b #7f1d1d !important; 
     box-shadow: inset 1px 1px 0 #7f1d1d, inset -1px -1px 0 #ef4444 !important; 
 }
-.solo-button.soloed, button.soloed { 
-    background-color: #b45309 !important; /* Darker amber (amber-700) */
-    color: #fefce8 !important; /* Lighter yellow text (yellow-50) */
+button.soloed { 
+    background-color: #b45309 !important; 
+    color: #1c1917 !important; /* Darker text for yellow contrast */
     border-color: #92400e #b45309 #b45309 #92400e !important; 
     box-shadow: inset 1px 1px 0 #92400e, inset -1px -1px 0 #fde68a !important; 
 }
-.arm-input-button.armed, button.armed { 
-    background-color: #c2410c !important; /* Darker orange (orange-700) */
-    color: #fff7ed !important; /* Lighter orange text (orange-50) */
+button.armed { 
+    background-color: #c2410c !important; 
+    color: #fff7ed !important; 
     border-color: #9a3412 #c2410c #c2410c #9a3412 !important; 
     box-shadow: inset 1px 1px 0 #9a3412, inset -1px -1px 0 #fed7aa !important; 
 }
-.slice-toggle-button.active, button.active { 
-    background-color: #1d4ed8 !important; /* Darker blue (blue-700) */
-    color: #dbeafe !important; /* Lighter blue text (blue-100) */
+button.active { /* Generic active state for other toggles if needed */
+    background-color: #1d4ed8 !important; 
+    color: #dbeafe !important; 
     border-color: #1e40af #1d4ed8 #1d4ed8 #1e40af !important; 
     box-shadow: inset 1px 1px 0 #1e40af, inset -1px -1px 0 #93c5fd !important; 
 }
 
-/* --- Sequencer Grid Styling (Dark Theme Inspired) --- */
+/* --- Sequencer Grid Styling (Unified Dark Theme) --- */
 .sequencer-container .controls { 
     position: sticky;
     top: 0;
     left: 0; 
-    background-color: #1e1e1e; /* Very dark controls bar */
+    background-color: #1e1e1e; 
     z-index: 30; 
     border-bottom: 1px solid #3a3a3a;
     padding: 0.25rem; 
-    color: #cccccc; /* Light text */
+    color: #cccccc; 
 }
 .sequencer-container .controls input,
 .sequencer-container .controls label {
@@ -366,7 +371,7 @@ body {
 }
 
 .sequencer-grid-layout {
-    background-color: #121212; /* Very dark grid background */
+    background-color: #121212; 
 }
 
 .sequencer-grid-layout > div {
@@ -378,15 +383,15 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.65rem; 
-    border: 1px solid #2a2a2a; /* Dark border for cells */
+    border: 1px solid #2a2a2a; 
 }
 
 .sequencer-grid-layout .sequencer-header-cell {
     position: sticky;
     top: 0;
-    background-color: #1c1c1c; /* Slightly off-very-dark */
+    background-color: #1c1c1c; 
     font-weight: 500;
-    color: #b0b0b0; /* Light grey text */
+    color: #b0b0b0; 
     z-index: 20; 
 }
 .sequencer-grid-layout .sequencer-header-cell:first-child { 
@@ -397,43 +402,43 @@ body {
 .sequencer-grid-layout .sequencer-label-cell {
     position: sticky;
     left: 0;
-    background-color: #1c1c1c; /* Slightly off-very-dark */
+    background-color: #1c1c1c; 
     justify-content: flex-end;
     padding-right: 0.25rem; 
     font-weight: 500;
-    color: #b0b0b0; /* Light grey text */
+    color: #b0b0b0; 
     z-index: 10; 
 }
 
 .sequencer-grid-layout .sequencer-step-cell {
     cursor: pointer;
     transition: background-color 0.1s ease;
-    color: #777777; /* Dimmer text for inactive steps */
+    color: #777777; 
 }
 
 /* Alternating background colors for 4-step blocks */
-.sequencer-step-cell.bg-gray-50 { background-color: #161616; } /* Very dark (was slate-700) */
-.dark .sequencer-step-cell.dark\\:bg-slate-700 { background-color: #161616; } 
-
-.sequencer-step-cell.bg-white { background-color: #1e1e1e; }  /* Slightly off-very-dark (was slate-750) */
-.dark .sequencer-step-cell.dark\\:bg-slate-750 { background-color: #1e1e1e; } 
+.sequencer-step-cell.bg-gray-50 { background-color: #161616; } /* Very dark */
+.sequencer-step-cell.bg-white { background-color: #1e1e1e; }  /* Slightly off-very-dark */
 
 .sequencer-step-cell:hover {
-    background-color: #2c2c2c !important; /* Slightly lighter dark grey on hover */
+    background-color: #2c2c2c !important; 
 }
 
-/* Active step colors (adjust text color for contrast on these backgrounds) */
-.sequencer-step-cell.active-synth { background-color: #3b82f6 !important; color: #FFFFFF !important; } 
-.sequencer-step-cell.active-sampler { background-color: #10b981 !important; color: #FFFFFF !important; } 
-.sequencer-step-cell.active-drum-sampler { background-color: #eab308 !important; color: #080808 !important; } /* Dark text on yellow */
-.sequencer-step-cell.active-instrument-sampler { background-color: #ec4899 !important; color: #FFFFFF !important; } 
+/* Active step colors (using example teal/blue from images) */
+.sequencer-step-cell.active-synth,
+.sequencer-step-cell.active-sampler,
+.sequencer-step-cell.active-drum-sampler,
+.sequencer-step-cell.active-instrument-sampler { 
+    background-color: #008080 !important; /* Teal */
+    color: #FFFFFF !important; 
+    border-color: #009090 !important; /* Slightly lighter teal for border */
+} 
 
 .sequencer-step-cell.playing {
-    outline: 2px solid #f87171; /* Lighter red for playing outline on dark theme */
+    outline: 2px solid #00ffff; /* Cyan outline for playing step */
     outline-offset: -2px;
     z-index: 5; 
 }
-
 
 /* --- Notification Area --- */
 #notification-area { /* ... unchanged ... */ }
@@ -446,64 +451,85 @@ body {
 .single-control-container { /* ... unchanged ... */ }
 
 /* --- Waveform Canvas --- */
-.waveform-canvas { /* ... unchanged ... */ }
+.waveform-canvas { 
+    border: 1px solid #3a3a3a;
+    background-color: #101010; /* Very dark background */
+    width: 100%; 
+    height: 70px; 
+    display: block; 
+}
 
 /* --- Meter Bar Styling --- */
-.meter-bar-container { /* ... unchanged ... */ }
-.meter-bar { /* ... unchanged ... */ }
-.meter-bar.clipping { /* ... unchanged ... */ }
-.track-meter-container { /* ... unchanged ... */ }
-.mixer-meter-container { /* ... unchanged ... */ }
-#masterMeterContainerGlobal, #mixerMasterMeterContainer { /* ... unchanged ... */ }
+.meter-bar-container { 
+    background-color: #101010; /* Very dark */
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid #3a3a3a;
+    height: 10px; 
+    box-sizing: border-box;
+}
+.meter-bar {
+    background-color: #00b0b0; /* Cyan/Teal for meter */
+    height: 100%;
+    width: 0%;
+    transition: width 0.05s linear;
+}
+.meter-bar.clipping {
+    background-color: #e04040; /* Brighter Red for clipping */
+}
+.track-meter-container { height: 16px; margin-top: 2px; }
+.mixer-meter-container { height: 12px; margin-top: 4px; }
+#masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; }
 
-/* Modal Styling (Dark Theme Inspired) */
+/* Modal Styling (Unified Dark Theme) */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.65); /* Darker overlay */
+    background-color: rgba(0,0,0,0.75); /* Even darker overlay */
     display: flex; justify-content: center; align-items: center;
     z-index: 15000; 
 }
 .modal-dialog {
-    background-color: #282828; /* Dark grey dialog */
-    border: 1px solid #4a4a4a; 
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.6);
+    background-color: #1e1e1e; /* Very dark dialog */
+    border: 1px solid #3a3a3a; 
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
     min-width: 300px; max-width: 90%; max-height: 90vh;
     display: flex; flex-direction: column;
-    color: #cccccc; /* Light text in modal */
-    border-radius: 4px; /* Slightly rounded modals */
+    color: #e0e0e0; /* Light text in modal */
+    border-radius: 4px; 
 }
 .modal-title-bar {
-    background-color: #1e1e1e; /* Very dark title bar */
-    color: #e0e0e0;
-    padding: 6px 10px; /* More padding */
+    background-color: #2a2a2a; /* Darker title bar */
+    color: #f0f0f0;
+    padding: 6px 10px; 
     font-weight: bold; font-size: 0.9rem; user-select: none;
-    border-bottom: 1px solid #3a3a3a;
-    border-top-left-radius: 3px; /* Match dialog rounding */
+    border-bottom: 1px solid #121212; /* Darkest separator */
+    border-top-left-radius: 3px; 
     border-top-right-radius: 3px;
 }
 .modal-content {
     padding: 15px; overflow-y: auto; flex-grow: 1;
-    background-color: #282828; /* Match dialog background */
-    color: #cccccc; 
+    background-color: #1e1e1e; 
+    color: #e0e0e0; 
 }
 .modal-content p { margin-bottom: 10px; }
 .modal-content p:last-child { margin-bottom: 0; }
 .modal-buttons {
     padding: 10px 15px; text-align: right;
     border-top: 1px solid #3a3a3a; 
-    background-color: #282828;
+    background-color: #1e1e1e;
     border-bottom-left-radius: 3px;
     border-bottom-right-radius: 3px;
 }
 .modal-buttons button {
     background-color: #3a3a3a;
-    border: 1px solid #1e1e1e;
+    border: 1px solid #1a1a1a;
     border-color: #484848 #2a2a2a #2a2a2a #484848; 
     box-shadow: 1px 1px 0 #484848 inset, -1px -1px 0 #2a2a2a inset;
     color: #e0e0e0;
-    padding: 6px 15px; /* Slightly larger buttons */
+    padding: 6px 15px; 
     margin-left: 10px; cursor: pointer; font-size: 0.85rem;
     border-radius: 3px;
+    transition: background-color 0.15s ease;
 }
 .modal-buttons button:hover {
     background-color: #484848;
@@ -531,37 +557,26 @@ body {
 .global-controls-window label { /* ... unchanged ... */ }
 
 /* Input and Select for Dark Theme (High Contrast) */
-/* Assuming .dark class is on html or body */
-.dark select, .dark input[type="text"], .dark input[type="number"],
-.dark .window-content select, .dark .modal-content select,
-.dark .window-content input[type="text"], .dark .window-content input[type="number"],
-.dark .modal-content input[type="text"], .dark .modal-content input[type="number"] {
-    background-color: #1f1f1f; /* Very dark input background */
-    color: #f0f0f0; /* Very light text */
-    border: 1px solid #505050; /* Contrasting border */
-    padding: 4px 6px; /* Consistent padding */
-    border-radius: 3px;
-    font-size: 0.8rem; 
-}
-.dark input::placeholder, 
-.dark .window-content input::placeholder, .dark .modal-content input::placeholder {
-    color: #777777; /* Lighter placeholder text */
-}
-
-/* Ensure light mode inputs also have high contrast (if not using .dark for everything) */
+/* Remove .dark prefix if this is the only theme */
 select, input[type="text"], input[type="number"],
 .window-content select, .modal-content select,
 .window-content input[type="text"], .window-content input[type="number"],
 .modal-content input[type="text"], .modal-content input[type="number"] {
-    background-color: #FFFFFF; 
-    color: #080808; 
-    border: 1px solid #a0a0a0; 
-    padding: 4px 6px; 
-    border-radius: 3px; 
-    font-size: 0.8rem; 
+    background-color: #282828; /* Dark input background */
+    color: #e0e0e0; /* Light text */
+    border: 1px solid #4a4a4a; /* Contrasting border */
+    padding: 5px 8px; /* More padding */
+    border-radius: 3px;
+    font-size: 0.85rem; /* Slightly larger font */
 }
-input::placeholder,
+input::placeholder, 
 .window-content input::placeholder, .modal-content input::placeholder {
-    color: #555555; 
+    color: #777777; /* Lighter placeholder text */
 }
 
+/* Remove all .dark prefixed rules if this is the only theme */
+/* For example:
+.dark body becomes body
+.dark .window becomes .window
+etc.
+*/
