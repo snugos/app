@@ -909,7 +909,7 @@ function showAddEffectModal(owner, ownerType) {
     return rackWindow;
 }
 
-export function openGlobalControlsWindow(savedState = null) {
+ function openGlobalControlsWindow(savedState = null) {
     const windowId = 'globalControls';
     console.log(`[UI] Attempting to open/focus Global Controls Window. SavedState:`, savedState);
 
