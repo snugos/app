@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 7');
+console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 8');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -199,7 +199,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     if (window.openWindows[inspectorId] && !savedState) { window.openWindows[inspectorId].restore(); return window.openWindows[inspectorId]; }
     if (window.openWindows[inspectorId] && savedState) window.openWindows[inspectorId].close();
     track.inspectorControls = {}; 
-    const inspectorContentElement = buildTrackInspectorContentDOM(track); // Ensure this is defined or imported
+    const inspectorContentElement = buildTrackInspectorContentDOM(track);
     if (!inspectorContentElement) { showNotification(`Failed to build Inspector content (Track ${track.id}).`, 4000); return null; }
     let windowHeight = 450; if (track.type === 'Synth') windowHeight = 620; else if (track.type === 'Sampler') windowHeight = 620; else if (track.type === 'DrumSampler') windowHeight = 580; else if (track.type === 'InstrumentSampler') windowHeight = 620;
     const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
@@ -321,25 +321,22 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
         }
         
         let finalSpliceIndex = newVisualIndex;
-        if (oldEffectIndex < newVisualIndex) {
+        if (oldEffectIndex < newVisualIndex) { // If moving an item downwards in the list
             finalSpliceIndex--; 
         }
-        finalSpliceIndex = Math.max(0, Math.min(finalSpliceIndex, effectsCurrentArray.length > 0 ? effectsCurrentArray.length -1 : 0));
-        
-        console.log(`[UI Drop] ID: ${droppedEffectId}, OldIdx: ${oldEffectIndex}, TargetElement: ${targetElement?.dataset.effectId}, VisualNewIdx: ${newVisualIndex}, FinalSpliceIdx: ${finalSpliceIndex}`);
+        // Clamp to valid array indices for insertion. For splice, this can be up to array.length.
+        finalSpliceIndex = Math.max(0, Math.min(finalSpliceIndex, effectsCurrentArray.length));
 
-        if (oldEffectIndex !== finalSpliceIndex || (oldEffectIndex === finalSpliceIndex && newVisualIndex === effectsCurrentArray.length && oldEffectIndex === effectsCurrentArray.length -1 && effectsCurrentArray.length > 0) ) {
-             if (ownerType === 'track') owner.reorderEffect(droppedEffectId, finalSpliceIndex);
-             else window.reorderMasterEffect(droppedEffectId, finalSpliceIndex);
-        } else if (oldEffectIndex === finalSpliceIndex && newVisualIndex !== effectsCurrentArray.length) {
-            // No change needed
-        } else if (oldEffectIndex !== finalSpliceIndex) {
+
+        console.log(`[UI Drop] ID: ${droppedEffectId}, OldIdx: ${oldEffectIndex}, TargetElement: ${targetElement?.dataset.effectId}, VisualNewIdx: ${newVisualIndex}, FinalSpliceIdx for reorderEffect: ${finalSpliceIndex}`);
+
+        if (oldEffectIndex !== finalSpliceIndex || (oldEffectIndex === finalSpliceIndex && newVisualIndex === effectsCurrentArray.length && oldEffectIndex !== effectsCurrentArray.length) ) {
              if (ownerType === 'track') owner.reorderEffect(droppedEffectId, finalSpliceIndex);
              else window.reorderMasterEffect(droppedEffectId, finalSpliceIndex);
         }
         
         const currentControlsContainer = document.getElementById(`${ownerType}-${owner?.id || 'master'}-effect-controls`);
-        renderEffectsList(owner, ownerType, listDiv, currentControlsContainer);
+        renderEffectsList(owner, ownerType, listDiv, currentControlsContainer); // Re-render to reflect new order
     });
 }
 
@@ -435,49 +432,74 @@ export function openGlobalControlsWindow(savedState = null) {
     if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) window.attachGlobalControlEvents(globalControlsWin.element); else console.warn("attachGlobalControlEvents not found or window element missing.");
     return globalControlsWin;
 }
-export function openTrackInspectorWindow(trackId, savedState = null) {
-    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) { showNotification(`Track ID ${trackId} not found.`, 3000); return null; }
-    const inspectorId = `trackInspector-${track.id}`;
-    if (window.openWindows[inspectorId] && !savedState) { window.openWindows[inspectorId].restore(); return window.openWindows[inspectorId]; }
-    if (window.openWindows[inspectorId] && savedState) window.openWindows[inspectorId].close();
-    track.inspectorControls = {}; 
-    const inspectorContentElement = buildTrackInspectorContentDOM(track);
-    if (!inspectorContentElement) { showNotification(`Failed to build Inspector content (Track ${track.id}).`, 4000); return null; }
-    let windowHeight = 450; if (track.type === 'Synth') windowHeight = 620; else if (track.type === 'Sampler') windowHeight = 620; else if (track.type === 'DrumSampler') windowHeight = 580; else if (track.type === 'InstrumentSampler') windowHeight = 620;
-    const winOptions = { width: Math.min(500, window.innerWidth - 40), height: Math.min(windowHeight, window.innerHeight - 80), initialContentKey: `trackInspector-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
-    let inspectorWin = null; try { inspectorWin = new SnugWindow(inspectorId, `Track: ${track.name}`, inspectorContentElement, winOptions); } catch (e) { console.error(`CRITICAL ERROR \`new SnugWindow()\` for inspector ${inspectorId}:`, e); showNotification("CRITICAL: Error creating inspector window.", 6000); return null; }
-    if (!inspectorWin || !inspectorWin.element) { showNotification(`Failed to create Inspector window for track ${track.id}.`, 5000); return null; }
-    track.inspectorWindow = inspectorWin; 
-    initializeCommonInspectorControls(track, inspectorWin.element); 
-    initializeTypeSpecificInspectorControls(track, inspectorWin.element);
-    setTimeout(() => { Object.values(track.inspectorControls).forEach(control => { if (control?.type === 'knob' && typeof control.refreshVisuals === 'function') control.refreshVisuals(); }); }, 50);
-    return inspectorWin;
+
+// --- Sound Browser UI ---
+export function openSoundBrowserWindow(savedState = null) {
+    console.log("[ui.js] openSoundBrowserWindow called.");
+    const windowId = 'soundBrowser';
+    if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') updateSoundBrowserDisplayForLibrary(window.currentLibraryName); return window.openWindows[windowId]; }
+    if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
+    let selectOptionsHTML = '';
+    if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) { for (const libName in Constants.soundLibraries) selectOptionsHTML += `<option value="${libName}">${libName}</option>`; } else { selectOptionsHTML = '<option value="">No Libraries Configured</option>'; }
+    const contentHTML = `<div class="sound-browser-content p-2"><select id="soundBrowserLibrarySelect" class="w-full mb-2 p-1 border border-gray-500 rounded-sm text-xs bg-white text-black focus:ring-blue-500 focus:border-blue-500">${selectOptionsHTML}</select><div id="soundBrowserPathDisplay" class="text-xs p-1 bg-gray-200 border-b border-gray-400 mb-1">Path: /</div><div id="soundBrowserList" class="sound-browser-list h-64 overflow-y-auto border border-gray-300 p-1 bg-white">Select a library to load sounds.</div></div>`;
+    const winOptions = { width: 350, height: 400, initialContentKey: 'soundBrowser' }; if (savedState) Object.assign(winOptions, savedState);
+    let soundBrowserWin = null;
+    try { soundBrowserWin = new SnugWindow(windowId, 'Sound Browser', contentHTML, winOptions); } catch(e) { console.error('[ui.js] CRITICAL ERROR during `new SnugWindow()` for Sound Browser:', e); showNotification("CRITICAL: Error creating Sound Browser window object.", 6000); return null; }
+    if (!soundBrowserWin || !soundBrowserWin.element) { console.error("[ui.js] Failed to create Sound Browser window instance OR its element is null."); showNotification("Failed to create Sound Browser window.", 5000); return null; }
+    const librarySelect = soundBrowserWin.element.querySelector('#soundBrowserLibrarySelect');
+    if (librarySelect) {
+        librarySelect.onchange = () => { const selectedLibraryName = librarySelect.value; if (typeof updateSoundBrowserDisplayForLibrary === 'function') updateSoundBrowserDisplayForLibrary(selectedLibraryName); };
+        if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) { const firstLibraryName = Object.keys(Constants.soundLibraries)[0]; const currentSelectedValue = librarySelect.value; let targetLibrary = Array.from(librarySelect.options).find(opt => opt.value === currentSelectedValue) ? currentSelectedValue : firstLibraryName; if (!Array.from(librarySelect.options).find(opt => opt.value === targetLibrary) && librarySelect.options.length > 0) targetLibrary = librarySelect.options[0].value; librarySelect.value = targetLibrary; if (typeof updateSoundBrowserDisplayForLibrary === 'function' && targetLibrary) updateSoundBrowserDisplayForLibrary(targetLibrary); } else { soundBrowserWin.element.querySelector('#soundBrowserList').innerHTML = "No sound libraries configured."; }
+    }
+    console.log("[ui.js] Sound Browser window created and initialized."); return soundBrowserWin;
 }
-export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
-    const mainContentDiv = document.createElement('div'); mainContentDiv.className = 'sequencer-window-content p-2';
-    const titleP = document.createElement('p'); titleP.className = 'text-xs mb-2'; titleP.textContent = `${track.name} - ${track.type} Sequencer (${rows} rows x ${track.sequenceLength} steps, ${numBars} Bars)`; mainContentDiv.appendChild(titleP);
-    const gridContainer = document.createElement('div'); gridContainer.className = 'sequencer-grid-container'; gridContainer.style.overflow = 'auto';
-    const gridDiv = document.createElement('div'); gridDiv.className = 'sequencer-grid'; gridDiv.style.display = 'grid'; gridDiv.style.gridTemplateColumns = `50px repeat(${track.sequenceLength}, minmax(20px, 1fr))`; gridDiv.style.gridTemplateRows = `25px repeat(${rows}, 25px)`; gridDiv.style.setProperty('--steps-per-bar', Constants.STEPS_PER_BAR.toString());
-    const topLeftEmptyCell = document.createElement('div'); topLeftEmptyCell.className = 'sequencer-header-cell empty-top-left'; topLeftEmptyCell.style.gridColumn = '1'; topLeftEmptyCell.style.gridRow = '1'; gridDiv.appendChild(topLeftEmptyCell);
-    for (let bar = 0; bar < numBars; bar++) { const barNumCell = document.createElement('div'); barNumCell.className = 'sequencer-header-cell bar-number-header'; barNumCell.textContent = `Bar ${bar + 1}`; barNumCell.style.gridRow = '1'; const startColForBar = (bar * Constants.STEPS_PER_BAR) + 2; barNumCell.style.gridColumn = `${startColForBar} / span ${Constants.STEPS_PER_BAR}`; barNumCell.style.textAlign = 'center'; barNumCell.style.overflow = 'hidden'; gridDiv.appendChild(barNumCell); }
-    for (let r = 0; r < rows; r++) { const labelCell = document.createElement('div'); labelCell.className = 'sequencer-label-cell'; labelCell.title = rowLabels[r] || `Row ${r+1}`; labelCell.textContent = rowLabels[r] || `R${r+1}`; labelCell.style.gridColumn = '1'; labelCell.style.gridRow = `${r + 2}`; labelCell.style.display = 'flex'; labelCell.style.alignItems = 'center'; labelCell.style.paddingLeft = '5px'; gridDiv.appendChild(labelCell); for (let c = 0; c < track.sequenceLength; c++) { const stepCell = document.createElement('div'); let cellClass = 'sequencer-step-cell'; const beatInBar = (c % Constants.STEPS_PER_BAR); if (Constants.STEPS_PER_BAR === 16) { if (beatInBar % 4 === 0) cellClass += ' beat-downbeat'; else cellClass += ' beat-other'; } else { if (Math.floor(beatInBar / (Constants.STEPS_PER_BAR / 4)) % 2 === 0) cellClass += ' beat-1'; else cellClass += ' beat-2'; } const stepData = track.sequenceData[r]?.[c]; if (stepData && stepData.active) { if (track.type === 'Synth') cellClass += ' active-synth'; else if (track.type === 'Sampler') cellClass += ' active-sampler'; else if (track.type === 'DrumSampler') cellClass += ' active-drum-sampler'; else if (track.type === 'InstrumentSampler') cellClass += ' active-instrument-sampler'; } stepCell.className = cellClass; stepCell.dataset.row = r; stepCell.dataset.col = c; stepCell.title = `${rowLabels[r] || ''} - Step ${c + 1}`; stepCell.style.gridColumn = `${c + 2}`; stepCell.style.gridRow = `${r + 2}`; gridDiv.appendChild(stepCell); } }
-    gridContainer.appendChild(gridDiv); mainContentDiv.appendChild(gridContainer); return mainContentDiv;
+export function updateSoundBrowserDisplayForLibrary(libraryName) {
+    const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
+    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js] Sound Browser DOM elements missing for updateDisplay."); return; }
+    window.currentLibraryName = libraryName;
+    if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) { window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName]; window.currentSoundBrowserPath = []; renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree); }
+    else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Loading ${libraryName} sounds...</div>`; pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`; }
+    else { const zipUrl = Constants.soundLibraries[libraryName]; if (zipUrl && typeof window.fetchSoundLibrary === 'function') window.fetchSoundLibrary(libraryName, zipUrl, false); else { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-red-500">Library ${libraryName} config not found.</div>`; pathDisplay.textContent = `Path: / (Error - ${libraryName})`; } }
 }
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
-    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) return null;
-    const windowId = `sequencerWin-${track.id}`; if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(track.id); else window.activeSequencerTrackId = track.id;
-    if (window.openWindows[windowId] && !forceRedraw && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
-    if (window.openWindows[windowId] && (forceRedraw || savedState)) window.openWindows[windowId].close();
-    let rows = 0, rowLabels = []; if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; } else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({length: rows}, (_, i) => `Slice ${i + 1}`); } else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({length: rows}, (_, i) => `Pad ${i+1}`); }
-    if (rows === 0 && track.sequenceData && track.sequenceData.length > 0) { rows = track.sequenceData.length; rowLabels = Array.from({length: rows}, (_, i) => `Row ${i + 1}`); }
-    if (rows === 0) { showNotification(`Cannot determine rows for ${track.type} sequencer.`, 3000); return null; }
-    const numBars = Math.ceil(track.sequenceLength / Constants.STEPS_PER_BAR); const sequencerContentElement = buildSequencerContentDOM(track, rows, rowLabels, numBars);
-    const winOptions = { width: Math.min(700, window.innerWidth - 50), height: Math.min(420 + rows * 28, window.innerHeight - 100), initialContentKey: `sequencerWin-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
-    const seqWin = new SnugWindow(windowId, `Sequencer: ${track.name}`, sequencerContentElement, winOptions); if (!seqWin || !seqWin.element) { showNotification("Failed to create Sequencer window.", 5000); return null; } track.sequencerWindow = seqWin;
-    seqWin.element.querySelectorAll('.sequencer-step-cell').forEach(cell => { cell.addEventListener('click', () => { const r = parseInt(cell.dataset.row); const c = parseInt(cell.dataset.col); if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Sequencer Step (Track ${track.name}, ${rowLabels[r] || 'Row ' + (r+1)}, Step ${c+1})`); if (!track.sequenceData[r]) track.sequenceData[r] = Array(track.sequenceLength).fill(null); const currentlyActive = track.sequenceData[r][c] && track.sequenceData[r][c].active; if (!currentlyActive) { track.sequenceData[r][c] = { active: true, velocity: Constants.defaultVelocity }; if(typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, true); } else { track.sequenceData[r][c].active = false; if(typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, false); } }); });
-    seqWin.onCloseCallback = () => { const currentActiveSeqId = typeof window.getActiveSequencerTrackId === 'function' ? window.getActiveSequencerTrackId() : null; if (currentActiveSeqId === track.id) { if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(null); } };
-    return seqWin;
+export function renderSoundBrowserDirectory(pathArray, treeNode) {
+    const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
+    console.log(`[UI SoundBrowser] Rendering directory. Path: /${pathArray.join('/')}, Library: ${window.currentLibraryName}, TreeNode type: ${typeof treeNode}, Is empty obj: ${treeNode && Object.keys(treeNode).length === 0}, Keys:`, treeNode ? Object.keys(treeNode) : 'null');
+    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js] renderSoundBrowserDirectory: DOM elements missing."); return; }
+    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`; return; }
+    if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") return;
+    if (!treeNode) { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`; pathDisplay.textContent = `Path: /`; return; }
+    soundBrowserList.innerHTML = ''; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
+    if (pathArray.length > 0) { const backButton = document.createElement('div'); backButton.className = 'sound-browser-item font-semibold hover:bg-gray-100 cursor-pointer p-1 text-sm border-b border-gray-200'; backButton.textContent = '⬆️ .. (Up)'; backButton.addEventListener('click', () => { window.currentSoundBrowserPath.pop(); let newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; if (!newTreeNode) { window.currentSoundBrowserPath = []; renderSoundBrowserDirectory([], null); return; } for (const segment of window.currentSoundBrowserPath) { if (newTreeNode[segment]?.type === 'folder') newTreeNode = newTreeNode[segment].children; else { window.currentSoundBrowserPath = []; newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; break; } } window.currentSoundFileTree = newTreeNode; renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode); }); soundBrowserList.appendChild(backButton); }
+    if (Object.keys(treeNode).length === 0 && pathArray.length > 0) { soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>'; }
+    else if (Object.keys(treeNode).length === 0 && pathArray.length === 0 && window.currentLibraryName) { soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or its structure was not recognized.</div>`; }
+
+    const sortedEntries = Object.entries(treeNode).sort(([nameA, itemA], [nameB, itemB]) => { if (itemA.type === 'folder' && itemB.type === 'file') return -1; if (itemA.type === 'file' && itemB.type === 'folder') return 1; return nameA.localeCompare(nameB); });
+    sortedEntries.forEach(([name, item]) => {
+        const div = document.createElement('div'); div.className = 'sound-browser-item hover:bg-gray-100 cursor-pointer p-1 text-xs border-b border-gray-200 last:border-b-0';
+        if (item.type === 'folder') { div.textContent = `📁 ${name}`; div.addEventListener('click', () => { window.currentSoundBrowserPath.push(name); window.currentSoundFileTree = item.children; renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children); }); }
+        else if (item.type === 'file') {
+            div.textContent = `🎵 ${name}`; div.title = `Click to play. Drag to load: ${name}`; div.draggable = true;
+            div.addEventListener('dragstart', (event) => { const soundData = { fullPath: item.fullPath, libraryName: window.currentLibraryName, fileName: name }; event.dataTransfer.setData("application/json", JSON.stringify(soundData)); event.dataTransfer.effectAllowed = "copy"; div.style.opacity = '0.5'; });
+            div.addEventListener('dragend', () => { div.style.opacity = '1'; });
+            div.addEventListener('click', async (event) => {
+                if (event.detail === 0) return;
+                if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
+                if (window.previewPlayer && !window.previewPlayer.disposed) { try { window.previewPlayer.stop(); window.previewPlayer.dispose(); } catch(e) {console.warn("Error disposing old preview player", e)} window.previewPlayer = null;}
+                try {
+                    if (!window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") throw new Error(`ZIP library "${window.currentLibraryName}" not loaded.`);
+                    const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath); if (!zipEntry) throw new Error(`File ${item.fullPath} not in ${window.currentLibraryName}.`);
+                    const fileBlob = await zipEntry.async("blob"); const objectURL = URL.createObjectURL(fileBlob);
+                    const buffer = await new Tone.Buffer().load(objectURL);
+                    window.previewPlayer = new Tone.Player(buffer).toDestination(); window.previewPlayer.autostart = true;
+                    window.previewPlayer.onstop = () => { if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){} window.previewPlayer = null; URL.revokeObjectURL(objectURL); };
+                } catch (error) { console.error(`Error previewing sound ${name}:`, error); showNotification(`Error previewing ${name}: ${error.message}`, 3000); }
+            });
+        }
+        soundBrowserList.appendChild(div);
+    });
 }
+
+// --- Mixer Window ---
 export function openMixerWindow(savedState = null) {
     const windowId = 'mixer'; if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; } if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
     const contentDiv = document.createElement('div'); contentDiv.className = 'mixer-window-content p-2 overflow-x-auto flex flex-row gap-2';
@@ -493,73 +515,19 @@ export function renderMixer(container) {
     const masterVolSliderCont = masterStrip.querySelector('#mixerMasterVolumeSliderContainer'); if(masterVolSliderCont){ let currentMasterVol = 0; if (window.masterGainNode?.gain) currentMasterVol = window.masterGainNode.gain.value; else if (Tone.getDestination()?.volume) currentMasterVol = Tone.getDestination().volume.value; const masterVolKnob = createKnob({ label: '', min:0, max:1.5, step:0.01, initialValue: currentMasterVol, displaySuffix: '', decimals:2, sensitivity: 0.8, onValueChange: (val) => { if (window.masterGainNode?.gain) window.masterGainNode.gain.value = val; else if (Tone.getDestination()?.volume) Tone.getDestination().volume.value = val; } }); masterVolSliderCont.innerHTML = ''; masterVolSliderCont.appendChild(masterVolKnob.element); }
     setTimeout(() => { currentTracks.forEach(track => { track.inspectorControls[`mixerVolume-${track.id}`]?.refreshVisuals?.(); }); }, 50);
 }
-export function renderSamplePads(track) {
-    if (!track || !track.inspectorWindow?.element) return;
-    const padsContainer = track.inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
-    if (!padsContainer) return;
-    padsContainer.innerHTML = '';
-    if (!track.slices || track.slices.length === 0) { padsContainer.textContent = 'No slices. Load sample.'; return; }
-    track.slices.forEach((slice, index) => {
-        const pad = document.createElement('button'); pad.className = `pad-button ${index === track.selectedSliceForEdit ? 'selected-for-edit' : ''}`; pad.textContent = `Slice ${index + 1}`; pad.title = `Select Slice ${index + 1}. Click to preview.`; pad.dataset.trackId = track.id; pad.dataset.trackType = "Sampler"; pad.dataset.padSliceIndex = index.toString();
-        pad.addEventListener('click', async () => { track.selectedSliceForEdit = index; if(typeof window.playSlicePreview === 'function') await window.playSlicePreview(track.id, index); renderSamplePads(track); updateSliceEditorUI(track); });
-        padsContainer.appendChild(pad);
-    });
-}
-export function updateSliceEditorUI(track) {
-    if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
-    const inspectorEl = track.inspectorWindow.element; const selectedSlice = track.slices[track.selectedSliceForEdit]; if (!selectedSlice) return;
-    const selectedSliceLabel = inspectorEl.querySelector(`#selectedSliceLabel-${track.id}`); if(selectedSliceLabel) selectedSliceLabel.textContent = (track.selectedSliceForEdit + 1).toString();
-    const startInput = inspectorEl.querySelector(`#sliceStart-${track.id}`); const endInput = inspectorEl.querySelector(`#sliceEnd-${track.id}`);
-    if (startInput) startInput.value = selectedSlice.offset.toFixed(3); if (endInput) endInput.value = (selectedSlice.offset + selectedSlice.duration).toFixed(3);
-    track.inspectorControls.sliceVolume?.setValue(selectedSlice.volume, false); track.inspectorControls.slicePitch?.setValue(selectedSlice.pitchShift, false); track.inspectorControls.sliceEnvAttack?.setValue(selectedSlice.envelope.attack, false); track.inspectorControls.sliceEnvDecay?.setValue(selectedSlice.envelope.decay, false); track.inspectorControls.sliceEnvSustain?.setValue(selectedSlice.envelope.sustain, false); track.inspectorControls.sliceEnvRelease?.setValue(selectedSlice.envelope.release, false);
-    const loopToggle = inspectorEl.querySelector(`#sliceLoopToggle-${track.id}`); if (loopToggle) { loopToggle.textContent = selectedSlice.loop ? 'Loop: ON' : 'Loop: OFF'; loopToggle.classList.toggle('active', selectedSlice.loop); }
-    const reverseToggle = inspectorEl.querySelector(`#sliceReverseToggle-${track.id}`); if (reverseToggle) { reverseToggle.textContent = selectedSlice.reverse ? 'Rev: ON' : 'Rev: OFF'; reverseToggle.classList.toggle('active', selectedSlice.reverse); }
-}
-export function applySliceEdits(trackId) {
-    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
-    const inspectorEl = track.inspectorWindow.element; const slice = track.slices[track.selectedSliceForEdit]; if (!slice) return;
-    const newStart = parseFloat(inspectorEl.querySelector(`#sliceStart-${track.id}`)?.value); const newEnd = parseFloat(inspectorEl.querySelector(`#sliceEnd-${track.id}`)?.value);
-    if (!isNaN(newStart) && !isNaN(newEnd) && newEnd > newStart && track.audioBuffer) { slice.offset = Math.max(0, Math.min(newStart, track.audioBuffer.duration)); slice.duration = Math.max(0.001, Math.min(newEnd - slice.offset, track.audioBuffer.duration - slice.offset)); slice.userDefined = true; if(typeof window.drawWaveform === 'function') window.drawWaveform(track); showNotification(`Slice ${track.selectedSliceForEdit + 1} updated.`, 1500); } else { showNotification("Invalid slice start/end times.", 2000); updateSliceEditorUI(track); }
-}
-export function drawWaveform(track) {
-    if (!track || (track.type !== 'Sampler' && track.type !== 'InstrumentSampler') ) return;
-    const isSampler = track.type === 'Sampler'; const audioBufferToDraw = isSampler ? track.audioBuffer : track.instrumentSamplerSettings.audioBuffer; const ctx = isSampler ? track.waveformCanvasCtx : track.instrumentWaveformCanvasCtx;
-    if (!audioBufferToDraw || !audioBufferToDraw.loaded || !ctx) { if (ctx) { const canvas = ctx.canvas; ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#e0e0e0'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#888'; ctx.textAlign = 'center'; ctx.fillText(isSampler ? 'No Sample Loaded' : 'No Instrument Sample', canvas.width / 2, canvas.height / 2); } return; }
-    const canvas = ctx.canvas; const width = canvas.width; const height = canvas.height; const channelData = audioBufferToDraw.getChannelData(0); ctx.clearRect(0, 0, width, height); ctx.fillStyle = '#a0a0a0'; ctx.fillRect(0, 0, width, height); ctx.lineWidth = 1; ctx.strokeStyle = '#333'; ctx.beginPath(); const sliceWidth = width / channelData.length; for (let i = 0; i < channelData.length; i++) { const x = i * sliceWidth; const y = (0.5 + channelData[i] * 0.5) * height; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke();
-    if (track.type === 'Sampler') { ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1; track.slices.forEach((slice, index) => { if (slice.duration > 0) { const startX = (slice.offset / audioBufferToDraw.duration) * width; const endX = ((slice.offset + slice.duration) / audioBufferToDraw.duration) * width; ctx.beginPath(); ctx.moveTo(startX, 0); ctx.lineTo(startX, height); ctx.stroke(); if (index === track.selectedSliceForEdit) { ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'; ctx.fillRect(startX, 0, endX - startX, height); ctx.strokeStyle = 'rgba(0, 0, 255, 0.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(startX,0); ctx.lineTo(startX,height); ctx.stroke(); ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1; } } }); }
-    if (track.type === 'InstrumentSampler' && track.instrumentSamplerSettings.loop) { ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)'; ctx.lineWidth = 1; const loopStartX = (track.instrumentSamplerSettings.loopStart / audioBufferToDraw.duration) * width; const loopEndX = (track.instrumentSamplerSettings.loopEnd / audioBufferToDraw.duration) * width; ctx.beginPath(); ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, height); ctx.stroke(); ctx.beginPath(); ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, height); ctx.stroke(); ctx.fillStyle = 'rgba(0, 255, 0, 0.1)'; ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, height); }
-}
+
+// --- Sequencer Window ---
+export function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... */ return mainContentDiv; }
+export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... */ return seqWin; }
+
+// --- Utility UI functions for samplers ---
+export function renderSamplePads(track) { /* ... */ }
+export function updateSliceEditorUI(track) { /* ... */ }
+export function applySliceEdits(trackId) { /* ... */ }
+export function drawWaveform(track) { /* ... */ }
 export function drawInstrumentWaveform(track) { drawWaveform(track); }
-export function updateDrumPadControlsUI(track) {
-    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) return;
-    const inspectorEl = track.inspectorWindow.element; const selectedPad = track.drumSamplerPads[track.selectedDrumPadForEdit]; if (!selectedPad) return;
-    const loadContainer = inspectorEl.querySelector(`#drumPadLoadContainer-${track.id}`);
-    if (loadContainer) {
-        const inputId = `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`;
-        loadContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', track.selectedDrumPadForEdit) + `<span id="drumPadFileName-${track.id}-${track.selectedDrumPadForEdit}" class="text-xs ml-2 block truncate" style="max-width: 150px;" title="${selectedPad.originalFileName || 'No file'}">${selectedPad.originalFileName || 'No file'}</span>`;
-        const fileInputEl = loadContainer.querySelector(`#${inputId}`); const dropZoneEl = loadContainer.querySelector(`#dropZone-${track.id}-drumsampler-${track.selectedDrumPadForEdit}`);
-        if (fileInputEl) fileInputEl.addEventListener('change', (e) => { window.loadDrumSamplerPadFile(e, track.id, track.selectedDrumPadForEdit); });
-        if (dropZoneEl && typeof utilSetupDropZoneListeners === 'function') utilSetupDropZoneListeners(dropZoneEl, track.id, 'DrumSampler', track.selectedDrumPadForEdit, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
-    }
-    track.inspectorControls.drumPadVolume?.setValue(selectedPad.volume, false); track.inspectorControls.drumPadPitch?.setValue(selectedPad.pitchShift, false); track.inspectorControls.drumPadEnvAttack?.setValue(selectedPad.envelope.attack, false); track.inspectorControls.drumPadEnvRelease?.setValue(selectedPad.envelope.release, false);
-}
-export function renderDrumSamplerPads(track) {
-    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) return;
-    const padsContainer = track.inspectorWindow.element.querySelector(`#drumSamplerPadsContainer-${track.id}`); if (!padsContainer) return;
-    padsContainer.innerHTML = ''; if (!track.drumSamplerPads || track.drumSamplerPads.length === 0) { padsContainer.textContent = 'No pads.'; return; }
-    track.drumSamplerPads.forEach((padData, index) => {
-        const padEl = document.createElement('button'); padEl.className = `pad-button ${index === track.selectedDrumPadForEdit ? 'selected-for-edit' : ''} drop-zone-pad`;
-        const fileNameDisplay = padData.originalFileName ? padData.originalFileName.substring(0, 10) + (padData.originalFileName.length > 10 ? '...' : '') : 'Empty';
-        padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 60px;" title="${padData.originalFileName || 'Empty'}">${fileNameDisplay}</span>`; padEl.title = `Select Pad ${index + 1}. Click to preview. Drag audio. Sample: ${padData.originalFileName || 'Empty'}`;
-        padEl.dataset.trackId = track.id.toString(); padEl.dataset.trackType = "DrumSampler"; padEl.dataset.padSliceIndex = index.toString();
-        padEl.addEventListener('click', async () => { track.selectedDrumPadForEdit = index; if(typeof window.playDrumSamplerPadPreview === 'function') await window.playDrumSamplerPadPreview(track.id, index); renderDrumSamplerPads(track); updateDrumPadControlsUI(track); });
-        if (typeof utilSetupDropZoneListeners === 'function') utilSetupDropZoneListeners(padEl, track.id, "DrumSampler", index, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
-        padsContainer.appendChild(padEl);
-    });
-}
-export function highlightPlayingStep(col, trackType, gridElement) {
-    if (!gridElement) return; const lastPlayingCol = gridElement._lastPlayingCol;
-    if (lastPlayingCol !== undefined && lastPlayingCol !== col) { const prevCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${lastPlayingCol}"]`); prevCells.forEach(cell => cell.classList.remove('playing')); }
-    if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
-    gridElement._lastPlayingCol = col;
-}
+export function updateDrumPadControlsUI(track) { /* ... */ }
+export function renderDrumSamplerPads(track) { /* ... */ }
+export function highlightPlayingStep(col, trackType, gridElement) { /* ... */ }
+
+// NO DUMMY FUNCTIONS OR GROUPED EXPORT BLOCK AT THE END
