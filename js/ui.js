@@ -777,7 +777,5 @@ export function highlightPlayingStep(col, trackType, gridElement) {
 // ... lots of code ...
 
 export {
-    drawInstrumentWaveform, // This was added in the last fix
-    openMasterEffectsRackWindow // <<<<<<<< FIRST MENTION
-    // Potentially another mention of openMasterEffectsRackWindow is here or it's exported inline earlier
+    drawInstrumentWaveform // This was added in the last fix
 };
