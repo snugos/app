@@ -138,9 +138,8 @@ export class Track {
     }
 
     rebuildEffectChain() {
-        console.log(`[Track ${this.id} - rebuildEffectChain] Rebuilding effect chain. Active effects: ${this.activeEffects.length}`);
+        console.log(`[Track ${this.id} - rebuildEffectChain V2] Rebuilding. PolySlicer: ${this.slicerIsPolyphonic}`);
 
-        // Ensure essential nodes are valid
         if (!this.gainNode || this.gainNode.disposed) {
             this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         }
@@ -148,96 +147,101 @@ export class Track {
             this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
         }
 
-        // Disconnect previous connections to avoid duplicates or stale paths
-        const mainInstrumentalSource = this.instrument || this.toneSampler; // Synth or InstrumentSampler
-        if (mainInstrumentalSource && !mainInstrumentalSource.disposed) {
-            try { mainInstrumentalSource.disconnect(); } catch(e) {/* ignore */}
-        }
+        // Disconnect everything upstream of the gain node first to avoid multiple paths
+        const sourcesToDisconnect = [];
+        if (this.instrument && !this.instrument.disposed) sourcesToDisconnect.push(this.instrument);
+        if (this.toneSampler && !this.toneSampler.disposed) sourcesToDisconnect.push(this.toneSampler);
         if (this.type === 'Sampler' && !this.slicerIsPolyphonic && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
-            try { this.slicerMonoGain.disconnect(); } catch(e) {/* ignore */}
+            // The output of the mono slicer chain is slicerMonoGain
+            sourcesToDisconnect.push(this.slicerMonoGain);
+            // Also ensure internal mono chain is clean
+            if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed) this.slicerMonoPlayer.disconnect();
+            if (this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed) this.slicerMonoEnvelope.disconnect();
         }
         if (this.type === 'DrumSampler') {
             this.drumPadPlayers.forEach(player => {
-                if (player && !player.disposed) try { player.disconnect(); } catch(e) {/* ignore */}
+                if (player && !player.disposed) sourcesToDisconnect.push(player);
             });
         }
-        this.activeEffects.forEach(effectWrapper => {
-            if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) try { effectWrapper.toneNode.disconnect(); } catch(e) {/* ignore */}
+        this.activeEffects.forEach(effect => {
+            if (effect.toneNode && !effect.toneNode.disposed) sourcesToDisconnect.push(effect.toneNode);
         });
-        try { this.gainNode.disconnect(); } catch(e) {/* ignore */}
 
+        sourcesToDisconnect.forEach(node => { try { node.disconnect(); } catch(e) {/* ignore */} });
+        try { this.gainNode.disconnect(); } catch(e) {/* ignore */} // Disconnect gain node from its previous outputs
 
-        // Determine the primary source output node for single-source tracks
-        let trackSourceOutputNode = null;
+        // --- Determine the main sound source output for the effects chain ---
+        let mainSourceOutputForEffects = null;
         if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
-            trackSourceOutputNode = this.instrument;
+            mainSourceOutputForEffects = this.instrument;
         } else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed) {
-            trackSourceOutputNode = this.toneSampler;
+            mainSourceOutputForEffects = this.toneSampler;
         } else if (this.type === 'Sampler' && !this.slicerIsPolyphonic) {
-            if (this.slicerMonoPlayer && this.slicerMonoEnvelope && this.slicerMonoGain &&
-                !this.slicerMonoPlayer.disposed && !this.slicerMonoEnvelope.disposed && !this.slicerMonoGain.disposed) {
-                try { // Ensure internal chain is clean and set
-                    this.slicerMonoPlayer.disconnect();
-                    this.slicerMonoEnvelope.disconnect();
-                    this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
-                } catch(e) { console.warn(`[Track ${this.id}] Error re-chaining mono slicer nodes:`, e.message); }
-                trackSourceOutputNode = this.slicerMonoGain; // The output is the gain node
+            if (this.slicerMonoPlayer && this.slicerMonoEnvelope && this.slicerMonoGain) {
+                if(this.slicerMonoPlayer.disposed || this.slicerMonoEnvelope.disposed || this.slicerMonoGain.disposed) {
+                    console.warn(`[Track ${this.id}] Mono slicer nodes disposed, attempting to re-setup.`);
+                    this.setupSlicerMonoNodes(); // This will re-create and chain them
+                } else { // Ensure they are chained correctly if not disposed
+                     try { this.slicerMonoPlayer.disconnect(); this.slicerMonoEnvelope.disconnect(); } catch(e){}
+                     this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
+                }
+                mainSourceOutputForEffects = this.slicerMonoGain; // The output of the mono chain
             }
         }
-        // For Polyphonic Sampler, players are temporary and connect in sequence callback.
-        // For Drum Sampler, each player connects individually.
+        // For Polyphonic Sampler, players are temporary and connect directly in sequence callback.
+        // For Drum Sampler, each player connects individually to the start of the effects chain.
 
-        console.log(`[Track ${this.id}] Track Source Output Node for effects: ${trackSourceOutputNode ? trackSourceOutputNode.constructor.name : 'N/A (Drum/PolySampler)'}`);
+        console.log(`[Track ${this.id}] Main source output for effects: ${mainSourceOutputForEffects ? mainSourceOutputForEffects.constructor.name : 'N/A (Drum/PolySampler)'}`);
 
-        // Determine the input point for the effects chain (or gain node if no effects)
-        const effectsChainStartPoint = this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed
-            ? this.activeEffects[0].toneNode
-            : this.gainNode;
+        // --- Define the start and end of the connectable effects chain ---
+        let effectsChainEntryPoint = this.gainNode; // If no effects, sources connect directly to gain
+        let effectsChainOutputPoint = this.gainNode; // If no effects, this remains gainNode
 
-        // Connect single sources to the effects chain start
-        if (trackSourceOutputNode && !trackSourceOutputNode.disposed) {
-            if (effectsChainStartPoint && !effectsChainStartPoint.disposed) {
-                trackSourceOutputNode.connect(effectsChainStartPoint);
-                console.log(`[Track ${this.id}] Connected ${trackSourceOutputNode.constructor.name} to ${effectsChainStartPoint.constructor.name}`);
+        if (this.activeEffects.length > 0) {
+            effectsChainEntryPoint = this.activeEffects[0].toneNode;
+            effectsChainOutputPoint = this.activeEffects[this.activeEffects.length - 1].toneNode;
+
+            // Chain effects together
+            for (let i = 0; i < this.activeEffects.length - 1; i++) {
+                const currentEffect = this.activeEffects[i].toneNode;
+                const nextEffect = this.activeEffects[i + 1].toneNode;
+                if (currentEffect && !currentEffect.disposed && nextEffect && !nextEffect.disposed) {
+                    currentEffect.connect(nextEffect);
+                    console.log(`[Track ${this.id}] Chained effect ${this.activeEffects[i].type} to ${this.activeEffects[i+1].type}`);
+                }
+            }
+            // Connect the last effect to the gain node
+            if (effectsChainOutputPoint && !effectsChainOutputPoint.disposed && this.gainNode && !this.gainNode.disposed) {
+                effectsChainOutputPoint.connect(this.gainNode);
+                console.log(`[Track ${this.id}] Connected last effect (${this.activeEffects[this.activeEffects.length - 1].type}) to GainNode.`);
+            }
+        }
+
+        // --- Connect sources to the effects chain (or gain node) ---
+        if (mainSourceOutputForEffects && !mainSourceOutputForEffects.disposed) {
+            if (effectsChainEntryPoint && !effectsChainEntryPoint.disposed) {
+                mainSourceOutputForEffects.connect(effectsChainEntryPoint);
+                console.log(`[Track ${this.id}] Connected ${mainSourceOutputForEffects.constructor.name} to ${effectsChainEntryPoint.constructor.name}`);
             } else {
-                console.warn(`[Track ${this.id}] Effects chain start point is invalid for single source.`);
+                console.warn(`[Track ${this.id}] No valid effectsChainEntryPoint for single source, source will be silent.`);
             }
         }
 
-        // Connect Drum Sampler players to the effects chain start
         if (this.type === 'DrumSampler') {
             this.drumPadPlayers.forEach((player, idx) => {
                 if (player && !player.disposed) {
-                    if (effectsChainStartPoint && !effectsChainStartPoint.disposed) {
-                        player.connect(effectsChainStartPoint);
-                        console.log(`[Track ${this.id}] Connected Drum Pad ${idx} to ${effectsChainStartPoint.constructor.name}`);
+                    if (effectsChainEntryPoint && !effectsChainEntryPoint.disposed) {
+                        player.connect(effectsChainEntryPoint);
+                        console.log(`[Track ${this.id}] Connected Drum Pad ${idx} to ${effectsChainEntryPoint.constructor.name}`);
+                    } else {
+                         console.warn(`[Track ${this.id}] No valid effectsChainEntryPoint for Drum Pad ${idx}.`);
                     }
                 }
             });
         }
+        // Polyphonic Sampler connections are handled dynamically in the sequence callback.
 
-        // Chain effects together
-        for (let i = 0; i < this.activeEffects.length - 1; i++) {
-            const currentEffectNode = this.activeEffects[i].toneNode;
-            const nextEffectNode = this.activeEffects[i+1].toneNode;
-            if (currentEffectNode && !currentEffectNode.disposed && nextEffectNode && !nextEffectNode.disposed) {
-                currentEffectNode.connect(nextEffectNode);
-                console.log(`[Track ${this.id}] Chained effect ${this.activeEffects[i].type} to ${this.activeEffects[i+1].type}`);
-            }
-        }
-
-        // Connect the end of the effects chain to the gain node
-        if (this.activeEffects.length > 0) {
-            const lastEffectNode = this.activeEffects[this.activeEffects.length - 1].toneNode;
-            if (lastEffectNode && !lastEffectNode.disposed && this.gainNode && !this.gainNode.disposed) {
-                lastEffectNode.connect(this.gainNode);
-                console.log(`[Track ${this.id}] Connected last effect (${this.activeEffects[this.activeEffects.length - 1].type}) to GainNode.`);
-            }
-        }
-        // If no effects, trackSourceOutputNode (for Synth, IS, MonoSampler) or DrumPlayers
-        // are already connected to effectsChainStartPoint (which would be this.gainNode).
-
-        // Final connections for the gain node
+        // --- Final output connections ---
         if (this.gainNode && !this.gainNode.disposed) {
             this.outputNode = this.gainNode;
             if (this.trackMeter && !this.trackMeter.disposed) {
@@ -249,10 +253,10 @@ export class Track {
             this.gainNode.connect(finalDestination);
             console.log(`[Track ${this.id}] GainNode connected to Meter and ${finalDestination === window.masterEffectsBusInput ? 'Master Bus Input' : 'Tone Destination'}.`);
         } else {
-            this.outputNode = null;
+            this.outputNode = null; // Should not happen if gainNode is re-initialized
             console.error(`[Track ${this.id}] GainNode is invalid at end of rebuild. Output will be silent.`);
         }
-        console.log(`[Track ${this.id}] Effect chain rebuild fully finished.`);
+        console.log(`[Track ${this.id}] Effect chain rebuild fully finished. Output node: ${this.outputNode?.constructor.name}`);
     }
 
 
@@ -499,7 +503,7 @@ export class Track {
             this.slicerMonoEnvelope = new Tone.AmplitudeEnvelope();
             this.slicerMonoGain = new Tone.Gain();
             this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
-            console.log(`[Track ${this.id}] Slicer mono nodes set up.`);
+            console.log(`[Track ${this.id}] Slicer mono nodes set up and chained internally.`);
         }
     }
     disposeSlicerMonoNodes() {
@@ -507,6 +511,7 @@ export class Track {
         if (this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed) this.slicerMonoEnvelope.dispose();
         if (this.slicerMonoGain && !this.slicerMonoGain.disposed) this.slicerMonoGain.dispose();
         this.slicerMonoPlayer = null; this.slicerMonoEnvelope = null; this.slicerMonoGain = null;
+        console.log(`[Track ${this.id}] Slicer mono nodes disposed.`);
     }
 
     setupToneSampler() {
@@ -520,23 +525,16 @@ export class Track {
                 urls: urls,
                 attack: this.instrumentSamplerSettings.envelope.attack,
                 release: this.instrumentSamplerSettings.envelope.release,
+                loop: this.instrumentSamplerSettings.loop, // Pass loop option
+                loopStart: this.instrumentSamplerSettings.loopStart,
+                loopEnd: this.instrumentSamplerSettings.loopEnd,
                 onload: () => console.log(`[Track ${this.id}] Tone.Sampler loaded for InstrumentSampler.`),
                 onerror: (e) => console.error(`[Track ${this.id}] Error loading Tone.Sampler:`, e)
             };
             this.toneSampler = new Tone.Sampler(samplerOptions);
-            if (this.instrumentSamplerSettings.loop && this.toneSampler.player) {
-                try {
-                    // Tone.Sampler might not directly expose loop points for individual notes in a multi-sample scenario.
-                    // This is a simplified approach.
-                     Object.values(this.toneSampler._players._buffers._buffers).forEach(toneBuffer => {
-                         // This path is highly dependent on Tone.js internal structure and might break.
-                         // Ideally, Tone.Sampler's constructor or options should handle loop points if supported.
-                     });
-                    console.log(`[Track ${this.id}] Instrument Sampler loop: ${this.instrumentSamplerSettings.loop}. Loop points applied if possible.`);
-                } catch (e) {
-                    console.warn(`[Track ${this.id}] Could not directly set loop points on Tone.Sampler's internal players.`, e);
-                }
-            }
+             // For Tone.Sampler, loop points are usually handled per-sample definition if more complex.
+            // If the sampler has a simple way to set global loop points (less common), it would be here.
+            // The constructor options are the primary way for Tone.Sampler.
         } else {
             console.warn(`[Track ${this.id}] InstrumentSampler audioBuffer not loaded, cannot setup Tone.Sampler.`);
         }
@@ -702,7 +700,7 @@ export class Track {
             }
             if (!this.gainNode || this.gainNode.disposed || this.isMuted || isSoloedOut) return;
 
-            const firstNodeInOutChain = this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed
+            const effectsChainStartPoint = this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed
                 ? this.activeEffects[0].toneNode
                 : (this.gainNode && !this.gainNode.disposed ? this.gainNode : (window.masterEffectsBusInput || Tone.getDestination()));
 
@@ -723,7 +721,7 @@ export class Track {
                             const tempPlayer = new Tone.Player(this.audioBuffer);
                             const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
                             const tempGain = new Tone.Gain(step.velocity * sliceData.volume);
-                            tempPlayer.chain(tempEnv, tempGain, firstNodeInOutChain);
+                            tempPlayer.chain(tempEnv, tempGain, effectsChainStartPoint); // Connect to start of effects or gain
                             tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse; tempPlayer.loop = sliceData.loop;
                             tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
                             tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
@@ -735,6 +733,7 @@ export class Track {
                             if (this.slicerMonoEnvelope.getValueAtTime(time) > 0.001) this.slicerMonoEnvelope.triggerRelease(time);
                             this.slicerMonoPlayer.buffer = this.audioBuffer; this.slicerMonoEnvelope.set(sliceData.envelope);
                             this.slicerMonoGain.gain.value = step.velocity * sliceData.volume;
+                            // The mono chain (player->env->gain) is already connected to effectsChainStartPoint via rebuildEffectChain
                             this.slicerMonoPlayer.playbackRate = playbackRate; this.slicerMonoPlayer.reverse = sliceData.reverse; this.slicerMonoPlayer.loop = sliceData.loop;
                             this.slicerMonoPlayer.loopStart = sliceData.offset; this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
                             this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
@@ -755,8 +754,8 @@ export class Track {
                     }
                 });
             } else if (this.type === 'InstrumentSampler' && this.toneSampler?.loaded) {
-                 if (!this.instrumentSamplerIsPolyphonic && Tone.Transport.state === 'started') {
-                     this.toneSampler.releaseAll(time);
+                 if (!this.instrumentSamplerIsPolyphonic && Tone.Transport.state === 'started') { // Check flag
+                     this.toneSampler.releaseAll(time); // Release previous notes for mono behavior
                  }
                 synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
