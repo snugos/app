@@ -197,7 +197,7 @@ export function drawWaveform(track) { /* ... */ }
 export function drawInstrumentWaveform(track) { drawWaveform(track); }
 export function updateDrumPadControlsUI(track) { /* ... */ }
 export function renderDrumSamplerPads(track) { /* ... */ }
-export function highlightPlayingStep(col, trackType, gridElement) { /* ... */ }
+function highlightPlayingStep(col, trackType, gridElement) { /* ... */ }
 
 export {
     createKnob,
