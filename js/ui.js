@@ -112,9 +112,9 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... same as befo
 
 
 // --- Track Inspector Window & Controls Initialization ---
-export function buildTrackInspectorContentDOM(track) { /* ... (same as v5/v6) ... */ }
-export function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same as v5/v6) ... */ }
-export function initializeCommonInspectorControls(track, winEl) { /* ... (same as v5/v6) ... */ }
+ function buildTrackInspectorContentDOM(track) { /* ... (same as v5/v6) ... */ }
+ function openTrackInspectorWindow(trackId, savedState = null) { /* ... (same as v5/v6) ... */ }
+ function initializeCommonInspectorControls(track, winEl) { /* ... (same as v5/v6) ... */ }
 
 // initializeTypeSpecificInspectorControls is defined below and exported once at the end.
 function initializeTypeSpecificInspectorControls(track, winEl) {
@@ -169,34 +169,34 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (sam
 // --- MODULAR EFFECTS RACK UI ---
 // ... (buildModularEffectsRackDOM, renderEffectsList, renderEffectControls, showAddEffectModal remain the same)
 function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... */ }
-export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... */ }
+ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... */ }
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... */ } // Made non-export, exported at bottom
 function showAddEffectModal(owner, ownerType) { /* ... */ }
 
 // --- Window Opening Functions ---
 // ... (openTrackEffectsRackWindow, openMasterEffectsRackWindow, openGlobalControlsWindow, openSoundBrowserWindow etc. remain the same)
-export function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... */ }
-export function openMasterEffectsRackWindow(savedState = null) { /* ... */ }
-export function openGlobalControlsWindow(savedState = null) { /* ... */ }
-export function openSoundBrowserWindow(savedState = null) { /* ... */ }
-export function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... */ }
-export function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... */ }
-export function openMixerWindow(savedState = null) { /* ... */ }
-export function updateMixerWindow() { /* ... */ }
-export function renderMixer(container) { /* ... */ }
-export function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... */ }
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... */ }
+ function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... */ }
+ function openMasterEffectsRackWindow(savedState = null) { /* ... */ }
+ function openGlobalControlsWindow(savedState = null) { /* ... */ }
+ function openSoundBrowserWindow(savedState = null) { /* ... */ }
+ function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... */ }
+ function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... */ }
+ function openMixerWindow(savedState = null) { /* ... */ }
+ function updateMixerWindow() { /* ... */ }
+ function renderMixer(container) { /* ... */ }
+ function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... */ }
+ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... */ }
 
 // --- Utility UI functions for samplers ---
 // ... (renderSamplePads, updateSliceEditorUI, applySliceEdits, drawWaveform, drawInstrumentWaveform)
 // ... (updateDrumPadControlsUI, renderDrumSamplerPads, highlightPlayingStep remain the same)
-export function renderSamplePads(track) { /* ... */ }
-export function updateSliceEditorUI(track) { /* ... */ }
-export function applySliceEdits(trackId) { /* ... */ }
-export function drawWaveform(track) { /* ... */ }
-export function drawInstrumentWaveform(track) { drawWaveform(track); }
-export function updateDrumPadControlsUI(track) { /* ... */ }
-export function renderDrumSamplerPads(track) { /* ... */ }
+ function renderSamplePads(track) { /* ... */ }
+ function updateSliceEditorUI(track) { /* ... */ }
+ function applySliceEdits(trackId) { /* ... */ }
+ function drawWaveform(track) { /* ... */ }
+ function drawInstrumentWaveform(track) { drawWaveform(track); }
+function updateDrumPadControlsUI(track) { /* ... */ }
+function renderDrumSamplerPads(track) { /* ... */ }
 function highlightPlayingStep(col, trackType, gridElement) { /* ... */ }
 
 export {
