@@ -773,7 +773,11 @@ export function highlightPlayingStep(col, trackType, gridElement) {
     if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
     gridElement._lastPlayingCol = col;
 }
-// ... (at the end of ui.js)
+// js/ui.js
+// ... lots of code ...
+
 export {
-    drawInstrumentWaveform // <<<<<<<< ADD OR UNCOMMENT THIS LINE
+    drawInstrumentWaveform, // This was added in the last fix
+    openMasterEffectsRackWindow // <<<<<<<< FIRST MENTION
+    // Potentially another mention of openMasterEffectsRackWindow is here or it's exported inline earlier
 };
