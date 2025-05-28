@@ -683,3 +683,101 @@ button.armed {
     border-bottom: 1px solid #404040;
     z-index: 1; /* Ensure it's above window content but below other windows */
 }
+
+/* Ensure modular effects rack content is scrollable if it overflows */
+.modular-effects-rack {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Make sure parent has height or this won't work as expected */
+}
+
+.effects-list-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 100px; /* Ensure it has some height even if empty */
+}
+
+.effect-controls-panel {
+    flex-shrink: 0; /* Prevent shrinking */
+    max-height: 40%; /* Or a fixed pixel value, or adjust based on content */
+    overflow-y: auto;
+    min-height: 100px; /* Ensure it has some height */
+}
+
+.effect-item.dragging {
+    opacity: 0.4;
+    background-color: #d1e7fd; /* Light blue when dragging */
+}
+
+.effect-item.dragover-target {
+    border-top: 2px dashed blue; /* Visual cue for drop target */
+    /* Or background-color, etc. */
+}
+
+/* Specific styling for drop zone in sampler inspector if needed */
+.drop-zone-relink-container {
+    /* Styles for the container that might hold the relink button */
+    font-size: 0.8rem;
+    color: #555;
+}
+.drop-zone-relink-button {
+    /* Styles for the relink button itself */
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    margin-left: 5px;
+}
+
+.drop-zone-missing {
+    border-color: #f59e0b; /* Amber/Orange for missing */
+    background-color: #fffbeb;
+}
+.drop-zone-error {
+    border-color: #ef4444; /* Red for error */
+    background-color: #fee2e2;
+}
+.drop-zone-loading {
+    border-color: #3b82f6; /* Blue for loading */
+    background-color: #eff6ff;
+    cursor: wait;
+}
+
+
+/* MIDI and Keyboard Indicators */
+#midiIndicatorGlobal, #keyboardIndicatorGlobal {
+    transition: background-color 0.1s ease-out;
+}
+#midiIndicatorGlobal.active, #keyboardIndicatorGlobal.active {
+    background-color: #4ade80; /* Green for active */
+}
+
+/* Ensure global controls window content is not overly cramped */
+.global-controls-window .flex {
+    margin-bottom: 0.25rem; /* Add a little space between flex rows */
+}
+.global-controls-window label {
+    white-space: nowrap; /* Prevent labels from wrapping too early */
+}
+
+/* Ensure taskbar buttons don't shrink too much */
+#taskbarButtons .taskbar-button {
+    flex-shrink: 0;
+}
+
+/* Ensure select elements in windows are styled consistently */
+.window-content select, .modal-content select {
+    background-color: #fff; /* White background */
+    color: #000; /* Black text */
+    border: 1px solid #808080; /* Grey border */
+    padding: 2px 4px; /* Adjust padding */
+    border-radius: 2px; /* Slight rounding */
+    font-size: 0.8rem; /* Consistent font size */
+}
+.window-content input[type="text"], .window-content input[type="number"],
+.modal-content input[type="text"], .modal-content input[type="number"] {
+    background-color: #fff;
+    color: #000;
+    border: 1px solid #808080;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 0.8rem;
+}
