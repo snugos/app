@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 9');
+console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 9 (with debug logs)'); // DEBUG
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -293,21 +293,39 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 
 // --- MODULAR EFFECTS RACK UI ---
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
-    console.log(`[UI] buildModularEffectsRackDOM for ${ownerType}, owner:`, owner);
+    // DEBUGGING MASTER EFFECTS RACK:
+    console.log(`[UI - buildModularEffectsRackDOM] Called for ownerType: ${ownerType}. Owner:`, owner);
+    console.log(`[UI - buildModularEffectsRackDOM] Current window.masterEffectsChain:`, JSON.parse(JSON.stringify(window.masterEffectsChain || [])));
+
     const rackContainer = document.createElement('div'); rackContainer.className = 'modular-effects-rack p-2 space-y-2 bg-gray-50 h-full flex flex-col';
     const header = document.createElement('div'); header.className = 'flex justify-between items-center mb-2 flex-shrink-0';
     const title = document.createElement('h3'); title.className = 'text-lg font-semibold text-gray-700'; title.textContent = ownerType === 'track' ? `Effects: ${owner.name}` : 'Master Effects'; header.appendChild(title);
     const addEffectButton = document.createElement('button'); addEffectButton.className = 'bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded text-xs shadow-sm'; addEffectButton.textContent = '+ Add Effect'; addEffectButton.onclick = () => showAddEffectModal(owner, ownerType); header.appendChild(addEffectButton); rackContainer.appendChild(header);
     const effectsListDiv = document.createElement('div'); effectsListDiv.id = `${ownerType}-${owner?.id || 'master'}-effects-list`; effectsListDiv.className = 'effects-list-container space-y-1 min-h-[100px] border p-1.5 bg-gray-100 rounded shadow-inner overflow-y-auto flex-grow'; rackContainer.appendChild(effectsListDiv);
     const effectControlsContainer = document.createElement('div'); effectControlsContainer.id = `${ownerType}-${owner?.id || 'master'}-effect-controls`; effectControlsContainer.className = 'effect-controls-panel mt-2 border-t border-gray-300 pt-2 min-h-[150px] overflow-y-auto flex-shrink-0 max-h-[40%]'; rackContainer.appendChild(effectControlsContainer);
+    
+    console.log(`[UI - buildModularEffectsRackDOM] About to call renderEffectsList for ${ownerType}.`);
     renderEffectsList(owner, ownerType, effectsListDiv, effectControlsContainer);
+    
+    console.log(`[UI - buildModularEffectsRackDOM] Rack container DOM built for ${ownerType}:`, rackContainer);
     return rackContainer;
 }
 
 function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
+    // DEBUGGING MASTER EFFECTS RACK:
+    console.log(`[UI - renderEffectsList] Called for ownerType: ${ownerType}. listDiv:`, listDiv, "controlsContainer:", controlsContainer);
+    
     listDiv.innerHTML = ''; controlsContainer.innerHTML = '';
     const effectsArray = ownerType === 'track' ? owner.activeEffects : (window.masterEffectsChain || []);
-    if (!effectsArray || effectsArray.length === 0) { listDiv.innerHTML = '<p class="text-xs text-gray-500 p-2">No effects added.</p>'; return; }
+    
+    // DEBUGGING MASTER EFFECTS RACK:
+    console.log(`[UI - renderEffectsList] Effects array for ${ownerType}:`, JSON.parse(JSON.stringify(effectsArray)));
+
+    if (!effectsArray || effectsArray.length === 0) { 
+        listDiv.innerHTML = '<p class="text-xs text-gray-500 p-2">No effects added.</p>'; 
+        console.log(`[UI - renderEffectsList] No effects found for ${ownerType}. Displaying 'No effects added.'`);
+        return; 
+    }
 
     effectsArray.forEach((effect, index) => {
         const effectItem = document.createElement('div'); effectItem.className = 'effect-item flex justify-between items-center p-1.5 bg-gray-200 rounded border border-gray-300 cursor-grab hover:bg-gray-300 shadow-sm'; effectItem.draggable = true; effectItem.dataset.effectId = effect.id; effectItem.dataset.index = index.toString();
@@ -339,49 +357,42 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
             return;
         }
 
-        let newVisualIndex; // Where it visually appears to be dropped
-        if (targetElement && targetElement.dataset.index && targetElement !== listDiv.querySelector(`[data-effect-id="${droppedEffectId}"]`)) { // Ensure not dropping on itself
+        let newVisualIndex; 
+        if (targetElement && targetElement.dataset.index && targetElement !== listDiv.querySelector(`[data-effect-id="${droppedEffectId}"]`)) { 
             const targetVisualIndex = parseInt(targetElement.dataset.index);
             const rect = targetElement.getBoundingClientRect();
             const isDropInUpperHalf = e.clientY < rect.top + rect.height / 2;
             newVisualIndex = isDropInUpperHalf ? targetVisualIndex : targetVisualIndex + 1;
-        } else { // Dropping in empty area or on itself (treat as end or no change for "on itself")
+        } else { 
              if (targetElement && targetElement.dataset.index && targetElement === listDiv.querySelector(`[data-effect-id="${droppedEffectId}"]`)) {
-                // Dropped on itself, no actual reorder needed
                 return;
             }
-            // Determine if dropping at the very start of the list (above all items)
             if (effectsCurrentArray.length > 0 && listDiv.firstChild && e.clientY < listDiv.firstChild.getBoundingClientRect().top + listDiv.firstChild.getBoundingClientRect().height / 2) {
                 newVisualIndex = 0;
             } else {
-                newVisualIndex = effectsCurrentArray.length; // Default to end
+                newVisualIndex = effectsCurrentArray.length; 
             }
         }
         
-        // The reorderEffect function expects the target index in the array *as if the item was already removed*
         let finalSpliceIndex = newVisualIndex;
         if (oldEffectIndex < newVisualIndex) {
-            finalSpliceIndex--; // Adjust if moving an item downwards, as its original spot is gone
+            finalSpliceIndex--; 
         }
-        // Clamp for insertion, can be effectsCurrentArray.length (to append using splice)
-        finalSpliceIndex = Math.max(0, Math.min(finalSpliceIndex, effectsCurrentArray.length -1 )); // if length is 1, max is 0. if length 0, max is 0.
-
+        finalSpliceIndex = Math.max(0, Math.min(finalSpliceIndex, effectsCurrentArray.length -1 )); 
         
         console.log(`[UI Drop] ID: ${droppedEffectId}, OldIdx: ${oldEffectIndex}, TargetElement: ${targetElement?.dataset.effectId}, VisualNewIdx: ${newVisualIndex}, FinalSpliceIdx for reorder: ${finalSpliceIndex}`);
 
-        // Only call reorder if the final position is different from the original
         if (oldEffectIndex !== finalSpliceIndex) {
              if (ownerType === 'track') owner.reorderEffect(droppedEffectId, finalSpliceIndex);
              else window.reorderMasterEffect(droppedEffectId, finalSpliceIndex);
         } else if (oldEffectIndex === finalSpliceIndex && newVisualIndex === effectsCurrentArray.length && oldEffectIndex === effectsCurrentArray.length -1 && effectsCurrentArray.length > 0) {
-            // This covers dragging the last item to be the last item again - no actual change.
-        } else if (oldEffectIndex !== finalSpliceIndex) { // Redundant, but for safety if the above condition is too narrow
+        } else if (oldEffectIndex !== finalSpliceIndex) { 
              if (ownerType === 'track') owner.reorderEffect(droppedEffectId, finalSpliceIndex);
              else window.reorderMasterEffect(droppedEffectId, finalSpliceIndex);
         }
         
         const currentControlsContainer = document.getElementById(`${ownerType}-${owner?.id || 'master'}-effect-controls`);
-        renderEffectsList(owner, ownerType, listDiv, currentControlsContainer); // Re-render to reflect new order
+        renderEffectsList(owner, ownerType, listDiv, currentControlsContainer); 
     });
 }
 
@@ -446,31 +457,58 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     if (!effectsWin || !effectsWin.element) { showNotification("Failed to create Track Effects Rack.", 5000); return null; }
     track.effectsRackWindow = effectsWin; return effectsWin;
 }
+
 export function openMasterEffectsRackWindow(savedState = null) {
-    console.log("[UI] >>> openMasterEffectsRackWindow called. SavedState:", savedState);
+    // DEBUGGING MASTER EFFECTS RACK:
+    console.log("[UI - openMasterEffectsRackWindow] Function CALLED. SavedState:", savedState);
+    console.log("[UI - openMasterEffectsRackWindow] Current window.openWindows:", window.openWindows);
+    console.log("[UI - openMasterEffectsRackWindow] Current window.masterEffectsChain before building DOM:", JSON.parse(JSON.stringify(window.masterEffectsChain || [])));
+
+
     const windowId = 'masterEffectsRack';
-    if (window.openWindows[windowId] && !savedState) { console.log("[UI] Restoring existing master effects rack."); window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
-    if (window.openWindows[windowId] && savedState) { console.log("[UI] Closing existing master effects rack before recreating from saved state."); window.openWindows[windowId].close(); }
+    if (window.openWindows[windowId] && !savedState) { 
+        console.log("[UI - openMasterEffectsRackWindow] Restoring existing master effects rack."); 
+        window.openWindows[windowId].restore(); 
+        return window.openWindows[windowId]; 
+    }
+    if (window.openWindows[windowId] && savedState) { 
+        console.log("[UI - openMasterEffectsRackWindow] Closing existing master effects rack before recreating from saved state."); 
+        window.openWindows[windowId].close(); 
+    }
     
+    console.log("[UI - openMasterEffectsRackWindow] Calling buildModularEffectsRackDOM for master.");
     const masterEffectsContentElement = buildModularEffectsRackDOM(null, 'master');
-    console.log("[UI] Master Effects Rack DOM built:", masterEffectsContentElement ? "Success" : "Failed");
-    if (!masterEffectsContentElement) { showNotification("Failed to build Master Effects Rack content.", 5000); return null; }
+    console.log("[UI - openMasterEffectsRackWindow] Master Effects Rack DOM built. Is it valid?", !!masterEffectsContentElement);
+    if (!masterEffectsContentElement) { 
+        showNotification("Failed to build Master Effects Rack content. Check console.", 5000); 
+        console.error("[UI - openMasterEffectsRackWindow] buildModularEffectsRackDOM returned null or undefined for master.");
+        return null; 
+    }
     
-    const winOptions = { width: 450, height: 550, initialContentKey: 'masterEffectsRack' }; if (savedState) Object.assign(winOptions, savedState);
+    const winOptions = { width: 450, height: 550, initialContentKey: 'masterEffectsRack' }; 
+    if (savedState) Object.assign(winOptions, savedState);
+    console.log("[UI - openMasterEffectsRackWindow] Window options for SnugWindow:", winOptions);
     
     let masterEffectsWin = null;
     try {
+        console.log("[UI - openMasterEffectsRackWindow] Attempting to create SnugWindow for masterEffectsRack...");
         masterEffectsWin = new SnugWindow(windowId, 'Master Effects Rack', masterEffectsContentElement, winOptions);
+        console.log("[UI - openMasterEffectsRackWindow] SnugWindow creation attempted. Result:", masterEffectsWin);
     } catch(e) {
-        console.error("[UI] CRITICAL ERROR during `new SnugWindow()` for Master Effects Rack:", e);
-        showNotification("CRITICAL: Error creating Master Effects Rack window object.", 6000);
+        console.error("[UI - openMasterEffectsRackWindow] CRITICAL ERROR during `new SnugWindow()` for Master Effects Rack:", e);
+        showNotification("CRITICAL: Error creating Master Effects Rack window object. Check console.", 6000);
         return null;
     }
 
-    if (!masterEffectsWin || !masterEffectsWin.element) { showNotification("Failed to create Master Effects Rack window instance.", 5000); console.error("[UI] Failed to create SnugWindow instance for Master Effects Rack."); return null; }
-    console.log("[UI] Master Effects Rack Window created and should be visible:", masterEffectsWin);
+    if (!masterEffectsWin || !masterEffectsWin.element) { 
+        showNotification("Failed to create Master Effects Rack window instance. Check console.", 5000); 
+        console.error("[UI - openMasterEffectsRackWindow] SnugWindow instance or its element is null/undefined for Master Effects Rack."); 
+        return null; 
+    }
+    console.log("[UI - openMasterEffectsRackWindow] Master Effects Rack Window CREATED SUCCESSFULLY and should be visible:", masterEffectsWin);
     return masterEffectsWin;
 }
+
 export function openGlobalControlsWindow(savedState = null) {
     console.log("[ui.js] openGlobalControlsWindow STARTING...");
     const windowId = 'globalControls';
@@ -668,3 +706,4 @@ export function highlightPlayingStep(col, trackType, gridElement) {
     if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
     gridElement._lastPlayingCol = col;
 }
+
