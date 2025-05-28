@@ -19,10 +19,12 @@ const MIN_OCTAVE_SHIFT = -2;
 const OCTAVE_SHIFT_AMOUNT = 12;
 
 export function initializePrimaryEventListeners(appContext) {
+    console.log("[EventHandlers] initializePrimaryEventListeners called with appContext:", appContext); // DEBUG
     const {
         addTrack, openSoundBrowserWindow, undoLastAction, redoLastAction,
         saveProject, loadProject, exportToWav,
         openGlobalControlsWindow, openMixerWindow,
+        openMasterEffectsRackWindow, // Make sure this is destructured
         handleProjectFileLoad,
         triggerCustomBackgroundUpload,
         removeCustomDesktopBackground
@@ -68,6 +70,26 @@ export function initializePrimaryEventListeners(appContext) {
 
     document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { if(typeof openGlobalControlsWindow === 'function') openGlobalControlsWindow(); else console.error("openGlobalControlsWindow is not defined"); startMenu?.classList.add('hidden'); });
     document.getElementById('menuOpenMixer')?.addEventListener('click', () => { if(typeof openMixerWindow === 'function') openMixerWindow(); else console.error("openMixerWindow is not defined"); startMenu?.classList.add('hidden'); });
+
+    // DEBUGGING MASTER EFFECTS RACK:
+    document.getElementById('menuOpenMasterEffects')?.addEventListener('click', () => {
+        console.log("[EventHandlers] 'Master Effects Rack' menu item clicked."); // DEBUG
+        if(typeof openMasterEffectsRackWindow === 'function') {
+            console.log("[EventHandlers] openMasterEffectsRackWindow IS a function. Calling it..."); // DEBUG
+            openMasterEffectsRackWindow();
+        } else {
+            console.error("[EventHandlers] openMasterEffectsRackWindow is NOT defined or not a function in appContext!"); // DEBUG
+            // Fallback check if it's somehow global but not in appContext (less likely with current main.js structure)
+            if (typeof window.openMasterEffectsRackWindow === 'function') {
+                console.warn("[EventHandlers] Fallback: Found openMasterEffectsRackWindow on global window object. Calling it."); // DEBUG
+                window.openMasterEffectsRackWindow();
+            } else {
+                 console.error("[EventHandlers] Fallback: openMasterEffectsRackWindow is also NOT on global window object."); // DEBUG
+            }
+        }
+        startMenu?.classList.add('hidden');
+    });
+
 
     document.getElementById('menuUploadCustomBg')?.addEventListener('click', () => {
         if (triggerCustomBackgroundUpload) triggerCustomBackgroundUpload();
@@ -732,3 +754,4 @@ export function handleOpenSequencer(trackId) {
         console.error("[EventHandlers] openTrackSequencerWindow function not available on window object.");
     }
 }
+
