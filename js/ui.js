@@ -791,6 +791,5 @@ export {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob,
-    openMasterEffectsRackWindow
+    createKnob
 };
