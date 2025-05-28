@@ -875,6 +875,3 @@ export class Track {
         console.log(`[Track ${this.id}] Finished disposing track: ${this.name}`);
     }
 }
-```
-
-Next, I will send the `js/ui.js` file with the sequencer coloring chang
