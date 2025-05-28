@@ -79,15 +79,18 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
 }
 
 /**
- * Creates HTML for a drop zone, now status-aware and with consistent ID generation.
+ * Creates HTML for a drop zone, status-aware with consistent ID generation.
  * @param {number} trackId - The ID of the track.
- * @param {string} trackTypeHint - Type of track (e.g., 'Sampler', 'DrumSampler').
- * @param {number|null} padOrSliceIndex - Index if it's for a specific pad/slice. Null for general track samplers.
- * @param {object|null} audioData - The audio data object from the track (e.g., track.samplerAudioData or padData) which contains fileName and status.
+ * @param {string} trackTypeHint - Type of track (e.g., 'Sampler', 'DrumSampler', 'InstrumentSampler').
+ * @param {number|null} padOrSliceIndex - Index if it's for a specific pad. Null for general track samplers like Sampler or InstrumentSampler.
+ * @param {object|null} audioData - The audio data object from the track (e.g., track.samplerAudioData, padData, or track.instrumentSamplerSettings)
+ * This object should contain `fileName` and `status`.
  * @returns {string} HTML string for the drop zone.
  */
 export function createDropZoneHTML(trackId, trackTypeHint, padOrSliceIndex = null, audioData = null) {
-    // Consistent ID generation
+    // Consistent ID generation:
+    // For general samplers (Sampler, InstrumentSampler), padOrSliceIndex will be null, resulting in '-null' suffix.
+    // For DrumSampler pads, padOrSliceIndex will be the pad's index.
     const indexSuffix = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '-null';
     const inputId = `fileInput-${trackId}-${trackTypeHint}${indexSuffix}`;
     const dropZoneId = `dropZone-${trackId}-${trackTypeHint.toLowerCase()}${indexSuffix}`;
@@ -102,19 +105,22 @@ export function createDropZoneHTML(trackId, trackTypeHint, padOrSliceIndex = nul
     const fileName = audioData?.fileName || 'Unknown File';
     const status = audioData?.status || 'empty'; // Default to 'empty' if no status
 
+    let displayText = fileName.length > 20 ? `${fileName.substring(0, 18)}...` : fileName;
+
+
     switch (status) {
         case 'loaded':
-            content = `Loaded: ${fileName.substring(0, 20)}${fileName.length > 20 ? '...' : ''}<br>
+            content = `Loaded: ${displayText}<br>
                        <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Replace</label>`;
             break;
         case 'missing':
-            content = `<span class="text-red-500 font-semibold">MISSING: ${fileName.substring(0, 15)}${fileName.length > 15 ? '...' : ''}</span><br>
+            content = `<span class="text-red-500 font-semibold">MISSING: ${displayText}</span><br>
                        <div class="drop-zone-relink-container mt-1">
                            <button id="${relinkButtonId}" class="text-xs bg-orange-500 hover:bg-orange-600 text-white py-0.5 px-1.5 rounded drop-zone-relink-button">Relink/Upload</button>
-                       </div>`; // Added a common class for relink buttons
+                       </div>`;
             break;
         case 'pending':
-            content = `<span class="text-gray-500">Loading: ${fileName.substring(0, 20)}${fileName.length > 20 ? '...' : ''}...</span>`;
+            content = `<span class="text-gray-500">Loading: ${displayText}...</span>`;
             break;
         case 'empty':
         default:
@@ -124,12 +130,11 @@ export function createDropZoneHTML(trackId, trackTypeHint, padOrSliceIndex = nul
     }
 
     return `
-        <div class="drop-zone p-2 text-center border-2 border-dashed border-gray-400 rounded-md bg-gray-50 hover:border-blue-400" id="${dropZoneId}" ${dataAttributes}>
+        <div class="drop-zone p-2 text-center border-2 border-dashed border-gray-400 rounded-md bg-gray-50 hover:border-blue-400" id="${dropZoneId}" ${dataAttributes} title="${fileName}">
             ${content}
             <input type="file" id="${inputId}" accept="audio/*" class="hidden">
         </div>`.trim();
 }
-
 
 export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
     if (!dropZoneElement) {
@@ -163,12 +168,15 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
             numericIndexForCallback = parseInt(dzPadSliceIndexStr);
         } else if (typeof padIndexOrSliceId === 'number' && !isNaN(padIndexOrSliceId)) {
+            // This case might be redundant if createDropZoneHTML always uses '-null' for non-indexed.
             numericIndexForCallback = padIndexOrSliceId;
         }
+        // For Sampler and InstrumentSampler, numericIndexForCallback will effectively be null or an unneeded 0 if padOrSliceIndex was null.
+        // For DrumSampler, it will be the pad index.
 
         const soundDataString = event.dataTransfer.getData("application/json");
 
-        if (soundDataString) { // From Sound Browser
+        if (soundDataString) {
             try {
                 const soundData = JSON.parse(soundDataString);
                 if (loadSoundCallback) {
@@ -178,17 +186,18 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
                 console.error("[Utils] Error parsing dropped sound data:", e);
                 showNotification("Error processing dropped sound.", 3000);
             }
-        } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) { // OS File Drop
+        } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
             const file = event.dataTransfer.files[0];
-            const simulatedEvent = { target: { files: [file] } }; 
+            const simulatedEvent = { target: { files: [file] } };
             if (loadFileCallback) {
                 if (dzTrackType === 'DrumSampler') {
-                    const trackForFallback = typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
+                    // numericIndexForCallback should be the correct pad index here
                     const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
                         ? numericIndexForCallback
-                        : (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0);
+                        : 0; // Fallback, though should be set
                     await loadFileCallback(simulatedEvent, dzTrackId, finalPadIndex, file.name);
                 } else if (dzTrackType === 'Sampler' || dzTrackType === 'InstrumentSampler') {
+                    // For these types, the third argument to loadSampleFile is trackTypeHint, not an index.
                     await loadFileCallback(simulatedEvent, dzTrackId, dzTrackType, file.name);
                 } else {
                     console.warn(`[Utils] Unhandled trackType "${dzTrackType}" for OS file drop with loadFileCallback.`);
