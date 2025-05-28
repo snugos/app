@@ -82,15 +82,11 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
  * Creates HTML for a drop zone, status-aware with consistent ID generation.
  * @param {number} trackId - The ID of the track.
  * @param {string} trackTypeHint - Type of track (e.g., 'Sampler', 'DrumSampler', 'InstrumentSampler').
- * @param {number|null} padOrSliceIndex - Index if it's for a specific pad. Null for general track samplers like Sampler or InstrumentSampler.
- * @param {object|null} audioData - The audio data object from the track (e.g., track.samplerAudioData, padData, or track.instrumentSamplerSettings)
- * This object should contain `fileName` and `status`.
+ * @param {number|null} padOrSliceIndex - Index if it's for a specific pad. Null for general track samplers.
+ * @param {object|null} audioData - The audio data object from the track (e.g., track.samplerAudioData or padData) which contains fileName and status.
  * @returns {string} HTML string for the drop zone.
  */
 export function createDropZoneHTML(trackId, trackTypeHint, padOrSliceIndex = null, audioData = null) {
-    // Consistent ID generation:
-    // For general samplers (Sampler, InstrumentSampler), padOrSliceIndex will be null, resulting in '-null' suffix.
-    // For DrumSampler pads, padOrSliceIndex will be the pad's index.
     const indexSuffix = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '-null';
     const inputId = `fileInput-${trackId}-${trackTypeHint}${indexSuffix}`;
     const dropZoneId = `dropZone-${trackId}-${trackTypeHint.toLowerCase()}${indexSuffix}`;
@@ -103,10 +99,9 @@ export function createDropZoneHTML(trackId, trackTypeHint, padOrSliceIndex = nul
 
     let content = '';
     const fileName = audioData?.fileName || 'Unknown File';
-    const status = audioData?.status || 'empty'; // Default to 'empty' if no status
+    const status = audioData?.status || 'empty';
 
     let displayText = fileName.length > 20 ? `${fileName.substring(0, 18)}...` : fileName;
-
 
     switch (status) {
         case 'loaded':
@@ -168,11 +163,8 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
             numericIndexForCallback = parseInt(dzPadSliceIndexStr);
         } else if (typeof padIndexOrSliceId === 'number' && !isNaN(padIndexOrSliceId)) {
-            // This case might be redundant if createDropZoneHTML always uses '-null' for non-indexed.
             numericIndexForCallback = padIndexOrSliceId;
         }
-        // For Sampler and InstrumentSampler, numericIndexForCallback will effectively be null or an unneeded 0 if padOrSliceIndex was null.
-        // For DrumSampler, it will be the pad index.
 
         const soundDataString = event.dataTransfer.getData("application/json");
 
@@ -191,13 +183,11 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             const simulatedEvent = { target: { files: [file] } };
             if (loadFileCallback) {
                 if (dzTrackType === 'DrumSampler') {
-                    // numericIndexForCallback should be the correct pad index here
                     const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
                         ? numericIndexForCallback
-                        : 0; // Fallback, though should be set
+                        : ( (typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId)?.selectedDrumPadForEdit : 0) || 0);
                     await loadFileCallback(simulatedEvent, dzTrackId, finalPadIndex, file.name);
                 } else if (dzTrackType === 'Sampler' || dzTrackType === 'InstrumentSampler') {
-                    // For these types, the third argument to loadSampleFile is trackTypeHint, not an index.
                     await loadFileCallback(simulatedEvent, dzTrackId, dzTrackType, file.name);
                 } else {
                     console.warn(`[Utils] Unhandled trackType "${dzTrackType}" for OS file drop with loadFileCallback.`);
