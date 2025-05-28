@@ -93,15 +93,12 @@ export function rebuildMasterEffectChain() {
     if (!window.masterEffectsBusInput || window.masterEffectsBusInput.disposed || !masterGainNode || masterGainNode.disposed) {
         console.warn("[Audio - rebuildMasterEffectChain] Master bus nodes are not valid. Forcing setupMasterBus.");
         setupMasterBus(); 
-        // If setupMasterBus itself calls rebuildMasterEffectChain, we might not need to return here,
-        // but to be safe and prevent potential infinite loops if there's an issue in setupMasterBus:
         return; 
     }
 
     console.log("[Audio - rebuildMasterEffectChain] Current window.masterEffectsChain (structure):", (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
     console.log(`[Audio - rebuildMasterEffectChain] masterEffectsBusInput valid: ${!!window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed}, masterGainNode valid: ${!!masterGainNode && !masterGainNode.disposed}`);
 
-    // Disconnect everything from the bus input and master gain first
     try { 
         window.masterEffectsBusInput.disconnect(); 
         console.log("[Audio - rebuildMasterEffectChain] Disconnected all outputs from masterEffectsBusInput.");
@@ -121,7 +118,6 @@ export function rebuildMasterEffectChain() {
     } catch(e) { console.warn(`[Audio - rebuildMasterEffectChain] Minor error disconnecting masterGainNode: ${e.message}`);}
 
 
-    // Rebuild the chain: BusInput -> Effect1 -> Effect2 -> ... -> MasterGain -> Destination
     let currentAudioPathEnd = window.masterEffectsBusInput;
     console.log(`[Audio - rebuildMasterEffectChain] Chain Rebuild: Starting audio path with masterEffectsBusInput (${currentAudioPathEnd?.constructor.name})`);
 
@@ -144,7 +140,6 @@ export function rebuildMasterEffectChain() {
         }
     });
 
-    // Connect the end of the effects chain (or the bus input if no effects) to the masterGainNode
     if (masterGainNode && !masterGainNode.disposed) {
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
              try {
@@ -154,22 +149,20 @@ export function rebuildMasterEffectChain() {
                 console.error(`[Audio - rebuildMasterEffectChain] Error connecting output of effects chain (${currentAudioPathEnd.constructor.name}) to masterGainNode:`, e);
             }
         } else {
-            // This case should ideally not happen if masterEffectsBusInput is always valid here
             console.log("[Audio - rebuildMasterEffectChain] No valid effects output or currentAudioPathEnd is masterEffectsBusInput itself, connecting masterEffectsBusInput directly to masterGainNode.");
             try {
-                if (window.masterEffectsBusInput !== masterGainNode) { // Avoid self-connection if currentAudioPathEnd was masterEffectsBusInput
+                if (window.masterEffectsBusInput !== masterGainNode) { 
                     window.masterEffectsBusInput.connect(masterGainNode);
                 }
             } catch (e) {
                  console.error(`[Audio - rebuildMasterEffectChain] Error connecting masterEffectsBusInput directly to masterGainNode:`, e);
             }
         }
-        // Finally, connect masterGainNode to destination and meter
         try {
             masterGainNode.toDestination();
             console.log("[Audio - rebuildMasterEffectChain] masterGainNode re-connected to Tone.Destination.");
             if (window.masterMeter && !window.masterMeter.disposed) {
-                try { masterGainNode.disconnect(window.masterMeter); } catch(e) {/* ignore */} // Ensure no double connection
+                try { masterGainNode.disconnect(window.masterMeter); } catch(e) {/* ignore */}
                 masterGainNode.connect(window.masterMeter);
                 console.log("[Audio - rebuildMasterEffectChain] masterGainNode re-connected to existing masterMeter.");
             } else {
@@ -183,7 +176,6 @@ export function rebuildMasterEffectChain() {
     }
     console.log(`[Audio - rebuildMasterEffectChain] Master chain rebuild finished.`);
 
-    // After master chain is rebuilt, ensure all tracks are reconnected to the master bus input
     if (typeof window.getTracks === 'function') {
         const currentTracks = window.getTracks();
         console.log(`[Audio - rebuildMasterEffectChain] Triggering rebuildEffectChain for ${currentTracks.length} tracks to ensure they connect to the updated master bus.`);
@@ -390,7 +382,6 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     let playDuration = sliceData.duration / playbackRate;
     if (sliceData.loop) playDuration = Math.min(playDuration, 2); // Limit loop preview duration
 
-    // Determine the correct destination node for the preview player
     const firstEffectNodeInTrack = track.activeEffects.length > 0 ? track.activeEffects[0].toneNode : track.gainNode;
     const actualDestination = (firstEffectNodeInTrack && !firstEffectNodeInTrack.disposed) ? firstEffectNodeInTrack : (window.masterEffectsBusInput || Tone.getDestination());
 
@@ -475,7 +466,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
 
     const isUrlSource = typeof eventOrUrl === 'string';
     const isDirectFile = eventOrUrl instanceof File;
-    const isBlobEvent = eventOrUrl instanceof Blob; // Check if eventOrUrl is already a Blob
+    const isBlobEvent = eventOrUrl instanceof Blob; 
 
     if (isUrlSource) { 
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample";
@@ -699,7 +690,6 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         padData.audioBuffer = newBuffer; padData.audioBufferDataURL = base64Url; padData.originalFileName = sourceName; padData.dbKey = dbKey; padData.status = 'loaded';
         track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer);
         track.rebuildEffectChain(); // Reconnect this player through the effects chain
-        // track.setSequenceLength(track.sequenceLength, true); // Re-init sequence
 
         showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1}.`, 2000);
         if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
@@ -709,7 +699,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         console.error(`[Audio - loadDrumSamplerPadFile] Error loading drum sample "${sourceName}":`, error);
         showNotification(`Error loading drum sample "${sourceName}": ${error.message || 'Unknown error, check console.'}`, 4000);
         if(track.drumSamplerPads[padIndex]) {
-            track.drumSamplerPads[padIndex].status = 'missing'; // or 'error'
+            track.drumSamplerPads[padIndex].status = 'missing'; 
              if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
              if (typeof window.renderDrumSamplerPads === 'function') window.renderDrumSamplerPads(track);
         }
@@ -766,9 +756,9 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
             if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
-                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.audioBufferDataURL); // Find first empty
-                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; // Fallback to selected
-                if (actualPadIndex === -1 || typeof actualPadIndex !== 'number') actualPadIndex = 0; // Absolute fallback
+                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.audioBufferDataURL); 
+                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; 
+                if (actualPadIndex === -1 || typeof actualPadIndex !== 'number') actualPadIndex = 0; 
             }
             console.log(`[Audio - loadSoundFromBrowserToTarget] Loading to DrumSampler, Pad Index: ${actualPadIndex}`); 
             await loadDrumSamplerPadFile(tempBlobUrlForDirectLoad, track.id, actualPadIndex, fileName); 
@@ -823,23 +813,21 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         const fileTree = {};
         let audioFileCount = 0; 
         loadedZip.forEach((relativePath, zipEntry) => {
-            if (zipEntry.dir) return; // Skip directories
-            // Filter out macOS resource fork files and other hidden files
+            if (zipEntry.dir) return; 
             const pathParts = relativePath.split('/').filter(p => p && p !== '__MACOSX'); 
              if (pathParts.some(p => p.startsWith('.'))) { 
-                // console.log(`[Audio - fetchSoundLibrary] Skipping hidden file/folder in zip: ${relativePath}`);
                 return;
             }
 
             let currentLevel = fileTree;
             for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
-                if (i === pathParts.length - 1) { // It's a file
-                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) { // Basic audio file check
+                if (i === pathParts.length - 1) { 
+                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) { 
                         currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
                         audioFileCount++; 
                     }
-                } else { // It's a directory part
+                } else { 
                     if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
                         currentLevel[part] = { type: 'folder', children: {} };
                     }
@@ -880,7 +868,7 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
         });
     }
     track.selectedSliceForEdit = 0;
-    track.setSequenceLength(track.sequenceLength, true); // Re-initialize sequence with potentially new number of rows if numSlices changed
+    track.setSequenceLength(track.sequenceLength, true); 
     if (typeof window.renderSamplePads === 'function') window.renderSamplePads(track);
     if (typeof window.updateSliceEditorUI === 'function') window.updateSliceEditorUI(track);
     if (typeof window.drawWaveform === 'function') window.drawWaveform(track);
