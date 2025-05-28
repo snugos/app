@@ -298,10 +298,9 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     if (Tone.Transport.state === 'started') Tone.Transport.stop();
     Tone.Transport.cancel();
 
-    // CRITICAL: Ensure audio context and master bus are ready FIRST
     if (typeof audioInitAudioContextAndMasterMeter === 'function') {
         console.log("[State - reconstructDAW] Ensuring audio context and master bus are initialized before track creation...");
-        await audioInitAudioContextAndMasterMeter(true); // Force initialization
+        await audioInitAudioContextAndMasterMeter(true); 
         console.log("[State - reconstructDAW] Master bus input after init:", window.masterEffectsBusInput);
         console.log("[State - reconstructDAW] Master gain node after init:", (typeof window.masterGainNode !== 'undefined' ? window.masterGainNode : " (masterGainNode not global)")); 
     } else {
@@ -608,7 +607,7 @@ export async function exportToWav() {
         tracks.forEach(track => {
             if (track.sequence) {
                 track.sequence.start(0);
-                // Removed: if (track.sequence instanceof Tone.Sequence) track.sequence.progress = 0;
+                // The problematic line "track.sequence.progress = 0;" has been removed.
             }
         });
         Tone.Transport.start("+0.1", 0);
@@ -627,8 +626,7 @@ export async function exportToWav() {
         console.log("[State - exportToWav] Recorder stopped.");
         recorder.dispose();
         
-        // It's good practice to disconnect after use, though dispose usually handles this.
-        if (recordSource.connected.includes(recorder)) { // Check if connected before trying to disconnect
+        if (recordSource.connected && recordSource.connected.includes(recorder)) { 
              try { recordSource.disconnect(recorder); } catch (e) { console.warn("Error disconnecting recorder from source", e); }
         }
 
@@ -651,4 +649,3 @@ export async function exportToWav() {
 }
 
 console.log("[State.js] Parsed and exports should be available.");
-
