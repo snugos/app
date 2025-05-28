@@ -7,7 +7,7 @@ let audioContextInitialized = false;
 window.masterEffectsBusInput = null; 
 window.masterEffectsChain = []; 
 let masterGainNode = null; 
-window.masterGainNode = masterGainNode; 
+window.masterGainNode = masterGainNode; // Ensure it's available if needed globally
 
 console.log("[Audio.js] Initializing. window.masterEffectsChain declared as (structure):", (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
 
@@ -436,20 +436,20 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
 }
 
 export function getMimeTypeFromFilename(filename) {
-    if (!filename || typeof filename !== 'string') return "application/octet-stream"; // Default if no filename
+    if (!filename || typeof filename !== 'string') return "application/octet-stream"; 
     const lowerFilename = filename.toLowerCase();
     if (lowerFilename.endsWith(".wav")) return "audio/wav";
     if (lowerFilename.endsWith(".mp3")) return "audio/mpeg";
     if (lowerFilename.endsWith(".ogg")) return "audio/ogg";
     if (lowerFilename.endsWith(".flac")) return "audio/flac";
     if (lowerFilename.endsWith(".aac")) return "audio/aac";
-    if (lowerFilename.endsWith(".m4a")) return "audio/mp4"; // Common for AAC
+    if (lowerFilename.endsWith(".m4a")) return "audio/mp4"; 
     console.warn(`[Audio - getMimeTypeFromFilename] Could not infer MIME type for: ${filename}`);
-    return "application/octet-stream"; // Fallback
+    return "application/octet-stream"; 
 }
 
 export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null) {
-    console.log(`[Audio - loadSampleFile] Called. TrackID: ${trackId}, TypeHint: ${trackTypeHint}, FileNameForURL: ${fileNameForUrl}`); // DEBUG
+    console.log(`[Audio - loadSampleFile] Called. TrackID: ${trackId}, TypeHint: ${trackTypeHint}, FileNameForURL: ${fileNameForUrl}`); 
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
     const track = tracksArray.find(t => t.id === trackId);
     if (!track) { showNotification(`Track ID ${trackId} not found.`, 3000); return; }
@@ -465,32 +465,32 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
 
     const isUrlSource = typeof eventOrUrl === 'string';
     const isDirectFile = eventOrUrl instanceof File;
-    const isBlobEvent = eventOrUrl instanceof Blob; // Check if it's a blob directly (like from zip)
+    const isBlobEvent = eventOrUrl instanceof Blob; 
 
-    if (isUrlSource) { // Handles blob URLs from sound browser, or actual http URLs
+    if (isUrlSource) { 
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample";
-        console.log(`[Audio - loadSampleFile] URL source. sourceName: ${sourceName}, eventOrUrl: ${eventOrUrl}`); // DEBUG
+        console.log(`[Audio - loadSampleFile] URL source. sourceName: ${sourceName}, eventOrUrl: ${eventOrUrl}`); 
         try {
             const response = await fetch(eventOrUrl);
             if (!response.ok) throw new Error(`Fetch failed for ${eventOrUrl}: ${response.status}`);
-            providedBlob = await response.blob(); // This is the blob we'll work with
-            console.log(`[Audio - loadSampleFile] Fetched blob from URL. Type: '${providedBlob.type}', Size: ${providedBlob.size}`); // DEBUG
+            providedBlob = await response.blob(); 
+            console.log(`[Audio - loadSampleFile] Fetched blob from URL. Type: '${providedBlob.type}', Size: ${providedBlob.size}`); 
         } catch (e) { 
             console.error(`[Audio - loadSampleFile] Error fetching sample from URL ${eventOrUrl}:`, e);
             showNotification(`Error fetching sample: ${e.message}`, 3000); return; 
         }
-    } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) { // From <input type="file">
+    } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) { 
         providedBlob = eventOrUrl.target.files[0];
         sourceName = providedBlob.name;
-        console.log(`[Audio - loadSampleFile] File input source. sourceName: ${sourceName}, Type: '${providedBlob.type}'`); // DEBUG
-    } else if (isDirectFile) { // If a File object is passed directly
+        console.log(`[Audio - loadSampleFile] File input source. sourceName: ${sourceName}, Type: '${providedBlob.type}'`); 
+    } else if (isDirectFile) { 
         providedBlob = eventOrUrl;
         sourceName = providedBlob.name;
-        console.log(`[Audio - loadSampleFile] Direct File object source. sourceName: ${sourceName}, Type: '${providedBlob.type}'`); // DEBUG
-    } else if (isBlobEvent) { // If a Blob object is passed directly (less common for this function's design but possible)
+        console.log(`[Audio - loadSampleFile] Direct File object source. sourceName: ${sourceName}, Type: '${providedBlob.type}'`); 
+    } else if (isBlobEvent) { 
         providedBlob = eventOrUrl;
-        sourceName = fileNameForUrl || "loaded_blob_sample"; // Try to get a name
-        console.log(`[Audio - loadSampleFile] Direct Blob object source. sourceName: ${sourceName}, Type: '${providedBlob.type}'`); // DEBUG
+        sourceName = fileNameForUrl || "loaded_blob_sample"; 
+        console.log(`[Audio - loadSampleFile] Direct Blob object source. sourceName: ${sourceName}, Type: '${providedBlob.type}'`); 
     } else { 
         showNotification("No file selected or invalid source.", 3000); 
         console.error("[Audio - loadSampleFile] No valid file source provided.");
@@ -505,24 +505,23 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     
     let explicitType = providedBlob.type;
     const inferredType = getMimeTypeFromFilename(sourceName);
-    console.log(`[Audio - loadSampleFile] For "${sourceName}": Original Blob Type='${explicitType}', Inferred Type='${inferredType}'`); // DEBUG
+    console.log(`[Audio - loadSampleFile] For "${sourceName}": Original Blob Type='${explicitType}', Inferred Type='${inferredType}'`); 
 
     if ((!explicitType || explicitType === "application/octet-stream" || explicitType === "") && inferredType !== "application/octet-stream") {
         explicitType = inferredType;
-        console.log(`[Audio - loadSampleFile] Using inferred type for "${sourceName}": '${explicitType}'`); // DEBUG
+        console.log(`[Audio - loadSampleFile] Using inferred type for "${sourceName}": '${explicitType}'`); 
     } else if (explicitType && explicitType !== "application/octet-stream") {
-        console.log(`[Audio - loadSampleFile] Using explicit blob type for "${sourceName}": '${explicitType}'`); // DEBUG
+        console.log(`[Audio - loadSampleFile] Using explicit blob type for "${sourceName}": '${explicitType}'`); 
     } else {
-        console.warn(`[Audio - loadSampleFile] Could not determine a specific audio type for "${sourceName}", staying with '${explicitType}' or default.`); // DEBUG
+        console.warn(`[Audio - loadSampleFile] Could not determine a specific audio type for "${sourceName}", staying with '${explicitType}' or default application/octet-stream.`); 
+        if (!explicitType) explicitType = 'application/octet-stream'; // Ensure some type is set
     }
-
-    // Create a new File object with the (potentially corrected) MIME type
-    // This is important because Tone.Buffer().load() might behave differently with a File vs a raw Blob/URL
+    
     fileObject = new File([providedBlob], sourceName, { type: explicitType });
     console.log(`[Audio - loadSampleFile] Created File object for Tone.Buffer. Name: "${fileObject.name}", Type: "${fileObject.type}", Size: ${fileObject.size}`);
 
 
-    if (!fileObject.type || (!fileObject.type.startsWith('audio/') && fileObject.type !== "application/octet-stream" ) ) { // Allow octet-stream if we couldn't infer better
+    if (!fileObject.type || (!fileObject.type.startsWith('audio/') && fileObject.type !== "application/octet-stream" ) ) { 
         showNotification(`Invalid audio file type: "${fileObject.type || 'unknown'}". Please use WAV, MP3, OGG.`, 3000); 
         console.error(`[Audio - loadSampleFile] Final fileObject type is invalid: ${fileObject.type}`);
         return; 
@@ -535,27 +534,21 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     let base64DataURL = null;
     
     try {
-        objectURLForTone = URL.createObjectURL(fileObject); // Create URL from the new File object
-        console.log(`[Audio - loadSampleFile] Object URL for Tone.Buffer: ${objectURLForTone} (from File with type: ${fileObject.type})`); // DEBUG
+        objectURLForTone = URL.createObjectURL(fileObject); 
+        console.log(`[Audio - loadSampleFile] Object URL for Tone.Buffer: ${objectURLForTone} (from File with type: ${fileObject.type})`); 
 
         base64DataURL = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
             reader.onerror = reject;
-            reader.readAsDataURL(fileObject); // Read from the new File object
+            reader.readAsDataURL(fileObject); 
         });
-        console.log(`[Audio - loadSampleFile] Base64 DataURL generated for ${sourceName}. Length: ${base64DataURL?.length}`); // DEBUG
+        console.log(`[Audio - loadSampleFile] Base64 DataURL generated for ${sourceName}. Length: ${base64DataURL?.length}`); 
 
-        console.log(`[Audio - loadSampleFile] Attempting Tone.Buffer().load('${objectURLForTone}') for ${sourceName}`); // DEBUG
+        console.log(`[Audio - loadSampleFile] Attempting Tone.Buffer().load('${objectURLForTone}') for ${sourceName}`); 
         const newAudioBuffer = await new Tone.Buffer().load(objectURLForTone);
-        console.log(`[Audio - loadSampleFile] Tone.Buffer loaded successfully for "${sourceName}". Duration: ${newAudioBuffer.duration}`); // DEBUG
+        console.log(`[Audio - loadSampleFile] Tone.Buffer loaded successfully for "${sourceName}". Duration: ${newAudioBuffer.duration}`); 
 
-        if (trackTypeHint === 'Sampler') {
-            // ... (rest of sampler logic)
-        } else if (trackTypeHint === 'InstrumentSampler') {
-            // ... (rest of instrument sampler logic)
-        }
-        // ... (UI updates as before) ...
         if (trackTypeHint === 'Sampler') {
             if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
             track.disposeSlicerMonoNodes();
@@ -597,13 +590,12 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         showNotification(`Sample "${sourceName}" loaded for ${track.name}.`, 2000);
 
     } catch (error) {
-        console.error(`[Audio - loadSampleFile] Error in Tone.Buffer().load or subsequent processing for "${sourceName}":`, error); // DEBUG
+        console.error(`[Audio - loadSampleFile] Error in Tone.Buffer().load or subsequent processing for "${sourceName}":`, error); 
         showNotification(`Error loading sample "${sourceName}": ${error.message || 'Unknown error, check console.'}`, 4000);
     } finally { if (objectURLForTone) URL.revokeObjectURL(objectURLForTone); }
 }
 
 export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, fileNameForUrl = null) {
-    // Simplified for brevity, assume similar logging and MIME type handling as loadSampleFile
     console.log(`[Audio - loadDrumSamplerPadFile] Called. TrackID: ${trackId}, Pad: ${padIndex}, FileName: ${fileNameForUrl}`);
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
     const track = tracksArray.find(t => t.id === trackId);
@@ -618,7 +610,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
 
     const isUrlSource = typeof eventOrUrl === 'string';
     const isDirectFile = eventOrUrl instanceof File;
-     const isBlobEvent = eventOrUrl instanceof Blob;
+    const isBlobEvent = eventOrUrl instanceof Blob;
 
     if (isUrlSource) {
         sourceName = fileNameForUrl || "pad_sample_from_url";
@@ -650,10 +642,12 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     if ((!explicitType || explicitType === "application/octet-stream" || explicitType === "") && inferredType !== "application/octet-stream") {
         explicitType = inferredType;
         console.log(`[Audio - loadDrumSamplerPadFile] Using inferred type for "${sourceName}": '${explicitType}'`);
+    } else if (!explicitType) {
+        explicitType = 'application/octet-stream';
     }
     
     fileObject = new File([providedBlob], sourceName, { type: explicitType });
-     console.log(`[Audio - loadDrumSamplerPadFile] Created File object for Tone.Buffer. Name: "${fileObject.name}", Type: "${fileObject.type}"`);
+    console.log(`[Audio - loadDrumSamplerPadFile] Created File object for Tone.Buffer. Name: "${fileObject.name}", Type: "${fileObject.type}"`);
 
     if (!fileObject.type || (!fileObject.type.startsWith('audio/') && fileObject.type !== "application/octet-stream")) {
         showNotification(`Invalid audio file type for drum pad: "${fileObject.type || 'unknown'}".`, 3000); return;
@@ -689,8 +683,6 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
     } finally { if (objectURLForTone) URL.revokeObjectURL(objectURLForTone); }
 }
 
-// ... rest of the file (loadSoundFromBrowserToTarget, fetchSoundLibrary, autoSliceSample) ...
-// Ensure fetchSoundLibrary and loadSoundFromBrowserToTarget have their existing debug logs from audio_js_sound_browser_debug
 export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetTrackType, targetPadOrSliceIndex = null) {
     console.log(`[Audio - loadSoundFromBrowserToTarget] Called. SoundData:`, soundData, `Target Track ID: ${targetTrackId}, Type: ${targetTrackType}, Index: ${targetPadOrSliceIndex}`); 
     const { fullPath, libraryName, fileName } = soundData;
@@ -714,7 +706,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     }
 
     showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
-    let tempBlobUrlForDirectLoad = null; // Use a temporary variable for the blob URL
+    let tempBlobUrlForDirectLoad = null; 
     try {
         console.log(`[Audio - loadSoundFromBrowserToTarget] Accessing library: ${libraryName}, fullPath: ${fullPath}`); 
         if (!window.loadedZipFiles || !window.loadedZipFiles[libraryName] || window.loadedZipFiles[libraryName] === "loading") {
@@ -726,16 +718,15 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
             throw new Error(`File "${fullPath}" not in ZIP.`);
         }
         console.log(`[Audio - loadSoundFromBrowserToTarget] Found zipEntry for ${fullPath}`); 
-        const fileBlob = await zipEntry.async("blob"); // This blob might have an empty MIME type
-        console.log(`[Audio - loadSoundFromBrowserToTarget] Got blob for ${fileName}, type from zip: '${fileBlob.type}', size: ${fileBlob.size}`); 
+        const fileBlobFromZip = await zipEntry.async("blob"); 
+        console.log(`[Audio - loadSoundFromBrowserToTarget] Got blob for ${fileName}, type from zip: '${fileBlobFromZip.type}', size: ${fileBlobFromZip.size}`); 
         
-        // Create a new File object with the correct name and potentially inferred type to pass down
-        // This helps loadSampleFile/loadDrumSamplerPadFile to correctly identify it
         const inferredMimeType = getMimeTypeFromFilename(fileName);
-        const blobToLoad = new File([fileBlob], fileName, {type: fileBlob.type || inferredMimeType || 'application/octet-stream'});
+        const finalMimeType = fileBlobFromZip.type || inferredMimeType || 'application/octet-stream';
+        const blobToLoad = new File([fileBlobFromZip], fileName, {type: finalMimeType});
         console.log(`[Audio - loadSoundFromBrowserToTarget] Created File object for loading. Name: ${blobToLoad.name}, Type: ${blobToLoad.type}`);
 
-        tempBlobUrlForDirectLoad = URL.createObjectURL(blobToLoad); // Pass this URL
+        tempBlobUrlForDirectLoad = URL.createObjectURL(blobToLoad); 
 
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Load ${fileName} to ${track.name}`);
 
@@ -747,13 +738,13 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
                 if (actualPadIndex === -1 || typeof actualPadIndex !== 'number') actualPadIndex = 0; 
             }
             console.log(`[Audio - loadSoundFromBrowserToTarget] Loading to DrumSampler, Pad Index: ${actualPadIndex}`); 
-            await loadDrumSamplerPadFile(tempBlobUrlForDirectLoad, track.id, actualPadIndex, fileName); // Pass fileName for sourceName context
+            await loadDrumSamplerPadFile(tempBlobUrlForDirectLoad, track.id, actualPadIndex, fileName); 
         } else if (track.type === 'Sampler') {
             console.log(`[Audio - loadSoundFromBrowserToTarget] Loading to Sampler (Slicer)`); 
-            await loadSampleFile(tempBlobUrlForDirectLoad, track.id, 'Sampler', fileName); // Pass fileName
+            await loadSampleFile(tempBlobUrlForDirectLoad, track.id, 'Sampler', fileName); 
         } else if (track.type === 'InstrumentSampler') {
             console.log(`[Audio - loadSoundFromBrowserToTarget] Loading to InstrumentSampler`); 
-            await loadSampleFile(tempBlobUrlForDirectLoad, track.id, 'InstrumentSampler', fileName); // Pass fileName
+            await loadSampleFile(tempBlobUrlForDirectLoad, track.id, 'InstrumentSampler', fileName); 
         }
     } catch (error) {
         console.error(`[Audio - loadSoundFromBrowserToTarget] Error loading sound from browser:`, error);
@@ -809,7 +800,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
             for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
                 if (i === pathParts.length - 1) { 
-                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) { // Added m4a
+                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) { 
                         currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
                         audioFileCount++; 
                     }
