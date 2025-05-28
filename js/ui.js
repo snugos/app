@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Audio Status, Relink & Debugging Version (Corrected Exports & Upload Click Fix)');
+console.log('[ui.js] TOP OF FILE PARSING - Audio Status, Relink & Debugging Version (Corrected Exports & Upload Click Fix + GCW Debug)');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -166,7 +166,6 @@ function buildSamplerSpecificInspectorDOM(track) {
     const panel = document.createElement('div'); panel.className = 'panel sampler-panel';
     const dzContainer = document.createElement('div');
     dzContainer.id = `dropZoneContainer-${track.id}-sampler`;
-    // Updated call to createDropZoneHTML
     dzContainer.innerHTML = createDropZoneHTML(track.id, 'Sampler', null, track.samplerAudioData);
     panel.appendChild(dzContainer);
 
@@ -331,7 +330,7 @@ function initializeSamplerSpecificControls(track, winEl) {
     if (dzContainerEl && fileInputEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
         if (dzEl) utilSetupDropZoneListeners(dzEl, track.id, 'Sampler', null, window.loadSoundFromBrowserToTarget, window.loadSampleFile);
-        
+
         fileInputEl.onchange = (e) => {
             console.log(`[UI] Sampler fileInputEl changed for track ${track.id} (ID: #${fileInputId})`);
             window.loadSampleFile(e, track.id, 'Sampler');
@@ -447,22 +446,100 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 
 
 // --- Modular Effects Rack UI ---
-function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (no changes) ... */ }
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... (no changes) ... */ }
-function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... (no changes) ... */ }
-function showAddEffectModal(owner, ownerType) { /* ... (no changes) ... */ }
+function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... */ }
+function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... */ }
+function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... */ }
+function showAddEffectModal(owner, ownerType) { /* ... */ }
 
 
 // --- Window Opening Functions (with Debugging) ---
-function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... (no changes) ... */ }
-function openMasterEffectsRackWindow(savedState = null) { /* ... (no changes) ... */ }
-function openGlobalControlsWindow(savedState = null) { /* ... (no changes with added logs) ... */ }
-function openSoundBrowserWindow(savedState = null) { /* ... (no changes from previous debug version) ... */ }
-function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (no changes from previous debug version) ... */ }
+function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... */ }
+function openMasterEffectsRackWindow(savedState = null) { /* ... */ }
+function openGlobalControlsWindow(savedState = null) {
+    console.log(`[UI - openGlobalControlsWindow] Called. savedState:`, savedState);
+    const windowId = 'globalControls';
+    if (typeof SnugWindow !== 'function') {
+        console.error("[UI - openGlobalControlsWindow] SnugWindow is NOT a function!");
+        return null;
+    }
+    if (window.openWindows && window.openWindows[windowId] && !savedState) {
+        window.openWindows[windowId].restore();
+        return window.openWindows[windowId];
+    }
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'global-controls-window p-2 space-y-3';
+    try {
+        let tempoValue = 120.0;
+        if (typeof Tone !== 'undefined' && Tone.Transport) {
+            tempoValue = Tone.Transport.bpm.value.toFixed(1);
+        }
+        contentDiv.innerHTML = `
+            <div class="flex items-center gap-2">
+                <button id="playBtnGlobal" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1 px-3 rounded-sm shadow">Play</button>
+                <button id="recordBtnGlobal" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1 px-3 rounded-sm shadow">Record</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <label for="tempoGlobalInput" class="control-label text-xs">Tempo:</label>
+                <input type="number" id="tempoGlobalInput" value="${tempoValue}" min="40" max="240" step="0.1" class="bg-white text-black w-16 p-1 rounded-sm text-center text-xs border border-gray-500">
+                <span class="text-xs"> BPM</span>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <label for="midiInputSelectGlobal" class="text-xs">MIDI In:</label>
+                <select id="midiInputSelectGlobal" class="bg-white text-black p-1 rounded-sm text-xs border border-gray-500 flex-grow"></select>
+                <span id="midiIndicatorGlobal" title="MIDI Activity" class="border border-black w-3 h-3 inline-block rounded-full bg-gray-400"></span>
+                <span id="keyboardIndicatorGlobal" title="Keyboard Input Activity" class="border border-black w-3 h-3 inline-block rounded-full bg-gray-400"></span>
+            </div>
+            <div id="masterMeterContainerGlobal" class="meter-bar-container mt-2" title="Master Output Level" style="height:15px;">
+                <div id="masterMeterBarGlobal" class="meter-bar" style="width: 0%;"></div>
+            </div>
+        `;
+    } catch (e) {
+        console.error("[UI - openGlobalControlsWindow] Error setting innerHTML for globalControls:", e);
+        showNotification("Error creating global controls.", 5000);
+        return null;
+    }
+    const winOptions = { width: 280, height: 250, x: 20, y: 20, initialContentKey: 'globalControls' };
+    if (savedState) Object.assign(winOptions, savedState);
+
+    let globalControlsWin = null;
+    try {
+        globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
+    } catch (e) {
+        console.error('[UI - openGlobalControlsWindow] CRITICAL ERROR `new SnugWindow()` for globalControls:', e);
+        showNotification("CRITICAL: Error creating window object.", 6000);
+        return null;
+    }
+
+    if (!globalControlsWin || !globalControlsWin.element) {
+        console.error("[UI - openGlobalControlsWindow] CRITICAL CHECK FAILED: globalControlsWin or element is falsy after SnugWindow construction.");
+        showNotification("Failed to create Global Controls window.", 5000);
+        return null; // Explicitly return null on failure
+    }
+
+    window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal');
+    window.recordBtn = globalControlsWin.element.querySelector('#recordBtnGlobal');
+    window.tempoInput = globalControlsWin.element.querySelector('#tempoGlobalInput');
+    window.masterMeterBar = globalControlsWin.element.querySelector('#masterMeterBarGlobal');
+    window.midiInputSelectGlobal = globalControlsWin.element.querySelector('#midiInputSelectGlobal');
+    window.midiIndicatorGlobalEl = globalControlsWin.element.querySelector('#midiIndicatorGlobal');
+    window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal');
+
+    if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
+        window.attachGlobalControlEvents(globalControlsWin.element);
+    } else {
+        console.warn("[UI - openGlobalControlsWindow] attachGlobalControlEvents not found or window element missing for globalControlsWin.");
+    }
+    
+    console.log("[UI - openGlobalControlsWindow] Returning globalControlsWin:", globalControlsWin); // ADDED LOG
+    console.log("[UI - openGlobalControlsWindow] globalControlsWin.element:", globalControlsWin?.element); // ADDED LOG
+    return globalControlsWin;
+}
+function openSoundBrowserWindow(savedState = null) { /* ... (with existing logs) ... */ }
+function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (with existing logs) ... */ }
 function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (no changes) ... */ }
-function openMixerWindow(savedState = null) { /* ... (no changes from previous debug version) ... */ }
-function updateMixerWindow() { /* ... (no changes from previous debug version) ... */ }
-function renderMixer(container) { /* ... (no changes from previous debug version) ... */ }
+function openMixerWindow(savedState = null) { /* ... (with existing logs) ... */ }
+function updateMixerWindow() { /* ... (with existing logs) ... */ }
+function renderMixer(container) { /* ... (with existing logs) ... */ }
 function buildSequencerContentDOM(track, rows, rowLabels, numBars) { /* ... (no changes) ... */ }
 function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... (no changes) ... */ }
 
@@ -487,13 +564,12 @@ function updateDrumPadControlsUI(track) {
 
     const loadContainer = inspectorEl.querySelector(`#drumPadLoadContainer-${track.id}`);
     if (loadContainer) {
-        // Call createDropZoneHTML using consistent ID generation scheme
         loadContainer.innerHTML = createDropZoneHTML(track.id, 'DrumSampler', padIndex, selectedPadData);
 
         const fileInputId = `fileInput-${track.id}-DrumSampler-${padIndex}`;
         const fileInputEl = loadContainer.querySelector(`#${fileInputId}`);
 
-        const dropZoneId = `dropZone-${track.id}-drumsampler-${padIndex}`; // Matches createDropZoneHTML
+        const dropZoneId = `dropZone-${track.id}-drumsampler-${padIndex}`;
         const dropZoneEl = loadContainer.querySelector(`#${dropZoneId}`);
 
         const relinkButtonId = `relinkFileBtn-${track.id}-DrumSampler-${padIndex}`;
@@ -501,7 +577,7 @@ function updateDrumPadControlsUI(track) {
 
         if (fileInputEl) {
             console.log(`[UI - updateDrumPadControlsUI] Setting up fileInputEl for pad ${padIndex} (ID: #${fileInputId})`);
-            fileInputEl.onchange = (e) => { // Replaces previous listener if any
+            fileInputEl.onchange = (e) => {
                 console.log(`[UI - updateDrumPadControlsUI] File input changed for pad ${padIndex}`);
                 window.loadDrumSamplerPadFile(e, track.id, padIndex);
             };
