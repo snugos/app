@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 9 (with debug logs v2)'); // DEBUG
+console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 9 (with sound browser debug logs)'); // DEBUG
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -294,7 +294,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 // --- MODULAR EFFECTS RACK UI ---
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     console.log(`[UI - buildModularEffectsRackDOM] Called for ownerType: ${ownerType}. Owner:`, owner);
-    console.log(`[UI - buildModularEffectsRackDOM] Current window.masterEffectsChain (structure):`, (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode}))); // DEBUG (Safer log)
+    console.log(`[UI - buildModularEffectsRackDOM] Current window.masterEffectsChain (structure):`, (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
 
     const rackContainer = document.createElement('div'); rackContainer.className = 'modular-effects-rack p-2 space-y-2 bg-gray-50 h-full flex flex-col';
     const header = document.createElement('div'); header.className = 'flex justify-between items-center mb-2 flex-shrink-0';
@@ -316,7 +316,6 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     listDiv.innerHTML = ''; controlsContainer.innerHTML = '';
     const effectsArray = ownerType === 'track' ? owner.activeEffects : (window.masterEffectsChain || []);
     
-    // FIX for Circular JSON error: Log structure, not full objects with ToneNodes
     console.log(`[UI - renderEffectsList] Effects array for ${ownerType} (structure):`, (effectsArray || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
 
     if (!effectsArray || effectsArray.length === 0) { 
@@ -524,7 +523,7 @@ export function openGlobalControlsWindow(savedState = null) {
     return globalControlsWin;
 }
 export function openSoundBrowserWindow(savedState = null) {
-    console.log("[ui.js] openSoundBrowserWindow called.");
+    console.log("[ui.js - openSoundBrowserWindow] Called."); // DEBUG
     const windowId = 'soundBrowser';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') updateSoundBrowserDisplayForLibrary(window.currentLibraryName); return window.openWindows[windowId]; }
     if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
@@ -540,53 +539,127 @@ export function openSoundBrowserWindow(savedState = null) {
         librarySelect.onchange = () => { const selectedLibraryName = librarySelect.value; if (typeof updateSoundBrowserDisplayForLibrary === 'function') updateSoundBrowserDisplayForLibrary(selectedLibraryName); };
         if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) { const firstLibraryName = Object.keys(Constants.soundLibraries)[0]; const currentSelectedValue = librarySelect.value; let targetLibrary = Array.from(librarySelect.options).find(opt => opt.value === currentSelectedValue) ? currentSelectedValue : firstLibraryName; if (!Array.from(librarySelect.options).find(opt => opt.value === targetLibrary) && librarySelect.options.length > 0) targetLibrary = librarySelect.options[0].value; librarySelect.value = targetLibrary; if (typeof updateSoundBrowserDisplayForLibrary === 'function' && targetLibrary) updateSoundBrowserDisplayForLibrary(targetLibrary); } else { soundBrowserWin.element.querySelector('#soundBrowserList').innerHTML = "No sound libraries configured."; }
     }
-    console.log("[ui.js] Sound Browser window created and initialized."); return soundBrowserWin;
+    console.log("[ui.js - openSoundBrowserWindow] Sound Browser window created and initialized."); return soundBrowserWin;
 }
 export function updateSoundBrowserDisplayForLibrary(libraryName) {
+    console.log(`[UI - updateSoundBrowserDisplayForLibrary] Updating for library: ${libraryName}`); // DEBUG
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js] Sound Browser DOM elements missing for updateDisplay."); return; }
+    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - updateSoundBrowserDisplayForLibrary] Sound Browser DOM elements missing."); return; }
     window.currentLibraryName = libraryName;
-    if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) { window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName]; window.currentSoundBrowserPath = []; renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree); }
-    else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Loading ${libraryName} sounds...</div>`; pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`; }
-    else { const zipUrl = Constants.soundLibraries[libraryName]; if (zipUrl && typeof window.fetchSoundLibrary === 'function') window.fetchSoundLibrary(libraryName, zipUrl, false); else { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-red-500">Library ${libraryName} config not found.</div>`; pathDisplay.textContent = `Path: / (Error - ${libraryName})`; } }
+    if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) { 
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Found pre-existing file tree for ${libraryName}.`); // DEBUG
+        window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName]; 
+        window.currentSoundBrowserPath = []; 
+        renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree); 
+    } else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") { 
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Loading ${libraryName} sounds...</div>`; 
+        pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`; 
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} is currently loading.`); // DEBUG
+    } else { 
+        const zipUrl = Constants.soundLibraries[libraryName]; 
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} not loaded. Zip URL: ${zipUrl}`); // DEBUG
+        if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
+            console.log(`[UI - updateSoundBrowserDisplayForLibrary] Calling fetchSoundLibrary for ${libraryName}.`); // DEBUG
+            window.fetchSoundLibrary(libraryName, zipUrl, false); 
+        } else { 
+            soundBrowserList.innerHTML = `<div class="p-2 text-xs text-red-500">Library ${libraryName} config not found or fetch function missing.</div>`; 
+            pathDisplay.textContent = `Path: / (Error - ${libraryName})`; 
+            console.error(`[UI - updateSoundBrowserDisplayForLibrary] Config/function missing for ${libraryName}.`); // DEBUG
+        } 
+    }
 }
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    console.log(`[UI SoundBrowser] Rendering directory. Path: /${pathArray.join('/')}, Library: ${window.currentLibraryName}, TreeNode type: ${typeof treeNode}, Is empty obj: ${treeNode && Object.keys(treeNode).length === 0}, Keys:`, treeNode ? Object.keys(treeNode) : 'null');
-    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js] renderSoundBrowserDirectory: DOM elements missing."); return; }
-    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`; return; }
-    if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") return;
-    if (!treeNode) { soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`; pathDisplay.textContent = `Path: /`; return; }
+    console.log(`[UI - renderSoundBrowserDirectory] Rendering. Path: /${pathArray.join('/')}, Lib: ${window.currentLibraryName}, TreeNode valid: ${!!treeNode}`); // DEBUG
+    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - renderSoundBrowserDirectory]: DOM elements missing."); return; }
+    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") { 
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`; 
+        pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`; 
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, library ${window.currentLibraryName} not 'loading'. Displaying empty/unavailable.`); // DEBUG
+        return; 
+    }
+    if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, but library ${window.currentLibraryName} is 'loading'. Aborting render for now.`); // DEBUG
+        return;
+    }
+    if (!treeNode) { 
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`; 
+        pathDisplay.textContent = `Path: /`; 
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, no library context or library missing. Displaying select message.`); // DEBUG
+        return; 
+    }
     soundBrowserList.innerHTML = ''; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
     if (pathArray.length > 0) { const backButton = document.createElement('div'); backButton.className = 'sound-browser-item font-semibold hover:bg-gray-100 cursor-pointer p-1 text-sm border-b border-gray-200'; backButton.textContent = '⬆️ .. (Up)'; backButton.addEventListener('click', () => { window.currentSoundBrowserPath.pop(); let newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; if (!newTreeNode) { window.currentSoundBrowserPath = []; renderSoundBrowserDirectory([], null); return; } for (const segment of window.currentSoundBrowserPath) { if (newTreeNode[segment]?.type === 'folder') newTreeNode = newTreeNode[segment].children; else { window.currentSoundBrowserPath = []; newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; break; } } window.currentSoundFileTree = newTreeNode; renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode); }); soundBrowserList.appendChild(backButton); }
-    if (Object.keys(treeNode).length === 0 && pathArray.length > 0) { soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>'; }
-    else if (Object.keys(treeNode).length === 0 && pathArray.length === 0 && window.currentLibraryName) { soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or its structure was not recognized.</div>`; }
+    
+    if (Object.keys(treeNode).length === 0) {
+        if (pathArray.length > 0) {
+            soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>';
+        } else if (window.currentLibraryName) {
+            soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or no audio files matched filters.</div>`;
+            console.log(`[UI - renderSoundBrowserDirectory] Library ${window.currentLibraryName} root is empty.`); // DEBUG
+        }
+    }
 
     const sortedEntries = Object.entries(treeNode).sort(([nameA, itemA], [nameB, itemB]) => { if (itemA.type === 'folder' && itemB.type === 'file') return -1; if (itemA.type === 'file' && itemB.type === 'folder') return 1; return nameA.localeCompare(nameB); });
     sortedEntries.forEach(([name, item]) => {
         const div = document.createElement('div'); div.className = 'sound-browser-item hover:bg-gray-100 cursor-pointer p-1 text-xs border-b border-gray-200 last:border-b-0';
-        if (item.type === 'folder') { div.textContent = `📁 ${name}`; div.addEventListener('click', () => { window.currentSoundBrowserPath.push(name); window.currentSoundFileTree = item.children; renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children); }); }
-        else if (item.type === 'file') {
-            div.textContent = `🎵 ${name}`; div.title = `Click to play. Drag to load: ${name}`; div.draggable = true;
+        if (item.type === 'folder') { 
+            div.textContent = `📁 ${name}`; 
+            div.addEventListener('click', () => { 
+                console.log(`[UI - renderSoundBrowserDirectory] Navigating into folder: ${name}`); // DEBUG
+                window.currentSoundBrowserPath.push(name); 
+                window.currentSoundFileTree = item.children; 
+                renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children); 
+            }); 
+        } else if (item.type === 'file') {
+            div.textContent = `🎵 ${name}`; 
+            div.title = `Click to play. Drag to load: ${name} (Path: ${item.fullPath})`; // DEBUG: Show full path in title
+            div.draggable = true; 
             div.addEventListener('dragstart', (event) => { const soundData = { fullPath: item.fullPath, libraryName: window.currentLibraryName, fileName: name }; event.dataTransfer.setData("application/json", JSON.stringify(soundData)); event.dataTransfer.effectAllowed = "copy"; div.style.opacity = '0.5'; });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
             div.addEventListener('click', async (event) => {
-                if (event.detail === 0) return;
+                if (event.detail === 0) return; // Prevent firing on drag setup
+                console.log(`[UI - renderSoundBrowserDirectory] Preview clicked for: ${name}, Path: ${item.fullPath}, Lib: ${window.currentLibraryName}`); // DEBUG
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
                 if (window.previewPlayer && !window.previewPlayer.disposed) { try { window.previewPlayer.stop(); window.previewPlayer.dispose(); } catch(e) {console.warn("Error disposing old preview player", e)} window.previewPlayer = null;}
                 try {
-                    if (!window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") throw new Error(`ZIP library "${window.currentLibraryName}" not loaded.`);
-                    const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath); if (!zipEntry) throw new Error(`File ${item.fullPath} not in ${window.currentLibraryName}.`);
-                    const fileBlob = await zipEntry.async("blob"); const objectURL = URL.createObjectURL(fileBlob);
-                    const buffer = await new Tone.Buffer().load(objectURL);
-                    window.previewPlayer = new Tone.Player(buffer).toDestination(); window.previewPlayer.autostart = true;
-                    window.previewPlayer.onstop = () => { if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){} window.previewPlayer = null; URL.revokeObjectURL(objectURL); };
-                } catch (error) { console.error(`Error previewing sound ${name}:`, error); showNotification(`Error previewing ${name}: ${error.message}`, 3000); }
+                    if (!window.loadedZipFiles || !window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") {
+                        console.error(`[UI - Preview] ZIP library "${window.currentLibraryName}" not fully loaded.`); // DEBUG
+                        throw new Error(`ZIP library "${window.currentLibraryName}" not loaded.`);
+                    }
+                    const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath); 
+                    if (!zipEntry) {
+                        console.error(`[UI - Preview] File ${item.fullPath} not found in ZIP library "${window.currentLibraryName}". Available files:`, Object.keys(window.loadedZipFiles[window.currentLibraryName].files)); // DEBUG
+                        throw new Error(`File ${item.fullPath} not in ${window.currentLibraryName}.`);
+                    }
+                    console.log(`[UI - Preview] Found zipEntry for ${item.fullPath}. Getting blob...`); // DEBUG
+                    const fileBlob = await zipEntry.async("blob");
+                    console.log(`[UI - Preview] Got blob for ${name}, type: ${fileBlob.type}, size: ${fileBlob.size}. Creating object URL...`); // DEBUG
+                    const objectURL = URL.createObjectURL(fileBlob);
+                    console.log(`[UI - Preview] Object URL: ${objectURL}. Loading into Tone.Buffer...`); // DEBUG
+                    
+                    const buffer = new Tone.Buffer();
+                    await buffer.load(objectURL); // Ensure await here
+                    console.log(`[UI - Preview] Tone.Buffer loaded for ${name}. Duration: ${buffer.duration}`); // DEBUG
+
+                    window.previewPlayer = new Tone.Player(buffer).toDestination(); 
+                    window.previewPlayer.autostart = true;
+                    window.previewPlayer.onstop = () => { 
+                        if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){} 
+                        window.previewPlayer = null; 
+                        URL.revokeObjectURL(objectURL); 
+                        console.log(`[UI - Preview] Player stopped and resources for ${name} released.`); // DEBUG
+                    };
+                } catch (error) { 
+                    console.error(`[UI - Preview] Error previewing sound ${name} (Path: ${item.fullPath}):`, error); 
+                    showNotification(`Error previewing ${name}: ${error.message || 'Unknown error'}`, 4000); 
+                }
             });
         }
         soundBrowserList.appendChild(div);
     });
 }
+
 
 // --- Mixer Window ---
 export function openMixerWindow(savedState = null) {
