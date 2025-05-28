@@ -132,17 +132,14 @@ export class Track {
 
         this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
-        this.outputNode = this.gainNode; // Initially, output is just the gainNode
+        this.outputNode = this.gainNode; 
 
-        // This will connect the gainNode to the meter and then to the master bus
-        // and also set up the instrument/players and connect them through effects to the gainNode.
         this.rebuildEffectChain();
     }
 
     rebuildEffectChain() {
         console.log(`[Track ${this.id} - rebuildEffectChain V6 PolyFix] Rebuilding. SlicerPoly: ${this.slicerIsPolyphonic}, Type: ${this.type}`);
 
-        // Ensure core nodes exist
         if (!this.gainNode || this.gainNode.disposed) {
             console.warn(`[Track ${this.id}] GainNode was invalid, recreating.`);
             this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
@@ -151,40 +148,35 @@ export class Track {
             this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
         }
 
-        // Disconnect all relevant internal nodes from their previous connections
         const nodesToDisconnect = [
             this.instrument, this.toneSampler,
-            this.slicerMonoPlayer, // This is the player part of the mono chain
-            // this.slicerMonoEnvelope, // Internal to mono chain, P->E->G
-            this.slicerMonoGain,     // This is the output of the mono chain
+            this.slicerMonoPlayer, 
+            this.slicerMonoGain,     
             ...this.drumPadPlayers,
             ...this.activeEffects.map(e => e.toneNode),
-            this.gainNode // Also disconnect gainNode from whatever it was previously connected to
+            this.gainNode 
         ].filter(node => node && !node.disposed);
 
         nodesToDisconnect.forEach(node => {
             try {
                 node.disconnect();
-                // console.log(`[Track ${this.id}] Disconnected ${node.constructor.name || 'node'}`);
-            } catch (e) { /* ignore errors, node might not have been connected */ }
+            } catch (e) { /* ignore */ }
         });
         console.log(`[Track ${this.id}] Disconnected relevant nodes.`);
 
 
-        // Determine the primary source output(s) for this track
         let sourceOutputs = [];
         if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
             sourceOutputs.push(this.instrument);
         } else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed) {
             sourceOutputs.push(this.toneSampler);
         } else if (this.type === 'Sampler' && !this.slicerIsPolyphonic) {
-            // For mono slicer, ensure the internal chain is correct and get the output gain
             if (!this.slicerMonoPlayer || this.slicerMonoPlayer.disposed ||
                 !this.slicerMonoEnvelope || this.slicerMonoEnvelope.disposed ||
                 !this.slicerMonoGain || this.slicerMonoGain.disposed) {
                 console.log(`[Track ${this.id}] Mono slicer nodes invalid/missing, re-setting up.`);
-                this.setupSlicerMonoNodes(); // Recreates and chains P->E->G internally
-            } else { // Ensure internal chain P->E->G is correct if nodes exist
+                this.setupSlicerMonoNodes(); 
+            } else { 
                 try { this.slicerMonoPlayer.disconnect(); } catch(e){}
                 this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
                  console.log(`[Track ${this.id}] Mono slicer nodes existed, re-chained P->E->G.`);
@@ -202,15 +194,12 @@ export class Track {
                 }
             });
         }
-        // Polyphonic Sampler players are connected dynamically within the sequence callback. They don't have a persistent sourceOutput here.
-
-        // Define the input point of the effects chain (or track's gain node if no effects)
-        let effectsChainStartNode = this.gainNode; // Default to gainNode if no effects
+        
+        let effectsChainStartNode = this.gainNode; 
         if (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed) {
             effectsChainStartNode = this.activeEffects[0].toneNode;
         }
 
-        // Connect sourceOutputs to the start of the effects chain (or gainNode if no effects)
         sourceOutputs.forEach(source => {
             if (source && !source.disposed && effectsChainStartNode && !effectsChainStartNode.disposed) {
                 try {
@@ -222,24 +211,19 @@ export class Track {
             }
         });
 
-        // Chain active effects together
-        let currentConnectionPoint = effectsChainStartNode; // Start from where sources were connected
+        let currentConnectionPoint = effectsChainStartNode; 
         for (let i = 0; i < this.activeEffects.length; i++) {
             const effectWrapper = this.activeEffects[i];
             if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
-                if (i === 0) { // The first effect in the chain is already `effectsChainStartNode` (if effects exist)
-                    // If sources connected directly to it, we don't need to re-connect currentConnectionPoint to itself.
-                    // If there were no sources but there are effects, currentConnectionPoint might still be gainNode.
-                    // This logic needs to ensure the first effect *becomes* the currentConnectionPoint.
+                if (i === 0) { 
                     currentConnectionPoint = effectWrapper.toneNode;
                 } else {
-                    // For subsequent effects, connect the previous one to the current one
                     const previousEffectNode = this.activeEffects[i-1].toneNode;
                     if (previousEffectNode && !previousEffectNode.disposed) {
                          try {
                             previousEffectNode.connect(effectWrapper.toneNode);
                             console.log(`[Track ${this.id}] Chained effect ${this.activeEffects[i-1].type} to ${effectWrapper.type}`);
-                            currentConnectionPoint = effectWrapper.toneNode; // Update connection point
+                            currentConnectionPoint = effectWrapper.toneNode; 
                         } catch(e) {
                             console.error(`[Track ${this.id}] Error chaining ${this.activeEffects[i-1].type} to ${effectWrapper.type}:`, e);
                         }
@@ -248,15 +232,10 @@ export class Track {
             }
         }
 
-
-        // Connect the output of the effects chain (which is currentConnectionPoint if effects existed)
-        // or the original effectsChainStartNode (if no effects, this is gainNode) to the gainNode
-        // This step is tricky: if effectsChainStartNode was gainNode, and currentConnectionPoint is also gainNode (no effects), do nothing.
-        // If there were effects, currentConnectionPoint is the last effect. Connect it to gainNode.
         if (this.activeEffects.length > 0) {
             const lastEffectNode = this.activeEffects[this.activeEffects.length - 1].toneNode;
             if (lastEffectNode && !lastEffectNode.disposed && this.gainNode && !this.gainNode.disposed) {
-                if (lastEffectNode !== this.gainNode) { // Avoid connecting gainNode to itself if it was the only thing
+                if (lastEffectNode !== this.gainNode) { 
                      try {
                         lastEffectNode.connect(this.gainNode);
                         console.log(`[Track ${this.id}] Connected last effect (${lastEffectNode.constructor.name}) to GainNode.`);
@@ -266,11 +245,9 @@ export class Track {
                 }
             }
         }
-        // If no effects, sourceOutputs were connected directly to gainNode (as effectsChainStartNode was gainNode).
-
-        // Final connections for the track's gain node
+        
         if (this.gainNode && !this.gainNode.disposed) {
-            this.outputNode = this.gainNode; // Track's final output point before master
+            this.outputNode = this.gainNode; 
             if (this.trackMeter && !this.trackMeter.disposed) {
                 try {
                     this.gainNode.connect(this.trackMeter);
@@ -289,8 +266,8 @@ export class Track {
             this.outputNode = null;
             console.error(`[Track ${this.id}] GainNode is invalid at end of rebuild. Output will be silent.`);
         }
-        this.applyMuteState(); // Re-apply mute state as gain might have been recreated
-        this.applySoloState(); // Re-apply solo state
+        this.applyMuteState(); 
+        this.applySoloState(); 
         console.log(`[Track ${this.id}] rebuildEffectChain finished. Output node: ${this.outputNode?.constructor.name}.`);
     }
 
@@ -310,7 +287,6 @@ export class Track {
             });
             this.rebuildEffectChain();
             if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow();
-            // If effects rack window is open, update it
             if (this.effectsRackWindow && this.effectsRackWindow.element && typeof window.renderEffectsList === 'function') {
                 const listDiv = this.effectsRackWindow.element.querySelector(`#effectsList-${this.id}`);
                 const controlsContainer = this.effectsRackWindow.element.querySelector(`#effectControlsContainer-${this.id}`);
@@ -331,12 +307,11 @@ export class Track {
             this.activeEffects.splice(effectIndex, 1);
             this.rebuildEffectChain();
             if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow();
-            // If effects rack window is open, update it
             if (this.effectsRackWindow && this.effectsRackWindow.element && typeof window.renderEffectsList === 'function') {
                 const listDiv = this.effectsRackWindow.element.querySelector(`#effectsList-${this.id}`);
                 const controlsContainer = this.effectsRackWindow.element.querySelector(`#effectControlsContainer-${this.id}`);
                 window.renderEffectsList(this, 'track', listDiv, controlsContainer);
-                controlsContainer.innerHTML = ''; // Clear controls for removed effect
+                controlsContainer.innerHTML = ''; 
             }
         }
     }
@@ -348,7 +323,6 @@ export class Track {
             return;
         }
 
-        // Store the raw value in params
         const keys = paramPath.split('.');
         let currentStoredParamLevel = effectWrapper.params;
         for (let i = 0; i < keys.length - 1; i++) {
@@ -357,7 +331,6 @@ export class Track {
         }
         currentStoredParamLevel[keys[keys.length - 1]] = value;
 
-        // Apply to Tone.js node
         try {
             let targetObject = effectWrapper.toneNode;
             for (let i = 0; i < keys.length - 1; i++) {
@@ -370,16 +343,15 @@ export class Track {
             const paramInstance = targetObject[finalParamKey];
 
             if (typeof paramInstance !== 'undefined') {
-                if (paramInstance && typeof paramInstance.value !== 'undefined' && typeof paramInstance.rampTo === 'function') { // For Tone.Param or Tone.Signal instances
-                    paramInstance.rampTo(value, 0.02); // Smooth ramp
+                if (paramInstance && typeof paramInstance.value !== 'undefined' && typeof paramInstance.rampTo === 'function') { 
+                    paramInstance.rampTo(value, 0.02); 
                 } else if (paramInstance && typeof paramInstance.value !== 'undefined') {
                     paramInstance.value = value;
                 }
-                 else { // Direct property assignment
+                 else { 
                     targetObject[finalParamKey] = value;
                 }
             } else if (typeof effectWrapper.toneNode.set === 'function') {
-                // Fallback to using .set() if the direct path wasn't a settable property (e.g. top-level options)
                 const setObj = {};
                 let currentLevelForSet = setObj;
                 for(let i = 0; i < keys.length - 1; i++){
@@ -416,8 +388,8 @@ export class Track {
 
     async fullyInitializeAudioResources() {
         console.log(`[Track ${this.id}] fullyInitializeAudioResources called for type: ${this.type}`);
-        if (!this.gainNode || this.gainNode.disposed) { // Ensure gainNode exists before anything else
-            await this.initializeAudioNodes(); // This also calls rebuildEffectChain
+        if (!this.gainNode || this.gainNode.disposed) { 
+            await this.initializeAudioNodes(); 
         }
 
         if (this.type === 'Synth') {
@@ -432,13 +404,13 @@ export class Track {
                         URL.revokeObjectURL(objectURL);
                         this.samplerAudioData.status = 'loaded';
                         console.log(`[Track ${this.id}] Sampler audio loaded from DB: ${this.samplerAudioData.fileName}`);
-                        if (!this.slicerIsPolyphonic) this.setupSlicerMonoNodes(); // Setup mono player with buffer
+                        if (!this.slicerIsPolyphonic) this.setupSlicerMonoNodes(); 
                     } else { this.samplerAudioData.status = 'missing_db'; }
                 } catch (e) {
                     console.error(`[Track ${this.id}] Error loading sampler audio from DB:`, e);
                     this.samplerAudioData.status = 'error';
                 }
-            } else if (this.samplerAudioData && this.samplerAudioData.audioBufferDataURL) { // Fallback to DataURL
+            } else if (this.samplerAudioData && this.samplerAudioData.audioBufferDataURL) { 
                  try {
                     this.audioBuffer = await new Tone.Buffer().load(this.samplerAudioData.audioBufferDataURL);
                     this.samplerAudioData.status = 'loaded';
@@ -471,7 +443,7 @@ export class Track {
                         console.error(`[Track ${this.id}] Error loading drum pad ${i} audio from DB:`, e);
                         pad.status = 'error';
                     }
-                } else if (pad.audioBufferDataURL) { // Fallback
+                } else if (pad.audioBufferDataURL) { 
                     try {
                         pad.audioBuffer = await new Tone.Buffer().load(pad.audioBufferDataURL);
                         if (this.drumPadPlayers[i] && !this.drumPadPlayers[i].disposed) this.drumPadPlayers[i].dispose();
@@ -499,7 +471,7 @@ export class Track {
                      console.error(`[Track ${this.id}] Error loading InstrumentSampler audio from DB:`, e);
                      this.instrumentSamplerSettings.status = 'error';
                  }
-            } else if (this.instrumentSamplerSettings.audioBufferDataURL) { // Fallback
+            } else if (this.instrumentSamplerSettings.audioBufferDataURL) { 
                 try {
                     this.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(this.instrumentSamplerSettings.audioBufferDataURL);
                     this.instrumentSamplerSettings.status = 'loaded';
@@ -512,8 +484,8 @@ export class Track {
             this.setupToneSampler();
         }
 
-        this.setSequenceLength(this.sequenceLength, true); // Re-initialize sequence with potentially new audio data
-        this.rebuildEffectChain(); // Crucial: ensure all new/loaded players are connected
+        this.setSequenceLength(this.sequenceLength, true); 
+        this.rebuildEffectChain(); 
         console.log(`[Track ${this.id}] fullyInitializeAudioResources finished.`);
     }
 
@@ -522,20 +494,19 @@ export class Track {
             if (this.instrument && !this.instrument.disposed) {
                 this.instrument.dispose();
             }
-            // For now, hardcode to MonoSynth or a default. Future: use this.synthEngineType
             this.instrument = new Tone.MonoSynth(this.synthParams);
             console.log(`[Track ${this.id}] MonoSynth instrument initialized with params:`, this.synthParams);
-            this.rebuildEffectChain(); // Reconnect instrument
+            this.rebuildEffectChain(); 
         }
     }
 
     setupSlicerMonoNodes() {
-        this.disposeSlicerMonoNodes(); // Always clear previous
+        this.disposeSlicerMonoNodes(); 
         if (!this.slicerIsPolyphonic) {
             console.log(`[Track ${this.id}] Setting up Slicer mono nodes.`);
             this.slicerMonoPlayer = new Tone.Player();
-            this.slicerMonoEnvelope = new Tone.AmplitudeEnvelope(); // Default envelope, will be set per slice
-            this.slicerMonoGain = new Tone.Gain(); // Default gain, will be set per slice
+            this.slicerMonoEnvelope = new Tone.AmplitudeEnvelope(); 
+            this.slicerMonoGain = new Tone.Gain(); 
             this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
 
             if (this.audioBuffer && this.audioBuffer.loaded) {
@@ -570,17 +541,12 @@ export class Track {
                         this.toneSampler.loop = this.instrumentSamplerSettings.loop;
                         this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart;
                         this.toneSampler.loopEnd = this.instrumentSamplerSettings.loopEnd;
-                        // Envelope beyond attack/release needs to be handled by connecting to an AmplitudeEnvelope if needed,
-                        // as Tone.Sampler's constructor mainly takes attack/release for its internal envelope.
-                        // For full ADSR, you might chain: sampler -> AmplitudeEnvelope(settings.envelope) -> gainNode
                     }
                 });
-                 // For full ADSR, we would chain to an AmplitudeEnvelope here if Tone.Sampler doesn't suffice.
-                // For now, we assume attack/release in constructor is primary.
-                this.rebuildEffectChain(); // Reconnect sampler
+                this.rebuildEffectChain(); 
             } else {
                 console.log(`[Track ${this.id}] InstrumentSampler audioBuffer not ready, cannot setup Tone.Sampler.`);
-                 this.toneSampler = new Tone.Sampler(); // Create a disposed one to avoid errors? Or null.
+                 this.toneSampler = null; 
             }
         }
     }
@@ -589,16 +555,6 @@ export class Track {
         this.previousVolumeBeforeMute = volume;
         if (this.gainNode && !this.gainNode.disposed && !this.isMuted) {
             this.gainNode.gain.setValueAtTime(volume, Tone.now());
-        }
-        // If a mixer window is open, update its knob visually
-        const mixerWindow = window.openWindows['mixer'];
-        if (mixerWindow && !mixerWindow.isMinimized) {
-            const mixerKnob = mixerWindow.element.querySelector(`#volumeKnob-mixer-${this.id}-placeholder knob-value`); // This selector might need adjustment if knob isn't direct child
-            if (mixerKnob && mixerKnob.parentElement.knobInstance && typeof mixerKnob.parentElement.knobInstance.setValue === 'function') {
-                 // TODO: This direct DOM manipulation for another window's knob isn't ideal.
-                 // Better to have a centralized update mechanism or events.
-                 // For now, this is a placeholder for how one *might* try to sync it.
-            }
         }
     }
 
@@ -611,8 +567,8 @@ export class Track {
         }
     }
 
-    applySoloState() { // Called when global solo state changes
-        this.applyMuteState(); // Mute state depends on solo state
+    applySoloState() { 
+        this.applyMuteState(); 
     }
 
     setSynthParam(paramPath, value) {
@@ -624,24 +580,20 @@ export class Track {
 
             for (let i = 0; i < keys.length - 1; i++) {
                 target = target[keys[i]];
-                paramsTarget[keys[i]] = paramsTarget[keys[i]] || {}; // Ensure path exists in synthParams
+                paramsTarget[keys[i]] = paramsTarget[keys[i]] || {}; 
                 paramsTarget = paramsTarget[keys[i]];
             }
             const finalKey = keys[keys.length - 1];
-
-            // Update stored synthParams
             paramsTarget[finalKey] = value;
 
-            // Apply to Tone.js instrument
-            if (target[finalKey] && typeof target[finalKey].setValueAtTime === 'function') { // For Signal or Param objects
+            if (target[finalKey] && typeof target[finalKey].setValueAtTime === 'function') { 
                 target[finalKey].setValueAtTime(value, Tone.now());
-            } else if (target[finalKey] && typeof target[finalKey].value !== 'undefined') { // Direct .value property
+            } else if (target[finalKey] && typeof target[finalKey].value !== 'undefined') { 
                  target[finalKey].value = value;
             }
-            else { // Direct assignment
+            else { 
                 target[finalKey] = value;
             }
-            // Special handling for filter type, as it might require recreating the filter or using .set()
             if (paramPath === 'filter.type' && typeof this.instrument.set === 'function') {
                  this.instrument.set({ filter: { type: value } });
             } else if (paramPath === 'oscillator.type' && typeof this.instrument.set === 'function') {
@@ -685,7 +637,7 @@ export class Track {
 
     setInstrumentSamplerRootNote(noteName) {
         this.instrumentSamplerSettings.rootNote = noteName;
-        this.setupToneSampler(); // Re-initialize sampler with new root note mapping
+        this.setupToneSampler(); 
     }
     setInstrumentSamplerLoop(loop) {
         this.instrumentSamplerSettings.loop = !!loop;
@@ -701,10 +653,9 @@ export class Track {
     }
     setInstrumentSamplerEnv(param, value) {
         this.instrumentSamplerSettings.envelope[param] = parseFloat(value);
-        if (this.toneSampler) { // Tone.Sampler directly uses attack/release
+        if (this.toneSampler) { 
             if (param === 'attack') this.toneSampler.attack = value;
             if (param === 'release') this.toneSampler.release = value;
-            // For full ADSR, would need an external AmplitudeEnvelope if not handled by Tone.Sampler internally
         }
     }
 
@@ -714,20 +665,16 @@ export class Track {
         }
         const oldLength = this.sequenceLength;
         const newLength = oldLength * 2;
-        const oldSequenceData = JSON.parse(JSON.stringify(this.sequenceData)); // Deep copy
+        const oldSequenceData = JSON.parse(JSON.stringify(this.sequenceData)); 
 
-        this.setSequenceLength(newLength, true); // true to skip internal undo capture for this part
+        this.setSequenceLength(newLength, true); 
 
-        // Copy old data into the first half of the new sequence
         for (let r = 0; r < oldSequenceData.length; r++) {
             if (!this.sequenceData[r]) this.sequenceData[r] = Array(newLength).fill(null);
             for (let c = 0; c < oldLength; c++) {
                 this.sequenceData[r][c] = oldSequenceData[r][c];
-                 // Optionally copy to the second half too:
-                 // this.sequenceData[r][c + oldLength] = oldSequenceData[r][c];
             }
         }
-        // If the sequencer window is open, it will be redrawn by setSequenceLength
     }
 
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
@@ -762,14 +709,11 @@ export class Track {
                 const gridElement = this.sequencerWindow.element?.querySelector('.sequencer-grid');
                 if (gridElement) window.highlightPlayingStep(col, this.type, gridElement);
             }
-
-            // CORRECTED CONDITION HERE:
+            
             if (!this.gainNode || this.gainNode.disposed || this.isMuted || isSoloedOut) {
                 return;
             }
-
-            // Determine the point where audio from this sequence step should enter the track's chain
-            // This is either the first effect, or the track's main gain node if no effects.
+            
             const effectsChainStartPoint = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
                 ? this.activeEffects[0].toneNode
                 : (this.gainNode && !this.gainNode.disposed ? this.gainNode : (window.masterEffectsBusInput || Tone.getDestination()));
@@ -778,7 +722,7 @@ export class Track {
             if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
                  synthPitches.forEach((pitchName, rowIndex) => {
                     const step = this.sequenceData[rowIndex]?.[col];
-                    if (step?.active) this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity * defaultVelocity); // Multiply by defaultVelocity if step.velocity is just a multiplier
+                    if (step?.active) this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity * defaultVelocity);
                 });
             } else if (this.type === 'Sampler') {
                 this.slices.forEach((sliceData, sliceIndex) => {
@@ -786,13 +730,13 @@ export class Track {
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
                         const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                         let playDuration = sliceData.duration / playbackRate;
-                        if (sliceData.loop) playDuration = Tone.Time("8n").toSeconds(); // Or adjust as needed for loops
+                        if (sliceData.loop) playDuration = Tone.Time("8n").toSeconds(); 
 
                         if (this.slicerIsPolyphonic) {
                             const tempPlayer = new Tone.Player(this.audioBuffer);
                             const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
-                            const tempGain = new Tone.Gain(step.velocity * sliceData.volume); // Apply velocity and slice volume
-                            tempPlayer.chain(tempEnv, tempGain, effectsChainStartPoint); // Connect to the correct start of chain
+                            const tempGain = new Tone.Gain(step.velocity * sliceData.volume); 
+                            tempPlayer.chain(tempEnv, tempGain, effectsChainStartPoint); 
                             tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse; tempPlayer.loop = sliceData.loop;
                             tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
                             tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
@@ -800,11 +744,10 @@ export class Track {
                             if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
                             Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
                         } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
-                            // For mono, the player is already connected through rebuildEffectChain. Just trigger it.
-                            if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time); // Stop previous note
-                            this.slicerMonoEnvelope.triggerRelease(time); // Ensure previous envelope is released
+                            if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time); 
+                            this.slicerMonoEnvelope.triggerRelease(time); 
 
-                            this.slicerMonoPlayer.buffer = this.audioBuffer; // Ensure buffer is set (might be redundant if always set)
+                            this.slicerMonoPlayer.buffer = this.audioBuffer; 
                             this.slicerMonoEnvelope.set(sliceData.envelope);
                             this.slicerMonoGain.gain.value = step.velocity * sliceData.volume;
                             this.slicerMonoPlayer.playbackRate = playbackRate;
@@ -826,7 +769,7 @@ export class Track {
                     const step = this.sequenceData[padIndex]?.[col];
                     const padData = this.drumSamplerPads[padIndex];
                     if (step?.active && padData && this.drumPadPlayers[padIndex]?.loaded) {
-                        const player = this.drumPadPlayers[padIndex]; // This player is connected via rebuildEffectChain
+                        const player = this.drumPadPlayers[padIndex]; 
                         player.volume.value = Tone.gainToDb(padData.volume * step.velocity);
                         player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
@@ -848,8 +791,10 @@ export class Track {
         }, Array.from(Array(this.sequenceLength).keys()), "16n").start(0);
 
         // If sequencer window is open, refresh it
-        if (this.sequencerWindow && this.sequencerWindow.element && !this.sequencerWindow.isMinimized && window.openWindows[`sequencerWin-${this.id}`] && typeof window.openTrackSequencerWindow === 'function') {
-             window.openTrackSequencerWindow(this.id, true); // true for forceRedraw
+        if (this.sequencerWindow && this.sequencerWindow.element && !this.sequencerWindow.isMinimized && 
+            window.openWindows[`sequencerWin-${this.id}`] && typeof window.openTrackSequencerWindow === 'function') {
+            console.log(`[Track ${this.id}] Forcing redraw of sequencer window due to length change. New length: ${this.sequenceLength} steps.`); // ADDED LOG
+            window.openTrackSequencerWindow(this.id, true); // true for forceRedraw
         }
     }
 
@@ -864,12 +809,11 @@ export class Track {
         if (this.gainNode && !this.gainNode.disposed) { this.gainNode.dispose(); }
         if (this.trackMeter && !this.trackMeter.disposed) { this.trackMeter.dispose(); }
 
-        // Close associated windows
         if (this.inspectorWindow && typeof this.inspectorWindow.close === 'function') { this.inspectorWindow.close(true); this.inspectorWindow = null; }
         if (this.effectsRackWindow && typeof this.effectsRackWindow.close === 'function') { this.effectsRackWindow.close(true); this.effectsRackWindow = null; }
         if (this.sequencerWindow && typeof this.sequencerWindow.close === 'function') { this.sequencerWindow.close(true); this.sequencerWindow = null; }
 
-        this.audioBuffer = null; // Buffer itself is owned by Tone.js, just release reference
+        this.audioBuffer = null; 
         this.drumSamplerPads.forEach(p => p.audioBuffer = null);
         if (this.instrumentSamplerSettings) this.instrumentSamplerSettings.audioBuffer = null;
         console.log(`[Track ${this.id}] Finished disposing track: ${this.name}`);
