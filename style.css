@@ -2,16 +2,15 @@
 #desktop {
     width: 100vw;
     height: 100vh;
-    overflow: hidden; /* To contain windows if they go off-screen */
-    position: relative; /* Important for absolute positioning of windows within it */
-    /* background-color is set by JS or var(--desktop-bg) in body */
+    overflow: hidden; 
+    position: relative; 
 }
 
 .window {
-    position: absolute; /* Positioned by JavaScript */
-    border: 1px solid #000000; 
+    position: absolute; 
+    border: 1px solid #000000; /* Classic black border, kept */
     box-shadow: 2px 2px 5px rgba(0,0,0,0.5); 
-    background-color: #c0c0c0; 
+    background-color: #c0c0c0; /* Preserved classic grey for window chrome */
     display: flex; 
     flex-direction: column; 
     overflow: hidden; 
@@ -19,9 +18,9 @@
     min-height: 100px;
 }
 .dark .window {
-    background-color: #374151; /* Tailwind gray-700 for dark window chrome */
-    border-color: #4b5563; /* Tailwind gray-600 */
-    color: #e5e7eb; /* Tailwind gray-200 for default text in dark windows */
+    background-color: #4a4a4a; /* Darker classic grey for dark mode window chrome */
+    border-color: #2c2c2c; 
+    color: #e5e7eb; 
 }
 
 
@@ -30,7 +29,7 @@
 }
 
 .window-title-bar {
-    background-color: #000080; 
+    background-color: #000080; /* Classic dark blue, kept for contrast */
     color: white;
     padding: 3px 5px;
     cursor: grab;
@@ -43,10 +42,9 @@
     font-weight: bold;
     user-select: none; 
 }
-/* Dark mode title bar can remain the same as it's already high contrast, or slightly adjust if desired */
 .dark .window-title-bar {
-    background-color: #1e3a8a; /* Darker blue, e.g., Tailwind blue-800 */
-    color: #e0e7ff; /* Lighter blueish white */
+    background-color: #1e3a8a; /* Slightly adjusted dark blue */
+    color: #e0e7ff; 
 }
 
 
@@ -62,11 +60,11 @@
 }
 
 .window-title-buttons button {
-    background: #c0c0c0; 
+    background: #c0c0c0; /* Preserved classic grey */
     border: 1px solid black;
     border-color: #ffffff #808080 #808080 #ffffff; 
     box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
-    color: black;
+    color: #080808; /* Very dark text */
     width: 18px;
     height: 18px;
     line-height: 16px; 
@@ -79,9 +77,9 @@
     flex-shrink: 0;
 }
 .dark .window-title-buttons button {
-    background: #4b5563; /* slate-600 */
-    color: #e5e7eb; /* gray-200 */
-    border-color: #6b7280 #1f2937 #1f2937 #6b7280; /* Adjusted 3D border for dark */
+    background: #4a4a4a; /* Darker classic grey */
+    color: #f0f0f0; /* Very light text */
+    border-color: #6b7280 #1f2937 #1f2937 #6b7280; 
     box-shadow: 1px 1px 0 #6b7280 inset, -1px -1px 0 #111827 inset;
 }
 
@@ -95,21 +93,21 @@
     box-shadow: -1px -1px 0 #6b7280 inset, 1px 1px 0 #111827 inset;
 }
 
-
+/* Window Content - High Contrast */
 .window-content {
     flex-grow: 1; 
     padding: 8px; 
-    background-color: var(--window-content-bg, #c0c0c0); 
+    background-color: #fdfdfd; /* Very light */
     overflow: auto; 
-    color: #111827; /* Default dark text for content area (Tailwind gray-900) */
+    color: #080808; /* Very dark text */
 }
 .dark .window-content {
-    background-color: var(--window-content-bg-dark, #1f2937); /* Tailwind slate-800 */
-    color: #d1d5db; /* Default light text for content area (Tailwind gray-300) */
+    background-color: #101010; /* Very dark */
+    color: #f0f0f0; /* Very light text */
 }
 
 
-/* --- Taskbar Styling (Basic) --- */
+/* --- Taskbar Styling (Preserved Grey) --- */
 #taskbar {
     position: fixed;
     bottom: 0;
@@ -123,28 +121,29 @@
     align-items: center;
     padding: 0 5px;
     box-sizing: border-box;
+    color: #080808; /* Very dark text on grey taskbar */
 }
-.dark #taskbar {
-    background-color: #1f2937; /* slate-800 */
-    border-top-color: #334155; /* slate-700 */
-    color: #e5e7eb; /* Default text on dark taskbar */
+.dark #taskbar { /* Dark mode taskbar can be a darker grey, or also #c0c0c0 if preferred */
+    background-color: #4a4a4a; /* Darker classic grey */
+    border-top-color: #606060; 
+    color: #f0f0f0; /* Very light text on dark grey taskbar */
 }
 
 #startButton {
-    background-color: #c0c0c0;
+    background-color: #c0c0c0; /* Preserved */
     border: 1px solid black;
     border-color: #ffffff #808080 #808080 #ffffff; 
     box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
     padding: 2px 8px;
     font-weight: bold;
     margin-right: 5px;
-    color: #000000;
+    color: #080808; /* Very dark text */
 }
 .dark #startButton {
-    background-color: #334155; /* slate-700 */
-    color: #e5e7eb; /* gray-200 */
-    border-color: #4b5563 #111827 #111827 #4b5563; 
-    box-shadow: 1px 1px 0 #4b5563 inset, -1px -1px 0 #000000 inset;
+    background-color: #4a4a4a; /* Darker classic grey */
+    color: #f0f0f0; /* Very light text */
+    border-color: #6b7280 #1f2937 #1f2937 #6b7280; 
+    box-shadow: 1px 1px 0 #6b7280 inset, -1px -1px 0 #111827 inset;
 }
 
 #startButton:active {
@@ -152,13 +151,13 @@
     box-shadow: -1px -1px 0 #ffffff inset, 1px 1px 0 #808080 inset;
 }
 .dark #startButton:active {
-    border-color: #111827 #4b5563 #4b5563 #111827;
-    box-shadow: -1px -1px 0 #4b5563 inset, 1px 1px 0 #000000 inset;
+    border-color: #1f2937 #6b7280 #6b7280 #1f2937;
+    box-shadow: -1px -1px 0 #6b7280 inset, 1px 1px 0 #111827 inset;
 }
 
 
 #taskbarButtons .taskbar-button {
-    background-color: #c0c0c0;
+    background-color: #c0c0c0; /* Preserved */
     border: 1px solid black;
     border-color: #ffffff #808080 #808080 #ffffff;
     box-shadow: 1px 1px 0 #ffffff inset, -1px -1px 0 #808080 inset;
@@ -170,13 +169,13 @@
     white-space: nowrap;
     font-size: 0.8rem;
     flex-shrink: 0; 
-    color: #000000;
+    color: #080808; /* Very dark text */
 }
 .dark #taskbarButtons .taskbar-button {
-    background-color: #334155; /* slate-700 */
-    color: #e5e7eb; /* gray-200 */
-    border-color: #4b5563 #111827 #111827 #4b5563;
-    box-shadow: 1px 1px 0 #4b5563 inset, -1px -1px 0 #000000 inset;
+    background-color: #4a4a4a; /* Darker classic grey */
+    color: #f0f0f0; /* Very light text */
+    border-color: #6b7280 #1f2937 #1f2937 #6b7280;
+    box-shadow: 1px 1px 0 #6b7280 inset, -1px -1px 0 #111827 inset;
 }
 
 
@@ -188,16 +187,16 @@
 }
 .dark #taskbarButtons .taskbar-button.active,
 .dark #taskbarButtons .taskbar-button:active {
-    background-color: #1f2937; /* slate-800 */
-    border-color: #111827 #4b5563 #4b5563 #111827;
-    box-shadow: -1px -1px 0 #4b5563 inset, 1px 1px 0 #000000 inset;
+    background-color: #374151; /* Darker active button */
+    border-color: #1f2937 #6b7280 #6b7280 #1f2937;
+    box-shadow: -1px -1px 0 #6b7280 inset, 1px 1px 0 #111827 inset;
 }
 
 #taskbarButtons .taskbar-button.minimized-on-taskbar {
-    background-color: #d0d0d0;
+    background-color: #d0d0d0; /* Preserved */
 }
 .dark #taskbarButtons .taskbar-button.minimized-on-taskbar {
-    background-color: #4b5563; /* slate-600 */
+    background-color: #525252; /* Darker grey for minimized */
 }
 
 
@@ -209,90 +208,54 @@
     border-left-color: #707070;
     box-shadow: inset 1px 1px #c0c0c0, inset -1px -1px #f0f0f0;
     font-size: 0.8rem;
-    background-color: #c0c0c0;
+    background-color: #c0c0c0; /* Preserved */
     cursor: pointer;
-    color: #000000;
+    color: #080808; /* Very dark text */
 }
 .dark #taskbarTempoDisplay {
-    background-color: #334155; /* slate-700 */
-    color: #e5e7eb; /* gray-200 */
-    border-color: #4b5563; /* slate-600 for general, then specific for 3D */
-    border-top-color: #2d3748; /* slate-800 */
-    border-left-color: #2d3748; /* slate-800 */
-    box-shadow: inset 1px 1px #4b5563, inset -1px -1px #6b7280; /* Adjusted shadow for dark */
+    background-color: #4a4a4a; /* Darker classic grey */
+    color: #f0f0f0; /* Very light text */
+    border-color: #6b7280; 
+    border-top-color: #525252; 
+    border-left-color: #525252; 
+    box-shadow: inset 1px 1px #525252, inset -1px -1px #717171; 
 }
 
 
-/* --- Start Menu Styling (Basic) --- */
+/* --- Start Menu Styling (Preserved Grey) --- */
 #startMenu {
     position: absolute;
     bottom: 30px; 
     left: 0;
-    background: #c0c0c0;
+    background: #c0c0c0; /* Preserved */
     border: 1px solid black;
     border-color: #ffffff #808080 #808080 #ffffff; 
     box-shadow: 2px 2px 3px rgba(0,0,0,0.3);
     z-index: 10001; 
     padding: 2px;
     min-width: 180px;
-    color: #000000; /* Default text color for start menu items */
+    color: #080808; /* Very dark text */
 }
 .dark #startMenu {
-    background: #1f2937; /* slate-800 */
-    border-color: #4b5563 #111827 #111827 #4b5563; /* Dark 3D border */
-    color: #e5e7eb; /* gray-200 for default text */
+    background: #4a4a4a; /* Darker classic grey */
+    border-color: #6b7280 #1f2937 #1f2937 #6b7280; 
+    color: #f0f0f0; /* Very light text */
 }
 
 
-#startMenu.hidden {
-    display: none;
-}
+#startMenu.hidden { display: none; }
+#startMenu ul { list-style: none; padding: 0; margin: 0; }
+#startMenu li { padding: 4px 20px 4px 8px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; }
+.dark #startMenu li { color: #f0f0f0; }
 
-#startMenu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+#startMenu li:hover, #startMenu li.disabled:hover { background: #000080; color: white; }
+.dark #startMenu li:hover, .dark #startMenu li.disabled:hover { background: #2563eb; color: white; }
 
-#startMenu li {
-    padding: 4px 20px 4px 8px; 
-    cursor: pointer;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    /* Inherits color from #startMenu */
-}
-.dark #startMenu li {
-    color: #e5e7eb; /* Ensure items are light on dark */
-}
+#startMenu li.disabled { color: #808080; cursor: default; }
+.dark #startMenu li.disabled { color: #71717a; } /* zinc-500 */
 
-#startMenu li:hover, #startMenu li.disabled:hover {
-    background: #000080; 
-    color: white;
-}
-.dark #startMenu li:hover, .dark #startMenu li.disabled:hover {
-    background: #2563eb; /* Tailwind blue-600 for dark hover */
-    color: white;
-}
-
-
-#startMenu li.disabled {
-    color: #808080; 
-    cursor: default;
-}
-.dark #startMenu li.disabled {
-    color: #6b7280; /* gray-500 */
-}
-
-#startMenu hr {
-    border: none;
-    border-top: 1px solid #808080;
-    border-bottom: 1px solid #ffffff;
-    margin: 2px 0;
-}
-.dark #startMenu hr {
-    border-top-color: #4b5563; /* slate-600 */
-    border-bottom-color: #111827; /* Almost black */
-}
+#startMenu hr { border: none; border-top: 1px solid #808080; border-bottom: 1px solid #ffffff; margin: 2px 0; }
+.dark #startMenu hr { border-top-color: #52525b; border-bottom-color: #27272a; } /* zinc-600, zinc-800 */
 
 /* --- General App Styles --- */
 body {
@@ -300,15 +263,14 @@ body {
     font-size: 14px;
     margin: 0; 
     overflow: hidden; 
-    background-color: var(--desktop-bg, #FFB6C1); 
-    color: var(--text-color, #111827); /* Tailwind gray-900 for default body text */
+    background-color: var(--desktop-bg, #FFFFFF); /* Very light desktop */
+    color: var(--text-color, #080808); /* Very dark default text */
 }
 
 .dark body { 
-    background-color: var(--desktop-bg-dark, #0f172a); /* Tailwind slate-900 for dark desktop */
-    color: var(--text-color-dark, #e5e7eb); /* Tailwind gray-200 for default dark body text */
+    background-color: var(--desktop-bg-dark, #080808); /* Very dark desktop */
+    color: var(--text-color-dark, #f0f0f0); /* Very light default text */
 }
-
 
 /* --- Pad Button Styling --- */
 .pad-button { /* ... unchanged ... */ }
@@ -319,46 +281,39 @@ body {
 .drop-zone-pad { /* ... unchanged ... */ }
 .drop-zone-pad.dragover { /* ... unchanged ... */ }
 
-/* --- General Drop Zone Styling --- */
+/* --- General Drop Zone Styling (High Contrast) --- */
 .drop-zone {
     border: 2px dashed #a0a0a0; 
     padding: 10px;          
     text-align: center;
-    background-color: #f0f0f0;  
-    color: #374151; /* Tailwind gray-700 for better contrast */              
+    background-color: #f8f8f8;  /* Very light */
+    color: #080808; /* Very dark text */              
     font-size: 0.8em; 
     border-radius: 4px;         
     margin-bottom: 5px;    
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 .dark .drop-zone {
-    background-color: #334155; /* slate-700 */
-    color: #9ca3af; /* slate-400 */
-    border-color: #4b5563; /* slate-600 */
+    background-color: #1a1a1a; /* Very dark */
+    color: #e0e0e0; /* Very light text */
+    border-color: #4a4a4a; 
 }
 
 .drop-zone.dragover {
-    background-color: #d8e8ff; 
+    background-color: #e0e7ff; /* Light blueish */
     border-color: #77aaff;     
-    color: #1f2937; /* slate-800 */
+    color: #080808; 
 }
 .dark .drop-zone.dragover {
-    background-color: #1e3a8a; /* A darker blue */
-    border-color: #60a5fa; /* Lighter blue for contrast */
-    color: #e5e7eb; /* slate-200 */
+    background-color: #1c2a4e; 
+    border-color: #60a5fa; 
+    color: #f0f0f0; 
 }
 
-.drop-zone label {
-    color: #007bff;             
-    text-decoration: underline;
-    cursor: pointer;
-}
-.dark .drop-zone label { color: #93c5fd; }
-
-.drop-zone label:hover {
-    color: #0056b3;             
-}
-.dark .drop-zone label:hover { color: #60a5fa; }
+.drop-zone label { color: #0066cc; text-decoration: underline; cursor: pointer; }
+.dark .drop-zone label { color: #7dd3fc; } /* Light sky blue */
+.drop-zone label:hover { color: #004488; }
+.dark .drop-zone label:hover { color: #38bdf8; }
 
 
 .pads-container { /* ... unchanged ... */ }
@@ -366,19 +321,20 @@ body {
 .notification-message { /* ... unchanged ... */ }
 .notification-message.show { /* ... unchanged ... */ }
 
-/* --- Knob Styling (Simplified for Visibility) --- */
+/* --- Knob Styling (High Contrast) --- */
 .knob-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 5px; /* Reverted */
-    min-width: 60px; /* Reverted */
+    margin: 5px; 
+    min-width: 60px; 
 }
 
 .knob-label {
-    font-size: 0.7rem; /* Reverted */
-    color: #000000; /* High contrast black */
+    font-size: 0.7rem; 
+    color: #080808; /* Very dark */
     margin-bottom: 2px;
+    /* ... rest unchanged ... */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -386,48 +342,48 @@ body {
     text-align: center;
 }
 .dark .knob-label { 
-    color: #FFFFFF; /* High contrast white */
+    color: #f0f0f0; /* Very light */
 }
 
 .knob {
-    width: 36px; /* Reverted */
-    height: 36px; /* Reverted */
-    background-color: #A0A0A0; /* Medium grey */
+    width: 36px; 
+    height: 36px; 
+    background-color: #D0D0D0; /* Light grey, distinct from very light content bg */
     border-radius: 50%;
     position: relative;
-    border: 1px solid #000000; /* Black border */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Simplified */
+    border: 1px solid #333333; /* Darker border */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
     cursor: ns-resize; 
 }
 .dark .knob {
-    background-color: #505050; /* Darker grey */
-    border-color: #FFFFFF; /* White border */
+    background-color: #282828; /* Very dark grey */
+    border-color: #777777; /* Lighter border for contrast */
 }
 
 .knob-handle {
-    width: 4px; /* Reverted */
-    height: 10px; /* Reverted */
-    background-color: #000000; /* Black handle */
+    width: 4px; 
+    height: 10px; 
+    background-color: #080808; /* Very dark handle */
     position: absolute;
-    top: 3px; /* Reverted */
+    top: 3px; 
     left: 50%;
     transform: translateX(-50%); 
     transform-origin: bottom center; 
     border-radius: 2px; 
 }
 .dark .knob-handle { 
-    background-color: #FFFFFF; /* White handle */
+    background-color: #f0f0f0; /* Very light handle */
 }
 
 .knob-value {
-    font-size: 0.65rem; /* Reverted */
-    color: #000000; /* High contrast black */
+    font-size: 0.65rem; 
+    color: #080808; /* Very dark */
     margin-top: 2px;
     min-height: 1em; 
     text-align: center;
 }
 .dark .knob-value { 
-    color: #FFFFFF; /* High contrast white */
+    color: #f0f0f0; /* Very light */
 }
 /* --- End Knob Styling --- */
 
@@ -442,40 +398,40 @@ body {
 .slice-toggle-button.active { /* ... unchanged ... */ }
 
 
-/* --- NEW SEQUENCER GRID STYLING --- */
+/* --- NEW SEQUENCER GRID STYLING (High Contrast) --- */
 .sequencer-container {
-    /* Styles for the main scrollable container of the sequencer window */
+    /* ... */
 }
 
 .sequencer-container .controls { 
     position: sticky;
     top: 0;
     left: 0; 
-    background-color: #e2e8f0; 
+    background-color: #f0f0f0; /* Very light */
     z-index: 30; 
-    border-bottom: 1px solid #cbd5e0;
+    border-bottom: 1px solid #cccccc;
     padding: 0.25rem; 
-    color: #1f2937; /* Dark text for controls bar */
+    color: #080808; /* Very dark text */
 }
 .dark .sequencer-container .controls {
-    background-color: #1e293b; 
-    border-bottom-color: #334155; 
-    color: #e5e7eb; /* Light text for controls bar */
+    background-color: #181818; /* Very dark */
+    border-bottom-color: #303030; 
+    color: #f0f0f0; /* Very light text */
 }
 .dark .sequencer-container .controls input,
 .dark .sequencer-container .controls label {
-    color: #e5e7eb; /* Ensure input text and label are light */
+    color: #f0f0f0; 
 }
 .dark .sequencer-container .controls input {
-    background-color: #334155; /* Darker background for input */
-    border-color: #4b5563;
+    background-color: #202020; 
+    border-color: #404040;
 }
 
 .sequencer-grid-layout {
-    background-color: #e5e7eb; 
+    background-color: #ffffff; /* Very light background for grid area */
 }
 .dark .sequencer-grid-layout {
-    background-color: #0f172a; 
+    background-color: #080808; /* Very dark background for grid area */
 }
 
 .sequencer-grid-layout > div {
@@ -487,23 +443,23 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.65rem; 
-    border: 1px solid #d1d5db; 
+    border: 1px solid #dcdcdc; /* Light border */
 }
 .dark .sequencer-grid-layout > div {
-    border-color: #4b5563; 
+    border-color: #2a2a2a; /* Dark border */
 }
 
 .sequencer-grid-layout .sequencer-header-cell {
     position: sticky;
     top: 0;
-    background-color: #e5e7eb; 
+    background-color: #f5f5f5; /* Slightly off-very-light */
     font-weight: 500;
-    color: #374151; /* Tailwind gray-700 for better contrast on light gray */
+    color: #080808; /* Very dark text */
     z-index: 20; 
 }
 .dark .sequencer-grid-layout .sequencer-header-cell {
-    background-color: #1f2937; 
-    color: #cbd5e1; /* slate-300, good contrast */
+    background-color: #1c1c1c; /* Slightly off-very-dark */
+    color: #f0f0f0; /* Very light text */
 }
 .sequencer-grid-layout .sequencer-header-cell:first-child { 
     z-index: 25; 
@@ -513,33 +469,33 @@ body {
 .sequencer-grid-layout .sequencer-label-cell {
     position: sticky;
     left: 0;
-    background-color: #e5e7eb; 
+    background-color: #f5f5f5; /* Slightly off-very-light */
     justify-content: flex-end;
     padding-right: 0.25rem; 
     font-weight: 500;
-    color: #374151; /* Tailwind gray-700 for better contrast */
+    color: #080808; /* Very dark text */
     z-index: 10; 
 }
 .dark .sequencer-grid-layout .sequencer-label-cell {
-    background-color: #1f2937; 
-    color: #cbd5e1; /* slate-300 */
+    background-color: #1c1c1c; /* Slightly off-very-dark */
+    color: #f0f0f0; /* Very light text */
 }
 
 .sequencer-grid-layout .sequencer-step-cell {
     cursor: pointer;
     transition: background-color 0.1s ease;
-    color: #4b5563; 
+    color: #333333; /* Darker grey for any potential text in steps */
 }
 .dark .sequencer-grid-layout .sequencer-step-cell {
-    color: #9ca3af; 
+    color: #bbbbbb; /* Lighter grey for text in dark steps */
 }
 
-/* Alternating background colors for 4-step blocks from ui.js classes */
-.sequencer-step-cell.bg-gray-50 { background-color: #e0e0e0; } 
-.dark .sequencer-step-cell.dark\\:bg-slate-700 { background-color: #1f2937; } 
+/* Alternating background colors for 4-step blocks */
+.sequencer-step-cell.bg-gray-50 { background-color: #fdfdfd; } /* Very light (was e0e0e0) */
+.dark .sequencer-step-cell.dark\\:bg-slate-700 { background-color: #161616; } /* Very dark (was 1f2937) */
 
-.sequencer-step-cell.bg-white { background-color: #f0f0f0; }  
-.dark .sequencer-step-cell.dark\\:bg-slate-750 { background-color: #334155; } 
+.sequencer-step-cell.bg-white { background-color: #f6f6f6; }  /* Slightly off-very-light (was f0f0f0) */
+.dark .sequencer-step-cell.dark\\:bg-slate-750 { background-color: #1e1e1e; } /* Slightly off-very-dark (was 334155) */
 
 
 .sequencer-step-cell:hover {
@@ -549,15 +505,15 @@ body {
     background-color: #1e40af !important; 
 }
 
-.sequencer-step-cell.active-synth { background-color: #60a5fa !important; color: #0c2b4d !important; } 
-.sequencer-step-cell.active-sampler { background-color: #34d399 !important; color: #04432d !important; } 
-.sequencer-step-cell.active-drum-sampler { background-color: #facc15 !important; color: #563e02 !important; } 
-.sequencer-step-cell.active-instrument-sampler { background-color: #f472b6 !important; color: #5a0a31 !important; } 
+.sequencer-step-cell.active-synth { background-color: #60a5fa !important; color: #000000 !important; } 
+.sequencer-step-cell.active-sampler { background-color: #34d399 !important; color: #000000 !important; } 
+.sequencer-step-cell.active-drum-sampler { background-color: #facc15 !important; color: #000000 !important; } 
+.sequencer-step-cell.active-instrument-sampler { background-color: #f472b6 !important; color: #000000 !important; } 
 
-.dark .sequencer-step-cell.active-synth { background-color: #3b82f6 !important; color: #eff6ff !important; } 
-.dark .sequencer-step-cell.active-sampler { background-color: #10b981 !important; color: #f0fdf4 !important; } 
-.dark .sequencer-step-cell.active-drum-sampler { background-color: #eab308 !important; color: #1c1917 !important; } 
-.dark .sequencer-step-cell.active-instrument-sampler { background-color: #ec4899 !important; color: #fff1f7 !important; } 
+.dark .sequencer-step-cell.active-synth { background-color: #3b82f6 !important; color: #FFFFFF !important; } 
+.dark .sequencer-step-cell.active-sampler { background-color: #10b981 !important; color: #FFFFFF !important; } 
+.dark .sequencer-step-cell.active-drum-sampler { background-color: #eab308 !important; color: #000000 !important; } /* Yellow needs dark text */
+.dark .sequencer-step-cell.active-instrument-sampler { background-color: #ec4899 !important; color: #FFFFFF !important; } 
 
 
 .sequencer-step-cell.playing {
@@ -600,15 +556,30 @@ body {
 .global-controls-window .flex { /* ... unchanged ... */ }
 .global-controls-window label { /* ... unchanged ... */ }
 
-/* Updated Input and Select for Dark Mode Contrast */
+/* Updated Input and Select for High Contrast Dark Mode */
 .dark .window-content select, .dark .modal-content select,
 .dark .window-content input[type="text"], .dark .window-content input[type="number"],
 .dark .modal-content input[type="text"], .dark .modal-content input[type="number"] {
-    background-color: #334155; /* slate-700 */
-    color: #e2e8f0; /* slate-200 */
-    border-color: #4b5563; /* slate-600 */
+    background-color: #1f1f1f; /* Very dark input background */
+    color: #f0f0f0; /* Very light text */
+    border-color: #505050; /* Contrasting border */
 }
 .dark .window-content input::placeholder, .dark .modal-content input::placeholder {
-    color: #9ca3af; /* slate-400 for placeholders */
+    color: #777777; /* Lighter placeholder text */
+}
+
+/* Ensure light mode inputs also have high contrast */
+.window-content select, .modal-content select,
+.window-content input[type="text"], .window-content input[type="number"],
+.modal-content input[type="text"], .modal-content input[type="number"] {
+    background-color: #FFFFFF; 
+    color: #080808; 
+    border: 1px solid #a0a0a0; 
+    padding: 2px 4px; 
+    border-radius: 2px; 
+    font-size: 0.8rem; 
+}
+.window-content input::placeholder, .modal-content input::placeholder {
+    color: #555555; 
 }
 
