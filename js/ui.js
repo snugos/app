@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 9 (with debug logs)'); // DEBUG
+console.log('[ui.js] TOP OF FILE PARSING - Modular Effects Version 9 (with debug logs v2)'); // DEBUG
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -293,9 +293,8 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 
 // --- MODULAR EFFECTS RACK UI ---
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
-    // DEBUGGING MASTER EFFECTS RACK:
     console.log(`[UI - buildModularEffectsRackDOM] Called for ownerType: ${ownerType}. Owner:`, owner);
-    console.log(`[UI - buildModularEffectsRackDOM] Current window.masterEffectsChain:`, JSON.parse(JSON.stringify(window.masterEffectsChain || [])));
+    console.log(`[UI - buildModularEffectsRackDOM] Current window.masterEffectsChain (structure):`, (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode}))); // DEBUG (Safer log)
 
     const rackContainer = document.createElement('div'); rackContainer.className = 'modular-effects-rack p-2 space-y-2 bg-gray-50 h-full flex flex-col';
     const header = document.createElement('div'); header.className = 'flex justify-between items-center mb-2 flex-shrink-0';
@@ -312,14 +311,13 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 }
 
 function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
-    // DEBUGGING MASTER EFFECTS RACK:
     console.log(`[UI - renderEffectsList] Called for ownerType: ${ownerType}. listDiv:`, listDiv, "controlsContainer:", controlsContainer);
     
     listDiv.innerHTML = ''; controlsContainer.innerHTML = '';
     const effectsArray = ownerType === 'track' ? owner.activeEffects : (window.masterEffectsChain || []);
     
-    // DEBUGGING MASTER EFFECTS RACK:
-    console.log(`[UI - renderEffectsList] Effects array for ${ownerType}:`, JSON.parse(JSON.stringify(effectsArray)));
+    // FIX for Circular JSON error: Log structure, not full objects with ToneNodes
+    console.log(`[UI - renderEffectsList] Effects array for ${ownerType} (structure):`, (effectsArray || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
 
     if (!effectsArray || effectsArray.length === 0) { 
         listDiv.innerHTML = '<p class="text-xs text-gray-500 p-2">No effects added.</p>'; 
@@ -459,10 +457,9 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
 }
 
 export function openMasterEffectsRackWindow(savedState = null) {
-    // DEBUGGING MASTER EFFECTS RACK:
     console.log("[UI - openMasterEffectsRackWindow] Function CALLED. SavedState:", savedState);
     console.log("[UI - openMasterEffectsRackWindow] Current window.openWindows:", window.openWindows);
-    console.log("[UI - openMasterEffectsRackWindow] Current window.masterEffectsChain before building DOM:", JSON.parse(JSON.stringify(window.masterEffectsChain || [])));
+    console.log("[UI - openMasterEffectsRackWindow] Current window.masterEffectsChain before building DOM (structure):", (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
 
 
     const windowId = 'masterEffectsRack';
