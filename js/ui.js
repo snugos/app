@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - v3 (Global Controls Fix Applied)');
+console.log('[ui.js] TOP OF FILE PARSING - Poly/Mono Fix Attempt v5');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -500,7 +500,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
         return window.openWindows[inspectorId];
     }
     if (window.openWindows[inspectorId] && savedState) { // If restoring from saved state, close existing first
-        try { window.openWindows[inspectorId].close(); } catch(e) {/* ignore */}
+        try { window.openWindows[inspectorId].close(true); } catch(e) {/* ignore */}
     }
 
 
@@ -654,7 +654,28 @@ function initializeSamplerSpecificControls(track, winEl) {
     const sERK = createKnob({ label: 'Release', min:0.01, max:2, step:0.01, initialValue: track.slices[track.selectedSliceForEdit]?.envelope.release || 0.1, decimals:2, trackRef: track, onValueChange: (val) => track.setSliceEnvelopeParam(track.selectedSliceForEdit, 'release', val)}); const relPh = winEl.querySelector(`#sliceEnvReleaseSlider-${track.id}`); if(relPh) { relPh.innerHTML = ''; relPh.appendChild(sERK.element); } track.inspectorControls.sliceEnvRelease = sERK;
     winEl.querySelector(`#sliceLoopToggle-${track.id}`)?.addEventListener('click', (e) => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Loop for Slice ${track.selectedSliceForEdit + 1} on ${track.name}`); track.setSliceLoop(track.selectedSliceForEdit, !track.slices[track.selectedSliceForEdit].loop); e.target.textContent = track.slices[track.selectedSliceForEdit].loop ? 'Loop: ON' : 'Loop: OFF'; e.target.classList.toggle('active', track.slices[track.selectedSliceForEdit].loop); });
     winEl.querySelector(`#sliceReverseToggle-${track.id}`)?.addEventListener('click', (e) => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Reverse for Slice ${track.selectedSliceForEdit + 1} on ${track.name}`); track.setSliceReverse(track.selectedSliceForEdit, !track.slices[track.selectedSliceForEdit].reverse); e.target.textContent = track.slices[track.selectedSliceForEdit].reverse ? 'Rev: ON' : 'Rev: OFF'; e.target.classList.toggle('active', track.slices[track.selectedSliceForEdit].reverse);});
-    const polyToggleBtn = winEl.querySelector(`#slicerPolyphonyToggle-${track.id}`); if (polyToggleBtn) { polyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`; polyToggleBtn.classList.toggle('active', !track.slicerIsPolyphonic); polyToggleBtn.addEventListener('click', () => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Slicer Polyphony for ${track.name} to ${!track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`); track.slicerIsPolyphonic = !track.slicerIsPolyphonic; polyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`; polyToggleBtn.classList.toggle('active', !track.slicerIsPolyphonic); if (!track.slicerIsPolyphonic) { track.setupSlicerMonoNodes(); if(track.slicerMonoPlayer && track.audioBuffer?.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer; showNotification(`${track.name} slicer mode: Mono`, 2000); } else { track.disposeSlicerMonoNodes(); showNotification(`${track.name} slicer mode: Poly`, 2000); } }); }
+    const polyToggleBtn = winEl.querySelector(`#slicerPolyphonyToggle-${track.id}`);
+    if (polyToggleBtn) {
+        polyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`;
+        polyToggleBtn.classList.toggle('active', track.slicerIsPolyphonic);
+        polyToggleBtn.addEventListener('click', () => {
+            if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Slicer Polyphony for ${track.name} to ${!track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`);
+            track.slicerIsPolyphonic = !track.slicerIsPolyphonic;
+            polyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`;
+            polyToggleBtn.classList.toggle('active', track.slicerIsPolyphonic);
+            if (!track.slicerIsPolyphonic) {
+                track.setupSlicerMonoNodes();
+                if(track.slicerMonoPlayer && track.audioBuffer?.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer;
+            } else {
+                track.disposeSlicerMonoNodes();
+            }
+            // Crucially, rebuild the effect chain to reflect the new mono/poly source
+            if (track && typeof track.rebuildEffectChain === 'function') {
+                track.rebuildEffectChain();
+            }
+            showNotification(`${track.name} slicer mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`, 2000);
+        });
+    }
 }
 function initializeDrumSamplerSpecificControls(track, winEl) {
     const loadContainer = winEl.querySelector(`#drumPadLoadContainer-${track.id}`); if (loadContainer && typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track);
@@ -672,7 +693,20 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     winEl.querySelector(`#instrumentLoopStart-${track.id}`)?.addEventListener('change', (e) => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set Loop Start for ${track.name} to ${e.target.value}`); track.setInstrumentSamplerLoopStart(parseFloat(e.target.value)); });
     winEl.querySelector(`#instrumentLoopEnd-${track.id}`)?.addEventListener('change', (e) => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set Loop End for ${track.name} to ${e.target.value}`); track.setInstrumentSamplerLoopEnd(parseFloat(e.target.value)); });
     winEl.querySelector(`#instrumentLoopToggle-${track.id}`)?.addEventListener('click', (e) => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Loop for ${track.name}`); track.setInstrumentSamplerLoop(!track.instrumentSamplerSettings.loop); e.target.textContent = track.instrumentSamplerSettings.loop ? 'Loop: ON' : 'Loop: OFF'; e.target.classList.toggle('active', track.instrumentSamplerSettings.loop);});
-    const instPolyToggleBtn = winEl.querySelector(`#instrumentSamplerPolyphonyToggle-${track.id}`); if (instPolyToggleBtn) { instPolyToggleBtn.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`; instPolyToggleBtn.classList.toggle('active', !track.instrumentSamplerIsPolyphonic); instPolyToggleBtn.addEventListener('click', () => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Instrument Sampler Polyphony for ${track.name} to ${!track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`); track.instrumentSamplerIsPolyphonic = !track.instrumentSamplerIsPolyphonic; instPolyToggleBtn.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`; instPolyToggleBtn.classList.toggle('active', !track.instrumentSamplerIsPolyphonic); showNotification(`${track.name} Instrument Sampler mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'} (for live input)`, 2000); }); }
+    const instPolyToggleBtn = winEl.querySelector(`#instrumentSamplerPolyphonyToggle-${track.id}`);
+    if (instPolyToggleBtn) {
+        instPolyToggleBtn.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`;
+        instPolyToggleBtn.classList.toggle('active', track.instrumentSamplerIsPolyphonic);
+        instPolyToggleBtn.addEventListener('click', () => {
+            if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Instrument Sampler Polyphony for ${track.name} to ${!track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`);
+            track.instrumentSamplerIsPolyphonic = !track.instrumentSamplerIsPolyphonic;
+            instPolyToggleBtn.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`;
+            instPolyToggleBtn.classList.toggle('active', track.instrumentSamplerIsPolyphonic);
+            // No need to rebuild chain or dispose/setup nodes here for InstrumentSampler,
+            // as Tone.Sampler handles polyphony internally. The flag is used by our custom logic.
+            showNotification(`${track.name} Instrument Sampler mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'} (for live input & sequence)`, 2000);
+        });
+    }
     const iEAK = createKnob({ label: 'Attack', min:0.005, max:2, step:0.001, initialValue: track.instrumentSamplerSettings.envelope.attack, decimals:3, trackRef: track, onValueChange: (val) => track.setInstrumentSamplerEnv('attack',val) }); const iAttPh = winEl.querySelector(`#instrumentEnvAttackSlider-${track.id}`); if(iAttPh) { iAttPh.innerHTML = ''; iAttPh.appendChild(iEAK.element); } track.inspectorControls.instEnvAttack = iEAK;
     const iEDK = createKnob({ label: 'Decay', min:0.01, max:2, step:0.01, initialValue: track.instrumentSamplerSettings.envelope.decay, decimals:2, trackRef: track, onValueChange: (val) => track.setInstrumentSamplerEnv('decay',val) }); const iDecPh = winEl.querySelector(`#instrumentEnvDecaySlider-${track.id}`); if(iDecPh) { iDecPh.innerHTML = ''; iDecPh.appendChild(iEDK.element); } track.inspectorControls.instEnvDecay = iEDK;
     const iESK = createKnob({ label: 'Sustain', min:0, max:1, step:0.01, initialValue: track.instrumentSamplerSettings.envelope.sustain, decimals:2, trackRef: track, onValueChange: (val) => track.setInstrumentSamplerEnv('sustain',val) }); const iSusPh = winEl.querySelector(`#instrumentEnvSustainSlider-${track.id}`); if(iSusPh) { iSusPh.innerHTML = ''; iSusPh.appendChild(iESK.element); } track.inspectorControls.instEnvSustain = iESK;
@@ -835,7 +869,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) return null;
     const windowId = `effectsRack-${track.id}`;
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
-    if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
+    if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close(true);
     const effectsRackContentElement = buildModularEffectsRackDOM(track, 'track');
     const winOptions = { width: 450, height: 550, initialContentKey: `effectsRack-${track.id}` }; if (savedState) Object.assign(winOptions, savedState);
     const effectsWin = new SnugWindow(windowId, `Effects: ${track.name}`, effectsRackContentElement, winOptions);
@@ -845,34 +879,30 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
 
 export function openMasterEffectsRackWindow(savedState = null) {
     console.log("[UI - openMasterEffectsRackWindow] Function CALLED. SavedState:", savedState);
-    console.log("[UI - openMasterEffectsRackWindow] Current window.openWindows:", window.openWindows);
-    console.log("[UI - openMasterEffectsRackWindow] Current window.masterEffectsChain before building DOM (structure):", (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
-
-
     const windowId = 'masterEffectsRack';
-    if (window.openWindows[windowId] && !savedState) {
-        console.log("[UI - openMasterEffectsRackWindow] Restoring existing master effects rack.");
-        window.openWindows[windowId].restore();
-        return window.openWindows[windowId];
+    if (window.openWindows[windowId] && !savedState) { 
+        console.log("[UI - openMasterEffectsRackWindow] Restoring existing master effects rack."); 
+        window.openWindows[windowId].restore(); 
+        return window.openWindows[windowId]; 
     }
-    if (window.openWindows[windowId] && savedState) {
-        console.log("[UI - openMasterEffectsRackWindow] Closing existing master effects rack before recreating from saved state.");
-        window.openWindows[windowId].close();
+    if (window.openWindows[windowId] && savedState) { 
+        console.log("[UI - openMasterEffectsRackWindow] Closing existing master effects rack before recreating from saved state."); 
+        window.openWindows[windowId].close(true); 
     }
-
+    
     console.log("[UI - openMasterEffectsRackWindow] Calling buildModularEffectsRackDOM for master.");
     const masterEffectsContentElement = buildModularEffectsRackDOM(null, 'master');
     console.log("[UI - openMasterEffectsRackWindow] Master Effects Rack DOM built. Is it valid?", !!masterEffectsContentElement);
-    if (!masterEffectsContentElement) {
-        showNotification("Failed to build Master Effects Rack content. Check console.", 5000);
+    if (!masterEffectsContentElement) { 
+        showNotification("Failed to build Master Effects Rack content. Check console.", 5000); 
         console.error("[UI - openMasterEffectsRackWindow] buildModularEffectsRackDOM returned null or undefined for master.");
-        return null;
+        return null; 
     }
-
-    const winOptions = { width: 450, height: 550, initialContentKey: 'masterEffectsRack' };
+    
+    const winOptions = { width: 450, height: 550, initialContentKey: 'masterEffectsRack' }; 
     if (savedState) Object.assign(winOptions, savedState);
     console.log("[UI - openMasterEffectsRackWindow] Window options for SnugWindow:", winOptions);
-
+    
     let masterEffectsWin = null;
     try {
         console.log("[UI - openMasterEffectsRackWindow] Attempting to create SnugWindow for masterEffectsRack...");
@@ -884,47 +914,54 @@ export function openMasterEffectsRackWindow(savedState = null) {
         return null;
     }
 
-    if (!masterEffectsWin || !masterEffectsWin.element) {
-        showNotification("Failed to create Master Effects Rack window instance. Check console.", 5000);
-        console.error("[UI - openMasterEffectsRackWindow] SnugWindow instance or its element is null/undefined for Master Effects Rack.");
-        return null;
+    if (!masterEffectsWin || !masterEffectsWin.element) { 
+        showNotification("Failed to create Master Effects Rack window instance. Check console.", 5000); 
+        console.error("[UI - openMasterEffectsRackWindow] SnugWindow instance or its element is null/undefined for Master Effects Rack."); 
+        return null; 
     }
     console.log("[UI - openMasterEffectsRackWindow] Master Effects Rack Window CREATED SUCCESSFULLY and should be visible:", masterEffectsWin);
     return masterEffectsWin;
 }
 
 export function openGlobalControlsWindow(savedState = null) {
-    console.log("[ui.js - openGlobalControlsWindow V3.1] Called. SavedState:", savedState); // DEBUG
+    console.log("[ui.js - openGlobalControlsWindow V5 PolyFix] Called. SavedState:", savedState);
     const windowId = 'globalControls';
 
     if (typeof SnugWindow !== 'function') {
-        console.error("[ui.js - openGlobalControlsWindow V3.1] SnugWindow is NOT a function! Cannot create window.");
+        console.error("[ui.js - openGlobalControlsWindow V5 PolyFix] SnugWindow is NOT a function! Cannot create window.");
         return null;
     }
 
-    if (window.openWindows && window.openWindows[windowId] && !savedState) {
-        console.log(`[ui.js - openGlobalControlsWindow V3.1] Window ${windowId} already exists. Restoring.`);
-        window.openWindows[windowId].restore();
-        return window.openWindows[windowId];
+    if (window.openWindows && window.openWindows[windowId] && !window.openWindows[windowId].isMinimized && !savedState) {
+        console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] Window ${windowId} already exists and is not minimized. Restoring.`);
+        try { window.openWindows[windowId].restore(); } catch (e) {
+            console.warn(`[ui.js - openGlobalControlsWindow V5 PolyFix] Error restoring existing window ${windowId}:`, e);
+            try { if (window.openWindows[windowId]) window.openWindows[windowId].close(true); } catch (delErr) { /* ignore */ }
+            delete window.openWindows[windowId];
+        }
+        if (window.openWindows && window.openWindows[windowId] && window.openWindows[windowId].element) {
+            return window.openWindows[windowId];
+        }
+        console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] Window ${windowId} was problematic or removed after restore attempt, will recreate.`);
     }
-    if (window.openWindows && window.openWindows[windowId] && savedState) {
-        console.log(`[ui.js - openGlobalControlsWindow V3.1] Window ${windowId} exists, closing to apply saved state.`);
-        window.openWindows[windowId].close();
+    
+    if (window.openWindows && window.openWindows[windowId]) {
+        try {
+            console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] Closing pre-existing window ${windowId} before creating new one.`);
+            window.openWindows[windowId].close(true);
+        } catch (e) { console.warn(`[ui.js - openGlobalControlsWindow V5 PolyFix] Error closing pre-existing window ${windowId}:`, e); }
+        delete window.openWindows[windowId];
     }
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'global-controls-window p-2 space-y-3';
-
-    let tempoValueStr = "120.0"; // Default fallback
+    let tempoValueStr = "120.0";
     try {
         if (typeof Tone !== 'undefined' && Tone.Transport && typeof Tone.Transport.bpm.value === 'number') {
             tempoValueStr = Tone.Transport.bpm.value.toFixed(1);
-        } else {
-            console.warn("[ui.js - openGlobalControlsWindow V3.1] Tone.Transport.bpm.value not available or not a number. Using default tempo string.");
-        }
-    } catch (e) {
-        console.error("[ui.js - openGlobalControlsWindow V3.1] Error accessing Tone.Transport.bpm.value:", e);
-    }
+        } else { console.warn("[ui.js - openGlobalControlsWindow V5 PolyFix] Tone.Transport.bpm.value not available/number."); }
+    } catch (e) { console.error("[ui.js - openGlobalControlsWindow V5 PolyFix] Error accessing Tone.Transport.bpm.value:", e); }
+    console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] Tempo for HTML: ${tempoValueStr}`);
 
     try {
         contentDiv.innerHTML = `
@@ -948,74 +985,72 @@ export function openGlobalControlsWindow(savedState = null) {
             </div>
         `;
     } catch (e) {
-        console.error("[ui.js - openGlobalControlsWindow V3.1] Error setting innerHTML for globalControls:", e);
-        showNotification("Error creating global controls content.", 5000);
+        console.error("[ui.js - openGlobalControlsWindow V5 PolyFix] Error setting innerHTML for globalControls:", e);
+        showNotification("Error creating global controls window content.", 5000);
         return null;
     }
 
+    const desktopEl = document.getElementById('desktop');
+    let defaultWidth = 280; let defaultHeight = 250;
+    if (desktopEl) { defaultWidth = Math.min(280, desktopEl.offsetWidth - 40); defaultHeight = Math.min(250, desktopEl.offsetHeight - 80); }
+
     const winOptions = {
-        width: 280, height: 250, x: 20, y: 20,
-        initialContentKey: 'globalControls',
+        width: defaultWidth, height: defaultHeight, x: 20, y: 20,
+        resizable: false, initialContentKey: 'globalControls',
         onCloseCallback: () => {
-            // Clear global references when the window is closed to prevent issues if it's reopened
-            window.playBtn = null;
-            window.recordBtn = null;
-            window.tempoInput = null;
-            window.masterMeterBar = null;
-            window.midiInputSelectGlobal = null;
-            window.midiIndicatorGlobalEl = null;
-            window.keyboardIndicatorGlobalEl = null;
-            console.log("[ui.js - openGlobalControlsWindow V3.1] Global controls window closed, DOM element references cleared.");
+            window.playBtn = null; window.recordBtn = null; window.tempoInput = null;
+            window.masterMeterBar = null; window.midiInputSelectGlobal = null;
+            window.midiIndicatorGlobalEl = null; window.keyboardIndicatorGlobalEl = null;
+            console.log("[ui.js - openGlobalControlsWindow V5 PolyFix] Global controls window closed, DOM refs cleared.");
         }
     };
     if (savedState) Object.assign(winOptions, savedState);
 
-    let globalControlsWin = null;
+    console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] Creating SnugWindow with ID: ${windowId}`);
+    let gcwInstance = null;
     try {
-        console.log("[ui.js - openGlobalControlsWindow V3.1] Attempting to create SnugWindow instance...");
-        globalControlsWin = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
-        console.log("[ui.js - openGlobalControlsWindow V3.1] SnugWindow instance created:", globalControlsWin);
+        gcwInstance = new SnugWindow(windowId, 'Global Controls', contentDiv, winOptions);
+        console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] SnugWindow instance CREATED:`, gcwInstance);
     } catch (e) {
-        console.error('[ui.js - openGlobalControlsWindow V3.1] CRITICAL ERROR during `new SnugWindow()` for globalControls:', e);
-        showNotification("CRITICAL: Error creating window object for global controls.", 6000);
+        console.error(`[ui.js - openGlobalControlsWindow V5 PolyFix] CRITICAL ERROR during \`new SnugWindow('${windowId}')\`:`, e);
+        showCustomModal("Critical Error", `Could not create Global Controls window: ${e.message}. App may be unstable.`, [{ text: "OK" }]);
         return null;
     }
 
-    if (!globalControlsWin || !globalControlsWin.element) {
-        console.error("[ui.js - openGlobalControlsWindow V3.1] CRITICAL CHECK FAILED: globalControlsWin or its element is falsy after instantiation.");
-        showNotification("Failed to create Global Controls window instance.", 5000);
-        return null;
+    if (!gcwInstance || !gcwInstance.element) {
+        console.error(`[ui.js - openGlobalControlsWindow V5 PolyFix] FAILED to create/initialize SnugWindow. Instance or element is null. Instance:`, gcwInstance);
+        showNotification("CRITICAL: Global Controls window element not found after creation. App will be limited.", 6000);
+        return gcwInstance;
     }
+    console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] SnugWindow element IS present:`, gcwInstance.element);
 
-    // Assign to global window variables AFTER successful creation
-    window.playBtn = globalControlsWin.element.querySelector('#playBtnGlobal');
-    window.recordBtn = globalControlsWin.element.querySelector('#recordBtnGlobal');
-    window.tempoInput = globalControlsWin.element.querySelector('#tempoGlobalInput');
-    window.masterMeterBar = globalControlsWin.element.querySelector('#masterMeterBarGlobal');
-    window.midiInputSelectGlobal = globalControlsWin.element.querySelector('#midiInputSelectGlobal');
-    window.midiIndicatorGlobalEl = globalControlsWin.element.querySelector('#midiIndicatorGlobal');
-    window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal');
+    if (gcwInstance.element) {
+        window.playBtn = gcwInstance.element.querySelector('#playBtnGlobal');
+        window.recordBtn = gcwInstance.element.querySelector('#recordBtnGlobal');
+        window.tempoInput = gcwInstance.element.querySelector('#tempoGlobalInput');
+        window.masterMeterBar = gcwInstance.element.querySelector('#masterMeterBarGlobal');
+        window.midiInputSelectGlobal = gcwInstance.element.querySelector('#midiInputSelectGlobal');
+        window.midiIndicatorGlobalEl = gcwInstance.element.querySelector('#midiIndicatorGlobal');
+        window.keyboardIndicatorGlobalEl = gcwInstance.element.querySelector('#keyboardIndicatorGlobal');
+        console.log("[ui.js - openGlobalControlsWindow V5 PolyFix] Global DOM elements assigned. MIDI Select:", window.midiInputSelectGlobal);
+    } else { console.error("[ui.js - openGlobalControlsWindow V5 PolyFix] gcwInstance.element is null, cannot query for controls."); }
 
-    console.log("[ui.js - openGlobalControlsWindow V3.1] Global DOM elements assigned:", {
-        playBtn: !!window.playBtn, recordBtn: !!window.recordBtn, tempoInput: !!window.tempoInput,
-        masterMeterBar: !!window.masterMeterBar, midiInputSelectGlobal: !!window.midiInputSelectGlobal
-    });
+    if (gcwInstance.element) {
+        if (typeof window.attachGlobalControlEvents === 'function') {
+            console.log("[ui.js - openGlobalControlsWindow V5 PolyFix] Calling window.attachGlobalControlEvents.");
+            window.attachGlobalControlEvents(gcwInstance.element);
+        } else { console.error("[ui.js - openGlobalControlsWindow V5 PolyFix] window.attachGlobalControlEvents function is not defined!"); showNotification("Error: Global control event handlers cannot be attached.", 5000); }
+    } else { console.warn("[ui.js - openGlobalControlsWindow V5 PolyFix] Cannot attach global control events as window element is missing."); }
 
-    if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
-        console.log("[ui.js - openGlobalControlsWindow V3.1] Calling attachGlobalControlEvents.");
-        window.attachGlobalControlEvents(globalControlsWin.element);
-    } else {
-        console.warn("[ui.js - openGlobalControlsWindow V3.1] attachGlobalControlEvents not found or window element missing for event attachment.");
-    }
-    console.log("[ui.js - openGlobalControlsWindow V3.1] FINISHED successfully.");
-    return globalControlsWin;
+    console.log(`[ui.js - openGlobalControlsWindow V5 PolyFix] FINISHED successfully. Returning gcwInstance:`, gcwInstance);
+    return gcwInstance;
 }
 
 export function openSoundBrowserWindow(savedState = null) {
-    console.log("[ui.js - openSoundBrowserWindow] Called.");
+    console.log("[ui.js - openSoundBrowserWindow] Called."); 
     const windowId = 'soundBrowser';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') updateSoundBrowserDisplayForLibrary(window.currentLibraryName); return window.openWindows[windowId]; }
-    if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
+    if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close(true);
     let selectOptionsHTML = '';
     if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) { for (const libName in Constants.soundLibraries) selectOptionsHTML += `<option value="${libName}">${libName}</option>`; } else { selectOptionsHTML = '<option value="">No Libraries Configured</option>'; }
     const contentHTML = `<div class="sound-browser-content p-2"><select id="soundBrowserLibrarySelect" class="w-full mb-2 p-1 border border-gray-500 rounded-sm text-xs bg-white text-black focus:ring-blue-500 focus:border-blue-500">${selectOptionsHTML}</select><div id="soundBrowserPathDisplay" class="text-xs p-1 bg-gray-200 border-b border-gray-400 mb-1">Path: /</div><div id="soundBrowserList" class="sound-browser-list h-64 overflow-y-auto border border-gray-300 p-1 bg-white">Select a library to load sounds.</div></div>`;
@@ -1031,126 +1066,126 @@ export function openSoundBrowserWindow(savedState = null) {
     console.log("[ui.js - openSoundBrowserWindow] Sound Browser window created and initialized."); return soundBrowserWin;
 }
 export function updateSoundBrowserDisplayForLibrary(libraryName) {
-    console.log(`[UI - updateSoundBrowserDisplayForLibrary] Updating for library: ${libraryName}`);
+    console.log(`[UI - updateSoundBrowserDisplayForLibrary] Updating for library: ${libraryName}`); 
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
     if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - updateSoundBrowserDisplayForLibrary] Sound Browser DOM elements missing."); return; }
     window.currentLibraryName = libraryName;
-    if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) {
-        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Found pre-existing file tree for ${libraryName}.`);
-        window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName];
-        window.currentSoundBrowserPath = [];
-        renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree);
-    } else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") {
-        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Loading ${libraryName} sounds...</div>`;
-        pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`;
-        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} is currently loading.`);
-    } else {
-        const zipUrl = Constants.soundLibraries[libraryName];
-        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} not loaded. Zip URL: ${zipUrl}`);
+    if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) { 
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Found pre-existing file tree for ${libraryName}.`); 
+        window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName]; 
+        window.currentSoundBrowserPath = []; 
+        renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree); 
+    } else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") { 
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Loading ${libraryName} sounds...</div>`; 
+        pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`; 
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} is currently loading.`); 
+    } else { 
+        const zipUrl = Constants.soundLibraries[libraryName]; 
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} not loaded. Zip URL: ${zipUrl}`); 
         if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
-            console.log(`[UI - updateSoundBrowserDisplayForLibrary] Calling fetchSoundLibrary for ${libraryName}.`);
-            window.fetchSoundLibrary(libraryName, zipUrl, false);
-        } else {
-            soundBrowserList.innerHTML = `<div class="p-2 text-xs text-red-500">Library ${libraryName} config not found or fetch function missing.</div>`;
-            pathDisplay.textContent = `Path: / (Error - ${libraryName})`;
-            console.error(`[UI - updateSoundBrowserDisplayForLibrary] Config/function missing for ${libraryName}.`);
-        }
+            console.log(`[UI - updateSoundBrowserDisplayForLibrary] Calling fetchSoundLibrary for ${libraryName}.`); 
+            window.fetchSoundLibrary(libraryName, zipUrl, false); 
+        } else { 
+            soundBrowserList.innerHTML = `<div class="p-2 text-xs text-red-500">Library ${libraryName} config not found or fetch function missing.</div>`; 
+            pathDisplay.textContent = `Path: / (Error - ${libraryName})`; 
+            console.error(`[UI - updateSoundBrowserDisplayForLibrary] Config/function missing for ${libraryName}.`); 
+        } 
     }
 }
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    console.log(`[UI - renderSoundBrowserDirectory] Rendering. Path: /${pathArray.join('/')}, Lib: ${window.currentLibraryName}, TreeNode valid: ${!!treeNode}`);
+    console.log(`[UI - renderSoundBrowserDirectory] Rendering. Path: /${pathArray.join('/')}, Lib: ${window.currentLibraryName}, TreeNode valid: ${!!treeNode}`); 
     if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - renderSoundBrowserDirectory]: DOM elements missing."); return; }
-    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") {
-        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`;
-        pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
-        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, library ${window.currentLibraryName} not 'loading'. Displaying empty/unavailable.`);
-        return;
+    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") { 
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`; 
+        pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`; 
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, library ${window.currentLibraryName} not 'loading'. Displaying empty/unavailable.`); 
+        return; 
     }
     if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
-        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, but library ${window.currentLibraryName} is 'loading'. Aborting render for now.`);
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, but library ${window.currentLibraryName} is 'loading'. Aborting render for now.`); 
         return;
     }
-    if (!treeNode) {
-        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`;
-        pathDisplay.textContent = `Path: /`;
-        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, no library context or library missing. Displaying select message.`);
-        return;
+    if (!treeNode) { 
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`; 
+        pathDisplay.textContent = `Path: /`; 
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, no library context or library missing. Displaying select message.`); 
+        return; 
     }
     soundBrowserList.innerHTML = ''; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
     if (pathArray.length > 0) { const backButton = document.createElement('div'); backButton.className = 'sound-browser-item font-semibold hover:bg-gray-100 cursor-pointer p-1 text-sm border-b border-gray-200'; backButton.textContent = '⬆️ .. (Up)'; backButton.addEventListener('click', () => { window.currentSoundBrowserPath.pop(); let newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; if (!newTreeNode) { window.currentSoundBrowserPath = []; renderSoundBrowserDirectory([], null); return; } for (const segment of window.currentSoundBrowserPath) { if (newTreeNode[segment]?.type === 'folder') newTreeNode = newTreeNode[segment].children; else { window.currentSoundBrowserPath = []; newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; break; } } window.currentSoundFileTree = newTreeNode; renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode); }); soundBrowserList.appendChild(backButton); }
-
+    
     if (Object.keys(treeNode).length === 0) {
         if (pathArray.length > 0) {
             soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>';
         } else if (window.currentLibraryName) {
             soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or no audio files matched filters.</div>`;
-            console.log(`[UI - renderSoundBrowserDirectory] Library ${window.currentLibraryName} root is empty.`);
+            console.log(`[UI - renderSoundBrowserDirectory] Library ${window.currentLibraryName} root is empty.`); 
         }
     }
 
     const sortedEntries = Object.entries(treeNode).sort(([nameA, itemA], [nameB, itemB]) => { if (itemA.type === 'folder' && itemB.type === 'file') return -1; if (itemA.type === 'file' && itemB.type === 'folder') return 1; return nameA.localeCompare(nameB); });
     sortedEntries.forEach(([name, item]) => {
         const div = document.createElement('div'); div.className = 'sound-browser-item hover:bg-gray-100 cursor-pointer p-1 text-xs border-b border-gray-200 last:border-b-0';
-        if (item.type === 'folder') {
-            div.textContent = `📁 ${name}`;
-            div.addEventListener('click', () => {
-                console.log(`[UI - renderSoundBrowserDirectory] Navigating into folder: ${name}`);
-                window.currentSoundBrowserPath.push(name);
-                window.currentSoundFileTree = item.children;
-                renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children);
-            });
+        if (item.type === 'folder') { 
+            div.textContent = `📁 ${name}`; 
+            div.addEventListener('click', () => { 
+                console.log(`[UI - renderSoundBrowserDirectory] Navigating into folder: ${name}`); 
+                window.currentSoundBrowserPath.push(name); 
+                window.currentSoundFileTree = item.children; 
+                renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children); 
+            }); 
         } else if (item.type === 'file') {
-            div.textContent = `🎵 ${name}`;
-            div.title = `Click to play. Drag to load: ${name} (Path: ${item.fullPath})`;
-            div.draggable = true;
+            div.textContent = `🎵 ${name}`; 
+            div.title = `Click to play. Drag to load: ${name} (Path: ${item.fullPath})`; 
+            div.draggable = true; 
             div.addEventListener('dragstart', (event) => { const soundData = { fullPath: item.fullPath, libraryName: window.currentLibraryName, fileName: name }; event.dataTransfer.setData("application/json", JSON.stringify(soundData)); event.dataTransfer.effectAllowed = "copy"; div.style.opacity = '0.5'; });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
             div.addEventListener('click', async (event) => {
-                if (event.detail === 0) return;
+                if (event.detail === 0) return; 
                 console.log(`[UI - Preview] Preview clicked for: ${name}, Path: ${item.fullPath}, Lib: ${window.currentLibraryName}`);
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
                 if (window.previewPlayer && !window.previewPlayer.disposed) { try { window.previewPlayer.stop(); window.previewPlayer.dispose(); } catch(e) {console.warn("Error disposing old preview player", e)} window.previewPlayer = null;}
-
-                let objectURL = null;
+                
+                let objectURL = null; 
                 try {
                     if (!window.loadedZipFiles || !window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") {
-                        console.error(`[UI - Preview] ZIP library "${window.currentLibraryName}" not fully loaded.`);
+                        console.error(`[UI - Preview] ZIP library "${window.currentLibraryName}" not fully loaded.`); 
                         throw new Error(`ZIP library "${window.currentLibraryName}" not loaded.`);
                     }
-                    const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath);
+                    const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath); 
                     if (!zipEntry) {
-                        console.error(`[UI - Preview] File ${item.fullPath} not found in ZIP library "${window.currentLibraryName}". Available files:`, Object.keys(window.loadedZipFiles[window.currentLibraryName].files));
+                        console.error(`[UI - Preview] File ${item.fullPath} not found in ZIP library "${window.currentLibraryName}". Available files:`, Object.keys(window.loadedZipFiles[window.currentLibraryName].files)); 
                         throw new Error(`File ${item.fullPath} not found in ${window.currentLibraryName}.`);
                     }
-                    console.log(`[UI - Preview] Found zipEntry for ${item.fullPath}. Getting blob...`);
+                    console.log(`[UI - Preview] Found zipEntry for ${item.fullPath}. Getting blob...`); 
                     const fileBlobFromZip = await zipEntry.async("blob");
                     console.log(`[UI - Preview] Got blob for ${name} from zip, type: '${fileBlobFromZip.type}', size: ${fileBlobFromZip.size}.`);
-
-                    const inferredMimeType = getMimeTypeFromFilename(name);
+                    
+                    const inferredMimeType = getMimeTypeFromFilename(name); 
                     const finalMimeType = fileBlobFromZip.type || inferredMimeType || 'application/octet-stream';
                     const typedFileObject = new File([fileBlobFromZip], name, { type: finalMimeType });
                     console.log(`[UI - Preview] Created File object for Tone.Buffer. Name: "${typedFileObject.name}", Type: "${typedFileObject.type}"`);
 
-                    objectURL = URL.createObjectURL(typedFileObject);
+                    objectURL = URL.createObjectURL(typedFileObject); 
                     console.log(`[UI - Preview] Object URL: ${objectURL} (from typed File). Loading into Tone.Buffer...`);
-
+                    
                     const buffer = new Tone.Buffer();
-                    await buffer.load(objectURL);
+                    await buffer.load(objectURL); 
                     console.log(`[UI - Preview] Tone.Buffer loaded for ${name}. Duration: ${buffer.duration}`);
 
-                    window.previewPlayer = new Tone.Player(buffer).toDestination();
+                    window.previewPlayer = new Tone.Player(buffer).toDestination(); 
                     window.previewPlayer.autostart = true;
-                    window.previewPlayer.onstop = () => {
-                        if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){}
-                        window.previewPlayer = null;
-                        if (objectURL) URL.revokeObjectURL(objectURL);
+                    window.previewPlayer.onstop = () => { 
+                        if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){} 
+                        window.previewPlayer = null; 
+                        if (objectURL) URL.revokeObjectURL(objectURL); 
                         console.log(`[UI - Preview] Player stopped and resources for ${name} released.`);
                     };
-                } catch (error) {
-                    console.error(`[UI - Preview] Error previewing sound ${name} (Path: ${item.fullPath}):`, error);
-                    showNotification(`Error previewing ${name}: ${error.message || 'Unknown error'}`, 4000);
-                    if (objectURL) URL.revokeObjectURL(objectURL);
+                } catch (error) { 
+                    console.error(`[UI - Preview] Error previewing sound ${name} (Path: ${item.fullPath}):`, error); 
+                    showNotification(`Error previewing ${name}: ${error.message || 'Unknown error'}`, 4000); 
+                    if (objectURL) URL.revokeObjectURL(objectURL); 
                 }
             });
         }
@@ -1160,7 +1195,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
 
 // --- Mixer Window ---
 export function openMixerWindow(savedState = null) {
-    const windowId = 'mixer'; if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; } if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
+    const windowId = 'mixer'; if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; } if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close(true);
     const contentDiv = document.createElement('div'); contentDiv.className = 'mixer-window-content p-2 overflow-x-auto flex flex-row gap-2';
     const winOptions = { width: Math.max(500, Math.min(800, window.innerWidth - 60)), height: 350, initialContentKey: 'mixer' }; if (savedState) Object.assign(winOptions, savedState);
     let mixerWin = null; try { mixerWin = new SnugWindow(windowId, 'Mixer', contentDiv, winOptions); } catch (e) { console.error('CRITICAL ERROR `new SnugWindow()` for Mixer:', e); showNotification("CRITICAL: Error creating Mixer window.", 6000); return null; }
@@ -1190,7 +1225,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track) return null;
     const windowId = `sequencerWin-${track.id}`; if(typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(track.id); else window.activeSequencerTrackId = track.id;
     if (window.openWindows[windowId] && !forceRedraw && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
-    if (window.openWindows[windowId] && (forceRedraw || savedState)) window.openWindows[windowId].close();
+    if (window.openWindows[windowId] && (forceRedraw || savedState)) window.openWindows[windowId].close(true);
     let rows = 0, rowLabels = []; if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; } else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({length: rows}, (_, i) => `Slice ${i + 1}`); } else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({length: rows}, (_, i) => `Pad ${i+1}`); }
     if (rows === 0 && track.sequenceData && track.sequenceData.length > 0) { rows = track.sequenceData.length; rowLabels = Array.from({length: rows}, (_, i) => `Row ${i + 1}`); }
     if (rows === 0) { showNotification(`Cannot determine rows for ${track.type} sequencer.`, 3000); return null; }
