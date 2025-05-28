@@ -1,7 +1,6 @@
 // js/utils.js - Utility Functions Module
 
 export function showNotification(message, duration = 3000) {
-    // ... (showNotification function as before)
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
         console.warn("Notification area not found. Message:", message);
@@ -26,7 +25,6 @@ export function showNotification(message, duration = 3000) {
 }
 
 export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = '') {
-    // ... (showCustomModal function as before)
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) {
         console.error("Modal container not found!");
@@ -73,7 +71,6 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
 }
 
 export function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
-    // ... (showConfirmationDialog function as before)
     const buttons = [
         { text: 'OK', action: onConfirm },
         { text: 'Cancel', action: onCancel }
@@ -82,19 +79,19 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
 }
 
 /**
- * Creates HTML for a drop zone, now status-aware.
+ * Creates HTML for a drop zone, now status-aware and with consistent ID generation.
  * @param {number} trackId - The ID of the track.
- * @param {string} baseInputId - Base ID for the file input (will be made unique).
  * @param {string} trackTypeHint - Type of track (e.g., 'Sampler', 'DrumSampler').
- * @param {number|null} padOrSliceIndex - Index if it's for a specific pad/slice.
+ * @param {number|null} padOrSliceIndex - Index if it's for a specific pad/slice. Null for general track samplers.
  * @param {object|null} audioData - The audio data object from the track (e.g., track.samplerAudioData or padData) which contains fileName and status.
  * @returns {string} HTML string for the drop zone.
  */
-export function createDropZoneHTML(trackId, baseInputId, trackTypeHint, padOrSliceIndex = null, audioData = null) {
-    const uniqueIndexStr = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '-null'; // Ensure 'null' for non-indexed samplers
-    const inputId = `fileInput-${trackId}-${trackTypeHint}${uniqueIndexStr}`;
-    const dropZoneId = `dropZone-${trackId}-${trackTypeHint.toLowerCase()}${uniqueIndexStr}`;
-    const relinkButtonId = `relinkFileBtn-${trackId}-${trackTypeHint}${uniqueIndexStr}`;
+export function createDropZoneHTML(trackId, trackTypeHint, padOrSliceIndex = null, audioData = null) {
+    // Consistent ID generation
+    const indexSuffix = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '-null';
+    const inputId = `fileInput-${trackId}-${trackTypeHint}${indexSuffix}`;
+    const dropZoneId = `dropZone-${trackId}-${trackTypeHint.toLowerCase()}${indexSuffix}`;
+    const relinkButtonId = `relinkFileBtn-${trackId}-${trackTypeHint}${indexSuffix}`;
 
     let dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHint}"`;
     if (padOrSliceIndex !== null && padOrSliceIndex !== undefined) {
@@ -103,7 +100,7 @@ export function createDropZoneHTML(trackId, baseInputId, trackTypeHint, padOrSli
 
     let content = '';
     const fileName = audioData?.fileName || 'Unknown File';
-    const status = audioData?.status || 'empty';
+    const status = audioData?.status || 'empty'; // Default to 'empty' if no status
 
     switch (status) {
         case 'loaded':
@@ -113,8 +110,8 @@ export function createDropZoneHTML(trackId, baseInputId, trackTypeHint, padOrSli
         case 'missing':
             content = `<span class="text-red-500 font-semibold">MISSING: ${fileName.substring(0, 15)}${fileName.length > 15 ? '...' : ''}</span><br>
                        <div class="drop-zone-relink-container mt-1">
-                           <button id="${relinkButtonId}" class="text-xs bg-orange-500 hover:bg-orange-600 text-white py-0.5 px-1.5 rounded">Relink/Upload</button>
-                       </div>`;
+                           <button id="${relinkButtonId}" class="text-xs bg-orange-500 hover:bg-orange-600 text-white py-0.5 px-1.5 rounded drop-zone-relink-button">Relink/Upload</button>
+                       </div>`; // Added a common class for relink buttons
             break;
         case 'pending':
             content = `<span class="text-gray-500">Loading: ${fileName.substring(0, 20)}${fileName.length > 20 ? '...' : ''}...</span>`;
@@ -135,7 +132,6 @@ export function createDropZoneHTML(trackId, baseInputId, trackTypeHint, padOrSli
 
 
 export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
-    // ... (setupDropZoneListeners function as before, ensure it correctly identifies the file input if a relink button is used)
     if (!dropZoneElement) {
         console.error("[Utils] setupDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint, "pad/slice:", padIndexOrSliceId);
         return;
@@ -184,7 +180,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             }
         } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) { // OS File Drop
             const file = event.dataTransfer.files[0];
-            const simulatedEvent = { target: { files: [file] } }; // Simulate event for loadFileCallback
+            const simulatedEvent = { target: { files: [file] } }; 
             if (loadFileCallback) {
                 if (dzTrackType === 'DrumSampler') {
                     const trackForFallback = typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
@@ -202,9 +198,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
     });
 }
 
-
 export function secondsToBBSTime(seconds) {
-    // ... (secondsToBBSTime function as before)
     if (typeof Tone === 'undefined' || seconds === null || seconds === undefined || isNaN(seconds)) {
         return "0:0:0";
     }
@@ -217,7 +211,6 @@ export function secondsToBBSTime(seconds) {
 }
 
 export function bbsTimeToSeconds(bbsString) {
-    // ... (bbsTimeToSeconds function as before)
     if (typeof Tone === 'undefined' || !bbsString || typeof bbsString !== 'string') {
         return null;
     }
