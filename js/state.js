@@ -298,12 +298,13 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     if (Tone.Transport.state === 'started') Tone.Transport.stop();
     Tone.Transport.cancel();
 
-    // Ensure audio context and master bus are ready FIRST
+    // CRITICAL: Ensure audio context and master bus are ready FIRST
     if (typeof audioInitAudioContextAndMasterMeter === 'function') {
         console.log("[State - reconstructDAW] Ensuring audio context and master bus are initialized before track creation...");
         await audioInitAudioContextAndMasterMeter(true); // Force initialization
         console.log("[State - reconstructDAW] Master bus input after init:", window.masterEffectsBusInput);
-        console.log("[State - reconstructDAW] Master gain node after init:", window.masterGainNode); // Assuming masterGainNode is exposed or testable
+        // Assuming masterGainNode is internal to audio.js or globally accessible as window.masterGainNode for this log
+        console.log("[State - reconstructDAW] Master gain node after init:", (typeof window.masterGainNode !== 'undefined' ? window.masterGainNode : " (masterGainNode not global)")); 
     } else {
         console.error("[State - reconstructDAW] audioInitAudioContextAndMasterMeter (from audio.js) is not defined!");
     }
@@ -342,8 +343,8 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
             window.masterGainNode.gain.value = gs.masterVolume !== undefined ? gs.masterVolume : Tone.dbToGain(0);
              console.log(`[State - reconstructDAW] Set masterGainNode volume to: ${window.masterGainNode.gain.value}`);
         } else if (Tone.getDestination()?.volume) { 
-            Tone.getDestination().volume.value = gs.masterVolume !== undefined ? gs.masterVolume : Tone.dbToGain(0);
-            console.warn(`[State - reconstructDAW] masterGainNode not available, set Tone.Destination().volume to: ${Tone.getDestination().volume.value}`);
+            Tone.getDestination().volume.value = gs.masterVolume !== undefined ? gs.masterVolume : Tone.dbToGain(0); // Fallback
+            console.warn(`[State - reconstructDAW] masterGainNode not available or invalid, set Tone.Destination().volume to: ${Tone.getDestination().volume.value}`);
         }
 
         if (typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
@@ -359,38 +360,56 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
                  if(addedEffectId){
                     const addedEffect = window.masterEffectsChain.find(e => e.id === addedEffectId);
                     if(addedEffect && effectData.params) { 
-                        Object.assign(addedEffect.params, effectData.params); // Apply saved params
-                        if(addedEffect.toneNode && typeof addedEffect.toneNode.set === 'function') {
+                        // Deep copy params to avoid modifying original projectData if it's reused
+                        addedEffect.params = JSON.parse(JSON.stringify(effectData.params));
+                        
+                        if(addedEffect.toneNode && !addedEffect.toneNode.disposed) {
                             try {
-                                // Apply each param individually to handle nested structures and signals correctly
-                                for (const paramKey in effectData.params) {
-                                    if (Object.hasOwnProperty.call(effectData.params, paramKey)) {
-                                        const value = effectData.params[paramKey];
-                                        let target = addedEffect.toneNode;
-                                        const keys = paramKey.split('.');
-                                        for (let i = 0; i < keys.length - 1; i++) {
-                                            target = target[keys[i]];
-                                        }
-                                        if (target && target[keys[keys.length -1]] && typeof target[keys[keys.length -1]].value !== 'undefined') {
-                                            target[keys[keys.length -1]].value = value;
-                                        } else if (target) {
-                                            target[keys[keys.length -1]] = value;
+                                // Attempt to set all params at once if the effect supports it
+                                if (typeof addedEffect.toneNode.set === 'function') {
+                                    addedEffect.toneNode.set(addedEffect.params);
+                                } else {
+                                    // Fallback: Apply each param individually
+                                    for (const paramKey in addedEffect.params) {
+                                        if (Object.hasOwnProperty.call(addedEffect.params, paramKey)) {
+                                            const value = addedEffect.params[paramKey];
+                                            let target = addedEffect.toneNode;
+                                            const keys = paramKey.split('.');
+                                            let currentParamObj = target;
+                                            for (let i = 0; i < keys.length - 1; i++) {
+                                                currentParamObj = currentParamObj[keys[i]];
+                                                 if (!currentParamObj) break;
+                                            }
+
+                                            if (currentParamObj && typeof currentParamObj[keys[keys.length -1]] !== 'undefined') {
+                                                if (currentParamObj[keys[keys.length -1]] && typeof currentParamObj[keys[keys.length -1]].value !== 'undefined') {
+                                                    // This is a Tone.Signal or Tone.Param
+                                                    currentParamObj[keys[keys.length -1]].value = value;
+                                                } else {
+                                                    // This is a direct property
+                                                    currentParamObj[keys[keys.length -1]] = value;
+                                                }
+                                            } else {
+                                                 console.warn(`[State - reconstructDAW] Could not set nested param ${paramKey} on master effect ${effectData.type} as path was invalid.`);
+                                            }
                                         }
                                     }
                                 }
                                 console.log(`[State - reconstructDAW] Applied params to master effect ${effectData.type}`);
                             } catch (e) {
-                                console.warn(`[State - reconstructDAW] Error setting params on master effect ${effectData.type} (${paramKey}):`, e);
+                                console.warn(`[State - reconstructDAW] Error setting params on master effect ${effectData.type}:`, e);
                             }
+                        } else {
+                             console.warn(`[State - reconstructDAW] Master effect ${effectData.type} toneNode is disposed or missing, cannot set params.`);
                         }
                     }
                  }
             } 
         });
-        // audioAddMasterEffect calls rebuildMasterEffectChain internally, so it should be fine.
-        // If there were effects, an explicit rebuild here might be redundant but safe.
-        if (window.masterEffectsChain.length > 0 && typeof audioRebuildMasterEffectChain === 'function') {
-             console.log("[State - reconstructDAW] Explicitly rebuilding master effect chain after loading all master effects.");
+        // audioAddMasterEffect calls rebuildMasterEffectChain internally.
+        // An explicit call here ensures the chain is correct after ALL master effects are loaded and params set.
+        if (typeof audioRebuildMasterEffectChain === 'function') {
+             console.log("[State - reconstructDAW] Explicitly rebuilding master effect chain after loading all master effects and their params.");
              audioRebuildMasterEffectChain();
         }
     }
@@ -410,7 +429,7 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
 
     const finalResourcePromises = tracks.map(track => {
         if (typeof track.fullyInitializeAudioResources === 'function') {
-            return track.fullyInitializeAudioResources();
+            return track.fullyInitializeAudioResources(); // This will also call track.rebuildEffectChain()
         }
         return Promise.resolve();
     });
@@ -421,12 +440,24 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         console.error("[State - reconstructDAW] Error finalizing track audio resources:", error);
     }
 
+    // After tracks are fully initialized (including their own effect chains),
+    // one final rebuild of the master chain can ensure everything is correctly routed.
+    // This might be redundant if track.rebuildEffectChain already correctly connects to the stable master bus.
+    if (typeof audioRebuildMasterEffectChain === 'function') {
+        console.log("[State - reconstructDAW] Final rebuild of master effect chain after all tracks initialized.");
+        audioRebuildMasterEffectChain();
+    }
+
+
     if (gs) {
         soloedTrackId = gs.soloedTrackId || null;
         armedTrackId = gs.armedTrackId || null;
         console.log(`[State - reconstructDAW] Restored global soloId: ${soloedTrackId}, armedId: ${armedTrackId}`);
         tracks.forEach(t => {
             t.isSoloed = (t.id === soloedTrackId);
+            // applyMuteState and applySoloState are called within fullyInitializeAudioResources or initializeAudioNodes
+            // if they correctly use the global soloed/muted state.
+            // However, an explicit call here ensures the UI reflects the loaded state.
             t.applyMuteState(); 
             t.applySoloState(); 
         });
@@ -558,7 +589,7 @@ export async function handleProjectFileLoad(event) {
 export async function exportToWav() {
     showNotification("Preparing export... Please wait.", 3000);
     try {
-        if (typeof audioInitAudioContextAndMasterMeter === 'function') { // Use imported name
+        if (typeof audioInitAudioContextAndMasterMeter === 'function') { 
             const audioReady = await audioInitAudioContextAndMasterMeter(true);
             if (!audioReady) {
                 showNotification("Audio system not ready for export. Please interact with the app (e.g. click Play) and try again.", 4000);
