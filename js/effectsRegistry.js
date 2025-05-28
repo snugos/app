@@ -343,3 +343,4 @@ export function getEffectDefaultParams(effectType) {
 export function getEffectParamDefinitions(effectType) {
     return AVAILABLE_EFFECTS[effectType]?.params || [];
 }
+
