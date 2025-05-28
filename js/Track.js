@@ -23,6 +23,7 @@ export class Track {
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
+            console.log(`[Track ${this.id} CONSTRUCTOR - Synth] Initial synthParams:`, JSON.parse(JSON.stringify(this.synthParams))); // DEBUG
         } else {
             this.synthEngineType = null;
             this.synthParams = {};
@@ -80,7 +81,6 @@ export class Track {
         this.activeEffects = [];
         if (initialData && initialData.activeEffects && Array.isArray(initialData.activeEffects)) {
             initialData.activeEffects.forEach(effectData => {
-                // Ensure params are deeply copied for the new instance
                 const paramsForInstance = effectData.params ? JSON.parse(JSON.stringify(effectData.params)) : {};
                 const toneNode = createEffectInstance(effectData.type, paramsForInstance);
                 if (toneNode) {
@@ -88,7 +88,7 @@ export class Track {
                         id: effectData.id || `effect-${this.id}-${effectData.type}-${Date.now()}-${Math.random().toString(36).substr(2,5)}`,
                         type: effectData.type,
                         toneNode: toneNode,
-                        params: paramsForInstance // Already a deep copy
+                        params: paramsForInstance 
                     });
                 } else {
                     console.warn(`[Track ${this.id}] Could not create effect instance for type: ${effectData.type} during construction.`);
@@ -151,7 +151,6 @@ export class Track {
         console.log(`[Track ${this.id}] Rebuilding effect chain. Active effects: ${this.activeEffects.length}`);
         const mainSourceNode = this.instrument || this.toneSampler || this.slicerMonoPlayer;
 
-        // 1. Disconnect all sources from their current outputs
         if (mainSourceNode && !mainSourceNode.disposed) {
             try { mainSourceNode.disconnect(); console.log(`[Track ${this.id}] Disconnected mainSourceNode.`); }
             catch (e) { console.warn(`[Track ${this.id}] Minor error disconnecting mainSourceNode: ${e.message}`); }
@@ -165,7 +164,6 @@ export class Track {
             });
         }
 
-        // 2. Disconnect all active effects from ALL their outputs.
         this.activeEffects.forEach(effectWrapper => {
             if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
                 try { effectWrapper.toneNode.disconnect(); console.log(`[Track ${this.id}] Disconnected effect ${effectWrapper.type}.`); }
@@ -173,22 +171,18 @@ export class Track {
             }
         });
 
-        // 3. Disconnect gain node from its outputs (meter and main bus/destination)
         if (this.gainNode && !this.gainNode.disposed) {
             try { this.gainNode.disconnect(); console.log(`[Track ${this.id}] Disconnected gainNode.`); }
             catch (e) { console.warn(`[Track ${this.id}] Minor error disconnecting gainNode: ${e.message}`); }
-        } else if (!this.gainNode || this.gainNode.disposed) { // Ensure gainNode exists
+        } else if (!this.gainNode || this.gainNode.disposed) { 
             console.warn(`[Track ${this.id}] GainNode was null or disposed. Re-initializing.`);
             this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         }
-        // Ensure trackMeter exists
         if (!this.trackMeter || this.trackMeter.disposed) {
             console.warn(`[Track ${this.id}] TrackMeter was null or disposed. Re-initializing.`);
             this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
         }
 
-
-        // 4. Connect the chain: Source(s) -> Effects -> GainNode
         let currentAudioPathEnd = null;
 
         if (mainSourceNode && !mainSourceNode.disposed) {
@@ -196,7 +190,6 @@ export class Track {
             console.log(`[Track ${this.id}] Chain starts with mainSourceNode (${mainSourceNode.constructor.name}).`);
         }
 
-        // Connect effects sequentially
         this.activeEffects.forEach(effectWrapper => {
             if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
                 if (currentAudioPathEnd) {
@@ -204,16 +197,11 @@ export class Track {
                         console.log(`[Track ${this.id}] Connecting ${currentAudioPathEnd.constructor.name} to ${effectWrapper.type}`);
                         currentAudioPathEnd.connect(effectWrapper.toneNode);
                     } catch (e) { console.error(`[Track ${this.id}] Error connecting ${currentAudioPathEnd.constructor.name} to ${effectWrapper.type}:`, e); }
-                } else {
-                    // This case should only happen if there's no mainSourceNode (e.g. synth not init'd yet)
-                    // AND this is the first effect. The effect becomes the start of the chain.
-                    console.log(`[Track ${this.id}] No currentAudioPathEnd, ${effectWrapper.type} becomes start.`);
                 }
                 currentAudioPathEnd = effectWrapper.toneNode;
             }
         });
 
-        // Connect the end of the effects chain (or the source if no effects) to the GainNode
         if (this.gainNode && !this.gainNode.disposed) {
             if (currentAudioPathEnd) {
                 try {
@@ -226,10 +214,9 @@ export class Track {
             this.outputNode = this.gainNode;
         } else {
             console.error(`[Track ${this.id}] GainNode is invalid after re-init. Cannot connect effects chain to it.`);
-            this.outputNode = currentAudioPathEnd;
+            this.outputNode = currentAudioPathEnd; 
         }
 
-        // For DrumSampler, connect each player to the start of the effect chain (or gainNode if no effects)
         if (this.type === 'DrumSampler') {
             const firstNodeInEffectsChain = this.activeEffects.length > 0 ? this.activeEffects[0].toneNode : this.gainNode;
             this.drumPadPlayers.forEach((player, idx) => {
@@ -246,21 +233,27 @@ export class Track {
             });
         }
 
-        // 5. Connect GainNode outputs (Meter and Main Out)
         if (this.gainNode && !this.gainNode.disposed && this.trackMeter && !this.trackMeter.disposed) {
             try {
                 this.gainNode.connect(this.trackMeter);
-                const finalDestination = window.masterEffectsBusInput || Tone.getDestination();
+                const finalDestination = (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) 
+                                         ? window.masterEffectsBusInput 
+                                         : Tone.getDestination();
                 this.gainNode.connect(finalDestination);
-                console.log(`[Track ${this.id}] GainNode connected to Meter and ${finalDestination === window.masterEffectsBusInput ? 'Master Bus Input' : 'Tone Destination'}.`);
+                console.log(`[Track ${this.id}] GainNode connected to Meter and ${finalDestination === window.masterEffectsBusInput ? 'Master Bus Input' : 'Tone Destination'}. Master bus input valid: ${!!(window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed)}`); // DEBUG
             } catch (e) {
                  console.error(`[Track ${this.id}] Error connecting GainNode final outputs: `, e);
             }
         } else {
             console.warn(`[Track ${this.id}] GainNode or TrackMeter is null/disposed. Final output connections might be incomplete.`);
-            if (this.outputNode && !this.outputNode.disposed && (window.masterEffectsBusInput || Tone.getDestination())) {
-                try { this.outputNode.connect(window.masterEffectsBusInput || Tone.getDestination()); }
-                catch(e) { console.error(`[Track ${this.id}] Error connecting fallback output node:`, e.message); }
+            if (this.outputNode && !this.outputNode.disposed) {
+                const fallbackDest = (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) 
+                                     ? window.masterEffectsBusInput 
+                                     : Tone.getDestination();
+                try { 
+                    this.outputNode.connect(fallbackDest); 
+                    console.log(`[Track ${this.id}] Fallback outputNode connected to ${fallbackDest === window.masterEffectsBusInput ? 'Master Bus Input' : 'Tone Destination'}.`);
+                } catch(e) { console.error(`[Track ${this.id}] Error connecting fallback output node:`, e.message); }
             }
         }
         console.log(`[Track ${this.id}] Effect chain rebuilt. Final output node: ${this.outputNode ? this.outputNode.constructor.name : 'None'}`);
@@ -311,56 +304,46 @@ export class Track {
             return;
         }
 
-        // 1. Update the stored params for serialization
         const keys = paramPath.split('.');
         let currentStoredParamLevel = effectWrapper.params;
         for (let i = 0; i < keys.length - 1; i++) {
-            currentStoredParamLevel[keys[i]] = currentStoredParamLevel[keys[i]] || {}; // Create nested object if it doesn't exist
+            currentStoredParamLevel[keys[i]] = currentStoredParamLevel[keys[i]] || {}; 
             currentStoredParamLevel = currentStoredParamLevel[keys[i]];
         }
         currentStoredParamLevel[keys[keys.length - 1]] = value;
 
-        // 2. Update the actual Tone.js node
         try {
             let targetObject = effectWrapper.toneNode;
-            // Traverse to the object that holds the final parameter
-            // e.g., for 'filter.type', targetObject becomes effectWrapper.toneNode.filter
             for (let i = 0; i < keys.length - 1; i++) {
                 targetObject = targetObject[keys[i]];
-                if (typeof targetObject === 'undefined') { // Check if intermediate object exists
+                if (typeof targetObject === 'undefined') { 
                     console.error(`[Track ${this.id}] Nested property "${keys.slice(0, i + 1).join('.')}" not found on Tone node for effect ${effectWrapper.type}. Cannot set parameter.`);
-                    return; // Cannot proceed if path is invalid
+                    return; 
                 }
             }
 
-            const finalParamKey = keys[keys.length - 1]; // e.g., 'type' or 'frequency' or 'Q'
-            const paramInstance = targetObject[finalParamKey]; // e.g., effectWrapper.toneNode.filter.Q or effectWrapper.toneNode.frequency
+            const finalParamKey = keys[keys.length - 1]; 
+            const paramInstance = targetObject[finalParamKey]; 
 
-            // Check if the parameter exists on the target object
             if (typeof paramInstance !== 'undefined') {
-                // Check if it's a Tone.Signal or Tone.Param (has a .value property)
                 if (paramInstance && typeof paramInstance.value !== 'undefined') {
                     if (typeof paramInstance.rampTo === 'function') {
-                        paramInstance.rampTo(value, 0.02); // Short ramp for smoothness
+                        paramInstance.rampTo(value, 0.02); 
                     } else {
-                        paramInstance.value = value; // Direct assignment to .value
+                        paramInstance.value = value; 
                     }
                 } else {
-                    // It's a direct property (e.g., filter.type, or a simple number property on the effect itself)
                     targetObject[finalParamKey] = value;
                 }
             } else if (typeof effectWrapper.toneNode.set === 'function' && keys.length > 0) {
-                 // Fallback to .set() for complex objects or if the direct path failed.
-                 // This is useful for params like 'filter.type' on AutoFilter where 'filter' is an object.
                 const setObj = {};
                 let currentLevelForSet = setObj;
                 for(let i = 0; i < keys.length - 1; i++){
-                    currentLevelForSet[keys[i]] = {}; // Create nested structure
+                    currentLevelForSet[keys[i]] = {}; 
                     currentLevelForSet = currentLevelForSet[keys[i]];
                 }
                 currentLevelForSet[finalParamKey] = value;
                 effectWrapper.toneNode.set(setObj);
-                // console.log(`[Track ${this.id}] Used .set() for ${effectWrapper.type} param ${paramPath} with value ${value}. Object:`, setObj);
             } else {
                 console.warn(`[Track ${this.id}] Cannot set param "${paramPath}" on ${effectWrapper.type}. Property or .set() method not available. Target object:`, targetObject, "Final Key:", finalParamKey);
             }
@@ -376,12 +359,9 @@ export class Track {
             console.warn(`[Track ${this.id}] Effect ID ${effectId} not found for reordering.`);
             return;
         }
-        // newIndex is the target *insertion* index.
-        // It can range from 0 (insert at beginning) to activeEffects.length (insert at end).
         const clampedNewIndex = Math.max(0, Math.min(newIndex, this.activeEffects.length));
 
-        if (oldIndex === clampedNewIndex || (oldIndex === clampedNewIndex -1 && newIndex === this.activeEffects.length) ) { // No change or trying to move to its current position as last item
-            // console.warn(`[Track ${this.id}] Reorder no change: old ${oldIndex}, new ${newIndex} (clamped ${clampedNewIndex})`);
+        if (oldIndex === clampedNewIndex || (oldIndex === clampedNewIndex -1 && newIndex === this.activeEffects.length) ) { 
             return;
         }
         
@@ -426,7 +406,7 @@ export class Track {
                 }
                 this.setupToneSampler();
             }
-            this.rebuildEffectChain();
+            this.rebuildEffectChain(); // Ensures connection to master bus AFTER resources are loaded
             this.setSequenceLength(this.sequenceLength, true);
             console.log(`[Track ${this.id}] fullyInitializeAudioResources completed.`);
         } catch (error) {
@@ -435,18 +415,34 @@ export class Track {
     }
 
     async initializeInstrument() {
-        console.log(`[Track ${this.id}] Initializing MonoSynth instrument...`);
+        console.log(`[Track ${this.id} - initializeInstrument] Initializing ${this.synthEngineType} instrument...`); // DEBUG
+        console.log(`[Track ${this.id} - initializeInstrument] Current this.instrument:`, this.instrument); // DEBUG
+        console.log(`[Track ${this.id} - initializeInstrument] Current this.synthParams:`, JSON.parse(JSON.stringify(this.synthParams))); // DEBUG
+
         if (this.instrument && typeof this.instrument.dispose === 'function' && !this.instrument.disposed) {
+            console.log(`[Track ${this.id} - initializeInstrument] Disposing existing instrument.`); // DEBUG
             this.instrument.dispose();
         }
         if (!this.synthParams || Object.keys(this.synthParams).length === 0) {
+            console.log(`[Track ${this.id} - initializeInstrument] synthParams empty or null, getting defaults.`); // DEBUG
             this.synthParams = this.getDefaultSynthParams();
         }
         try {
-            this.instrument = new Tone.MonoSynth(this.synthParams);
+            // Ensure synthParams are correctly structured for Tone.MonoSynth
+            const paramsForSynth = {
+                portamento: this.synthParams.portamento,
+                oscillator: this.synthParams.oscillator, // Should be { type: 'sine', ... }
+                envelope: this.synthParams.envelope,     // Should be { attack: 0.005, ... }
+                filter: this.synthParams.filter,         // Should be { type: 'lowpass', ... }
+                filterEnvelope: this.synthParams.filterEnvelope // Should be { attack: 0.06, ... }
+            };
+            console.log(`[Track ${this.id} - initializeInstrument] Params for new MonoSynth:`, JSON.parse(JSON.stringify(paramsForSynth))); // DEBUG
+            this.instrument = new Tone.MonoSynth(paramsForSynth);
+            console.log(`[Track ${this.id} - initializeInstrument] NEW MonoSynth instrument CREATED:`, this.instrument); // DEBUG
         } catch (error) {
-            console.error(`[Track ${this.id}] Error creating MonoSynth instrument:`, error);
-            this.instrument = new Tone.Synth();
+            console.error(`[Track ${this.id} - initializeInstrument] Error creating MonoSynth instrument:`, error); // DEBUG
+            console.log(`[Track ${this.id} - initializeInstrument] Falling back to Tone.Synth() due to error.`); // DEBUG
+            this.instrument = new Tone.Synth(); // Basic fallback
         }
     }
 
@@ -519,17 +515,68 @@ export class Track {
     }
 
     setSynthParam(paramPath, value) {
-        if (this.type !== 'Synth' || !this.instrument || this.instrument.disposed) { return; }
-        if (!this.synthParams) this.synthParams = this.getDefaultSynthParams();
+        console.log(`[Track ${this.id} - setSynthParam] Called. Path: '${paramPath}', Value:`, value, `Type: ${this.type}`); // DEBUG
+        if (this.type !== 'Synth') {
+            console.warn(`[Track ${this.id} - setSynthParam] Not a Synth track. Returning.`); return;
+        }
+        if (!this.instrument) {
+            console.error(`[Track ${this.id} - setSynthParam] this.instrument is NULL. Synth type: ${this.synthEngineType}. Returning.`); return;
+        }
+        if (this.instrument.disposed) {
+            console.error(`[Track ${this.id} - setSynthParam] this.instrument is DISPOSED. Returning.`); return;
+        }
+        if (!this.synthParams) {
+            console.log(`[Track ${this.id} - setSynthParam] Initializing this.synthParams as it was missing.`);
+            this.synthParams = this.getDefaultSynthParams();
+        }
+        
+        // Update local synthParams state
         const keys = paramPath.split('.');
         let currentParamLevel = this.synthParams;
         for (let i = 0; i < keys.length - 1; i++) {
-            if (!currentParamLevel[keys[i]]) currentParamLevel[keys[i]] = {};
+            if (!currentParamLevel[keys[i]]) currentParamLevel[keys[i]] = {}; // Create intermediate objects if they don't exist
             currentParamLevel = currentParamLevel[keys[i]];
         }
         currentParamLevel[keys[keys.length - 1]] = value;
-        try { this.instrument.set({ [paramPath]: value }); }
-        catch (e) { console.error(`Error setting synth param ${paramPath}:`, e); }
+        console.log(`[Track ${this.id} - setSynthParam] Updated local this.synthParams.${paramPath} to`, value);
+        console.log(`[Track ${this.id} - setSynthParam] Full local synthParams now:`, JSON.parse(JSON.stringify(this.synthParams)));
+
+        try {
+            // Attempt to set on the Tone.js instrument instance
+            let targetObject = this.instrument;
+            for (let i = 0; i < keys.length - 1; i++) {
+                targetObject = targetObject[keys[i]];
+                if (!targetObject) {
+                    console.error(`[Track ${this.id} - setSynthParam] Intermediate object for path "${keys.slice(0,i+1).join('.')}" NOT FOUND on actual instrument. Path: ${paramPath}`);
+                    // Attempt fallback using instrument.set() if intermediate object not found for direct assignment
+                    console.warn(`[Track ${this.id} - setSynthParam] Trying this.instrument.set({ '${paramPath}': ${value} }) as fallback.`);
+                    this.instrument.set({ [paramPath]: value });
+                    console.log(`[Track ${this.id} - setSynthParam] Fallback this.instrument.set() for ${paramPath} completed.`);
+                    return; // Exit after fallback attempt
+                }
+            }
+            
+            const finalKey = keys[keys.length - 1];
+            if (targetObject && typeof targetObject[finalKey] !== 'undefined') {
+                // Check if it's an AudioParam or Tone.Signal (has a .value property)
+                if (targetObject[finalKey] && typeof targetObject[finalKey].value !== 'undefined' && typeof value === 'number') {
+                    console.log(`[Track ${this.id} - setSynthParam] Setting AudioParam/Signal: ${paramPath}.value = ${value}`);
+                    targetObject[finalKey].value = value;
+                } else {
+                    // Direct property assignment (e.g., oscillator.type, filter.type)
+                    console.log(`[Track ${this.id} - setSynthParam] Setting direct property: ${paramPath} = ${value}`);
+                    targetObject[finalKey] = value;
+                }
+                console.log(`[Track ${this.id} - setSynthParam] Successfully set synth param ${paramPath} on Tone.js object.`);
+            } else {
+                // Fallback to instrument.set() if the direct path resolved to an undefined property
+                console.warn(`[Track ${this.id} - setSynthParam] Property ${paramPath} (finalKey: ${finalKey}) not directly found on target object, attempting this.instrument.set(). Target object:`, targetObject);
+                this.instrument.set({ [paramPath]: value });
+                console.log(`[Track ${this.id} - setSynthParam] Fallback this.instrument.set() for ${paramPath} completed.`);
+            }
+        } catch (e) { 
+            console.error(`[Track ${this.id} - setSynthParam] Error setting synth param '${paramPath}' to '${value}':`, e); 
+        }
     }
 
     setSliceVolume(sliceIndex, volume) { if (this.slices[sliceIndex]) this.slices[sliceIndex].volume = parseFloat(volume); }
@@ -552,7 +599,7 @@ export class Track {
         }
         const oldLength = this.sequenceLength;
         const newLength = oldLength * 2;
-        if (newLength > 1024) {
+        if (newLength > 1024) { // Example max length
             return { success: false, message: "Maximum sequence length reached." };
         }
         this.sequenceData = this.sequenceData.map(row => {
@@ -569,7 +616,7 @@ export class Track {
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
         const oldActualLength = this.sequenceLength;
         newLengthInSteps = Math.max(STEPS_PER_BAR, parseInt(newLengthInSteps) || defaultStepsPerBar);
-        newLengthInSteps = Math.ceil(newLengthInSteps / STEPS_PER_BAR) * STEPS_PER_BAR;
+        newLengthInSteps = Math.ceil(newLengthInSteps / STEPS_PER_BAR) * STEPS_PER_BAR; 
         if (!skipUndoCapture && oldActualLength !== newLengthInSteps && typeof window.captureStateForUndo === 'function') {
             window.captureStateForUndo(`Set Seq Length for ${this.name} to ${newLengthInSteps / STEPS_PER_BAR} bars`);
         }
@@ -661,7 +708,7 @@ export class Track {
     dispose() {
         console.log(`[Track ${this.id}] Disposing track ${this.name} (${this.type})`);
         try { if (this.sequence && !this.sequence.disposed) { this.sequence.stop(); this.sequence.clear(); this.sequence.dispose(); } } catch(e){ console.warn("Error disposing sequence", e.message); }
-        try { if (this.instrument && !this.instrument.disposed) this.instrument.dispose(); } catch(e){ console.warn("Error disposing instrument", e.message); }
+        try { if (this.instrument && !this.instrument.disposed) { console.log(`[Track ${this.id} - Dispose] Disposing instrument.`); this.instrument.dispose(); } } catch(e){ console.warn("Error disposing instrument", e.message); }
         try { if (this.audioBuffer && !this.audioBuffer.disposed) this.audioBuffer.dispose(); } catch(e){ console.warn("Error disposing audioBuffer", e.message); }
         this.disposeSlicerMonoNodes();
         try { if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.dispose(); } catch(e){ console.warn("Error disposing toneSampler", e.message); }
