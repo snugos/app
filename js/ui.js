@@ -190,7 +190,7 @@ function buildSamplerSpecificInspectorDOM(track) {
     if (sampleStatus !== 'loaded') {
         rightSide.querySelectorAll('input, button, select, details').forEach(el => {
             // Ensure not to disable the relink button itself or its container's interactive elements
-            if (!el.closest('.drop-zone-relink-container') && !el.classList.contains('drop-zone-relink-button')) {
+            if (!el.closest('.drop-zone-relink-container') && !el.classList.contains('drop-zone-relink-button')) { // Assuming relink button might have this class
                  el.disabled = true;
             }
         });
@@ -433,7 +433,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 }
 
 // --- Modular Effects Rack UI ---
-// ... (No changes to effect rack UI logic for this step)
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const rackContainer = document.createElement('div'); rackContainer.className = 'modular-effects-rack p-2 space-y-2 bg-gray-50 h-full flex flex-col';
     const header = document.createElement('div'); header.className = 'flex justify-between items-center mb-2 flex-shrink-0';
@@ -689,7 +688,87 @@ export function updateSoundBrowserDisplayForLibrary(libraryName) {
         }
     }
 }
-export function renderSoundBrowserDirectory(pathArray, treeNode) { /* ... (no changes) ... */ }
+export function renderSoundBrowserDirectory(pathArray, treeNode) {
+    const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
+    if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - renderSoundBrowserDirectory]: DOM elements missing."); return; }
+    if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") {
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`;
+        pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
+        return;
+    }
+    if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
+        return;
+    }
+    if (!treeNode) {
+        soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`;
+        pathDisplay.textContent = `Path: /`;
+        return;
+    }
+    soundBrowserList.innerHTML = ''; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
+    if (pathArray.length > 0) { const backButton = document.createElement('div'); backButton.className = 'sound-browser-item font-semibold hover:bg-gray-100 cursor-pointer p-1 text-sm border-b border-gray-200'; backButton.textContent = '⬆️ .. (Up)'; backButton.addEventListener('click', () => { window.currentSoundBrowserPath.pop(); let newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; if (!newTreeNode) { window.currentSoundBrowserPath = []; renderSoundBrowserDirectory([], null); return; } for (const segment of window.currentSoundBrowserPath) { if (newTreeNode[segment]?.type === 'folder') newTreeNode = newTreeNode[segment].children; else { window.currentSoundBrowserPath = []; newTreeNode = window.soundLibraryFileTrees[window.currentLibraryName]; break; } } window.currentSoundFileTree = newTreeNode; renderSoundBrowserDirectory(window.currentSoundBrowserPath, newTreeNode); }); soundBrowserList.appendChild(backButton); }
+
+    if (Object.keys(treeNode).length === 0) {
+        if (pathArray.length > 0) {
+            soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>';
+        } else if (window.currentLibraryName) {
+            soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or no audio files matched filters.</div>`;
+        }
+    }
+
+    const sortedEntries = Object.entries(treeNode).sort(([nameA, itemA], [nameB, itemB]) => { if (itemA.type === 'folder' && itemB.type === 'file') return -1; if (itemA.type === 'file' && itemB.type === 'folder') return 1; return nameA.localeCompare(nameB); });
+    sortedEntries.forEach(([name, item]) => {
+        const div = document.createElement('div'); div.className = 'sound-browser-item hover:bg-gray-100 cursor-pointer p-1 text-xs border-b border-gray-200 last:border-b-0';
+        if (item.type === 'folder') {
+            div.textContent = `📁 ${name}`;
+            div.addEventListener('click', () => {
+                window.currentSoundBrowserPath.push(name);
+                window.currentSoundFileTree = item.children;
+                renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children);
+            });
+        } else if (item.type === 'file') {
+            div.textContent = `🎵 ${name}`;
+            div.title = `Click to play. Drag to load: ${name} (Path: ${item.fullPath})`;
+            div.draggable = true;
+            div.addEventListener('dragstart', (event) => { const soundData = { fullPath: item.fullPath, libraryName: window.currentLibraryName, fileName: name }; event.dataTransfer.setData("application/json", JSON.stringify(soundData)); event.dataTransfer.effectAllowed = "copy"; div.style.opacity = '0.5'; });
+            div.addEventListener('dragend', () => { div.style.opacity = '1'; });
+            div.addEventListener('click', async (event) => {
+                if (event.detail === 0) return;
+                if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
+                if (window.previewPlayer && !window.previewPlayer.disposed) { try { window.previewPlayer.stop(); window.previewPlayer.dispose(); } catch(e) {console.warn("Error disposing old preview player", e)} window.previewPlayer = null;}
+
+                let objectURL = null;
+                try {
+                    if (!window.loadedZipFiles || !window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") {
+                        throw new Error(`ZIP library "${window.currentLibraryName}" not fully loaded.`);
+                    }
+                    const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath);
+                    if (!zipEntry) {
+                        throw new Error(`File ${item.fullPath} not found in ${window.currentLibraryName}.`);
+                    }
+                    const fileBlobFromZip = await zipEntry.async("blob");
+                    const inferredMimeType = getMimeTypeFromFilename(name);
+                    const finalMimeType = fileBlobFromZip.type || inferredMimeType || 'application/octet-stream';
+                    const typedFileObject = new File([fileBlobFromZip], name, { type: finalMimeType });
+                    objectURL = URL.createObjectURL(typedFileObject);
+                    const buffer = new Tone.Buffer();
+                    await buffer.load(objectURL);
+                    window.previewPlayer = new Tone.Player(buffer).toDestination();
+                    window.previewPlayer.autostart = true;
+                    window.previewPlayer.onstop = () => {
+                        if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){}
+                        window.previewPlayer = null;
+                        if (objectURL) URL.revokeObjectURL(objectURL);
+                    };
+                } catch (error) {
+                    console.error(`[UI - Preview] Error previewing sound ${name} (Path: ${item.fullPath}):`, error);
+                    showNotification(`Error previewing ${name}: ${error.message || 'Unknown error'}`, 4000);
+                    if (objectURL) URL.revokeObjectURL(objectURL);
+                }
+            });
+        }
+        soundBrowserList.appendChild(div);
+    });
+ }
 export function openMixerWindow(savedState = null) {
     console.log(`[UI - openMixerWindow] Called. savedState:`, savedState);
     const windowId = 'mixer';
@@ -766,6 +845,236 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
 // --- Utility UI functions for samplers (Updated for Audio Status) ---
 // ... (renderSamplePads, updateSliceEditorUI, applySliceEdits, drawWaveform, drawInstrumentWaveform, updateDrumPadControlsUI, renderDrumSamplerPads as previously updated)
 // Ensure these functions correctly use the `status` property from track.samplerAudioData, track.instrumentSamplerSettings, or padData.
+export function drawWaveform(track) { // For Sampler (Slicer)
+    if (!track || (track.type !== 'Sampler' && track.type !== 'InstrumentSampler') ) return;
+    const isSamplerTrack = track.type === 'Sampler';
+    const audioDataSource = isSamplerTrack ? track.samplerAudioData : track.instrumentSamplerSettings;
+    const audioBufferToDraw = isSamplerTrack ? track.audioBuffer : track.instrumentSamplerSettings.audioBuffer;
+    const ctx = isSamplerTrack ? track.waveformCanvasCtx : track.instrumentWaveformCanvasCtx;
+
+    if (!ctx) return;
+    const canvas = ctx.canvas; const width = canvas.width; const height = canvas.height;
+    ctx.clearRect(0, 0, width, height); ctx.fillStyle = '#e0e0e0'; ctx.fillRect(0, 0, width, height);
+
+    let statusMessage = '';
+    if (audioDataSource?.status === 'missing') statusMessage = `File: ${audioDataSource.fileName || 'Unknown'} MISSING`;
+    else if (audioDataSource?.status === 'pending') statusMessage = `Loading: ${audioDataSource.fileName || 'sample'}...`;
+    else if (audioDataSource?.status === 'empty' || !audioBufferToDraw || !audioBufferToDraw.loaded) statusMessage = isSamplerTrack ? 'No Sample Loaded' : 'No Instrument Sample';
+
+    if (statusMessage) {
+        ctx.fillStyle = '#888'; ctx.textAlign = 'center'; ctx.font = '10px Inter';
+        ctx.fillText(statusMessage, width / 2, height / 2);
+        return;
+    }
+
+    // If loaded, draw the waveform
+    const channelData = audioBufferToDraw.getChannelData(0);
+    ctx.lineWidth = 1; ctx.strokeStyle = '#333'; ctx.beginPath();
+    const sliceWidth = width / channelData.length;
+    for (let i = 0; i < channelData.length; i++) {
+        const x = i * sliceWidth; const y = (0.5 + channelData[i] * 0.5) * height;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    if (track.type === 'Sampler') {
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1;
+        track.slices.forEach((slice, index) => {
+            if (slice.duration > 0) {
+                const startX = (slice.offset / audioBufferToDraw.duration) * width;
+                const endX = ((slice.offset + slice.duration) / audioBufferToDraw.duration) * width;
+                ctx.beginPath(); ctx.moveTo(startX, 0); ctx.lineTo(startX, height); ctx.stroke();
+                if (index === track.selectedSliceForEdit) {
+                    ctx.fillStyle = 'rgba(0, 0, 255, 0.2)'; ctx.fillRect(startX, 0, endX - startX, height);
+                    ctx.strokeStyle = 'rgba(0, 0, 255, 0.9)'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(startX,0); ctx.lineTo(startX,height); ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)'; ctx.lineWidth = 1; // Reset for next slice marker
+                }
+            }
+        });
+    }
+    if (track.type === 'InstrumentSampler' && track.instrumentSamplerSettings.loop) {
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)'; ctx.lineWidth = 1;
+        const loopStartX = (track.instrumentSamplerSettings.loopStart / audioBufferToDraw.duration) * width;
+        const loopEndX = (track.instrumentSamplerSettings.loopEnd / audioBufferToDraw.duration) * width;
+        ctx.beginPath(); ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, height); ctx.stroke();
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.1)'; ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, height);
+    }
+}
+export function drawInstrumentWaveform(track) { drawWaveform(track); }
+
+export function renderSamplePads(track) { // For Sampler (Slicer)
+    if (!track || !track.inspectorWindow?.element) return;
+    const padsContainer = track.inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
+    if (!padsContainer) return;
+    padsContainer.innerHTML = '';
+
+    const sampleStatus = track.samplerAudioData?.status;
+    if (sampleStatus !== 'loaded') {
+        let statusMessage = 'No sample loaded.';
+        if (sampleStatus === 'missing') statusMessage = `Sample "${track.samplerAudioData.fileName || 'unknown'}" missing. Relink/Upload.`;
+        else if (sampleStatus === 'pending') statusMessage = `Loading "${track.samplerAudioData.fileName || 'sample'}"...`;
+        padsContainer.innerHTML = `<p class="text-xs text-gray-500 p-1">${statusMessage}</p>`;
+        return;
+    }
+
+    if (!track.slices || track.slices.length === 0) { padsContainer.textContent = 'No slices defined. Auto-slice or load sample.'; return; }
+    track.slices.forEach((slice, index) => {
+        const pad = document.createElement('button'); pad.className = `pad-button ${index === track.selectedSliceForEdit ? 'selected-for-edit' : ''}`; pad.textContent = `Slice ${index + 1}`; pad.title = `Select Slice ${index + 1}. Click to preview.`; pad.dataset.trackId = track.id; pad.dataset.trackType = "Sampler"; pad.dataset.padSliceIndex = index.toString();
+        pad.addEventListener('click', async () => { track.selectedSliceForEdit = index; if(typeof window.playSlicePreview === 'function') await window.playSlicePreview(track.id, index); renderSamplePads(track); updateSliceEditorUI(track); });
+        padsContainer.appendChild(pad);
+    });
+}
+
+export function updateSliceEditorUI(track) { // For Sampler (Slicer)
+    if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
+    const inspectorEl = track.inspectorWindow.element;
+    const sampleStatus = track.samplerAudioData?.status;
+    const selectedSlice = track.slices[track.selectedSliceForEdit];
+
+    const selectedSliceLabel = inspectorEl.querySelector(`#selectedSliceLabel-${track.id}`);
+    if(selectedSliceLabel) selectedSliceLabel.textContent = (track.selectedSliceForEdit + 1).toString();
+
+    const controlsContainer = inspectorEl.querySelector(`#sliceControlsContainer-${track.id}`);
+    const disableControls = sampleStatus !== 'loaded' || !selectedSlice;
+
+    if (controlsContainer) {
+        controlsContainer.querySelectorAll('input, button, select, details').forEach(el => {
+             if (!el.closest('.drop-zone-relink-container') && !el.classList.contains('drop-zone-relink-button')) el.disabled = disableControls;
+        });
+        controlsContainer.style.opacity = disableControls ? '0.5' : '1';
+    }
+
+    if (disableControls || !selectedSlice) {
+        const startInput = inspectorEl.querySelector(`#sliceStart-${track.id}`); if(startInput) startInput.value = '0.000';
+        const endInput = inspectorEl.querySelector(`#sliceEnd-${track.id}`); if(endInput) endInput.value = '0.000';
+        track.inspectorControls.sliceVolume?.setValue(0.7, false);
+        track.inspectorControls.slicePitch?.setValue(0, false);
+        track.inspectorControls.sliceEnvAttack?.setValue(0.01,false);
+        track.inspectorControls.sliceEnvDecay?.setValue(0.1,false);
+        track.inspectorControls.sliceEnvSustain?.setValue(1.0,false);
+        track.inspectorControls.sliceEnvRelease?.setValue(0.1,false);
+        const loopToggle = inspectorEl.querySelector(`#sliceLoopToggle-${track.id}`); if (loopToggle) { loopToggle.textContent = 'Loop: OFF'; loopToggle.classList.remove('active'); }
+        const reverseToggle = inspectorEl.querySelector(`#sliceReverseToggle-${track.id}`); if (reverseToggle) { reverseToggle.textContent = 'Rev: OFF'; reverseToggle.classList.remove('active'); }
+        return;
+    }
+
+    const startInput = inspectorEl.querySelector(`#sliceStart-${track.id}`); if (startInput) startInput.value = selectedSlice.offset.toFixed(3);
+    const endInput = inspectorEl.querySelector(`#sliceEnd-${track.id}`); if (endInput) endInput.value = (selectedSlice.offset + selectedSlice.duration).toFixed(3);
+    track.inspectorControls.sliceVolume?.setValue(selectedSlice.volume, false); track.inspectorControls.slicePitch?.setValue(selectedSlice.pitchShift, false); track.inspectorControls.sliceEnvAttack?.setValue(selectedSlice.envelope.attack, false); track.inspectorControls.sliceEnvDecay?.setValue(selectedSlice.envelope.decay, false); track.inspectorControls.sliceEnvSustain?.setValue(selectedSlice.envelope.sustain, false); track.inspectorControls.sliceEnvRelease?.setValue(selectedSlice.envelope.release, false);
+    const loopToggle = inspectorEl.querySelector(`#sliceLoopToggle-${track.id}`); if (loopToggle) { loopToggle.textContent = selectedSlice.loop ? 'Loop: ON' : 'Loop: OFF'; loopToggle.classList.toggle('active', selectedSlice.loop); }
+    const reverseToggle = inspectorEl.querySelector(`#sliceReverseToggle-${track.id}`); if (reverseToggle) { reverseToggle.textContent = selectedSlice.reverse ? 'Rev: ON' : 'Rev: OFF'; reverseToggle.classList.toggle('active', selectedSlice.reverse); }
+}
+
+export function applySliceEdits(trackId) {
+    const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null; if (!track || track.type !== 'Sampler' || !track.inspectorWindow?.element) return;
+    if (track.samplerAudioData?.status !== 'loaded' || !track.audioBuffer) {
+        showNotification("Cannot apply slice edits: Sample not loaded.", 2000);
+        return;
+    }
+    const inspectorEl = track.inspectorWindow.element; const slice = track.slices[track.selectedSliceForEdit]; if (!slice) return;
+    const newStart = parseFloat(inspectorEl.querySelector(`#sliceStart-${track.id}`)?.value); const newEnd = parseFloat(inspectorEl.querySelector(`#sliceEnd-${track.id}`)?.value);
+    if (!isNaN(newStart) && !isNaN(newEnd) && newEnd > newStart && track.audioBuffer) { slice.offset = Math.max(0, Math.min(newStart, track.audioBuffer.duration)); slice.duration = Math.max(0.001, Math.min(newEnd - slice.offset, track.audioBuffer.duration - slice.offset)); slice.userDefined = true; if(typeof window.drawWaveform === 'function') window.drawWaveform(track); showNotification(`Slice ${track.selectedSliceForEdit + 1} updated.`, 1500); } else { showNotification("Invalid slice start/end times.", 2000); updateSliceEditorUI(track); }
+}
+
+export function updateDrumPadControlsUI(track) { // For Drum Sampler
+    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) return;
+    const inspectorEl = track.inspectorWindow.element;
+    const selectedPadData = track.drumSamplerPads[track.selectedDrumPadForEdit];
+    if (!selectedPadData) return;
+
+    const loadContainer = inspectorEl.querySelector(`#drumPadLoadContainer-${track.id}`);
+    const padIndex = track.selectedDrumPadForEdit;
+    if (loadContainer) {
+        // createDropZoneHTML will handle status display for the selected pad
+        loadContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}`, 'DrumSampler', padIndex, selectedPadData);
+        const fileInputId = `fileInput-${track.id}-DrumSampler-${padIndex}`;
+        const fileInputEl = loadContainer.querySelector(`#${fileInputId}`);
+        const dropZoneEl = loadContainer.querySelector(`#dropZone-${track.id}-drumsampler-${padIndex}`);
+        const relinkButtonId = `relinkFileBtn-${track.id}-DrumSampler-${padIndex}`;
+        const relinkButton = loadContainer.querySelector(`#${relinkButtonId}`);
+
+
+        if (fileInputEl) fileInputEl.addEventListener('change', (e) => { window.loadDrumSamplerPadFile(e, track.id, padIndex); });
+        if (dropZoneEl && typeof utilSetupDropZoneListeners === 'function') utilSetupDropZoneListeners(dropZoneEl, track.id, "DrumSampler", padIndex, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
+        if (relinkButton && fileInputEl) relinkButton.onclick = () => fileInputEl.click();
+    }
+
+    // Update knob values
+    track.inspectorControls.drumPadVolume?.setValue(selectedPadData.volume, false);
+    track.inspectorControls.drumPadPitch?.setValue(selectedPadData.pitchShift, false);
+    track.inspectorControls.drumPadEnvAttack?.setValue(selectedPadData.envelope.attack, false);
+    track.inspectorControls.drumPadEnvRelease?.setValue(selectedPadData.envelope.release, false);
+
+    // Enable/disable controls based on pad status
+    const controlsContainer = inspectorEl.querySelector(`#drumPadControlsContainer-${track.id}`);
+    const padSpecificControls = controlsContainer?.querySelectorAll('input, button, select, details');
+    const disable = selectedPadData.status !== 'loaded';
+    if (padSpecificControls) {
+        padSpecificControls.forEach(el => {
+            if (!el.closest('.drop-zone-relink-container') && !el.classList.contains('drop-zone-relink-button') && el.id !== `drumPadLoadContainer-${track.id}`) {
+                 el.disabled = disable;
+            }
+        });
+        if (controlsContainer) controlsContainer.style.opacity = disable ? '0.5' : '1';
+    }
+}
+
+export function renderDrumSamplerPads(track) { // For Drum Sampler
+    if (!track || track.type !== 'DrumSampler' || !track.inspectorWindow?.element) return;
+    const padsContainer = track.inspectorWindow.element.querySelector(`#drumSamplerPadsContainer-${track.id}`); if (!padsContainer) return;
+    padsContainer.innerHTML = ''; if (!track.drumSamplerPads || track.drumSamplerPads.length === 0) { padsContainer.textContent = 'No pads.'; return; }
+
+    track.drumSamplerPads.forEach((padData, index) => {
+        const padEl = document.createElement('button');
+        padEl.className = `pad-button ${index === track.selectedDrumPadForEdit ? 'selected-for-edit' : ''} drop-zone-pad`;
+
+        let fileNameDisplay = padData.originalFileName ? padData.originalFileName.substring(0, 10) + (padData.originalFileName.length > 10 ? '...' : '') : 'Empty';
+        let titleInfo = `Sample: ${padData.originalFileName || 'Empty'}`;
+        padEl.style.borderColor = ''; // Reset border color
+
+        if (padData.status === 'missing') {
+            fileNameDisplay = `MISSING!`;
+            padEl.style.borderColor = 'red';
+            titleInfo = `MISSING: ${padData.originalFileName || 'Unknown'}. Click to select new file or drag file here.`;
+        } else if (padData.status === 'pending') {
+            fileNameDisplay = `Loading...`;
+            titleInfo = `Loading: ${padData.originalFileName}`;
+        } else if (padData.status === 'empty') {
+             titleInfo = 'Empty. Click to load or drag file here.';
+        }
+
+
+        padEl.innerHTML = `Pad ${index + 1} <span class="pad-label block truncate" style="max-width: 60px;" title="${padData.originalFileName || 'Empty'}">${fileNameDisplay}</span>`;
+        padEl.title = `Select Pad ${index + 1}. ${titleInfo}`;
+        padEl.dataset.trackId = track.id.toString(); padEl.dataset.trackType = "DrumSampler"; padEl.dataset.padSliceIndex = index.toString();
+
+        padEl.addEventListener('click', async () => {
+            track.selectedDrumPadForEdit = index;
+            if (padData.status === 'loaded' && typeof window.playDrumSamplerPadPreview === 'function') {
+                await window.playDrumSamplerPadPreview(track.id, index);
+            } else if (padData.status === 'missing' || padData.status === 'empty') {
+                // Trigger file input for this pad specifically if its individual dropzone isn't immediately visible
+                // The main controls will update to show the dropzone for the selected pad.
+                const fileInputForPad = track.inspectorWindow.element.querySelector(`#fileInput-${track.id}-DrumSampler-${index}`);
+                if (fileInputForPad) {
+                     // This input might not exist if updateDrumPadControlsUI hasn't run for this specific pad yet
+                    fileInputForPad.click();
+                } else {
+                    // Fallback: if inspector controls are not yet specific to this pad, clicking the pad first selects it,
+                    // then updateDrumPadControlsUI will make the correct file input available in the control section.
+                    // A second click (on the now visible relink/upload button) might be needed by the user.
+                    console.warn(`File input for pad ${index} not directly found, relying on main control update.`);
+                }
+            }
+            renderDrumSamplerPads(track); // Re-render to update 'selected-for-edit' class on pads
+            updateDrumPadControlsUI(track); // Update controls section for the newly selected pad
+        });
+        if (typeof utilSetupDropZoneListeners === 'function') utilSetupDropZoneListeners(padEl, track.id, "DrumSampler", index, window.loadSoundFromBrowserToTarget, window.loadDrumSamplerPadFile);
+        padsContainer.appendChild(padEl);
+    });
+}
 
 export function highlightPlayingStep(col, trackType, gridElement) {
     if (!gridElement) return; const lastPlayingCol = gridElement._lastPlayingCol;
@@ -773,3 +1082,45 @@ export function highlightPlayingStep(col, trackType, gridElement) {
     if (lastPlayingCol !== col) { const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`); currentCells.forEach(cell => cell.classList.add('playing')); }
     gridElement._lastPlayingCol = col;
 }
+
+export {
+    // Ensure all functions intended for export are listed here
+    // openTrackInspectorWindow, // Already exported by build function
+    // buildTrackInspectorContentDOM, // Typically not exported directly
+    // initializeCommonInspectorControls, // Typically not exported
+    // initializeTypeSpecificInspectorControls, // Typically not exported
+    // buildSynthSpecificInspectorDOM, // Internal
+    // buildSamplerSpecificInspectorDOM, // Internal
+    // buildDrumSamplerSpecificInspectorDOM, // Internal
+    // buildInstrumentSamplerSpecificInspectorDOM, // Internal
+    // initializeSynthSpecificControls, // Internal
+    // initializeSamplerSpecificControls, // Internal
+    // initializeDrumSamplerSpecificControls, // Internal
+    // initializeInstrumentSamplerSpecificControls, // Internal
+
+    // renderSamplePads, // If needed by other modules, but usually called internally or via update
+    // updateSliceEditorUI, // "
+    applySliceEdits,
+    drawWaveform,
+    drawInstrumentWaveform,
+    // updateDrumPadControlsUI, // Usually internal
+    // renderDrumSamplerPads, // Usually internal
+
+    buildModularEffectsRackDOM,
+    renderEffectsList,
+    renderEffectControls,
+    showAddEffectModal,
+
+    openTrackEffectsRackWindow,
+    openMasterEffectsRackWindow,
+    openGlobalControlsWindow,
+    openSoundBrowserWindow,
+    updateSoundBrowserDisplayForLibrary,
+    renderSoundBrowserDirectory,
+    openMixerWindow,
+    updateMixerWindow,
+    renderMixer,
+    buildSequencerContentDOM,
+    openTrackSequencerWindow,
+    // highlightPlayingStep // Already exported
+};
