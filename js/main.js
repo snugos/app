@@ -6,7 +6,7 @@ import { showNotification, showCustomModal, showConfirmationDialog } from './uti
 import {
     initializePrimaryEventListeners,
     setupMIDI,
-    attachGlobalControlEvents,
+    attachGlobalControlEvents, // Make sure this is imported
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
     selectMIDIInput
@@ -183,7 +183,11 @@ window.removeTrack = handleRemoveTrack;
 window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
+
+// Assign attachGlobalControlEvents to window object here
 window.attachGlobalControlEvents = attachGlobalControlEvents;
+console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents); // ADDED THIS LOG
+
 window.selectMIDIInput = selectMIDIInput;
 
 window.getTracks = getTracks;
@@ -265,7 +269,7 @@ async function initializeSnugOS() {
         } else {
             globalControlsWindowInstance = await window.openGlobalControlsWindow();
             console.log("[Main] globalControlsWindowInstance received:", globalControlsWindowInstance);
-            if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) { // Check for null or undefined
+            if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) { 
                 console.error("[Main] CRITICAL: Failed to initialize Global Controls Window (instance or element is null/undefined). App functionality will be severely limited.");
                 showNotification("CRITICAL Error: Global controls window failed to initialize. App may not function.", 8000);
             } else {
@@ -342,4 +346,3 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
-
