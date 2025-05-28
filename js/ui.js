@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Audio Status, Relink & Debugging Version (Corrected Exports & Upload Click Fix + GCW Debug + Super GCW try...catch)');
+console.log('[ui.js] TOP OF FILE PARSING - Audio Status, Relink & Debugging Version (Corrected Exports & Upload Click Fix + GCW Debug + Super GCW try...catch + NO ATTACH GLOBAL EVENTS)');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -135,7 +135,7 @@ function openGlobalControlsWindow(savedState = null) {
     console.log(`[UI - openGlobalControlsWindow] Called. savedState:`, savedState);
     const windowId = 'globalControls';
 
-    try { // SUPER TRY-CATCH starts here
+    try {
         if (typeof SnugWindow !== 'function') {
             console.error("[UI - openGlobalControlsWindow] SnugWindow is NOT a function!");
             return null;
@@ -148,7 +148,6 @@ function openGlobalControlsWindow(savedState = null) {
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'global-controls-window p-2 space-y-3';
-        // Inner try-catch for innerHTML setup (less critical if it fails, but good to have)
         try {
             let tempoValue = 120.0;
             if (typeof Tone !== 'undefined' && Tone.Transport) {
@@ -163,7 +162,7 @@ function openGlobalControlsWindow(savedState = null) {
         } catch (e) {
             console.error("[UI - openGlobalControlsWindow] Error setting innerHTML for globalControls:", e);
             showNotification("Error creating global controls content.", 5000);
-            return null; // Return from outer function if contentDiv setup fails
+            return null;
         }
 
         const winOptions = { width: 280, height: 250, x: 20, y: 20, initialContentKey: 'globalControls' };
@@ -189,25 +188,26 @@ function openGlobalControlsWindow(savedState = null) {
         window.keyboardIndicatorGlobalEl = globalControlsWin.element.querySelector('#keyboardIndicatorGlobal');
         console.log("[UI - openGlobalControlsWindow] Global element references assigned.");
 
-        if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
-            console.log("[UI - openGlobalControlsWindow] Attaching global control events...");
-            window.attachGlobalControlEvents(globalControlsWin.element);
-            console.log("[UI - openGlobalControlsWindow] Global control events attached.");
-        } else {
-            console.warn("[UI - openGlobalControlsWindow] attachGlobalControlEvents not found or window element missing for globalControlsWin.");
-        }
+        // Temporarily comment out the call to attachGlobalControlEvents
+        // if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) {
+        //     console.log("[UI - openGlobalControlsWindow] Attaching global control events...");
+        //     window.attachGlobalControlEvents(globalControlsWin.element);
+        //     console.log("[UI - openGlobalControlsWindow] Global control events attached.");
+        // } else {
+        //     console.warn("[UI - openGlobalControlsWindow] attachGlobalControlEvents not found or window element missing for globalControlsWin.");
+        // }
+        console.log("[UI - openGlobalControlsWindow] SKIPPED attaching global control events for debugging.");
         
         console.log("[UI - openGlobalControlsWindow] Successfully returning globalControlsWin:", globalControlsWin);
         console.log("[UI - openGlobalControlsWindow] globalControlsWin.element before return:", globalControlsWin?.element);
         return globalControlsWin;
 
-    } catch (error) { // Catch any error within the main body of the function
+    } catch (error) {
         console.error("[UI - openGlobalControlsWindow] UNHANDLED EXCEPTION in openGlobalControlsWindow:", error);
         showNotification("Major error creating Global Controls. App may be unstable.", 6000);
-        return null; // Ensure null is returned on any unhandled error
+        return null;
     }
 }
-
 
 function openSoundBrowserWindow(savedState = null) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
 function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... (same content as in ui_js_latest_debug_May28_v2) ... */ }
