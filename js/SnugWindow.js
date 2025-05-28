@@ -127,7 +127,7 @@ export class SnugWindow {
 
         // Register window
         if (typeof window.openWindows !== 'object' || window.openWindows === null) {
-            console.warn(`[SnugWindow ${id}] window.openWindows is not an object or is null! Initializing as {}.`);
+            console.warn(`[SnugWindow ${this.id}] window.openWindows is not an object or is null! Initializing as {}.`);
             window.openWindows = {};
         }
         window.openWindows[this.id] = this;
@@ -380,8 +380,8 @@ export class SnugWindow {
         }
     }
 
-    close() {
-        console.log(`[SnugWindow ${this.id}] Closing window: ${this.title}`); // DEBUG
+    close(isReconstruction = false) { // Added isReconstruction flag
+        console.log(`[SnugWindow ${this.id}] Closing window: ${this.title}`);
         if (this.onCloseCallback && typeof this.onCloseCallback === 'function') {
             try { this.onCloseCallback(); }
             catch (e) { console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e); }
@@ -394,17 +394,15 @@ export class SnugWindow {
             try { this.element.remove(); } catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing window element`, e); }
         }
 
-
-        const oldWindowTitle = this.title; // Capture before deleting from openWindows
+        const oldWindowTitle = this.title;
         if (window.openWindows && typeof window.openWindows === 'object') {
             delete window.openWindows[this.id];
-            console.log(`[SnugWindow ${this.id}] Removed from window.openWindows. Remaining:`, window.openWindows); // DEBUG
+            console.log(`[SnugWindow ${this.id}] Removed from window.openWindows. Remaining:`, Object.keys(window.openWindows));
         } else {
             console.warn(`[SnugWindow ${this.id}] window.openWindows not available for cleanup during close.`);
         }
 
-        // Clean up track references
-        const trackIdStr = this.id.split('-')[1]; // e.g., "trackInspector-1" -> "1"
+        const trackIdStr = this.id.split('-')[1];
         if (trackIdStr && typeof getTracks === 'function') {
             const trackIdNum = parseInt(trackIdStr);
             if (!isNaN(trackIdNum)) {
@@ -419,14 +417,14 @@ export class SnugWindow {
                 }
             }
         }
-        // Only capture undo if not part of a project reconstruction
-        if (typeof captureStateForUndo === 'function' && !window.isReconstructingDAW) {
+        // Only capture undo if not part of a project reconstruction or specific skip flag
+        if (typeof captureStateForUndo === 'function' && !window.isReconstructingDAW && !isReconstruction) {
             captureStateForUndo(`Close window "${oldWindowTitle}"`);
         }
-        console.log(`[SnugWindow ${this.id}] Close process finished.`); // DEBUG
+        console.log(`[SnugWindow ${this.id}] Close process finished.`);
     }
 
-    focus(skipUndo = false) { // Added skipUndo parameter
+    focus(skipUndo = false) { 
         if (this.isMinimized) { this.restore(skipUndo); return; }
         if (!this.element) {
             console.warn(`[SnugWindow ${this.id}] Focus called but element is null.`);
@@ -441,13 +439,12 @@ export class SnugWindow {
             }
             this.element.style.zIndex = ++window.highestZIndex;
             console.log(`[SnugWindow Focus ${this.id}] Focused. New zIndex: ${this.element.style.zIndex}. Global highestZIndex: ${window.highestZIndex}`);
-        } else if (currentZ > window.highestZIndex) { // This case should ideally not happen if zIndex is managed correctly
+        } else if (currentZ > window.highestZIndex) { 
             window.highestZIndex = currentZ;
             console.warn(`[SnugWindow Focus ${this.id}] Focused, but its zIndex ${currentZ} was already higher than global highestZIndex ${window.highestZIndex-1}. Adjusted global highestZIndex.`);
         }
 
 
-        // Update active state for all taskbar buttons
         if (window.openWindows && typeof window.openWindows === 'object') {
             Object.values(window.openWindows).forEach(win => {
                 if (win && win.taskbarButton && typeof win.updateTaskbarButtonActiveState === 'function') {
@@ -457,8 +454,7 @@ export class SnugWindow {
         }
     }
 
-    // Method to apply saved state, useful for project loading
-    applyState(state) { // Added for project loading
+    applyState(state) { 
         if (!this.element) return;
         this.element.style.left = state.left;
         this.element.style.top = state.top;
@@ -473,9 +469,9 @@ export class SnugWindow {
         }
 
         if (state.isMinimized && !this.isMinimized) {
-            this.minimize(true); // true to skip undo for initial state
+            this.minimize(true); 
         } else if (!state.isMinimized && this.isMinimized) {
-            this.restore(true); // true to skip undo for initial state
+            this.restore(true); 
         }
         this.updateTaskbarButtonActiveState();
     }
