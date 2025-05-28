@@ -12,7 +12,7 @@ import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.
 import { getMimeTypeFromFilename } from './audio.js';
 
 // --- Knob UI ---
-export function createKnob(options) {
+ function createKnob(options) {
     const container = document.createElement('div');
     container.className = 'knob-container';
     const labelEl = document.createElement('div');
