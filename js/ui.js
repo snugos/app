@@ -9,6 +9,7 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.js';
+import { getMimeTypeFromFilename } from './audio.js'; // Import for MIME type inference
 
 // --- Knob UI ---
 export function createKnob(options) {
@@ -139,10 +140,23 @@ function buildSynthEngineControls(track, container, engineType) {
         if (controlDef.type === 'select') {
             const selectContainer = document.createElement('div'); selectContainer.className = 'mb-2 flex flex-col items-start'; const labelEl = document.createElement('label'); labelEl.htmlFor = controlId; labelEl.className = 'knob-label text-xs mb-0.5'; labelEl.textContent = controlDef.label; selectContainer.appendChild(labelEl);
             const selectEl = document.createElement('select'); selectEl.id = controlId; selectEl.className = 'text-xs p-1 border w-full bg-white text-black rounded-sm focus:ring-blue-500 focus:border-blue-500'; controlDef.options.forEach(opt => selectEl.add(new Option(opt, opt))); selectEl.value = initialValue;
-            selectEl.addEventListener('change', (e) => { if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set ${track.name} ${controlDef.label} to ${e.target.value}`); track.setSynthParam(controlDef.paramPath, e.target.value); });
+            selectEl.addEventListener('change', (e) => { 
+                console.log(`[UI - SynthSelect Change] Track ID: ${track.id}, ParamPath: '${controlDef.paramPath}', New Value: ${e.target.value}`); 
+                if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set ${track.name} ${controlDef.label} to ${e.target.value}`); 
+                track.setSynthParam(controlDef.paramPath, e.target.value); 
+            });
             selectContainer.appendChild(selectEl); controlGroup.appendChild(selectContainer);
         } else if (controlDef.type === 'knob') {
-            const knob = createKnob({ label: controlDef.label, min: controlDef.min, max: controlDef.max, step: controlDef.step, initialValue: initialValue, decimals: controlDef.decimals, displaySuffix: controlDef.displaySuffix, trackRef: track, onValueChange: (val) => track.setSynthParam(controlDef.paramPath, val) });
+            const knob = createKnob({ 
+                label: controlDef.label, 
+                min: controlDef.min, max: controlDef.max, step: controlDef.step, 
+                initialValue: initialValue, decimals: controlDef.decimals, 
+                displaySuffix: controlDef.displaySuffix, trackRef: track, 
+                onValueChange: (val) => {
+                    console.log(`[UI - SynthKnob Change] Track ID: ${track.id}, ParamPath: '${controlDef.paramPath}', New Value: ${val}`); 
+                    track.setSynthParam(controlDef.paramPath, val);
+                } 
+            });
             controlGroup.appendChild(knob.element); if (!track.inspectorControls) track.inspectorControls = {}; track.inspectorControls[controlDef.idPrefix] = knob;
         }
     });
@@ -522,8 +536,9 @@ export function openGlobalControlsWindow(savedState = null) {
     if (typeof window.attachGlobalControlEvents === 'function' && globalControlsWin.element) window.attachGlobalControlEvents(globalControlsWin.element); else console.warn("attachGlobalControlEvents not found or window element missing.");
     return globalControlsWin;
 }
+
 export function openSoundBrowserWindow(savedState = null) {
-    console.log("[ui.js - openSoundBrowserWindow] Called."); // DEBUG
+    console.log("[ui.js - openSoundBrowserWindow] Called."); 
     const windowId = 'soundBrowser';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); if (window.currentLibraryName && typeof updateSoundBrowserDisplayForLibrary === 'function') updateSoundBrowserDisplayForLibrary(window.currentLibraryName); return window.openWindows[windowId]; }
     if (window.openWindows[windowId] && savedState) window.openWindows[windowId].close();
@@ -542,50 +557,50 @@ export function openSoundBrowserWindow(savedState = null) {
     console.log("[ui.js - openSoundBrowserWindow] Sound Browser window created and initialized."); return soundBrowserWin;
 }
 export function updateSoundBrowserDisplayForLibrary(libraryName) {
-    console.log(`[UI - updateSoundBrowserDisplayForLibrary] Updating for library: ${libraryName}`); // DEBUG
+    console.log(`[UI - updateSoundBrowserDisplayForLibrary] Updating for library: ${libraryName}`); 
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
     if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - updateSoundBrowserDisplayForLibrary] Sound Browser DOM elements missing."); return; }
     window.currentLibraryName = libraryName;
     if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) { 
-        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Found pre-existing file tree for ${libraryName}.`); // DEBUG
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Found pre-existing file tree for ${libraryName}.`); 
         window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName]; 
         window.currentSoundBrowserPath = []; 
         renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree); 
     } else if (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading") { 
         soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Loading ${libraryName} sounds...</div>`; 
         pathDisplay.textContent = `Path: / (${libraryName} - Loading...)`; 
-        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} is currently loading.`); // DEBUG
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} is currently loading.`); 
     } else { 
         const zipUrl = Constants.soundLibraries[libraryName]; 
-        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} not loaded. Zip URL: ${zipUrl}`); // DEBUG
+        console.log(`[UI - updateSoundBrowserDisplayForLibrary] Library ${libraryName} not loaded. Zip URL: ${zipUrl}`); 
         if (zipUrl && typeof window.fetchSoundLibrary === 'function') {
-            console.log(`[UI - updateSoundBrowserDisplayForLibrary] Calling fetchSoundLibrary for ${libraryName}.`); // DEBUG
+            console.log(`[UI - updateSoundBrowserDisplayForLibrary] Calling fetchSoundLibrary for ${libraryName}.`); 
             window.fetchSoundLibrary(libraryName, zipUrl, false); 
         } else { 
             soundBrowserList.innerHTML = `<div class="p-2 text-xs text-red-500">Library ${libraryName} config not found or fetch function missing.</div>`; 
             pathDisplay.textContent = `Path: / (Error - ${libraryName})`; 
-            console.error(`[UI - updateSoundBrowserDisplayForLibrary] Config/function missing for ${libraryName}.`); // DEBUG
+            console.error(`[UI - updateSoundBrowserDisplayForLibrary] Config/function missing for ${libraryName}.`); 
         } 
     }
 }
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const soundBrowserList = document.getElementById('soundBrowserList'); const pathDisplay = document.getElementById('soundBrowserPathDisplay');
-    console.log(`[UI - renderSoundBrowserDirectory] Rendering. Path: /${pathArray.join('/')}, Lib: ${window.currentLibraryName}, TreeNode valid: ${!!treeNode}`); // DEBUG
+    console.log(`[UI - renderSoundBrowserDirectory] Rendering. Path: /${pathArray.join('/')}, Lib: ${window.currentLibraryName}, TreeNode valid: ${!!treeNode}`); 
     if (!soundBrowserList || !pathDisplay ) { console.warn("[ui.js - renderSoundBrowserDirectory]: DOM elements missing."); return; }
     if (!treeNode && window.currentLibraryName && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] !== "loading") { 
         soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Content for ${window.currentLibraryName || 'selected library'} is unavailable or empty.</div>`; 
         pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`; 
-        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, library ${window.currentLibraryName} not 'loading'. Displaying empty/unavailable.`); // DEBUG
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, library ${window.currentLibraryName} not 'loading'. Displaying empty/unavailable.`); 
         return; 
     }
     if (!treeNode && window.loadedZipFiles && window.loadedZipFiles[window.currentLibraryName] === "loading") {
-        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, but library ${window.currentLibraryName} is 'loading'. Aborting render for now.`); // DEBUG
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, but library ${window.currentLibraryName} is 'loading'. Aborting render for now.`); 
         return;
     }
     if (!treeNode) { 
         soundBrowserList.innerHTML = `<div class="p-2 text-xs text-gray-500">Select a library or library content is missing.</div>`; 
         pathDisplay.textContent = `Path: /`; 
-        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, no library context or library missing. Displaying select message.`); // DEBUG
+        console.log(`[UI - renderSoundBrowserDirectory] Tree node is null, no library context or library missing. Displaying select message.`); 
         return; 
     }
     soundBrowserList.innerHTML = ''; pathDisplay.textContent = `Path: /${pathArray.join('/')} (${window.currentLibraryName || 'No Lib'})`;
@@ -596,7 +611,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
             soundBrowserList.innerHTML += '<div class="p-2 text-xs text-gray-500">Folder is empty.</div>';
         } else if (window.currentLibraryName) {
             soundBrowserList.innerHTML += `<div class="p-2 text-xs text-gray-500">Library "${window.currentLibraryName}" appears empty or no audio files matched filters.</div>`;
-            console.log(`[UI - renderSoundBrowserDirectory] Library ${window.currentLibraryName} root is empty.`); // DEBUG
+            console.log(`[UI - renderSoundBrowserDirectory] Library ${window.currentLibraryName} root is empty.`); 
         }
     }
 
@@ -606,60 +621,68 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         if (item.type === 'folder') { 
             div.textContent = `📁 ${name}`; 
             div.addEventListener('click', () => { 
-                console.log(`[UI - renderSoundBrowserDirectory] Navigating into folder: ${name}`); // DEBUG
+                console.log(`[UI - renderSoundBrowserDirectory] Navigating into folder: ${name}`); 
                 window.currentSoundBrowserPath.push(name); 
                 window.currentSoundFileTree = item.children; 
                 renderSoundBrowserDirectory(window.currentSoundBrowserPath, item.children); 
             }); 
         } else if (item.type === 'file') {
             div.textContent = `🎵 ${name}`; 
-            div.title = `Click to play. Drag to load: ${name} (Path: ${item.fullPath})`; // DEBUG: Show full path in title
+            div.title = `Click to play. Drag to load: ${name} (Path: ${item.fullPath})`; 
             div.draggable = true; 
             div.addEventListener('dragstart', (event) => { const soundData = { fullPath: item.fullPath, libraryName: window.currentLibraryName, fileName: name }; event.dataTransfer.setData("application/json", JSON.stringify(soundData)); event.dataTransfer.effectAllowed = "copy"; div.style.opacity = '0.5'; });
             div.addEventListener('dragend', () => { div.style.opacity = '1'; });
             div.addEventListener('click', async (event) => {
-                if (event.detail === 0) return; // Prevent firing on drag setup
-                console.log(`[UI - renderSoundBrowserDirectory] Preview clicked for: ${name}, Path: ${item.fullPath}, Lib: ${window.currentLibraryName}`); // DEBUG
+                if (event.detail === 0) return; 
+                console.log(`[UI - Preview] Preview clicked for: ${name}, Path: ${item.fullPath}, Lib: ${window.currentLibraryName}`);
                 if(typeof window.initAudioContextAndMasterMeter === 'function') await window.initAudioContextAndMasterMeter(true);
                 if (window.previewPlayer && !window.previewPlayer.disposed) { try { window.previewPlayer.stop(); window.previewPlayer.dispose(); } catch(e) {console.warn("Error disposing old preview player", e)} window.previewPlayer = null;}
+                
+                let objectURL = null; 
                 try {
                     if (!window.loadedZipFiles || !window.loadedZipFiles[window.currentLibraryName] || window.loadedZipFiles[window.currentLibraryName] === "loading") {
-                        console.error(`[UI - Preview] ZIP library "${window.currentLibraryName}" not fully loaded.`); // DEBUG
+                        console.error(`[UI - Preview] ZIP library "${window.currentLibraryName}" not fully loaded.`); 
                         throw new Error(`ZIP library "${window.currentLibraryName}" not loaded.`);
                     }
                     const zipEntry = window.loadedZipFiles[window.currentLibraryName].file(item.fullPath); 
                     if (!zipEntry) {
-                        console.error(`[UI - Preview] File ${item.fullPath} not found in ZIP library "${window.currentLibraryName}". Available files:`, Object.keys(window.loadedZipFiles[window.currentLibraryName].files)); // DEBUG
-                        throw new Error(`File ${item.fullPath} not in ${window.currentLibraryName}.`);
+                        console.error(`[UI - Preview] File ${item.fullPath} not found in ZIP library "${window.currentLibraryName}". Available files:`, Object.keys(window.loadedZipFiles[window.currentLibraryName].files)); 
+                        throw new Error(`File ${item.fullPath} not found in ${window.currentLibraryName}.`);
                     }
-                    console.log(`[UI - Preview] Found zipEntry for ${item.fullPath}. Getting blob...`); // DEBUG
-                    const fileBlob = await zipEntry.async("blob");
-                    console.log(`[UI - Preview] Got blob for ${name}, type: ${fileBlob.type}, size: ${fileBlob.size}. Creating object URL...`); // DEBUG
-                    const objectURL = URL.createObjectURL(fileBlob);
-                    console.log(`[UI - Preview] Object URL: ${objectURL}. Loading into Tone.Buffer...`); // DEBUG
+                    console.log(`[UI - Preview] Found zipEntry for ${item.fullPath}. Getting blob...`); 
+                    const fileBlobFromZip = await zipEntry.async("blob");
+                    console.log(`[UI - Preview] Got blob for ${name} from zip, type: '${fileBlobFromZip.type}', size: ${fileBlobFromZip.size}.`);
+                    
+                    const inferredMimeType = getMimeTypeFromFilename(name); 
+                    const finalMimeType = fileBlobFromZip.type || inferredMimeType || 'application/octet-stream';
+                    const typedFileObject = new File([fileBlobFromZip], name, { type: finalMimeType });
+                    console.log(`[UI - Preview] Created File object for Tone.Buffer. Name: "${typedFileObject.name}", Type: "${typedFileObject.type}"`);
+
+                    objectURL = URL.createObjectURL(typedFileObject); 
+                    console.log(`[UI - Preview] Object URL: ${objectURL} (from typed File). Loading into Tone.Buffer...`);
                     
                     const buffer = new Tone.Buffer();
-                    await buffer.load(objectURL); // Ensure await here
-                    console.log(`[UI - Preview] Tone.Buffer loaded for ${name}. Duration: ${buffer.duration}`); // DEBUG
+                    await buffer.load(objectURL); 
+                    console.log(`[UI - Preview] Tone.Buffer loaded for ${name}. Duration: ${buffer.duration}`);
 
                     window.previewPlayer = new Tone.Player(buffer).toDestination(); 
                     window.previewPlayer.autostart = true;
                     window.previewPlayer.onstop = () => { 
                         if (window.previewPlayer && !window.previewPlayer.disposed) try{window.previewPlayer.dispose();} catch(e){} 
                         window.previewPlayer = null; 
-                        URL.revokeObjectURL(objectURL); 
-                        console.log(`[UI - Preview] Player stopped and resources for ${name} released.`); // DEBUG
+                        if (objectURL) URL.revokeObjectURL(objectURL); 
+                        console.log(`[UI - Preview] Player stopped and resources for ${name} released.`);
                     };
                 } catch (error) { 
                     console.error(`[UI - Preview] Error previewing sound ${name} (Path: ${item.fullPath}):`, error); 
                     showNotification(`Error previewing ${name}: ${error.message || 'Unknown error'}`, 4000); 
+                    if (objectURL) URL.revokeObjectURL(objectURL); 
                 }
             });
         }
         soundBrowserList.appendChild(div);
     });
 }
-
 
 // --- Mixer Window ---
 export function openMixerWindow(savedState = null) {
