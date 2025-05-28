@@ -1,6 +1,7 @@
 // js/utils.js - Utility Functions Module
 
 export function showNotification(message, duration = 3000) {
+    // ... (showNotification function as before)
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
         console.warn("Notification area not found. Message:", message);
@@ -25,6 +26,7 @@ export function showNotification(message, duration = 3000) {
 }
 
 export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = '') {
+    // ... (showCustomModal function as before)
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) {
         console.error("Modal container not found!");
@@ -71,6 +73,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
 }
 
 export function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
+    // ... (showConfirmationDialog function as before)
     const buttons = [
         { text: 'OK', action: onConfirm },
         { text: 'Cancel', action: onCancel }
@@ -78,24 +81,61 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
     showCustomModal(title, message, buttons);
 }
 
-export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOrSliceIndex = null) {
-    const indexString = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '';
-    const dropZoneId = `dropZone-${trackId}-${trackTypeHintForLoad.toLowerCase()}${indexString}`;
+/**
+ * Creates HTML for a drop zone, now status-aware.
+ * @param {number} trackId - The ID of the track.
+ * @param {string} baseInputId - Base ID for the file input (will be made unique).
+ * @param {string} trackTypeHint - Type of track (e.g., 'Sampler', 'DrumSampler').
+ * @param {number|null} padOrSliceIndex - Index if it's for a specific pad/slice.
+ * @param {object|null} audioData - The audio data object from the track (e.g., track.samplerAudioData or padData) which contains fileName and status.
+ * @returns {string} HTML string for the drop zone.
+ */
+export function createDropZoneHTML(trackId, baseInputId, trackTypeHint, padOrSliceIndex = null, audioData = null) {
+    const uniqueIndexStr = (padOrSliceIndex !== null && padOrSliceIndex !== undefined) ? `-${padOrSliceIndex}` : '-null'; // Ensure 'null' for non-indexed samplers
+    const inputId = `fileInput-${trackId}-${trackTypeHint}${uniqueIndexStr}`;
+    const dropZoneId = `dropZone-${trackId}-${trackTypeHint.toLowerCase()}${uniqueIndexStr}`;
+    const relinkButtonId = `relinkFileBtn-${trackId}-${trackTypeHint}${uniqueIndexStr}`;
 
-    let dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHintForLoad}"`;
+    let dataAttributes = `data-track-id="${trackId}" data-track-type="${trackTypeHint}"`;
     if (padOrSliceIndex !== null && padOrSliceIndex !== undefined) {
         dataAttributes += ` data-pad-slice-index="${padOrSliceIndex}"`;
     }
 
+    let content = '';
+    const fileName = audioData?.fileName || 'Unknown File';
+    const status = audioData?.status || 'empty';
+
+    switch (status) {
+        case 'loaded':
+            content = `Loaded: ${fileName.substring(0, 20)}${fileName.length > 20 ? '...' : ''}<br>
+                       <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Replace</label>`;
+            break;
+        case 'missing':
+            content = `<span class="text-red-500 font-semibold">MISSING: ${fileName.substring(0, 15)}${fileName.length > 15 ? '...' : ''}</span><br>
+                       <div class="drop-zone-relink-container mt-1">
+                           <button id="${relinkButtonId}" class="text-xs bg-orange-500 hover:bg-orange-600 text-white py-0.5 px-1.5 rounded">Relink/Upload</button>
+                       </div>`;
+            break;
+        case 'pending':
+            content = `<span class="text-gray-500">Loading: ${fileName.substring(0, 20)}${fileName.length > 20 ? '...' : ''}...</span>`;
+            break;
+        case 'empty':
+        default:
+            content = `Drag & Drop Audio File or <br>
+                       <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Click to Upload</label>`;
+            break;
+    }
+
     return `
-        <div class="drop-zone" id="${dropZoneId}" ${dataAttributes}>
-            Drag & Drop Audio File or <br>
-            <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Click to Upload</label>
+        <div class="drop-zone p-2 text-center border-2 border-dashed border-gray-400 rounded-md bg-gray-50 hover:border-blue-400" id="${dropZoneId}" ${dataAttributes}>
+            ${content}
             <input type="file" id="${inputId}" accept="audio/*" class="hidden">
         </div>`.trim();
 }
 
+
 export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
+    // ... (setupDropZoneListeners function as before, ensure it correctly identifies the file input if a relink button is used)
     if (!dropZoneElement) {
         console.error("[Utils] setupDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint, "pad/slice:", padIndexOrSliceId);
         return;
@@ -118,33 +158,25 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         event.preventDefault();
         event.stopPropagation();
         dropZoneElement.classList.remove('dragover');
-        
-        console.log(`[Utils] Drop event TRIGGERED on element ID: ${dropZoneElement.id}, Classes: ${dropZoneElement.className}. Dataset:`, JSON.parse(JSON.stringify(dropZoneElement.dataset)));
 
         const dzTrackId = dropZoneElement.dataset.trackId ? parseInt(dropZoneElement.dataset.trackId) : trackId;
         const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint;
         const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex;
-        
+
         let numericIndexForCallback = null;
         if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
             numericIndexForCallback = parseInt(dzPadSliceIndexStr);
         } else if (typeof padIndexOrSliceId === 'number' && !isNaN(padIndexOrSliceId)) {
             numericIndexForCallback = padIndexOrSliceId;
         }
-        console.log(`[Utils] Drop effective params: trackId=${dzTrackId}, type=${dzTrackType}, indexForCallback=${numericIndexForCallback} (Original dzPadSliceIndexStr: "${dzPadSliceIndexStr}", arg padIndexOrSliceId: ${padIndexOrSliceId})`);
-
 
         const soundDataString = event.dataTransfer.getData("application/json");
 
         if (soundDataString) { // From Sound Browser
-            console.log("[Utils] Dropped JSON data (from sound browser):", soundDataString);
             try {
                 const soundData = JSON.parse(soundDataString);
-                if (loadSoundCallback) { 
-                    console.log(`[Utils] Calling loadSoundCallback for Sound Browser drop. Target index: ${numericIndexForCallback}`);
+                if (loadSoundCallback) {
                     await loadSoundCallback(soundData, dzTrackId, dzTrackType, numericIndexForCallback);
-                } else {
-                    console.warn("[Utils] loadSoundCallback not provided for sound browser drop.");
                 }
             } catch (e) {
                 console.error("[Utils] Error parsing dropped sound data:", e);
@@ -152,67 +184,48 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             }
         } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) { // OS File Drop
             const file = event.dataTransfer.files[0];
-            console.log("[Utils] Dropped OS file:", file.name, "Type:", file.type);
-            const simulatedEvent = { target: { files: [file] } };
+            const simulatedEvent = { target: { files: [file] } }; // Simulate event for loadFileCallback
             if (loadFileCallback) {
-                console.log("[Utils] Calling loadFileCallback for OS file drop. Callback name:", loadFileCallback.name);
                 if (dzTrackType === 'DrumSampler') {
                     const trackForFallback = typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
                     const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
                         ? numericIndexForCallback
-                        : (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0); 
-                    console.log(`[Utils] OS Drop on DrumSampler: trackId=${dzTrackId}, finalPadIndex=${finalPadIndex}, fileName=${file.name}`);
+                        : (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0);
                     await loadFileCallback(simulatedEvent, dzTrackId, finalPadIndex, file.name);
                 } else if (dzTrackType === 'Sampler' || dzTrackType === 'InstrumentSampler') {
-                    console.log(`[Utils] OS Drop on ${dzTrackType}: trackId=${dzTrackId}, trackTypeHint=${dzTrackType}, fileName=${file.name}`);
                     await loadFileCallback(simulatedEvent, dzTrackId, dzTrackType, file.name);
                 } else {
                     console.warn(`[Utils] Unhandled trackType "${dzTrackType}" for OS file drop with loadFileCallback.`);
                 }
-            } else {
-                 console.warn("[Utils] loadFileCallback not provided for OS file drop.");
             }
-        } else {
-            console.log("[Utils] Drop event with no recognized data (JSON or files).");
         }
     });
 }
 
-/**
- * Converts seconds to "Bars:Beats:Sixteenths" string format.
- * Example: 2.5 seconds at 120 BPM, 4/4 time might become "1:1:0" (Bar 1, Beat 1, 0 Sixteenths).
- * @param {number} seconds - The time in seconds.
- * @returns {string} Time in "B:B:S" format.
- */
+
 export function secondsToBBSTime(seconds) {
+    // ... (secondsToBBSTime function as before)
     if (typeof Tone === 'undefined' || seconds === null || seconds === undefined || isNaN(seconds)) {
         return "0:0:0";
     }
     try {
-        // Tone.Time can take seconds as a number and convert it.
-        // .toBarsBeatsSixteenths() is a convenient method.
         return Tone.Time(seconds).toBarsBeatsSixteenths();
     } catch (e) {
         console.error("Error converting seconds to B:B:S:", e);
-        return "0:0:0"; // Fallback
+        return "0:0:0";
     }
 }
 
-/**
- * Converts a "Bars:Beats:Sixteenths" string (e.g., "1:2:0") to seconds.
- * @param {string} bbsString - Time in "B:B:S" format.
- * @returns {number} Time in seconds, or null if parsing fails.
- */
 export function bbsTimeToSeconds(bbsString) {
+    // ... (bbsTimeToSeconds function as before)
     if (typeof Tone === 'undefined' || !bbsString || typeof bbsString !== 'string') {
         return null;
     }
     try {
-        // Tone.Time can parse "B:B:S" strings.
         const seconds = Tone.Time(bbsString).toSeconds();
         return isNaN(seconds) ? null : seconds;
     } catch (e) {
         console.error("Error converting B:B:S to seconds:", bbsString, e);
-        return null; // Parsing failed
+        return null;
     }
 }
