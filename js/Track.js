@@ -33,11 +33,11 @@ export class Track {
         // Sampler (Slicer) specific
         this.samplerAudioData = initialData?.samplerAudioData || {
             fileName: null,
-            audioBufferDataURL: null, // Store the Data URL for reconstruction
+            audioBufferDataURL: null, // Store the Data URL for reconstruction if DB fails
+            dbKey: null, // Key for IndexedDB storage
             status: 'empty' // 'empty', 'loading', 'loaded', 'error', 'missing' (after project load if not found)
         };
         this.audioBuffer = null; // This will hold the actual Tone.Buffer or AudioBuffer object at runtime
-        // this.audioBufferDataURL = initialData?.samplerAudioData?.audioBufferDataURL || null; // Moved into samplerAudioData
         this.slices = initialData?.slices || Array(numSlices).fill(null).map(() => ({
             offset: 0, duration: 0, userDefined: false, volume: 1.0, pitchShift: 0,
             loop: false, reverse: false,
@@ -53,10 +53,11 @@ export class Track {
 
         // Instrument Sampler specific
         this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || {
-            sampleUrl: null, // Not directly used if audioBufferDataURL is present
+            sampleUrl: null,
             audioBuffer: null, // Runtime Tone.Buffer
             audioBufferDataURL: null,
             originalFileName: null,
+            dbKey: null, // Key for IndexedDB storage
             rootNote: 'C4',
             loop: false,
             loopStart: 0,
@@ -69,10 +70,11 @@ export class Track {
 
         // Drum Sampler (Pads) specific
         this.drumSamplerPads = initialData?.drumSamplerPads || Array(numDrumSamplerPads).fill(null).map(() => ({
-            sampleUrl: null, // Not directly used if audioBufferDataURL is present
+            sampleUrl: null,
             audioBuffer: null, // Runtime Tone.Buffer
             audioBufferDataURL: null,
             originalFileName: null,
+            dbKey: null, // Key for IndexedDB storage
             volume: 0.7, pitchShift: 0,
             envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 }, // Simpler AR envelope
             status: 'empty'
@@ -82,10 +84,11 @@ export class Track {
                 if (this.drumSamplerPads[index]) { // Ensure target pad exists
                     this.drumSamplerPads[index].audioBufferDataURL = padData.audioBufferDataURL || null;
                     this.drumSamplerPads[index].originalFileName = padData.originalFileName || null;
+                    this.drumSamplerPads[index].dbKey = padData.dbKey || null;
                     this.drumSamplerPads[index].volume = padData.volume ?? 0.7;
                     this.drumSamplerPads[index].pitchShift = padData.pitchShift ?? 0;
                     this.drumSamplerPads[index].envelope = padData.envelope ? JSON.parse(JSON.stringify(padData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 };
-                    this.drumSamplerPads[index].status = padData.status || (padData.audioBufferDataURL ? 'missing' : 'empty');
+                    this.drumSamplerPads[index].status = padData.status || (padData.audioBufferDataURL || padData.dbKey ? 'missing' : 'empty');
                 }
             });
         }
@@ -230,9 +233,6 @@ export class Track {
                     currentAudioPathEnd.connect(this.gainNode);
                 } catch (e) { console.error(`[Track ${this.id}] Error connecting ${currentAudioPathEnd.constructor.name} to GainNode:`, e); }
             } else if (this.type !== 'DrumSampler' && !mainSourceNode) {
-                 // For tracks like Synth/Sampler/InstrumentSampler that might not have an instrument yet (e.g., during init)
-                 // but still need their gainNode in the master path.
-                 // This case might be rare if initializeAudioNodes is called after instrument setup.
                  console.log(`[Track ${this.id}] No source or effects, gainNode is effectively the start for now.`);
             }
             this.outputNode = this.gainNode; // GainNode is always part of the output path
@@ -272,7 +272,6 @@ export class Track {
             }
         } else {
             console.warn(`[Track ${this.id}] GainNode or TrackMeter is null/disposed. Final output connections might be incomplete.`);
-            // As a fallback, if outputNode is set (e.g., last effect) and gainNode is bad, try connecting outputNode to destination
             if (this.outputNode && !this.outputNode.disposed && this.outputNode !== this.gainNode) {
                 const fallbackDest = (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) 
                                      ? window.masterEffectsBusInput 
@@ -390,11 +389,9 @@ export class Track {
             console.warn(`[Track ${this.id}] Effect ID ${effectId} not found for reordering.`);
             return;
         }
-        // Clamp newIndex to valid range (0 to length of array)
-        // If newIndex is length, it means move to end.
         const clampedNewIndex = Math.max(0, Math.min(newIndex, this.activeEffects.length));
 
-        if (oldIndex === clampedNewIndex || (oldIndex === clampedNewIndex -1 && newIndex === this.activeEffects.length) ) { // No change or trying to move last item to same "end" position
+        if (oldIndex === clampedNewIndex || (oldIndex === clampedNewIndex -1 && newIndex === this.activeEffects.length) ) { 
             return;
         }
         
@@ -402,7 +399,6 @@ export class Track {
             window.captureStateForUndo(`Reorder effect on ${this.name}`);
         }
         const [effectToMove] = this.activeEffects.splice(oldIndex, 1);
-        // If moving to a higher index, the target index effectively shifts down by one after splice.
         this.activeEffects.splice(clampedNewIndex > oldIndex ? clampedNewIndex -1 : clampedNewIndex, 0, effectToMove);
         
         console.log(`[Track ${this.id}] Reordered effect. Old: ${oldIndex}, New (requested): ${newIndex}, Actual Splice Index: ${clampedNewIndex > oldIndex ? clampedNewIndex -1 : clampedNewIndex}. New order:`, this.activeEffects.map(e=>e.type));
@@ -415,10 +411,23 @@ export class Track {
             if (this.type === 'Synth') {
                 await this.initializeInstrument();
             } else if (this.type === 'Sampler') {
-                if (this.samplerAudioData.audioBufferDataURL && (!this.audioBuffer || !this.audioBuffer.loaded)) {
+                if (this.samplerAudioData.dbKey && (!this.audioBuffer || !this.audioBuffer.loaded)) {
+                    const blob = await getAudio(this.samplerAudioData.dbKey);
+                    if (blob) {
+                        const objectURL = URL.createObjectURL(blob);
+                        this.audioBuffer = await new Tone.Buffer().load(objectURL);
+                        URL.revokeObjectURL(objectURL);
+                        this.samplerAudioData.status = this.audioBuffer.loaded ? 'loaded' : 'error';
+                        if(this.audioBuffer.loaded && !this.samplerAudioData.audioBufferDataURL) { // Generate dataURL if missing (e.g. loaded from DB only)
+                             const reader = new FileReader();
+                             reader.onloadend = () => { this.samplerAudioData.audioBufferDataURL = reader.result; };
+                             reader.readAsDataURL(blob);
+                        }
+                    } else { this.samplerAudioData.status = 'missing_db'; }
+                } else if (this.samplerAudioData.audioBufferDataURL && (!this.audioBuffer || !this.audioBuffer.loaded)) {
                     this.audioBuffer = await new Tone.Buffer().load(this.samplerAudioData.audioBufferDataURL);
                     this.samplerAudioData.status = this.audioBuffer.loaded ? 'loaded' : 'error';
-                } else if (!this.samplerAudioData.audioBufferDataURL) {
+                } else if (!this.samplerAudioData.dbKey && !this.samplerAudioData.audioBufferDataURL) {
                     this.samplerAudioData.status = 'empty';
                 }
                 if (!this.slicerIsPolyphonic && this.audioBuffer?.loaded) {
@@ -427,10 +436,23 @@ export class Track {
             } else if (this.type === 'DrumSampler') {
                 for (let i = 0; i < this.drumSamplerPads.length; i++) {
                     const pad = this.drumSamplerPads[i];
-                    if (pad.audioBufferDataURL && (!pad.audioBuffer || !pad.audioBuffer.loaded)) {
+                    if (pad.dbKey && (!pad.audioBuffer || !pad.audioBuffer.loaded)) {
+                        const blob = await getAudio(pad.dbKey);
+                        if (blob) {
+                            const objectURL = URL.createObjectURL(blob);
+                            pad.audioBuffer = await new Tone.Buffer().load(objectURL);
+                            URL.revokeObjectURL(objectURL);
+                            pad.status = pad.audioBuffer.loaded ? 'loaded' : 'error';
+                            if(pad.audioBuffer.loaded && !pad.audioBufferDataURL) {
+                                 const reader = new FileReader();
+                                 reader.onloadend = () => { pad.audioBufferDataURL = reader.result; };
+                                 reader.readAsDataURL(blob);
+                            }
+                        } else { pad.status = 'missing_db'; }
+                    } else if (pad.audioBufferDataURL && (!pad.audioBuffer || !pad.audioBuffer.loaded)) {
                         pad.audioBuffer = await new Tone.Buffer().load(pad.audioBufferDataURL);
                         pad.status = pad.audioBuffer.loaded ? 'loaded' : 'error';
-                    } else if (!pad.audioBufferDataURL) {
+                    } else if (!pad.dbKey && !pad.audioBufferDataURL) {
                         pad.status = 'empty';
                     }
                     if (pad.audioBuffer && pad.audioBuffer.loaded) {
@@ -441,64 +463,75 @@ export class Track {
                     }
                 }
             } else if (this.type === 'InstrumentSampler') {
-                if (this.instrumentSamplerSettings.audioBufferDataURL && (!this.instrumentSamplerSettings.audioBuffer || !this.instrumentSamplerSettings.audioBuffer.loaded)) {
+                 if (this.instrumentSamplerSettings.dbKey && (!this.instrumentSamplerSettings.audioBuffer || !this.instrumentSamplerSettings.audioBuffer.loaded)) {
+                    const blob = await getAudio(this.instrumentSamplerSettings.dbKey);
+                    if (blob) {
+                        const objectURL = URL.createObjectURL(blob);
+                        this.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(objectURL);
+                        URL.revokeObjectURL(objectURL);
+                        this.instrumentSamplerSettings.status = this.instrumentSamplerSettings.audioBuffer.loaded ? 'loaded' : 'error';
+                        if(this.instrumentSamplerSettings.audioBuffer.loaded && !this.instrumentSamplerSettings.audioBufferDataURL) {
+                             const reader = new FileReader();
+                             reader.onloadend = () => { this.instrumentSamplerSettings.audioBufferDataURL = reader.result; };
+                             reader.readAsDataURL(blob);
+                        }
+                    } else { this.instrumentSamplerSettings.status = 'missing_db'; }
+                } else if (this.instrumentSamplerSettings.audioBufferDataURL && (!this.instrumentSamplerSettings.audioBuffer || !this.instrumentSamplerSettings.audioBuffer.loaded)) {
                     this.instrumentSamplerSettings.audioBuffer = await new Tone.Buffer().load(this.instrumentSamplerSettings.audioBufferDataURL);
                     this.instrumentSamplerSettings.status = this.instrumentSamplerSettings.audioBuffer.loaded ? 'loaded' : 'error';
-                } else if (!this.instrumentSamplerSettings.audioBufferDataURL) {
+                } else if (!this.instrumentSamplerSettings.dbKey && !this.instrumentSamplerSettings.audioBufferDataURL) {
                     this.instrumentSamplerSettings.status = 'empty';
                 }
                 this.setupToneSampler();
             }
-            this.rebuildEffectChain(); // Ensures connection to master bus AFTER resources are loaded
-            this.setSequenceLength(this.sequenceLength, true); // Re-initialize sequence with correct length
+            this.rebuildEffectChain();
+            this.setSequenceLength(this.sequenceLength, true);
             console.log(`[Track ${this.id}] fullyInitializeAudioResources completed.`);
         } catch (error) {
             console.error(`[Track ${this.id}] Error in fullyInitializeAudioResources:`, error);
             if (this.type === 'Sampler') this.samplerAudioData.status = 'error';
-            else if (this.type === 'DrumSampler') this.drumSamplerPads.forEach(p => { if (p.audioBufferDataURL && !p.audioBuffer) p.status = 'error'; });
+            else if (this.type === 'DrumSampler') this.drumSamplerPads.forEach(p => { if ((p.audioBufferDataURL || p.dbKey) && !p.audioBuffer) p.status = 'error'; });
             else if (this.type === 'InstrumentSampler') this.instrumentSamplerSettings.status = 'error';
         }
     }
 
     async initializeInstrument() {
-        console.log(`[Track ${this.id} - initializeInstrument] Initializing ${this.synthEngineType} instrument...`); // DEBUG
-        console.log(`[Track ${this.id} - initializeInstrument] Current this.instrument:`, this.instrument); // DEBUG
-        console.log(`[Track ${this.id} - initializeInstrument] Current this.synthParams:`, JSON.parse(JSON.stringify(this.synthParams))); // DEBUG
+        console.log(`[Track ${this.id} - initializeInstrument] Initializing ${this.synthEngineType} instrument...`);
+        console.log(`[Track ${this.id} - initializeInstrument] Current this.instrument:`, this.instrument);
+        console.log(`[Track ${this.id} - initializeInstrument] Current this.synthParams:`, JSON.parse(JSON.stringify(this.synthParams)));
 
         if (this.instrument && typeof this.instrument.dispose === 'function' && !this.instrument.disposed) {
-            console.log(`[Track ${this.id} - initializeInstrument] Disposing existing instrument.`); // DEBUG
+            console.log(`[Track ${this.id} - initializeInstrument] Disposing existing instrument.`);
             this.instrument.dispose();
         }
         if (!this.synthParams || Object.keys(this.synthParams).length === 0) {
-            console.log(`[Track ${this.id} - initializeInstrument] synthParams empty or null, getting defaults.`); // DEBUG
+            console.log(`[Track ${this.id} - initializeInstrument] synthParams empty or null, getting defaults.`);
             this.synthParams = this.getDefaultSynthParams();
         }
         try {
-            // Ensure synthParams are correctly structured for Tone.MonoSynth
             const paramsForSynth = {
                 portamento: this.synthParams.portamento,
-                oscillator: this.synthParams.oscillator, // Should be { type: 'sine', ... }
-                envelope: this.synthParams.envelope,     // Should be { attack: 0.005, ... }
-                filter: this.synthParams.filter,         // Should be { type: 'lowpass', ... }
-                filterEnvelope: this.synthParams.filterEnvelope // Should be { attack: 0.06, ... }
+                oscillator: this.synthParams.oscillator,
+                envelope: this.synthParams.envelope,
+                filter: this.synthParams.filter,
+                filterEnvelope: this.synthParams.filterEnvelope
             };
-            console.log(`[Track ${this.id} - initializeInstrument] Params for new MonoSynth:`, JSON.parse(JSON.stringify(paramsForSynth))); // DEBUG
+            console.log(`[Track ${this.id} - initializeInstrument] Params for new MonoSynth:`, JSON.parse(JSON.stringify(paramsForSynth)));
             this.instrument = new Tone.MonoSynth(paramsForSynth);
-            console.log(`[Track ${this.id} - initializeInstrument] NEW MonoSynth instrument CREATED:`, this.instrument); // DEBUG
+            console.log(`[Track ${this.id} - initializeInstrument] NEW MonoSynth instrument CREATED:`, this.instrument);
         } catch (error) {
-            console.error(`[Track ${this.id} - initializeInstrument] Error creating MonoSynth instrument:`, error); // DEBUG
-            console.log(`[Track ${this.id} - initializeInstrument] Falling back to Tone.Synth() due to error.`); // DEBUG
+            console.error(`[Track ${this.id} - initializeInstrument] Error creating MonoSynth instrument:`, error);
+            console.log(`[Track ${this.id} - initializeInstrument] Falling back to Tone.Synth() due to error.`);
             this.instrument = new Tone.Synth(); // Basic fallback
         }
     }
 
     setupSlicerMonoNodes() {
         if (!this.slicerIsPolyphonic) {
-            this.disposeSlicerMonoNodes(); // Clean up if they exist
+            this.disposeSlicerMonoNodes();
             this.slicerMonoPlayer = new Tone.Player();
             this.slicerMonoEnvelope = new Tone.AmplitudeEnvelope();
             this.slicerMonoGain = new Tone.Gain();
-            // Chain them up, but don't connect to final destination yet (rebuildEffectChain handles that)
             this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
             console.log(`[Track ${this.id}] Slicer mono nodes set up.`);
         }
@@ -525,11 +558,28 @@ export class Track {
                 onerror: (e) => console.error(`[Track ${this.id}] Error loading Tone.Sampler:`, e)
             };
             this.toneSampler = new Tone.Sampler(samplerOptions);
-            // Loop settings need to be applied to the underlying Player(s) if Tone.Sampler exposes them
-            // Tone.Sampler itself doesn't have a direct .loop property. This might require custom handling
-            // or checking if Tone.js has updated its Sampler API. For now, this is a placeholder.
-            if (this.instrumentSamplerSettings.loop) {
-                console.warn(`[Track ${this.id}] Loop settings for Tone.Sampler might need specific handling if not directly supported.`);
+            if (this.instrumentSamplerSettings.loop && this.toneSampler.player) { // Tone.Sampler uses internal Player(s)
+                // This is a bit of a hack as Tone.Sampler doesn't directly expose loop points for all notes
+                // This would apply to the first player if it's a simple one-sample instrument.
+                // For multi-sampled instruments, this would be more complex.
+                try {
+                    // Attempt to set loop on the underlying players if possible.
+                    // This part is highly dependent on Tone.js internal structure for Sampler
+                    // and might not work reliably or might need adjustments based on Tone.js version.
+                    Object.values(this.toneSampler._players._buffers._buffers).forEach(toneBuffer => {
+                        if (toneBuffer && toneBuffer._buffer && toneBuffer._buffer instanceof AudioBuffer) {
+                           // Tone.Player instances managed by Tone.Sampler are not directly exposed for loop point setting.
+                           // The loop flag on the Sampler constructor options is the primary way.
+                           // If more granular control is needed, one might need to manage Players manually.
+                        }
+                    });
+                    // The Sampler's 'loop' option in constructor is the main way.
+                    // If we need to change loop points after init, it's complex.
+                    // For now, we rely on the initial setup or re-creating the sampler.
+                    console.log(`[Track ${this.id}] Instrument Sampler loop: ${this.instrumentSamplerSettings.loop}. Loop points may need manual Player management if changed post-init.`);
+                } catch (e) {
+                    console.warn(`[Track ${this.id}] Could not directly set loop points on Tone.Sampler's internal players.`, e);
+                }
             }
         } else {
             console.warn(`[Track ${this.id}] InstrumentSampler audioBuffer not loaded, cannot setup Tone.Sampler.`);
@@ -537,7 +587,7 @@ export class Track {
     }
 
     setVolume(volume, fromInteraction = false) {
-        this.previousVolumeBeforeMute = Math.max(0, Math.min(1, parseFloat(volume) || 0)); // Ensure volume is between 0 and 1
+        this.previousVolumeBeforeMute = Math.max(0, Math.min(1, parseFloat(volume) || 0));
         if (this.gainNode && !this.gainNode.disposed && !this.isMuted) {
             this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05);
         }
@@ -550,10 +600,8 @@ export class Track {
             this.gainNode.gain.rampTo(0, 0.01);
         } else {
             if (currentGlobalSoloId && currentGlobalSoloId !== this.id) {
-                // If another track is soloed, this one should be silent (unless it's the soloed one)
                 this.gainNode.gain.rampTo(0, 0.01);
             } else {
-                // Not muted and no other track is soloed (or this IS the soloed track)
                 this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05);
             }
         }
@@ -563,20 +611,20 @@ export class Track {
         if (!this.gainNode || this.gainNode.disposed) { console.warn(`[Track ${this.id}] applySoloState: gainNode is null/disposed.`); return; }
         const currentGlobalSoloId = typeof window.getSoloedTrackId === 'function' ? window.getSoloedTrackId() : null;
 
-        if (this.isMuted) { // Muted tracks are always silent
+        if (this.isMuted) {
             this.gainNode.gain.rampTo(0, 0.01);
             return;
         }
 
-        if (currentGlobalSoloId) { // If any track is soloed
+        if (currentGlobalSoloId) {
             this.gainNode.gain.rampTo(this.id === currentGlobalSoloId ? this.previousVolumeBeforeMute : 0, 0.01);
-        } else { // No tracks are soloed
+        } else {
             this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.05);
         }
     }
 
     setSynthParam(paramPath, value) {
-        console.log(`[Track ${this.id} - setSynthParam] Called. Path: '${paramPath}', Value:`, value, `Type: ${this.type}`); // DEBUG
+        console.log(`[Track ${this.id} - setSynthParam] Called. Path: '${paramPath}', Value:`, value, `Type: ${this.type}`);
         if (this.type !== 'Synth') {
             console.warn(`[Track ${this.id} - setSynthParam] Not a Synth track. Returning.`); return;
         }
@@ -591,11 +639,10 @@ export class Track {
             this.synthParams = this.getDefaultSynthParams();
         }
         
-        // Update local synthParams state
         const keys = paramPath.split('.');
         let currentParamLevel = this.synthParams;
         for (let i = 0; i < keys.length - 1; i++) {
-            if (!currentParamLevel[keys[i]]) currentParamLevel[keys[i]] = {}; // Create intermediate objects if they don't exist
+            if (!currentParamLevel[keys[i]]) currentParamLevel[keys[i]] = {};
             currentParamLevel = currentParamLevel[keys[i]];
         }
         currentParamLevel[keys[keys.length - 1]] = value;
@@ -603,34 +650,29 @@ export class Track {
         console.log(`[Track ${this.id} - setSynthParam] Full local synthParams now:`, JSON.parse(JSON.stringify(this.synthParams)));
 
         try {
-            // Attempt to set on the Tone.js instrument instance
             let targetObject = this.instrument;
             for (let i = 0; i < keys.length - 1; i++) {
                 targetObject = targetObject[keys[i]];
                 if (!targetObject) {
                     console.error(`[Track ${this.id} - setSynthParam] Intermediate object for path "${keys.slice(0,i+1).join('.')}" NOT FOUND on actual instrument. Path: ${paramPath}`);
-                    // Attempt fallback using instrument.set() if intermediate object not found for direct assignment
                     console.warn(`[Track ${this.id} - setSynthParam] Trying this.instrument.set({ '${paramPath}': ${value} }) as fallback.`);
                     this.instrument.set({ [paramPath]: value });
                     console.log(`[Track ${this.id} - setSynthParam] Fallback this.instrument.set() for ${paramPath} completed.`);
-                    return; // Exit after fallback attempt
+                    return;
                 }
             }
             
             const finalKey = keys[keys.length - 1];
             if (targetObject && typeof targetObject[finalKey] !== 'undefined') {
-                // Check if it's an AudioParam or Tone.Signal (has a .value property)
                 if (targetObject[finalKey] && typeof targetObject[finalKey].value !== 'undefined' && typeof value === 'number') {
                     console.log(`[Track ${this.id} - setSynthParam] Setting AudioParam/Signal: ${paramPath}.value = ${value}`);
                     targetObject[finalKey].value = value;
                 } else {
-                    // Direct property assignment (e.g., oscillator.type, filter.type)
                     console.log(`[Track ${this.id} - setSynthParam] Setting direct property: ${paramPath} = ${value}`);
                     targetObject[finalKey] = value;
                 }
                 console.log(`[Track ${this.id} - setSynthParam] Successfully set synth param ${paramPath} on Tone.js object.`);
             } else {
-                // Fallback to instrument.set() if the direct path resolved to an undefined property
                 console.warn(`[Track ${this.id} - setSynthParam] Property ${paramPath} (finalKey: ${finalKey}) not directly found on target object, attempting this.instrument.set(). Target object:`, targetObject);
                 this.instrument.set({ [paramPath]: value });
                 console.log(`[Track ${this.id} - setSynthParam] Fallback this.instrument.set() for ${paramPath} completed.`);
@@ -677,7 +719,7 @@ export class Track {
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
         const oldActualLength = this.sequenceLength;
         newLengthInSteps = Math.max(STEPS_PER_BAR, parseInt(newLengthInSteps) || defaultStepsPerBar);
-        newLengthInSteps = Math.ceil(newLengthInSteps / STEPS_PER_BAR) * STEPS_PER_BAR; // Ensure it's a multiple of STEPS_PER_BAR
+        newLengthInSteps = Math.ceil(newLengthInSteps / STEPS_PER_BAR) * STEPS_PER_BAR; 
         if (!skipUndoCapture && oldActualLength !== newLengthInSteps && typeof window.captureStateForUndo === 'function') {
             window.captureStateForUndo(`Set Seq Length for ${this.name} to ${newLengthInSteps / STEPS_PER_BAR} bars`);
         }
@@ -686,7 +728,7 @@ export class Track {
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = synthPitches.length;
         else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : numSlices;
         else if (this.type === 'DrumSampler') numRows = numDrumSamplerPads;
-        else numRows = (this.sequenceData && this.sequenceData.length > 0) ? this.sequenceData.length : 0; // Fallback for unknown or empty
+        else numRows = (this.sequenceData && this.sequenceData.length > 0) ? this.sequenceData.length : 0;
         const currentSequenceData = this.sequenceData || [];
         this.sequenceData = Array(numRows).fill(null).map((_, rIndex) => {
             const currentRow = currentSequenceData[rIndex] || [];
@@ -717,7 +759,7 @@ export class Track {
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
                         const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                         let playDuration = sliceData.duration / playbackRate;
-                        if (sliceData.loop) playDuration = Tone.Time("8n").toSeconds(); // Arbitrary loop duration for sequence step
+                        if (sliceData.loop) playDuration = Tone.Time("8n").toSeconds();
                         if (this.slicerIsPolyphonic) {
                             const tempPlayer = new Tone.Player(this.audioBuffer);
                             const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
@@ -728,7 +770,7 @@ export class Track {
                             tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
                             tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
                             tempEnv.triggerAttack(time);
-                            if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95); // Slightly before actual end
+                            if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
                             Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
                         } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                             if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
@@ -762,7 +804,7 @@ export class Track {
             }
         }, Array.from(Array(this.sequenceLength).keys()), "16n").start(0);
         if (this.sequencerWindow && !this.sequencerWindow.isMinimized && window.openWindows[`sequencerWin-${this.id}`] && typeof window.openTrackSequencerWindow === 'function') {
-             window.openTrackSequencerWindow(this.id, true); // forceRedraw
+             window.openTrackSequencerWindow(this.id, true);
         }
     }
 
@@ -780,9 +822,9 @@ export class Track {
         this.activeEffects = [];
         try { if (this.gainNode && !this.gainNode.disposed) this.gainNode.dispose(); } catch(e){ console.warn("Error disposing gainNode", e.message); }
         try { if (this.trackMeter && !this.trackMeter.disposed) this.trackMeter.dispose(); } catch(e){ console.warn("Error disposing trackMeter", e.message); }
-        if (this.inspectorWindow?.close) try {this.inspectorWindow.close();} catch(e){}
-        if (this.effectsRackWindow?.close) try {this.effectsRackWindow.close();} catch(e){}
-        if (this.sequencerWindow?.close) try {this.sequencerWindow.close();} catch(e){}
+        if (this.inspectorWindow?.close) try {this.inspectorWindow.close(true);} catch(e){} // Pass true to skip undo during this type of close
+        if (this.effectsRackWindow?.close) try {this.effectsRackWindow.close(true);} catch(e){}
+        if (this.sequencerWindow?.close) try {this.sequencerWindow.close(true);} catch(e){}
         Object.keys(this).forEach(key => { if (key !== 'id' && key !== 'name' && key !== 'type') this[key] = null; });
         console.log(`[Track ${this.id}] Finished disposing track.`);
     }
