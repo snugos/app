@@ -1,7 +1,7 @@
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 import * as Constants from './constants.js';
 import { showNotification } from './utils.js';
-import { createEffectInstance, getEffectDefaultParams } from './effectsRegistry.js'; // Removed AVAILABLE_EFFECTS as it's not directly used here
+import { createEffectInstance, getEffectDefaultParams } from './effectsRegistry.js';
 
 let audioContextInitialized = false;
 window.masterEffectsBusInput = null; // Input to the master chain
@@ -10,16 +10,24 @@ let masterGainNode = null; // Final gain before Tone.getDestination()
 
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
     if (audioContextInitialized && Tone.context.state === 'running') {
-        if (!window.masterEffectsBusInput) setupMasterBus();
+        if (!window.masterEffectsBusInput || window.masterEffectsBusInput.disposed) {
+            console.log("[Audio] Master bus input missing or disposed, re-setting up master bus.");
+            setupMasterBus();
+        }
         return true;
     }
     try {
         await Tone.start();
+        console.log("[Audio] Tone.start() successful. Context state:", Tone.context.state);
         if (Tone.context.state === 'running') {
             setupMasterBus();
             if (!window.masterMeter && masterGainNode && !masterGainNode.disposed) {
                 window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
                 masterGainNode.connect(window.masterMeter);
+                 console.log("[Audio] Master meter connected to masterGainNode.");
+            } else if (window.masterMeter && masterGainNode && masterGainNode.numberOfOutputs === 1) { // Only connected to destination, not meter yet
+                masterGainNode.connect(window.masterMeter);
+                console.log("[Audio] Master meter re-connected to masterGainNode.");
             }
             audioContextInitialized = true;
             return true;
@@ -41,93 +49,118 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 }
 
 function setupMasterBus() {
-    if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) {
+    console.log("[Audio] setupMasterBus called.");
+    if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed && masterGainNode && !masterGainNode.disposed) {
+        console.log("[Audio] Master bus appears to be already set up and valid.");
+        // Ensure it's connected correctly even if it exists
+        rebuildMasterEffectChain();
         return;
     }
-    console.log("[Audio] Setting up Master Bus.");
+
+    console.log("[Audio] Setting up Master Bus nodes.");
     if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) window.masterEffectsBusInput.dispose();
     if (masterGainNode && !masterGainNode.disposed) masterGainNode.dispose();
 
-    window.masterEffectsBusInput = new Tone.Gain().toDestination(); // Connect to destination initially
+    window.masterEffectsBusInput = new Tone.Gain();
     masterGainNode = new Tone.Gain();
+    console.log("[Audio] Master bus input and gain nodes created.");
     rebuildMasterEffectChain();
 }
 
 export function rebuildMasterEffectChain() {
-    if (!window.masterEffectsBusInput || !masterGainNode) {
-        console.warn("[Audio] Master bus input or master gain node not initialized. Cannot rebuild chain.");
-        if (!window.masterEffectsBusInput) console.log("masterEffectsBusInput is null");
-        if (!masterGainNode) console.log("masterGainNode is null");
-        return;
+    if (!window.masterEffectsBusInput || window.masterEffectsBusInput.disposed) {
+        console.warn("[Audio] Master bus input is null or disposed. Attempting to re-initialize master bus.");
+        // Try to re-initialize. This might be risky if called in a loop.
+        // For now, just log and potentially skip if critical components are missing.
+        // setupMasterBus(); // Avoid recursive call if setupMasterBus itself calls this.
+        if(!window.masterEffectsBusInput) window.masterEffectsBusInput = new Tone.Gain(); // Last resort
+        if(!window.masterEffectsBusInput) {
+            console.error("[Audio] CRITICAL: Master bus input could not be initialized in rebuildMasterEffectChain.");
+            return;
+        }
     }
-    console.log("[Audio] Rebuilding Master Effect Chain. Effects count:", (window.masterEffectsChain || []).length);
-
-    // Ensure nodes are valid before disconnecting
-    if (window.masterEffectsBusInput.numberOfOutputs > 0) { // Check if it's connected to anything
-        try { window.masterEffectsBusInput.disconnect(); } catch (e) { console.warn("[Audio] Minor error disconnecting masterEffectsBusInput:", e.message); }
+    if (!masterGainNode || masterGainNode.disposed) {
+         console.warn("[Audio] Master gain node is null or disposed. Re-initializing.");
+        masterGainNode = new Tone.Gain();
+         if(!masterGainNode) {
+            console.error("[Audio] CRITICAL: Master gain node could not be initialized in rebuildMasterEffectChain.");
+            return;
+        }
     }
 
+    console.log(`[Audio] Rebuilding Master Effect Chain. Current effects: ${(window.masterEffectsChain || []).length}`);
+
+    // 1. Disconnect everything thoroughly
+    try { window.masterEffectsBusInput.disconnect(); } catch(e) { console.warn(`[Audio] Minor error disconnecting masterEffectsBusInput: ${e.message}`); }
     (window.masterEffectsChain || []).forEach(effectWrapper => {
         if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
             try { effectWrapper.toneNode.disconnect(); } catch (e) { console.warn(`[Audio] Minor error disconnecting master effect ${effectWrapper.type}: ${e.message}`); }
         }
     });
-
-    if (masterGainNode.numberOfOutputs > 0) {
-        try { masterGainNode.disconnect(); } catch (e) { console.warn(`[Audio] Minor error disconnecting masterGainNode: ${e.message}`); }
-    }
+    try { masterGainNode.disconnect(); } catch(e) { console.warn(`[Audio] Minor error disconnecting masterGainNode: ${e.message}`); }
 
 
+    // 2. Connect the chain: masterEffectsBusInput -> Master Effects -> masterGainNode
     let currentAudioPathEnd = window.masterEffectsBusInput;
+    console.log(`[Audio] Master Chain: Starting with masterEffectsBusInput`);
 
-    (window.masterEffectsChain || []).forEach(effectWrapper => {
+    (window.masterEffectsChain || []).forEach((effectWrapper, index) => {
         if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
             if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
                 try {
-                    console.log(`[Audio] Master Chain: Connecting ${currentAudioPathEnd.constructor.name} to ${effectWrapper.type}`);
+                    console.log(`[Audio] Master Chain: Connecting ${currentAudioPathEnd.constructor.name} to effect ${index + 1} (${effectWrapper.type})`);
                     currentAudioPathEnd.connect(effectWrapper.toneNode);
+                    currentAudioPathEnd = effectWrapper.toneNode; // Update for the next connection
                 } catch (e) {
                     console.error(`[Audio] Error connecting master chain node ${currentAudioPathEnd.constructor.name} to ${effectWrapper.type}:`, e);
+                    // Attempt to continue chain if possible, or log failure for this effect
                 }
             } else {
                  console.warn(`[Audio] Master Chain: currentAudioPathEnd is invalid before connecting to ${effectWrapper.type}`);
+                 currentAudioPathEnd = effectWrapper.toneNode; // Try to pick up chain with current effect
             }
-            currentAudioPathEnd = effectWrapper.toneNode;
+        } else {
+            console.warn(`[Audio] Master Chain: Effect ${index+1} (${effectWrapper.type}) has invalid or disposed toneNode.`);
         }
     });
 
+    // Connect the end of the master effects chain (or the bus input if no effects) to the masterGainNode
     if (masterGainNode && !masterGainNode.disposed) {
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
              try {
-                console.log(`[Audio] Master Chain: Connecting ${currentAudioPathEnd.constructor.name} to MasterGainNode`);
+                console.log(`[Audio] Master Chain: Connecting final effect output (${currentAudioPathEnd.constructor.name}) to MasterGainNode`);
                 currentAudioPathEnd.connect(masterGainNode);
             } catch (e) {
                 console.error(`[Audio] Error connecting master effects output (${currentAudioPathEnd.constructor.name}) to masterGainNode:`, e);
             }
-        } else { // No effects, connect bus input directly to master gain
-             try {
-                console.log(`[Audio] Master Chain: Connecting MasterEffectsBusInput directly to MasterGainNode`);
-                window.masterEffectsBusInput.connect(masterGainNode);
-             } catch (e) {
-                console.error(`[Audio] Error connecting MasterEffectsBusInput to masterGainNode:`, e);
-             }
+        } else {
+            console.warn("[Audio] Master Chain: No valid currentAudioPathEnd to connect to masterGainNode. This might happen if masterEffectsBusInput was also invalid.");
         }
-        masterGainNode.toDestination(); // Connect to destination
-        if (window.masterMeter && !window.masterMeter.disposed) {
-            masterGainNode.connect(window.masterMeter);
-        } else if (!window.masterMeter) {
-            window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
-            masterGainNode.connect(window.masterMeter);
+
+        // Connect masterGainNode to final destination and meter
+        try {
+            masterGainNode.toDestination(); // Connect to destination
+            console.log("[Audio] MasterGainNode connected to Destination.");
+            if (window.masterMeter && !window.masterMeter.disposed) {
+                masterGainNode.connect(window.masterMeter); // Reconnect meter
+                console.log("[Audio] MasterGainNode connected to existing MasterMeter.");
+            } else if (!window.masterMeter) {
+                window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
+                masterGainNode.connect(window.masterMeter);
+                console.log("[Audio] MasterGainNode connected to new MasterMeter.");
+            }
+        } catch (e) {
+            console.error("[Audio] Error connecting masterGainNode to destination or meter:", e);
         }
     } else {
         console.error("[Audio] masterGainNode is invalid. Final connection to destination might fail.");
-        if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
-            currentAudioPathEnd.toDestination(); // Fallback
-        } else {
-            window.masterEffectsBusInput.toDestination(); // Ultimate fallback
+        if (currentAudioPathEnd && !currentAudioPathEnd.disposed) { // Fallback if masterGainNode is bad
+            try { currentAudioPathEnd.toDestination(); } catch(e) { console.error("[Audio] Error connecting last effect in chain directly to destination:", e); }
+        } else if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) { // Ultimate fallback
+            try { window.masterEffectsBusInput.toDestination(); } catch(e) { console.error("[Audio] Error connecting master bus input directly to destination:", e); }
         }
     }
-    console.log(`[Audio] Master chain rebuilt. Final output node: ${masterGainNode ? masterGainNode.constructor.name : 'N/A'}`);
+    console.log(`[Audio] Master chain rebuild finished. Outputting via: ${masterGainNode && !masterGainNode.disposed ? 'MasterGainNode' : (currentAudioPathEnd && !currentAudioPathEnd.disposed ? currentAudioPathEnd.constructor.name : 'MasterBusInput or None')}`);
 }
 
 
@@ -167,7 +200,7 @@ export function removeMasterEffect(effectId) {
 }
 
 export function updateMasterEffectParam(effectId, paramPath, value) {
-    if(!window.masterEffectsChain) window.masterEffectsChain = [];
+    if (!window.masterEffectsChain) window.masterEffectsChain = [];
     const effectWrapper = window.masterEffectsChain.find(e => e.id === effectId);
     if (!effectWrapper || !effectWrapper.toneNode || effectWrapper.toneNode.disposed) {
         console.warn(`[Audio] Master Effect node not found or disposed for ID: ${effectId} while trying to update ${paramPath}.`);
@@ -194,14 +227,16 @@ export function updateMasterEffectParam(effectId, paramPath, value) {
         const paramInstance = targetObject[finalParamKey];
 
         if (typeof paramInstance !== 'undefined') {
-            if (paramInstance && typeof paramInstance.value === 'number' && typeof paramInstance.rampTo === 'function') {
-                paramInstance.rampTo(value, 0.02);
-            } else if (paramInstance && typeof paramInstance.value !== 'undefined') { // Covers numbers and strings for .value
-                paramInstance.value = value;
-            } else { // Direct property assignment (e.g. filter.type, or effect.oversample)
+            if (paramInstance && typeof paramInstance.value !== 'undefined') { // Covers Tone.Signal, Tone.Param
+                if (typeof paramInstance.rampTo === 'function') {
+                    paramInstance.rampTo(value, 0.02);
+                } else {
+                    paramInstance.value = value;
+                }
+            } else { // Direct property assignment
                 targetObject[finalParamKey] = value;
             }
-        } else if (typeof effectWrapper.toneNode.set === 'function') {
+        } else if (typeof effectWrapper.toneNode.set === 'function' && keys.length > 0) {
             const setObj = {};
             let currentLevelForSet = setObj;
             for(let i = 0; i < keys.length - 1; i++){
@@ -223,22 +258,19 @@ export function reorderMasterEffect(effectId, newIndex) {
     const oldIndex = window.masterEffectsChain.findIndex(e => e.id === effectId);
      if (oldIndex === -1 || oldIndex === newIndex ) return;
 
-    const maxIndex = window.masterEffectsChain.length -1;
+    const maxIndex = window.masterEffectsChain.length; // Can insert at the very end
     const clampedNewIndex = Math.max(0, Math.min(newIndex, maxIndex));
-
-    if (clampedNewIndex === oldIndex) return;
 
     if (typeof window.captureStateForUndo === 'function') {
         window.captureStateForUndo(`Reorder Master effect`);
     }
     const [effectToMove] = window.masterEffectsChain.splice(oldIndex, 1);
     window.masterEffectsChain.splice(clampedNewIndex, 0, effectToMove);
-    console.log(`[Audio] Reordered master effect. Old: ${oldIndex}, New: ${clampedNewIndex}. New order:`, window.masterEffectsChain.map(e=>e.type));
+    console.log(`[Audio] Reordered master effect. Old: ${oldIndex}, New (requested): ${newIndex}, Actual Splice Index: ${clampedNewIndex}. New order:`, window.masterEffectsChain.map(e=>e.type));
     rebuildMasterEffectChain();
 }
 
-// --- Sample Loading and Utility Functions (Re-integrated) ---
-
+// --- Sample Loading and Utility Functions ---
 export function getMimeTypeFromFilename(filename) {
     if (!filename || typeof filename !== 'string') return null;
     if (filename.toLowerCase().endsWith(".wav")) return "audio/wav";
@@ -497,3 +529,6 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
     if (typeof window.drawWaveform === 'function') window.drawWaveform(track);
     showNotification(`Sample auto-sliced into ${numSlicesToCreate} parts.`, 2000);
 }
+
+// Ensure all functions from the previous version of audio.js that are used by main.js are present and exported
+// playSlicePreview, playDrumSamplerPadPreview are already here and updated.
