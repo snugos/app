@@ -27,6 +27,8 @@ import {
     addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect,
     rebuildMasterEffectChain
 } from './audio.js';
+
+// --- Full UI.JS IMPORTS ---
 import {
     openTrackEffectsRackWindow,
     openTrackSequencerWindow,
@@ -47,7 +49,8 @@ import {
     createKnob,
     openMasterEffectsRackWindow
 } from './ui.js';
-import { AVAILABLE_EFFECTS } from './effectsRegistry.js'; // <<<<<<<<<<< ADDED THIS IMPORT
+
+import { AVAILABLE_EFFECTS } from './effectsRegistry.js';
 
 console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js)");
 
@@ -64,6 +67,11 @@ window.transportEventsInitialized = false;
 window.masterMeter = null;
 window.openWindows = {};
 window.highestZIndex = 100;
+
+window.masterEffectsBusInput = null; // Managed in audio.js
+window.masterEffectsChain = []; // Managed in audio.js
+window.masterGainNode = null; // Managed in audio.js
+
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
 
@@ -102,7 +110,7 @@ function handleCustomBackgroundUpload(event) {
             } catch (error) {
                 console.error("Error saving background to localStorage:", error);
                 showNotification("Could not save background: Storage full or image too large.", 4000);
-                applyDesktopBackground(dataURL); // Apply even if not saved, for current session
+                applyDesktopBackground(dataURL);
             }
         };
         reader.onerror = () => {
@@ -130,7 +138,7 @@ window.createWindow = (id, title, contentHTMLOrElement, options = {}) => {
         window.openWindows[id].restore(); return window.openWindows[id];
     }
     if (window.openWindows[id]) {
-        try { window.openWindows[id].close(); } catch(e) { /* ignore */ }
+        try { window.openWindows[id].close(); } catch(e) { /* ignore error during close if any */ }
     }
     const newWindow = new SnugWindow(id, title, contentHTMLOrElement, options);
     return newWindow.element ? newWindow : null;
@@ -186,14 +194,12 @@ window.getActiveSequencerTrackId = getActiveSequencerTrackId;
 window.isTrackRecording = isTrackRecording;
 window.getRecordingTrackId = getRecordingTrackId;
 window.getUndoStack = getUndoStack;
-window.setRecordingTrackId = setRecordingTrackId;
-window.setIsRecording = setIsRecording;
 
 window.addMasterEffect = addMasterEffect;
 window.removeMasterEffect = removeMasterEffect;
 window.updateMasterEffectParam = updateMasterEffectParam;
 window.reorderMasterEffect = reorderMasterEffect;
-window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS; // Now AVAILABLE_EFFECTS is defined due to the import
+window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS;
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -250,19 +256,20 @@ async function initializeSnugOS() {
 
     document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
 
+    let globalControlsWindowInstance = null;
     try {
+        console.log("[Main] Attempting to open Global Controls Window...");
         if (typeof window.openGlobalControlsWindow !== 'function') {
             console.error("[Main] CRITICAL: openGlobalControlsWindow is not available to be called!");
             showNotification("CRITICAL Error: Global controls system unavailable.", 8000);
         } else {
-            console.log("[Main] Attempting to open Global Controls Window...");
-            const globalControlsWindowInstance = window.openGlobalControlsWindow(); // Removed await as it's sync
+            globalControlsWindowInstance = await window.openGlobalControlsWindow();
             console.log("[Main] globalControlsWindowInstance received:", globalControlsWindowInstance);
-            console.log("[Main] globalControlsWindowInstance.element:", globalControlsWindowInstance?.element);
-
-            if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) {
-                console.error("[Main] CRITICAL: Failed to initialize Global Controls Window (instance or element is null). App functionality will be severely limited.");
+            if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) { // Check for null or undefined
+                console.error("[Main] CRITICAL: Failed to initialize Global Controls Window (instance or element is null/undefined). App functionality will be severely limited.");
                 showNotification("CRITICAL Error: Global controls window failed to initialize. App may not function.", 8000);
+            } else {
+                 console.log("[Main] Global Controls Window initialized. Element:", globalControlsWindowInstance.element);
             }
         }
     } catch (error) {
@@ -335,3 +342,4 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
+
