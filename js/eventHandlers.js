@@ -422,6 +422,7 @@ export async function handleMIDIMessage(message) {
         }
     } else if (command === 128 || (command === 144 && velocityByte === 0)) { // Note Off
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
+            // *** THIS IS THE FIRST BUG FIX ***
             currentArmedTrack.instrument.triggerRelease(time + 0.05);
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
             if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
@@ -537,14 +538,16 @@ function handleComputerKeyUp(e) {
         const time = Tone.now();
         const currentArmedTrack = getTrackById(getArmedTrackId());
         if (currentArmedTrack) {
-            const baseComputerKeyNote = Constants.computerKeySynthMap[e.code]; // Only synths/instruments need explicit release usually
+            // *** THIS IS THE SECOND BUG FIX AREA ***
+            const isSynthKey = Constants.computerKeySynthMap[e.code] !== undefined;
+            const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
+
             if (baseComputerKeyNote !== undefined) {
                 const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
                 if (computerKeyNote >= 0 && computerKeyNote <= 127) {
-                    if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-                        // *** THIS IS THE CORRECTED LINE ***
+                    if (currentArmedTrack.type === 'Synth' && isSynthKey && currentArmedTrack.instrument) {
                         currentArmedTrack.instrument.triggerRelease(time + 0.05);
-                    } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
+                    } else if (currentArmedTrack.type === 'InstrumentSampler' && isSynthKey && currentArmedTrack.toneSampler?.loaded) {
                         if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
                             currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
                         }
