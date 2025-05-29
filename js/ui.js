@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence_length');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence_final_added');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -1550,7 +1550,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     return html;
 }
 
-// --- MODIFIED openTrackSequencerWindow (with Erase Sequence) ---
+// --- MODIFIED openTrackSequencerWindow (with Erase Sequence and Double Sequence Length) ---
  function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) {
@@ -1705,6 +1705,60 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         }
                         showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000);
                         console.log('[UI - Sequencer Context] Erased sequence for track:', currentTrackForMenu.id);
+                    }
+                },
+                {
+                    label: "Double Sequence Length",
+                    action: () => {
+                        if (!currentTrackForMenu) return;
+
+                        const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR;
+                        if (currentNumBars * 2 > Constants.MAX_BARS) {
+                            showNotification(`Cannot double: Exceeds maximum of ${Constants.MAX_BARS} bars.`, 3000);
+                            return;
+                        }
+
+                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Double Sequence Length for ${currentTrackForMenu.name}`);
+
+                        const originalSequenceData = JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData || []));
+                        const oldLength = currentTrackForMenu.sequenceLength;
+                        const newLength = oldLength * 2;
+                        
+                        // Determine the number of rows based on track type, ensuring it's consistent
+                        let numRows = 0;
+                        if (currentTrackForMenu.type === 'Synth' || currentTrackForMenu.type === 'InstrumentSampler') {
+                            numRows = Constants.synthPitches.length;
+                        } else if (currentTrackForMenu.type === 'Sampler') {
+                            numRows = currentTrackForMenu.slices ? (currentTrackForMenu.slices.length > 0 ? currentTrackForMenu.slices.length : Constants.numSlices) : Constants.numSlices;
+                        } else if (currentTrackForMenu.type === 'DrumSampler') {
+                            numRows = Constants.numDrumSamplerPads;
+                        } else { // Fallback or for unknown types
+                            numRows = originalSequenceData.length;
+                        }
+
+
+                        const doubledSequenceData = Array(numRows).fill(null).map(() => Array(newLength).fill(null));
+
+                        for (let r = 0; r < numRows; r++) {
+                            // Ensure originalRow exists and is an array, even if sparse
+                            const originalRow = (originalSequenceData[r] && Array.isArray(originalSequenceData[r])) ? originalSequenceData[r] : [];
+                            for (let c = 0; c < oldLength; c++) {
+                                if (originalRow[c]) { // If the step existed
+                                    doubledSequenceData[r][c] = JSON.parse(JSON.stringify(originalRow[c]));
+                                    doubledSequenceData[r][c + oldLength] = JSON.parse(JSON.stringify(originalRow[c]));
+                                }
+                            }
+                        }
+                        
+                        currentTrackForMenu.sequenceData = doubledSequenceData;
+                        currentTrackForMenu.sequenceLength = newLength; 
+                        
+                        currentTrackForMenu.setSequenceLength(newLength, true); 
+
+                        if(typeof window.openTrackSequencerWindow === 'function'){
+                             window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
+                        }
+                        showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000);
                     }
                 }
             ];
@@ -1883,6 +1937,8 @@ function drawInstrumentWaveform(track) {
     }
 }
 // --- END Waveform Drawing Functions ---
+
+// ... (Other UI functions like renderSamplePads, updateSliceEditorUI, etc. should be here) ...
 
 function renderSamplePads(track) { 
     const inspector = track.inspectorWindow?.element;
