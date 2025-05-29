@@ -1,10 +1,7 @@
+// js/constants.js - Shared constants for SnugOS
 
 export const STEPS\_PER\_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
-export const MAX\_BARS = 32; // Maximum number of bars a sequence can have
-
-export const MIN\_TEMPO = 30; // Minimum tempo in BPM
-export const MAX\_TEMPO = 300; // Maximum tempo in BPM
 
 export const synthPitches = [
 'C2', 'C\#2', 'D2', 'D\#2', 'E2', 'F2', 'F\#2', 'G2', 'G\#2', 'A2', 'A\#2', 'B2',
@@ -18,27 +15,34 @@ export const soundLibraries = {
 "Instruments": "assets/instruments.zip",
 "Instruments 2": "assets/instruments2.zip",
 "Instruments 3": "assets/instruments3.zip"
+// Add more libraries here as needed
 };
 
-export const numSlices = 8;
-export const numDrumSamplerPads = 8;
-export const samplerMIDINoteStart = 36; // C2
+export const numSlices = 8; // Default number of slices for Sampler (Slicer)
+export const numDrumSamplerPads = 8; // Number of pads for Drum Sampler
+export const samplerMIDINoteStart = 36; // C2, often used as the base for sampler mapping
 
-export const defaultVelocity = 0.7;
+export const defaultVelocity = 0.7; // Default velocity for new sequencer notes (0.0 to 1.0)
 
-export const defaultDesktopBg = '\#FFB6C1';
-export const defaultTaskbarBg = '\#c0c0c0';
-export const defaultWindowBg = '\#c0c0c0';
-export const defaultWindowContentBg = '\#c0c0c0';
+// Default theme colors (can be overridden by user settings in future)
+export const defaultDesktopBg = '\#FFB6C1'; // Light Pink
+export const defaultTaskbarBg = '\#c0c0c0'; // Classic Grey
+export const defaultWindowBg = '\#c0c0c0'; // Classic Grey
+export const defaultWindowContentBg = '\#c0c0c0'; // Classic Grey (or \#ffffff for white content areas)
 
-export const MAX\_HISTORY\_STATES = 30;
+export const MAX\_HISTORY\_STATES = 30; // Max undo/redo steps
 
+// Computer Keyboard to MIDI mapping
+// Synth / Instrument Sampler (chromatic)
 export const computerKeySynthMap = {
 'KeyA': 60, 'KeyW': 61, 'KeyS': 62, 'KeyE': 63, 'KeyD': 64, 'KeyF': 65, 'KeyT': 66,
 'KeyG': 67, 'KeyY': 68, 'KeyH': 69, 'KeyU': 70, 'KeyJ': 71, 'KeyK': 72,
 };
 
+// Sampler (Slicer) / Drum Sampler (Pads) - typically mapped to a range of notes
 export const computerKeySamplerMap = {
 'Digit1': samplerMIDINoteStart + 0, 'Digit2': samplerMIDINoteStart + 1, 'Digit3': samplerMIDINoteStart + 2, 'Digit4': samplerMIDINoteStart + 3,
 'Digit5': samplerMIDINoteStart + 4, 'Digit6': samplerMIDINoteStart + 5, 'Digit7': samplerMIDINoteStart + 6, 'Digit8': samplerMIDINoteStart + 7
 };
+
+// Note: The extra '}' at the end of the previous file has been removed.
