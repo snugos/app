@@ -15,25 +15,25 @@ export const synthPitches = [
 ].reverse(); // Reversed for typical top-to-bottom piano roll display
 
 export const soundLibraries = {
-    "Drums": "assets/drums.zip", 
+    "Drums": "assets/drums.zip",
     "Instruments": "assets/instruments.zip",
     "Instruments 2": "assets/instruments2.zip",
     "Instruments 3": "assets/instruments3.zip"
 };
 
-export const numSlices = 8; 
-export const numDrumSamplerPads = 8; 
+export const numSlices = 8;
+export const numDrumSamplerPads = 8;
 export const samplerMIDINoteStart = 36; // C2
 
-export const defaultVelocity = 0.7; 
+export const defaultVelocity = 0.7;
 
-export const defaultDesktopBg = '#FFB6C1'; 
-export const defaultTaskbarBg = '#c0c0c0'; 
-export const defaultWindowBg = '#c0c0c0'; 
-export const defaultWindowContentBg = '#c0c0c0'; 
+export const defaultDesktopBg = '#FFB6C1';
+// export const defaultTaskbarBg = '#c0c0c0'; // These are now primarily CSS driven
+// export const defaultWindowBg = '#c0c0c0';
+// export const defaultWindowContentBg = '#c0c0c0';
 
 
-export const MAX_HISTORY_STATES = 30; 
+export const MAX_HISTORY_STATES = 30;
 
 // Computer Keyboard to MIDI mapping
 export const computerKeySynthMap = {
