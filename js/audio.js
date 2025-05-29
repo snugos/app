@@ -26,30 +26,42 @@ export function initializeAudioModule(appServices) {
 
 
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
+    console.log('[Audio] initAudioContextAndMasterMeter called. isUserInitiated:', isUserInitiated, 'Current Tone.context.state:', Tone.context.state, 'audioContextInitialized:', audioContextInitialized);
+
     if (audioContextInitialized && Tone.context.state === 'running') {
         if (typeof window !== 'undefined' && (!window.masterEffectsBusInput || window.masterEffectsBusInput.disposed || !window.masterGainNode || window.masterGainNode.disposed)) {
+            console.log('[Audio] Context running, but master bus needs setup.');
             setupMasterBus();
         }
+        console.log('[Audio] Context already running and initialized.');
         return true;
     }
     try {
+        console.log('[Audio] Attempting Tone.start(). Current state:', Tone.context.state);
         await Tone.start();
+        console.log('[Audio] Tone.start() completed. New state:', Tone.context.state);
+
         if (Tone.context.state === 'running') {
             if(!audioContextInitialized) {
+                console.log('[Audio] First time setup for master bus after Tone.start()');
                 setupMasterBus();
             }
             // Ensure masterGainNode is on window for other modules if they still expect it
             if (typeof window !== 'undefined' && window.masterGainNode && !window.masterGainNode.disposed) {
                 if (!window.masterMeter || window.masterMeter.disposed) {
                     window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
+                    console.log('[Audio] Master meter created.');
                 }
                 try { window.masterGainNode.disconnect(window.masterMeter); } catch(e) {/*ignore*/}
                 window.masterGainNode.connect(window.masterMeter);
+                console.log('[Audio] Master gain node connected to master meter.');
             }
 
             audioContextInitialized = true;
+            console.log('[Audio] Audio context now running and initialized successfully.');
             return true;
         } else {
+            console.warn('[Audio] Audio context NOT running after Tone.start(). State:', Tone.context.state);
             if (isUserInitiated) {
                 showNotification("AudioContext could not be started even with user interaction.", 5000);
             } else {
@@ -68,28 +80,36 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 
 function setupMasterBus() {
     if (typeof window === 'undefined') return; // Should not happen in browser
+    console.log('[Audio] setupMasterBus called.');
 
     if (!window.masterEffectsBusInput || window.masterEffectsBusInput.disposed) {
         if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed) {
-             try {window.masterEffectsBusInput.dispose();} catch(e){/*console.warn("[Audio - setupMasterBus] Error disposing old master bus input", e.message)*/}
+             try {window.masterEffectsBusInput.dispose();} catch(e){console.warn("[Audio - setupMasterBus] Error disposing old master bus input", e.message)}
         }
         window.masterEffectsBusInput = new Tone.Gain();
+        console.log('[Audio] Master effects bus input created/recreated.');
     }
 
     if (!window.masterGainNode || window.masterGainNode.disposed) {
         if (window.masterGainNode && !window.masterGainNode.disposed) {
-            try {window.masterGainNode.dispose();} catch(e){/*console.warn("[Audio - setupMasterBus] Error disposing old master gain node", e.message)*/}
+            try {window.masterGainNode.dispose();} catch(e){console.warn("[Audio - setupMasterBus] Error disposing old master gain node", e.message)}
         }
         window.masterGainNode = new Tone.Gain();
         // masterGainNodeLocal = window.masterGainNode;
+        console.log('[Audio] Master gain node created/recreated.');
     }
     rebuildMasterEffectChain();
 }
 
 export function rebuildMasterEffectChain() {
+    console.log('[Audio] rebuildMasterEffectChain called.');
     if (typeof window === 'undefined' || !window.masterEffectsBusInput || window.masterEffectsBusInput.disposed || !window.masterGainNode || window.masterGainNode.disposed) {
+        console.log('[Audio] Master bus components not ready, attempting setupMasterBus first.');
         setupMasterBus();
-        if (!window.masterEffectsBusInput || !window.masterGainNode) return; // Still not ready
+        if (!window.masterEffectsBusInput || !window.masterGainNode) {
+            console.error('[Audio] Master bus setup failed within rebuildMasterEffectChain. Aborting.');
+            return;
+        }
     }
 
     try { window.masterEffectsBusInput.disconnect(); } catch(e) { /* ignore */ }
@@ -102,11 +122,13 @@ export function rebuildMasterEffectChain() {
     try { window.masterGainNode.disconnect(); } catch(e) { /* ignore */}
 
     let currentAudioPathEnd = window.masterEffectsBusInput;
+    console.log('[Audio] Starting master chain with:', currentAudioPathEnd?.name || 'MasterBusInput');
 
     (window.masterEffectsChain || []).forEach(effectWrapper => {
         if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
             if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
                 try {
+                    console.log(`[Audio] Connecting ${currentAudioPathEnd.name || 'PreviousEffect'} to ${effectWrapper.type}`);
                     currentAudioPathEnd.connect(effectWrapper.toneNode);
                     currentAudioPathEnd = effectWrapper.toneNode;
                 } catch (e) {
@@ -114,37 +136,47 @@ export function rebuildMasterEffectChain() {
                 }
             } else {
                  currentAudioPathEnd = effectWrapper.toneNode;
+                 console.log(`[Audio] Setting currentAudioPathEnd to ${effectWrapper.type} as previous was null/disposed.`);
             }
         }
     });
 
     if (currentAudioPathEnd && !currentAudioPathEnd.disposed && window.masterGainNode && !window.masterGainNode.disposed) {
         try {
+            console.log(`[Audio] Connecting ${currentAudioPathEnd.name || 'LastEffect/BusInput'} to MasterGainNode`);
             currentAudioPathEnd.connect(window.masterGainNode);
         } catch (e) {
             console.error(`[Audio - rebuildMasterEffectChain] Error connecting output of effects chain to masterGainNode:`, e);
         }
+    } else {
+        console.warn('[Audio] Could not connect end of master chain to masterGainNode. CurrentOutput:', currentAudioPathEnd, 'MasterGain:', window.masterGainNode);
     }
 
     if (window.masterGainNode && !window.masterGainNode.disposed) {
         try {
+            console.log('[Audio] Connecting MasterGainNode to destination and meter.');
             window.masterGainNode.toDestination();
             if (window.masterMeter && !window.masterMeter.disposed) {
                 window.masterGainNode.connect(window.masterMeter);
             } else {
                 window.masterMeter = new Tone.Meter({ smoothing: 0.8 });
                 window.masterGainNode.connect(window.masterMeter);
+                console.log('[Audio] New master meter created and connected.');
             }
         } catch (e) { console.error("[Audio - rebuildMasterEffectChain] Error connecting masterGainNode to destination or meter:", e); }
+    } else {
+        console.warn('[Audio] MasterGainNode not available or disposed for final connection.');
     }
 
     // Rebuild individual track chains as they connect to the master bus
     const currentTracks = localAppServices.getTracks ? localAppServices.getTracks() : (typeof window !== 'undefined' && window.getTracks ? window.getTracks() : []);
+    console.log(`[Audio] Rebuilding effect chains for ${currentTracks.length} tracks.`);
     currentTracks.forEach(track => {
         if (track && typeof track.rebuildEffectChain === 'function') {
             track.rebuildEffectChain();
         }
     });
+    console.log('[Audio] rebuildMasterEffectChain finished.');
 }
 
 
@@ -365,7 +397,7 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     }
     const player = track.drumPadPlayers[padIndex];
     const padData = track.drumSamplerPads[padIndex];
-    player.volume.value = Tone.gainToDb(padData.volume * velocity * 0.5); // Apply some headroom
+    player.volume.value = Tone.dbToGain(padData.volume * velocity * 0.5); // Apply some headroom
     const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
     player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
     player.start(Tone.now());
