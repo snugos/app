@@ -20,15 +20,12 @@ import {
     setRecordingTrackId,
     setIsRecording
 } from './state.js';
-import { // Ensure all necessary audio functions are imported
+import {
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
     addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect,
-    rebuildMasterEffectChain,
-    clearMasterEffects, 
-    applyMasterEffectState, 
-    toggleMasterEffectBypass 
+    rebuildMasterEffectChain
 } from './audio.js';
 
 // --- Full UI.JS IMPORTS ---
@@ -49,10 +46,9 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob,
+    createKnob, 
     openMasterEffectsRackWindow
 } from './ui.js';
-
 
 import { AVAILABLE_EFFECTS } from './effectsRegistry.js';
 
@@ -75,6 +71,15 @@ window.highestZIndex = 100;
 window.masterEffectsBusInput = null; 
 window.masterEffectsChain = []; 
 window.masterGainNode = null; 
+
+// Clipboard for copy/paste operations
+window.clipboardData = {
+    type: null,             // e.g., 'sequence', 'trackSettings', 'effect'
+    data: null,             // The actual copied data
+    sourceTrackType: null,  // e.g., 'Synth', 'Sampler', for compatibility checks
+    sequenceLength: null,   // Specifically for sequence type
+    // Add other metadata as needed for different clipboard types
+};
 
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
@@ -161,7 +166,6 @@ window.renderSamplePads = renderSamplePads;
 window.updateSliceEditorUI = updateSliceEditorUI;
 window.updateDrumPadControlsUI = updateDrumPadControlsUI;
 window.renderDrumSamplerPads = renderDrumSamplerPads;
-window.createContextMenu = createContextMenu; 
 
 window.playSlicePreview = playSlicePreview;
 window.playDrumSamplerPadPreview = playDrumSamplerPadPreview;
@@ -189,8 +193,9 @@ window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
 
+// Assign attachGlobalControlEvents to window object here
 window.attachGlobalControlEvents = attachGlobalControlEvents;
-console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents); 
+console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents);
 
 window.selectMIDIInput = selectMIDIInput;
 
@@ -207,11 +212,10 @@ window.addMasterEffect = addMasterEffect;
 window.removeMasterEffect = removeMasterEffect;
 window.updateMasterEffectParam = updateMasterEffectParam;
 window.reorderMasterEffect = reorderMasterEffect;
-window.toggleMasterEffectBypass = toggleMasterEffectBypass; // <-- MAKE SURE THIS IS ASSIGNED
-window.clearMasterEffects = clearMasterEffects;             // <-- MAKE SURE THIS IS ASSIGNED
-window.applyMasterEffectState = applyMasterEffectState;     // <-- MAKE SURE THIS IS ASSIGNED
+window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS;
 
-window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS; 
+// Make createContextMenu globally available for SnugWindow or other modules if needed
+window.createContextMenu = createContextMenu; 
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -268,33 +272,29 @@ async function initializeSnugOS() {
 
     document.getElementById('customBgInput')?.addEventListener('change', handleCustomBackgroundUpload);
 
-    let globalControlsWindowInstance = null;
-    try {
-        console.log("[Main] Attempting to open Global Controls Window...");
-        if (typeof window.openGlobalControlsWindow !== 'function') {
-            console.error("[Main] CRITICAL: openGlobalControlsWindow is not available to be called!");
-            showNotification("CRITICAL Error: Global controls system unavailable.", 8000);
-        } else {
-            globalControlsWindowInstance = await window.openGlobalControlsWindow();
-            console.log("[Main] globalControlsWindowInstance received:", globalControlsWindowInstance);
-            if (!globalControlsWindowInstance || !globalControlsWindowInstance.element) { 
-                console.error("[Main] CRITICAL: Failed to initialize Global Controls Window (instance or element is null/undefined). App functionality will be severely limited.");
-                showNotification("CRITICAL Error: Global controls window failed to initialize. App may not function.", 8000);
+    // *** MAJOR FIX: Use a callback to prevent the race condition ***
+    // This ensures the global controls window is fully built before we try to use its buttons.
+    window.openGlobalControlsWindow(async () => {
+        console.log('[Main Callback] Global Controls window is ready. Attaching events and setting up MIDI.');
+        const globalControlsWindow = window.openWindows['globalControls'];
+        if (globalControlsWindow && globalControlsWindow.element) {
+            // Attach event listeners now that we know the buttons exist
+            if (typeof window.attachGlobalControlEvents === 'function') {
+                window.attachGlobalControlEvents(globalControlsWindow.element);
             } else {
-                 console.log("[Main] Global Controls Window initialized. Element:", globalControlsWindowInstance.element);
+                 console.error("[Main Callback] attachGlobalControlEvents is not a function!");
             }
+            
+            // Setup MIDI now that we know the dropdown menu exists
+            if (window.midiInputSelectGlobal) {
+                await setupMIDI();
+            } else {
+                console.warn("[Main Callback] MIDI input select element not found, skipping MIDI setup.");
+            }
+        } else {
+             console.error("[Main Callback] Global Controls window or element not found after creation.");
         }
-    } catch (error) {
-        console.error("[Main] Error during openGlobalControlsWindow call:", error);
-        showNotification("Error initializing global controls. Check console.", 5000);
-    }
-
-
-    if (window.midiInputSelectGlobal) {
-        await setupMIDI();
-    } else {
-        console.warn("[Main] MIDI input select element not found after Global Controls Window attempt, skipping MIDI setup for now.");
-    }
+    });
 
     const libraryPromises = [];
     let librariesToFetchCount = 0;
@@ -338,7 +338,7 @@ async function initializeSnugOS() {
 
 function updateMetersLoop() {
     const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
-    const mixerMasterMeterBar = document.getElementById('mixerMasterMeterBar'); // This might be null if mixer not open
+    const mixerMasterMeterBar = document.getElementById('mixerMasterMeterBar');
     updateMeters(window.masterMeterBar, window.masterMeterBar, mixerMasterMeterBar, currentTracks);
     requestAnimationFrame(updateMetersLoop);
 }
@@ -354,4 +354,3 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
-
