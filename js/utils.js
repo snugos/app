@@ -261,6 +261,7 @@ export function bbsTimeToSeconds(bbsString) {
 let activeContextMenu = null;
 
 export function createContextMenu(event, menuItems) {
+    console.log('[Utils - createContextMenu] FUNCTION CALLED. Event:', event, 'MenuItems:', menuItems); // DEBUG LOG
     event.preventDefault();
     event.stopPropagation();
 
@@ -304,6 +305,11 @@ export function createContextMenu(event, menuItems) {
     menu.appendChild(ul);
     document.body.appendChild(menu);
     activeContextMenu = menu;
+    console.log('[Utils - createContextMenu] Menu DOM element appended to body:', activeContextMenu); // DEBUG LOG
+    if (activeContextMenu) { // Check if menu exists before trying to get computed style
+        console.log('[Utils - createContextMenu] Menu computed style left:', getComputedStyle(activeContextMenu).left, 'top:', getComputedStyle(activeContextMenu).top, 'zIndex:', getComputedStyle(activeContextMenu).zIndex, 'display:', getComputedStyle(activeContextMenu).display); // DEBUG LOG
+    }
+
 
     // Reposition if it overflows viewport
     const menuRect = menu.getBoundingClientRect();
