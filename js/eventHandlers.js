@@ -213,7 +213,10 @@ export function attachGlobalControlEvents(globalControlsElements) {
             }
             if (!isTrackRecording()) {
                 const currentArmedTrackId = getArmedTrackId();
-                if (!currentArmedTrackId) { showNotification("No track armed for recording.", 3000); return; }
+                if (currentArmedTrackId === null) { // Explicitly check for null
+                    showNotification("No track armed for recording.", 3000);
+                    return;
+                }
                 const trackToRecord = getTrackById(currentArmedTrackId);
                 if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
 
@@ -397,7 +400,7 @@ export async function handleMIDIMessage(message) {
     }
 
     const currentArmedTrackId = getArmedTrackId();
-    if (!currentArmedTrackId) return;
+    if (currentArmedTrackId === null) return; // Explicitly check for null
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
@@ -432,7 +435,7 @@ export async function handleMIDIMessage(message) {
 }
 
 async function handleComputerKeyDown(e) {
-    console.log('[EventHandlers] handleComputerKeyDown triggered. Key:', e.code, 'Target:', e.target.tagName); // 1. Log key press & target
+    console.log('[EventHandlers] handleComputerKeyDown triggered. Key:', e.code, 'Target:', e.target.tagName);
 
     if (e.code === 'Space') {
         e.preventDefault();
@@ -470,16 +473,15 @@ async function handleComputerKeyDown(e) {
 
     const time = Tone.now();
     const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
-    console.log('[EventHandlers] baseComputerKeyNote:', baseComputerKeyNote, 'for key:', e.code); // Log base note
+    console.log('[EventHandlers] baseComputerKeyNote:', baseComputerKeyNote, 'for key:', e.code);
 
     if (baseComputerKeyNote === undefined) {
         console.log('[EventHandlers] Key not mapped for notes.');
-        // delete currentlyPressedComputerKeys[e.code]; // Keep it pressed for keyup, but don't play
         return;
     }
 
     const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-    console.log('[EventHandlers] computerKeyNote (with octave shift):', computerKeyNote); // Log final note
+    console.log('[EventHandlers] computerKeyNote (with octave shift):', computerKeyNote);
 
     if (computerKeyNote < 0 || computerKeyNote > 127) {
         console.log('[EventHandlers] Note out of MIDI range.');
@@ -487,7 +489,7 @@ async function handleComputerKeyDown(e) {
     }
 
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
-    console.log('[EventHandlers] audioReady from initAudioContextAndMasterMeter:', audioReady); // Log audioReady status
+    console.log('[EventHandlers] audioReady from initAudioContextAndMasterMeter:', audioReady);
 
     if (!audioReady) {
         console.warn('[EventHandlers] Audio not ready, note play aborted.');
@@ -528,14 +530,15 @@ async function handleComputerKeyDown(e) {
     }
 
     const currentArmedTrackId = getArmedTrackId();
-    console.log('[EventHandlers] currentArmedTrackId for note play:', currentArmedTrackId); // Log armed track ID
+    console.log('[EventHandlers] currentArmedTrackId for note play:', currentArmedTrackId);
 
-    if (!currentArmedTrackId) {
-        console.log('[EventHandlers] No track armed, note play aborted.');
+    // *** THIS IS THE CORRECTED LOGIC ***
+    if (currentArmedTrackId === null || typeof currentArmedTrackId === 'undefined') {
+        console.log('[EventHandlers] No track armed (currentArmedTrackId is null or undefined), note play aborted.');
         return;
     }
     const currentArmedTrack = getTrackById(currentArmedTrackId);
-    console.log('[EventHandlers] currentArmedTrack for note play:', currentArmedTrack ? currentArmedTrack.name : 'null', 'Type:', currentArmedTrack ? currentArmedTrack.type : 'N/A'); // Log armed track object
+    console.log('[EventHandlers] currentArmedTrack for note play:', currentArmedTrack ? currentArmedTrack.name : 'null', 'Type:', currentArmedTrack ? currentArmedTrack.type : 'N/A');
 
     if (!currentArmedTrack) {
         console.warn('[EventHandlers] Armed track object not found, note play aborted.');
@@ -578,7 +581,7 @@ async function handleComputerKeyDown(e) {
 
 function handleComputerKeyUp(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.code === 'Space') return;
-    console.log('[EventHandlers] handleComputerKeyUp triggered. Key:', e.code); // Log key up
+    console.log('[EventHandlers] handleComputerKeyUp triggered. Key:', e.code);
 
     const isOctaveKey = (e.code === 'KeyZ' || e.code === 'KeyX');
     if (isOctaveKey) {
