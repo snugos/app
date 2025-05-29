@@ -2,46 +2,22 @@
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupGenericDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
 import * as Constants from './constants.js';
-// Event handlers are now mostly called by main.js or passed into SnugWindow context menus
-// For direct UI interactions (like a mute button inside an inspector), we'll import them if simple.
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
 import { AVAILABLE_EFFECTS, getEffectParamDefinitions, synthEngineControlDefinitions } from './effectsRegistry.js';
-// import { getMimeTypeFromFilename } from './audio.js'; // Not directly used in ui.js after refactor, audio.js handles it
 
 // Module-level state for appServices, to be set by main.js
-let localAppServices = {
-    getTrackById: () => null,
-    captureStateForUndo: () => {},
-    getArmedTrackId: () => null,
-    getSoloedTrackId: () => null,
-    getActiveSequencerTrackId: () => null,
-    getTracks: () => [],
-    // Audio functions
-    loadSoundFromBrowserToTarget: async () => {},
-    loadSampleFile: async () => {},
-    loadDrumSamplerPadFile: async () => {},
-    playSlicePreview: async () => {},
-    playDrumSamplerPadPreview: async () => {},
-    addMasterEffect: () => null,
-    removeMasterEffect: () => {},
-    updateMasterEffectParam: () => {},
-    reorderMasterEffect: () => {},
-    autoSliceSample: () => {},
-    // UI functions from main.js or other UI parts
-    updateTrackUI: (trackId, reason, detail) => {},
-    // Global state/nodes (some might still be on window for simplicity this pass)
-};
+let localAppServices = {};
 
-export function initializeUIModule(appServicesFromMain) {
+function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 }
 
 // --- Knob UI ---
-export function createKnob(options) {
+function createKnob(options) {
     const container = document.createElement('div');
     container.className = 'knob-container';
 
@@ -469,7 +445,7 @@ function buildTrackInspectorContentDOM(track) {
         </div>`;
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) {
+function openTrackInspectorWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
@@ -527,7 +503,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     </div>`;
 }
 
-export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
+function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     if (!listDiv) return;
     listDiv.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (window.masterEffectsChain || []);
@@ -576,7 +552,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
     });
 }
 
-export function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
+function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (window.masterEffectsChain || []);
@@ -655,8 +631,8 @@ function showAddEffectModal(owner, ownerType) {
     }
 }
 
-// --- Window Opening Functions (Exported) ---
-export function openTrackEffectsRackWindow(trackId, savedState = null) {
+// --- Window Opening Functions ---
+function openTrackEffectsRackWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
@@ -672,7 +648,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     return rackWindow;
 }
 
-export function openMasterEffectsRackWindow(savedState = null) {
+function openMasterEffectsRackWindow(savedState = null) {
     const windowId = 'masterEffectsRack';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
     const contentDOM = buildModularEffectsRackDOM(null, 'master');
@@ -686,7 +662,7 @@ export function openMasterEffectsRackWindow(savedState = null) {
     return rackWindow;
 }
 
-export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
+function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     const windowId = 'globalControls';
     if (window.openWindows[windowId] && !savedState) {
         const win = window.openWindows[windowId];
@@ -706,7 +682,7 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     return newWindow;
 }
 
-export function openSoundBrowserWindow(savedState = null) {
+function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
     const contentHTML = `<div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full dark:text-slate-300"> <div class="flex space-x-1 mb-1"> <select id="librarySelect" class="flex-grow p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">Select Library...</option> </select> <button id="upDirectoryBtn" class="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500" title="Up Directory">↑</button> </div> <div id="currentPathDisplay" class="text-xs text-gray-600 dark:text-slate-400 truncate mb-1">/</div> <div id="soundBrowserList" class="min-h-[100px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600 overflow-y-auto"> <p class="text-gray-500 dark:text-slate-400 italic">Select a library to browse sounds.</p> </div> <div id="soundPreviewControls" class="mt-1 text-center"> <button id="previewSoundBtn" class="px-2 py-1 text-xs border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-slate-500" disabled>Preview</button> </div> </div>`;
@@ -733,7 +709,7 @@ export function openSoundBrowserWindow(savedState = null) {
     return browserWindow;
 }
 
-export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) {
+function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) {
     const browserWindowEl = window.openWindows['soundBrowser']?.element;
     if (!browserWindowEl) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -749,7 +725,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
 
-export function renderSoundBrowserDirectory(pathArray, treeNode) {
+function renderSoundBrowserDirectory(pathArray, treeNode) {
     const browserWindowEl = window.openWindows['soundBrowser']?.element;
     if (!browserWindowEl || !treeNode) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -777,7 +753,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
 }
 
 // --- Mixer Window ---
-export function openMixerWindow(savedState = null) {
+function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
     if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
     const contentContainer = document.createElement('div'); contentContainer.id = 'mixerContentContainer';
@@ -789,14 +765,14 @@ export function openMixerWindow(savedState = null) {
     return mixerWindow;
 }
 
-export function updateMixerWindow() {
+function updateMixerWindow() {
     const mixerWindow = window.openWindows['mixer'];
     if (!mixerWindow?.element || mixerWindow.isMinimized) return;
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (container) renderMixer(container);
 }
 
-export function renderMixer(container) {
+function renderMixer(container) {
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     container.innerHTML = '';
     const masterTrackDiv = document.createElement('div');
@@ -845,7 +821,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     html += `</div></div>`; return html;
 }
 
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
+function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `sequencerWin-${trackId}`;
@@ -890,7 +866,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     const currentStepData = track.sequenceData[row][col]; const isActive = !(currentStepData?.active);
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
                     track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
-                    // The updateSequencerCellUI function is now exported and used here
                     updateSequencerCellUI(sequencerWindow.element, track.type, row, col, isActive);
                 }
             }
@@ -902,7 +877,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
 }
 
 // --- UI Update & Drawing Functions ---
-export function drawWaveform(track) {
+function drawWaveform(track) {
     if (!track?.waveformCanvasCtx || !track.audioBuffer?.loaded) {
         if (track?.waveformCanvasCtx) {
             const canvas = track.waveformCanvasCtx.canvas;
@@ -941,7 +916,7 @@ export function drawWaveform(track) {
     });
 }
 
-export function drawInstrumentWaveform(track) {
+function drawInstrumentWaveform(track) {
     if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
         if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message */ } return;
     }
@@ -964,7 +939,7 @@ export function drawInstrumentWaveform(track) {
     }
 }
 
-export function renderSamplePads(track) {
+function renderSamplePads(track) {
     const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
     if (!inspectorWindow?.element || track.type !== 'Sampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
@@ -980,7 +955,7 @@ export function renderSamplePads(track) {
     });
 }
 
-export function updateSliceEditorUI(track) {
+function updateSliceEditorUI(track) {
     const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
     if (!inspectorWindow?.element || track.type !== 'Sampler' || !track.slices?.length) return;
     const selectedInfo = inspectorWindow.element.querySelector(`#selectedSliceInfo-${track.id}`);
@@ -999,7 +974,7 @@ export function updateSliceEditorUI(track) {
     if (track.inspectorControls.sliceEnvRelease) track.inspectorControls.sliceEnvRelease.setValue(env.release);
 }
 
-export function renderDrumSamplerPads(track) {
+function renderDrumSamplerPads(track) {
     const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
     if (!inspectorWindow?.element || track.type !== 'DrumSampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#drumPadsGridContainer-${track.id}`);
@@ -1015,8 +990,7 @@ export function renderDrumSamplerPads(track) {
     });
 }
 
-// Added export for updateDrumPadControlsUI
-export function updateDrumPadControlsUI(track) {
+function updateDrumPadControlsUI(track) {
     const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
     if (!inspectorWindow || !inspectorWindow.element || track.type !== 'DrumSampler' || !track.drumSamplerPads) return;
     const inspector = inspectorWindow.element;
@@ -1080,7 +1054,7 @@ export function updateDrumPadControlsUI(track) {
 }
 
 
-export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
+function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
@@ -1096,7 +1070,7 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
     }
 }
 
-export function highlightPlayingStep(trackId, col) {
+function highlightPlayingStep(trackId, col) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return;
     const seqWindow = window.openWindows[`sequencerWin-${trackId}`];
@@ -1109,3 +1083,30 @@ export function highlightPlayingStep(trackId, col) {
         currentCells.forEach(cell => cell.classList.add('playing'));
     }
 }
+
+// --- CONSOLIDATED EXPORT BLOCK ---
+export {
+    initializeUIModule,
+    createKnob,
+    openTrackInspectorWindow,
+    renderEffectsList,
+    renderEffectControls,
+    openTrackEffectsRackWindow,
+    openMasterEffectsRackWindow,
+    openGlobalControlsWindow,
+    openSoundBrowserWindow,
+    updateSoundBrowserDisplayForLibrary,
+    renderSoundBrowserDirectory,
+    openMixerWindow,
+    updateMixerWindow,
+    renderMixer,
+    openTrackSequencerWindow,
+    drawWaveform,
+    drawInstrumentWaveform,
+    renderSamplePads,
+    updateSliceEditorUI,
+    renderDrumSamplerPads,
+    updateDrumPadControlsUI, // Ensured this is exported
+    updateSequencerCellUI,
+    highlightPlayingStep
+};
