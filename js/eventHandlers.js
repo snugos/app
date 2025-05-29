@@ -35,280 +35,330 @@ export function initializePrimaryEventListeners(appContext) {
         const startMenu = document.getElementById('startMenu');
         startButton?.addEventListener('click', (e) => {
             e.stopPropagation();
-            startMenu?.classList.toggle('hidden');
-        });
-        document.addEventListener('click', (e) => {
-            if (startMenu && !startMenu.classList.contains('hidden') && !startMenu.contains(e.target) && e.target !== startButton) {
-                startMenu.classList.add('hidden');
-            }
-        });
-
-        document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => { addTrack('Synth', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuAddInstrumentSamplerTrack')?.addEventListener('click', () => { addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-
-        document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => { if(typeof openSoundBrowserWindow === 'function') openSoundBrowserWindow(); else console.error("openSoundBrowserWindow is not defined"); startMenu?.classList.add('hidden'); });
-
-        document.getElementById('menuUndo')?.addEventListener('click', () => {
-            if (!document.getElementById('menuUndo').classList.contains('disabled')) {
-                undoLastAction(); startMenu?.classList.add('hidden');
-            }
-        });
-        document.getElementById('menuRedo')?.addEventListener('click', () => {
-            if (!document.getElementById('menuRedo').classList.contains('disabled')) {
-                redoLastAction(); startMenu?.classList.add('hidden');
-            }
-        });
-
-        document.getElementById('menuSaveProject')?.addEventListener('click', () => { saveProject(); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuLoadProject')?.addEventListener('click', () => {
-            if (typeof loadProject === 'function') loadProject();
-            else document.getElementById('loadProjectInput')?.click();
-            startMenu?.classList.add('hidden');
-        });
-        document.getElementById('menuExportWav')?.addEventListener('click', () => { exportToWav(); startMenu?.classList.add('hidden'); });
-
-        document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { if(typeof openGlobalControlsWindow === 'function') openGlobalControlsWindow(); else console.error("openGlobalControlsWindow is not defined"); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuOpenMixer')?.addEventListener('click', () => { if(typeof openMixerWindow === 'function') openMixerWindow(); else console.error("openMixerWindow is not defined"); startMenu?.classList.add('hidden'); });
-
-        document.getElementById('menuOpenMasterEffects')?.addEventListener('click', () => {
-            console.log("[EventHandlers] 'Master Effects Rack' menu item clicked.");
-            if(typeof openMasterEffectsRackWindow === 'function') {
-                console.log("[EventHandlers] openMasterEffectsRackWindow IS a function. Calling it...");
-                openMasterEffectsRackWindow();
+            startMenu.classList.toggle('hidden');
+            if (!startMenu.classList.contains('hidden')) {
+                startButton.classList.add('active');
             } else {
-                console.error("[EventHandlers] openMasterEffectsRackWindow is NOT defined or not a function in appContext!");
-                if (typeof window.openMasterEffectsRackWindow === 'function') {
-                    console.warn("[EventHandlers] Fallback: Found openMasterEffectsRackWindow on global window object. Calling it.");
-                    window.openMasterEffectsRackWindow();
-                } else {
-                     console.error("[EventHandlers] Fallback: openMasterEffectsRackWindow is also NOT on global window object.");
-                }
+                startButton.classList.remove('active');
             }
-            startMenu?.classList.add('hidden');
         });
 
-
-        document.getElementById('menuUploadCustomBg')?.addEventListener('click', () => {
-            if (triggerCustomBackgroundUpload) triggerCustomBackgroundUpload();
-            startMenu?.classList.add('hidden');
-        });
-        document.getElementById('menuRemoveCustomBg')?.addEventListener('click', () => {
-            if (removeCustomDesktopBackground) removeCustomDesktopBackground();
-            startMenu?.classList.add('hidden');
+        document.addEventListener('click', (e) => {
+            if (startMenu && !startMenu.classList.contains('hidden') && startButton && !startButton.contains(e.target) && !startMenu.contains(e.target)) {
+                startMenu.classList.add('hidden');
+                startButton.classList.remove('active');
+            }
         });
 
+        document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => { addTrack('Synth'); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler'); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler'); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuAddInstrumentSamplerTrack')?.addEventListener('click', () => { addTrack('InstrumentSampler'); startMenu.classList.add('hidden'); startButton.classList.remove('active');});
+
+
+        document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => { openSoundBrowserWindow(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuUndo')?.addEventListener('click', () => { if (!document.getElementById('menuUndo').classList.contains('disabled')) { undoLastAction(); } startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuRedo')?.addEventListener('click', () => { if (!document.getElementById('menuRedo').classList.contains('disabled')) { redoLastAction(); } startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuSaveProject')?.addEventListener('click', () => { saveProject(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuLoadProject')?.addEventListener('click', () => { loadProject(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuExportWav')?.addEventListener('click', () => { exportToWav(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { openGlobalControlsWindow(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuOpenMixer')?.addEventListener('click', () => { openMixerWindow(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuOpenMasterEffects')?.addEventListener('click', () => { openMasterEffectsRackWindow(); startMenu.classList.add('hidden'); startButton.classList.remove('active');});
+        document.getElementById('menuUploadCustomBg')?.addEventListener('click', () => { triggerCustomBackgroundUpload(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+        document.getElementById('menuRemoveCustomBg')?.addEventListener('click', () => { removeCustomDesktopBackground(); startMenu.classList.add('hidden'); startButton.classList.remove('active'); });
+
+        
         document.getElementById('menuToggleFullScreen')?.addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
-                    showNotification(`Error entering full screen: ${err.message}`, 3000);
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
                 });
             } else {
-                if (document.exitFullscreen) document.exitFullscreen();
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
-            startMenu?.classList.add('hidden');
+            startMenu.classList.add('hidden');
+            startButton.classList.remove('active');
         });
 
-        document.getElementById('taskbarTempoDisplay')?.addEventListener('click', () => {
-            if(typeof openGlobalControlsWindow === 'function') openGlobalControlsWindow(); else console.error("openGlobalControlsWindow is not defined");
-        });
 
-        const loadProjectInputEl = document.getElementById('loadProjectInput');
-        if (loadProjectInputEl && typeof handleProjectFileLoad === 'function') {
-            loadProjectInputEl.addEventListener('change', handleProjectFileLoad);
-        } else if (!handleProjectFileLoad) {
-            console.warn("[EventHandlers] handleProjectFileLoad function not provided via appContext. Project loading from file will not work.");
-        } else if (!loadProjectInputEl) {
-            console.warn("[EventHandlers] loadProjectInput element not found.");
-        }
+        const loadProjectInput = document.getElementById('loadProjectInput');
+        loadProjectInput?.addEventListener('change', handleProjectFileLoad);
 
-        document.addEventListener('keydown', handleComputerKeyDown);
-        document.addEventListener('keyup', handleComputerKeyUp);
-
-        // Transport Event Listeners with added logging
-        if (!window.transportEventsInitialized && typeof Tone !== 'undefined' && Tone.Transport) {
-            Tone.Transport.on('start', () => {
-                console.log("[EventHandlers] Tone.Transport 'start' EVENT FIRED. Current state:", Tone.Transport.state); // ADDED
-                if (window.playBtn) window.playBtn.textContent = 'Pause';
-                const globalPlayBtn = document.getElementById('playBtnGlobal');
-                if (globalPlayBtn) globalPlayBtn.textContent = 'Pause';
-            });
-            Tone.Transport.on('pause', () => {
-                console.log("[EventHandlers] Tone.Transport 'pause' EVENT FIRED. Current state:", Tone.Transport.state); // ADDED
-                if (window.playBtn) window.playBtn.textContent = 'Play';
-                const globalPlayBtn = document.getElementById('playBtnGlobal');
-                if (globalPlayBtn) globalPlayBtn.textContent = 'Play';
-
-                if (isTrackRecording()) {
-                    setIsRecording(false);
-                    if(window.recordBtn) { window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording'); }
-                    const globalRecordBtn = document.getElementById('recordBtnGlobal');
-                    if (globalRecordBtn) { globalRecordBtn.textContent = 'Record'; globalRecordBtn.classList.remove('recording');}
-                    showNotification("Recording stopped due to transport pause.", 2000);
-                    captureStateForUndo(`Stop Recording (transport paused)`);
-                    setRecordingTrackId(null);
+        const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
+        if (taskbarTempoDisplay) {
+            taskbarTempoDisplay.addEventListener('click', () => {
+                if (window.openGlobalControlsWindow && typeof window.openGlobalControlsWindow === 'function') {
+                    const gcWin = window.openGlobalControlsWindow(); 
+                    if (gcWin && gcWin.element) {
+                        const tempoInputEl = gcWin.element.querySelector('#tempoGlobalInput');
+                        if (tempoInputEl) {
+                           setTimeout(()=> tempoInputEl.focus(), 0); 
+                           setTimeout(()=> tempoInputEl.select(), 0); 
+                        }
+                    }
                 }
             });
-            Tone.Transport.on('stop', () => {
-                console.log("[EventHandlers] Tone.Transport 'stop' EVENT FIRED. Current state:", Tone.Transport.state); // ADDED
-                if (window.playBtn) window.playBtn.textContent = 'Play';
-                const globalPlayBtn = document.getElementById('playBtnGlobal');
-                if (globalPlayBtn) globalPlayBtn.textContent = 'Play';
-
-                document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                if (isTrackRecording()) {
-                    setIsRecording(false);
-                    if(window.recordBtn) { window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording'); }
-                    const globalRecordBtn = document.getElementById('recordBtnGlobal');
-                    if (globalRecordBtn) { globalRecordBtn.textContent = 'Record'; globalRecordBtn.classList.remove('recording');}
-                    showNotification("Recording stopped due to transport stop.", 2000);
-                    captureStateForUndo(`Stop Recording (transport stopped)`);
-                    setRecordingTrackId(null);
-                }
-            });
-            window.transportEventsInitialized = true;
         }
+
+
     } catch (error) {
-        console.error("[EventHandlers] Error during initializePrimaryEventListeners:", error);
-        showNotification("Error setting up primary event listeners. Some UI elements might not work.", 5000);
+        console.error("[EventHandlers] Error setting up primary event listeners:", error);
+        showNotification("Error initializing some UI controls. Check console.", 5000);
     }
+
+    // --- GLOBAL KEYBOARD SHORTCUTS LISTENER ---
+    document.addEventListener('keydown', (event) => {
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+
+        const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey for Cmd on Mac
+
+        if (isCtrlPressed && !isInputFocused) { 
+            switch (event.key.toLowerCase()) {
+                case 's': 
+                    event.preventDefault();
+                    console.log('[Shortcut] Save Project triggered');
+                    if (typeof window.saveProject === 'function') window.saveProject();
+                    break;
+                case 'o': 
+                    event.preventDefault();
+                    console.log('[Shortcut] Load Project triggered');
+                    if (typeof window.loadProject === 'function') window.loadProject();
+                    break;
+                case 'z': 
+                    if (event.shiftKey) { // Handle Ctrl+Shift+Z for Redo
+                        event.preventDefault();
+                        console.log('[Shortcut] Redo (Ctrl+Shift+Z) triggered');
+                        if (typeof window.redoLastAction === 'function') window.redoLastAction();
+                    } else { // Handle Ctrl+Z for Undo
+                        event.preventDefault();
+                        console.log('[Shortcut] Undo triggered');
+                        if (typeof window.undoLastAction === 'function') window.undoLastAction();
+                    }
+                    break;
+                case 'y': // Ctrl+Y or Cmd+Y for Redo
+                    event.preventDefault();
+                    console.log('[Shortcut] Redo triggered');
+                    if (typeof window.redoLastAction === 'function') window.redoLastAction();
+                    break;
+                case 'n': 
+                     event.preventDefault();
+                     console.log('[Shortcut] New Project triggered');
+                     showConfirmationDialog(
+                        'New Project',
+                        'Create a new project? Any unsaved changes will be lost.',
+                        () => {
+                            // Actual new project logic would go here.
+                            // For now, just a notification, or could reset state.
+                            if (typeof window.reconstructDAW === 'function') {
+                                window.reconstructDAW(null, true); // true to indicate it's a new project
+                                showNotification("New project started.", 2000);
+                            } else {
+                                showNotification("New Project functionality not fully implemented.", 3000);
+                            }
+                        }
+                    );
+                    break;
+            }
+        } else if (!isCtrlPressed && !isInputFocused) { // Non-Ctrl shortcuts that also should not fire if typing
+             switch (event.key.toLowerCase()) {
+                case 'z': // Lower octave (without Ctrl/Cmd)
+                    if (!event.shiftKey) { // Ensure Shift is not also pressed (for Ctrl+Shift+Z)
+                        currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
+                        showNotification(`Octave: ${currentOctaveShift > 0 ? '+' : ''}${currentOctaveShift}`, 1000);
+                    }
+                    break;
+                case 'x': // Raise octave (without Ctrl/Cmd)
+                    currentOctaveShift = Math.min(MAX_OCTAVE_SHIFT, currentOctaveShift + 1);
+                    showNotification(`Octave: ${currentOctaveShift > 0 ? '+' : ''}${currentOctaveShift}`, 1000);
+                    break;
+            }
+        }
+    });
+     // --- END GLOBAL KEYBOARD SHORTCUTS LISTENER ---
 }
+
 
 export function attachGlobalControlEvents(globalControlsWindowElement) {
     console.log("[EventHandlers] attachGlobalControlEvents called with element:", globalControlsWindowElement);
     if (!globalControlsWindowElement) {
-        console.error("[EventHandlers] attachGlobalControlEvents: globalControlsWindowElement is null. Cannot attach events.");
+        console.error("[EventHandlers] Global controls window element not provided for attaching events.");
         return;
     }
-    try {
-        const playButton = globalControlsWindowElement.querySelector('#playBtnGlobal');
-        console.log("[EventHandlers] Play button query result:", playButton);
-        if (playButton) {
-            playButton.addEventListener('click', async () => {
-                console.log("[EventHandlers] Play/Pause button clicked. Current Tone.Transport.state:", Tone.Transport.state);
-                try {
-                    const audioReady = await window.initAudioContextAndMasterMeter(true);
-                    if (!audioReady) {
-                        console.warn("[EventHandlers] Audio context not ready after play button click.");
-                        showNotification("Audio system not ready. Please try again or check browser permissions.", 3000);
-                        return;
+
+    const playBtn = globalControlsWindowElement.querySelector('#playBtnGlobal');
+    const recordBtn = globalControlsWindowElement.querySelector('#recordBtnGlobal');
+    const tempoInput = globalControlsWindowElement.querySelector('#tempoGlobalInput');
+    const midiInputSelectGlobal = globalControlsWindowElement.querySelector('#midiInputSelectGlobal');
+
+    console.log("[EventHandlers] Play button query result:", playBtn);
+    console.log("[EventHandlers] Record button query result:", recordBtn);
+    console.log("[EventHandlers] Tempo input query result:", tempoInput);
+
+
+    if (playBtn) {
+        playBtn.addEventListener('click', () => {
+            if (typeof Tone !== 'undefined') {
+                if (Tone.Transport.state === 'started') {
+                    Tone.Transport.pause();
+                    playBtn.textContent = 'Play';
+                    playBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'dark:bg-yellow-600', 'dark:hover:bg-yellow-700');
+                    playBtn.classList.add('bg-green-500', 'hover:bg-green-600', 'dark:bg-green-600', 'dark:hover:bg-green-700');
+                    if (window.recordBtn) {
+                         window.recordBtn.classList.remove('armed');
+                         setIsRecording(false);
+                         setRecordingTrackId(null);
                     }
 
-                    if (Tone.Transport.state !== 'started') {
-                        console.log("[EventHandlers] Transport state is not 'started'. Resetting position and starting transport.");
-                        Tone.Transport.position = 0;
-                        document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                        // Tone.Transport.start("+0.1"); // Original
-                        Tone.Transport.start(); // Simplified for testing
-                        console.log("[EventHandlers] After Tone.Transport.start() call. New state:", Tone.Transport.state);
-                    } else {
-                        console.log("[EventHandlers] Transport state is 'started'. Pausing transport.");
-                        Tone.Transport.pause();
-                        console.log("[EventHandlers] After Tone.Transport.pause() call. New state:", Tone.Transport.state);
-                    }
-                } catch (error) {
-                    console.error("[EventHandlers] Error in play/pause click:", error);
-                    showNotification("Error starting playback. AudioContext might not be ready.", 3000);
-                }
-            });
-        } else { console.warn("[EventHandlers] Play button (#playBtnGlobal) not found in global controls window."); }
-
-        const recordButton = globalControlsWindowElement.querySelector('#recordBtnGlobal');
-        console.log("[EventHandlers] Record button query result:", recordButton);
-        if (recordButton) {
-            recordButton.addEventListener('click', async () => {
-                console.log("[EventHandlers] Record button clicked.");
-                console.log("Current armed track ID:", getArmedTrackId());
-                console.log("Is currently recording (state):", isTrackRecording());
-                 try {
-                    const audioReady = await window.initAudioContextAndMasterMeter(true);
-                    if (!audioReady) {
-                        showNotification("Audio system not ready for recording. Please click Play or interact to initialize audio.", 3000);
-                        return;
-                    }
-
-                    if (!isTrackRecording()) {
-                        const currentArmedTrackId = getArmedTrackId();
-                        if (!currentArmedTrackId) { showNotification("No track armed for recording.", 3000); return; }
-                        const trackToRecord = getTrackById(currentArmedTrackId);
-                        if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
-
-                        setIsRecording(true);
-                        setRecordingTrackId(currentArmedTrackId);
-                        setRecordingStartTime(Tone.Transport.seconds);
-
-                        if(window.recordBtn) {window.recordBtn.textContent = 'Stop Rec'; window.recordBtn.classList.add('recording');}
-                        recordButton.textContent = 'Stop Rec'; recordButton.classList.add('recording');
-
-                        showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
-                        captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
-                        if (Tone.Transport.state !== 'started') {
-                            Tone.Transport.position = 0;
-                            document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                            Tone.Transport.start(); // Using simplified start
-                            console.log("[EventHandlers] Record button started transport. New state:", Tone.Transport.state);
-                        }
-                    } else {
-                        setIsRecording(false);
-                        if(window.recordBtn) {window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording');}
-                        recordButton.textContent = 'Record'; recordButton.classList.remove('recording');
-
-                        const recordedTrack = getTrackById(getRecordingTrackId());
-                        showNotification("Recording stopped.", 2000);
-                        captureStateForUndo(`Stop Recording (Track: ${recordedTrack?.name || 'Unknown'})`);
-                        setRecordingTrackId(null);
-                    }
-                } catch (error) {
-                    console.error("[EventHandlers] Error in record button click:", error);
-                    showNotification("Error during recording setup.", 3000);
-                    if (window.recordBtn) { window.recordBtn.textContent = 'Record'; window.recordBtn.classList.remove('recording');}
-                    recordButton.textContent = 'Record'; recordButton.classList.remove('recording');
-                    setIsRecording(false); setRecordingTrackId(null);
-                }
-            });
-        } else { console.warn("[EventHandlers] Record button (#recordBtnGlobal) not found in global controls window."); }
-
-        const tempoInputElement = globalControlsWindowElement.querySelector('#tempoGlobalInput');
-        console.log("[EventHandlers] Tempo input query result:", tempoInputElement);
-        if (tempoInputElement) {
-            tempoInputElement.addEventListener('change', (e) => {
-                console.log("[EventHandlers] Tempo input changed. Raw value:", e.target.value);
-                const newTempo = parseFloat(e.target.value);
-                console.log("[EventHandlers] Parsed newTempo:", newTempo);
-                const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
-                if (!isNaN(newTempo) && newTempo >= 40 && newTempo <= 240) {
-                    if (Tone.Transport.bpm.value !== newTempo) captureStateForUndo(`Set Tempo to ${newTempo.toFixed(1)} BPM`);
-                    Tone.Transport.bpm.value = newTempo;
-                    console.log("[EventHandlers] Tone.Transport.bpm is now:", Tone.Transport.bpm.value);
-                    if(typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
-                    else if(taskbarTempoDisplay) taskbarTempoDisplay.textContent = `${newTempo.toFixed(1)} BPM`;
                 } else {
-                    e.target.value = Tone.Transport.bpm.value.toFixed(1);
-                    showNotification(`Tempo must be between 40 and 240.`, 2500);
+                    Tone.Transport.start();
+                    playBtn.textContent = 'Pause';
+                    playBtn.classList.remove('bg-green-500', 'hover:bg-green-600', 'dark:bg-green-600', 'dark:hover:bg-green-700');
+                    playBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'dark:bg-yellow-600', 'dark:hover:bg-yellow-700');
+                     if (getArmedTrackId() !== null && window.recordBtn && window.recordBtn.classList.contains('armed')) {
+                         setIsRecording(true);
+                         setRecordingTrackId(getArmedTrackId());
+                         setRecordingStartTime(Tone.now());
+                         console.log(`[EventHandlers] Recording started for track ${getRecordingTrackId()} at time ${Tone.now()}`);
+                    }
                 }
-            });
-        } else { console.warn("[EventHandlers] Tempo input (#tempoGlobalInput) not found in global controls window."); }
+            }
+        });
+    } else { console.warn("[EventHandlers] Play button not found in global controls window."); }
+
+    if (recordBtn) {
+        recordBtn.addEventListener('click', () => {
+            if (getArmedTrackId() === null && !recordBtn.classList.contains('armed')) {
+                 showNotification("No track is armed for recording.", 2500);
+                 return;
+            }
+            recordBtn.classList.toggle('armed');
+            if (recordBtn.classList.contains('armed')) {
+                 recordBtn.textContent = 'Armed';
+                 if (Tone.Transport.state === 'started') { 
+                     setIsRecording(true);
+                     setRecordingTrackId(getArmedTrackId());
+                     setRecordingStartTime(Tone.now());
+                     console.log(`[EventHandlers] Recording started (armed while playing) for track ${getRecordingTrackId()} at time ${Tone.now()}`);
+                 }
+            } else {
+                 recordBtn.textContent = 'Record';
+                 setIsRecording(false);
+                 setRecordingTrackId(null);
+                 console.log(`[EventHandlers] Recording stopped/disarmed.`);
+            }
+        });
+    } else { console.warn("[EventHandlers] Record button not found in global controls window."); }
 
 
-        if (window.midiInputSelectGlobal) {
-            window.midiInputSelectGlobal.onchange = () => {
-                console.log("[EventHandlers] midiInputSelectGlobal changed.");
-                const oldMidiName = window.activeMIDIInput ? window.activeMIDIInput.name : "No MIDI Input";
-                const newMidiId = window.midiInputSelectGlobal.value;
-                const newMidiDevice = window.midiAccess && newMidiId ? window.midiAccess.inputs.get(newMidiId) : null;
-                const newMidiName = newMidiDevice ? newMidiDevice.name : "No MIDI Input";
-                if (oldMidiName !== newMidiName) {
-                     captureStateForUndo(`Change MIDI Input to ${newMidiName}`);
-                }
-                selectMIDIInput();
-            };
-        } else {
-            console.warn("[EventHandlers] attachGlobalControlEvents: window.midiInputSelectGlobal not found (it should have been assigned by ui.js).");
+    if (tempoInput) {
+        if (typeof Tone !== 'undefined' && Tone.Transport) {
+            tempoInput.value = Tone.Transport.bpm.value.toFixed(1);
         }
-    } catch (error) {
-        console.error("[EventHandlers] UNCAUGHT ERROR during event attachment:", error);
-        showNotification("Critical error setting up global control events. Functionality will be impaired.", 5000);
+        tempoInput.addEventListener('change', (e) => {
+            const newTempo = parseFloat(e.target.value);
+            if (!isNaN(newTempo) && newTempo >= 30 && newTempo <= 300) {
+                if (typeof Tone !== 'undefined' && Tone.Transport) {
+                    if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Set Tempo to ${newTempo}`);
+                    Tone.Transport.bpm.value = newTempo;
+                     if (typeof window.updateTaskbarTempoDisplay === 'function') window.updateTaskbarTempoDisplay(newTempo);
+
+                }
+            } else {
+                showNotification("Tempo must be between 30 and 300 BPM.", 2500);
+                e.target.value = Tone.Transport.bpm.value.toFixed(1); 
+            }
+        });
+    } else { console.warn("[EventHandlers] Tempo input not found in global controls window."); }
+
+    if (midiInputSelectGlobal) {
+        midiInputSelectGlobal.addEventListener('change', (e) => {
+            if (typeof window.selectMIDIInput === 'function') {
+                window.selectMIDIInput(e.target.value, false); 
+            }
+        });
+    } else {
+        console.warn("[EventHandlers] Global MIDI input select not found.");
+    }
+
+}
+
+
+function handleMIDIMessage(event) {
+    if (typeof Tone === 'undefined' || !Tone.context || Tone.context.state !== 'running') {
+        console.warn("[MIDI] AudioContext not running. MIDI message ignored.");
+        return;
+    }
+    if (!window.activeMIDIInput) {
+        return;
+    }
+
+    const command = event.data[0];
+    const note = event.data[1];
+    const velocity = (event.data.length > 2) ? event.data[2] : 0; 
+
+    const armedTrackId = getArmedTrackId();
+    if (armedTrackId === null) return; 
+
+    const track = getTrackById(armedTrackId);
+    if (!track || !track.instrument) return;
+
+    if (window.midiIndicatorGlobalEl) {
+        window.midiIndicatorGlobalEl.classList.add('active');
+        setTimeout(() => {
+            if (window.midiIndicatorGlobalEl) window.midiIndicatorGlobalEl.classList.remove('active');
+        }, 100);
+    }
+
+    switch (command & 0xF0) { 
+        case 0x90: 
+            if (velocity > 0) {
+                track.playNote(note, velocity / 127);
+                if (isTrackRecording() && getRecordingTrackId() === armedTrackId && Tone.Transport.state === 'started') {
+                    const currentTransportTime = Tone.Transport.seconds;
+                    const timeSinceRecordingStart = currentTransportTime - (window.recordingStartTime || 0);
+                    const stepTime = 60 / Tone.Transport.bpm.value / (Constants.STEPS_PER_BAR / 4); 
+                    const currentStep = Math.floor(timeSinceRecordingStart / stepTime) % track.sequenceLength;
+
+                    let pitchToRecord = Tone.Frequency(note, "midi").toNote();
+
+                    let rowIndex = -1;
+                    if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
+                        rowIndex = Constants.synthPitches.indexOf(pitchToRecord);
+                    } else if (track.type === 'DrumSampler' || track.type === 'Sampler') {
+                        const baseNote = (track.type === 'DrumSampler') ? Constants.drumSamplerMIDINoteStart : Constants.samplerMIDINoteStart;
+                        rowIndex = note - baseNote; 
+                        const maxRows = (track.type === 'DrumSampler') ? Constants.numDrumSamplerPads : (track.slices ? track.slices.length : Constants.numSlices);
+                        if (rowIndex < 0 || rowIndex >= maxRows) rowIndex = -1; 
+                    }
+
+
+                    if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
+                        if (!track.sequenceData[rowIndex]) {
+                            track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
+                        }
+                        track.sequenceData[rowIndex][currentStep] = { active: true, velocity: velocity / 127 };
+                        console.log(`[MIDI Rec] Recorded note ${pitchToRecord} (row ${rowIndex}) at step ${currentStep} for track ${track.id}`);
+                        
+                        const sequencerWindow = window.openWindows[`sequencerWin-${track.id}`];
+                        if (sequencerWindow && sequencerWindow.element) {
+                            const cell = sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${rowIndex}"][data-col="${currentStep}"]`);
+                            if (cell && typeof window.updateSequencerCellUI === 'function') {
+                                window.updateSequencerCellUI(cell, track.type, true);
+                            }
+                        }
+                    }
+                }
+            } else { 
+                track.releaseNote(note);
+            }
+            break;
+        case 0x80: 
+            track.releaseNote(note);
+            break;
     }
 }
 
@@ -318,13 +368,14 @@ export async function setupMIDI() {
     if (navigator.requestMIDIAccess) {
         try {
             console.log("[EventHandlers] Requesting MIDI access...");
-            window.midiAccess = await navigator.requestMIDIAccess();
-            console.log("[EventHandlers] MIDI Access Granted:", window.midiAccess);
+            const midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+            console.log("[EventHandlers] MIDI Access Granted:", midiAccess);
+            window.midiAccess = midiAccess; 
             populateMIDIInputs();
-            window.midiAccess.onstatechange = populateMIDIInputs;
-        } catch (e) {
-            console.error("[EventHandlers] Could not access MIDI devices.", e);
-            showNotification(`Could not access MIDI: ${e.message}. Ensure permissions.`, 6000);
+            midiAccess.onstatechange = populateMIDIInputs; 
+        } catch (error) {
+            console.error("[EventHandlers] MIDI access denied or error:", error);
+            showNotification("MIDI access denied or an error occurred.", 3000);
         }
     } else {
         console.warn("[EventHandlers] Web MIDI API not supported in this browser.");
@@ -334,425 +385,227 @@ export async function setupMIDI() {
 
 function populateMIDIInputs() {
     console.log("[EventHandlers] populateMIDIInputs called.");
-    if (!window.midiAccess) {
-        console.warn("[EventHandlers] populateMIDIInputs: window.midiAccess is null.");
-        return;
-    }
-    if (!window.midiInputSelectGlobal) {
-        console.warn("[EventHandlers] populateMIDIInputs: window.midiInputSelectGlobal is null. Cannot populate MIDI dropdown.");
+    if (!window.midiAccess || !window.midiInputSelectGlobal) {
+        if (!window.midiInputSelectGlobal) console.warn("[EventHandlers] Global MIDI input select element not found. Cannot populate.");
+        if (!window.midiAccess) console.warn("[EventHandlers] MIDI Access not available. Cannot populate.");
         return;
     }
 
-    const previouslySelectedId = window.activeMIDIInput ? window.activeMIDIInput.id : window.midiInputSelectGlobal.value;
-    console.log(`[EventHandlers] populateMIDIInputs: Previously selected MIDI ID: ${previouslySelectedId}`);
-    window.midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>';
+    const previouslySelectedId = window.midiInputSelectGlobal.value;
+    window.midiInputSelectGlobal.innerHTML = '<option value="">No MIDI Input</option>'; 
 
-    const inputs = window.midiAccess.inputs;
-    if (inputs.size === 0) {
-        console.log("[EventHandlers] No MIDI input devices found.");
-    } else {
-        inputs.forEach(input => {
-            console.log(`[EventHandlers] Found MIDI Input: ID=${input.id}, Name=${input.name}, State=${input.state}, Connection=${input.connection}`);
-            const option = document.createElement('option');
-            option.value = input.id;
-            option.textContent = input.name;
-            window.midiInputSelectGlobal.appendChild(option);
-        });
+    const inputs = window.midiAccess.inputs.values();
+    let deviceFound = false;
+    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+        deviceFound = true;
+        const option = document.createElement('option');
+        option.value = input.value.id;
+        option.textContent = input.value.name;
+        window.midiInputSelectGlobal.appendChild(option);
     }
+    console.log(`[EventHandlers] populateMIDIInputs: Previously selected MIDI ID: `, previouslySelectedId);
 
-    if (previouslySelectedId && window.midiAccess.inputs.get(previouslySelectedId)) {
-        window.midiInputSelectGlobal.value = previouslySelectedId;
-        console.log(`[EventHandlers] Restored MIDI selection to: ${previouslySelectedId} (${window.midiAccess.inputs.get(previouslySelectedId).name})`);
-    } else {
-        window.midiInputSelectGlobal.value = "";
-        if (previouslySelectedId) {
-            console.log(`[EventHandlers] Previously selected MIDI ID ${previouslySelectedId} not found or no longer valid. Defaulting to 'No MIDI Input'.`);
+    if (deviceFound) {
+        if (previouslySelectedId && window.midiInputSelectGlobal.querySelector(`option[value="${previouslySelectedId}"]`)) {
+            window.midiInputSelectGlobal.value = previouslySelectedId;
+            selectMIDIInput(previouslySelectedId, true); 
+        } else if (window.midiAccess.inputs.size > 0) {
+            const firstInputId = window.midiAccess.inputs.values().next().value?.id;
+            if (firstInputId) {
+                window.midiInputSelectGlobal.value = firstInputId;
+                selectMIDIInput(firstInputId, true);
+            }
         }
+    } else {
+        console.log("[EventHandlers] No MIDI input devices found.");
+        selectMIDIInput("", true); 
     }
-    selectMIDIInput(true);
 }
 
-export function selectMIDIInput(skipUndoCaptureAndNotification = false) {
-    console.log(`[EventHandlers] selectMIDIInput called. skipUndoCaptureAndNotification: ${skipUndoCaptureAndNotification}`);
+export function selectMIDIInput(inputId, skipUndoCaptureAndNotification = false) {
+    console.log("[EventHandlers] selectMIDIInput called. skipUndoCaptureAndNotification:", skipUndoCaptureAndNotification);
     if (window.activeMIDIInput) {
-        console.log(`[EventHandlers] Removing onmidimessage from old input: ${window.activeMIDIInput.name}`);
-        window.activeMIDIInput.onmidimessage = null;
+        window.activeMIDIInput.onmidimessage = null; 
+        window.activeMIDIInput.close?.(); 
+        window.activeMIDIInput = null;
+        console.log("[EventHandlers] Cleared listeners from previous MIDI input.");
     }
-    window.activeMIDIInput = null;
+    console.log("[EventHandlers] Selected MIDI ID in dropdown:", inputId);
 
-    const selectedId = window.midiInputSelectGlobal ? window.midiInputSelectGlobal.value : null;
-    console.log(`[EventHandlers] Selected MIDI ID in dropdown: ${selectedId}`);
-
-    if (window.midiAccess && selectedId) {
-        const inputDevice = window.midiAccess.inputs.get(selectedId);
-        if (inputDevice) {
-            window.activeMIDIInput = inputDevice;
-            console.log(`[EventHandlers] Setting onmidimessage for new input: ${window.activeMIDIInput.name}`);
+    if (inputId && window.midiAccess) {
+        const selectedInput = window.midiAccess.inputs.get(inputId);
+        if (selectedInput) {
+            window.activeMIDIInput = selectedInput;
             window.activeMIDIInput.onmidimessage = handleMIDIMessage;
             if (!skipUndoCaptureAndNotification) {
-                showNotification(`MIDI Input: ${window.activeMIDIInput.name} selected.`, 2000);
+                if (typeof captureStateForUndo === 'function') captureStateForUndo(`Select MIDI Input ${selectedInput.name}`);
+                showNotification(`MIDI Input: ${selectedInput.name}`, 2000);
             }
+            console.log(`[EventHandlers] MIDI Input selected: ${selectedInput.name}`);
         } else {
-             if (!skipUndoCaptureAndNotification) showNotification("Selected MIDI input not found or unavailable.", 2000);
-             console.warn(`[EventHandlers] Selected MIDI device ID "${selectedId}" not found in available inputs.`);
+            if (!skipUndoCaptureAndNotification) showNotification("Selected MIDI input not found.", 3000);
+            console.warn(`[EventHandlers] Selected MIDI input with ID ${inputId} not found.`);
         }
     } else {
-        if (!skipUndoCaptureAndNotification && selectedId === "") showNotification("MIDI Input deselected.", 1500);
+        if (!skipUndoCaptureAndNotification && inputId) showNotification("No MIDI input selected.", 2000);
         console.log("[EventHandlers] No MIDI input selected or midiAccess not available.");
     }
-    if (window.midiIndicatorGlobalEl) window.midiIndicatorGlobalEl.classList.toggle('active', !!window.activeMIDIInput);
 }
 
 
-export async function handleMIDIMessage(message) {
-    const [command, note, velocity] = message.data;
-    const time = Tone.now();
-    const normVel = velocity / 127;
+const computerKeyNoteMap = Constants.computerKeySynthMap;
 
-    if (window.midiIndicatorGlobalEl) {
-        window.midiIndicatorGlobalEl.classList.add('active');
-        setTimeout(() => window.midiIndicatorGlobalEl.classList.remove('active'), 100);
+
+function getNoteFromComputerKey(key) {
+    let midiNote = computerKeyNoteMap[key];
+    if (midiNote !== undefined) {
+        return midiNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
     }
-
-    if (command === 144 && velocity > 0) { // Note On
-        const audioReady = await window.initAudioContextAndMasterMeter(true);
-        if (!audioReady) {
-            console.warn("[EventHandlers] Audio context not ready for MIDI Note On.");
-            return;
-        }
-    }
-
-    const currentRecordingTrackId = getRecordingTrackId();
-    if (isTrackRecording() && getArmedTrackId() === currentRecordingTrackId && command === 144 && velocity > 0) {
-        const track = getTrackById(currentRecordingTrackId);
-        if (track) {
-            const currentTimeInSeconds = Tone.Transport.seconds;
-            const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
-            let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
-            currentStep = (currentStep % track.sequenceLength + track.sequenceLength) % track.sequenceLength;
-
-            let rowIndex = -1;
-            if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
-                const pitchName = Tone.Frequency(note, "midi").toNote();
-                rowIndex = Constants.synthPitches.indexOf(pitchName);
-            } else if (track.type === 'Sampler') {
-                rowIndex = note - Constants.samplerMIDINoteStart;
-                if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-            } else if (track.type === 'DrumSampler') {
-                rowIndex = note - Constants.samplerMIDINoteStart;
-                if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
-            }
-
-            if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
-                if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
-                track.sequenceData[rowIndex][currentStep] = { active: true, velocity: normVel };
-
-                if (track.sequencerWindow && !track.sequencerWindow.isMinimized && getActiveSequencerTrackId() === track.id) {
-                    const cell = track.sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${rowIndex}"][data-col="${currentStep}"]`);
-                    if (cell && typeof window.updateSequencerCellUI === 'function') {
-                        window.updateSequencerCellUI(cell, track.type, true);
-                    }
-                }
-            }
-        }
-    }
-
-    const currentArmedTrackId = getArmedTrackId();
-    if (!currentArmedTrackId) return;
-    const currentArmedTrack = getTrackById(currentArmedTrackId);
-    if (!currentArmedTrack) return;
-
-    if (command === 144 && velocity > 0) { 
-        if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
-        } else if (currentArmedTrack.type === 'Sampler') { 
-            const sliceIdx = note - Constants.samplerMIDINoteStart;
-            if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-                window.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
-            }
-        } else if (currentArmedTrack.type === 'DrumSampler') { 
-            const padIndex = note - Constants.samplerMIDINoteStart;
-            if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-                window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
-            }
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
-            if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                currentArmedTrack.toneSampler.releaseAll(time); 
-            }
-            currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && !currentArmedTrack.toneSampler.loaded) {
-            console.warn(`[EventHandlers] InstrumentSampler on track ${currentArmedTrack.id} not loaded, cannot play MIDI note.`);
-        }
-    } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
-        if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerRelease(time + 0.05);
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
-            if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                 currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
-            }
-        }
-    }
+    return null; 
 }
 
-async function handleComputerKeyDown(e) {
-    if (e.code === 'Space') {
-        e.preventDefault();
-        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
-            const playBtnGlobal = document.getElementById('playBtnGlobal');
-            if (playBtnGlobal && typeof playBtnGlobal.click === 'function') {
-                playBtnGlobal.click();
-            } else if (window.playBtn && typeof window.playBtn.click === 'function') {
-                 window.playBtn.click();
-            }
+document.addEventListener('keydown', (event) => {
+    if (event.repeat) return; 
+    
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+
+    // Handle octave shifts only if not focused on input and no Ctrl/Meta/Shift keys are pressed
+    if (!isInputFocused && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+        if (event.key.toLowerCase() === 'z') { 
+            currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
+            showNotification(`Octave: ${currentOctaveShift > 0 ? '+' : ''}${currentOctaveShift}`, 1000);
+            return; 
         }
-        return;
-    }
-
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-
-    if (e.code === 'KeyZ') {
-        if (!currentlyPressedComputerKeys[e.code]) {
-            if (currentOctaveShift > MIN_OCTAVE_SHIFT) {
-                currentOctaveShift--;
-                showNotification(`Octave: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 1000);
-            } else {
-                showNotification(`Min Octave (${MIN_OCTAVE_SHIFT}) Reached`, 1000);
-            }
+        if (event.key.toLowerCase() === 'x') { 
+            currentOctaveShift = Math.min(MAX_OCTAVE_SHIFT, currentOctaveShift + 1);
+            showNotification(`Octave: ${currentOctaveShift > 0 ? '+' : ''}${currentOctaveShift}`, 1000);
+            return; 
         }
-        currentlyPressedComputerKeys[e.code] = true;
-        if(window.keyboardIndicatorGlobalEl) window.keyboardIndicatorGlobalEl.classList.add('active');
-        return;
     }
-    if (e.code === 'KeyX') {
-        if (!currentlyPressedComputerKeys[e.code]) {
-            if (currentOctaveShift < MAX_OCTAVE_SHIFT) {
-                currentOctaveShift++;
-                showNotification(`Octave: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 1000);
-            } else {
-                showNotification(`Max Octave (${MAX_OCTAVE_SHIFT}) Reached`, 1000);
-            }
+
+    if (isInputFocused) return; // Other shortcuts are handled after this, so input focus check here is fine.
+
+    const note = getNoteFromComputerKey(event.code); // Use event.code for layout-independent keys
+    if (note !== null && !currentlyPressedComputerKeys[event.code]) {
+        currentlyPressedComputerKeys[event.code] = true;
+        
+        const armedTrackId = getArmedTrackId();
+        if (armedTrackId === null) return;
+        const track = getTrackById(armedTrackId);
+        if (!track) return;
+
+        track.playNote(note, Constants.defaultVelocity / 127); 
+
+        if (window.keyboardIndicatorGlobalEl) {
+            window.keyboardIndicatorGlobalEl.classList.add('active');
         }
-        currentlyPressedComputerKeys[e.code] = true;
-        if(window.keyboardIndicatorGlobalEl) window.keyboardIndicatorGlobalEl.classList.add('active');
-        return;
     }
+});
 
-    if (e.repeat || currentlyPressedComputerKeys[e.code]) return;
+document.addEventListener('keyup', (event) => {
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+    if (isInputFocused) return;
 
-    currentlyPressedComputerKeys[e.code] = true;
-    if(window.keyboardIndicatorGlobalEl) window.keyboardIndicatorGlobalEl.classList.add('active');
+    const note = getNoteFromComputerKey(event.code); // Use event.code
+    if (note !== null && currentlyPressedComputerKeys[event.code]) {
+        currentlyPressedComputerKeys[event.code] = false;
+        
+        const armedTrackId = getArmedTrackId();
+        if (armedTrackId === null) return;
+        const track = getTrackById(armedTrackId);
+        if (!track) return;
 
-    const time = Tone.now();
-    const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
-
-    if (baseComputerKeyNote === undefined) {
-        return;
-    }
-
-    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-    const computerKeyVelocity = Constants.defaultVelocity;
-
-    if (computerKeyNote < 0 || computerKeyNote > 127) {
-        console.warn(`Octave shifted note ${computerKeyNote} (Base: ${baseComputerKeyNote}, Shift: ${currentOctaveShift}) is out of MIDI range.`);
-        return;
-    }
-
-    const audioReady = await window.initAudioContextAndMasterMeter(true);
-    if (!audioReady) {
-        console.warn("[EventHandlers] Audio context not ready for Computer Key Down note playing.");
-        delete currentlyPressedComputerKeys[e.code];
-        if(window.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).filter(k => k !== 'KeyZ' && k !== 'KeyX').length === 0) {
+        track.releaseNote(note);
+        if (window.keyboardIndicatorGlobalEl) {
             window.keyboardIndicatorGlobalEl.classList.remove('active');
         }
-        return;
     }
+});
 
-    const currentRecordingTrackId = getRecordingTrackId();
-    if (isTrackRecording() && getArmedTrackId() === currentRecordingTrackId) {
-        const track = getTrackById(currentRecordingTrackId);
-        if (track) {
-            const currentTimeInSeconds = Tone.Transport.seconds;
-            const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
-            let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
-            currentStep = (currentStep % track.sequenceLength + track.sequenceLength) % track.sequenceLength;
 
-            let rowIndex = -1;
-            if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && Constants.computerKeySynthMap[e.code]) {
-                const pitchName = Tone.Frequency(computerKeyNote, "midi").toNote();
-                rowIndex = Constants.synthPitches.indexOf(pitchName);
-            } else if (track.type === 'Sampler' && Constants.computerKeySamplerMap[e.code]) {
-                 rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
-                 if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-            } else if (track.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code]) {
-                 rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
-                 if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
-            }
-
-            if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
-                if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
-                track.sequenceData[rowIndex][currentStep] = { active: true, velocity: computerKeyVelocity };
-                if (track.sequencerWindow && !track.sequencerWindow.isMinimized && getActiveSequencerTrackId() === track.id) {
-                    const cell = track.sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${rowIndex}"][data-col="${currentStep}"]`);
-                     if (cell && typeof window.updateSequencerCellUI === 'function') window.updateSequencerCellUI(cell, track.type, true);
-                }
-            }
-        }
-    }
-
-    const currentArmedTrackId = getArmedTrackId();
-    if (!currentArmedTrackId) return;
-    const currentArmedTrack = getTrackById(currentArmedTrackId);
-    if (!currentArmedTrack) return;
-
-    if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
-        currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, computerKeyVelocity);
-    } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
-        const sliceIdx = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
-        if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length && typeof window.playSlicePreview === 'function') {
-            window.playSlicePreview(currentArmedTrack.id, sliceIdx, computerKeyVelocity, 0); 
-        }
-    } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined) {
-        const padIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
-        if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads && typeof window.playDrumSamplerPadPreview === 'function') {
-            window.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, computerKeyVelocity, 0); 
-        }
-    } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler && currentArmedTrack.toneSampler.loaded) {
-        if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
-            currentArmedTrack.toneSampler.releaseAll(time);
-        }
-        currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, computerKeyVelocity);
-    } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler && !currentArmedTrack.toneSampler.loaded) {
-        console.warn(`[EventHandlers] InstrumentSampler on track ${currentArmedTrack.id} not loaded, cannot play note (KBD).`);
-    }
-}
-
-function handleComputerKeyUp(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.code === 'Space') return;
-
-    const isOctaveKey = (e.code === 'KeyZ' || e.code === 'KeyX');
-    if (isOctaveKey) {
-        delete currentlyPressedComputerKeys[e.code];
-        const noteKeysPressed = Object.keys(currentlyPressedComputerKeys).some(key => key !== 'KeyZ' && key !== 'KeyX');
-        if(window.keyboardIndicatorGlobalEl && !noteKeysPressed && !currentlyPressedComputerKeys['KeyZ'] && !currentlyPressedComputerKeys['KeyX']) {
-            window.keyboardIndicatorGlobalEl.classList.remove('active');
-        }
-        return;
-    }
-
-    if (currentlyPressedComputerKeys[e.code]) {
-        const time = Tone.now();
-        const currentArmedTrackId = getArmedTrackId();
-        if (currentArmedTrackId) {
-            const track = getTrackById(currentArmedTrackId);
-            if (track) {
-                const baseComputerKeyNote = Constants.computerKeySynthMap[e.code];
-                if (baseComputerKeyNote !== undefined) {
-                    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-                     if (computerKeyNote >= 0 && computerKeyNote <= 127) {
-                        if (track.type === 'Synth' && track.instrument) {
-                            track.instrument.triggerRelease(time + 0.05);
-                        } else if (track.type === 'InstrumentSampler' && track.toneSampler && track.toneSampler.loaded) {
-                            if (track.instrumentSamplerIsPolyphonic) {
-                                track.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
-                            }
-                        }
-                     }
-                }
-            }
-        }
-        delete currentlyPressedComputerKeys[e.code];
-    }
-
-    const noteKeysPressed = Object.keys(currentlyPressedComputerKeys).some(key => key !== 'KeyZ' && key !== 'KeyX');
-    if(window.keyboardIndicatorGlobalEl && !noteKeysPressed && !currentlyPressedComputerKeys['KeyZ'] && !currentlyPressedComputerKeys['KeyX']) {
-        window.keyboardIndicatorGlobalEl.classList.remove('active');
-    }
-}
 
 export function handleTrackMute(trackId) {
-    console.log(`[EventHandlers] handleTrackMute called for trackId: ${trackId}`);
     const track = getTrackById(trackId);
-    console.log(`[EventHandlers] Track found for mute:`, track);
-    if (!track) {
-        console.warn(`[EventHandlers] handleTrackMute: Track ID ${trackId} not found.`);
-        return;
+    if (!track) return;
+    if (typeof captureStateForUndo === 'function') captureStateForUndo(`${track.isMuted ? 'Unmute' : 'Mute'} track "${track.name}"`);
+    track.toggleMute();
+    if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow();
+    const inspector = window.openWindows[`trackInspector-${trackId}`];
+    if (inspector && inspector.element) {
+        const muteBtn = inspector.element.querySelector(`#muteBtn-${trackId}`);
+        if (muteBtn) {
+            muteBtn.textContent = track.isMuted ? 'Unmute' : 'Mute';
+            muteBtn.classList.toggle('muted', track.isMuted);
+        }
     }
-    captureStateForUndo(`${track.isMuted ? "Unmute" : "Mute"} Track "${track.name}"`);
-    track.isMuted = !track.isMuted;
-    track.applyMuteState();
-    console.log(`[EventHandlers] Track ${track.id} isMuted state after toggle: ${track.isMuted}`);
-
-    const inspectorMuteBtn = track.inspectorWindow?.element?.querySelector(`#muteBtn-${track.id}`);
-    if (inspectorMuteBtn) inspectorMuteBtn.classList.toggle('muted', track.isMuted);
-    const mixerMuteBtn = window.openWindows['mixer']?.element?.querySelector(`#mixerMuteBtn-${track.id}`);
-    if (mixerMuteBtn) mixerMuteBtn.classList.toggle('muted', track.isMuted);
 }
 
 export function handleTrackSolo(trackId) {
-    console.log(`[EventHandlers] handleTrackSolo called for trackId: ${trackId}`);
     const track = getTrackById(trackId);
-    console.log(`[EventHandlers] Track found for solo:`, track);
-    if (!track) {
-        console.warn(`[EventHandlers] handleTrackSolo: Track ID ${trackId} not found.`);
-        return;
-    }
+    if (!track) return;
+    if (typeof captureStateForUndo === 'function') captureStateForUndo(`${track.isSoloed ? 'Unsolo' : 'Solo'} track "${track.name}"`);
+    
+    const wasSoloed = track.isSoloed; 
+    setSoloedTrackId(wasSoloed ? null : trackId); 
 
-    const currentGlobalSoloId = getSoloedTrackId();
-    const isCurrentlySoloed = currentGlobalSoloId === track.id;
+    const tracks = getTracks();
+    tracks.forEach(t => {
+        t.applySoloState(getSoloedTrackId()); 
+    });
 
-    captureStateForUndo(`${isCurrentlySoloed ? "Unsolo" : "Solo"} Track "${track.name}"`);
-
-    if (isCurrentlySoloed) {
-        setSoloedTrackId(null);
-    } else {
-        setSoloedTrackId(track.id);
-    }
-    console.log(`[EventHandlers] Global soloedTrackId is now: ${getSoloedTrackId()}`);
-
-    getTracks().forEach(t => {
-        t.isSoloed = (getSoloedTrackId() === t.id);
-        t.applySoloState();
-
-        const inspectorSoloBtn = t.inspectorWindow?.element?.querySelector(`#soloBtn-${t.id}`);
-        if (inspectorSoloBtn) inspectorSoloBtn.classList.toggle('soloed', t.isSoloed);
-        const mixerSoloBtn = window.openWindows['mixer']?.element?.querySelector(`#mixerSoloBtn-${t.id}`);
-        if (mixerSoloBtn) mixerSoloBtn.classList.toggle('soloed', t.isSoloed);
+    if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow();
+    tracks.forEach(t => {
+        const inspector = window.openWindows[`trackInspector-${t.id}`];
+        if (inspector && inspector.element) {
+            const soloBtn = inspector.element.querySelector(`#soloBtn-${t.id}`);
+            if (soloBtn) {
+                const isCurrentlySoloed = getSoloedTrackId() === t.id;
+                soloBtn.textContent = isCurrentlySoloed ? 'Unsolo' : 'Solo';
+                soloBtn.classList.toggle('soloed', isCurrentlySoloed);
+            }
+        }
     });
 }
 
 export function handleTrackArm(trackId) {
-    console.log(`[EventHandlers] handleTrackArm called for trackId: ${trackId}`);
     const track = getTrackById(trackId);
-    console.log(`[EventHandlers] Track found for arm:`, track);
-    if (!track) {
-        console.warn(`[EventHandlers] handleTrackArm: Track ID ${trackId} not found.`);
-        return;
-    }
+    if (!track) return;
 
-    const currentArmedId = getArmedTrackId();
-    const isCurrentlyArmed = currentArmedId === track.id;
+    const currentlyArmedTrackId = getArmedTrackId();
+    let actionMessage = "";
 
-    captureStateForUndo(`${isCurrentlyArmed ? "Disarm" : "Arm"} Track "${track.name}" for Input`);
-
-    if (isCurrentlyArmed) {
+    if (currentlyArmedTrackId === trackId) { 
         setArmedTrackId(null);
-    } else {
-        setArmedTrackId(track.id);
+        actionMessage = `Disarm track "${track.name}"`;
+    } else { 
+        setArmedTrackId(trackId);
+        actionMessage = `Arm track "${track.name}"`;
     }
-    console.log(`[EventHandlers] Global armedTrackId is now: ${getArmedTrackId()}`);
+    if (typeof captureStateForUndo === 'function') captureStateForUndo(actionMessage);
 
-    getTracks().forEach(t => {
-        const inspectorArmBtn = t.inspectorWindow?.element?.querySelector(`#armInputBtn-${t.id}`);
-        if (inspectorArmBtn) inspectorArmBtn.classList.toggle('armed', getArmedTrackId() === t.id);
+    if (typeof window.updateMixerWindow === 'function') window.updateMixerWindow(); 
+    const tracks = getTracks();
+    tracks.forEach(t => { 
+        const inspector = window.openWindows[`trackInspector-${t.id}`];
+        if (inspector && inspector.element) {
+            const armBtn = inspector.element.querySelector(`#armInputBtn-${t.id}`);
+            if (armBtn) armBtn.classList.toggle('armed', getArmedTrackId() === t.id);
+        }
     });
-
-    const newArmedTrack = getTrackById(getArmedTrackId());
-    showNotification(newArmedTrack ? `${newArmedTrack.name} armed for input.` : "Input disarmed.", 1500);
+    const globalRecordBtn = window.recordBtn; 
+    if (globalRecordBtn) {
+        if (getArmedTrackId() === null && globalRecordBtn.classList.contains('armed')) {
+            globalRecordBtn.classList.remove('armed');
+            globalRecordBtn.textContent = 'Record';
+            setIsRecording(false);
+            setRecordingTrackId(null);
+        }
+    }
 }
 
 export function handleRemoveTrack(trackId) {
-    console.log(`[EventHandlers] handleRemoveTrack called for trackId: ${trackId}`);
     const track = getTrackById(trackId);
     if (!track) {
         console.warn(`[EventHandlers] handleRemoveTrack: Track ID ${trackId} not found.`);
@@ -760,7 +613,7 @@ export function handleRemoveTrack(trackId) {
     }
     showConfirmationDialog(
         'Confirm Delete Track',
-        `Are you sure you want to remove track "${track.name}"? This cannot be undone directly (only via project reload or undo history).`,
+        `Are you sure you want to remove track \"${track.name}\"? This cannot be undone directly (only via project reload or undo history).`,
         () => {
             coreRemoveTrackFromState(trackId);
         }
