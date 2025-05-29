@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - applySliceEdits Fix / Drum Knob Fix / Seq DOM Rework / Sound Browser Path Fix / Tailwind Class Reduction');
+console.log('[ui.js] TOP OF FILE PARSING - applySliceEdits Fix / Drum Knob Fix / Seq DOM Rework / Sound Browser Path Fix');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
@@ -14,24 +14,23 @@ import { getMimeTypeFromFilename } from './audio.js';
 // --- Knob UI ---
  function createKnob(options) {
     const container = document.createElement('div');
-    // Removed Tailwind 'knob-container' if it was one, assuming style.css handles it or it's a custom class
-    container.className = 'knob-container'; // Keep if it's a custom class defined in style.css
-
+    container.className = 'knob-container';
+    
     const labelEl = document.createElement('div');
-    labelEl.className = 'knob-label'; // Keep if custom
+    labelEl.className = 'knob-label';
     labelEl.textContent = options.label || '';
     labelEl.title = options.label || '';
     container.appendChild(labelEl);
 
     const knobEl = document.createElement('div');
-    knobEl.className = 'knob'; // Keep if custom
+    knobEl.className = 'knob';
     const handleEl = document.createElement('div');
-    handleEl.className = 'knob-handle'; // Keep if custom
+    handleEl.className = 'knob-handle';
     knobEl.appendChild(handleEl);
     container.appendChild(knobEl);
 
     const valueEl = document.createElement('div');
-    valueEl.className = 'knob-value'; // Keep if custom
+    valueEl.className = 'knob-value';
     container.appendChild(valueEl);
 
     let currentValue = options.initialValue === undefined ? (options.min !== undefined ? options.min : 0) : options.initialValue;
@@ -61,10 +60,10 @@ import { getMimeTypeFromFilename } from './audio.js';
         if (step !== 0) {
             boundedValue = Math.round(boundedValue / step) * step;
         }
-
+        
         const oldValue = currentValue;
-        currentValue = Math.min(max, Math.max(min, boundedValue));
-
+        currentValue = Math.min(max, Math.max(min, boundedValue)); 
+        
         updateKnobVisual();
 
         if (triggerCallback && options.onValueChange && (oldValue !== currentValue || fromInteraction) ) {
@@ -82,7 +81,7 @@ import { getMimeTypeFromFilename } from './audio.js';
 
         function onMove(moveEvent) {
             const currentY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
-            const deltaY = startY - currentY;
+            const deltaY = startY - currentY; 
             let valueChange = (deltaY / pixelsForFullRange) * range * currentSensitivity;
             let newValue = startValue + valueChange;
             setValue(newValue, true, true);
@@ -107,14 +106,15 @@ import { getMimeTypeFromFilename } from './audio.js';
     knobEl.addEventListener('mousedown', (e) => handleInteraction(e, false));
     knobEl.addEventListener('touchstart', (e) => handleInteraction(e, true), { passive: false });
 
-    setValue(currentValue, false);
+    setValue(currentValue, false); 
 
     return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
 }
 
 // --- Synth Inspector Specifics ---
+// ... (Synth related functions: synthEngineControlDefinitions, buildSynthSpecificInspectorDOM, buildSynthEngineControls - remain unchanged from your provided version) ...
 const synthEngineControlDefinitions = {
-    MonoSynth: [
+    MonoSynth: [ 
         { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
         { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sawtooth', path: 'oscillator.type' },
         { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
@@ -122,8 +122,8 @@ const synthEngineControlDefinitions = {
         { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.9, decimals: 2, path: 'envelope.sustain' },
         { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
         { idPrefix: 'filtType', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', path: 'filter.type' },
-        { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' },
-        { idPrefix: 'filtQ', label: 'Filt Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'filter.Q.value' },
+        { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' }, 
+        { idPrefix: 'filtQ', label: 'Filt Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'filter.Q.value' }, 
         { idPrefix: 'filtEnvAttack', label: 'F.Atk', type: 'knob', min:0.001, max:2, step:0.001, defaultValue:0.06, decimals:3, path:'filterEnvelope.attack'},
         { idPrefix: 'filtEnvDecay', label: 'F.Dec', type: 'knob', min:0.01, max:2, step:0.01, defaultValue:0.2, decimals:2, path:'filterEnvelope.decay'},
         { idPrefix: 'filtEnvSustain', label: 'F.Sus', type: 'knob', min:0, max:1, step:0.01, defaultValue:0.5, decimals:2, path:'filterEnvelope.sustain'},
@@ -136,8 +136,7 @@ const synthEngineControlDefinitions = {
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
     const definitions = synthEngineControlDefinitions[engineType] || [];
-    // Removed Tailwind p-1, kept layout classes
-    let controlsHTML = `<div id="synthEngineControls-${track.id}" class="grid grid-cols-2 md:grid-cols-3 gap-2">`;
+    let controlsHTML = `<div id="synthEngineControls-${track.id}" class="grid grid-cols-2 md:grid-cols-3 gap-2 p-1">`;
     definitions.forEach(def => {
         controlsHTML += `<div id="${def.idPrefix}-${track.id}-placeholder"></div>`;
     });
@@ -161,12 +160,12 @@ function buildSynthEngineControls(track, container, engineType) {
             if (currentValObj && typeof currentValObj === 'object' && pathParts[i] in currentValObj) {
                 currentValObj = currentValObj[pathParts[i]];
             } else {
-                currentValObj = undefined;
+                currentValObj = undefined; 
                 break;
             }
         }
         initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
-
+        
         if (def.path.endsWith('.value') && track.instrument && track.instrument.get) {
             try {
                 const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
@@ -186,13 +185,12 @@ function buildSynthEngineControls(track, container, engineType) {
                     track.setSynthParam(def.path, val);
                 }
             });
-            placeholder.innerHTML = '';
-            placeholder.appendChild(knob.element);
+            placeholder.innerHTML = ''; 
+            placeholder.appendChild(knob.element); 
             track.inspectorControls[def.idPrefix] = knob;
         } else if (def.type === 'select') {
             const selectEl = document.createElement('select');
             selectEl.id = `${def.idPrefix}-${track.id}`;
-            // Kept Tailwind for select as style.css has generic select styles that might not be enough
             selectEl.className = 'synth-param-select w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600';
             def.options.forEach(opt => {
                 const option = document.createElement('option');
@@ -209,31 +207,29 @@ function buildSynthEngineControls(track, container, engineType) {
             const labelEl = document.createElement('label');
             labelEl.htmlFor = selectEl.id;
             labelEl.textContent = def.label + ':';
-            // Kept Tailwind for label
             labelEl.className = 'text-xs block mb-0.5 dark:text-slate-300';
-
+            
             const wrapperDiv = document.createElement('div');
-            wrapperDiv.className = 'flex flex-col items-start'; // Keep layout
+            wrapperDiv.className = 'flex flex-col items-start';
             wrapperDiv.appendChild(labelEl);
             wrapperDiv.appendChild(selectEl);
-            placeholder.innerHTML = '';
-            placeholder.appendChild(wrapperDiv);
+            placeholder.innerHTML = ''; 
+            placeholder.appendChild(wrapperDiv); 
             track.inspectorControls[def.idPrefix] = selectEl;
         }
     });
 }
 
 
+// --- Sampler Inspector Specifics ---
+// ... (buildSamplerSpecificInspectorDOM - remains unchanged from your provided version) ...
 function buildSamplerSpecificInspectorDOM(track) {
-    // Removed p-1, space-y-2. Kept layout classes.
-    let html = `<div class="sampler-controls space-y-2">`;
+    let html = `<div class="sampler-controls p-1 space-y-2">`;
     html += `<div id="dropZoneContainer-${track.id}-sampler" class="mb-2"></div>`;
-    // Removed p-1 from waveform-section, kept border, rounded, bg (Tailwind for now, style.css might override if specific enough)
-    html += `<div class="waveform-section border rounded bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
+    html += `<div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
                 <canvas id="waveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
              </div>`;
-    // Removed p-1 from slice-editor-controls, kept border, rounded, bg, space-y-1
-    html += `<div class="slice-editor-controls mt-2 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+    html += `<div class="slice-editor-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
                 <h4 class="text-xs font-semibold dark:text-slate-200">Slice Editor (Selected: <span id="selectedSliceInfo-${track.id}">1</span>)</h4>
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1 items-center text-xs">
                     <div id="sliceVolumeSlider-${track.id}-placeholder"></div>
@@ -256,11 +252,11 @@ function buildSamplerSpecificInspectorDOM(track) {
     return html;
 }
 
+// --- Drum Sampler Inspector Specifics ---
+// ... (buildDrumSamplerSpecificInspectorDOM - remains unchanged from your provided version) ...
 function buildDrumSamplerSpecificInspectorDOM(track) {
-    // Removed p-1, space-y-2
-    let html = `<div class="drum-sampler-controls space-y-2">`;
-    // Removed p-1 from selected-pad-controls, kept border, rounded, bg, space-y-1
-    html += `<div class="selected-pad-controls border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
+    let html = `<div class="drum-sampler-controls p-1 space-y-2">`;
+    html += `<div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
                 <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
                 <div id="drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}" class="mb-1 text-xs"></div>
                 <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
@@ -280,16 +276,16 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
     return html;
 }
 
+
+// --- Instrument Sampler Inspector Specifics ---
+// ... (buildInstrumentSamplerSpecificInspectorDOM - remains unchanged from your provided version) ...
 function buildInstrumentSamplerSpecificInspectorDOM(track) {
-    // Removed p-1, space-y-2
-    let html = `<div class="instrument-sampler-controls space-y-2">`;
+    let html = `<div class="instrument-sampler-controls p-1 space-y-2">`;
     html += `<div id="dropZoneContainer-${track.id}-instrumentsampler" class="mb-2"></div>`;
-    // Removed p-1 from waveform-section
-    html += `<div class="waveform-section border rounded bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
+    html += `<div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
                <canvas id="instrumentWaveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
              </div>`;
-    // Removed p-1 from instrument-params-controls
-    html += `<div class="instrument-params-controls mt-2 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1 text-xs">
+    html += `<div class="instrument-params-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1 text-xs">
                 <div class="grid grid-cols-2 gap-2 items-center">
                     <div>
                         <label for="instrumentRootNote-${track.id}" class="block text-xs font-medium dark:text-slate-300">Root Note:</label>
@@ -321,6 +317,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     return html;
 }
 
+// Definition of applySliceEdits
 function applySliceEdits(trackId) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track || track.type !== 'Sampler') {
@@ -333,6 +330,8 @@ function applySliceEdits(trackId) {
     }
 }
 
+
+// --- Track Inspector Window & Controls Initialization ---
  function buildTrackInspectorContentDOM(track) {
     if (!track) return '<div>Error: Track data not found.</div>';
     let specificControlsHTML = '';
@@ -346,10 +345,8 @@ function applySliceEdits(trackId) {
         specificControlsHTML = buildInstrumentSamplerSpecificInspectorDOM(track);
     }
 
-    // Removed p-1, space-y-1, text-xs, text-gray-700, dark:text-slate-300 from main div
-    // .window-content from style.css should provide base padding and text color.
     return `
-        <div class="track-inspector-content space-y-1 overflow-y-auto h-full">
+        <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 dark:text-slate-300 overflow-y-auto h-full">
             <div class="common-controls grid grid-cols-3 gap-1 mb-1">
                 <button id="muteBtn-${track.id}" title="Mute Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'Unmute' : 'Mute'}</button>
                 <button id="soloBtn-${track.id}" title="Solo Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
@@ -378,15 +375,15 @@ function applySliceEdits(trackId) {
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
     const windowId = `trackInspector-${trackId}`;
-    if (window.openWindows[windowId] && !savedState) {
-        window.openWindows[windowId].restore();
+    if (window.openWindows[windowId] && !savedState) { 
+        window.openWindows[windowId].restore(); 
         return window.openWindows[windowId];
     }
-
+    
     const contentDOM = buildTrackInspectorContentDOM(track);
     const inspectorOptions = {
         width: 320, height: 450, minWidth: 280, minHeight: 350,
-        initialContentKey: windowId,
+        initialContentKey: windowId, 
         onCloseCallback: () => { if (track) track.inspectorWindow = null; }
     };
 
@@ -407,7 +404,7 @@ function applySliceEdits(trackId) {
         initializeTypeSpecificInspectorControls(track, inspectorWindow.element);
     } else {
         console.error(`[UI] Failed to create inspector window for track ${trackId}.`);
-        if (track) track.inspectorWindow = null;
+        if (track) track.inspectorWindow = null; 
         return null;
     }
     return inspectorWindow;
@@ -425,14 +422,14 @@ function applySliceEdits(trackId) {
     if (volumeKnobPlaceholder) {
         const volumeKnob = createKnob({
             label: 'Volume', min: 0, max: 1.2, step: 0.01,
-            initialValue: track.previousVolumeBeforeMute,
+            initialValue: track.previousVolumeBeforeMute, 
             decimals: 2, trackRef: track,
             onValueChange: (val, oldVal, fromInteraction) => {
-                track.setVolume(val, fromInteraction);
+                track.setVolume(val, fromInteraction); 
             }
         });
-        volumeKnobPlaceholder.innerHTML = '';
-        volumeKnobPlaceholder.appendChild(volumeKnob.element);
+        volumeKnobPlaceholder.innerHTML = ''; 
+        volumeKnobPlaceholder.appendChild(volumeKnob.element); 
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -476,7 +473,7 @@ function initializeSamplerSpecificControls(track, winEl) {
     if (typeof renderSamplePads === 'function') renderSamplePads(track);
     winEl.querySelector(`#applySliceEditsBtn-${track.id}`)?.addEventListener('click', () => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Apply Slice Edits for ${track.name}`);
-        applySliceEdits(track.id);
+        applySliceEdits(track.id); // Call the defined function
     });
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
     if (canvas) {
@@ -489,8 +486,8 @@ function initializeSamplerSpecificControls(track, winEl) {
         const placeholder = winEl.querySelector(`#${placeholderId}`);
         if (placeholder) {
             const knob = createKnob(options);
-            placeholder.innerHTML = '';
-            placeholder.appendChild(knob.element);
+            placeholder.innerHTML = ''; 
+            placeholder.appendChild(knob.element); 
             return knob;
         } else {
             console.warn(`[UI - initializeSamplerSpecificControls] Placeholder ${placeholderId} not found.`);
@@ -542,13 +539,13 @@ function initializeSamplerSpecificControls(track, winEl) {
             polyToggleBtn.textContent = `Mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`;
             polyToggleBtn.classList.toggle('active', track.slicerIsPolyphonic);
             if (!track.slicerIsPolyphonic) {
-                track.setupSlicerMonoNodes();
+                track.setupSlicerMonoNodes(); 
             } else {
                 track.disposeSlicerMonoNodes();
             }
             if (track && typeof track.rebuildEffectChain === 'function') {
                 console.log(`[UI - SlicerPolyToggle] Rebuilding effect chain for track ${track.id} after polyphony change.`);
-                track.rebuildEffectChain();
+                track.rebuildEffectChain(); 
             }
             showNotification(`${track.name} slicer mode: ${track.slicerIsPolyphonic ? 'Poly' : 'Mono'}`, 2000);
         });
@@ -556,8 +553,8 @@ function initializeSamplerSpecificControls(track, winEl) {
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
-    if (typeof renderDrumSamplerPads === 'function') renderDrumSamplerPads(track);
-    if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track);
+    if (typeof renderDrumSamplerPads === 'function') renderDrumSamplerPads(track); 
+    if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); 
 }
 
 function updateDrumPadControlsUI(track) {
@@ -569,7 +566,7 @@ function updateDrumPadControlsUI(track) {
 
     const selectedInfo = inspector.querySelector(`#selectedDrumPadInfo-${track.id}`);
     if (selectedInfo) selectedInfo.textContent = selectedPadIndex + 1;
-
+    
     const padSpecificDropZoneContainerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
     const controlsArea = inspector.querySelector('.selected-pad-controls');
     let dzContainer = inspector.querySelector(`#${padSpecificDropZoneContainerId}`);
@@ -578,24 +575,24 @@ function updateDrumPadControlsUI(track) {
         const existingDropZones = controlsArea.querySelectorAll(`div[id^="drumPadDropZoneContainer-${track.id}-"]`);
         existingDropZones.forEach(oldDz => {
             if (oldDz.id !== padSpecificDropZoneContainerId) {
-                oldDz.remove();
+                oldDz.remove(); 
             }
         });
-
+        
         dzContainer = controlsArea.querySelector(`#${padSpecificDropZoneContainerId}`);
-        if (!dzContainer) {
+        if (!dzContainer) { 
             dzContainer = document.createElement('div');
             dzContainer.id = padSpecificDropZoneContainerId;
-            dzContainer.className = 'mb-1 text-xs'; // Kept Tailwind for specific sub-element
+            dzContainer.className = 'mb-1 text-xs';
             const knobGridOrFirstChild = controlsArea.querySelector('.grid') || controlsArea.firstChild;
             if (knobGridOrFirstChild) {
                  controlsArea.insertBefore(dzContainer, knobGridOrFirstChild);
-            } else {
+            } else { 
                 controlsArea.appendChild(dzContainer);
             }
         }
     }
-
+    
     if (dzContainer) {
         const existingAudioData = {
             originalFileName: padData.originalFileName,
@@ -612,8 +609,8 @@ function updateDrumPadControlsUI(track) {
         const placeholder = inspector.querySelector(`#${placeholderId}`);
         if (placeholder) {
             const knob = createKnob(options);
-            placeholder.innerHTML = '';
-            placeholder.appendChild(knob.element);
+            placeholder.innerHTML = ''; 
+            placeholder.appendChild(knob.element); 
             return knob;
         } else {
             console.warn(`[UI - updateDrumPadControlsUI] Placeholder ${placeholderId} not found.`);
@@ -653,7 +650,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 
     const rootNoteSelect = winEl.querySelector(`#instrumentRootNote-${track.id}`);
     if (rootNoteSelect) {
-        Constants.synthPitches.slice().reverse().forEach(pitch => {
+        Constants.synthPitches.slice().reverse().forEach(pitch => { 
             const option = document.createElement('option');
             option.value = pitch;
             option.textContent = pitch;
@@ -699,8 +696,8 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         const placeholder = winEl.querySelector(`#${placeholderId}`);
         if (placeholder) {
             const knob = createKnob(options);
-            placeholder.innerHTML = '';
-            placeholder.appendChild(knob.element);
+            placeholder.innerHTML = ''; 
+            placeholder.appendChild(knob.element); 
             return knob;
         } else {
             console.warn(`[UI - initializeInstrumentSamplerSpecificControls] Placeholder ${placeholderId} not found.`);
@@ -722,7 +719,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
             track.instrumentSamplerIsPolyphonic = !track.instrumentSamplerIsPolyphonic;
             polyToggleBtnInst.textContent = `Mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`;
             polyToggleBtnInst.classList.toggle('active', track.instrumentSamplerIsPolyphonic);
-            if (track.toneSampler) {
+            if (track.toneSampler) { 
                 console.log(`[UI] Instrument Sampler for ${track.name} polyphony set to: ${track.instrumentSamplerIsPolyphonic}`);
             }
             showNotification(`${track.name} instrument sampler mode: ${track.instrumentSamplerIsPolyphonic ? 'Poly' : 'Mono'}`, 2000);
@@ -730,12 +727,13 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     }
 }
 
+// --- MODULAR EFFECTS RACK UI --- 
+// ... (buildModularEffectsRackDOM, renderEffectsList, renderEffectControls, showAddEffectModal - unchanged) ...
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
 
-    // Removed p-2, space-y-2 from main div. .window-content from style.css provides base padding.
-    let html = `<div id="effectsRackContent-${ownerId}" class="space-y-2 overflow-y-auto h-full">
+    let html = `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full">
         <h3 class="text-sm font-semibold dark:text-slate-200">Effects Rack: ${ownerName}</h3>
         <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
             </div>
@@ -748,12 +746,12 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 
  function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     if (!listDiv) return;
-    listDiv.innerHTML = '';
+    listDiv.innerHTML = ''; 
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : window.masterEffectsChain;
 
     if (!effectsArray || effectsArray.length === 0) {
         listDiv.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
-        if (controlsContainer) controlsContainer.innerHTML = '';
+        if (controlsContainer) controlsContainer.innerHTML = ''; 
         return;
     }
 
@@ -762,7 +760,6 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
         const displayName = effectDef ? effectDef.displayName : effect.type;
 
         const item = document.createElement('div');
-        // Kept Tailwind for specific item styling
         item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs';
         item.innerHTML = `
             <span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit ${displayName}">${displayName}</span>
@@ -781,20 +778,20 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.reorderEffect(effect.id, index - 1);
             else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effect.id, index - 1);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
+            renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
         });
         item.querySelector('.down-btn').addEventListener('click', () => {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.reorderEffect(effect.id, index + 1);
             else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effect.id, index + 1);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
+            renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
         });
         item.querySelector('.remove-btn').addEventListener('click', () => {
             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Remove ${effect.type} from ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.removeEffect(effect.id);
             else if (typeof window.removeMasterEffect === 'function') window.removeMasterEffect(effect.id);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
-            if (controlsContainer) controlsContainer.innerHTML = '';
+            renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
+            if (controlsContainer) controlsContainer.innerHTML = ''; 
         });
         listDiv.appendChild(item);
     });
@@ -802,7 +799,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
-    controlsContainer.innerHTML = '';
+    controlsContainer.innerHTML = ''; 
 
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : window.masterEffectsChain;
     const effectWrapper = effectsArray.find(e => e.id === effectId);
@@ -823,9 +820,8 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     titleEl.textContent = `Controls: ${effectDef.displayName}`;
     controlsContainer.appendChild(titleEl);
 
-    // Removed p-1 from gridContainer, kept other Tailwind for layout and bg
     const gridContainer = document.createElement('div');
-    gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 text-xs';
+    gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 text-xs';
 
     if (!effectDef.params || effectDef.params.length === 0) {
         gridContainer.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic col-span-full">No adjustable parameters for this effect.</p>';
@@ -839,7 +835,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                 if (tempVal && typeof tempVal === 'object' && key in tempVal) {
                     tempVal = tempVal[key];
                 } else {
-                    tempVal = undefined;
+                    tempVal = undefined; 
                     break;
                 }
             }
@@ -852,7 +848,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     min: paramDef.min, max: paramDef.max, step: paramDef.step,
                     initialValue: currentValue,
                     decimals: paramDef.decimals, displaySuffix: paramDef.displaySuffix || '',
-                    trackRef: (ownerType === 'track' ? owner : null),
+                    trackRef: (ownerType === 'track' ? owner : null), 
                     onValueChange: (val, oldVal, fromInteraction) => {
                         if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, val);
                         else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, val);
@@ -905,10 +901,9 @@ function showAddEffectModal(owner, ownerType) {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
 
-    // Removed p-1.5 from li, relying on modal-content padding
     let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
     for (const effectKey in AVAILABLE_EFFECTS) {
-        modalContentHTML += `<li class="hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}" style="padding: 6px 10px;">${AVAILABLE_EFFECTS[effectKey].displayName}</li>`;
+        modalContentHTML += `<li class="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS[effectKey].displayName}</li>`;
     }
     modalContentHTML += `</ul></div>`;
 
@@ -929,21 +924,22 @@ function showAddEffectModal(owner, ownerType) {
                         renderEffectsList(owner, ownerType, listDiv, controlsContainer);
                     }
                 } else if (ownerType === 'master' && typeof window.addMasterEffect === 'function') {
-                    window.addMasterEffect(effectType);
+                    window.addMasterEffect(effectType); 
                      const masterRackWindow = window.openWindows['masterEffectsRack'];
                      if (masterRackWindow && masterRackWindow.element) {
                         const listDiv = masterRackWindow.element.querySelector(`#effectsList-master`);
                         const controlsContainer = masterRackWindow.element.querySelector(`#effectControlsContainer-master`);
-                        renderEffectsList(null, 'master', listDiv, controlsContainer);
+                        renderEffectsList(null, 'master', listDiv, controlsContainer); 
                      }
                 }
-                modal.overlay.remove();
+                modal.overlay.remove(); 
             });
         });
     }
 }
 
- function openTrackEffectsRackWindow(trackId, savedState = null) {
+// --- Window Opening Functions --- 
+ function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... unchanged ... */ 
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) { console.error(`[UI] Track ${trackId} not found for effects rack.`); return null; }
 
@@ -976,7 +972,7 @@ function showAddEffectModal(owner, ownerType) {
     }
     return rackWindow;
 }
- function openMasterEffectsRackWindow(savedState = null) {
+ function openMasterEffectsRackWindow(savedState = null) { /* ... unchanged ... */ 
     const windowId = 'masterEffectsRack';
     console.log(`[UI] Attempting to open Master Effects Rack. SavedState:`, savedState);
     if (window.openWindows[windowId] && !savedState) {
@@ -984,7 +980,7 @@ function showAddEffectModal(owner, ownerType) {
         return window.openWindows[windowId];
     }
 
-    const contentDOM = buildModularEffectsRackDOM(null, 'master');
+    const contentDOM = buildModularEffectsRackDOM(null, 'master'); 
     const rackOptions = {
         width: 350, height: 400, minWidth: 300, minHeight: 250,
         initialContentKey: windowId,
@@ -1006,11 +1002,11 @@ function showAddEffectModal(owner, ownerType) {
     return rackWindow;
 }
 
-function openGlobalControlsWindow(savedState = null) {
+function openGlobalControlsWindow(savedState = null) { /* ... unchanged from previous version with logs ... */ 
     const windowId = 'globalControls';
     console.log(`[UI - openGlobalControlsWindow] Attempting to open/focus. SavedState:`, savedState);
 
-    if (window.openWindows[windowId] && !savedState) {
+    if (window.openWindows[windowId] && !savedState) { 
         const existingWindow = window.openWindows[windowId];
         if (!existingWindow.isMinimized) {
             console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' already open and not minimized. Focusing.`);
@@ -1023,9 +1019,8 @@ function openGlobalControlsWindow(savedState = null) {
     }
 
     console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' not found or was closed. Creating new instance.`);
-    // Removed p-2.5, space-y-3, text-sm, text-gray-700, dark:text-slate-300 from outer div
     const contentHTML = `
-        <div id="global-controls-content" class="space-y-3">
+        <div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300">
             <div class="grid grid-cols-2 gap-2 items-center">
                 <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button>
                 <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button>
@@ -1056,7 +1051,7 @@ function openGlobalControlsWindow(savedState = null) {
     const options = {
         width: 280, height: 290, minWidth: 250, minHeight: 270,
         closable: true, minimizable: true, resizable: true,
-        initialContentKey: windowId
+        initialContentKey: windowId 
     };
 
     if (savedState && savedState.id === windowId) {
@@ -1065,7 +1060,7 @@ function openGlobalControlsWindow(savedState = null) {
         options.y = parseInt(savedState.top, 10);
         options.width = parseInt(savedState.width, 10);
         options.height = parseInt(savedState.height, 10);
-        options.zIndex = savedState.zIndex;
+        options.zIndex = savedState.zIndex; 
         if (savedState.isMinimized) options.isMinimized = true;
     } else {
       console.log(`[UI - openGlobalControlsWindow] No valid saved state, using defaults.`);
@@ -1083,7 +1078,7 @@ function openGlobalControlsWindow(savedState = null) {
         window.midiInputSelectGlobal = newWindow.element.querySelector('#midiInputSelectGlobal');
         window.midiIndicatorGlobalEl = newWindow.element.querySelector('#midiIndicatorGlobal');
         window.keyboardIndicatorGlobalEl = newWindow.element.querySelector('#keyboardIndicatorGlobal');
-
+        
         console.log('[UI - openGlobalControlsWindow] Global element references populated.');
         console.log('[UI - openGlobalControlsWindow] Type of window.attachGlobalControlEvents JUST BEFORE CHECK:', typeof window.attachGlobalControlEvents);
 
@@ -1101,16 +1096,16 @@ function openGlobalControlsWindow(savedState = null) {
     }
 }
 
- function openSoundBrowserWindow(savedState = null) {
+// --- Sound Browser ---
+ function openSoundBrowserWindow(savedState = null) { /* ... unchanged ... */ 
     const windowId = 'soundBrowser';
     if (window.openWindows[windowId] && !savedState) {
         window.openWindows[windowId].restore();
         return window.openWindows[windowId];
     }
 
-    // Removed p-2, space-y-2, text-xs, dark:text-slate-300 from outer div
     let contentHTML = `
-        <div id="soundBrowserContent" class="space-y-2 overflow-y-auto h-full">
+        <div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full dark:text-slate-300">
             <div class="flex space-x-1 mb-1">
                 <select id="librarySelect" class="flex-grow p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
                     <option value="">Select Library...</option>
@@ -1168,13 +1163,13 @@ function openGlobalControlsWindow(savedState = null) {
                 }
                 const { fullPath, libraryName } = window.selectedSoundForPreview;
                 if (window.loadedZipFiles && window.loadedZipFiles[libraryName] && window.loadedZipFiles[libraryName] !== "loading") {
-                    const zipEntry = window.loadedZipFiles[libraryName].file(fullPath);
+                    const zipEntry = window.loadedZipFiles[libraryName].file(fullPath); // Use the correct fullPath
                     if (zipEntry) {
                         zipEntry.async("blob").then(blob => {
                             const tempUrl = URL.createObjectURL(blob);
                             window.previewPlayer = new Tone.Player(tempUrl, () => {
                                 window.previewPlayer.start();
-                                URL.revokeObjectURL(tempUrl);
+                                URL.revokeObjectURL(tempUrl); 
                             }).toDestination();
                         }).catch(err => showNotification("Error loading preview: " + err.message, 2000));
                     } else {
@@ -1189,7 +1184,7 @@ function openGlobalControlsWindow(savedState = null) {
     } else { return null; }
     return browserWindow;
 }
- function updateSoundBrowserDisplayForLibrary(libraryName) {
+ function updateSoundBrowserDisplayForLibrary(libraryName) { /* ... unchanged ... */ 
     const browserWindowEl = window.openWindows['soundBrowser']?.element;
     if (!browserWindowEl) return;
 
@@ -1198,9 +1193,9 @@ function openGlobalControlsWindow(savedState = null) {
     const currentPathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
 
     window.currentLibraryName = libraryName;
-    window.currentSoundBrowserPath = [];
+    window.currentSoundBrowserPath = []; 
 
-    if (librarySelect && librarySelect.value !== libraryName) {
+    if (librarySelect && librarySelect.value !== libraryName) { 
         librarySelect.value = libraryName || "";
     }
 
@@ -1217,7 +1212,7 @@ function openGlobalControlsWindow(savedState = null) {
         window.currentSoundFileTree = null;
     } else if (window.soundLibraryFileTrees && window.soundLibraryFileTrees[libraryName]) {
         window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName];
-        if (typeof renderSoundBrowserDirectory === 'function') renderSoundBrowserDirectory([], window.currentSoundFileTree);
+        if (typeof renderSoundBrowserDirectory === 'function') renderSoundBrowserDirectory([], window.currentSoundFileTree); 
     } else {
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" not found or failed to load.</p>`;
         currentPathDisplay.textContent = '/';
@@ -1233,7 +1228,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     const currentPathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
     const previewSoundBtn = browserWindowEl.querySelector('#previewSoundBtn');
 
-    listDiv.innerHTML = '';
+    listDiv.innerHTML = ''; 
     currentPathDisplay.textContent = `/${window.currentLibraryName || ''}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
     window.selectedSoundForPreview = null;
     if(previewSoundBtn) previewSoundBtn.disabled = true;
@@ -1259,11 +1254,10 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 
     items.forEach(itemObj => {
         const name = itemObj.name;
-        const node = itemObj.nodeData;
+        const node = itemObj.nodeData; 
         const listItem = document.createElement('div');
-        // Kept Tailwind for specific item styling
         listItem.className = 'p-1 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-xs flex items-center';
-        listItem.draggable = node.type === 'file';
+        listItem.draggable = node.type === 'file'; 
 
         const icon = document.createElement('span');
         icon.className = 'mr-1.5';
@@ -1279,13 +1273,13 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                 window.currentSoundBrowserPath.push(name);
                 renderSoundBrowserDirectory(window.currentSoundBrowserPath, node.children);
             });
-        } else {
+        } else { 
             listItem.addEventListener('click', () => {
                 listDiv.querySelectorAll('.bg-blue-200').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
                 listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
                 window.selectedSoundForPreview = {
                     fileName: name,
-                    fullPath: node.fullPath,
+                    fullPath: node.fullPath, // Use the correct fullPath from the node data
                     libraryName: window.currentLibraryName
                 };
                 if(previewSoundBtn) previewSoundBtn.disabled = false;
@@ -1293,9 +1287,9 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
             listItem.addEventListener('dragstart', (event) => {
                 const soundData = {
                     fileName: name,
-                    fullPath: node.fullPath,
+                    fullPath: node.fullPath, // Use the correct fullPath from the node data
                     libraryName: window.currentLibraryName,
-                    type: 'sound-browser-item'
+                    type: 'sound-browser-item' 
                 };
                 event.dataTransfer.setData("application/json", JSON.stringify(soundData));
                 event.dataTransfer.effectAllowed = "copy";
@@ -1306,7 +1300,8 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     });
 }
 
- function openMixerWindow(savedState = null) {
+// --- Mixer --- 
+ function openMixerWindow(savedState = null) { /* ... unchanged ... */ 
     const windowId = 'mixer';
     if (window.openWindows[windowId] && !savedState) {
         window.openWindows[windowId].restore();
@@ -1315,10 +1310,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 
     const contentContainer = document.createElement('div');
     contentContainer.id = 'mixerContentContainer';
-    // Removed p-2, overflow-x-auto, whitespace-nowrap, h-full. Kept bg colors.
-    // Style.css .window-content handles overflow and height. Specific mixer styles might be needed for x-scroll.
-    contentContainer.className = 'overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800';
-
+    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800'; 
 
     const mixerOptions = {
         width: Math.min(800, (document.getElementById('desktop')?.offsetWidth || 800) - 40),
@@ -1330,30 +1322,29 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     const mixerWindow = window.createWindow(windowId, 'Mixer', contentContainer, mixerOptions);
 
     if (mixerWindow && mixerWindow.element) {
-        if (typeof updateMixerWindow === 'function') updateMixerWindow();
+        if (typeof updateMixerWindow === 'function') updateMixerWindow(); 
     } else { return null; }
     return mixerWindow;
 }
- function updateMixerWindow() {
+ function updateMixerWindow() { /* ... unchanged ... */ 
     const mixerWindow = window.openWindows['mixer'];
     if (!mixerWindow || !mixerWindow.element || mixerWindow.isMinimized) return;
 
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (!container) return;
 
-    renderMixer(container);
+    renderMixer(container); 
 }
- function renderMixer(container) {
-    container.innerHTML = '';
+ function renderMixer(container) { /* ... unchanged ... */ 
+    container.innerHTML = ''; 
     const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
 
     const masterTrackDiv = document.createElement('div');
-    // Removed p-1.5 from masterTrackDiv, kept other Tailwind for item styling
-    masterTrackDiv.className = 'mixer-track master-track inline-block align-top border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
+    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
     masterTrackDiv.innerHTML = `
-        <div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="Master" style="padding: 0.375rem;">Master</div>
+        <div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="Master">Master</div>
         <div id="masterVolumeKnob-mixer-placeholder" class="h-16 mx-auto mb-1"></div>
-        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden mt-1" style="margin: 0.25rem 0.375rem;">
+        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden mt-1">
             <div id="mixerMasterMeterBar" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
         </div>
     `;
@@ -1378,16 +1369,15 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        // Removed p-1.5 from trackDiv
-        trackDiv.className = 'mixer-track inline-block align-top border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
+        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
         trackDiv.innerHTML = `
-            <div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}" style="padding: 0.375rem;">${track.name}</div>
+            <div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
-            <div class="grid grid-cols-2 gap-0.5 my-1" style="padding: 0 0.375rem;">
+            <div class="grid grid-cols-2 gap-0.5 my-1">
                 <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button>
                 <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button>
             </div>
-            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5" style="margin: 0.25rem 0.375rem 0.375rem;">
+            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5">
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
         `;
@@ -1408,13 +1398,12 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     });
 }
 
+// --- Sequencer DOM Rework ---
 function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const stepsPerBar = Constants.STEPS_PER_BAR;
     const totalSteps = numBars * stepsPerBar;
-    // Removed p-1, text-xs, dark:bg-slate-900, dark:text-slate-300 from outer div
-    let html = `<div class="sequencer-container overflow-auto h-full">`;
-    // Removed p-1 from controls div, kept sticky, bg, z-index, border for functionality
-    html += `<div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 z-30 border-b dark:border-slate-700" style="padding: 0.25rem;">
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300">`;
+    html += `<div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700">
                 <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span>
                 <div>
                     <label for="seqLengthInput-${track.id}">Bars: </label>
@@ -1424,7 +1413,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;">`;
 
-    // Kept Tailwind for header/label cells as they are specific parts of the grid
     html += `<div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
 
     for (let i = 0; i < totalSteps; i++) {
@@ -1447,20 +1435,18 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                 else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler';
                 else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
             }
-
+            
             let beatBlockClass = '';
-            if (Math.floor((j % stepsPerBar) / 4) % 2 === 0) {
-                // Using style.css defined classes if available, or Tailwind as fallback
-                beatBlockClass = 'sequencer-beat-block-even'; // Custom class
-            } else {
-                beatBlockClass = 'sequencer-beat-block-odd'; // Custom class
+            if (Math.floor((j % stepsPerBar) / 4) % 2 === 0) { 
+                beatBlockClass = 'bg-gray-50 dark:bg-slate-700'; 
+            } else { 
+                beatBlockClass = 'bg-white dark:bg-slate-750'; 
             }
-            // Border classes for bar/beat lines - kept Tailwind for this specific visual structure
             if (j % stepsPerBar === 0 && j > 0) {
                 beatBlockClass += ' border-l-2 border-l-gray-400 dark:border-l-slate-600';
-            } else if (j > 0 && j % (stepsPerBar / 2) === 0) {
+            } else if (j > 0 && j % (stepsPerBar / 2) === 0) { 
                  beatBlockClass += ' border-l-gray-300 dark:border-l-slate-650';
-            } else if (j > 0 && j % (stepsPerBar / 4) === 0) {
+            } else if (j > 0 && j % (stepsPerBar / 4) === 0) { 
                  beatBlockClass += ' border-l-gray-200 dark:border-l-slate-675';
             }
 
@@ -1468,11 +1454,11 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                          data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}"></div>`;
         }
     }
-    html += `</div></div>`;
+    html += `</div></div>`; 
     return html;
 }
 
- function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
+ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { /* ... unchanged ... */ 
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) { console.error(`[UI] Track ${trackId} not found for sequencer.`); return null; }
 
@@ -1519,7 +1505,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         track.sequencerWindow = sequencerWindow;
         if (typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(trackId);
 
-        const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
+        const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout'); 
         if (grid) {
             grid.addEventListener('click', (e) => {
                 if (e.target.classList.contains('sequencer-step-cell')) {
@@ -1549,9 +1535,9 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             lengthInput.addEventListener('change', (e) => {
                 const newNumBars = parseInt(e.target.value);
                 if (!isNaN(newNumBars) && newNumBars >= 1 && newNumBars <= (Constants.MAX_BARS || 16)) {
-                    track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR);
+                    track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); 
                 } else {
-                    e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR;
+                    e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR; 
                 }
             });
         }
@@ -1563,16 +1549,15 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     return sequencerWindow;
 }
 
- function renderSamplePads(track) {
+ function renderSamplePads(track) { /* ... unchanged ... */ 
     const inspector = track.inspectorWindow?.element;
     if (!inspector || track.type !== 'Sampler') return;
     const padsContainer = inspector.querySelector(`#samplePadsContainer-${track.id}`);
     if (!padsContainer) return;
-    padsContainer.innerHTML = '';
+    padsContainer.innerHTML = ''; 
 
     track.slices.forEach((slice, index) => {
         const pad = document.createElement('button');
-        // Kept Tailwind for specific pad styling
         pad.className = `sample-pad p-2 border rounded text-xs h-12 flex items-center justify-center dark:border-slate-500 dark:text-slate-300
                          ${track.selectedSliceForEdit === index ? 'bg-blue-200 border-blue-400 dark:bg-blue-700 dark:border-blue-500' : 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500'}
                          ${(!track.audioBuffer || !track.audioBuffer.loaded || slice.duration <= 0) ? 'opacity-50' : ''}`;
@@ -1585,13 +1570,13 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         pad.addEventListener('click', () => {
             track.selectedSliceForEdit = index;
             if (typeof window.playSlicePreview === 'function') window.playSlicePreview(track.id, index);
-            renderSamplePads(track);
-            if (typeof updateSliceEditorUI === 'function') updateSliceEditorUI(track);
+            renderSamplePads(track); 
+            if (typeof updateSliceEditorUI === 'function') updateSliceEditorUI(track); 
         });
         padsContainer.appendChild(pad);
     });
 }
- function updateSliceEditorUI(track) {
+ function updateSliceEditorUI(track) { /* ... unchanged ... */ 
     const inspector = track.inspectorWindow?.element;
     if (!inspector || track.type !== 'Sampler' || !track.slices || track.slices.length === 0) return;
 
@@ -1599,7 +1584,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     if (selectedInfo) selectedInfo.textContent = track.selectedSliceForEdit + 1;
 
     const slice = track.slices[track.selectedSliceForEdit];
-    if (!slice) return;
+    if (!slice) return; 
 
     if (track.inspectorControls.sliceVolume) track.inspectorControls.sliceVolume.setValue(slice.volume || 0.7);
     if (track.inspectorControls.slicePitch) track.inspectorControls.slicePitch.setValue(slice.pitchShift || 0);
@@ -1621,14 +1606,14 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     if (track.inspectorControls.sliceEnvSustain) track.inspectorControls.sliceEnvSustain.setValue(env.sustain);
     if (track.inspectorControls.sliceEnvRelease) track.inspectorControls.sliceEnvRelease.setValue(env.release);
 }
- function drawWaveform(track) {
+ function drawWaveform(track) { /* ... unchanged ... */ 
     if (!track || !track.waveformCanvasCtx || !track.audioBuffer || !track.audioBuffer.loaded) {
-        if (track && track.waveformCanvasCtx) {
+        if (track && track.waveformCanvasCtx) { 
             const canvas = track.waveformCanvasCtx.canvas;
             track.waveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#334155' : '#e0e0e0';
+             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#334155' : '#e0e0e0'; 
              track.waveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0';
+             track.waveformCanvasCtx.fillStyle = track.waveformCanvasCtx.canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0'; 
              track.waveformCanvasCtx.textAlign = 'center';
              track.waveformCanvasCtx.fillText('No audio loaded or processed', canvas.width / 2, canvas.height / 2);
         }
@@ -1636,15 +1621,15 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     }
     const canvas = track.waveformCanvasCtx.canvas;
     const ctx = track.waveformCanvasCtx;
-    const buffer = track.audioBuffer.get();
-    const data = buffer.getChannelData(0);
+    const buffer = track.audioBuffer.get(); 
+    const data = buffer.getChannelData(0); 
     const step = Math.ceil(data.length / canvas.width);
     const amp = canvas.height / 2;
 
-    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0';
+    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0'; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6';
+    ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6'; 
 
     ctx.beginPath();
     ctx.moveTo(0, amp);
@@ -1656,7 +1641,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             if (datum > max) max = datum;
         }
         ctx.lineTo(i, (1 + min) * amp);
-        ctx.lineTo(i, (1 + max) * amp);
+        ctx.lineTo(i, (1 + max) * amp); 
     }
     ctx.lineTo(canvas.width, amp);
     ctx.stroke();
@@ -1679,9 +1664,9 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         ctx.fillText(`S${index + 1}`, startX + 2, 10);
     });
 }
- function drawInstrumentWaveform(track) {
+ function drawInstrumentWaveform(track) { /* ... unchanged ... */ 
     if (!track || !track.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer || !track.instrumentSamplerSettings.audioBuffer.loaded) {
-         if (track && track.instrumentWaveformCanvasCtx) {
+         if (track && track.instrumentWaveformCanvasCtx) { 
             const canvas = track.instrumentWaveformCanvasCtx.canvas;
             track.instrumentWaveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
              track.instrumentWaveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#334155' : '#e0e0e0';
@@ -1702,7 +1687,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     ctx.fillStyle = canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = canvas.classList.contains('dark') ? '#34d399' : '#10b981';
+    ctx.strokeStyle = canvas.classList.contains('dark') ? '#34d399' : '#10b981'; 
     ctx.beginPath();
     ctx.moveTo(0, amp);
     for (let i = 0; i < canvas.width; i++) {
@@ -1731,25 +1716,24 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         ctx.stroke();
     }
 }
- function renderDrumSamplerPads(track) {
+ function renderDrumSamplerPads(track) { /* ... unchanged ... */ 
     const inspector = track.inspectorWindow?.element;
     if (!inspector || track.type !== 'DrumSampler') return;
     const padsContainer = inspector.querySelector(`#drumPadsGridContainer-${track.id}`);
     if (!padsContainer) return;
-    padsContainer.innerHTML = '';
+    padsContainer.innerHTML = ''; 
 
     track.drumSamplerPads.forEach((padData, index) => {
         const padEl = document.createElement('button');
-        // Kept Tailwind for specific pad styling
         padEl.className = `drum-pad p-2 border rounded text-xs h-12 flex items-center justify-center dark:border-slate-500 dark:text-slate-300
                          ${track.selectedDrumPadForEdit === index ? 'bg-blue-200 border-blue-400 dark:bg-blue-700 dark:border-blue-500' : 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500'}
-                         ${(!padData.audioBufferDataURL && !padData.dbKey && padData.status !== 'loaded') ? 'opacity-60' : ''}`;
+                         ${(!padData.audioBufferDataURL && !padData.dbKey && padData.status !== 'loaded') ? 'opacity-60' : ''}`; 
         padEl.textContent = `Pad ${index + 1}`;
         padEl.title = padData.originalFileName || `Pad ${index + 1}`;
 
         if (padData.status === 'missing' || padData.status === 'error') {
             padEl.classList.add(padData.status === 'missing' ? 'border-yellow-500' : 'border-red-500');
-            padEl.classList.add('text-black', 'dark:text-white');
+            padEl.classList.add('text-black', 'dark:text-white'); 
         }
 
 
@@ -1760,13 +1744,13 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             } else if (padData.status !== 'loaded') {
                 showNotification(`Sample for Pad ${index+1} not loaded. Click to load.`, 2000);
             }
-            renderDrumSamplerPads(track);
-            if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track);
+            renderDrumSamplerPads(track); 
+            if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); 
         });
         padsContainer.appendChild(padEl);
     });
 }
- function highlightPlayingStep(col, trackType, gridElement) {
+ function highlightPlayingStep(col, trackType, gridElement) { /* ... unchanged ... */ 
     if (!gridElement) return;
     const previouslyPlaying = gridElement.querySelector('.sequencer-step-cell.playing');
     if (previouslyPlaying) previouslyPlaying.classList.remove('playing');
@@ -1781,12 +1765,12 @@ export {
     buildTrackInspectorContentDOM,
     openTrackInspectorWindow,
     initializeCommonInspectorControls,
-    initializeTypeSpecificInspectorControls,
-    applySliceEdits,
+    initializeTypeSpecificInspectorControls, 
+    applySliceEdits, // Now defined and exported
     drawWaveform,
     drawInstrumentWaveform,
     renderEffectsList,
-    renderEffectControls,
+    renderEffectControls, 
     openTrackEffectsRackWindow,
     openMasterEffectsRackWindow,
     openGlobalControlsWindow,
