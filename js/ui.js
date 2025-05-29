@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - All features & fixes verified. Version: daw_ui_js_full_final_check');
+console.log('[ui.js] TOP OF FILE PARSING - Sequencer: Copy, Paste, Erase, Double. Version: daw_ui_js_seq_ctx_all_ops_final');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -112,7 +112,7 @@ import { getMimeTypeFromFilename } from './audio.js';
 }
 
 // --- Synth Inspector Specifics ---
-// synthEngineControlDefinitions is now imported from effectsRegistry.js
+// synthEngineControlDefinitions is imported from effectsRegistry.js
 
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
@@ -730,10 +730,10 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
         return;
     }
 
-    effectsArray.forEach((effectWrapper, index) => {
+    effectsArray.forEach((effectWrapper, index) => { 
         const effectDef = AVAILABLE_EFFECTS[effectWrapper.type];
         const displayName = effectDef ? effectDef.displayName : effectWrapper.type;
-        const isBypassed = effectWrapper.isBypassed || false;
+        const isBypassed = effectWrapper.isBypassed || false; // Default to false if undefined
 
         const item = document.createElement('div');
         item.className = `effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs ${isBypassed ? 'opacity-60 italic' : ''}`;
@@ -788,24 +788,24 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
                     label: effectWrapper.isBypassed ? "Enable Effect" : "Bypass Effect",
                     action: () => {
                         let targetOwner = owner; 
-                        let toggleFunction = owner?.toggleEffectBypass;
+                        let toggleFunction;
 
-                        if (ownerType === 'master') {
-                            targetOwner = window; 
-                            toggleFunction = window.toggleMasterEffectBypass;
+                        if (ownerType === 'track' && owner && typeof owner.toggleEffectBypass === 'function') {
+                            toggleFunction = owner.toggleEffectBypass;
+                        } else if (ownerType === 'master' && typeof window.toggleMasterEffectBypass === 'function') {
+                            targetOwner = window; // Functions on window object are called with window as `this` implicitly
+                            toggleFunction = window.toggleMasterEffectBypass; 
                         }
                         
                         if (targetOwner && typeof toggleFunction === 'function') {
                             toggleFunction.call(targetOwner, effectWrapper.id); 
                         } else {
                             console.warn("Bypass function not found for owner type:", ownerType, "or owner is undefined:", owner);
-                            showNotification("Bypass function not available.", 2000);
+                            showNotification("Bypass function not available for this effect.", 2000);
                         }
                         // Re-render the list immediately after state change
-                        // Use a small timeout to ensure state update has propagated if necessary
                         setTimeout(() => {
                             renderEffectsList(owner, ownerType, listDiv, controlsContainer);
-                             // If this effect's controls were shown, re-render them too
                             if (item.classList.contains('bg-blue-100')) { 
                                 renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer);
                             }
@@ -835,7 +835,6 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     });
 }
 
-
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
     controlsContainer.innerHTML = ''; 
@@ -856,7 +855,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
 
     const titleEl = document.createElement('h4');
     titleEl.className = 'text-xs font-semibold mb-1 dark:text-slate-200';
-    titleEl.textContent = `Controls: ${effectDef.displayName} ${effectWrapper.isBypassed ? '(Bypassed)' : ''}`; // Show bypass state in controls title
+    titleEl.textContent = `Controls: ${effectDef.displayName} ${effectWrapper.isBypassed ? '(Bypassed)' : ''}`;
     controlsContainer.appendChild(titleEl);
 
     const gridContainer = document.createElement('div');
@@ -889,8 +888,8 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     decimals: paramDef.decimals, displaySuffix: paramDef.displaySuffix || '',
                     trackRef: (ownerType === 'track' ? owner : null), 
                     onValueChange: (val, oldVal, fromInteraction) => {
-                        if (ownerType === 'track' && owner) owner.updateEffectParam(effectWrapper.id, paramDef.key, val);
-                        else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectWrapper.id, paramDef.key, val);
+                        if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, val);
+                        else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, val);
                     }
                 });
                 controlWrapper.appendChild(knob.element);
@@ -912,8 +911,8 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     const finalValue = (typeof paramDef.defaultValue === 'number' && !isNaN(parseFloat(newValue))) ? parseFloat(newValue) : newValue;
 
                     if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Change ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
-                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectWrapper.id, paramDef.key, finalValue);
-                    else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectWrapper.id, paramDef.key, finalValue);
+                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, finalValue);
+                    else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, finalValue);
                 });
                 controlWrapper.appendChild(label);
                 controlWrapper.appendChild(select);
@@ -924,9 +923,9 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                 button.addEventListener('click', () => {
                     const newValue = !currentValue;
                     if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
-                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectWrapper.id, paramDef.key, newValue);
-                    else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectWrapper.id, paramDef.key, newValue);
-                    renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer);
+                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue);
+                    else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, newValue);
+                    renderEffectControls(owner, ownerType, effectId, controlsContainer);
                 });
                 controlWrapper.appendChild(button);
             }
@@ -1450,77 +1449,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
         `;
-        
-        console.log(`[UI - renderMixer] Creating trackDiv for track ID: ${track.id}`, trackDiv); 
-
-        trackDiv.addEventListener('click', (event) => {
-            console.log(`[UI - renderMixer] CLICK event on trackDiv for ID: ${track.id}`, event.target);
-        });
-        console.log(`[UI - renderMixer] Basic CLICK listener ADDED for track ID: ${track.id}`); 
-
-
-        console.log(`[UI - renderMixer] Attempting to add CONTEXTMENU listener for track ID: ${track.id}`); 
-        trackDiv.addEventListener('contextmenu', (event) => {
-            event.preventDefault(); 
-            console.log(`[UI - renderMixer] CONTEXTMENU event triggered for track ID: ${track.id}`); 
-            
-            const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
-            if (!currentTrack) {
-                console.log(`[UI - renderMixer] Context menu: Track ${track.id} not found via getTrackById.`);
-                return;
-            }
-            console.log(`[UI - renderMixer] Context menu: currentTrack found:`, currentTrack.name);
-
-
-            const menuItems = [
-                {
-                    label: "Open Inspector",
-                    action: () => window.handleOpenTrackInspector(currentTrack.id)
-                },
-                {
-                    label: "Open Effects Rack",
-                    action: () => window.handleOpenEffectsRack(currentTrack.id)
-                },
-                {
-                    label: "Open Sequencer",
-                    action: () => window.handleOpenSequencer(currentTrack.id)
-                },
-                { separator: true },
-                {
-                    label: currentTrack.isMuted ? "Unmute" : "Mute",
-                    action: () => window.handleTrackMute(currentTrack.id)
-                },
-                {
-                    label: (typeof window.getSoloedTrackId === 'function' && window.getSoloedTrackId() === currentTrack.id) ? "Unsolo" : "Solo",
-                    action: () => window.handleTrackSolo(currentTrack.id)
-                },
-                {
-                    label: (typeof window.getArmedTrackId === 'function' && window.getArmedTrackId() === currentTrack.id) ? "Disarm Input" : "Arm for Input",
-                    action: () => window.handleTrackArm(currentTrack.id)
-                },
-                { separator: true },
-                {
-                    label: "Remove Track",
-                    action: () => window.handleRemoveTrack(currentTrack.id),
-                    disabled: false
-                }
-            ];
-            console.log(`[UI - renderMixer] Context menu: menuItems defined:`, menuItems);
-
-            if (typeof createContextMenu === 'function') {
-                 console.log(`[UI - renderMixer] Context menu: Calling imported createContextMenu`);
-                createContextMenu(event, menuItems);
-            } else if (typeof window.createContextMenu === 'function') {
-                console.log(`[UI - renderMixer] Context menu: Calling window.createContextMenu`);
-                window.createContextMenu(event, menuItems);
-            } else {
-                console.error("[UI - renderMixer] createContextMenu function is not available.");
-            }
-        });
-        console.log(`[UI - renderMixer] CONTEXTMENU listener setup completed for track ID: ${track.id}`); 
-        
         container.appendChild(trackDiv);
-
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
@@ -1534,6 +1463,28 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 
         trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', () => handleTrackMute(track.id));
         trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', () => handleTrackSolo(track.id));
+
+        // Mixer Track Context Menu
+        trackDiv.addEventListener('contextmenu', (event) => {
+            event.preventDefault(); 
+            const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
+            if (!currentTrack) return;
+
+            const menuItems = [
+                { label: "Open Inspector", action: () => window.handleOpenTrackInspector(currentTrack.id) },
+                { label: "Open Effects Rack", action: () => window.handleOpenEffectsRack(currentTrack.id) },
+                { label: "Open Sequencer", action: () => window.handleOpenSequencer(currentTrack.id) },
+                { separator: true },
+                { label: currentTrack.isMuted ? "Unmute" : "Mute", action: () => window.handleTrackMute(currentTrack.id) },
+                { label: (typeof window.getSoloedTrackId === 'function' && window.getSoloedTrackId() === currentTrack.id) ? "Unsolo" : "Solo", action: () => window.handleTrackSolo(currentTrack.id) },
+                { label: (typeof window.getArmedTrackId === 'function' && window.getArmedTrackId() === currentTrack.id) ? "Disarm Input" : "Arm for Input", action: () => window.handleTrackArm(currentTrack.id) },
+                { separator: true },
+                { label: "Remove Track", action: () => window.handleRemoveTrack(currentTrack.id) }
+            ];
+            
+            if (typeof createContextMenu === 'function') createContextMenu(event, menuItems);
+            else console.error("[UI - renderMixer] createContextMenu function is not available.");
+        });
     });
 }
 
@@ -1754,7 +1705,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         console.log('[UI - Sequencer Context] Erased sequence for track:', currentTrackForMenu.id);
                     }
                 },
-                 {
+                {
                     label: "Double Sequence Length",
                     action: () => {
                         if (!currentTrackForMenu) return;
@@ -1785,7 +1736,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         while (originalSequenceData.length < numRows) {
                             originalSequenceData.push([]);
                         }
-
 
                         const doubledSequenceData = Array(numRows).fill(null).map(() => Array(newLength).fill(null));
 
