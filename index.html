@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,111 +22,20 @@
     <meta name="msapplication-TileImage" content="ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="js/lib/Tone.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="js/lib/Tone.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="style.css"> 
-
-    <style type="text/tailwindcss">
-        @layer base {
-            body {
-                font-family: 'Inter', sans-serif;
-            }
-        }
-
-        @layer components {
-            /* Window System Styles from Step 3 */
-            .window {
-                @apply absolute border border-neutral-700 shadow-lg bg-neutral-800 flex flex-col overflow-hidden text-neutral-200 rounded;
-                min-width: 150px;
-                min-height: 100px;
-            }
-            .window.minimized {
-                @apply !hidden;
-            }
-            .window-title-bar {
-                @apply bg-neutral-700 text-neutral-100 px-2 py-1 cursor-grab flex justify-between items-center h-[28px] shrink-0 text-[0.9rem] font-semibold select-none border-b border-black rounded-t-sm;
-            }
-            .window-title-bar span {
-                @apply overflow-hidden text-ellipsis whitespace-nowrap pr-2;
-            }
-            .window-title-buttons button {
-                @apply bg-neutral-600 border border-neutral-800 text-neutral-300 w-[20px] h-[20px] leading-[18px] text-center text-[11px] font-bold ml-1 p-0 cursor-default shrink-0 rounded transition-colors duration-150;
-            }
-            .window-title-buttons button:hover {
-                @apply bg-neutral-500 text-white;
-            }
-            .window-title-buttons button:active {
-                @apply bg-neutral-700 border-black;
-            }
-            .window-content {
-                @apply flex-grow p-2.5 bg-neutral-900 overflow-auto text-neutral-200;
-            }
-
-            /* Pad Button Styling from Step 6 */
-            .pad-button {
-                @apply p-2 border border-neutral-600 bg-neutral-700 text-neutral-300 cursor-pointer text-center min-w-[70px] min-h-[70px] flex flex-col items-center justify-center overflow-hidden relative rounded transition-colors duration-150;
-                /* The box-shadow for inset effect is tricky with default Tailwind utilities.
-                   Kept from original CSS for now. */
-                box-shadow: inset -1px -1px 1px #1a1a1a, inset 1px 1px 1px #3a3a3a;
-            }
-            .pad-button:hover {
-                @apply bg-neutral-600;
-            }
-            .pad-button:active, .pad-button.selected-for-edit {
-                @apply bg-neutral-800 border-neutral-500;
-                box-shadow: inset 1px 1px 1px #1a1a1a, inset -1px -1px 1px #3a3a3a; /* Kept from original CSS */
-            }
-            .pad-button.selected-for-edit {
-                @apply border-blue-400 border-2 p-[7px]; /* Adjusted padding due to thicker border */
-            }
-            .pad-label {
-                @apply text-[0.65rem] text-neutral-400 block mt-1 leading-tight overflow-hidden text-ellipsis break-all; /* Added break-all from CSS */
-                max-height: 2.4em; /* Keep if specific value is important */
-            }
-        }
-
-        @layer utilities {
-            /* Custom utility classes can be defined here */
-        }
-
-        /* Plain CSS for scrollbars (from your style.css, slightly adapted for clarity) */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e1e1e;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4a4a4a;
-            border-radius: 2px;
-            border: 1px solid #5a5a5a;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #5a5a5a;
-        }
-        ::-webkit-scrollbar-corner {
-            background: #1e1e1e;
-        }
-        /* Firefox scrollbar styling (basic) */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: #4a4a4a #1e1e1e; /* thumb track */
-        }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-neutral-900 text-neutral-200 font-sans text-sm m-0 overflow-hidden">
-    <div id="desktop" class="w-screen h-screen overflow-hidden relative bg-neutral-900">
-    </div>
+<body>
+    <div id="desktop">
+        </div>
 
     <div id="taskbar">
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
-        </div>
+            </div>
         <div id="taskbarTempoDisplay" title="Current Tempo">120.0 BPM</div>
     </div>
 
@@ -134,7 +43,7 @@
         <ul>
             <li id="menuAddSynthTrack">Add Synth Track</li>
             <li id="menuAddSamplerTrack">Add Slicer Sampler Track</li>
-            <li id="menuAddDrumSamplerTrack">Add Sampler Track</li>
+            <li id="menuAddDrumSamplerTrack">Add Sampler (Pads)</li>
             <li id="menuAddInstrumentSamplerTrack">Add Instrument Sampler Track</li>
             <li><hr></li>
             <li id="menuOpenSoundBrowser">Sound Browser</li>
@@ -162,11 +71,9 @@
     <input type="file" id="sampleFileInput" class="hidden" accept="audio/*">
 
 
-    <div id="notification-area">
-    </div>
+    <div id="notification-area"></div>
 
-    <div id="modalContainer">
-    </div>
+    <div id="modalContainer"></div>
 
     <script type="module" src="js/main.js"></script>
 </body>
