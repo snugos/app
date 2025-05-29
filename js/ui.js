@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Ensuring all functions are correctly defined and exported.');
+console.log('[ui.js] TOP OF FILE PARSING - Ensuring all functions are correctly defined and exported. Version: daw_ui_js_all_funcs_verified');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -423,7 +423,7 @@ function applySliceEdits(trackId) {
             }
         });
         volumeKnobPlaceholder.innerHTML = ''; 
-        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Ensured this uses volumeKnob.element
+        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Corrected this line
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -1694,7 +1694,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         } else {
             console.error(`[UI - openTrackSequencerWindow] Sequencer grid layout element not found for track ${track.id} to attach context menu.`);
         }
-        if (controlsDiv) { // Also attach to controls div
+        if (controlsDiv) { 
             controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
         }  else {
             console.error(`[UI - openTrackSequencerWindow] Sequencer controls div element not found for track ${track.id} to attach context menu.`);
@@ -1743,8 +1743,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 // --- END MODIFIED openTrackSequencerWindow ---
 
-// ... (other functions like renderSamplePads, updateSliceEditorUI, etc.) ...
-
+// --- Waveform Drawing Functions ---
 function drawWaveform(track) { 
     if (!track || !track.waveformCanvasCtx || !track.audioBuffer || !track.audioBuffer.loaded) {
         if (track && track.waveformCanvasCtx) { 
@@ -1856,6 +1855,112 @@ function drawInstrumentWaveform(track) {
         ctx.stroke();
     }
 }
+// --- END Waveform Drawing Functions ---
+
+// ... (other functions like renderSamplePads, updateSliceEditorUI, etc.) ...
+function renderSamplePads(track) { 
+    const inspector = track.inspectorWindow?.element;
+    if (!inspector || track.type !== 'Sampler') return;
+    const padsContainer = inspector.querySelector(`#samplePadsContainer-${track.id}`);
+    if (!padsContainer) return;
+    padsContainer.innerHTML = ''; 
+
+    track.slices.forEach((slice, index) => {
+        const pad = document.createElement('button');
+        pad.className = `sample-pad p-2 border rounded text-xs h-12 flex items-center justify-center dark:border-slate-500 dark:text-slate-300
+                         ${track.selectedSliceForEdit === index ? 'bg-blue-200 border-blue-400 dark:bg-blue-700 dark:border-blue-500' : 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500'}
+                         ${(!track.audioBuffer || !track.audioBuffer.loaded || slice.duration <= 0) ? 'opacity-50' : ''}`;
+        pad.textContent = `S${index + 1}`;
+        pad.title = `Slice ${index + 1}`;
+        if (!track.audioBuffer || !track.audioBuffer.loaded || slice.duration <= 0) {
+            pad.disabled = true;
+        }
+
+        pad.addEventListener('click', () => {
+            track.selectedSliceForEdit = index;
+            if (typeof window.playSlicePreview === 'function') window.playSlicePreview(track.id, index);
+            renderSamplePads(track); 
+            if (typeof updateSliceEditorUI === 'function') updateSliceEditorUI(track); 
+        });
+        padsContainer.appendChild(pad);
+    });
+}
+
+function updateSliceEditorUI(track) { 
+    const inspector = track.inspectorWindow?.element;
+    if (!inspector || track.type !== 'Sampler' || !track.slices || track.slices.length === 0) return;
+
+    const selectedInfo = inspector.querySelector(`#selectedSliceInfo-${track.id}`);
+    if (selectedInfo) selectedInfo.textContent = track.selectedSliceForEdit + 1;
+
+    const slice = track.slices[track.selectedSliceForEdit];
+    if (!slice) return; 
+
+    if (track.inspectorControls.sliceVolume) track.inspectorControls.sliceVolume.setValue(slice.volume || 0.7);
+    if (track.inspectorControls.slicePitch) track.inspectorControls.slicePitch.setValue(slice.pitchShift || 0);
+
+    const loopToggleBtn = inspector.querySelector(`#sliceLoopToggle-${track.id}`);
+    if (loopToggleBtn) {
+        loopToggleBtn.textContent = slice.loop ? 'Loop: ON' : 'Loop: OFF';
+        loopToggleBtn.classList.toggle('active', slice.loop);
+    }
+    const reverseToggleBtn = inspector.querySelector(`#sliceReverseToggle-${track.id}`);
+    if (reverseToggleBtn) {
+        reverseToggleBtn.textContent = slice.reverse ? 'Rev: ON' : 'Rev: OFF';
+        reverseToggleBtn.classList.toggle('active', slice.reverse);
+    }
+
+    const env = slice.envelope || { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 };
+    if (track.inspectorControls.sliceEnvAttack) track.inspectorControls.sliceEnvAttack.setValue(env.attack);
+    if (track.inspectorControls.sliceEnvDecay) track.inspectorControls.sliceEnvDecay.setValue(env.decay);
+    if (track.inspectorControls.sliceEnvSustain) track.inspectorControls.sliceEnvSustain.setValue(env.sustain);
+    if (track.inspectorControls.sliceEnvRelease) track.inspectorControls.sliceEnvRelease.setValue(env.release);
+}
+
+function renderDrumSamplerPads(track) { 
+    const inspector = track.inspectorWindow?.element;
+    if (!inspector || track.type !== 'DrumSampler') return;
+    const padsContainer = inspector.querySelector(`#drumPadsGridContainer-${track.id}`);
+    if (!padsContainer) return;
+    padsContainer.innerHTML = ''; 
+
+    track.drumSamplerPads.forEach((padData, index) => {
+        const padEl = document.createElement('button');
+        padEl.className = `drum-pad p-2 border rounded text-xs h-12 flex items-center justify-center dark:border-slate-500 dark:text-slate-300
+                         ${track.selectedDrumPadForEdit === index ? 'bg-blue-200 border-blue-400 dark:bg-blue-700 dark:border-blue-500' : 'bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500'}
+                         ${(!padData.audioBufferDataURL && !padData.dbKey && padData.status !== 'loaded') ? 'opacity-60' : ''}`; 
+        padEl.textContent = `Pad ${index + 1}`;
+        padEl.title = padData.originalFileName || `Pad ${index + 1}`;
+
+        if (padData.status === 'missing' || padData.status === 'error') {
+            padEl.classList.add(padData.status === 'missing' ? 'border-yellow-500' : 'border-red-500');
+            padEl.classList.add('text-black', 'dark:text-white'); 
+        }
+
+
+        padEl.addEventListener('click', () => {
+            track.selectedDrumPadForEdit = index;
+            if (typeof window.playDrumSamplerPadPreview === 'function' && padData.status === 'loaded') {
+                 window.playDrumSamplerPadPreview(track.id, index);
+            } else if (padData.status !== 'loaded') {
+                showNotification(`Sample for Pad ${index+1} not loaded. Click to load.`, 2000);
+            }
+            renderDrumSamplerPads(track); 
+            if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track); 
+        });
+        padsContainer.appendChild(padEl);
+    });
+}
+
+function highlightPlayingStep(col, trackType, gridElement) { 
+    if (!gridElement) return;
+    const previouslyPlaying = gridElement.querySelector('.sequencer-step-cell.playing');
+    if (previouslyPlaying) previouslyPlaying.classList.remove('playing');
+
+    const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`);
+    currentCells.forEach(cell => cell.classList.add('playing'));
+}
+
 
 export {
     createKnob,
