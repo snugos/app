@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Erase Sequence and verifying all exports. Version: daw_ui_js_with_erase_sequence_final_final_verified');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -311,7 +311,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     return html;
 }
 
-// Definition of applySliceEdits (Ensured this is present)
+// Definition of applySliceEdits
 function applySliceEdits(trackId) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track || track.type !== 'Sampler') {
@@ -1691,8 +1691,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         if (currentTrackForMenu.type === 'Synth' || currentTrackForMenu.type === 'InstrumentSampler') {
                             numRowsForErase = Constants.synthPitches.length;
                         } else if (currentTrackForMenu.type === 'Sampler') {
-                            // Use the current number of slices for the sampler track
-                            numRowsForErase = currentTrackForMenu.slices ? currentTrackForMenu.slices.length : Constants.numSlices;
+                            numRowsForErase = currentTrackForMenu.slices ? (currentTrackForMenu.slices.length > 0 ? currentTrackForMenu.slices.length : Constants.numSlices) : Constants.numSlices;
                         } else if (currentTrackForMenu.type === 'DrumSampler') {
                             numRowsForErase = Constants.numDrumSamplerPads;
                         }
@@ -1886,7 +1885,6 @@ function drawInstrumentWaveform(track) {
 }
 // --- END Waveform Drawing Functions ---
 
-// ... (Other UI functions like renderSamplePads, updateSliceEditorUI, etc. should be here)
 function renderSamplePads(track) { 
     const inspector = track.inspectorWindow?.element;
     if (!inspector || track.type !== 'Sampler') return;
