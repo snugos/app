@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Effects Rack Context Menu. Version: daw_ui_js_effects_rack_context_menu_final');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Effects Rack Context Menu. Version: daw_ui_js_effects_rack_context_final_final');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -112,7 +112,7 @@ import { getMimeTypeFromFilename } from './audio.js';
 }
 
 // --- Synth Inspector Specifics ---
-// synthEngineControlDefinitions is imported from effectsRegistry.js
+// synthEngineControlDefinitions is now imported from effectsRegistry.js
 
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
@@ -730,10 +730,10 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
         return;
     }
 
-    effectsArray.forEach((effectWrapper, index) => {
+    effectsArray.forEach((effectWrapper, index) => { 
         const effectDef = AVAILABLE_EFFECTS[effectWrapper.type];
         const displayName = effectDef ? effectDef.displayName : effectWrapper.type;
-        const isBypassed = effectWrapper.isBypassed || false;
+        const isBypassed = effectWrapper.isBypassed || false; // Default to false if undefined
 
         const item = document.createElement('div');
         item.className = `effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs ${isBypassed ? 'opacity-60 italic' : ''}`;
@@ -794,11 +794,11 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
                         } else {
                             console.warn("Bypass function not found for owner type:", ownerType);
                         }
-                         // Re-render the list immediately after state change
-                        renderEffectsList(owner, ownerType, listDiv, controlsContainer);
-                        // If this effect's controls were shown, re-render them too to reflect bypass state if necessary
-                        if (item.classList.contains('bg-blue-100')) { // Check if it was the selected one for editing
-                            renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer);
+                        // Re-render the list AFTER the state has been changed by toggleEffectBypass
+                         setTimeout(() => renderEffectsList(owner, ownerType, listDiv, controlsContainer), 0);
+                        // If this effect's controls were shown, re-render them too
+                        if (item.classList.contains('bg-blue-100')) { 
+                             setTimeout(() => renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer),0);
                         }
                     }
                 },
@@ -826,9 +826,7 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
 }
 
 
-// ... (rest of the file remains the same, including renderEffectControls, openTrackEffectsRackWindow, etc.) ...
-// ... and the sequencer context menu logic within openTrackSequencerWindow ...
-
+// ... (rest of the file, including renderEffectControls, openTrackEffectsRackWindow, etc.) ...
 // Ensure all other functions are present and correctly defined before the export block.
 
 export {
@@ -840,7 +838,7 @@ export {
     applySliceEdits, 
     drawWaveform, 
     drawInstrumentWaveform, 
-    renderEffectsList,
+    renderEffectsList, // Updated
     renderEffectControls, 
     openTrackEffectsRackWindow,
     openMasterEffectsRackWindow,
