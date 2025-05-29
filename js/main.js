@@ -2,11 +2,11 @@
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
-import { showNotification, showCustomModal, showConfirmationDialog, createContextMenu } from './utils.js'; // Added createContextMenu here
+import { showNotification, showCustomModal, showConfirmationDialog, createContextMenu } from './utils.js';
 import {
     initializePrimaryEventListeners,
     setupMIDI,
-    attachGlobalControlEvents, // Make sure this is imported
+    attachGlobalControlEvents, 
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
     selectMIDIInput
@@ -46,7 +46,7 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob, // Assuming createKnob is also from ui.js, if not, adjust import
+    createKnob, 
     openMasterEffectsRackWindow
 } from './ui.js';
 
@@ -68,9 +68,18 @@ window.masterMeter = null;
 window.openWindows = {};
 window.highestZIndex = 100;
 
-window.masterEffectsBusInput = null; // Managed in audio.js
-window.masterEffectsChain = []; // Managed in audio.js
-window.masterGainNode = null; // Managed in audio.js
+window.masterEffectsBusInput = null; 
+window.masterEffectsChain = []; 
+window.masterGainNode = null; 
+
+// Clipboard for copy/paste operations
+window.clipboardData = {
+    type: null,             // e.g., 'sequence', 'trackSettings', 'effect'
+    data: null,             // The actual copied data
+    sourceTrackType: null,  // e.g., 'Synth', 'Sampler', for compatibility checks
+    sequenceLength: null,   // Specifically for sequence type
+    // Add other metadata as needed for different clipboard types
+};
 
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
