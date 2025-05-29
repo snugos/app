@@ -273,7 +273,7 @@ body {
     border-color: #5a5a5a;     
     color: #cccccc; 
 }
-.drop-zone label { color: #7dd3fc; text-decoration: underline; cursor: pointer; } /* This will be overridden by .drop-zone-upload-label for specific labels */
+.drop-zone label { color: #7dd3fc; text-decoration: underline; cursor: pointer; }
 .drop-zone label:hover { color: #38bdf8; }
 
 
@@ -547,7 +547,7 @@ button.active { /* Generic active state for other toggles if needed */
 .effect-item.dragging { /* ... unchanged ... */ }
 .effect-item.dragover-target { /* ... unchanged ... */ }
 .drop-zone-relink-container { /* ... unchanged ... */ }
-/* .drop-zone-relink-button { /* ... This class is now replaced by .drop-zone-button ... */ } */
+.drop-zone-relink-button { /* ... unchanged ... */ }
 .drop-zone-missing { /* ... unchanged ... */ }
 .drop-zone-error { /* ... unchanged ... */ }
 .drop-zone-loading { /* ... unchanged ... */ }
@@ -605,56 +605,3 @@ input::placeholder,
   scrollbar-color: #4a4a4a #1e1e1e; /* thumb and track */
 }
 
-/* --- Utility and Dynamic Element Styles --- */
-.hidden, .utils-hidden { /* Added .utils-hidden for clarity if you already use .hidden elsewhere */
-    display: none;
-}
-
-.drop-zone-button {
-    font-size: 0.75rem; /* text-xs */
-    padding-top: 0.125rem;    /* py-0.5 */
-    padding-bottom: 0.125rem; /* py-0.5 */
-    padding-left: 0.25rem;    /* px-1 */
-    padding-right: 0.25rem;   /* px-1 */
-    border-radius: 0.25rem; /* rounded */
-    margin-top: 0.25rem;    /* mt-1 */
-    border-width: 1px; /* Assuming a default border, adjust if needed */
-    border-style: solid;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; /* Added transition */
-}
-
-.drop-zone-button-yellow {
-    background-color: #f59e0b; /* bg-yellow-500 */
-    color: #000000;            /* text-black */
-    border-color: #d97706;     /* A bit darker for border */
-}
-.drop-zone-button-yellow:hover {
-    background-color: #d97706; /* hover:bg-yellow-600 */
-    border-color: #b45309;
-}
-
-.drop-zone-button-red {
-    background-color: #ef4444; /* bg-red-500 */
-    color: #ffffff;            /* text-white */
-    border-color: #dc2626;
-}
-.drop-zone-button-red:hover {
-    background-color: #dc2626; /* hover:bg-red-600 */
-    border-color: #b91c1c;
-}
-
-.drop-zone-upload-label {
-    color: #2563eb;            /* text-blue-600 */
-    text-decoration: underline; /* underline */
-    cursor: pointer;            /* cursor-pointer */
-    font-size: 0.8em; /* Inherited from .drop-zone in your original CSS */
-}
-.drop-zone-upload-label:hover {
-    color: #1d4ed8;            /* hover:text-blue-800 */
-}
-
-/* General styling for the file input if it's ever made visible, though usually hidden */
-.drop-zone-file-input {
-    /* You might not need styles if it's always display: none via .utils-hidden */
-}
