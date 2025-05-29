@@ -1,6 +1,6 @@
 // js/Track.js - Track Class Module
 
-import { STEPS_PER_BAR, defaultStepsPerBar, synthPitches, numSlices, numDrumSamplerPads, samplerMIDINoteStart, defaultVelocity, MAX_BARS, computerKeySynthMap, computerKeySamplerMap, MIN_TEMPO, MAX_TEMPO } from './constants.js';
+import { STEPS_PER_BAR, defaultStepsPerBar, synthPitches, numSlices, numDrumSamplerPads, samplerMIDINoteStart, defaultVelocity, MAX_BARS, MIN_TEMPO, MAX_TEMPO, computerKeySynthMap, computerKeySamplerMap } from './constants.js';
 import { createEffectInstance, getEffectDefaultParams, AVAILABLE_EFFECTS, synthEngineControlDefinitions } from './effectsRegistry.js';
 import { storeAudio, getAudio, deleteAudio } from './db.js';
 
@@ -99,6 +99,8 @@ export class Track {
         console.log(`[Track ${this.id}] Initializing core audio nodes (Gain, Meter)...`);
         this.fullyInitializeAudioResources(); 
     }
+
+    // --- ALL METHODS BELOW THIS LINE MUST BE INSIDE THE CLASS ---
 
     getDefaultSynthParams() {
         const params = {};
@@ -445,12 +447,10 @@ export class Track {
     }
 
     triggerNotePlayback(noteIdentifier, velocity, time, rowIndex) {
-        // Playback logic is now handled by playNote and releaseNote to avoid duplication
-        // This method might become a simple wrapper or be refactored further
         if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
             this.instrument.triggerAttackRelease(noteIdentifier, "8n", time, velocity);
         } else if (this.type === 'Sampler') {
-             if (this.slicerIsPolyphonic && this.instrument && this.instrument.has(noteIdentifier)) {
+            if (this.slicerIsPolyphonic && this.instrument && this.instrument.has(noteIdentifier)) {
                 const player = this.instrument.player(noteIdentifier);
                 const sliceIndex = parseInt(noteIdentifier.split('-')[1]);
                 const slice = this.slices[sliceIndex];
@@ -502,14 +502,14 @@ export class Track {
         }
     }
 
-    playNote(midiNoteOrNoteName, velocityParam = defaultVelocity) { // Combined for MIDI and computer keys
+    playNote(midiNoteOrNoteName, velocityParam = defaultVelocity) { 
         let freq;
         let noteNameToLog = midiNoteOrNoteName;
 
-        if (typeof midiNoteOrNoteName === 'number') { // MIDI note number
+        if (typeof midiNoteOrNoteName === 'number') { 
             freq = Tone.Frequency(midiNoteOrNoteName, "midi").toFrequency();
             noteNameToLog = Tone.Frequency(midiNoteOrNoteName, "midi").toNote();
-        } else if (typeof midiNoteOrNoteName === 'string') { // Note name like "C4" or "slice-0" or "pad-0"
+        } else if (typeof midiNoteOrNoteName === 'string') { 
             noteNameToLog = midiNoteOrNoteName;
             if (noteNameToLog.startsWith('slice-') || noteNameToLog.startsWith('pad-')) {
                 // Handled by triggerNotePlayback based on noteIdentifier string
@@ -561,55 +561,46 @@ export class Track {
 
 
         if (this.type === 'Synth' && this.instrument && !this.instrument.disposed && typeof this.instrument.triggerRelease === 'function') {
-            this.instrument.triggerRelease(freq, Tone.now() + 0.05);
+             this.instrument.triggerRelease(freq, Tone.now() + 0.05); 
         } else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed && typeof this.toneSampler.triggerRelease === 'function' && this.instrumentSamplerIsPolyphonic) {
-            this.toneSampler.triggerRelease(freq, Tone.now() + 0.05);
+             this.toneSampler.triggerRelease(freq, Tone.now() + 0.05);
         } else if (this.type === 'Sampler' && !this.slicerIsPolyphonic && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed) {
-            this.slicerMonoEnvelope.triggerRelease(Tone.now() + 0.01);
+             this.slicerMonoEnvelope.triggerRelease(Tone.now() + 0.01);
         }
-        // For polyphonic sampler slices and drum pads, release is often handled by their envelope within triggerNotePlayback or is one-shot.
     }
 
-    dispose() {
-        console.log(`[Track ${this.id}] Disposing track: ${this.name}`);
-        if (this.sequence && !this.sequence.disposed) { this.sequence.stop(); this.sequence.clear(); this.sequence.dispose(); }
-        
-        if (this.instrument && !this.instrument.disposed) { 
-            if (this.type === 'Sampler' && this.slicerIsPolyphonic) { 
-                this.instrument.dispose(); 
-            } else { 
-                this.instrument.dispose();
+    async fullyInitializeAudioResources() {
+        console.log(`[Track ${this.id}] fullyInitializeAudioResources called for type: ${this.type}`);
+        if (!this.gainNode || this.gainNode.disposed) { 
+            await this.initializeAudioNodes(); 
+        }
+
+        if (this.type === 'Synth') {
+            await this.initializeInstrument();
+        } else if (this.type === 'Sampler') {
+            if (this.samplerAudioData && (this.samplerAudioData.dbKey || this.samplerAudioData.originalFileName)) { 
+                 await this.loadSamplerAudio(); 
             }
-        }
-        this.instrument = null;
+            this.setupSlicerMonoNodes(); 
+        } else if (this.type === 'DrumSampler') {
+            await this.initializeDrumPadPlayers();
+             if (this.drumPadGainNode && !this.drumPadGainNode.disposed) this.drumPadGainNode.dispose();
+             this.drumPadGainNode = new Tone.Gain(); 
+             this.drumPadPlayers.forEach(player => {
+                 if (player && !player.disposed) player.connect(this.drumPadGainNode);
+             });
 
-        if (this.toneSampler && !this.toneSampler.disposed) { this.toneSampler.dispose(); this.toneSampler = null; }
-        this.disposeSlicerMonoNodes();
-        if (this.drumPadPlayers) {
-            this.drumPadPlayers.forEach(player => { if (player && !player.disposed) player.dispose(); });
-            this.drumPadPlayers = [];
-        }
-        if (this.drumPadGainNode && !this.drumPadGainNode.disposed) { this.drumPadGainNode.dispose(); this.drumPadGainNode = null; }
-        
-        this.activeEffects.forEach(effect => { if (effect.toneNode && !effect.toneNode.disposed) effect.toneNode.dispose(); });
-        if (this.gainNode && !this.gainNode.disposed) { this.gainNode.dispose(); }
-        if (this.trackMeter && !this.trackMeter.disposed) { this.trackMeter.dispose(); }
-
-        if (this.inspectorWindow && typeof this.inspectorWindow.close === 'function') { this.inspectorWindow.close(true); this.inspectorWindow = null; }
-        if (this.effectsRackWindow && typeof this.effectsRackWindow.close === 'function') { this.effectsRackWindow.close(true); this.effectsRackWindow = null; }
-        if (this.sequencerWindow && typeof this.sequencerWindow.close === 'function') { this.sequencerWindow.close(true); this.sequencerWindow = null; }
-
-        if (this.audioBuffer && !this.audioBuffer.disposed) { this.audioBuffer.dispose(); this.audioBuffer = null; }
-        if (this.drumSamplerPads) this.drumSamplerPads.forEach(p => {
-            if (p.audioBuffer && !p.audioBuffer.disposed) p.audioBuffer.dispose();
-            p.audioBuffer = null;
-        });
-        if (this.instrumentSamplerSettings && this.instrumentSamplerSettings.audioBuffer && !this.instrumentSamplerSettings.audioBuffer.disposed) {
-            this.instrumentSamplerSettings.audioBuffer.dispose();
-            this.instrumentSamplerSettings.audioBuffer = null;
+        } else if (this.type === 'InstrumentSampler') {
+             if (this.instrumentSamplerSettings && (this.instrumentSamplerSettings.dbKey || this.instrumentSamplerSettings.originalFileName)) {
+                 await this.loadInstrumentSamplerAudio();
+             } else {
+                this.setupToneSampler(); 
+             }
         }
 
-        console.log(`[Track ${this.id}] Finished disposing track: ${this.name}`);
+        this.rebuildEffectChain(); 
+        this.initializeToneSequence();
+        console.log(`[Track ${this.id}] fullyInitializeAudioResources finished.`);
     }
     
     async initializeAudioNodes() { 
@@ -670,6 +661,7 @@ export class Track {
         } else {
             this.samplerAudioData.status = 'empty';
         }
+        this.rebuildEffectChain();
     }
 
     async initializeDrumPadPlayers() { 
