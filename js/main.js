@@ -14,7 +14,7 @@ import {
     captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject,
     loadProject, handleProjectFileLoad, exportToWav, getUndoStack,
     getArmedTrackId, getSoloedTrackId, isTrackRecording, setActiveSequencerTrackId, getActiveSequencerTrackId,
-    setRecordingTrackId, setIsRecording // Added missing setters that state.js exports
+    setRecordingTrackId, setIsRecording
 } from './state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
@@ -28,7 +28,8 @@ import {
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep, drawWaveform,
     drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
     renderEffectsList, renderEffectControls, createKnob,
-    updateSequencerCellUI
+    updateSequencerCellUI,
+    openMasterEffectsRackWindow // <<< THIS LINE WAS UNCOMMENTED
 } from './ui.js';
 
 console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored)");
