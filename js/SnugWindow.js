@@ -327,53 +327,57 @@ export class SnugWindow {
             }
         });
 
-        // --- NEW CONTEXT MENU LOGIC FOR TASKBAR BUTTON ---
+        // --- NEW CONTEXT MENU LOGIC FOR TASKBAR BUTTON (WITH DEBUG LOGS) ---
         this.taskbarButton.addEventListener('contextmenu', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            console.log(`[SnugWindow - TaskbarButton Context] Right-click on taskbar button for window ID: ${this.id}`);
+            console.log(`[SnugWindow - TaskbarButton Context] Right-click on taskbar button for window ID: ${this.id}`, this); // Log `this`
 
             const menuItems = [];
+            console.log(`[SnugWindow - TaskbarButton Context] Initial menuItems array created for ${this.id}`);
 
             if (this.isMinimized) {
                 menuItems.push({ label: "Restore", action: () => this.restore() });
             } else {
                 menuItems.push({ label: "Minimize", action: () => this.minimize() });
             }
+            console.log(`[SnugWindow - TaskbarButton Context] After min/restore:`, menuItems);
 
-            if (this.options.resizable) { // Assuming maximize is tied to resizable
+
+            if (this.options.resizable) {
                 menuItems.push({
                     label: this.isMaximized ? "Restore Down" : "Maximize",
                     action: () => this.toggleMaximize()
                 });
             }
+            console.log(`[SnugWindow - TaskbarButton Context] After max/restore down:`, menuItems);
+
 
             if (this.options.closable) {
                 menuItems.push({ label: "Close", action: () => this.close() });
             }
+            console.log(`[SnugWindow - TaskbarButton Context] After close:`, menuItems);
 
-            // Check if it's a track-specific window to add more options
+
             let trackId = null;
-            const parts = this.id.split('-'); // e.g., "trackInspector-1"
-            // Ensure the ID format matches what we expect for track-specific windows
-            if (parts.length > 1 && 
-                (this.id.startsWith('trackInspector-') || 
-                 this.id.startsWith('effectsRack-') || 
-                 this.id.startsWith('sequencerWin-'))) {
-                const idPart = parts[parts.length - 1]; // Get the last part
+            const parts = this.id.split('-');
+            if (parts.length > 1 && (this.id.startsWith('trackInspector-') || this.id.startsWith('effectsRack-') || this.id.startsWith('sequencerWin-'))) {
+                const idPart = parts[parts.length - 1];
                 if (!isNaN(parseInt(idPart))) {
                     trackId = parseInt(idPart);
                 }
             }
+            console.log(`[SnugWindow - TaskbarButton Context] Parsed trackId: ${trackId} from windowId: ${this.id}`);
             
             let currentTrack = null;
             if (trackId !== null && typeof window.getTrackById === 'function') {
                  currentTrack = window.getTrackById(trackId);
+                 console.log(`[SnugWindow - TaskbarButton Context] Fetched currentTrack:`, currentTrack ? currentTrack.name : 'Not Found');
             }
 
-            if (currentTrack) { // Only add these if the track actually exists
+
+            if (currentTrack) {
                 menuItems.push({ separator: true });
-                // Only add "Open Inspector" if this window isn't already the inspector for this track
                 if (!this.id.startsWith('trackInspector-') && typeof window.handleOpenTrackInspector === 'function') {
                     menuItems.push({
                         label: "Open Inspector",
@@ -393,11 +397,13 @@ export class SnugWindow {
                     });
                 }
             }
+            console.log(`[SnugWindow - TaskbarButton Context] Final menuItems before calling createContextMenu:`, menuItems);
             
             if (typeof window.createContextMenu === 'function') {
+                console.log(`[SnugWindow - TaskbarButton Context] Calling window.createContextMenu for ${this.id}`);
                 window.createContextMenu(event, menuItems);
             } else {
-                console.error("[SnugWindow] window.createContextMenu function is not available. Ensure it's globally exposed from utils.js via main.js.");
+                console.error("[SnugWindow - TaskbarButton Context] window.createContextMenu function is NOT available.");
             }
         });
         // --- END OF NEW CONTEXT MENU LOGIC ---
