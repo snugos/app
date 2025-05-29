@@ -1,7 +1,10 @@
-// js/effectsRegistry.js - Definitions for modular effects and synth engines
+// js/effectsRegistry.js - Definitions for modular effects
 
+// Note: synthEngineControlDefinitions was moved here from ui.js in the original code,
+// but it's more of a UI concern. For now, keeping it here as per original structure.
+// Ideally, this would be in a UI-specific constants/definitions file if it's only for UI.
 export const synthEngineControlDefinitions = {
-    MonoSynth: [ 
+    MonoSynth: [
         { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
         { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sawtooth', path: 'oscillator.type' },
         { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
@@ -9,8 +12,8 @@ export const synthEngineControlDefinitions = {
         { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.9, decimals: 2, path: 'envelope.sustain' },
         { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
         { idPrefix: 'filtType', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', path: 'filter.type' },
-        { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' }, 
-        { idPrefix: 'filtQ', label: 'Filt Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'filter.Q.value' }, 
+        { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' },
+        { idPrefix: 'filtQ', label: 'Filt Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'filter.Q.value' },
         { idPrefix: 'filtEnvAttack', label: 'F.Atk', type: 'knob', min:0.001, max:2, step:0.001, defaultValue:0.06, decimals:3, path:'filterEnvelope.attack'},
         { idPrefix: 'filtEnvDecay', label: 'F.Dec', type: 'knob', min:0.01, max:2, step:0.01, defaultValue:0.2, decimals:2, path:'filterEnvelope.decay'},
         { idPrefix: 'filtEnvSustain', label: 'F.Sus', type: 'knob', min:0, max:1, step:0.01, defaultValue:0.5, decimals:2, path:'filterEnvelope.sustain'},
@@ -60,7 +63,7 @@ export const AVAILABLE_EFFECTS = {
         displayName: 'Bit Crusher',
         toneClass: 'BitCrusher',
         params: [
-            { key: 'bits', label: 'Bits', type: 'knob', min: 1, max: 16, step: 1, defaultValue: 4, decimals: 0, isSignal: true },
+            { key: 'bits', label: 'Bits', type: 'knob', min: 1, max: 16, step: 1, defaultValue: 4, decimals: 0, isSignal: true }, // Note: Tone.js BitCrusher bits is a Signal or number, not an AudioParam.
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
         ]
     },
@@ -90,7 +93,7 @@ export const AVAILABLE_EFFECTS = {
         displayName: 'Distortion',
         toneClass: 'Distortion',
         params: [
-            { key: 'distortion', label: 'Amount', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.4, decimals: 2, isSignal: false },
+            { key: 'distortion', label: 'Amount', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.4, decimals: 2, isSignal: false }, // This is a number, not an AudioParam
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
             { key: 'oversample', label: 'Oversample', type: 'select', options: ['none', '2x', '4x'], defaultValue: 'none', isSignal: false }
         ]
@@ -109,7 +112,7 @@ export const AVAILABLE_EFFECTS = {
         toneClass: 'Freeverb',
         params: [
             { key: 'roomSize', label: 'Room Size', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.7, decimals: 2, isSignal: true },
-            { key: 'dampening', label: 'Dampening', type: 'knob', min: 0, max: 10000, step: 100, defaultValue: 3000, decimals: 0, displaySuffix: 'Hz', isSignal: true },
+            { key: 'dampening', label: 'Dampening', type: 'knob', min: 0, max: 10000, step: 100, defaultValue: 3000, decimals: 0, displaySuffix: 'Hz', isSignal: true }, // This is a Signal in Tone.js
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
         ]
     },
@@ -134,10 +137,10 @@ export const AVAILABLE_EFFECTS = {
         toneClass: 'Phaser',
         params: [
             { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 0.5, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'octaves', label: 'Octaves', type: 'knob', min: 0, max: 8, step: 0.1, defaultValue: 3, decimals: 1, isSignal: false }, 
-            { key: 'stages', label: 'Stages', type: 'knob', min: 0, max: 12, step: 1, defaultValue: 10, decimals: 0, isSignal: false }, 
+            { key: 'octaves', label: 'Octaves', type: 'knob', min: 0, max: 8, step: 0.1, defaultValue: 3, decimals: 1, isSignal: false },
+            { key: 'stages', label: 'Stages', type: 'knob', min: 0, max: 12, step: 1, defaultValue: 10, decimals: 0, isSignal: false },
             { key: 'Q', label: 'Q', type: 'knob', min: 0, max: 20, step: 0.1, defaultValue: 10, decimals: 1, isSignal: true },
-            { key: 'baseFrequency', label: 'Base Freq', type: 'knob', min: 20, max: 2000, step: 10, defaultValue: 350, decimals: 0, displaySuffix: 'Hz', isSignal: false }, 
+            { key: 'baseFrequency', label: 'Base Freq', type: 'knob', min: 20, max: 2000, step: 10, defaultValue: 350, decimals: 0, displaySuffix: 'Hz', isSignal: false },
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
         ]
     },
@@ -145,7 +148,7 @@ export const AVAILABLE_EFFECTS = {
         displayName: 'Ping Pong Delay',
         toneClass: 'PingPongDelay',
         params: [
-            { key: 'delayTime', label: 'Time', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true },
+            { key: 'delayTime', label: 'Time', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true }, // This is a Signal or Time
             { key: 'feedback', label: 'Feedback', type: 'knob', min: 0, max: 0.99, step: 0.01, defaultValue: 0.2, decimals: 2, isSignal: true },
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
         ]
@@ -154,18 +157,18 @@ export const AVAILABLE_EFFECTS = {
         displayName: 'Pitch Shift',
         toneClass: 'PitchShift',
         params: [
-            { key: 'pitch', label: 'Pitch', type: 'knob', min: -24, max: 24, step: 1, defaultValue: 0, decimals: 0, displaySuffix: 'st', isSignal: false }, 
-            { key: 'windowSize', label: 'Window', type: 'knob', min: 0.03, max: 0.1, step: 0.001, defaultValue: 0.1, decimals: 3, displaySuffix: 's', isSignal: false }, 
+            { key: 'pitch', label: 'Pitch', type: 'knob', min: -24, max: 24, step: 1, defaultValue: 0, decimals: 0, displaySuffix: 'st', isSignal: false },
+            { key: 'windowSize', label: 'Window', type: 'knob', min: 0.03, max: 0.1, step: 0.001, defaultValue: 0.1, decimals: 3, displaySuffix: 's', isSignal: false },
             { key: 'feedback', label: 'Feedback', type: 'knob', min: 0, max: 0.99, step: 0.01, defaultValue: 0, decimals: 2, isSignal: true },
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
         ]
     },
-    Reverb: { 
+    Reverb: {
         displayName: 'Reverb (Algorithmic)',
         toneClass: 'Reverb',
         params: [
-            { key: 'decay', label: 'Decay', type: 'knob', min: 0.001, max: 20, step: 0.01, defaultValue: 1.5, decimals: 2, displaySuffix: 's', isSignal: false },
-            { key: 'preDelay', label: 'PreDelay', type: 'knob', min: 0, max: 1, step: 0.001, defaultValue: 0.01, decimals: 3, displaySuffix: 's', isSignal: false }, 
+            { key: 'decay', label: 'Decay', type: 'knob', min: 0.001, max: 20, step: 0.01, defaultValue: 1.5, decimals: 2, displaySuffix: 's', isSignal: false }, // This is a number
+            { key: 'preDelay', label: 'PreDelay', type: 'knob', min: 0, max: 1, step: 0.001, defaultValue: 0.01, decimals: 3, displaySuffix: 's', isSignal: false }, // This is a number
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
         ]
     },
@@ -183,7 +186,7 @@ export const AVAILABLE_EFFECTS = {
         params: [
             { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 40, step: 0.1, defaultValue: 10, decimals: 1, displaySuffix: 'Hz', isSignal: true },
             { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-            { key: 'spread', label: 'Spread', type: 'knob', min: 0, max: 180, step: 1, defaultValue: 180, decimals: 0, displaySuffix: '°', isSignal: false }, 
+            { key: 'spread', label: 'Spread', type: 'knob', min: 0, max: 180, step: 1, defaultValue: 180, decimals: 0, displaySuffix: '°', isSignal: false },
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
             { key: 'type', label: 'Waveform', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle'], defaultValue: 'sine', isSignal: false },
         ]
@@ -192,9 +195,9 @@ export const AVAILABLE_EFFECTS = {
         displayName: 'Vibrato',
         toneClass: 'Vibrato',
         params: [
-            { key: 'maxDelay', label: 'Max Delay', type: 'knob', min: 0, max: 0.01, step: 0.0001, defaultValue: 0.005, decimals: 4, displaySuffix: 's', isSignal: false }, 
+            { key: 'maxDelay', label: 'Max Delay', type: 'knob', min: 0, max: 0.01, step: 0.0001, defaultValue: 0.005, decimals: 4, displaySuffix: 's', isSignal: false },
             { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 5, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: true },
+            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: true }, // This is a NormalRange Signal
             { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
             { key: 'type', label: 'Waveform', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle'], defaultValue: 'sine', isSignal: false },
         ]
@@ -206,8 +209,8 @@ export const AVAILABLE_EFFECTS = {
             { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -24, decimals: 0, displaySuffix: 'dB', isSignal: true },
             { key: 'ratio', label: 'Ratio', type: 'knob', min: 1, max: 20, step: 0.1, defaultValue: 12, decimals: 1, isSignal: true },
             { key: 'knee', label: 'Knee', type: 'knob', min: 0, max: 40, step: 1, defaultValue: 30, decimals: 0, displaySuffix: 'dB', isSignal: true },
-            { key: 'attack', label: 'Attack', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.003, decimals: 3, displaySuffix: 's', isSignal: true },
-            { key: 'release', label: 'Release', type: 'knob', min: 0.01, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true },
+            { key: 'attack', label: 'Attack', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.003, decimals: 3, displaySuffix: 's', isSignal: true }, // Time value
+            { key: 'release', label: 'Release', type: 'knob', min: 0.01, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true }, // Time value
         ]
     },
     EQ3: {
@@ -227,7 +230,7 @@ export const AVAILABLE_EFFECTS = {
         params: [
             { key: 'type', label: 'Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', isSignal: false },
             { key: 'frequency', label: 'Frequency', type: 'knob', min: 10, max: 20000, step: 1, defaultValue: 1000, decimals: 0, displaySuffix: 'Hz', isSignal: true },
-            { key: 'rolloff', label: 'Rolloff', type: 'select', options: [-12, -24, -48, -96], defaultValue: -12, isSignal: false }, 
+            { key: 'rolloff', label: 'Rolloff', type: 'select', options: [-12, -24, -48, -96], defaultValue: -12, isSignal: false },
             { key: 'Q', label: 'Q', type: 'knob', min: 0.0001, max: 100, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
             { key: 'gain', label: 'Gain (Shelf/Peak)', type: 'knob', min: -40, max: 40, step: 0.5, defaultValue: 0, decimals: 1, displaySuffix: 'dB', isSignal: true },
         ]
@@ -236,21 +239,21 @@ export const AVAILABLE_EFFECTS = {
         displayName: 'Gate',
         toneClass: 'Gate',
         params: [
-            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -40, decimals: 0, displaySuffix: 'dB', isSignal: false },
-            { key: 'smoothing', label: 'Smoothing', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: false },
+            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -40, decimals: 0, displaySuffix: 'dB', isSignal: false }, // This is Decibels or AudioRange
+            { key: 'smoothing', label: 'Smoothing', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: false }, // This is Time
         ]
     },
     Limiter: {
         displayName: 'Limiter',
         toneClass: 'Limiter',
         params: [
-            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -12, decimals: 0, displaySuffix: 'dB', isSignal: true },
+            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -12, decimals: 0, displaySuffix: 'dB', isSignal: true }, // This is Decibels
         ]
     },
     Mono: {
         displayName: 'Mono',
         toneClass: 'Mono',
-        params: [] 
+        params: []
     },
 };
 
@@ -264,11 +267,25 @@ export function createEffectInstance(effectType, initialParams = {}) {
     const paramsForInstance = {};
     if (definition.params) {
         definition.params.forEach(pDef => {
-            const valueToUse = initialParams.hasOwnProperty(pDef.key) ? initialParams[pDef.key] : pDef.defaultValue;
-            const keys = pDef.key.split('.');
+            // Correctly retrieve nested initialParams if pDef.key is dot-separated
+            let valueToUse;
+            const pathKeys = pDef.key.split('.');
+            let tempInitialParam = initialParams;
+            let paramFoundInInitial = true;
+            for (const key of pathKeys) {
+                if (tempInitialParam && typeof tempInitialParam === 'object' && tempInitialParam.hasOwnProperty(key)) {
+                    tempInitialParam = tempInitialParam[key];
+                } else {
+                    paramFoundInInitial = false;
+                    break;
+                }
+            }
+            valueToUse = paramFoundInInitial ? tempInitialParam : pDef.defaultValue;
+
+
             let currentLevel = paramsForInstance;
-            keys.forEach((key, index) => {
-                if (index === keys.length - 1) {
+            pathKeys.forEach((key, index) => {
+                if (index === pathKeys.length - 1) {
                     currentLevel[key] = valueToUse;
                 } else {
                     currentLevel[key] = currentLevel[key] || {};
@@ -277,22 +294,25 @@ export function createEffectInstance(effectType, initialParams = {}) {
             });
         });
     }
-    if (initialParams.wet !== undefined && !paramsForInstance.hasOwnProperty('wet') && definition.params.some(p => p.key === 'wet')) {
+
+    // Ensure 'wet' is included if it's in initialParams but not explicitly in definition.params (though it should be)
+    if (initialParams.hasOwnProperty('wet') && !paramsForInstance.hasOwnProperty('wet') && definition.params.some(p => p.key === 'wet')) {
          paramsForInstance.wet = initialParams.wet;
     }
 
 
     try {
         const instance = new Tone[definition.toneClass](paramsForInstance);
-        console.log(`[EffectsRegistry] Created ${effectType} with params:`, JSON.parse(JSON.stringify(paramsForInstance)), "Instance:", instance);
+        // console.log(`[EffectsRegistry] Created ${effectType} with params:`, JSON.parse(JSON.stringify(paramsForInstance)), "Instance:", instance);
         return instance;
     } catch (e) {
         console.error(`Error instantiating Tone.${definition.toneClass} with params:`, paramsForInstance, e);
+        // Fallback: try creating with no params and then .set()
         try {
             const instance = new Tone[definition.toneClass]();
             if (typeof instance.set === 'function') {
                 instance.set(paramsForInstance);
-            } else { 
+            } else { // Manual assignment for deeply nested params if .set() is not robust enough or for non-signal params
                 for (const key in paramsForInstance) {
                     if (Object.hasOwnProperty.call(paramsForInstance, key)) {
                          const value = paramsForInstance[key];
@@ -303,16 +323,16 @@ export function createEffectInstance(effectType, initialParams = {}) {
                              if (!target) break;
                          }
                          if (target && typeof target[keys[keys.length-1]] !== 'undefined') {
-                              if (target[keys[keys.length-1]] && typeof target[keys[keys.length-1]].value !== 'undefined') {
+                              if (target[keys[keys.length-1]] && typeof target[keys[keys.length-1]].value !== 'undefined' && pDef.isSignal) { // Check if it's a signal
                                  target[keys[keys.length-1]].value = value;
-                              } else {
+                              } else { // Direct assignment for non-signal properties or complex objects
                                  target[keys[keys.length-1]] = value;
                               }
                          }
                     }
                 }
             }
-            console.log(`[EffectsRegistry] Fallback created ${effectType}, then set params. Instance:`, instance);
+            // console.log(`[EffectsRegistry] Fallback created ${effectType}, then set params. Instance:`, instance);
             return instance;
         } catch (e2) {
             console.error(`Fallback instantiation for Tone.${definition.toneClass} also failed:`, e2);
