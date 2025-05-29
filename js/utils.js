@@ -105,30 +105,31 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
 
     let currentFileText = 'Drag & Drop Audio File or <br>';
     let relinkButtonHTML = '';
-    let statusClass = ''; // This class (.drop-zone-missing, .drop-zone-error, .drop-zone-loading) is from your existing style.css
+    let statusClass = '';
 
     if (existingAudioData) {
         if (existingAudioData.status === 'loaded' && existingAudioData.originalFileName) {
             currentFileText = `Loaded: ${existingAudioData.originalFileName.substring(0,20)}${existingAudioData.originalFileName.length > 20 ? '...' : ''}<br>`;
         } else if (existingAudioData.status === 'missing' || existingAudioData.status === 'missing_db') {
             currentFileText = `Missing: ${existingAudioData.originalFileName || 'Unknown File'}<br>`;
-            statusClass = 'drop-zone-missing'; // This class is from your style.css
-            relinkButtonHTML = `<button class="drop-zone-button drop-zone-button-yellow">Relink</button>`;
+            statusClass = 'drop-zone-missing';
+            relinkButtonHTML = `<button class="drop-zone-relink-button text-xs bg-yellow-500 hover:bg-yellow-600 text-black py-0.5 px-1 rounded mt-1">Relink</button>`;
         } else if (existingAudioData.status === 'error') {
             currentFileText = `Error Loading: ${existingAudioData.originalFileName || 'Unknown File'}<br>`;
-            statusClass = 'drop-zone-error'; // This class is from your style.css
-            relinkButtonHTML = `<button class="drop-zone-button drop-zone-button-red">Retry Load</button>`;
+            statusClass = 'drop-zone-error';
+            relinkButtonHTML = `<button class="drop-zone-relink-button text-xs bg-red-500 hover:bg-red-600 text-white py-0.5 px-1 rounded mt-1">Retry Load</button>`;
         } else if (existingAudioData.status === 'loading') {
              currentFileText = `Loading: ${existingAudioData.originalFileName || 'Sample'}...<br>`;
-             statusClass = 'drop-zone-loading'; // This class is from your style.css
+             statusClass = 'drop-zone-loading';
         }
     }
+
 
     return `
         <div class="drop-zone ${statusClass}" id="${dropZoneId}" ${dataAttributes}>
             ${currentFileText}
-            <label for="${inputId}" class="drop-zone-upload-label">Click to Upload</label>
-            <input type="file" id="${inputId}" accept="audio/*" class="utils-hidden drop-zone-file-input">
+            <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Click to Upload</label>
+            <input type="file" id="${inputId}" accept="audio/*" class="hidden">
             ${relinkButtonHTML}
         </div>`.trim();
 }
@@ -255,3 +256,4 @@ export function bbsTimeToSeconds(bbsString) {
         return null; // Parsing failed
     }
 }
+
