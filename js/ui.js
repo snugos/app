@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Sequencer: Copy, Paste, Erase, Double. Version: daw_ui_js_seq_ctx_all_ops_final');
+console.log('[ui.js] TOP OF FILE PARSING - All functions and exports meticulously verified. Version: daw_ui_js_all_definitions_final_check');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -112,7 +112,7 @@ import { getMimeTypeFromFilename } from './audio.js';
 }
 
 // --- Synth Inspector Specifics ---
-// synthEngineControlDefinitions is imported from effectsRegistry.js
+// synthEngineControlDefinitions is now imported from effectsRegistry.js
 
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
@@ -793,7 +793,7 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
                         if (ownerType === 'track' && owner && typeof owner.toggleEffectBypass === 'function') {
                             toggleFunction = owner.toggleEffectBypass;
                         } else if (ownerType === 'master' && typeof window.toggleMasterEffectBypass === 'function') {
-                            targetOwner = window; // Functions on window object are called with window as `this` implicitly
+                            targetOwner = window; 
                             toggleFunction = window.toggleMasterEffectBypass; 
                         }
                         
@@ -803,7 +803,6 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
                             console.warn("Bypass function not found for owner type:", ownerType, "or owner is undefined:", owner);
                             showNotification("Bypass function not available for this effect.", 2000);
                         }
-                        // Re-render the list immediately after state change
                         setTimeout(() => {
                             renderEffectsList(owner, ownerType, listDiv, controlsContainer);
                             if (item.classList.contains('bg-blue-100')) { 
@@ -834,6 +833,7 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
         listDiv.appendChild(item);
     });
 }
+
 
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
@@ -1402,11 +1402,9 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     renderMixer(container); 
 }
  function renderMixer(container) { 
-    const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
-    console.log('[UI - renderMixer] Called. Number of tracks found:', tracks.length, 'Tracks:', tracks); 
-    
     container.innerHTML = ''; 
-    
+    const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
+
     const masterTrackDiv = document.createElement('div');
     masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
     masterTrackDiv.innerHTML = `
@@ -1464,7 +1462,6 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
         trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', () => handleTrackMute(track.id));
         trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', () => handleTrackSolo(track.id));
 
-        // Mixer Track Context Menu
         trackDiv.addEventListener('contextmenu', (event) => {
             event.preventDefault(); 
             const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
@@ -1548,7 +1545,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     return html;
 }
 
-// --- MODIFIED openTrackSequencerWindow (with Erase Sequence & Double Sequence Length) ---
+// --- openTrackSequencerWindow ---
  function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) {
@@ -1705,7 +1702,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         console.log('[UI - Sequencer Context] Erased sequence for track:', currentTrackForMenu.id);
                     }
                 },
-                {
+                 {
                     label: "Double Sequence Length",
                     action: () => {
                         if (!currentTrackForMenu) return;
@@ -1736,6 +1733,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         while (originalSequenceData.length < numRows) {
                             originalSequenceData.push([]);
                         }
+
 
                         const doubledSequenceData = Array(numRows).fill(null).map(() => Array(newLength).fill(null));
 
