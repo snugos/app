@@ -414,7 +414,7 @@ function applySliceEdits(trackId) {
 
     const volumeKnobPlaceholder = winEl.querySelector(`#volumeKnob-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
-        const volumeKnob = createKnob({ // volumeKnob is defined here
+        const volumeKnob = createKnob({ 
             label: 'Volume', min: 0, max: 1.2, step: 0.01,
             initialValue: track.previousVolumeBeforeMute, 
             decimals: 2, trackRef: track,
@@ -423,7 +423,7 @@ function applySliceEdits(trackId) {
             }
         });
         volumeKnobPlaceholder.innerHTML = ''; 
-        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Corrected: use volumeKnob.element
+        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Corrected this line
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -1358,7 +1358,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 }
  function renderMixer(container) { 
     const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
-    console.log('[UI - renderMixer] Called. Number of tracks found:', tracks.length, 'Tracks:', tracks); //  ADDED LOG
+    console.log('[UI - renderMixer] Called. Number of tracks found:', tracks.length, 'Tracks:', tracks); 
     
     container.innerHTML = ''; 
     
