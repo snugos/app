@@ -10,7 +10,7 @@ window.masterEffectsChain = [];
 let masterGainNode = null; 
 window.masterGainNode = masterGainNode; 
 
-console.log("[Audio.js] Initializing. window.masterEffectsChain declared as (structure):", (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, toneNodeExists: !!e.toneNode})));
+console.log("[Audio.js] Initializing. window.masterEffectsChain declared as (structure):", (window.masterEffectsChain || []).map(e => ({id: e.id, type: e.type, params: e.params, isBypassed: e.isBypassed, toneNodeExists: !!e.toneNode})));
 
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
     console.log(`[Audio] initAudioContextAndMasterMeter called. isUserInitiated: ${isUserInitiated}, audioContextInitialized: ${audioContextInitialized}, Tone.context.state: ${Tone.context?.state}`);
@@ -123,6 +123,7 @@ export function rebuildMasterEffectChain() {
 
     (window.masterEffectsChain || []).forEach((effectWrapper, index) => {
         if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
+            // Apply bypass state when rebuilding chain
             if (effectWrapper.toneNode.wet && typeof effectWrapper.toneNode.wet.value === 'number') {
                  effectWrapper.toneNode.wet.value = effectWrapper.isBypassed ? 0 : (effectWrapper.storedWetValue !== undefined ? effectWrapper.storedWetValue : 1);
             }
@@ -187,7 +188,7 @@ export function rebuildMasterEffectChain() {
     }
 }
 
-function isUserActionPlaceholder(arg) { // Helper to check if arg is the placeholder
+function isUserActionPlaceholder(arg) { 
     return typeof arg === 'object' && arg !== null && arg._isUserActionPlaceholder === true;
 }
 
@@ -349,7 +350,6 @@ export function clearMasterEffects() {
         try { window.masterEffectsBusInput.disconnect(); } catch(e) {}
     }
     console.log("[Audio] Cleared master effects chain and disconnected master bus input.");
-    // Rebuild to connect master bus input directly to master gain if no effects are left
     rebuildMasterEffectChain(); 
 }
 
@@ -421,12 +421,11 @@ export function toggleMasterEffectBypass(effectId) {
         console.log(`[Audio] Master effect ${effectWrapper.type} ${effectWrapper.isBypassed ? 'bypassed' : 'enabled'}. Wet: ${effectWrapper.toneNode.wet ? effectWrapper.toneNode.wet.value : 'N/A'}, Stored: ${effectWrapper.storedWetValue}`);
         if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`${effectWrapper.isBypassed ? 'Bypass' : 'Enable'} master effect "${effectWrapper.type}"`);
         
-        // Update UI if master effects rack is open
         const masterRackWindow = window.openWindows['masterEffectsRack'];
         if (masterRackWindow && typeof window.renderEffectsList === 'function' && masterRackWindow.element) {
             const listDiv = masterRackWindow.element.querySelector(`#effectsList-master`);
             const controlsContainer = masterRackWindow.element.querySelector(`#effectControlsContainer-master`);
-            setTimeout(() => { // Allow state to propagate
+            setTimeout(() => { 
                 window.renderEffectsList(null, 'master', listDiv, controlsContainer);
                 const item = listDiv.querySelector(`.effect-item .effect-name[title*="${effectWrapper.type}"]`)?.closest('.effect-item');
                 if(item && item.classList.contains('bg-blue-100')) { 
@@ -507,15 +506,14 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
 
     if (!track.slicerIsPolyphonic) {
         if (!track.slicerMonoPlayer || track.slicerMonoPlayer.disposed) {
-            track.setupSlicerMonoNodes(); // This will create and chain them
+            track.setupSlicerMonoNodes(); 
             if(!track.slicerMonoPlayer) { console.warn("[Audio] Mono player not set up after setupSlicerMonoNodes."); return; }
-             if(track.audioBuffer && track.audioBuffer.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer.get(); // Use .get()
+             if(track.audioBuffer && track.audioBuffer.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer.get(); 
         }
         const player = track.slicerMonoPlayer; const env = track.slicerMonoEnvelope; const gain = track.slicerMonoGain;
 
-        // Connect the mono slicer output (gain) to the actual destination (start of effects or master bus)
         if (gain && !gain.disposed && actualDestination && !actualDestination.disposed) {
-            try { gain.disconnect(actualDestination); } catch(e){} // Disconnect first to avoid duplicates
+            try { gain.disconnect(actualDestination); } catch(e){} 
             gain.connect(actualDestination);
         } else {
             console.warn("[Audio] Mono slicer gain or destination invalid for connection.");
@@ -527,7 +525,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         
         player.buffer = track.audioBuffer.get(); 
         env.set(sliceData.envelope);
-        gain.gain.value = Tone.dbToGain(-6) + Tone.gainToDb(sliceData.volume * velocity); // Apply velocity, use dB for gain
+        gain.gain.value = Tone.dbToGain(-6) + Tone.gainToDb(sliceData.volume * velocity); 
         player.playbackRate = playbackRate; player.reverse = sliceData.reverse;
         player.loop = sliceData.loop; player.loopStart = sliceData.offset; player.loopEnd = sliceData.offset + sliceData.duration;
         
@@ -808,10 +806,9 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         padData.dbKey = dbKey; 
         padData.status = 'loaded';
         
-        track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer); // No .connect here, rebuildEffectChain handles drumPadGainNode
-        // track.drumPadPlayers[padIndex].volume.value = Tone.gainToDb(padData.volume || 0.7); // Volume applied at playback
-
-        track.rebuildEffectChain(); // Reconnect this player through the effects chain
+        track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer); 
+        // Connection to drumPadGainNode is handled in rebuildEffectChain or initializeDrumPadPlayers
+        track.rebuildEffectChain(); 
 
         showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1}.`, 2000);
         if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
@@ -873,7 +870,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
             if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
-                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey); // Find first empty pad by dbKey
+                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey); 
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; 
                 if (actualPadIndex === -1 || typeof actualPadIndex !== 'number') actualPadIndex = 0; 
             }
