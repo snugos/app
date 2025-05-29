@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - applySliceEdits Fix / Drum Knob Fix / Seq DOM Rework / Sound Browser Path Fix');
+console.log('[ui.js] TOP OF FILE PARSING - Ensuring all functions are correctly defined and exported.');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -467,7 +467,7 @@ function initializeSamplerSpecificControls(track, winEl) {
     if (typeof renderSamplePads === 'function') renderSamplePads(track);
     winEl.querySelector(`#applySliceEditsBtn-${track.id}`)?.addEventListener('click', () => {
         if(typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Apply Slice Edits for ${track.name}`);
-        applySliceEdits(track.id); // Call the defined function
+        applySliceEdits(track.id); 
     });
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
     if (canvas) {
@@ -1560,8 +1560,9 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     }
 
     const windowId = `sequencerWin-${trackId}`;
-    let currentSelectedStepCell = null; // To keep track of the DOM element
-    let selectedStepCoords = null;      // To store {row, col}
+    // Variables for step selection (kept within this function's scope or could be on track object)
+    let currentSelectedStepCellDOM = null; 
+    let selectedStepCoords = null; // {row, col}
 
     if (forceRedraw && window.openWindows[windowId]) {
         console.log(`[UI - SeqWindow] forceRedraw true for existing window ${windowId}. Closing it first to ensure content refresh.`);
@@ -1628,7 +1629,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout'); 
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls'); 
 
-        const sequencerContextMenuHandler = (event) => {
+        const sequencerContextMenuLogic = (event) => {
             event.preventDefault();
             event.stopPropagation();
         
@@ -1636,17 +1637,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             if (!currentTrackForMenu) {
                 console.error("[UI - Sequencer Context] Could not get current track for menu.");
                 return;
-            }
-        
-            const clickedCellElement = event.target.closest('.sequencer-step-cell');
-            let targetRow, targetCol;
-        
-            if (clickedCellElement) {
-                targetRow = parseInt(clickedCellElement.dataset.row);
-                targetCol = parseInt(clickedCellElement.dataset.col);
-                console.log(`[UI - Sequencer Context] Right-click on cell: Row ${targetRow}, Col ${targetCol} for track ID: ${track.id}`);
-            } else {
-                console.log(`[UI - Sequencer Context] Right-click on general area (controls/grid background) for track ID: ${track.id}`);
             }
         
             const menuItems = [
@@ -1657,9 +1647,9 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         const sequenceDataCopy = currentTrackForMenu.sequenceData ? JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData)) : [];
                         
                         window.clipboardData = {
-                            type: 'sequence', // For whole sequence
+                            type: 'sequence', 
                             sourceTrackType: currentTrackForMenu.type,
-                            data: sequenceDataCopy, // Use 'data' consistently
+                            data: sequenceDataCopy, 
                             sequenceLength: currentTrackForMenu.sequenceLength,
                         };
                         showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000);
@@ -1686,7 +1676,8 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
                         
                         if(typeof window.openTrackSequencerWindow === 'function'){
-                            window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
+                            console.log(`[UI - Sequencer Context] Forcing redraw of sequencer for track ${currentTrackForMenu.id} after paste.`);
+                            window.openTrackSequencerWindow(currentTrackForMenu.id, true, null); 
                         }
                         showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000);
                     },
@@ -1702,12 +1693,12 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         };
 
         if (grid) {
-            grid.addEventListener('contextmenu', sequencerContextMenuHandler);
+            grid.addEventListener('contextmenu', sequencerContextMenuLogic);
         } else {
             console.error(`[UI - openTrackSequencerWindow] Sequencer grid layout element not found for track ${track.id} to attach context menu.`);
         }
         if (controlsDiv) {
-            controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
+            controlsDiv.addEventListener('contextmenu', sequencerContextMenuLogic); // Also attach to controls div
         }  else {
             console.error(`[UI - openTrackSequencerWindow] Sequencer controls div element not found for track ${track.id} to attach context menu.`);
         }
@@ -1720,16 +1711,18 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                     const row = parseInt(targetCell.dataset.row);
                     const col = parseInt(targetCell.dataset.col);
 
-                    // Handle step activation toggle
-                    if (!track.sequenceData[row]) track.sequenceData[row] = Array(track.sequenceLength).fill(null);
-                    const currentStepData = track.sequenceData[row][col];
-                    const isActive = !(currentStepData && currentStepData.active);
+                    // Handle step activation toggle (this part remains for left-click)
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { // Ensure not a modified click if those are for other things
+                        if (!track.sequenceData[row]) track.sequenceData[row] = Array(track.sequenceLength).fill(null);
+                        const currentStepData = track.sequenceData[row][col];
+                        const isActive = !(currentStepData && currentStepData.active);
 
-                    if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
-                    track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
+                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
+                        track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
 
-                    if(typeof window.updateSequencerCellUI === 'function') {
-                        window.updateSequencerCellUI(targetCell, track.type, isActive);
+                        if(typeof window.updateSequencerCellUI === 'function') {
+                            window.updateSequencerCellUI(targetCell, track.type, isActive);
+                        }
                     }
                 }
             });
@@ -1754,7 +1747,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 // --- END MODIFIED openTrackSequencerWindow ---
 
-// ... (rest of ui.js, including renderSamplePads, updateSliceEditorUI, etc., remains the same) ...
+// ... (rest of the file, including renderSamplePads, updateSliceEditorUI, etc.) ...
 
 export {
     createKnob,
