@@ -1561,8 +1561,8 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 
     const windowId = `sequencerWin-${trackId}`;
     // Variables for step selection (kept within this function's scope or could be on track object)
-    let currentSelectedStepCellDOM = null; 
-    let selectedStepCoords = null; // {row, col}
+    // let currentSelectedStepCellDOM = null; // For future step-specific actions
+    // let selectedStepCoords = null;      // {row, col} For future step-specific actions
 
     if (forceRedraw && window.openWindows[windowId]) {
         console.log(`[UI - SeqWindow] forceRedraw true for existing window ${windowId}. Closing it first to ensure content refresh.`);
@@ -1629,7 +1629,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout'); 
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls'); 
 
-        const sequencerContextMenuLogic = (event) => {
+        const sequencerContextMenuHandler = (event) => {
             event.preventDefault();
             event.stopPropagation();
         
@@ -1693,12 +1693,12 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         };
 
         if (grid) {
-            grid.addEventListener('contextmenu', sequencerContextMenuLogic);
+            grid.addEventListener('contextmenu', sequencerContextMenuHandler);
         } else {
             console.error(`[UI - openTrackSequencerWindow] Sequencer grid layout element not found for track ${track.id} to attach context menu.`);
         }
-        if (controlsDiv) {
-            controlsDiv.addEventListener('contextmenu', sequencerContextMenuLogic); // Also attach to controls div
+        if (controlsDiv) { // Attach to controls div as well
+            controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
         }  else {
             console.error(`[UI - openTrackSequencerWindow] Sequencer controls div element not found for track ${track.id} to attach context menu.`);
         }
@@ -1711,8 +1711,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                     const row = parseInt(targetCell.dataset.row);
                     const col = parseInt(targetCell.dataset.col);
 
-                    // Handle step activation toggle (this part remains for left-click)
-                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { // Ensure not a modified click if those are for other things
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { 
                         if (!track.sequenceData[row]) track.sequenceData[row] = Array(track.sequenceLength).fill(null);
                         const currentStepData = track.sequenceData[row][col];
                         const isActive = !(currentStepData && currentStepData.active);
@@ -1747,7 +1746,60 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 // --- END MODIFIED openTrackSequencerWindow ---
 
-// ... (rest of the file, including renderSamplePads, updateSliceEditorUI, etc.) ...
+// ... (rest of ui.js, including renderSamplePads, updateSliceEditorUI, etc.) ...
+// Make sure the drawInstrumentWaveform function is defined:
+function drawInstrumentWaveform(track) { 
+    if (!track || !track.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer || !track.instrumentSamplerSettings.audioBuffer.loaded) {
+         if (track && track.instrumentWaveformCanvasCtx) { 
+            const canvas = track.instrumentWaveformCanvasCtx.canvas;
+            track.instrumentWaveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+             track.instrumentWaveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#334155' : '#e0e0e0';
+             track.instrumentWaveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+             track.instrumentWaveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0';
+             track.instrumentWaveformCanvasCtx.textAlign = 'center';
+             track.instrumentWaveformCanvasCtx.fillText('No audio loaded', canvas.width / 2, canvas.height / 2);
+        }
+        return;
+    }
+    const canvas = track.instrumentWaveformCanvasCtx.canvas;
+    const ctx = track.instrumentWaveformCanvasCtx;
+    const buffer = track.instrumentSamplerSettings.audioBuffer.get();
+    const data = buffer.getChannelData(0);
+    const step = Math.ceil(data.length / canvas.width);
+    const amp = canvas.height / 2;
+
+    ctx.fillStyle = canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = canvas.classList.contains('dark') ? '#34d399' : '#10b981'; 
+    ctx.beginPath();
+    ctx.moveTo(0, amp);
+    for (let i = 0; i < canvas.width; i++) {
+        let min = 1.0; let max = -1.0;
+        for (let j = 0; j < step; j++) {
+            const datum = data[(i * step) + j];
+            if (datum < min) min = datum;
+            if (datum > max) max = datum;
+        }
+        ctx.lineTo(i, (1 + min) * amp);
+        ctx.lineTo(i, (1 + max) * amp);
+    }
+    ctx.lineTo(canvas.width, amp);
+    ctx.stroke();
+
+    if (track.instrumentSamplerSettings.loop) {
+        const loopStartX = (track.instrumentSamplerSettings.loopStart / buffer.duration) * canvas.width;
+        const loopEndX = (track.instrumentSamplerSettings.loopEnd / buffer.duration) * canvas.width;
+        ctx.fillStyle = canvas.classList.contains('dark') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 255, 0, 0.2)';
+        ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, canvas.height);
+        ctx.strokeStyle = canvas.classList.contains('dark') ? 'rgba(52, 211, 153, 0.6)' : 'rgba(0,200,0,0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, canvas.height);
+        ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, canvas.height);
+        ctx.stroke();
+    }
+}
 
 export {
     createKnob,
@@ -1757,7 +1809,7 @@ export {
     initializeTypeSpecificInspectorControls, 
     applySliceEdits, 
     drawWaveform,
-    drawInstrumentWaveform,
+    drawInstrumentWaveform, // Ensure it's exported
     renderEffectsList,
     renderEffectControls, 
     openTrackEffectsRackWindow,
