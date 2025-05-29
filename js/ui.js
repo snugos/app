@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Erase Sequence. Version: daw_ui_js_erase_sequence_final');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Erase Sequence. Version: daw_ui_js_erase_sequence_final_final');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -423,7 +423,7 @@ function applySliceEdits(trackId) {
             }
         });
         volumeKnobPlaceholder.innerHTML = ''; 
-        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Corrected this line
+        volumeKnobPlaceholder.appendChild(volumeKnob.element); 
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -1680,6 +1680,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                     },
                     disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type))
                 }
+                // "Erase Sequence" and step-specific items would go here in the future
             ];
             
             if (typeof createContextMenu === 'function') {
@@ -1857,6 +1858,7 @@ function drawInstrumentWaveform(track) {
 }
 // --- END Waveform Drawing Functions ---
 
+// ... (Other UI functions like renderSamplePads, updateSliceEditorUI, etc. should be here)
 function renderSamplePads(track) { 
     const inspector = track.inspectorWindow?.element;
     if (!inspector || track.type !== 'Sampler') return;
@@ -1989,4 +1991,3 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
-
