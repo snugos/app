@@ -112,25 +112,23 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
             currentFileText = `Loaded: ${existingAudioData.originalFileName.substring(0,20)}${existingAudioData.originalFileName.length > 20 ? '...' : ''}<br>`;
         } else if (existingAudioData.status === 'missing' || existingAudioData.status === 'missing_db') {
             currentFileText = `Missing: ${existingAudioData.originalFileName || 'Unknown File'}<br>`;
-            statusClass = 'drop-zone-missing'; // CSS will style this based on .drop-zone-missing
-            relinkButtonHTML = `<button class="drop-zone-relink-button text-xs bg-yellow-500 hover:bg-yellow-600 text-black dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200 py-0.5 px-1 rounded mt-1">Relink</button>`;
+            statusClass = 'drop-zone-missing';
+            relinkButtonHTML = `<button class="drop-zone-relink-button text-xs bg-yellow-500 hover:bg-yellow-600 text-black py-0.5 px-1 rounded mt-1">Relink</button>`;
         } else if (existingAudioData.status === 'error') {
             currentFileText = `Error Loading: ${existingAudioData.originalFileName || 'Unknown File'}<br>`;
-            statusClass = 'drop-zone-error'; // CSS will style this
-            relinkButtonHTML = `<button class="drop-zone-relink-button text-xs bg-red-500 hover:bg-red-600 text-white dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-gray-200 py-0.5 px-1 rounded mt-1">Retry Load</button>`;
+            statusClass = 'drop-zone-error';
+            relinkButtonHTML = `<button class="drop-zone-relink-button text-xs bg-red-500 hover:bg-red-600 text-white py-0.5 px-1 rounded mt-1">Retry Load</button>`;
         } else if (existingAudioData.status === 'loading') {
              currentFileText = `Loading: ${existingAudioData.originalFileName || 'Sample'}...<br>`;
-             statusClass = 'drop-zone-loading'; // CSS will style this
+             statusClass = 'drop-zone-loading';
         }
     }
 
-    // For "Click to Upload", use text-gray-400 dark:text-gray-300 hover:text-gray-200 dark:hover:text-gray-100
-    // The style.css has specific styling for .drop-zone label, so Tailwind here is more of a fallback or can be harmonized.
-    // Let's ensure Tailwind uses grays for dark mode if those specific CSS rules are not present or overridden.
+
     return `
         <div class="drop-zone ${statusClass}" id="${dropZoneId}" ${dataAttributes}>
             ${currentFileText}
-            <label for="${inputId}" class="text-blue-600 hover:text-blue-800 dark:text-gray-400 dark:hover:text-gray-200 underline cursor-pointer">Click to Upload</label>
+            <label for="${inputId}" class="text-blue-600 hover:text-blue-800 underline cursor-pointer">Click to Upload</label>
             <input type="file" id="${inputId}" accept="audio/*" class="hidden">
             ${relinkButtonHTML}
         </div>`.trim();
@@ -160,13 +158,13 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         event.preventDefault();
         event.stopPropagation();
         dropZoneElement.classList.remove('dragover');
-
+        
         console.log(`[Utils] Drop event TRIGGERED on element ID: ${dropZoneElement.id}, Classes: ${dropZoneElement.className}. Dataset:`, JSON.parse(JSON.stringify(dropZoneElement.dataset)));
 
         const dzTrackId = dropZoneElement.dataset.trackId ? parseInt(dropZoneElement.dataset.trackId) : trackId;
         const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint;
         const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex;
-
+        
         let numericIndexForCallback = null;
         if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
             numericIndexForCallback = parseInt(dzPadSliceIndexStr);
@@ -182,7 +180,7 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             console.log("[Utils] Dropped JSON data (from sound browser):", soundDataString);
             try {
                 const soundData = JSON.parse(soundDataString);
-                if (loadSoundCallback) {
+                if (loadSoundCallback) { 
                     console.log(`[Utils] Calling loadSoundCallback for Sound Browser drop. Target index: ${numericIndexForCallback}`);
                     await loadSoundCallback(soundData, dzTrackId, dzTrackType, numericIndexForCallback);
                 } else {
@@ -258,3 +256,4 @@ export function bbsTimeToSeconds(bbsString) {
         return null; // Parsing failed
     }
 }
+
