@@ -256,3 +256,81 @@ export function bbsTimeToSeconds(bbsString) {
         return null; // Parsing failed
     }
 }
+
+// --- Context Menu Utility ---
+let activeContextMenu = null;
+
+export function createContextMenu(event, menuItems) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Remove any existing context menu
+    if (activeContextMenu) {
+        activeContextMenu.remove();
+        activeContextMenu = null;
+    }
+
+    const menu = document.createElement('div');
+    menu.id = 'snug-context-menu';
+    menu.className = 'context-menu'; // You'll style this in style.css
+    menu.style.position = 'fixed'; // Use fixed to avoid issues with scrolled containers
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
+    menu.style.zIndex = (window.highestZIndex || 100) + 100; // Ensure it's on top
+
+    const ul = document.createElement('ul');
+    menuItems.forEach(itemConfig => {
+        if (itemConfig.separator) {
+            const hr = document.createElement('hr');
+            hr.className = 'context-menu-separator';
+            ul.appendChild(hr);
+            return;
+        }
+
+        const li = document.createElement('li');
+        li.className = `context-menu-item ${itemConfig.disabled ? 'disabled' : ''}`;
+        li.textContent = itemConfig.label;
+        if (!itemConfig.disabled && typeof itemConfig.action === 'function') {
+            li.addEventListener('click', (e) => {
+                e.stopPropagation();
+                itemConfig.action();
+                if (activeContextMenu) activeContextMenu.remove();
+                activeContextMenu = null; // Ensure it's cleared
+            });
+        }
+        ul.appendChild(li);
+    });
+
+    menu.appendChild(ul);
+    document.body.appendChild(menu);
+    activeContextMenu = menu;
+
+    // Reposition if it overflows viewport
+    const menuRect = menu.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (menuRect.right > viewportWidth) {
+        menu.style.left = `${Math.max(0, viewportWidth - menuRect.width)}px`;
+    }
+    if (menuRect.bottom > viewportHeight) {
+        menu.style.top = `${Math.max(0, viewportHeight - menuRect.height)}px`;
+    }
+
+    // Listener to close the menu when clicking elsewhere
+    const closeListener = (e) => {
+        if (activeContextMenu && !menu.contains(e.target)) {
+            activeContextMenu.remove();
+            activeContextMenu = null;
+            document.removeEventListener('click', closeListener, { capture: true });
+            document.removeEventListener('contextmenu', closeListener, { capture: true }); // Close on another contextmenu event
+        }
+    };
+    // Use capture phase to catch clicks reliably
+    setTimeout(() => { // Timeout to prevent immediate close from the same click that opened it
+        document.addEventListener('click', closeListener, { capture: true });
+        document.addEventListener('contextmenu', closeListener, { capture: true });
+    }, 0);
+
+    return menu;
+}
