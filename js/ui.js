@@ -250,6 +250,15 @@ function buildSynthEngineControls(track, container, engineType) {
     });
 }
 
+// *** THIS IS THE NEWLY ADDED FUNCTION ***
+function initializeSynthSpecificControls(track, winEl) {
+    const engineType = track.synthEngineType || 'MonoSynth';
+    const container = winEl.querySelector(`#synthEngineControls-${track.id}`);
+    if (container) {
+        buildSynthEngineControls(track, container, engineType);
+    }
+}
+
 function initializeSamplerSpecificControls(track, winEl) {
     const dzContainerEl = winEl.querySelector(`#dropZoneContainer-${track.id}-sampler`);
     if (dzContainerEl) {
