@@ -14,10 +14,7 @@ const defaultWindowContentBg = '#282828'; // Or from CSS variables
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
-        console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`);
-        // console.log(`[SnugWindow ${id}] Initial options received:`, JSON.parse(JSON.stringify(options)));
-        // console.log(`[SnugWindow ${id}] appServices received:`, appServices ? Object.keys(appServices) : 'null');
-
+        // console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`); // Kept for debugging if needed
 
         this.id = id;
         this.title = title;
@@ -46,7 +43,6 @@ export class SnugWindow {
         let initialX = options.x;
         let initialY = options.y;
 
-        // window.openWindows is still used globally for cascading new windows
         const openWindowCount = (typeof window !== 'undefined' && window.openWindows) ? Object.keys(window.openWindows).length : 0;
         if (initialX === undefined || initialY === undefined) {
             const cascadeOffset = 20 + (openWindowCount % 10) * 25;
@@ -78,7 +74,6 @@ export class SnugWindow {
         this.element.style.width = `${this.options.width}px`;
         this.element.style.height = `${this.options.height}px`;
 
-        // window.highestZIndex is still managed globally
         if (typeof window.highestZIndex === 'undefined' || window.highestZIndex === null || isNaN(parseInt(window.highestZIndex))) {
             window.highestZIndex = 100;
         }
@@ -108,7 +103,6 @@ export class SnugWindow {
         this.element.appendChild(this.contentArea);
         desktopEl.appendChild(this.element);
 
-        // window.openWindows is still managed globally
         if (typeof window.openWindows !== 'object' || window.openWindows === null) {
             window.openWindows = {};
         }
@@ -135,15 +129,11 @@ export class SnugWindow {
         if (options.isMinimized) {
             this.minimize(true);
         }
-        // console.log(`[SnugWindow CONSTRUCTOR END] ID: ${id} successfully initialized.`);
     }
 
     _captureUndo(description) {
         if (this.appServices.captureStateForUndo) {
             this.appServices.captureStateForUndo(description);
-        } else if (typeof window !== 'undefined' && window.captureStateForUndo) { // Fallback, less ideal
-            console.warn(`[SnugWindow ${this.id}] captureStateForUndo called via window fallback.`);
-            window.captureStateForUndo(description);
         } else {
             console.warn(`[SnugWindow ${this.id}] captureStateForUndo service not available.`);
         }
