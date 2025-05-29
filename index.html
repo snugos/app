@@ -1,34 +1,45 @@
 <!DOCTYPE html>
-<html lang="en" class=dark>
+<html lang="en" class="dark"> {/* <--- Added dark class */}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SnugOS</title>
-    <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
+    {/* ... other favicons and meta tags ... */}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/lib/Tone.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script> <script src="js/lib/Tone.min.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css"> {/* Keep this for now, we'll empty it gradually */}
 
-    <link rel="stylesheet" href="style.css">
+    <style type="text/tailwindcss">
+        /* Tailwind customizations and @apply rules will go here */
+        @layer base {
+            /* Base styles can be defined here */
+        }
+
+        @layer components {
+            /* Component styles using @apply will go here */
+        }
+
+        @layer utilities {
+            /* Custom utility classes can be defined here */
+        }
+
+        /* You can also put plain CSS rules here if necessary for things
+           Tailwind doesn't easily handle with the CDN setup (e.g., very specific shadows) */
+    </style>
 </head>
-<body>
-    <div id="desktop">
-        </div>
+<body class="bg-neutral-900 text-neutral-200 font-sans text-sm m-0 overflow-hidden">
+    {/* Closest Tailwind defaults for body:
+        #101010 -> bg-neutral-900 (or bg-black, bg-zinc-900)
+        #e0e0e0 -> text-neutral-200 (or text-gray-200)
+        font-family will be inherited from style.css initially, or set via @layer base.
+        font-size: 14px -> text-sm
+    */}
+    <div id="desktop" class="w-screen h-screen overflow-hidden relative bg-neutral-900">
+        {/* bg-neutral-900 to match body */}
+    </div>
 
     <div id="taskbar">
         <button id="startButton">Start</button>
