@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence_length');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -311,7 +311,6 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     return html;
 }
 
-// Definition of applySliceEdits
 function applySliceEdits(trackId) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track || track.type !== 'Sampler') {
@@ -1551,7 +1550,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     return html;
 }
 
-// --- MODIFIED openTrackSequencerWindow ---
+// --- MODIFIED openTrackSequencerWindow (with Erase Sequence) ---
  function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) {
