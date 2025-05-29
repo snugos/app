@@ -2,7 +2,7 @@
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
-import { showNotification, showCustomModal, showConfirmationDialog } from './utils.js';
+import { showNotification, showCustomModal, showConfirmationDialog, createContextMenu } from './utils.js'; // Added createContextMenu here
 import {
     initializePrimaryEventListeners,
     setupMIDI,
@@ -46,7 +46,7 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob,
+    createKnob, // Assuming createKnob is also from ui.js, if not, adjust import
     openMasterEffectsRackWindow
 } from './ui.js';
 
@@ -186,7 +186,7 @@ window.handleOpenSequencer = handleOpenSequencer;
 
 // Assign attachGlobalControlEvents to window object here
 window.attachGlobalControlEvents = attachGlobalControlEvents;
-console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents); // ADDED THIS LOG
+console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents);
 
 window.selectMIDIInput = selectMIDIInput;
 
@@ -204,6 +204,9 @@ window.removeMasterEffect = removeMasterEffect;
 window.updateMasterEffectParam = updateMasterEffectParam;
 window.reorderMasterEffect = reorderMasterEffect;
 window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS;
+
+// Make createContextMenu globally available for SnugWindow or other modules if needed
+window.createContextMenu = createContextMenu; 
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -346,3 +349,4 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js)");
+
