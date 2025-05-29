@@ -1,6 +1,6 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
-import { showNotification, showConfirmationDialog } from './utils.js';
+import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js'; // Ensure createContextMenu is imported if not relying on window global
 import {
     getTracks, getTrackById, captureStateForUndo,
     setSoloedTrackId, getSoloedTrackId,
@@ -26,8 +26,8 @@ export function initializePrimaryEventListeners(appContext) {
         openGlobalControlsWindow, openMixerWindow,
         openMasterEffectsRackWindow,
         handleProjectFileLoad,
-        triggerCustomBackgroundUpload,
-        removeCustomDesktopBackground
+        triggerCustomBackgroundUpload, // This function is passed in appContext
+        removeCustomDesktopBackground  // This function is passed in appContext
     } = appContext;
 
     try {
@@ -103,6 +103,51 @@ export function initializePrimaryEventListeners(appContext) {
             });
         }
 
+        // --- DESKTOP CONTEXT MENU ---
+        const desktopElement = document.getElementById('desktop');
+        if (desktopElement) {
+            desktopElement.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                console.log('[EventHandlers] Desktop context menu triggered.');
+
+                const menuItems = [
+                    {
+                        label: "Change Custom Background...",
+                        action: () => {
+                            if (appContext && typeof appContext.triggerCustomBackgroundUpload === 'function') {
+                                appContext.triggerCustomBackgroundUpload();
+                            } else {
+                                console.error("triggerCustomBackgroundUpload function not available in appContext.");
+                                // Fallback: document.getElementById('customBgInput')?.click(); // Less ideal
+                            }
+                        }
+                    },
+                    {
+                        label: "Remove Custom Background",
+                        action: () => {
+                             if (appContext && typeof appContext.removeCustomDesktopBackground === 'function') {
+                                appContext.removeCustomDesktopBackground();
+                            } else {
+                                console.error("removeCustomDesktopBackground function not available in appContext.");
+                            }
+                        }
+                    }
+                    // Add other desktop-specific items here later (e.g., New Folder, Arrange Icons)
+                ];
+
+                if (typeof createContextMenu === 'function') { // Prefer imported version
+                    createContextMenu(event, menuItems);
+                } else if (typeof window.createContextMenu === 'function') { // Fallback to global
+                    window.createContextMenu(event, menuItems);
+                } else {
+                    console.error("[EventHandlers] createContextMenu function is not available for desktop.");
+                }
+            });
+        } else {
+            console.warn("[EventHandlers] Desktop element not found, cannot attach context menu.");
+        }
+        // --- END DESKTOP CONTEXT MENU ---
+
 
     } catch (error) {
         console.error("[EventHandlers] Error setting up primary event listeners:", error);
@@ -114,7 +159,7 @@ export function initializePrimaryEventListeners(appContext) {
         const activeElement = document.activeElement;
         const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
 
-        const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey for Cmd on Mac
+        const isCtrlPressed = event.ctrlKey || event.metaKey; 
 
         if (isCtrlPressed && !isInputFocused) { 
             switch (event.key.toLowerCase()) {
@@ -129,49 +174,36 @@ export function initializePrimaryEventListeners(appContext) {
                     if (typeof window.loadProject === 'function') window.loadProject();
                     break;
                 case 'z': 
-                    if (event.shiftKey) { // Handle Ctrl+Shift+Z for Redo
+                    if (event.shiftKey) { 
                         event.preventDefault();
                         console.log('[Shortcut] Redo (Ctrl+Shift+Z) triggered');
                         if (typeof window.redoLastAction === 'function') window.redoLastAction();
-                    } else { // Handle Ctrl+Z for Undo
+                    } else { 
                         event.preventDefault();
                         console.log('[Shortcut] Undo triggered');
                         if (typeof window.undoLastAction === 'function') window.undoLastAction();
                     }
                     break;
-                case 'y': // Ctrl+Y or Cmd+Y for Redo
+                case 'y': 
                     event.preventDefault();
                     console.log('[Shortcut] Redo triggered');
                     if (typeof window.redoLastAction === 'function') window.redoLastAction();
                     break;
-                case 'n': 
-                     event.preventDefault();
-                     console.log('[Shortcut] New Project triggered');
-                     showConfirmationDialog(
-                        'New Project',
-                        'Create a new project? Any unsaved changes will be lost.',
-                        () => {
-                            // Actual new project logic would go here.
-                            // For now, just a notification, or could reset state.
-                            if (typeof window.reconstructDAW === 'function') {
-                                window.reconstructDAW(null, true); // true to indicate it's a new project
-                                showNotification("New project started.", 2000);
-                            } else {
-                                showNotification("New Project functionality not fully implemented.", 3000);
-                            }
-                        }
-                    );
-                    break;
+                // case 'n': // Ctrl+N functionality removed for now as requested
+                //      event.preventDefault();
+                //      console.log('[Shortcut] New Project triggered (placeholder)');
+                //      // ... previous logic ...
+                //     break;
             }
-        } else if (!isCtrlPressed && !isInputFocused) { // Non-Ctrl shortcuts that also should not fire if typing
+        } else if (!isCtrlPressed && !isInputFocused) { 
              switch (event.key.toLowerCase()) {
-                case 'z': // Lower octave (without Ctrl/Cmd)
-                    if (!event.shiftKey) { // Ensure Shift is not also pressed (for Ctrl+Shift+Z)
+                case 'z': 
+                    if (!event.shiftKey) { 
                         currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
                         showNotification(`Octave: ${currentOctaveShift > 0 ? '+' : ''}${currentOctaveShift}`, 1000);
                     }
-                    break;
-                case 'x': // Raise octave (without Ctrl/Cmd)
+                    break; 
+                case 'x': 
                     currentOctaveShift = Math.min(MAX_OCTAVE_SHIFT, currentOctaveShift + 1);
                     showNotification(`Octave: ${currentOctaveShift > 0 ? '+' : ''}${currentOctaveShift}`, 1000);
                     break;
@@ -180,8 +212,7 @@ export function initializePrimaryEventListeners(appContext) {
     });
      // --- END GLOBAL KEYBOARD SHORTCUTS LISTENER ---
 }
-
-
+// ... (rest of the file, including attachGlobalControlEvents, MIDI handlers, etc.)
 export function attachGlobalControlEvents(globalControlsWindowElement) {
     console.log("[EventHandlers] attachGlobalControlEvents called with element:", globalControlsWindowElement);
     if (!globalControlsWindowElement) {
@@ -470,7 +501,6 @@ document.addEventListener('keydown', (event) => {
     const activeElement = document.activeElement;
     const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
 
-    // Handle octave shifts only if not focused on input and no Ctrl/Meta/Shift keys are pressed
     if (!isInputFocused && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
         if (event.key.toLowerCase() === 'z') { 
             currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
@@ -484,10 +514,14 @@ document.addEventListener('keydown', (event) => {
         }
     }
 
-    if (isInputFocused) return; // Other shortcuts are handled after this, so input focus check here is fine.
+    if (isInputFocused && !(activeElement.id === 'tempoGlobalInput' && (event.key === 'ArrowUp' || event.key === 'ArrowDown'))) { 
+      // Allow arrow keys for tempo input even if focused, but not other shortcuts.
+      return;
+    }
 
-    const note = getNoteFromComputerKey(event.code); // Use event.code for layout-independent keys
-    if (note !== null && !currentlyPressedComputerKeys[event.code]) {
+
+    const note = getNoteFromComputerKey(event.code); 
+    if (note !== null && !currentlyPressedComputerKeys[event.code] && !isInputFocused) { // Check !isInputFocused again for note playing
         currentlyPressedComputerKeys[event.code] = true;
         
         const armedTrackId = getArmedTrackId();
@@ -506,9 +540,9 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     const activeElement = document.activeElement;
     const isInputFocused = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
-    if (isInputFocused) return;
+    if (isInputFocused && !(activeElement.id === 'tempoGlobalInput')) return; // Allow keyup for tempo input
 
-    const note = getNoteFromComputerKey(event.code); // Use event.code
+    const note = getNoteFromComputerKey(event.code); 
     if (note !== null && currentlyPressedComputerKeys[event.code]) {
         currentlyPressedComputerKeys[event.code] = false;
         
