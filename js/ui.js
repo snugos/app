@@ -817,10 +817,3 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
-```
-
-**Next, I'll send the `style.css` file with the corresponding styles for these changes.**
-You'll notice I've:
-* Removed Tailwind classes like `bg-gray-100`, `dark:bg-slate-700`, `hover:bg-blue-100`, etc., from the HTML generation in `ui.js` for the Sound Browser list, inspector panels, and sequencer.
-* Instead, I'm relying on more generic CSS classes (like `.sound-browser-item`, or styling panel divs like `.slice-editor-controls` directly in CSS) to apply the new dark theme.
-* The sequencer DOM structure in `buildSequencerContentDOM` uses basic class names like `sequencer-step-cell`, `beat-block-a`, `beat-block-b`, `bar-line-strong` etc., which will be styled in the `style.cs
