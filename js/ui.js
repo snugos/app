@@ -1425,6 +1425,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
             }
             console.log(`[UI - renderMixer] Context menu: currentTrack found:`, currentTrack.name);
 
+
             const menuItems = [
                 {
                     label: "Open Inspector",
@@ -1622,30 +1623,46 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         track.sequencerWindow = sequencerWindow;
         if (typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(trackId);
 
-        const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
-        if (controlsDiv) {
-            controlsDiv.addEventListener('contextmenu', (event) => {
+        const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout'); // Grid element
+        const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls'); // Controls bar
+
+        // Attach context menu to the grid layout area
+        if (grid) {
+            grid.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
-                console.log(`[UI - Sequencer Context] Right-click in sequencer controls for track ID: ${track.id}`);
+                event.stopPropagation();
+
+                const clickedCell = event.target.closest('.sequencer-step-cell');
+                if (clickedCell) {
+                    const row = clickedCell.dataset.row;
+                    const col = clickedCell.dataset.col;
+                    console.log(`[UI - Sequencer Grid Context] Right-click on cell: Row ${row}, Col ${col} for track ID: ${track.id}`);
+                } else {
+                    console.log(`[UI - Sequencer Grid Context] Right-click on grid area (not a specific cell) for track ID: ${track.id}`);
+                }
+                
                 const currentTrackForMenu = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
-                if (!currentTrackForMenu) return;
+                if (!currentTrackForMenu) {
+                    console.error("[UI - Sequencer Grid Context] Could not get current track for menu.");
+                    return;
+                }
 
                 const menuItems = [
                     {
                         label: "Copy Sequence",
                         action: () => {
                             if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Copy Sequence from ${currentTrackForMenu.name}`);
+                            // Ensure a deep copy of sequenceData
+                            const sequenceDataCopy = currentTrackForMenu.sequenceData ? JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData)) : [];
+                            
                             window.clipboardData = {
                                 type: 'sequence',
                                 sourceTrackType: currentTrackForMenu.type,
-                                // Deep copy sequence data
-                                sequenceData: JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData)),
+                                sequenceData: sequenceDataCopy,
                                 sequenceLength: currentTrackForMenu.sequenceLength,
-                                // Optionally, store original number of rows if it can vary and matters for pasting
-                                // sourceNumRows: currentTrackForMenu.sequenceData.length 
                             };
                             showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000);
-                            console.log('[UI - Sequencer Context] Copied sequence:', window.clipboardData);
+                            console.log('[UI - Sequencer Grid Context] Copied sequence:', window.clipboardData);
                         }
                     },
                     {
@@ -1653,10 +1670,12 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         action: () => {
                             if (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.sequenceData) {
                                 showNotification("Clipboard is empty or does not contain sequence data.", 2000);
+                                console.log('[UI - Sequencer Grid Context] Paste failed: Clipboard empty or not sequence type.');
                                 return;
                             }
                             if (window.clipboardData.sourceTrackType !== currentTrackForMenu.type) {
                                 showNotification(`Cannot paste: Track types do not match (Source: ${window.clipboardData.sourceTrackType}, Target: ${currentTrackForMenu.type}).`, 3000);
+                                console.log('[UI - Sequencer Grid Context] Paste failed: Track type mismatch.');
                                 return;
                             }
 
@@ -1666,31 +1685,31 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                             currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(window.clipboardData.sequenceData));
                             currentTrackForMenu.sequenceLength = window.clipboardData.sequenceLength;
 
-                            // This will rebuild Tone.Sequence and internal data arrays correctly
+                            // This reinitializes Tone.Sequence and ensures data arrays are correct
                             currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
                             
-                            // Force redraw of the sequencer window UI
                             if(typeof window.openTrackSequencerWindow === 'function'){
-                                window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
+                                console.log(`[UI - Sequencer Grid Context] Forcing redraw of sequencer for track ${currentTrackForMenu.id} after paste.`);
+                                window.openTrackSequencerWindow(currentTrackForMenu.id, true, null); // forceRedraw
                             }
                             showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000);
-                            console.log('[UI - Sequencer Context] Pasted sequence into track:', currentTrackForMenu.id);
+                            console.log('[UI - Sequencer Grid Context] Pasted sequence into track:', currentTrackForMenu.id);
                         },
-                        disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.sequenceData)
+                        disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.sequenceData || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type))
                     }
                 ];
                 
                 if (typeof createContextMenu === 'function') {
                     createContextMenu(event, menuItems);
                 } else {
-                    console.error("[UI - Sequencer Context] createContextMenu function is not available.");
+                    console.error("[UI - Sequencer Grid Context] createContextMenu function is not available.");
                 }
             });
+        }  else {
+            console.error(`[UI - openTrackSequencerWindow] Sequencer grid layout element not found for track ${track.id} to attach context menu.`);
         }
 
-
-        const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
-        if (grid) {
+        if (grid) { 
             grid.addEventListener('click', (e) => {
                 if (e.target.classList.contains('sequencer-step-cell')) {
                     const row = parseInt(e.target.dataset.row);
