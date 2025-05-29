@@ -1,9 +1,9 @@
 /* --- SnugOS General & Desktop Styling --- */
 body {
-    font-family: 'Inter', sans-serif; 
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
-    margin: 0; 
-    overflow: hidden; 
+    margin: 0;
+    overflow: hidden;
     background-color: #101010; /* Very dark base background */
     color: #e0e0e0; /* Light grey default text for the entire application */
 }
@@ -11,53 +11,53 @@ body {
 #desktop {
     width: 100vw;
     height: 100vh;
-    overflow: hidden; 
-    position: relative; 
+    overflow: hidden;
+    position: relative;
     background-color: #101010; /* Consistent very dark desktop */
 }
 
 /* --- Window Styling (Unified Dark Theme) --- */
 .window {
-    position: absolute; 
+    position: absolute;
     border: 1px solid #383838; /* Dark border, slightly lighter than deepest blacks */
     box-shadow: 0px 0px 15px rgba(0,0,0,0.5); /* Softer, more modern shadow */
     background-color: #1e1e1e; /* Main window background - very dark grey */
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; 
-    min-width: 150px; 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 150px;
     min-height: 100px;
     color: #e0e0e0; /* Default text color for windows */
     border-radius: 3px; /* Subtle rounding for a more modern feel */
 }
 
 .window.minimized {
-    display: none !important; 
+    display: none !important;
 }
 
 .window-title-bar {
     background-color: #2a2a2a; /* Slightly lighter than window body for definition */
     color: #f0f0f0; /* Bright white text for title */
-    padding: 5px 8px; 
+    padding: 5px 8px;
     cursor: grab;
     display: flex;
     justify-content: space-between;
     align-items: center;
     height: 28px; /* Slightly taller */
-    flex-shrink: 0; 
-    font-size: 0.9rem; 
+    flex-shrink: 0;
+    font-size: 0.9rem;
     font-weight: 600; /* Semibold */
-    user-select: none; 
+    user-select: none;
     border-bottom: 1px solid #121212; /* Darker separator line */
     border-top-left-radius: 2px; /* Match window rounding */
     border-top-right-radius: 2px;
 }
 
-.window-title-bar span { 
+.window-title-bar span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 8px; 
+    padding-right: 8px;
 }
 
 .window-title-buttons {
@@ -66,19 +66,19 @@ body {
 
 .window-title-buttons button {
     background: #383838; /* Dark grey button background */
-    border: 1px solid #1a1a1a; 
+    border: 1px solid #1a1a1a;
     color: #d0d0d0; /* Light grey text */
-    width: 20px; 
+    width: 20px;
     height: 20px;
-    line-height: 18px; 
+    line-height: 18px;
     text-align: center;
     font-size: 11px;
     font-weight: bold;
     margin-left: 4px; /* Slightly more spacing */
     padding: 0;
-    cursor: default; 
+    cursor: default;
     flex-shrink: 0;
-    border-radius: 3px; 
+    border-radius: 3px;
     transition: background-color 0.15s ease;
 }
 
@@ -93,10 +93,10 @@ body {
 }
 
 .window-content {
-    flex-grow: 1; 
+    flex-grow: 1;
     padding: 10px; /* More padding */
     background-color: #181818; /* Main content area - very dark */
-    overflow: auto; 
+    overflow: auto;
     color: #e0e0e0; /* Light grey text for content */
 }
 
@@ -109,23 +109,23 @@ body {
     height: 32px; /* Slightly taller */
     background-color: #1a1a1a; /* Dark taskbar */
     border-top: 1px solid #303030; /* Subtle top border */
-    z-index: 10000; 
+    z-index: 10000;
     display: flex;
     align-items: center;
     padding: 0 6px;
     box-sizing: border-box;
-    color: #d0d0d0; 
+    color: #d0d0d0;
 }
 
 #startButton {
-    background-color: #2c2c2c; 
+    background-color: #2c2c2c;
     border: 1px solid #121212;
-    border-color: #3c3c3c #181818 #181818 #3c3c3c; 
+    border-color: #3c3c3c #181818 #181818 #3c3c3c;
     box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
-    padding: 3px 12px; 
+    padding: 3px 12px;
     font-weight: 600; /* Semibold */
     margin-right: 6px;
-    color: #e0e0e0; 
+    color: #e0e0e0;
     border-radius: 3px;
     transition: background-color 0.15s ease;
 }
@@ -133,25 +133,25 @@ body {
     background-color: #3a3a3a;
 }
 #startButton:active {
-    border-color: #181818 #3c3c3c #3c3c3c #181818; 
+    border-color: #181818 #3c3c3c #3c3c3c #181818;
     box-shadow: -1px -1px 0 #3c3c3c inset, 1px 1px 0 #181818 inset;
     background-color: #202020;
 }
 
 #taskbarButtons .taskbar-button {
-    background-color: #2c2c2c; 
+    background-color: #2c2c2c;
     border: 1px solid #121212;
     border-color: #3c3c3c #181818 #181818 #3c3c3c;
     box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
-    padding: 3px 10px; 
+    padding: 3px 10px;
     margin: 0 3px;
     max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.8rem;
-    flex-shrink: 0; 
-    color: #d0d0d0; 
+    flex-shrink: 0;
+    color: #d0d0d0;
     border-radius: 3px;
     transition: background-color 0.15s ease, color 0.15s ease;
 }
@@ -163,24 +163,24 @@ body {
 #taskbarButtons .taskbar-button:active {
     border-color: #181818 #3c3c3c #3c3c3c #181818;
     box-shadow: -1px -1px 0 #3c3c3c inset, 1px 1px 0 #181818 inset;
-    background-color: #202020; 
-    color: #ffffff; 
+    background-color: #202020;
+    color: #ffffff;
 }
 #taskbarButtons .taskbar-button.minimized-on-taskbar {
-    background-color: #282828; 
+    background-color: #282828;
     opacity: 0.65; /* More dim for minimized */
 }
 
 #taskbarTempoDisplay {
-    margin-left: auto; 
+    margin-left: auto;
     padding: 3px 10px;
     border: 1px solid #121212;
-    border-color: #3c3c3c #181818 #181818 #3c3c3c; 
+    border-color: #3c3c3c #181818 #181818 #3c3c3c;
     box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
     font-size: 0.8rem;
-    background-color: #2c2c2c; 
+    background-color: #2c2c2c;
     cursor: pointer;
-    color: #d0d0d0; 
+    color: #d0d0d0;
     border-radius: 3px;
 }
 #taskbarTempoDisplay:hover {
@@ -192,21 +192,21 @@ body {
     position: absolute;
     bottom: 32px; /* Adjusted for slightly taller taskbar */
     left: 0;
-    background: #1e1e1e; 
-    border: 1px solid #3a3a3a; 
-    border-color: #484848 #2a2a2a #2a2a2a #484848; 
+    background: #1e1e1e;
+    border: 1px solid #3a3a3a;
+    border-color: #484848 #2a2a2a #2a2a2a #484848;
     box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-    z-index: 10001; 
+    z-index: 10001;
     padding: 4px; /* More padding */
-    min-width: 220px; 
-    color: #e0e0e0; 
+    min-width: 220px;
+    color: #e0e0e0;
     border-radius: 3px;
 }
 
 #startMenu.hidden { display: none; }
 #startMenu ul { list-style: none; padding: 0; margin: 0; }
 #startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; color: #e0e0e0; border-radius: 2px; transition: background-color 0.1s ease;}
-#startMenu li:hover, #startMenu li.disabled:hover { background: #0060c0; color: white; } /* Brighter blue hover */
+#startMenu li:hover, #startMenu li.disabled:hover { background: #4a4a4a; color: white; } /* Adjusted for monochromatic theme */
 #startMenu li.disabled { color: #555555; cursor: default; }
 #startMenu hr { border: none; border-top: 1px solid #3a3a3a; margin: 4px 0; }
 
@@ -214,67 +214,68 @@ body {
 /* --- Pad Button Styling (Unified Dark Theme) --- */
 .pad-button {
     padding: 8px;
-    border: 1px solid #404040; 
-    background-color: #282828; 
-    color: #cccccc; 
+    border: 1px solid #404040;
+    background-color: #282828;
+    color: #cccccc;
     cursor: pointer;
     text-align: center;
-    min-width: 70px; 
+    min-width: 70px;
     min-height: 70px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: inset -1px -1px 1px #1a1a1a, inset 1px 1px 1px #3a3a3a; 
+    box-shadow: inset -1px -1px 1px #1a1a1a, inset 1px 1px 1px #3a3a3a;
     transition: background-color 0.15s ease, box-shadow 0.15s ease;
-    overflow: hidden; 
-    position: relative; 
+    overflow: hidden;
+    position: relative;
     border-radius: 3px;
 }
 .pad-button:hover {
-    background-color: #3a3a3a; 
+    background-color: #3a3a3a;
 }
 .pad-button:active, .pad-button.selected-for-edit {
-    background-color: #202020; 
-    box-shadow: inset 1px 1px 1px #1a1a1a, inset -1px -1px 1px #3a3a3a; 
+    background-color: #202020;
+    box-shadow: inset 1px 1px 1px #1a1a1a, inset -1px -1px 1px #3a3a3a;
     border-color: #505050;
 }
 .pad-button.selected-for-edit {
-    border-color: #60a5fa; /* Lighter blue accent for selected */
+    border-color: #60a5fa; /* Lighter blue accent for selected (can be changed to gray if strictly mono) */
+    /* Consider: border-color: #777777; for monochromatic selected pad */
     border-width: 2px;
-    padding: 7px; 
+    padding: 7px;
 }
 .pad-label {
-    font-size: 0.65rem; 
-    color: #b0b0b0; 
+    font-size: 0.65rem;
+    color: #b0b0b0;
     display: block;
     margin-top: 5px;
-    word-break: break-all; 
+    word-break: break-all;
     line-height: 1.2;
-    max-height: 2.4em; 
+    max-height: 2.4em;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 /* --- General Drop Zone Styling (Unified Dark Theme) --- */
 .drop-zone {
-    border: 2px dashed #4a4a4a; 
-    padding: 10px;          
+    border: 2px dashed #4a4a4a;
+    padding: 10px;
     text-align: center;
-    background-color: #1c1c1c;  
-    color: #888888;            
-    font-size: 0.8em; 
-    border-radius: 4px;         
-    margin-bottom: 5px;    
+    background-color: #1c1c1c;
+    color: #888888;
+    font-size: 0.8em;
+    border-radius: 4px;
+    margin-bottom: 5px;
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 .drop-zone.dragover {
-    background-color: #2a2a2a; 
-    border-color: #5a5a5a;     
-    color: #cccccc; 
+    background-color: #2a2a2a;
+    border-color: #5a5a5a;
+    color: #cccccc;
 }
-.drop-zone label { color: #7dd3fc; text-decoration: underline; cursor: pointer; }
-.drop-zone label:hover { color: #38bdf8; }
+.drop-zone label { color: #b0b0b0; text-decoration: underline; cursor: pointer; } /* Monochromatic label */
+.drop-zone label:hover { color: #d0d0d0; }
 
 
 /* --- Knob Styling (Unified Dark Theme) --- */
@@ -282,12 +283,12 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 5px; 
-    min-width: 60px; 
+    margin: 5px;
+    min-width: 60px;
 }
 .knob-label {
-    font-size: 0.7rem; 
-    color: #b0b0b0; 
+    font-size: 0.7rem;
+    color: #b0b0b0;
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -296,82 +297,65 @@ body {
     text-align: center;
 }
 .knob {
-    width: 36px; 
-    height: 36px; 
-    background-color: #303030; 
+    width: 36px;
+    height: 36px;
+    background-color: #303030;
     border-radius: 50%;
     position: relative;
-    border: 1px solid #1e1e1e; 
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); 
-    cursor: ns-resize; 
+    border: 1px solid #1e1e1e;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    cursor: ns-resize;
 }
 .knob-handle {
-    width: 4px; 
-    height: 10px; 
-    background-color: #909090; 
+    width: 4px;
+    height: 10px;
+    background-color: #909090;
     position: absolute;
-    top: 3px; 
+    top: 3px;
     left: 50%;
-    transform: translateX(-50%); 
-    transform-origin: bottom center; 
-    border-radius: 2px; 
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    border-radius: 2px;
 }
 .knob-value {
-    font-size: 0.65rem; 
-    color: #a0a0a0; 
+    font-size: 0.65rem;
+    color: #a0a0a0;
     margin-top: 2px;
-    min-height: 1em; 
+    min-height: 1em;
     text-align: center;
 }
 
-/* --- General Button Active States (Unified Dark Theme) --- */
-button.muted { 
-    background-color: #991b1b !important; 
-    color: #fecaca !important; 
-    border-color: #7f1d1d #991b1b #991b1b #7f1d1d !important; 
-    box-shadow: inset 1px 1px 0 #7f1d1d, inset -1px -1px 0 #ef4444 !important; 
-}
-button.soloed { 
-    background-color: #b45309 !important; 
-    color: #1c1917 !important; /* Darker text for yellow contrast */
-    border-color: #92400e #b45309 #b45309 #92400e !important; 
-    box-shadow: inset 1px 1px 0 #92400e, inset -1px -1px 0 #fde68a !important; 
-}
-button.armed { 
-    background-color: #c2410c !important; 
-    color: #fff7ed !important; 
-    border-color: #9a3412 #c2410c #c2410c #9a3412 !important; 
-    box-shadow: inset 1px 1px 0 #9a3412, inset -1px -1px 0 #fed7aa !important; 
-}
-button.active { /* Generic active state for other toggles if needed */
-    background-color: #1d4ed8 !important; 
-    color: #dbeafe !important; 
-    border-color: #1e40af #1d4ed8 #1d4ed8 #1e40af !important; 
-    box-shadow: inset 1px 1px 0 #1e40af, inset -1px -1px 0 #93c5fd !important; 
+/* --- General Button Active States (Monochromatic) --- */
+button.muted, button.soloed, button.armed, button.active {
+    background-color: #4a4a4a !important; /* A slightly lighter, active gray */
+    color: #ffffff !important;
+    border-color: #5a5a5a #3a3a3a #3a3a3a #5a5a5a !important; /* Adjusted border for better inset */
+    box-shadow: inset 1px 1px 1px #303030, inset -1px -1px 1px #606060 !important; /* Adjusted shadow */
 }
 
+
 /* --- Sequencer Grid Styling (Unified Dark Theme) --- */
-.sequencer-container .controls { 
+.sequencer-container .controls {
     position: sticky;
     top: 0;
-    left: 0; 
-    background-color: #1e1e1e; 
-    z-index: 30; 
+    left: 0;
+    background-color: #1e1e1e;
+    z-index: 30;
     border-bottom: 1px solid #3a3a3a;
-    padding: 0.25rem; 
-    color: #cccccc; 
+    padding: 0.25rem;
+    color: #cccccc;
 }
 .sequencer-container .controls input,
 .sequencer-container .controls label {
-    color: #cccccc; 
+    color: #cccccc;
 }
 .sequencer-container .controls input {
-    background-color: #282828; 
+    background-color: #282828;
     border-color: #404040;
 }
 
 .sequencer-grid-layout {
-    background-color: #121212; 
+    background-color: #121212;
 }
 
 .sequencer-grid-layout > div {
@@ -382,140 +366,180 @@ button.active { /* Generic active state for other toggles if needed */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.65rem; 
-    border: 1px solid #2a2a2a; 
+    font-size: 0.65rem;
+    border: 1px solid #2a2a2a;
 }
 
 .sequencer-grid-layout .sequencer-header-cell {
     position: sticky;
     top: 0;
-    background-color: #1c1c1c; 
+    background-color: #1c1c1c;
     font-weight: 500;
-    color: #b0b0b0; 
-    z-index: 20; 
+    color: #b0b0b0;
+    z-index: 20;
 }
-.sequencer-grid-layout .sequencer-header-cell:first-child { 
-    z-index: 25; 
-    left: 0; 
+.sequencer-grid-layout .sequencer-header-cell:first-child {
+    z-index: 25;
+    left: 0;
 }
 
 .sequencer-grid-layout .sequencer-label-cell {
     position: sticky;
     left: 0;
-    background-color: #1c1c1c; 
+    background-color: #1c1c1c;
     justify-content: flex-end;
-    padding-right: 0.25rem; 
+    padding-right: 0.25rem;
     font-weight: 500;
-    color: #b0b0b0; 
-    z-index: 10; 
+    color: #b0b0b0;
+    z-index: 10;
 }
 
 .sequencer-grid-layout .sequencer-step-cell {
     cursor: pointer;
     transition: background-color 0.1s ease;
-    color: #777777; 
+    color: #777777;
 }
 
-/* Alternating background colors for 4-step blocks */
+/* Alternating background colors for 4-step blocks (already dark by default from previous rules) */
 .sequencer-step-cell.bg-gray-50 { background-color: #161616; } /* Very dark */
 .sequencer-step-cell.bg-white { background-color: #1e1e1e; }  /* Slightly off-very-dark */
 
 .sequencer-step-cell:hover {
-    background-color: #2c2c2c !important; 
+    background-color: #2c2c2c !important;
 }
 
-/* Active step colors (using example teal/blue from images) */
+/* Active step colors (Monochromatic) */
 .sequencer-step-cell.active-synth,
 .sequencer-step-cell.active-sampler,
 .sequencer-step-cell.active-drum-sampler,
-.sequencer-step-cell.active-instrument-sampler { 
-    background-color: #008080 !important; /* Teal */
-    color: #FFFFFF !important; 
-    border-color: #009090 !important; /* Slightly lighter teal for border */
-} 
+.sequencer-step-cell.active-instrument-sampler {
+    background-color: #5a5a5a !important; /* Monochromatic active step */
+    border-color: #6a6a6a !important;
+    color: #f0f0f0 !important;
+}
 
 .sequencer-step-cell.playing {
-    outline: 2px solid #00ffff; /* Cyan outline for playing step */
+    outline: 2px solid #707070; /* Lighter Gray outline for playing step for mono theme */
+    /* outline: 2px solid #00ffff; */ /* Original Cyan outline for playing step */
     outline-offset: -2px;
-    z-index: 5; 
+    z-index: 5;
 }
 
 /* --- Notification Area --- */
-#notification-area { /* ... unchanged ... */ }
-.notification-message { /* ... unchanged ... */ }
-.notification-message.show { /* ... unchanged ... */ }
-
-/* --- Panel and Control Group --- */
-.panel { /* ... unchanged ... */ }
-.control-group { /* ... unchanged ... */ }
-.single-control-container { /* ... unchanged ... */ }
-
-/* --- Waveform Canvas --- */
-.waveform-canvas { 
-    border: 1px solid #3a3a3a;
-    background-color: #101010; /* Very dark background */
-    width: 100%; 
-    height: 70px; 
-    display: block; 
+#notification-area {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 20000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.notification-message {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    font-size: 0.85rem;
+}
+.notification-message.show {
+    opacity: 1;
+    transform: translateX(0);
 }
 
+/* --- Panel and Control Group --- */
+.panel { /* Basic panel styling if needed */
+    background-color: #1c1c1c;
+    border: 1px solid #3a3a3a;
+    padding: 10px;
+    border-radius: 3px;
+    margin-bottom: 10px;
+}
+.control-group {
+    margin-bottom: 8px;
+}
+.single-control-container { /* For individual controls that need some space */
+    margin-bottom: 6px;
+}
+
+
+/* --- Waveform Canvas --- */
+.waveform-canvas { /* General class for waveform displays */
+    border: 1px solid #3a3a3a;
+    background-color: #101010; /* Very dark background for high contrast */
+    width: 100%;
+    height: 70px; /* Default height, can be overridden */
+    display: block; /* Remove extra space below canvas */
+}
+canvas#waveformCanvas, canvas#instrumentWaveformCanvas { /* Specific IDs if needed */
+    background-color: #101010; /* Explicitly set for the specific canvases */
+}
+
+
 /* --- Meter Bar Styling --- */
-.meter-bar-container { 
-    background-color: #101010; /* Very dark */
+.meter-bar-container {
+    background-color: #101010; /* Very dark, same as waveform canvas bg */
     border-radius: 3px;
     overflow: hidden;
     border: 1px solid #3a3a3a;
-    height: 10px; 
+    height: 10px; /* Default height, adjust as needed */
     box-sizing: border-box;
 }
 .meter-bar {
-    background-color: #00b0b0; /* Cyan/Teal for meter */
+    background-color: #505050; /* Neutral gray for meter bar */
     height: 100%;
     width: 0%;
     transition: width 0.05s linear;
 }
 .meter-bar.clipping {
-    background-color: #e04040; /* Brighter Red for clipping */
+    background-color: #d04040; /* Muted Red for clipping, less harsh */
 }
-.track-meter-container { height: 16px; margin-top: 2px; }
-.mixer-meter-container { height: 12px; margin-top: 4px; }
-#masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; }
+/* Specific meter heights if needed, inheriting general style */
+.track-meter-container { height: 16px; margin-top: 2px; } /* In track inspector */
+.mixer-meter-container { height: 12px; margin-top: 4px; } /* In mixer strips */
+#masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; } /* Global/Master meters */
+
 
 /* Modal Styling (Unified Dark Theme) */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: rgba(0,0,0,0.75); /* Even darker overlay */
     display: flex; justify-content: center; align-items: center;
-    z-index: 15000; 
+    z-index: 15000;
 }
 .modal-dialog {
     background-color: #1e1e1e; /* Very dark dialog */
-    border: 1px solid #3a3a3a; 
+    border: 1px solid #3a3a3a;
     box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
     min-width: 300px; max-width: 90%; max-height: 90vh;
     display: flex; flex-direction: column;
     color: #e0e0e0; /* Light text in modal */
-    border-radius: 4px; 
+    border-radius: 4px;
 }
 .modal-title-bar {
     background-color: #2a2a2a; /* Darker title bar */
     color: #f0f0f0;
-    padding: 6px 10px; 
+    padding: 6px 10px;
     font-weight: bold; font-size: 0.9rem; user-select: none;
     border-bottom: 1px solid #121212; /* Darkest separator */
-    border-top-left-radius: 3px; 
+    border-top-left-radius: 3px;
     border-top-right-radius: 3px;
 }
 .modal-content {
     padding: 15px; overflow-y: auto; flex-grow: 1;
-    background-color: #1e1e1e; 
-    color: #e0e0e0; 
+    background-color: #1e1e1e;
+    color: #e0e0e0;
 }
 .modal-content p { margin-bottom: 10px; }
 .modal-content p:last-child { margin-bottom: 0; }
 .modal-buttons {
     padding: 10px 15px; text-align: right;
-    border-top: 1px solid #3a3a3a; 
+    border-top: 1px solid #3a3a3a;
     background-color: #1e1e1e;
     border-bottom-left-radius: 3px;
     border-bottom-right-radius: 3px;
@@ -523,10 +547,10 @@ button.active { /* Generic active state for other toggles if needed */
 .modal-buttons button {
     background-color: #3a3a3a;
     border: 1px solid #1a1a1a;
-    border-color: #484848 #2a2a2a #2a2a2a #484848; 
+    border-color: #484848 #2a2a2a #2a2a2a #484848;
     box-shadow: 1px 1px 0 #484848 inset, -1px -1px 0 #2a2a2a inset;
     color: #e0e0e0;
-    padding: 6px 15px; 
+    padding: 6px 15px;
     margin-left: 10px; cursor: pointer; font-size: 0.85rem;
     border-radius: 3px;
     transition: background-color 0.15s ease;
@@ -535,26 +559,68 @@ button.active { /* Generic active state for other toggles if needed */
     background-color: #484848;
 }
 .modal-buttons button:active {
-    border-color: #2a2a2a #484848 #484848 #2a2a2a; 
+    border-color: #2a2a2a #484848 #484848 #2a2a2a;
     box-shadow: -1px -1px 0 #484848 inset, 1px 1px 0 #2a2a2a inset;
     background-color: #303030;
 }
 
-.window-resizer { /* ... unchanged ... */ }
-.modular-effects-rack { /* ... unchanged ... */ }
-.effects-list-container { /* ... unchanged ... */ }
-.effect-controls-panel { /* ... unchanged ... */ }
-.effect-item.dragging { /* ... unchanged ... */ }
-.effect-item.dragover-target { /* ... unchanged ... */ }
-.drop-zone-relink-container { /* ... unchanged ... */ }
-.drop-zone-relink-button { /* ... unchanged ... */ }
-.drop-zone-missing { /* ... unchanged ... */ }
-.drop-zone-error { /* ... unchanged ... */ }
-.drop-zone-loading { /* ... unchanged ... */ }
-#midiIndicatorGlobal, #keyboardIndicatorGlobal { /* ... unchanged ... */ }
-#midiIndicatorGlobal.active, #keyboardIndicatorGlobal.active { /* ... unchanged ... */ }
-.global-controls-window .flex { /* ... unchanged ... */ }
-.global-controls-window label { /* ... unchanged ... */ }
+.window-resizer {
+    width: 10px; height: 10px;
+    background: repeating-linear-gradient( -45deg, #444, #444 1px, #555 1px, #555 3px ); /* Subtle darker resizer */
+    position: absolute; bottom: 0; right: 0; cursor: nwse-resize;
+    z-index: 1; /* Ensure it's above content if content overflows weirdly */
+}
+
+.modular-effects-rack {}
+.effects-list-container {}
+.effect-controls-panel {}
+.effect-item.dragging { opacity: 0.5; }
+.effect-item.dragover-target { border-top: 2px solid #60a5fa; } /* Blue for drop target, can be gray */
+
+
+.drop-zone-relink-container {
+    /* If specific container styling is needed beyond .drop-zone */
+}
+.drop-zone-relink-button {
+    /* These are styled by Tailwind in JS, but you could add base styles here */
+}
+.drop-zone-missing {
+    border-color: #ca8a04; /* Tailwind yellow-500 */
+    background-color: #1c1c1c; /* Keep dark background */
+}
+.drop-zone-error {
+    border-color: #dc2626; /* Tailwind red-500 */
+    background-color: #1c1c1c; /* Keep dark background */
+}
+.drop-zone-loading {
+    border-color: #2563eb; /* Tailwind blue-600 */
+    background-color: #1c1c1c; /* Keep dark background */
+    animation: pulseBorder 2s infinite;
+}
+@keyframes pulseBorder {
+    0% { border-color: #2563eb; }
+    50% { border-color: #60a5fa; }
+    100% { border-color: #2563eb; }
+}
+
+
+#midiIndicatorGlobal, #keyboardIndicatorGlobal {
+    padding: 2px 6px;
+    border-radius: 3px;
+    background-color: #3a3a3a;
+    color: #888888;
+    font-size: 0.7rem;
+    transition: background-color 0.1s, color 0.1s;
+}
+#midiIndicatorGlobal.active, #keyboardIndicatorGlobal.active {
+    background-color: #5a5a5a; /* Lighter gray when active */
+    color: #e0e0e0;
+}
+
+/* Ensure Global Controls Window elements inherit general dark theme */
+.global-controls-window .flex {} /* if specific flex styling needed */
+.global-controls-window label { color: #b0b0b0; } /* Match knob label color */
+
 
 /* Input and Select for Dark Theme (High Contrast) */
 select, input[type="text"], input[type="number"],
@@ -568,7 +634,7 @@ select, input[type="text"], input[type="number"],
     border-radius: 3px;
     font-size: 0.85rem; /* Slightly larger font */
 }
-input::placeholder, 
+input::placeholder,
 .window-content input::placeholder, .modal-content input::placeholder {
     color: #777777; /* Lighter placeholder text */
 }
@@ -604,4 +670,3 @@ input::placeholder,
   scrollbar-width: thin; /* "auto" or "thin" */
   scrollbar-color: #4a4a4a #1e1e1e; /* thumb and track */
 }
-
