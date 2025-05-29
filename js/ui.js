@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - All functions and exports meticulously verified. Version: daw_ui_js_all_definitions_final_check');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence_final_added');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -8,7 +8,7 @@ import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
-import { AVAILABLE_EFFECTS, getEffectParamDefinitions, synthEngineControlDefinitions } from './effectsRegistry.js';
+import { AVAILABLE_EFFECTS, getEffectParamDefinitions } from './effectsRegistry.js';
 import { getMimeTypeFromFilename } from './audio.js';
 
 // --- Knob UI ---
@@ -112,7 +112,25 @@ import { getMimeTypeFromFilename } from './audio.js';
 }
 
 // --- Synth Inspector Specifics ---
-// synthEngineControlDefinitions is now imported from effectsRegistry.js
+const synthEngineControlDefinitions = {
+    MonoSynth: [ 
+        { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
+        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sawtooth', path: 'oscillator.type' },
+        { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
+        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 0.1, decimals: 2, path: 'envelope.decay' },
+        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.9, decimals: 2, path: 'envelope.sustain' },
+        { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
+        { idPrefix: 'filtType', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', path: 'filter.type' },
+        { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' }, 
+        { idPrefix: 'filtQ', label: 'Filt Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'filter.Q.value' }, 
+        { idPrefix: 'filtEnvAttack', label: 'F.Atk', type: 'knob', min:0.001, max:2, step:0.001, defaultValue:0.06, decimals:3, path:'filterEnvelope.attack'},
+        { idPrefix: 'filtEnvDecay', label: 'F.Dec', type: 'knob', min:0.01, max:2, step:0.01, defaultValue:0.2, decimals:2, path:'filterEnvelope.decay'},
+        { idPrefix: 'filtEnvSustain', label: 'F.Sus', type: 'knob', min:0, max:1, step:0.01, defaultValue:0.5, decimals:2, path:'filterEnvelope.sustain'},
+        { idPrefix: 'filtEnvRelease', label: 'F.Rel', type: 'knob', min:0.01, max:5, step:0.01, defaultValue:2, decimals:2, path:'filterEnvelope.release'},
+        { idPrefix: 'filtEnvBaseFreq', label: 'F.Base', type: 'knob', min:20, max:5000, step:1, defaultValue:200, decimals:0, path:'filterEnvelope.baseFrequency'},
+        { idPrefix: 'filtEnvOctaves', label: 'F.Oct', type: 'knob', min:0, max:10, step:0.1, defaultValue:7, decimals:1, path:'filterEnvelope.octaves'},
+    ]
+};
 
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
@@ -718,27 +736,25 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     return html;
 }
 
-// Modified renderEffectsList to include context menu
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
+ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     if (!listDiv) return;
-    listDiv.innerHTML = '';
+    listDiv.innerHTML = ''; 
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : window.masterEffectsChain;
 
     if (!effectsArray || effectsArray.length === 0) {
         listDiv.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
-        if (controlsContainer) controlsContainer.innerHTML = '';
+        if (controlsContainer) controlsContainer.innerHTML = ''; 
         return;
     }
 
-    effectsArray.forEach((effectWrapper, index) => { 
-        const effectDef = AVAILABLE_EFFECTS[effectWrapper.type];
-        const displayName = effectDef ? effectDef.displayName : effectWrapper.type;
-        const isBypassed = effectWrapper.isBypassed || false; // Default to false if undefined
+    effectsArray.forEach((effect, index) => {
+        const effectDef = AVAILABLE_EFFECTS[effect.type];
+        const displayName = effectDef ? effectDef.displayName : effect.type;
 
         const item = document.createElement('div');
-        item.className = `effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs ${isBypassed ? 'opacity-60 italic' : ''}`;
+        item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs';
         item.innerHTML = `
-            <span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit ${displayName}">${displayName} ${isBypassed ? '(Bypassed)' : ''}</span>
+            <span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit ${displayName}">${displayName}</span>
             <div class="effect-actions">
                 <button class="up-btn text-xs px-0.5 ${index === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600 dark:hover:text-green-400'} dark:text-slate-400" ${index === 0 ? 'disabled' : ''} title="Move Up">▲</button>
                 <button class="down-btn text-xs px-0.5 ${index === effectsArray.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600 dark:hover:text-green-400'} dark:text-slate-400" ${index === effectsArray.length - 1 ? 'disabled' : ''} title="Move Down">▼</button>
@@ -746,94 +762,32 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
             </div>
         `;
         item.querySelector('.effect-name').addEventListener('click', () => {
-            renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer);
+            renderEffectControls(owner, ownerType, effect.id, controlsContainer);
             listDiv.querySelectorAll('.effect-item').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
             item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
         });
         item.querySelector('.up-btn').addEventListener('click', () => {
-            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
-            if (ownerType === 'track' && owner) owner.reorderEffect(effectWrapper.id, index - 1);
-            else if (ownerType === 'master' && typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effectWrapper.id, index - 1);
+            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
+            if (ownerType === 'track') owner.reorderEffect(effect.id, index - 1);
+            else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effect.id, index - 1);
             renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
         });
         item.querySelector('.down-btn').addEventListener('click', () => {
-            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
-            if (ownerType === 'track' && owner) owner.reorderEffect(effectWrapper.id, index + 1);
-            else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effectWrapper.id, index + 1);
+            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
+            if (ownerType === 'track') owner.reorderEffect(effect.id, index + 1);
+            else if (typeof window.reorderMasterEffect === 'function') window.reorderMasterEffect(effect.id, index + 1);
             renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
         });
         item.querySelector('.remove-btn').addEventListener('click', () => {
-            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Remove ${effectWrapper.type} from ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
-            if (ownerType === 'track' && owner) owner.removeEffect(effectWrapper.id);
-            else if (typeof window.removeMasterEffect === 'function') window.removeMasterEffect(effectWrapper.id);
+            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Remove ${effect.type} from ${ownerType === 'track' ? owner.name : 'Master'}`);
+            if (ownerType === 'track') owner.removeEffect(effect.id);
+            else if (typeof window.removeMasterEffect === 'function') window.removeMasterEffect(effect.id);
             renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
             if (controlsContainer) controlsContainer.innerHTML = ''; 
-        });
-
-        item.addEventListener('contextmenu', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            console.log(`[UI - EffectItem Context] Right-click on effect: ${displayName} (ID: ${effectWrapper.id})`);
-
-            const menuItems = [
-                {
-                    label: "Edit Parameters",
-                    action: () => {
-                        renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer);
-                        listDiv.querySelectorAll('.effect-item').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
-                        item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
-                    }
-                },
-                {
-                    label: effectWrapper.isBypassed ? "Enable Effect" : "Bypass Effect",
-                    action: () => {
-                        let targetOwner = owner; 
-                        let toggleFunction;
-
-                        if (ownerType === 'track' && owner && typeof owner.toggleEffectBypass === 'function') {
-                            toggleFunction = owner.toggleEffectBypass;
-                        } else if (ownerType === 'master' && typeof window.toggleMasterEffectBypass === 'function') {
-                            targetOwner = window; 
-                            toggleFunction = window.toggleMasterEffectBypass; 
-                        }
-                        
-                        if (targetOwner && typeof toggleFunction === 'function') {
-                            toggleFunction.call(targetOwner, effectWrapper.id); 
-                        } else {
-                            console.warn("Bypass function not found for owner type:", ownerType, "or owner is undefined:", owner);
-                            showNotification("Bypass function not available for this effect.", 2000);
-                        }
-                        setTimeout(() => {
-                            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
-                            if (item.classList.contains('bg-blue-100')) { 
-                                renderEffectControls(owner, ownerType, effectWrapper.id, controlsContainer);
-                            }
-                        }, 0);
-                    }
-                },
-                { separator: true },
-                {
-                    label: "Remove Effect",
-                    action: () => {
-                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Remove ${effectWrapper.type} from ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
-                        if (ownerType === 'track' && owner) owner.removeEffect(effectWrapper.id);
-                        else if (typeof window.removeMasterEffect === 'function') window.removeMasterEffect(effectWrapper.id);
-                        renderEffectsList(owner, ownerType, listDiv, controlsContainer); 
-                        if (controlsContainer) controlsContainer.innerHTML = ''; 
-                    }
-                }
-            ];
-
-            if (typeof createContextMenu === 'function') {
-                createContextMenu(event, menuItems);
-            } else {
-                console.error("[UI - EffectItem Context] createContextMenu function is not available.");
-            }
         });
         listDiv.appendChild(item);
     });
 }
-
 
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
@@ -855,7 +809,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
 
     const titleEl = document.createElement('h4');
     titleEl.className = 'text-xs font-semibold mb-1 dark:text-slate-200';
-    titleEl.textContent = `Controls: ${effectDef.displayName} ${effectWrapper.isBypassed ? '(Bypassed)' : ''}`;
+    titleEl.textContent = `Controls: ${effectDef.displayName}`;
     controlsContainer.appendChild(titleEl);
 
     const gridContainer = document.createElement('div');
@@ -910,7 +864,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     const newValue = e.target.value;
                     const finalValue = (typeof paramDef.defaultValue === 'number' && !isNaN(parseFloat(newValue))) ? parseFloat(newValue) : newValue;
 
-                    if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Change ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
+                    if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Change ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
                     if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, finalValue);
                     else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, finalValue);
                 });
@@ -922,7 +876,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                 button.textContent = `${paramDef.label}: ${currentValue ? 'ON' : 'OFF'}`;
                 button.addEventListener('click', () => {
                     const newValue = !currentValue;
-                    if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
+                    if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
                     if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue);
                     else if (typeof window.updateMasterEffectParam === 'function') window.updateMasterEffectParam(effectId, paramDef.key, newValue);
                     renderEffectControls(owner, ownerType, effectId, controlsContainer);
@@ -951,7 +905,7 @@ function showAddEffectModal(owner, ownerType) {
         modal.contentDiv.querySelectorAll('li[data-effect-type]').forEach(item => {
             item.addEventListener('click', () => {
                 const effectType = item.dataset.effectType;
-                if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Add ${effectType} to ${ownerType === 'track' && owner ? owner.name : 'Master'}`);
+                if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Add ${effectType} to ${ownerType === 'track' ? owner.name : 'Master'}`);
 
                 if (ownerType === 'track' && owner) {
                     owner.addEffect(effectType);
@@ -1054,18 +1008,21 @@ function showAddEffectModal(owner, ownerType) {
     return rackWindow;
 }
 
-function openGlobalControlsWindow(savedState = null) { 
+// *** MAJOR FIX: Accept a callback to run after the window is built ***
+function openGlobalControlsWindow(onReadyCallback, savedState = null) { 
     const windowId = 'globalControls';
     console.log(`[UI - openGlobalControlsWindow] Attempting to open/focus. SavedState:`, savedState);
 
     if (window.openWindows[windowId] && !savedState) { 
         const existingWindow = window.openWindows[windowId];
         if (!existingWindow.isMinimized) {
-            console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' already open and not minimized. Focusing.`);
             existingWindow.focus();
         } else {
-            console.log(`[UI - openGlobalControlsWindow] Window '${windowId}' already open but minimized. Restoring.`);
             existingWindow.restore();
+        }
+        // If it already exists, run the callback immediately
+        if (typeof onReadyCallback === 'function') {
+            onReadyCallback();
         }
         return existingWindow;
     }
@@ -1107,22 +1064,18 @@ function openGlobalControlsWindow(savedState = null) {
     };
 
     if (savedState && savedState.id === windowId) {
-        console.log(`[UI - openGlobalControlsWindow] Applying saved state:`, savedState);
         options.x = parseInt(savedState.left, 10);
         options.y = parseInt(savedState.top, 10);
         options.width = parseInt(savedState.width, 10);
         options.height = parseInt(savedState.height, 10);
         options.zIndex = savedState.zIndex; 
         if (savedState.isMinimized) options.isMinimized = true;
-    } else {
-      console.log(`[UI - openGlobalControlsWindow] No valid saved state, using defaults.`);
     }
 
     const newWindow = window.createWindow(windowId, 'Global Controls', contentHTML, options);
 
     if (newWindow && newWindow.element) {
-        console.log('[UI - openGlobalControlsWindow] SnugWindow created successfully. Element exists.');
-
+        // Populate global variables so they are available for the callback
         window.playBtn = newWindow.element.querySelector('#playBtnGlobal');
         window.recordBtn = newWindow.element.querySelector('#recordBtnGlobal');
         window.tempoInput = newWindow.element.querySelector('#tempoGlobalInput');
@@ -1131,19 +1084,16 @@ function openGlobalControlsWindow(savedState = null) {
         window.midiIndicatorGlobalEl = newWindow.element.querySelector('#midiIndicatorGlobal');
         window.keyboardIndicatorGlobalEl = newWindow.element.querySelector('#keyboardIndicatorGlobal');
         
-        console.log('[UI - openGlobalControlsWindow] Global element references populated.');
-        console.log('[UI - openGlobalControlsWindow] Type of window.attachGlobalControlEvents JUST BEFORE CHECK:', typeof window.attachGlobalControlEvents);
-
-        if (typeof window.attachGlobalControlEvents === 'function') {
-            console.log('[UI - openGlobalControlsWindow] ATTACHING global control events to element:', newWindow.element);
-            window.attachGlobalControlEvents(newWindow.element);
-        } else {
-            console.error('[UI - openGlobalControlsWindow] window.attachGlobalControlEvents IS NOT A FUNCTION! Value:', window.attachGlobalControlEvents);
+        console.log('[UI] Global Controls window created and elements are populated.');
+        
+        // Execute the callback function now that the DOM is ready
+        if (typeof onReadyCallback === 'function') {
+            onReadyCallback();
         }
-        console.log('[UI - openGlobalControlsWindow] Finished with attachGlobalControlEvents block.');
+        
         return newWindow;
     } else {
-        console.error('[UI - openGlobalControlsWindow] CRITICAL: window.createWindow failed to return a valid instance or element for Global Controls.');
+        console.error('[UI] CRITICAL: window.createWindow failed for Global Controls.');
         return null;
     }
 }
@@ -1402,9 +1352,10 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     renderMixer(container); 
 }
  function renderMixer(container) { 
-    container.innerHTML = ''; 
     const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
-
+    
+    container.innerHTML = ''; 
+    
     const masterTrackDiv = document.createElement('div');
     masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
     masterTrackDiv.innerHTML = `
@@ -1447,7 +1398,52 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
         `;
+        
+        trackDiv.addEventListener('contextmenu', (event) => {
+            event.preventDefault(); 
+            const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
+            if (!currentTrack) return;
+
+            const menuItems = [
+                {
+                    label: "Open Inspector",
+                    action: () => window.handleOpenTrackInspector(currentTrack.id)
+                },
+                {
+                    label: "Open Effects Rack",
+                    action: () => window.handleOpenEffectsRack(currentTrack.id)
+                },
+                {
+                    label: "Open Sequencer",
+                    action: () => window.handleOpenSequencer(currentTrack.id)
+                },
+                { separator: true },
+                {
+                    label: currentTrack.isMuted ? "Unmute" : "Mute",
+                    action: () => window.handleTrackMute(currentTrack.id)
+                },
+                {
+                    label: (typeof window.getSoloedTrackId === 'function' && window.getSoloedTrackId() === currentTrack.id) ? "Unsolo" : "Solo",
+                    action: () => window.handleTrackSolo(currentTrack.id)
+                },
+                {
+                    label: (typeof window.getArmedTrackId === 'function' && window.getArmedTrackId() === currentTrack.id) ? "Disarm Input" : "Arm for Input",
+                    action: () => window.handleTrackArm(currentTrack.id)
+                },
+                { separator: true },
+                {
+                    label: "Remove Track",
+                    action: () => window.handleRemoveTrack(currentTrack.id),
+                }
+            ];
+            
+            if (typeof createContextMenu === 'function') {
+                createContextMenu(event, menuItems);
+            }
+        });
+        
         container.appendChild(trackDiv);
+
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
@@ -1461,27 +1457,6 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 
         trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', () => handleTrackMute(track.id));
         trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', () => handleTrackSolo(track.id));
-
-        trackDiv.addEventListener('contextmenu', (event) => {
-            event.preventDefault(); 
-            const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
-            if (!currentTrack) return;
-
-            const menuItems = [
-                { label: "Open Inspector", action: () => window.handleOpenTrackInspector(currentTrack.id) },
-                { label: "Open Effects Rack", action: () => window.handleOpenEffectsRack(currentTrack.id) },
-                { label: "Open Sequencer", action: () => window.handleOpenSequencer(currentTrack.id) },
-                { separator: true },
-                { label: currentTrack.isMuted ? "Unmute" : "Mute", action: () => window.handleTrackMute(currentTrack.id) },
-                { label: (typeof window.getSoloedTrackId === 'function' && window.getSoloedTrackId() === currentTrack.id) ? "Unsolo" : "Solo", action: () => window.handleTrackSolo(currentTrack.id) },
-                { label: (typeof window.getArmedTrackId === 'function' && window.getArmedTrackId() === currentTrack.id) ? "Disarm Input" : "Arm for Input", action: () => window.handleTrackArm(currentTrack.id) },
-                { separator: true },
-                { label: "Remove Track", action: () => window.handleRemoveTrack(currentTrack.id) }
-            ];
-            
-            if (typeof createContextMenu === 'function') createContextMenu(event, menuItems);
-            else console.error("[UI - renderMixer] createContextMenu function is not available.");
-        });
     });
 }
 
@@ -1545,7 +1520,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     return html;
 }
 
-// --- openTrackSequencerWindow ---
+// --- MODIFIED openTrackSequencerWindow (with Erase Sequence and Double Sequence Length) ---
  function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) {
@@ -1556,7 +1531,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const windowId = `sequencerWin-${trackId}`;
 
     if (forceRedraw && window.openWindows[windowId]) {
-        console.log(`[UI - SeqWindow] forceRedraw true for existing window ${windowId}. Closing it first to ensure content refresh.`);
         try {
             window.openWindows[windowId].close(true); 
         } catch (e) {
@@ -1625,16 +1599,12 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             event.stopPropagation();
         
             const currentTrackForMenu = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
-            if (!currentTrackForMenu) {
-                console.error("[UI - Sequencer Context] Could not get current track for menu.");
-                return;
-            }
+            if (!currentTrackForMenu) return;
         
             const menuItems = [
                 {
                     label: "Copy Sequence",
                     action: () => {
-                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Copy Sequence from ${currentTrackForMenu.name}`);
                         const sequenceDataCopy = currentTrackForMenu.sequenceData ? JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData)) : [];
                         
                         window.clipboardData = {
@@ -1644,32 +1614,25 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                             sequenceLength: currentTrackForMenu.sequenceLength,
                         };
                         showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000);
-                        console.log('[UI - Sequencer Context] Copied sequence:', window.clipboardData);
                     }
                 },
                 {
                     label: "Paste Sequence",
                     action: () => {
                         if (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data) {
-                            showNotification("Clipboard is empty or does not contain full sequence data.", 2000);
+                            showNotification("Clipboard is empty or does not contain sequence data.", 2000);
                             return;
                         }
                         if (window.clipboardData.sourceTrackType !== currentTrackForMenu.type) {
-                            showNotification(`Cannot paste sequence: Track types do not match (Source: ${window.clipboardData.sourceTrackType}, Target: ${currentTrackForMenu.type}).`, 3000);
+                            showNotification(`Cannot paste: Track types do not match (Source: ${window.clipboardData.sourceTrackType}, Target: ${currentTrackForMenu.type}).`, 3000);
                             return;
                         }
         
                         if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`);
                         
                         currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(window.clipboardData.data));
-                        currentTrackForMenu.sequenceLength = window.clipboardData.sequenceLength;
-        
-                        currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
+                        currentTrackForMenu.setSequenceLength(window.clipboardData.sequenceLength, true); 
                         
-                        if(typeof window.openTrackSequencerWindow === 'function'){
-                            console.log(`[UI - Sequencer Context] Forcing redraw of sequencer for track ${currentTrackForMenu.id} after paste.`);
-                            window.openTrackSequencerWindow(currentTrackForMenu.id, true, null); 
-                        }
                         showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000);
                     },
                     disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type))
@@ -1679,82 +1642,37 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                     label: "Erase Sequence",
                     action: () => {
                         if (!currentTrackForMenu) return;
-                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`);
-                        
-                        let numRowsForErase = 0;
-                        if (currentTrackForMenu.type === 'Synth' || currentTrackForMenu.type === 'InstrumentSampler') {
-                            numRowsForErase = Constants.synthPitches.length;
-                        } else if (currentTrackForMenu.type === 'Sampler') {
-                            numRowsForErase = currentTrackForMenu.slices ? (currentTrackForMenu.slices.length > 0 ? currentTrackForMenu.slices.length : Constants.numSlices) : Constants.numSlices;
-                        } else if (currentTrackForMenu.type === 'DrumSampler') {
-                            numRowsForErase = Constants.numDrumSamplerPads;
-                        }
-                        
-                        currentTrackForMenu.sequenceData = Array(numRowsForErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null));
-                        
-                        currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
-
-                        if(typeof window.openTrackSequencerWindow === 'function'){
-                            console.log(`[UI - Sequencer Context] Forcing redraw of sequencer for track ${currentTrackForMenu.id} after erase.`);
-                            window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
-                        }
-                        showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000);
-                        console.log('[UI - Sequencer Context] Erased sequence for track:', currentTrackForMenu.id);
+                        showConfirmationDialog(
+                            `Erase Sequence for ${currentTrackForMenu.name}?`,
+                            "This will clear all notes in the sequencer for this track. This can be undone.",
+                            () => {
+                                if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`);
+                                
+                                let numRowsForErase = currentTrackForMenu.sequenceData.length;
+                                
+                                currentTrackForMenu.sequenceData = Array(numRowsForErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null));
+                                
+                                currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
+                                showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000);
+                            }
+                        );
                     }
                 },
-                 {
+                {
                     label: "Double Sequence Length",
+                    // *** MAJOR FIX: Call the correct method on the track object ***
                     action: () => {
                         if (!currentTrackForMenu) return;
 
                         const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR;
-                        if (currentNumBars * 2 > Constants.MAX_BARS) {
-                            showNotification(`Cannot double: Exceeds maximum of ${Constants.MAX_BARS} bars.`, 3000);
+                        if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) {
+                            showNotification(`Cannot double: Exceeds maximum of ${Constants.MAX_BARS || 16} bars.`, 3000);
                             return;
                         }
-
-                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Double Sequence Length for ${currentTrackForMenu.name}`);
-
-                        const originalSequenceData = JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData || []));
-                        const oldLength = currentTrackForMenu.sequenceLength;
-                        const newLength = oldLength * 2;
                         
-                        let numRows = 0;
-                        if (currentTrackForMenu.type === 'Synth' || currentTrackForMenu.type === 'InstrumentSampler') {
-                            numRows = Constants.synthPitches.length;
-                        } else if (currentTrackForMenu.type === 'Sampler') {
-                            numRows = currentTrackForMenu.slices ? (currentTrackForMenu.slices.length > 0 ? currentTrackForMenu.slices.length : Constants.numSlices) : Constants.numSlices;
-                        } else if (currentTrackForMenu.type === 'DrumSampler') {
-                            numRows = Constants.numDrumSamplerPads;
-                        } else { 
-                            numRows = originalSequenceData.length; 
-                        }
+                        // This now correctly calls the method in track.js
+                        currentTrackForMenu.doubleSequence();
                         
-                        while (originalSequenceData.length < numRows) {
-                            originalSequenceData.push([]);
-                        }
-
-
-                        const doubledSequenceData = Array(numRows).fill(null).map(() => Array(newLength).fill(null));
-
-                        for (let r = 0; r < numRows; r++) {
-                            const originalRow = originalSequenceData[r] || []; 
-                            for (let c = 0; c < oldLength; c++) {
-                                if (originalRow[c]) { 
-                                    doubledSequenceData[r][c] = JSON.parse(JSON.stringify(originalRow[c]));
-                                    doubledSequenceData[r][c + oldLength] = JSON.parse(JSON.stringify(originalRow[c]));
-                                }
-                            }
-                        }
-                        
-                        currentTrackForMenu.sequenceData = doubledSequenceData;
-                        currentTrackForMenu.sequenceLength = newLength; 
-                        
-                        currentTrackForMenu.setSequenceLength(newLength, true); 
-
-                        if(typeof window.openTrackSequencerWindow === 'function'){
-                             window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
-                        }
                         showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000);
                     }
                 }
@@ -1762,22 +1680,15 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             
             if (typeof createContextMenu === 'function') {
                 createContextMenu(event, menuItems);
-            } else {
-                console.error("[UI - Sequencer Context] createContextMenu function is not available.");
             }
         };
 
         if (grid) {
             grid.addEventListener('contextmenu', sequencerContextMenuHandler);
-        } else {
-            console.error(`[UI - openTrackSequencerWindow] Sequencer grid layout element not found for track ${track.id} to attach context menu.`);
         }
         if (controlsDiv) { 
             controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
-        }  else {
-            console.error(`[UI - openTrackSequencerWindow] Sequencer controls div element not found for track ${track.id} to attach context menu.`);
         }
-
 
         if (grid) { 
             grid.addEventListener('click', (e) => {
