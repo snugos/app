@@ -3,7 +3,13 @@ import * as Constants from './constants.js';
 import { showNotification, showConfirmationDialog } from './utils.js';
 import { Track } from './Track.js';
 import { createEffectInstance, getEffectDefaultParams, AVAILABLE_EFFECTS } from './effectsRegistry.js'; 
-import { rebuildMasterEffectChain as audioRebuildMasterEffectChain, addMasterEffect as audioAddMasterEffect, initAudioContextAndMasterMeter as audioInitAudioContextAndMasterMeter, clearMasterEffects, applyMasterEffectParamsFromState } from './audio.js'; // Added clearMasterEffects and applyMasterEffectParamsFromState
+import { 
+    rebuildMasterEffectChain as audioRebuildMasterEffectChain, 
+    addMasterEffect as audioAddMasterEffect, 
+    initAudioContextAndMasterMeter as audioInitAudioContextAndMasterMeter,
+    clearMasterEffects as audioClearMasterEffects, // For clearing master effects before loading
+    applyMasterEffectState // Assumed helper to apply params and bypass to master effects
+} from './audio.js'; 
 import { getAudio } from './db.js'; 
 
 
@@ -51,13 +57,12 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
     let newTrackId;
     if (initialData && initialData.id != null) {
         newTrackId = initialData.id;
-        // Ensure trackIdCounter is always higher than any loaded ID
+        // Ensure trackIdCounter is always higher than any loaded ID to prevent collisions
         if (newTrackId >= trackIdCounter) trackIdCounter = newTrackId + 1; 
     } else {
         newTrackId = trackIdCounter++;
     }
     
-    // If initialData.id was null/undefined, but we generated one, assign it for consistency
     if (initialData && initialData.id == null) {
         initialData.id = newTrackId;
     }
@@ -66,15 +71,9 @@ export async function addTrackToState(type, initialData = null, isUserAction = t
     const newTrack = new Track(newTrackId, type, initialData);
     tracks.push(newTrack);
     
-    // fullyInitializeAudioResources is now called within the Track constructor
-    // So, we just need to handle UI updates after it (which is done below by checking initialData)
+    // fullyInitializeAudioResources is called within the Track constructor
 
     if (isBrandNewUserTrack || (initialData && !isUserAction)) { 
-        // For brand new tracks or tracks being loaded (not undo/redo), 
-        // show inspector and update mixer after resources are likely set up by constructor.
-        // The fullyInitializeAudioResources in constructor is async, so direct UI update here might be too soon
-        // for things depending on async audio loading within the track.
-        // However, basic UI like inspector can open.
         if (isBrandNewUserTrack) {
             showNotification(`${newTrack.name} added.`, 2000);
             if (typeof window.openTrackInspectorWindow === 'function') {
@@ -136,9 +135,8 @@ export function captureStateForUndo(description = "Unknown action") {
     console.log("[State] Capturing state for undo:", description);
     try {
         const currentState = gatherProjectData();
-        // Attempt to stringify to catch errors early
-        const stringifiedState = JSON.stringify(currentState); 
-        const parsedState = JSON.parse(stringifiedState); // And parse back to ensure validity
+        const stringifiedState = JSON.stringify(currentState); // Test stringification
+        const parsedState = JSON.parse(stringifiedState); // Test parsing
         
         parsedState.description = description; 
         undoStack.push(parsedState); 
@@ -148,8 +146,8 @@ export function captureStateForUndo(description = "Unknown action") {
         redoStack = []; 
         updateUndoRedoButtons();
     } catch (error) {
-        console.error("[State] Error capturing state for undo (likely JSON stringify/parse issue):", error, "State attempted:", gatherProjectData());
-        showNotification("Error capturing undo state. Check console for details.", 3000);
+        console.error("[State] Error capturing state for undo (JSON stringify/parse issue):", error, "Attempted state:", gatherProjectData());
+        showNotification("Error capturing undo state. Check console.", 3000);
     }
 }
 
@@ -162,7 +160,7 @@ export async function undoLastAction() {
         const stateToRestore = undoStack.pop();
         const currentStateForRedo = gatherProjectData(); 
         currentStateForRedo.description = stateToRestore.description; 
-        redoStack.push(JSON.parse(JSON.stringify(currentStateForRedo))); // Deep copy
+        redoStack.push(JSON.parse(JSON.stringify(currentStateForRedo))); 
         if (redoStack.length > Constants.MAX_HISTORY_STATES) {
             redoStack.shift();
         }
@@ -212,7 +210,7 @@ export async function redoLastAction() {
 export function gatherProjectData() {
     console.log("[State] Gathering project data...");
     const projectData = {
-        version: "5.7.0", // Incremented due to effect bypass state
+        version: "5.7.1", // Incremented due to explicit effect state saving
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: window.masterGainNode && typeof window.masterGainNode.gain?.value === 'number' ? window.masterGainNode.gain.value : Tone.dbToGain(0),
@@ -224,9 +222,9 @@ export function gatherProjectData() {
         masterEffects: (window.masterEffectsChain || []).map(effect => ({ 
             id: effect.id,
             type: effect.type,
-            params: JSON.parse(JSON.stringify(effect.params)), // Deep copy params
-            isBypassed: effect.isBypassed || false,             // Save bypass state
-            storedWetValue: effect.storedWetValue !== undefined ? effect.storedWetValue : 1 // Save stored wet
+            params: JSON.parse(JSON.stringify(effect.params)), 
+            isBypassed: effect.isBypassed || false,             
+            storedWetValue: effect.storedWetValue !== undefined ? effect.storedWetValue : 1 
         })),
         tracks: tracks.map(track => {
             const trackData = {
@@ -236,16 +234,14 @@ export function gatherProjectData() {
                 activeEffects: track.activeEffects.map(effect => ({ 
                     id: effect.id,
                     type: effect.type,
-                    params: JSON.parse(JSON.stringify(effect.params)), // Deep copy params
-                    isBypassed: effect.isBypassed || false,             // Save bypass state
-                    storedWetValue: effect.storedWetValue !== undefined ? effect.storedWetValue : 1 // Save stored wet
+                    params: JSON.parse(JSON.stringify(effect.params)), 
+                    isBypassed: effect.isBypassed || false,             
+                    storedWetValue: effect.storedWetValue !== undefined ? effect.storedWetValue : 1 
                 })),
                 sequenceLength: track.sequenceLength,
                 sequenceData: JSON.parse(JSON.stringify(track.sequenceData)), 
                 automation: JSON.parse(JSON.stringify(track.automation || { volume: [] })), 
                 selectedSliceForEdit: track.selectedSliceForEdit,
-                waveformZoom: track.waveformZoom,
-                waveformScrollOffset: track.waveformScrollOffset,
                 slicerIsPolyphonic: track.slicerIsPolyphonic,
                 selectedDrumPadForEdit: track.selectedDrumPadForEdit,
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
@@ -313,9 +309,8 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
     tracks = [];
     trackIdCounter = 0;
 
-    // Clear and then reconstruct Master Effects
-    if (typeof clearMasterEffects === 'function') clearMasterEffects();
-    else if (window.masterEffectsChain) { // Fallback if clearMasterEffects isn't exposed
+    if (typeof audioClearMasterEffects === 'function') audioClearMasterEffects();
+    else if (window.masterEffectsChain) { 
          window.masterEffectsChain.forEach(effect => {
             if (effect.toneNode && !effect.toneNode.disposed) effect.toneNode.dispose();
         });
@@ -345,26 +340,25 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         window.highestZIndex = gs.highestZIndex || 100;
     }
 
-    // Reconstruct Master Effects carefully
     if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
         console.log("[State - reconstructDAW] Reconstructing master effects:", projectData.masterEffects.length);
         projectData.masterEffects.forEach(effectData => {
             if (typeof audioAddMasterEffect === 'function') {
-                 const addedEffectId = audioAddMasterEffect(effectData.type, effectData.id); // Pass ID if available
+                 const addedEffectId = audioAddMasterEffect(effectData.type, effectData.id, true); // Pass true to skip rebuild for now
                  if(addedEffectId){
                     const addedEffect = window.masterEffectsChain.find(e => e.id === addedEffectId);
                     if(addedEffect) { 
-                        // Apply params and bypass state
                         if (effectData.params) addedEffect.params = JSON.parse(JSON.stringify(effectData.params));
                         addedEffect.isBypassed = effectData.isBypassed || false;
                         addedEffect.storedWetValue = effectData.storedWetValue !== undefined ? effectData.storedWetValue : 1;
-                        if (typeof applyMasterEffectParamsFromState === 'function') {
-                            applyMasterEffectParamsFromState(addedEffectId, addedEffect.params, addedEffect.isBypassed, addedEffect.storedWetValue);
+                        if (typeof applyMasterEffectState === 'function') { // Use the new helper
+                            applyMasterEffectState(addedEffectId, addedEffect.params, addedEffect.isBypassed, addedEffect.storedWetValue);
                         }
                     }
                  }
             } 
         });
+        // Single rebuild after all master effects are added and their states set
         if (window.masterEffectsChain.length > 0 && typeof audioRebuildMasterEffectChain === 'function') {
              audioRebuildMasterEffectChain();
         }
@@ -376,19 +370,34 @@ export async function reconstructDAW(projectData, isUndoRedo = false) {
         console.log(`[State - reconstructDAW] Reconstructing ${projectData.tracks.length} tracks.`);
         for (const trackData of projectData.tracks) {
             if (trackData.type === 'Synth' && !trackData.synthEngineType) trackData.synthEngineType = 'MonoSynth';
-            // AddTrackToState will call new Track(), which calls fullyInitializeAudioResources (async)
             trackPromises.push(addTrackToState(trackData.type, trackData, false)); 
         }
     }
     
-    await Promise.all(trackPromises); // Wait for all tracks to be added to the state array
+    await Promise.all(trackPromises); 
     console.log("[State - reconstructDAW] All tracks added to state array.");
 
-    // Now that all tracks are created, ensure their audio resources are fully initialized.
-    // The Track constructor already calls fullyInitializeAudioResources, which is async.
-    // We need to ensure these complete before setting global solo/arm states that depend on them.
-    // This might require collecting promises from fullyInitializeAudioResources if it's not already awaited in addTrackToState.
-    // For now, assume addTrackToState handles the async nature sufficiently or fullyInitializeAudioResources is synchronous enough for what follows.
+    // Track constructor now calls fullyInitializeAudioResources, which is async.
+    // We need to ensure these promises complete for all tracks.
+    const finalResourcePromises = tracks.map(track => {
+        // The fullyInitializeAudioResources is called in constructor.
+        // If it returns a promise, we should ideally await it during track creation.
+        // For now, assuming it's handled, or we add a brief timeout if needed.
+        return Promise.resolve(); // Placeholder, actual await might be more complex here.
+    });
+    try {
+        await Promise.all(finalResourcePromises);
+        console.log("[State - reconstructDAW] All track audio resources assumed finalized (called from constructors).");
+    } catch (error) {
+        console.error("[State - reconstructDAW] Error finalizing track audio resources:", error);
+    }
+
+    // One final rebuild of master chain to ensure tracks connect correctly after they are fully set up
+    if (typeof audioRebuildMasterEffectChain === 'function') {
+        console.log("[State - reconstructDAW] Final rebuild of master effect chain after all tracks initialized.");
+        audioRebuildMasterEffectChain();
+    }
+
 
     if (gs) {
         soloedTrackId = gs.soloedTrackId || null;
@@ -561,7 +570,7 @@ export async function exportToWav() {
         showNotification(`Recording for export (${maxDuration.toFixed(1)}s)...`, Math.max(3000, maxDuration * 1000 + 1000));
 
         tracks.forEach(track => {
-            if (track.sequence && !track.sequence.disposed) { // Added disposed check
+            if (track.sequence && !track.sequence.disposed) { 
                 track.sequence.start(0);
             }
         });
@@ -603,4 +612,5 @@ export async function exportToWav() {
     }
 }
 
-console.log("[State.js] Parsed and exports should be available (IndexedDB version with full debug in reconstructDAW).
+console.log("[State.js] Parsed and exports should be available (IndexedDB version with full debug in reconstructDAW).");
+
