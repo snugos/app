@@ -229,6 +229,7 @@ body { /* Keeping font-family here for now, as it's globally effective from styl
 
 
 /* --- Pad Button Styling (Unified Dark Theme) --- */
+/*
 .pad-button {
     padding: 8px;
     border: 1px solid #404040;
@@ -272,6 +273,7 @@ body { /* Keeping font-family here for now, as it's globally effective from styl
     overflow: hidden;
     text-overflow: ellipsis;
 }
+*/
 
 /* --- General Drop Zone Styling (Unified Dark Theme) --- */
 .drop-zone {
