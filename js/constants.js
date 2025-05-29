@@ -1,4 +1,3 @@
-// js/constants.js - Shared constants for SnugOS
 
 export const STEPS\_PER\_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -34,7 +33,6 @@ export const defaultWindowContentBg = '\#c0c0c0';
 
 export const MAX\_HISTORY\_STATES = 30;
 
-// Computer Keyboard to MIDI mapping
 export const computerKeySynthMap = {
 'KeyA': 60, 'KeyW': 61, 'KeyS': 62, 'KeyE': 63, 'KeyD': 64, 'KeyF': 65, 'KeyT': 66,
 'KeyG': 67, 'KeyY': 68, 'KeyH': 69, 'KeyU': 70, 'KeyJ': 71, 'KeyK': 72,
