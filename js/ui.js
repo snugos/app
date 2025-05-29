@@ -1015,6 +1015,71 @@ export function renderDrumSamplerPads(track) {
     });
 }
 
+// Added export for updateDrumPadControlsUI
+export function updateDrumPadControlsUI(track) {
+    const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
+    if (!inspectorWindow || !inspectorWindow.element || track.type !== 'DrumSampler' || !track.drumSamplerPads) return;
+    const inspector = inspectorWindow.element;
+
+    const selectedPadIndex = track.selectedDrumPadForEdit;
+    const padData = track.drumSamplerPads[selectedPadIndex];
+
+    const selectedInfo = inspector.querySelector(`#selectedDrumPadInfo-${track.id}`);
+    if (selectedInfo) selectedInfo.textContent = selectedPadIndex + 1;
+
+    const padSpecificDropZoneContainerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
+    const controlsArea = inspector.querySelector('.selected-pad-controls');
+    let dzContainer = inspector.querySelector(`#${padSpecificDropZoneContainerId}`);
+
+    if (controlsArea) {
+        const existingDropZones = controlsArea.querySelectorAll(`div[id^="drumPadDropZoneContainer-${track.id}-"]`);
+        existingDropZones.forEach(oldDz => {
+            if (oldDz.id !== padSpecificDropZoneContainerId) oldDz.remove();
+        });
+
+        dzContainer = controlsArea.querySelector(`#${padSpecificDropZoneContainerId}`);
+        if (!dzContainer) {
+            dzContainer = document.createElement('div');
+            dzContainer.id = padSpecificDropZoneContainerId;
+            dzContainer.className = 'mb-1 text-xs';
+            const knobGridOrFirstChild = controlsArea.querySelector('.grid') || controlsArea.firstChild;
+            if (knobGridOrFirstChild) controlsArea.insertBefore(dzContainer, knobGridOrFirstChild);
+            else controlsArea.appendChild(dzContainer);
+        }
+    }
+
+    if (dzContainer) {
+        const existingAudioData = {
+            originalFileName: padData.originalFileName,
+            status: padData.status || (padData.originalFileName ? 'missing' : 'empty')
+        };
+        dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
+        const dzEl = dzContainer.querySelector('.drop-zone');
+        const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
+        if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
+        if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
+    }
+
+    const createAndPlaceKnob = (placeholderId, options) => {
+        const placeholder = inspector.querySelector(`#${placeholderId}`);
+        if (placeholder) {
+            const knob = createKnob(options);
+            placeholder.innerHTML = ''; placeholder.appendChild(knob.element);
+            return knob;
+        }
+        return null;
+    };
+
+    const env = padData.envelope || { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 };
+    track.inspectorControls.drumPadVolume = createAndPlaceKnob(`drumPadVolumeKnob-${track.id}-placeholder`, { label: 'Vol', min:0, max:1, step:0.01, initialValue: padData.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(selectedPadIndex, val)});
+    track.inspectorControls.drumPadPitch = createAndPlaceKnob(`drumPadPitchKnob-${track.id}-placeholder`, { label: 'Pitch', min:-24, max:24, step:1, initialValue: padData.pitchShift || 0, decimals:0, displaySuffix:'st', trackRef: track, onValueChange: (val) => track.setDrumSamplerPadPitch(selectedPadIndex, val)});
+    track.inspectorControls.drumPadEnvAttack = createAndPlaceKnob(`drumPadEnvAttack-${track.id}-placeholder`, { label: 'Attack', min:0.001, max:1, step:0.001, initialValue: env.attack, decimals:3, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'attack', val)});
+    track.inspectorControls.drumPadEnvDecay = createAndPlaceKnob(`drumPadEnvDecay-${track.id}-placeholder`, { label: 'Decay', min:0.01, max:1, step:0.01, initialValue: env.decay, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'decay', val)});
+    track.inspectorControls.drumPadEnvSustain = createAndPlaceKnob(`drumPadEnvSustain-${track.id}-placeholder`, { label: 'Sustain', min:0, max:1, step:0.01, initialValue: env.sustain, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'sustain', val)});
+    track.inspectorControls.drumPadEnvRelease = createAndPlaceKnob(`drumPadEnvRelease-${track.id}-placeholder`, { label: 'Release', min:0.01, max:2, step:0.01, initialValue: env.release, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'release', val)});
+}
+
+
 export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
@@ -1031,7 +1096,6 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
     }
 }
 
-// Added export for highlightPlayingStep
 export function highlightPlayingStep(trackId, col) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return;
