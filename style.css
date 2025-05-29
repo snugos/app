@@ -605,3 +605,45 @@ input::placeholder,
   scrollbar-color: #4a4a4a #1e1e1e; /* thumb and track */
 }
 
+/* --- Context Menu Styling (Unified Dark Theme) --- */
+.context-menu {
+    background-color: #2a2a2a; /* Dark background */
+    border: 1px solid #484848;   /* Slightly lighter border */
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+    padding: 4px 0;
+    min-width: 180px;
+    border-radius: 3px;
+    color: #e0e0e0; /* Light text */
+    position: absolute; /* Changed from fixed to absolute for potential parent relative positioning if needed, but fixed is often better for global menus */
+    /* z-index is set by JS */
+}
+
+.context-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.context-menu-item {
+    padding: 6px 15px 6px 12px; /* Adjust padding as needed */
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.context-menu-item:not(.disabled):hover {
+    background-color: #0060c0; /* Brighter blue hover */
+    color: white;
+}
+
+.context-menu-item.disabled {
+    color: #555555; /* Darker grey for disabled items */
+    cursor: default;
+}
+
+.context-menu-separator {
+    border: none;
+    border-top: 1px solid #3a3a3a; /* Dark separator line */
+    margin: 4px 0;
+}
