@@ -1405,24 +1405,18 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
             </div>
         `;
         
-        // --- MODIFIED PART FOR DEBUGGING ---
         console.log(`[UI - renderMixer] Creating trackDiv for track ID: ${track.id}`, trackDiv); 
 
-        // Test basic click listener
         trackDiv.addEventListener('click', (event) => {
-            // alert(`Track div for "${track.name}" (ID: ${track.id}) was CLICKED!`); // Removed alert
             console.log(`[UI - renderMixer] CLICK event on trackDiv for ID: ${track.id}`, event.target);
         });
         console.log(`[UI - renderMixer] Basic CLICK listener ADDED for track ID: ${track.id}`); 
 
 
-        // Context Menu Logic
         console.log(`[UI - renderMixer] Attempting to add CONTEXTMENU listener for track ID: ${track.id}`); 
         trackDiv.addEventListener('contextmenu', (event) => {
             event.preventDefault(); 
             console.log(`[UI - renderMixer] CONTEXTMENU event triggered for track ID: ${track.id}`); 
-            
-            // alert(`Context menu for track "${track.name}" (ID: ${track.id}) would appear here.`); // Removed alert
             
             const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
             if (!currentTrack) {
@@ -1430,7 +1424,6 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                 return;
             }
             console.log(`[UI - renderMixer] Context menu: currentTrack found:`, currentTrack.name);
-
 
             const menuItems = [
                 {
@@ -1478,7 +1471,6 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
             }
         });
         console.log(`[UI - renderMixer] CONTEXTMENU listener setup completed for track ID: ${track.id}`); 
-        // --- END OF MODIFIED PART ---
         
         container.appendChild(trackDiv);
 
@@ -1568,29 +1560,22 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 
     const windowId = `sequencerWin-${trackId}`;
 
-    // If forceRedraw is true AND the window already exists, close it first.
-    // This ensures that window.createWindow will use the new contentDOM.
     if (forceRedraw && window.openWindows[windowId]) {
         console.log(`[UI - SeqWindow] forceRedraw true for existing window ${windowId}. Closing it first to ensure content refresh.`);
         try {
-            window.openWindows[windowId].close(true); // Pass true to skip undo for this specific close as it's part of a refresh
+            window.openWindows[windowId].close(true); 
         } catch (e) {
             console.warn(`[UI - SeqWindow] Error closing existing window during forceRedraw for ${windowId}:`, e);
         }
-        // After .close(), window.openWindows[windowId] will be undefined due to SnugWindow's close logic
     }
 
-    // Standard check: if window exists (and not forceRedraw, or it was just closed above), restore it.
-    // This will now mainly handle the !forceRedraw case.
     if (window.openWindows[windowId] && !forceRedraw && !savedState) {
         window.openWindows[windowId].restore();
         if (typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(trackId);
         return window.openWindows[windowId];
     }
 
-    // Proceed to create (or re-create if forceRedraw closed it) the window
     let rows, rowLabels;
-    // This will correctly use the updated track.sequenceLength
     const numBars = Math.max(1, track.sequenceLength / Constants.STEPS_PER_BAR);
 
     if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
@@ -1637,6 +1622,73 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         track.sequencerWindow = sequencerWindow;
         if (typeof window.setActiveSequencerTrackId === 'function') window.setActiveSequencerTrackId(trackId);
 
+        const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
+        if (controlsDiv) {
+            controlsDiv.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                console.log(`[UI - Sequencer Context] Right-click in sequencer controls for track ID: ${track.id}`);
+                const currentTrackForMenu = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
+                if (!currentTrackForMenu) return;
+
+                const menuItems = [
+                    {
+                        label: "Copy Sequence",
+                        action: () => {
+                            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Copy Sequence from ${currentTrackForMenu.name}`);
+                            window.clipboardData = {
+                                type: 'sequence',
+                                sourceTrackType: currentTrackForMenu.type,
+                                // Deep copy sequence data
+                                sequenceData: JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData)),
+                                sequenceLength: currentTrackForMenu.sequenceLength,
+                                // Optionally, store original number of rows if it can vary and matters for pasting
+                                // sourceNumRows: currentTrackForMenu.sequenceData.length 
+                            };
+                            showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000);
+                            console.log('[UI - Sequencer Context] Copied sequence:', window.clipboardData);
+                        }
+                    },
+                    {
+                        label: "Paste Sequence",
+                        action: () => {
+                            if (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.sequenceData) {
+                                showNotification("Clipboard is empty or does not contain sequence data.", 2000);
+                                return;
+                            }
+                            if (window.clipboardData.sourceTrackType !== currentTrackForMenu.type) {
+                                showNotification(`Cannot paste: Track types do not match (Source: ${window.clipboardData.sourceTrackType}, Target: ${currentTrackForMenu.type}).`, 3000);
+                                return;
+                            }
+
+                            if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`);
+                            
+                            // Deep copy pasted data
+                            currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(window.clipboardData.sequenceData));
+                            currentTrackForMenu.sequenceLength = window.clipboardData.sequenceLength;
+
+                            // This will rebuild Tone.Sequence and internal data arrays correctly
+                            currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
+                            
+                            // Force redraw of the sequencer window UI
+                            if(typeof window.openTrackSequencerWindow === 'function'){
+                                window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
+                            }
+                            showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000);
+                            console.log('[UI - Sequencer Context] Pasted sequence into track:', currentTrackForMenu.id);
+                        },
+                        disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.sequenceData)
+                    }
+                ];
+                
+                if (typeof createContextMenu === 'function') {
+                    createContextMenu(event, menuItems);
+                } else {
+                    console.error("[UI - Sequencer Context] createContextMenu function is not available.");
+                }
+            });
+        }
+
+
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         if (grid) {
             grid.addEventListener('click', (e) => {
@@ -1650,10 +1702,9 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                     if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
                     track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
 
-                    // Call global UI update function for cell
                     if(typeof window.updateSequencerCellUI === 'function') {
                         window.updateSequencerCellUI(e.target, track.type, isActive);
-                    } else { // Fallback basic visual toggle if global one isn't set up yet
+                    } else { 
                         e.target.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
                         if (isActive) {
                             let activeClass = '';
@@ -1671,10 +1722,10 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         if (lengthInput) {
             lengthInput.addEventListener('change', (e) => {
                 const newNumBarsInput = parseInt(e.target.value);
-                if (!isNaN(newNumBarsInput) && newNumBarsInput >= 1 && newNumBarsInput <= (Constants.MAX_BARS || 16)) { // Ensure MAX_BARS is defined or fallback
+                if (!isNaN(newNumBarsInput) && newNumBarsInput >= 1 && newNumBarsInput <= (Constants.MAX_BARS || 16)) { 
                     track.setSequenceLength(newNumBarsInput * Constants.STEPS_PER_BAR);
                 } else {
-                    e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR; // Reset to current if invalid
+                    e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR; 
                 }
             });
         }
@@ -1926,3 +1977,4 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
+
