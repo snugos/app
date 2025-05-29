@@ -2,7 +2,7 @@
 console.log('[ui.js] TOP OF FILE PARSING - applySliceEdits Fix / Drum Knob Fix / Seq DOM Rework / Sound Browser Path Fix');
 
 import { SnugWindow } from './SnugWindow.js';
-import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal } from './utils.js';
+import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js'; // Added createContextMenu
 import * as Constants from './constants.js';
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
@@ -1402,7 +1402,57 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
         `;
+        
+        // Context Menu Logic
+        trackDiv.addEventListener('contextmenu', (event) => {
+            const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
+            if (!currentTrack) return;
+
+            const menuItems = [
+                {
+                    label: "Open Inspector",
+                    action: () => window.handleOpenTrackInspector(currentTrack.id)
+                },
+                {
+                    label: "Open Effects Rack",
+                    action: () => window.handleOpenEffectsRack(currentTrack.id)
+                },
+                {
+                    label: "Open Sequencer",
+                    action: () => window.handleOpenSequencer(currentTrack.id)
+                },
+                { separator: true },
+                {
+                    label: currentTrack.isMuted ? "Unmute" : "Mute",
+                    action: () => window.handleTrackMute(currentTrack.id)
+                },
+                {
+                    label: (typeof window.getSoloedTrackId === 'function' && window.getSoloedTrackId() === currentTrack.id) ? "Unsolo" : "Solo",
+                    action: () => window.handleTrackSolo(currentTrack.id)
+                },
+                {
+                    label: (typeof window.getArmedTrackId === 'function' && window.getArmedTrackId() === currentTrack.id) ? "Disarm Input" : "Arm for Input",
+                    action: () => window.handleTrackArm(currentTrack.id)
+                },
+                { separator: true },
+                {
+                    label: "Remove Track",
+                    action: () => window.handleRemoveTrack(currentTrack.id),
+                    disabled: false
+                }
+            ];
+
+            if (typeof createContextMenu === 'function') {
+                createContextMenu(event, menuItems);
+            } else if (typeof window.createContextMenu === 'function') {
+                window.createContextMenu(event, menuItems);
+            } else {
+                console.error("createContextMenu function is not available.");
+            }
+        });
+
         container.appendChild(trackDiv);
+
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
@@ -1847,3 +1897,4 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
+
