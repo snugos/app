@@ -1,5 +1,8 @@
 // js/utils.js - Utility Functions Module
 
+// It's good practice to ensure Tone is available if used, though direct import isn't needed
+// if Tone is always available globally from its own script tag before this module runs.
+
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
@@ -134,10 +137,10 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
         </div>`.trim();
 }
 
-
-export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
+// Renamed to avoid conflict if ui.js also has a setupDropZoneListeners
+export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
     if (!dropZoneElement) {
-        console.error("[Utils] setupDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint, "pad/slice:", padIndexOrSliceId);
+        console.error("[Utils] setupGenericDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint, "pad/slice:", padIndexOrSliceId);
         return;
     }
 
@@ -158,30 +161,24 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         event.preventDefault();
         event.stopPropagation();
         dropZoneElement.classList.remove('dragover');
-        
-        console.log(`[Utils] Drop event TRIGGERED on element ID: ${dropZoneElement.id}, Classes: ${dropZoneElement.className}. Dataset:`, JSON.parse(JSON.stringify(dropZoneElement.dataset)));
 
         const dzTrackId = dropZoneElement.dataset.trackId ? parseInt(dropZoneElement.dataset.trackId) : trackId;
         const dzTrackType = dropZoneElement.dataset.trackType || trackTypeHint;
         const dzPadSliceIndexStr = dropZoneElement.dataset.padSliceIndex;
-        
+
         let numericIndexForCallback = null;
         if (dzPadSliceIndexStr !== undefined && dzPadSliceIndexStr !== null && dzPadSliceIndexStr !== "null" && !isNaN(parseInt(dzPadSliceIndexStr))) {
             numericIndexForCallback = parseInt(dzPadSliceIndexStr);
         } else if (typeof padIndexOrSliceId === 'number' && !isNaN(padIndexOrSliceId)) {
             numericIndexForCallback = padIndexOrSliceId;
         }
-        console.log(`[Utils] Drop effective params: trackId=${dzTrackId}, type=${dzTrackType}, indexForCallback=${numericIndexForCallback} (Original dzPadSliceIndexStr: "${dzPadSliceIndexStr}", arg padIndexOrSliceId: ${padIndexOrSliceId})`);
-
 
         const soundDataString = event.dataTransfer.getData("application/json");
 
         if (soundDataString) { // From Sound Browser
-            console.log("[Utils] Dropped JSON data (from sound browser):", soundDataString);
             try {
                 const soundData = JSON.parse(soundDataString);
-                if (loadSoundCallback) { 
-                    console.log(`[Utils] Calling loadSoundCallback for Sound Browser drop. Target index: ${numericIndexForCallback}`);
+                if (loadSoundCallback) {
                     await loadSoundCallback(soundData, dzTrackId, dzTrackType, numericIndexForCallback);
                 } else {
                     console.warn("[Utils] loadSoundCallback not provided for sound browser drop.");
@@ -192,19 +189,18 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             }
         } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) { // OS File Drop
             const file = event.dataTransfer.files[0];
-            console.log("[Utils] Dropped OS file:", file.name, "Type:", file.type);
-            const simulatedEvent = { target: { files: [file] } }; // Simulate file input event
+            const simulatedEvent = { target: { files: [file] } };
             if (loadFileCallback) {
-                console.log("[Utils] Calling loadFileCallback for OS file drop. Callback name:", loadFileCallback.name);
                 if (dzTrackType === 'DrumSampler') {
-                    const trackForFallback = typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
+                    // This relies on getTrackById being available, which is a state function.
+                    // For a pure util, this logic might be better placed in ui.js or passed in.
+                    // For now, assuming window.getTrackById might still be a fallback or main.js handles it.
+                    const trackForFallback = typeof window !== 'undefined' && typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
                     const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
                         ? numericIndexForCallback
-                        : ( (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0) || 0); // Ensure a number
-                    console.log(`[Utils] OS Drop on DrumSampler: trackId=${dzTrackId}, finalPadIndex=${finalPadIndex}, fileName=${file.name}`);
+                        : ( (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0) || 0);
                     await loadFileCallback(simulatedEvent, dzTrackId, finalPadIndex, file.name);
                 } else if (dzTrackType === 'Sampler' || dzTrackType === 'InstrumentSampler') {
-                    console.log(`[Utils] OS Drop on ${dzTrackType}: trackId=${dzTrackId}, trackTypeHint=${dzTrackType}, fileName=${file.name}`);
                     await loadFileCallback(simulatedEvent, dzTrackId, dzTrackType, file.name);
                 } else {
                     console.warn(`[Utils] Unhandled trackType "${dzTrackType}" for OS file drop with loadFileCallback.`);
@@ -212,60 +208,42 @@ export function setupDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
             } else {
                  console.warn("[Utils] loadFileCallback not provided for OS file drop.");
             }
-        } else {
-            console.log("[Utils] Drop event with no recognized data (JSON or files).");
         }
     });
 }
 
-/**
- * Converts seconds to "Bars:Beats:Sixteenths" string format.
- * Example: 2.5 seconds at 120 BPM, 4/4 time might become "1:1:0" (Bar 1, Beat 1, 0 Sixteenths).
- * @param {number} seconds - The time in seconds.
- * @returns {string} Time in "B:B:S" format.
- */
+
 export function secondsToBBSTime(seconds) {
     if (typeof Tone === 'undefined' || seconds === null || seconds === undefined || isNaN(seconds)) {
         return "0:0:0";
     }
     try {
-        // Tone.Time can take seconds as a number and convert it.
-        // .toBarsBeatsSixteenths() is a convenient method.
         return Tone.Time(seconds).toBarsBeatsSixteenths();
     } catch (e) {
         console.error("Error converting seconds to B:B:S:", e);
-        return "0:0:0"; // Fallback
+        return "0:0:0";
     }
 }
 
-/**
- * Converts a "Bars:Beats:Sixteenths" string (e.g., "1:2:0") to seconds.
- * @param {string} bbsString - Time in "B:B:S" format.
- * @returns {number} Time in seconds, or null if parsing fails.
- */
 export function bbsTimeToSeconds(bbsString) {
     if (typeof Tone === 'undefined' || !bbsString || typeof bbsString !== 'string') {
         return null;
     }
     try {
-        // Tone.Time can parse "B:B:S" strings.
         const seconds = Tone.Time(bbsString).toSeconds();
         return isNaN(seconds) ? null : seconds;
     } catch (e) {
         console.error("Error converting B:B:S to seconds:", bbsString, e);
-        return null; // Parsing failed
+        return null;
     }
 }
 
-// --- Context Menu Utility ---
 let activeContextMenu = null;
 
 export function createContextMenu(event, menuItems) {
-    console.log('[Utils - createContextMenu] FUNCTION CALLED. Event:', event, 'MenuItems:', menuItems); // DEBUG LOG
     event.preventDefault();
     event.stopPropagation();
 
-    // Remove any existing context menu
     if (activeContextMenu) {
         activeContextMenu.remove();
         activeContextMenu = null;
@@ -273,11 +251,13 @@ export function createContextMenu(event, menuItems) {
 
     const menu = document.createElement('div');
     menu.id = 'snug-context-menu';
-    menu.className = 'context-menu'; // You'll style this in style.css
-    menu.style.position = 'fixed'; // Use fixed to avoid issues with scrolled containers
+    menu.className = 'context-menu';
+    menu.style.position = 'fixed';
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
-    menu.style.zIndex = (window.highestZIndex || 100) + 100; // Ensure it's on top
+    // Ensure highestZIndex is accessed safely if it's on window
+    const currentHighestZ = (typeof window !== 'undefined' && window.highestZIndex) ? window.highestZIndex : 100;
+    menu.style.zIndex = currentHighestZ + 100;
 
     const ul = document.createElement('ul');
     menuItems.forEach(itemConfig => {
@@ -296,7 +276,7 @@ export function createContextMenu(event, menuItems) {
                 e.stopPropagation();
                 itemConfig.action();
                 if (activeContextMenu) activeContextMenu.remove();
-                activeContextMenu = null; // Ensure it's cleared
+                activeContextMenu = null;
             });
         }
         ul.appendChild(li);
@@ -305,13 +285,7 @@ export function createContextMenu(event, menuItems) {
     menu.appendChild(ul);
     document.body.appendChild(menu);
     activeContextMenu = menu;
-    console.log('[Utils - createContextMenu] Menu DOM element appended to body:', activeContextMenu); // DEBUG LOG
-    if (activeContextMenu) { // Check if menu exists before trying to get computed style
-        console.log('[Utils - createContextMenu] Menu computed style left:', getComputedStyle(activeContextMenu).left, 'top:', getComputedStyle(activeContextMenu).top, 'zIndex:', getComputedStyle(activeContextMenu).zIndex, 'display:', getComputedStyle(activeContextMenu).display); // DEBUG LOG
-    }
 
-
-    // Reposition if it overflows viewport
     const menuRect = menu.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -323,17 +297,15 @@ export function createContextMenu(event, menuItems) {
         menu.style.top = `${Math.max(0, viewportHeight - menuRect.height)}px`;
     }
 
-    // Listener to close the menu when clicking elsewhere
     const closeListener = (e) => {
         if (activeContextMenu && !menu.contains(e.target)) {
             activeContextMenu.remove();
             activeContextMenu = null;
             document.removeEventListener('click', closeListener, { capture: true });
-            document.removeEventListener('contextmenu', closeListener, { capture: true }); // Close on another contextmenu event
+            document.removeEventListener('contextmenu', closeListener, { capture: true });
         }
     };
-    // Use capture phase to catch clicks reliably
-    setTimeout(() => { // Timeout to prevent immediate close from the same click that opened it
+    setTimeout(() => {
         document.addEventListener('click', closeListener, { capture: true });
         document.addEventListener('contextmenu', closeListener, { capture: true });
     }, 0);
