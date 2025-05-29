@@ -2,7 +2,7 @@
 console.log('[ui.js] TOP OF FILE PARSING - applySliceEdits Fix / Drum Knob Fix / Seq DOM Rework / Sound Browser Path Fix');
 
 import { SnugWindow } from './SnugWindow.js';
-import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js'; // Added createContextMenu
+import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
 import * as Constants from './constants.js';
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
@@ -414,7 +414,7 @@ function applySliceEdits(trackId) {
 
     const volumeKnobPlaceholder = winEl.querySelector(`#volumeKnob-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
-        const volumeKnob = createKnob({
+        const volumeKnob = createKnob({ // volumeKnob is defined here
             label: 'Volume', min: 0, max: 1.2, step: 0.01,
             initialValue: track.previousVolumeBeforeMute, 
             decimals: 2, trackRef: track,
@@ -423,7 +423,7 @@ function applySliceEdits(trackId) {
             }
         });
         volumeKnobPlaceholder.innerHTML = ''; 
-        volumeKnobPlaceholder.appendChild(knob.element); 
+        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Corrected: use volumeKnob.element
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -1357,9 +1357,11 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
     renderMixer(container); 
 }
  function renderMixer(container) { 
-    container.innerHTML = ''; 
     const tracks = typeof window.getTracks === 'function' ? window.getTracks() : [];
-
+    console.log('[UI - renderMixer] Called. Number of tracks found:', tracks.length, 'Tracks:', tracks); //  ADDED LOG
+    
+    container.innerHTML = ''; 
+    
     const masterTrackDiv = document.createElement('div');
     masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
     masterTrackDiv.innerHTML = `
@@ -1404,24 +1406,23 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
         `;
         
         // --- MODIFIED PART FOR DEBUGGING ---
-        console.log(`[UI - renderMixer] Creating trackDiv for track ID: ${track.id}`, trackDiv); //  ADDED LOG
+        console.log(`[UI - renderMixer] Creating trackDiv for track ID: ${track.id}`, trackDiv); 
 
         // Test basic click listener
         trackDiv.addEventListener('click', (event) => {
-            alert(`Track div for "${track.name}" (ID: ${track.id}) was CLICKED!`);
+            // alert(`Track div for "${track.name}" (ID: ${track.id}) was CLICKED!`); // Removed alert
             console.log(`[UI - renderMixer] CLICK event on trackDiv for ID: ${track.id}`, event.target);
         });
-        console.log(`[UI - renderMixer] Basic CLICK listener ADDED for track ID: ${track.id}`); //  ADDED LOG
+        console.log(`[UI - renderMixer] Basic CLICK listener ADDED for track ID: ${track.id}`); 
 
 
         // Context Menu Logic
-        console.log(`[UI - renderMixer] Attempting to add CONTEXTMENU listener for track ID: ${track.id}`); //  ADDED LOG
+        console.log(`[UI - renderMixer] Attempting to add CONTEXTMENU listener for track ID: ${track.id}`); 
         trackDiv.addEventListener('contextmenu', (event) => {
-            event.preventDefault(); // Keep this!
+            event.preventDefault(); 
             console.log(`[UI - renderMixer] CONTEXTMENU event triggered for track ID: ${track.id}`); 
             
-            // For now, just an alert to confirm contextmenu listener is working
-            alert(`Context menu for track "${track.name}" (ID: ${track.id}) would appear here.`);
+            // alert(`Context menu for track "${track.name}" (ID: ${track.id}) would appear here.`); // Removed alert
             
             const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
             if (!currentTrack) {
@@ -1476,7 +1477,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                 console.error("[UI - renderMixer] createContextMenu function is not available.");
             }
         });
-        console.log(`[UI - renderMixer] CONTEXTMENU listener setup completed for track ID: ${track.id}`); // ADDED LOG
+        console.log(`[UI - renderMixer] CONTEXTMENU listener setup completed for track ID: ${track.id}`); 
         // --- END OF MODIFIED PART ---
         
         container.appendChild(trackDiv);
