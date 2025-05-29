@@ -828,39 +828,3 @@ export class Track {
 
 }
 ```
-
-**Explanation of changes in `Track.js`:**
-1.  **Import Statement for Constants:**
-    * Changed from `import * as Constants from './constants.js';`
-    * To: `import { STEPS_PER_BAR, defaultStepsPerBar, synthPitches, numSlices, numDrumSamplerPads, samplerMIDINoteStart, defaultVelocity, MAX_BARS, computerKeySynthMap, computerKeySamplerMap } from './constants.js';`
-    * This brings each constant directly into the module's scope, so you use them as `numDrumSamplerPads` instead of `Constants.numDrumSamplerPads`. I've added all the constants you were using directly.
-
-2.  **Import Statement for `effectsRegistry.js`:**
-    * Added `synthEngineControlDefinitions` to the import:
-        `import { createEffectInstance, getEffectDefaultParams, AVAILABLE_EFFECTS, synthEngineControlDefinitions } from './effectsRegistry.js';`
-
-3.  **Usage of Constants:**
-    * In the constructor, `Constants.numDrumSamplerPads` is changed to just `numDrumSamplerPads`.
-    * `Constants.defaultStepsPerBar` is changed to `defaultStepsPerBar`.
-    * In `createEmptySequenceData`, `Constants.synthPitches`, `Constants.numSlices`, `Constants.numDrumSamplerPads` are changed to `synthPitches`, `numSlices`, `numDrumSamplerPads` respectively.
-    * In `setSequenceLength`, `Constants.synthPitches`, `Constants.numSlices`, `Constants.numDrumSamplerPads` are changed.
-    * In `initializeToneSequence`, `Constants.synthPitches`, `Constants.samplerMIDINoteStart`, `Constants.numDrumSamplerPads`, `Constants.STEPS_PER_BAR` are changed.
-    * In `triggerNotePlayback`, `Constants.STEPS_PER_BAR` is changed.
-    * Added `MAX_BARS` to the import as it's used in `setSequenceLength` (from the sequencer length input) and the "Double Sequence Length" context menu item (in `ui.js`).
-
-4.  **Usage of `synthEngineControlDefinitions`:**
-    * In `getDefaultSynthParams()`, it now correctly uses the imported `synthEngineControlDefinitions`.
-
-**Your `effectsRegistry.js` should be the version I sent previously (ID `daw_effects_registry_js_synth_def_export`), which defines and exports `synthEngineControlDefinitions`.**
-
-Your `ui.js` (from the last full version I sent, ID `daw_ui_js_all_funcs_verified` or the subsequent `daw_ui_js_erase_sequence_final_final` or `daw_ui_js_double_sequence_length`) should already be importing `synthEngineControlDefinitions` correctly from `effectsRegistry.js` and other constants directly.
-
-**After replacing your `Track.js` with the code above:**
-1.  **Save `Track.js`**.
-2.  Ensure your `effectsRegistry.js` has the `synthEngineControlDefinitions` defined and exported.
-3.  **Hard refresh SnugOS in your browser** (Ctrl+Shift+R or Cmd+Shift+R).
-4.  Check the console immediately for any errors.
-
-This should resolve the `Constants is not defined` error and also pre-empt the `synthEngineControlDefinitions is not defined` error in `Track.js`.
-
-Let me know if the application loads correctly now and if the windows op
