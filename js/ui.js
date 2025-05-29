@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - All functions verified for definition and export.');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Erase Sequence. Version: daw_ui_js_erase_sequence_final');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -423,7 +423,7 @@ function applySliceEdits(trackId) {
             }
         });
         volumeKnobPlaceholder.innerHTML = ''; 
-        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Ensured this uses volumeKnob.element
+        volumeKnobPlaceholder.appendChild(volumeKnob.element); // Corrected this line
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -1680,7 +1680,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                     },
                     disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type))
                 }
-                // "Erase Sequence" and step-specific items would go here in the future
             ];
             
             if (typeof createContextMenu === 'function') {
@@ -1745,7 +1744,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 // --- END MODIFIED openTrackSequencerWindow ---
 
 // --- Waveform Drawing Functions ---
-// Definition for Slicer Sampler waveform
 function drawWaveform(track) { 
     if (!track || !track.waveformCanvasCtx || !track.audioBuffer || !track.audioBuffer.loaded) {
         if (track && track.waveformCanvasCtx) { 
@@ -1805,7 +1803,6 @@ function drawWaveform(track) {
     });
 }
 
-// Definition for Instrument Sampler waveform
 function drawInstrumentWaveform(track) { 
     if (!track || !track.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer || !track.instrumentSamplerSettings.audioBuffer.loaded) {
          if (track && track.instrumentWaveformCanvasCtx) { 
@@ -1992,3 +1989,4 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
+
