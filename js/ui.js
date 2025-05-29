@@ -1405,8 +1405,14 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
         
         // Context Menu Logic
         trackDiv.addEventListener('contextmenu', (event) => {
+            console.log(`[UI - renderMixer] Context menu event triggered for track ID: ${track.id}`); // DEBUG LOG
             const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
-            if (!currentTrack) return;
+            if (!currentTrack) {
+                console.log(`[UI - renderMixer] Context menu: Track ${track.id} not found via getTrackById.`); // DEBUG LOG
+                return;
+            }
+            console.log(`[UI - renderMixer] Context menu: currentTrack found:`, currentTrack.name); // DEBUG LOG
+
 
             const menuItems = [
                 {
@@ -1441,13 +1447,16 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                     disabled: false
                 }
             ];
+            console.log(`[UI - renderMixer] Context menu: menuItems defined:`, menuItems); // DEBUG LOG
 
             if (typeof createContextMenu === 'function') {
+                 console.log(`[UI - renderMixer] Context menu: Calling imported createContextMenu`); // DEBUG LOG
                 createContextMenu(event, menuItems);
             } else if (typeof window.createContextMenu === 'function') {
+                console.log(`[UI - renderMixer] Context menu: Calling window.createContextMenu`); // DEBUG LOG
                 window.createContextMenu(event, menuItems);
             } else {
-                console.error("createContextMenu function is not available.");
+                console.error("[UI - renderMixer] createContextMenu function is not available.");
             }
         });
 
