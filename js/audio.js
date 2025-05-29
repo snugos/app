@@ -123,7 +123,6 @@ export function rebuildMasterEffectChain() {
 
     (window.masterEffectsChain || []).forEach((effectWrapper, index) => {
         if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
-            // Apply bypass state when rebuilding chain
             if (effectWrapper.toneNode.wet && typeof effectWrapper.toneNode.wet.value === 'number') {
                  effectWrapper.toneNode.wet.value = effectWrapper.isBypassed ? 0 : (effectWrapper.storedWetValue !== undefined ? effectWrapper.storedWetValue : 1);
             }
@@ -153,8 +152,7 @@ export function rebuildMasterEffectChain() {
             } catch (e) {
                 console.error(`[Audio - rebuildMasterEffectChain] Error connecting output of effects chain (${currentAudioPathEnd.constructor.name}) to masterGainNode:`, e);
             }
-        } else { // Should only happen if masterEffectsBusInput was null and no effects
-            console.log("[Audio - rebuildMasterEffectChain] No valid effects output or currentAudioPathEnd is masterEffectsBusInput itself, connecting masterEffectsBusInput directly to masterGainNode.");
+        } else { 
              if (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed && window.masterEffectsBusInput !== masterGainNode) { 
                 try { window.masterEffectsBusInput.connect(masterGainNode); } catch(e) { console.error(`[Audio - rebuildMasterEffectChain] Error connecting masterEffectsBusInput directly to masterGainNode:`, e); }
             }
@@ -189,9 +187,13 @@ export function rebuildMasterEffectChain() {
     }
 }
 
-export function addMasterEffect(effectType, effectIdToUse = null, skipRebuild = false) {
-    console.log(`[Audio - addMasterEffect] Attempting to add effect: ${effectType}, ID to use: ${effectIdToUse}`);
-    if (!isUserActionPlaceholder(effectIdToUse) && typeof window.captureStateForUndo === 'function') { // Check if not placeholder
+function isUserActionPlaceholder(arg) { // Helper to check if arg is the placeholder
+    return typeof arg === 'object' && arg !== null && arg._isUserActionPlaceholder === true;
+}
+
+export function addMasterEffect(effectType, effectIdToUse = null, skipRebuildDuringLoad = false) {
+    console.log(`[Audio - addMasterEffect] Attempting to add effect: ${effectType}, ID to use: ${effectIdToUse}, SkipRebuild: ${skipRebuildDuringLoad}`);
+    if (!isUserActionPlaceholder(effectIdToUse) && !skipRebuildDuringLoad && typeof window.captureStateForUndo === 'function') {
         window.captureStateForUndo(`Add ${effectType} to Master`);
     }
     const defaultParams = getEffectDefaultParams(effectType);
@@ -203,27 +205,25 @@ export function addMasterEffect(effectType, effectIdToUse = null, skipRebuild = 
             console.warn("[Audio - addMasterEffect] window.masterEffectsChain was undefined, initializing.");
             window.masterEffectsChain = [];
         }
-        const initialWet = (toneNode.wet && typeof toneNode.wet.value === 'number') ? toneNode.wet.value : (defaultParams?.wet !== undefined ? defaultParams.wet : 1);
+        const initialWet = (toneNode.wet && typeof toneNode.wet.value === 'number') ? 
+                                toneNode.wet.value : 
+                                (defaultParams?.wet !== undefined ? defaultParams.wet : 1);
         window.masterEffectsChain.push({
             id: effectId, 
             type: effectType, 
             toneNode: toneNode, 
             params: JSON.parse(JSON.stringify(defaultParams)),
-            isBypassed: false,      // Initialize bypass state
-            storedWetValue: initialWet // Initialize stored wet value
+            isBypassed: false,      
+            storedWetValue: initialWet 
         });
-        console.log(`[Audio - addMasterEffect] Effect ${effectType} (ID: ${effectId}) added to masterEffectsChain. New chain (structure):`, window.masterEffectsChain.map(e => ({id: e.id, type: e.type, params: e.params, isBypassed: e.isBypassed, toneNodeExists: !!e.toneNode})));
-        if (!skipRebuild) {
+        console.log(`[Audio - addMasterEffect] Effect ${effectType} (ID: ${effectId}) added to masterEffectsChain.`);
+        if (!skipRebuildDuringLoad) {
             rebuildMasterEffectChain(); 
         }
         return effectId;
     }
     console.warn(`[Audio - addMasterEffect] Failed to create master effect instance for ${effectType}`);
     return null;
-}
-// Helper to check if an argument is a placeholder for user action differentiation
-function isUserActionPlaceholder(arg) {
-    return typeof arg === 'object' && arg !== null && arg._isUserActionPlaceholder === true;
 }
 
 
@@ -233,7 +233,7 @@ export function removeMasterEffect(effectId) {
     const effectIndex = window.masterEffectsChain.findIndex(e => e.id === effectId);
     if (effectIndex > -1) {
         const effectToRemove = window.masterEffectsChain[effectIndex];
-        console.log(`[Audio - removeMasterEffect] Found effect to remove (structure):`, {id: effectToRemove.id, type: effectToRemove.type, params: effectToRemove.params});
+        console.log(`[Audio - removeMasterEffect] Found effect to remove:`, effectToRemove.type);
         if (typeof window.captureStateForUndo === 'function') {
             window.captureStateForUndo(`Remove ${effectToRemove.type} from Master`);
         }
@@ -242,7 +242,7 @@ export function removeMasterEffect(effectId) {
             console.log(`[Audio - removeMasterEffect] Disposed ToneNode for ${effectToRemove.type}`);
         }
         window.masterEffectsChain.splice(effectIndex, 1);
-        console.log(`[Audio - removeMasterEffect] Effect removed. New chain (structure):`, window.masterEffectsChain.map(e => ({id: e.id, type: e.type, params: e.params, isBypassed: e.isBypassed, toneNodeExists: !!e.toneNode})));
+        console.log(`[Audio - removeMasterEffect] Effect removed.`);
         rebuildMasterEffectChain(); 
     } else {
         console.warn(`[Audio - removeMasterEffect] Effect ID ${effectId} not found in masterEffectsChain.`);
@@ -258,7 +258,6 @@ export function updateMasterEffectParam(effectId, paramPath, value) {
         return;
     }
 
-    console.log(`[Audio - updateMasterEffectParam] Found effect wrapper (structure):`, {id: effectWrapper.id, type: effectWrapper.type, params: effectWrapper.params, isBypassed: effectWrapper.isBypassed});
     const keys = paramPath.split('.');
     let currentStoredParamLevel = effectWrapper.params;
     for (let i = 0; i < keys.length - 1; i++) {
@@ -266,7 +265,6 @@ export function updateMasterEffectParam(effectId, paramPath, value) {
         currentStoredParamLevel = currentStoredParamLevel[keys[i]];
     }
     currentStoredParamLevel[keys[keys.length - 1]] = value;
-    console.log(`[Audio - updateMasterEffectParam] Updated effectWrapper.params:`, JSON.parse(JSON.stringify(effectWrapper.params)));
 
     try {
         let targetNode = effectWrapper.toneNode;
@@ -281,16 +279,16 @@ export function updateMasterEffectParam(effectId, paramPath, value) {
 
         if (typeof paramInstance !== 'undefined') {
              if (finalParamKey === 'wet') {
-                effectWrapper.storedWetValue = value;
-                if (!effectWrapper.isBypassed) { // Only apply to live node if not bypassed
-                    if (paramInstance && typeof paramInstance.value !== 'undefined') paramInstance.value = value;
-                    else targetNode[finalParamKey] = value;
+                effectWrapper.storedWetValue = value; 
+                if (!effectWrapper.isBypassed && paramInstance && typeof paramInstance.value !== 'undefined') {
+                    paramInstance.value = value;
+                } else if (!effectWrapper.isBypassed) {
+                    targetNode[finalParamKey] = value; 
                 }
             } else {
-                if (paramInstance && typeof paramInstance.value !== 'undefined') paramInstance.value = value;
-                else targetNode[finalParamKey] = value;
+                 if (paramInstance && typeof paramInstance.value !== 'undefined') paramInstance.value = value;
+                 else targetNode[finalParamKey] = value;
             }
-            console.log(`[Audio - updateMasterEffectParam] Successfully updated ToneNode param ${paramPath}.`);
         } else if (typeof effectWrapper.toneNode.set === 'function' && keys.length > 0) {
             const setObj = {};
             let currentLevelForSet = setObj;
@@ -300,13 +298,12 @@ export function updateMasterEffectParam(effectId, paramPath, value) {
             }
             currentLevelForSet[finalParamKey] = value;
             effectWrapper.toneNode.set(setObj);
-             if (finalParamKey === 'wet') effectWrapper.storedWetValue = value; // Update storedWetValue here too
-            console.log(`[Audio - updateMasterEffectParam] Successfully updated ToneNode param ${paramPath} using .set().`);
+             if (finalParamKey === 'wet') effectWrapper.storedWetValue = value;
         } else {
-            console.warn(`[Audio - updateMasterEffectParam] Cannot set param "${paramPath}" on master effect ${effectWrapper.type}. Property or .set() method not available. Target object:`, targetNode, "Final Key:", finalParamKey);
+            console.warn(`[Audio - updateMasterEffectParam] Cannot set param "${paramPath}" on master effect ${effectWrapper.type}.`);
         }
     } catch (err) {
-        console.error(`[Audio - updateMasterEffectParam] Error updating param ${paramPath} for master effect ${effectWrapper.type}:`, err, "Value:", value, "Effect Node:", effectWrapper.toneNode);
+        console.error(`[Audio - updateMasterEffectParam] Error updating param ${paramPath} for master effect ${effectWrapper.type}:`, err);
     }
 }
 
@@ -335,7 +332,7 @@ export function reorderMasterEffect(effectId, newIndex) {
     const [effectToMove] = window.masterEffectsChain.splice(oldIndex, 1);
     window.masterEffectsChain.splice(clampedNewIndex, 0, effectToMove);
 
-    console.log(`[Audio - reorderMasterEffect] Reordered master effect. New order (structure):`, window.masterEffectsChain.map(e=>({id: e.id, type: e.type})));
+    console.log(`[Audio - reorderMasterEffect] Reordered master effect.`);
     rebuildMasterEffectChain();
 }
 
@@ -352,7 +349,8 @@ export function clearMasterEffects() {
         try { window.masterEffectsBusInput.disconnect(); } catch(e) {}
     }
     console.log("[Audio] Cleared master effects chain and disconnected master bus input.");
-    // rebuildMasterEffectChain(); // Rebuild to connect bus input directly to master gain if no effects
+    // Rebuild to connect master bus input directly to master gain if no effects are left
+    rebuildMasterEffectChain(); 
 }
 
 export function applyMasterEffectState(effectId, params, isBypassed, storedWetValue) {
@@ -363,7 +361,7 @@ export function applyMasterEffectState(effectId, params, isBypassed, storedWetVa
         if (params) {
             effectWrapper.params = JSON.parse(JSON.stringify(params));
             if (typeof effectWrapper.toneNode.set === 'function') {
-                effectWrapper.toneNode.set(params);
+                try { effectWrapper.toneNode.set(params); } catch(e) {console.warn(`Error setting params via .set() for ${effectWrapper.type}`, e)}
             } else {
                 for (const paramKey in params) {
                     if (Object.hasOwnProperty.call(params, paramKey)) {
@@ -387,7 +385,7 @@ export function applyMasterEffectState(effectId, params, isBypassed, storedWetVa
         }
 
         effectWrapper.isBypassed = isBypassed || false;
-        effectWrapper.storedWetValue = storedWetValue !== undefined ? storedWetValue : 1;
+        effectWrapper.storedWetValue = storedWetValue !== undefined ? storedWetValue : (effectWrapper.params?.wet !== undefined ? effectWrapper.params.wet : 1) ;
 
         if (effectWrapper.toneNode.wet && typeof effectWrapper.toneNode.wet.value === 'number') {
             effectWrapper.toneNode.wet.value = effectWrapper.isBypassed ? 0 : effectWrapper.storedWetValue;
@@ -417,11 +415,26 @@ export function toggleMasterEffectBypass(effectId) {
                 effectWrapper.toneNode.wet.value = effectWrapper.storedWetValue !== undefined ? effectWrapper.storedWetValue : 1;
             }
         } else {
-            console.warn(`[Audio] Master effect ${effectWrapper.type} does not have a standard .wet property. Bypass handled by rebuildEffectChain.`);
+            console.warn(`[Audio] Master effect ${effectWrapper.type} does not have a standard .wet property. Bypass requires rebuild.`);
             rebuildMasterEffectChain(); 
         }
         console.log(`[Audio] Master effect ${effectWrapper.type} ${effectWrapper.isBypassed ? 'bypassed' : 'enabled'}. Wet: ${effectWrapper.toneNode.wet ? effectWrapper.toneNode.wet.value : 'N/A'}, Stored: ${effectWrapper.storedWetValue}`);
         if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`${effectWrapper.isBypassed ? 'Bypass' : 'Enable'} master effect "${effectWrapper.type}"`);
+        
+        // Update UI if master effects rack is open
+        const masterRackWindow = window.openWindows['masterEffectsRack'];
+        if (masterRackWindow && typeof window.renderEffectsList === 'function' && masterRackWindow.element) {
+            const listDiv = masterRackWindow.element.querySelector(`#effectsList-master`);
+            const controlsContainer = masterRackWindow.element.querySelector(`#effectControlsContainer-master`);
+            setTimeout(() => { // Allow state to propagate
+                window.renderEffectsList(null, 'master', listDiv, controlsContainer);
+                const item = listDiv.querySelector(`.effect-item .effect-name[title*="${effectWrapper.type}"]`)?.closest('.effect-item');
+                if(item && item.classList.contains('bg-blue-100')) { 
+                     window.renderEffectControls(null, 'master', effectWrapper.id, controlsContainer);
+                }
+            }, 0);
+        }
+
     } else {
         console.warn(`[Audio] toggleMasterEffectBypass: Master effect ID ${effectId} not found or node invalid.`);
     }
@@ -429,10 +442,9 @@ export function toggleMasterEffectBypass(effectId) {
 
 
 export function updateMeters(masterMeterVisualElement, masterMeterBarVisualElement, mixerMasterMeterVisualElement, tracks) {
-    // ... (implementation as before)
     if (Tone.context.state !== 'running' || !audioContextInitialized) return;
 
-    if (window.masterMeter && typeof window.masterMeter.getValue === 'function') {
+    if (window.masterMeter && typeof window.masterMeter.getValue === 'function' && !window.masterMeter.disposed) {
         const masterLevelValue = window.masterMeter.getValue();
         const level = Tone.dbToGain(masterLevelValue);
         const isClipping = masterLevelValue > -0.1;
@@ -448,7 +460,7 @@ export function updateMeters(masterMeterVisualElement, masterMeterBarVisualEleme
     }
 
     (tracks || []).forEach(track => {
-        if (track && track.trackMeter && typeof track.trackMeter.getValue === 'function') {
+        if (track && track.trackMeter && typeof track.trackMeter.getValue === 'function' && !track.trackMeter.disposed) {
             const meterValue = track.trackMeter.getValue();
             const level = Tone.dbToGain(meterValue);
             const isClipping = meterValue > -0.1;
@@ -472,7 +484,6 @@ export function updateMeters(masterMeterVisualElement, masterMeterBarVisualEleme
 }
 
 export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0) {
-    // ... (implementation as before)
     const audioReady = await initAudioContextAndMasterMeter(true);
     if (!audioReady) { showNotification("Audio not ready for preview.", 2000); return; }
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
@@ -490,22 +501,36 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     let playDuration = sliceData.duration / playbackRate;
     if (sliceData.loop) playDuration = Math.min(playDuration, 2); 
 
-    const firstEffectNodeInTrack = track.activeEffects.length > 0 ? track.activeEffects[0].toneNode : track.gainNode;
-    const actualDestination = (firstEffectNodeInTrack && !firstEffectNodeInTrack.disposed) ? firstEffectNodeInTrack : (window.masterEffectsBusInput || Tone.getDestination());
+    const firstEffectNodeInTrack = track.activeEffects.length > 0 && track.activeEffects[0].toneNode && !track.activeEffects[0].toneNode.disposed ? track.activeEffects[0].toneNode : track.gainNode;
+    const actualDestination = (firstEffectNodeInTrack && !firstEffectNodeInTrack.disposed) ? firstEffectNodeInTrack : (window.masterEffectsBusInput && !window.masterEffectsBusInput.disposed ? window.masterEffectsBusInput : Tone.getDestination());
+
 
     if (!track.slicerIsPolyphonic) {
         if (!track.slicerMonoPlayer || track.slicerMonoPlayer.disposed) {
-            track.setupSlicerMonoNodes();
-            if(!track.slicerMonoPlayer) { console.warn("[Audio] Mono player not set up."); return; }
-             if(track.audioBuffer && track.audioBuffer.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer;
+            track.setupSlicerMonoNodes(); // This will create and chain them
+            if(!track.slicerMonoPlayer) { console.warn("[Audio] Mono player not set up after setupSlicerMonoNodes."); return; }
+             if(track.audioBuffer && track.audioBuffer.loaded) track.slicerMonoPlayer.buffer = track.audioBuffer.get(); // Use .get()
         }
         const player = track.slicerMonoPlayer; const env = track.slicerMonoEnvelope; const gain = track.slicerMonoGain;
+
+        // Connect the mono slicer output (gain) to the actual destination (start of effects or master bus)
+        if (gain && !gain.disposed && actualDestination && !actualDestination.disposed) {
+            try { gain.disconnect(actualDestination); } catch(e){} // Disconnect first to avoid duplicates
+            gain.connect(actualDestination);
+        } else {
+            console.warn("[Audio] Mono slicer gain or destination invalid for connection.");
+        }
+
+
         if (player.state === 'started') player.stop(time);
         if (env.getValueAtTime(time) > 0.001) env.triggerRelease(time);
-        player.buffer = track.audioBuffer.get(); env.set(sliceData.envelope);
-        gain.gain.value = Tone.dbToGain(-6) * sliceData.volume * velocity; 
+        
+        player.buffer = track.audioBuffer.get(); 
+        env.set(sliceData.envelope);
+        gain.gain.value = Tone.dbToGain(-6) + Tone.gainToDb(sliceData.volume * velocity); // Apply velocity, use dB for gain
         player.playbackRate = playbackRate; player.reverse = sliceData.reverse;
         player.loop = sliceData.loop; player.loopStart = sliceData.offset; player.loopEnd = sliceData.offset + sliceData.duration;
+        
         player.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
         env.triggerAttack(time);
         if (!sliceData.loop) {
@@ -515,7 +540,8 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     } else {
         const tempPlayer = new Tone.Player(track.audioBuffer.get());
         const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
-        const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * velocity); 
+        const tempGain = new Tone.Gain(Tone.dbToGain(-6) + Tone.gainToDb(sliceData.volume * velocity)); 
+        
         tempPlayer.chain(tempEnv, tempGain, actualDestination);
         tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse;
         tempPlayer.loop = sliceData.loop; tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
@@ -527,7 +553,6 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
 }
 
 export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0) {
-    // ... (implementation as before)
     const audioReady = await initAudioContextAndMasterMeter(true);
     if (!audioReady) { showNotification("Audio not ready for preview.", 2000); return; }
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
@@ -546,7 +571,6 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
 }
 
 export function getMimeTypeFromFilename(filename) {
-    // ... (implementation as before)
     if (!filename || typeof filename !== 'string') return "application/octet-stream";
     const lowerFilename = filename.toLowerCase();
     if (lowerFilename.endsWith(".wav")) return "audio/wav";
@@ -560,7 +584,6 @@ export function getMimeTypeFromFilename(filename) {
 }
 
 export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNameForUrl = null) {
-    // ... (implementation as before)
     console.log(`[Audio - loadSampleFile] Called. TrackID: ${trackId}, TypeHint: ${trackTypeHint}, FileNameForURL: ${fileNameForUrl}`); 
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
     const track = tracksArray.find(t => t.id === trackId);
@@ -622,11 +645,8 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     if ((!explicitType || explicitType === "application/octet-stream" || explicitType === "") && inferredType !== "application/octet-stream") {
         explicitType = inferredType;
         console.log(`[Audio - loadSampleFile] Using inferred type for "${sourceName}": '${explicitType}'`); 
-    } else if (explicitType && explicitType !== "application/octet-stream") {
-        console.log(`[Audio - loadSampleFile] Using explicit blob type for "${sourceName}": '${explicitType}'`); 
-    } else {
-        console.warn(`[Audio - loadSampleFile] Could not determine a specific audio type for "${sourceName}", staying with '${explicitType}' or default application/octet-stream.`); 
-        if (!explicitType) explicitType = 'application/octet-stream'; 
+    } else if (!explicitType) {
+        explicitType = 'application/octet-stream';
     }
     
     fileObject = new File([providedBlob], sourceName, { type: explicitType });
@@ -648,8 +668,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         objectURLForTone = URL.createObjectURL(fileObject); 
         console.log(`[Audio - loadSampleFile] Object URL for Tone.Buffer: ${objectURLForTone} (from File with type: ${fileObject.type})`); 
 
-        // Store in IndexedDB BEFORE loading into Tone.Buffer
-        const dbKey = `track-${track.id}-${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9.-]/g, "_")}`; // Sanitize key a bit more
+        const dbKey = `track-${track.id}-${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
         await storeAudio(dbKey, fileObject); 
         console.log(`[Audio - loadSampleFile] Stored "${sourceName}" in IndexedDB with key: ${dbKey}`);
 
@@ -708,7 +727,6 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
 }
 
 export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, fileNameForUrl = null) {
-    // ... (implementation as before, ensure dbKey is robust)
     console.log(`[Audio - loadDrumSamplerPadFile] Called. TrackID: ${trackId}, Pad: ${padIndex}, FileName: ${fileNameForUrl}`);
     const tracksArray = typeof window.getTracks === 'function' ? window.getTracks() : (window.tracks || []);
     const track = tracksArray.find(t => t.id === trackId);
@@ -785,13 +803,15 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         if (padData.audioBuffer && !padData.audioBuffer.disposed) padData.audioBuffer.dispose();
         if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
         
-        padData.audioBuffer = newBuffer; // Store ToneAudioBuffer
+        padData.audioBuffer = newBuffer; 
         padData.originalFileName = sourceName; 
         padData.dbKey = dbKey; 
         padData.status = 'loaded';
         
-        track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer).connect(track.drumPadGainNode); // Connect to track's drum gain node
-        track.drumPadPlayers[padIndex].volume.value = Tone.gainToDb(padData.volume || 0.7);
+        track.drumPadPlayers[padIndex] = new Tone.Player(newBuffer); // No .connect here, rebuildEffectChain handles drumPadGainNode
+        // track.drumPadPlayers[padIndex].volume.value = Tone.gainToDb(padData.volume || 0.7); // Volume applied at playback
+
+        track.rebuildEffectChain(); // Reconnect this player through the effects chain
 
         showNotification(`Sample "${sourceName}" loaded for Pad ${padIndex + 1}.`, 2000);
         if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
@@ -801,7 +821,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         console.error(`[Audio - loadDrumSamplerPadFile] Error loading drum sample "${sourceName}":`, error);
         showNotification(`Error loading drum sample "${sourceName}": ${error.message || 'Unknown error, check console.'}`, 4000);
         if(track.drumSamplerPads[padIndex]) {
-            track.drumSamplerPads[padIndex].status = 'error'; // Changed from 'missing' to 'error'
+            track.drumSamplerPads[padIndex].status = 'error'; 
              if (typeof window.updateDrumPadControlsUI === 'function') window.updateDrumPadControlsUI(track);
              if (typeof window.renderDrumSamplerPads === 'function') window.renderDrumSamplerPads(track);
         }
@@ -831,7 +851,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     }
 
     showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
-    let tempBlobUrlForDirectLoad = null; 
     try {
         console.log(`[Audio - loadSoundFromBrowserToTarget] Accessing library: ${libraryName}, fullPath: ${fullPath}`); 
         if (!window.loadedZipFiles || !window.loadedZipFiles[libraryName] || window.loadedZipFiles[libraryName] === "loading") {
@@ -851,11 +870,10 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         const blobToLoad = new File([fileBlobFromZip], fileName, {type: finalMimeType});
         console.log(`[Audio - loadSoundFromBrowserToTarget] Created File object for loading. Name: ${blobToLoad.name}, Type: ${blobToLoad.type}`);
 
-        // We pass the File object (blobToLoad) directly
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
             if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
-                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.audioBufferDataURL); 
+                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey); // Find first empty pad by dbKey
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; 
                 if (actualPadIndex === -1 || typeof actualPadIndex !== 'number') actualPadIndex = 0; 
             }
@@ -872,7 +890,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         console.error(`[Audio - loadSoundFromBrowserToTarget] Error loading sound from browser:`, error);
         showNotification(`Error loading "${fileName}": ${error.message}`, 3000);
     } finally { 
-        // No tempBlobUrlForDirectLoad was created in this path, so no revoke needed here.
         console.log(`[Audio - loadSoundFromBrowserToTarget] Finished processing sound from browser.`);
     }
 }
@@ -958,13 +975,13 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
         return;
     }
     const duration = track.audioBuffer.duration;
-    track.slices = []; // Clear existing slices before creating new ones
+    track.slices = []; 
     const sliceDuration = duration / numSlicesToCreate;
     for (let i = 0; i < numSlicesToCreate; i++) {
         track.slices.push({
             offset: i * sliceDuration, 
             duration: sliceDuration, 
-            userDefined: false, // Mark as not user-defined initially
+            userDefined: false, 
             volume: 1.0, 
             pitchShift: 0, 
             loop: false, 
@@ -972,24 +989,23 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
             envelope: { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 }
         });
     }
-    track.selectedSliceForEdit = 0; // Reset selected slice to the first one
-    track.setSequenceLength(track.sequenceLength, true); // Reschedule sequence if needed
+    track.selectedSliceForEdit = 0; 
+    track.setSequenceLength(track.sequenceLength, true); 
     
-    // Re-initialize Tone.Players for the slicer if it's polyphonic
-    if (track.slicerIsPolyphonic && track.instrument && typeof track.instrument.dispose === 'function' && !track.instrument.disposed) {
-        track.instrument.dispose();
-    }
     if (track.slicerIsPolyphonic) {
-        track.instrument = new Tone.Players(); // No .toDestination() here
+        if (track.instrument && typeof track.instrument.dispose === 'function' && !track.instrument.disposed) {
+             track.instrument.dispose();
+        }
+        track.instrument = new Tone.Players(); 
         track.slices.forEach((slice, index) => {
             if (track.audioBuffer && track.audioBuffer.loaded) {
                 const player = track.instrument.add(`slice-${index}`, track.audioBuffer.get());
                 if (player) player.loop = slice.loop;
             }
         });
-        track.rebuildEffectChain(); // Reconnect the new Tone.Players instance
+        track.rebuildEffectChain(); 
     } else if (track.slicerMonoPlayer && track.audioBuffer && track.audioBuffer.loaded) {
-         track.slicerMonoPlayer.buffer = track.audioBuffer.get(); // Update buffer for mono player
+         track.slicerMonoPlayer.buffer = track.audioBuffer.get(); 
     }
 
 
