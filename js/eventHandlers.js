@@ -422,7 +422,7 @@ export async function handleMIDIMessage(message) {
         }
     } else if (command === 128 || (command === 144 && velocityByte === 0)) { // Note Off
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
+            currentArmedTrack.instrument.triggerRelease(time + 0.05);
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
             if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
                  currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
@@ -542,7 +542,8 @@ function handleComputerKeyUp(e) {
                 const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
                 if (computerKeyNote >= 0 && computerKeyNote <= 127) {
                     if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-                        currentArmedTrack.instrument.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
+                        // *** THIS IS THE CORRECTED LINE ***
+                        currentArmedTrack.instrument.triggerRelease(time + 0.05);
                     } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
                         if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
                             currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
@@ -622,4 +623,3 @@ export function handleOpenEffectsRack(trackId) {
 export function handleOpenSequencer(trackId) {
     if (localAppServices.openTrackSequencerWindow) localAppServices.openTrackSequencerWindow(trackId);
 }
-
