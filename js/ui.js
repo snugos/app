@@ -423,7 +423,7 @@ function applySliceEdits(trackId) {
             }
         });
         volumeKnobPlaceholder.innerHTML = ''; 
-        volumeKnobPlaceholder.appendChild(volumeKnob.element); 
+        volumeKnobPlaceholder.appendChild(knob.element); 
         track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -1403,15 +1403,32 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
             </div>
         `;
         
+        // --- MODIFIED PART FOR DEBUGGING ---
+        console.log(`[UI - renderMixer] Creating trackDiv for track ID: ${track.id}`, trackDiv); //  ADDED LOG
+
+        // Test basic click listener
+        trackDiv.addEventListener('click', (event) => {
+            alert(`Track div for "${track.name}" (ID: ${track.id}) was CLICKED!`);
+            console.log(`[UI - renderMixer] CLICK event on trackDiv for ID: ${track.id}`, event.target);
+        });
+        console.log(`[UI - renderMixer] Basic CLICK listener ADDED for track ID: ${track.id}`); //  ADDED LOG
+
+
         // Context Menu Logic
+        console.log(`[UI - renderMixer] Attempting to add CONTEXTMENU listener for track ID: ${track.id}`); //  ADDED LOG
         trackDiv.addEventListener('contextmenu', (event) => {
-            console.log(`[UI - renderMixer] Context menu event triggered for track ID: ${track.id}`); // DEBUG LOG
+            event.preventDefault(); // Keep this!
+            console.log(`[UI - renderMixer] CONTEXTMENU event triggered for track ID: ${track.id}`); 
+            
+            // For now, just an alert to confirm contextmenu listener is working
+            alert(`Context menu for track "${track.name}" (ID: ${track.id}) would appear here.`);
+            
             const currentTrack = typeof window.getTrackById === 'function' ? window.getTrackById(track.id) : null;
             if (!currentTrack) {
-                console.log(`[UI - renderMixer] Context menu: Track ${track.id} not found via getTrackById.`); // DEBUG LOG
+                console.log(`[UI - renderMixer] Context menu: Track ${track.id} not found via getTrackById.`);
                 return;
             }
-            console.log(`[UI - renderMixer] Context menu: currentTrack found:`, currentTrack.name); // DEBUG LOG
+            console.log(`[UI - renderMixer] Context menu: currentTrack found:`, currentTrack.name);
 
 
             const menuItems = [
@@ -1447,19 +1464,21 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
                     disabled: false
                 }
             ];
-            console.log(`[UI - renderMixer] Context menu: menuItems defined:`, menuItems); // DEBUG LOG
+            console.log(`[UI - renderMixer] Context menu: menuItems defined:`, menuItems);
 
             if (typeof createContextMenu === 'function') {
-                 console.log(`[UI - renderMixer] Context menu: Calling imported createContextMenu`); // DEBUG LOG
+                 console.log(`[UI - renderMixer] Context menu: Calling imported createContextMenu`);
                 createContextMenu(event, menuItems);
             } else if (typeof window.createContextMenu === 'function') {
-                console.log(`[UI - renderMixer] Context menu: Calling window.createContextMenu`); // DEBUG LOG
+                console.log(`[UI - renderMixer] Context menu: Calling window.createContextMenu`);
                 window.createContextMenu(event, menuItems);
             } else {
                 console.error("[UI - renderMixer] createContextMenu function is not available.");
             }
         });
-
+        console.log(`[UI - renderMixer] CONTEXTMENU listener setup completed for track ID: ${track.id}`); // ADDED LOG
+        // --- END OF MODIFIED PART ---
+        
         container.appendChild(trackDiv);
 
 
