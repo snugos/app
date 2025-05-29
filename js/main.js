@@ -20,12 +20,15 @@ import {
     setRecordingTrackId,
     setIsRecording
 } from './state.js';
-import {
+import { // Ensure all necessary audio functions are imported
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
     addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect,
-    rebuildMasterEffectChain
+    rebuildMasterEffectChain,
+    clearMasterEffects, 
+    applyMasterEffectState, 
+    toggleMasterEffectBypass 
 } from './audio.js';
 
 // --- Full UI.JS IMPORTS ---
@@ -46,9 +49,10 @@ import {
     updateSliceEditorUI,
     updateDrumPadControlsUI,
     renderDrumSamplerPads,
-    createKnob, 
+    createKnob,
     openMasterEffectsRackWindow
 } from './ui.js';
+
 
 import { AVAILABLE_EFFECTS } from './effectsRegistry.js';
 
@@ -71,15 +75,6 @@ window.highestZIndex = 100;
 window.masterEffectsBusInput = null; 
 window.masterEffectsChain = []; 
 window.masterGainNode = null; 
-
-// Clipboard for copy/paste operations
-window.clipboardData = {
-    type: null,             // e.g., 'sequence', 'trackSettings', 'effect'
-    data: null,             // The actual copied data
-    sourceTrackType: null,  // e.g., 'Synth', 'Sampler', for compatibility checks
-    sequenceLength: null,   // Specifically for sequence type
-    // Add other metadata as needed for different clipboard types
-};
 
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
@@ -166,6 +161,7 @@ window.renderSamplePads = renderSamplePads;
 window.updateSliceEditorUI = updateSliceEditorUI;
 window.updateDrumPadControlsUI = updateDrumPadControlsUI;
 window.renderDrumSamplerPads = renderDrumSamplerPads;
+window.createContextMenu = createContextMenu; 
 
 window.playSlicePreview = playSlicePreview;
 window.playDrumSamplerPadPreview = playDrumSamplerPadPreview;
@@ -193,9 +189,8 @@ window.handleOpenTrackInspector = handleOpenTrackInspector;
 window.handleOpenEffectsRack = handleOpenEffectsRack;
 window.handleOpenSequencer = handleOpenSequencer;
 
-// Assign attachGlobalControlEvents to window object here
 window.attachGlobalControlEvents = attachGlobalControlEvents;
-console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents);
+console.log('[Main] window.attachGlobalControlEvents assigned. Type:', typeof window.attachGlobalControlEvents); 
 
 window.selectMIDIInput = selectMIDIInput;
 
@@ -212,10 +207,11 @@ window.addMasterEffect = addMasterEffect;
 window.removeMasterEffect = removeMasterEffect;
 window.updateMasterEffectParam = updateMasterEffectParam;
 window.reorderMasterEffect = reorderMasterEffect;
-window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS;
+window.toggleMasterEffectBypass = toggleMasterEffectBypass; // <-- MAKE SURE THIS IS ASSIGNED
+window.clearMasterEffects = clearMasterEffects;             // <-- MAKE SURE THIS IS ASSIGNED
+window.applyMasterEffectState = applyMasterEffectState;     // <-- MAKE SURE THIS IS ASSIGNED
 
-// Make createContextMenu globally available for SnugWindow or other modules if needed
-window.createContextMenu = createContextMenu; 
+window.AVAILABLE_EFFECTS = AVAILABLE_EFFECTS; 
 
 window.updateSequencerCellUI = (cell, trackType, isActive) => {
     if (!cell) return;
@@ -342,7 +338,7 @@ async function initializeSnugOS() {
 
 function updateMetersLoop() {
     const currentTracks = typeof getTracks === 'function' ? getTracks() : [];
-    const mixerMasterMeterBar = document.getElementById('mixerMasterMeterBar');
+    const mixerMasterMeterBar = document.getElementById('mixerMasterMeterBar'); // This might be null if mixer not open
     updateMeters(window.masterMeterBar, window.masterMeterBar, mixerMasterMeterBar, currentTracks);
     requestAnimationFrame(updateMetersLoop);
 }
