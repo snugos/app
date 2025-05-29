@@ -34,8 +34,6 @@ let localAppServices = {
     // UI functions from main.js or other UI parts
     updateTrackUI: (trackId, reason, detail) => {},
     // Global state/nodes (some might still be on window for simplicity this pass)
-    // masterGainNode: null, (accessed via window)
-    // masterEffectsChain: [], (accessed via window)
 };
 
 export function initializeUIModule(appServicesFromMain) {
@@ -874,10 +872,10 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             const currentTrackForMenu = localAppServices.getTrackById ? localAppServices.getTrackById(track.id) : null; if (!currentTrackForMenu) return;
             const menuItems = [
                 { label: "Copy Sequence", action: () => { if (typeof window !== 'undefined') { window.clipboardData = { type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData || [])), sequenceLength: currentTrackForMenu.sequenceLength }; showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000); } } },
-                { label: "Paste Sequence", action: () => { if (typeof window !== 'undefined' && (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data)) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (window.clipboardData.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`); currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(window.clipboardData.data)); currentTrackForMenu.setSequenceLength(window.clipboardData.sequenceLength, true); showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000); }, disabled: (typeof window === 'undefined' || !window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type)) },
+                { label: "Paste Sequence", action: () => { if (typeof window !== 'undefined' && (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data)) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (window.clipboardData.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`); currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(window.clipboardData.data)); currentTrackForMenu.setSequenceLength(window.clipboardData.sequenceLength, true); showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (typeof window === 'undefined' || !window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type)) },
                 { separator: true },
-                { label: "Erase Sequence", action: () => { showConfirmationDialog(`Erase Sequence for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`); let numRowsErase = currentTrackForMenu.sequenceData.length; currentTrackForMenu.sequenceData = Array(numRowsErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null)); currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000); }); } },
-                { label: "Double Sequence Length", action: () => { const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000); } }
+                { label: "Erase Sequence", action: () => { showConfirmationDialog(`Erase Sequence for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`); let numRowsErase = currentTrackForMenu.sequenceData.length; currentTrackForMenu.sequenceData = Array(numRowsErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null)); currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
+                { label: "Double Sequence Length", action: () => { const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000); /* UI update handled by track.doubleSequence -> setSequenceLength -> appServices.updateTrackUI */ } }
             ];
             createContextMenu(event, menuItems);
         };
@@ -892,8 +890,8 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     const currentStepData = track.sequenceData[row][col]; const isActive = !(currentStepData?.active);
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
                     track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
-                    const cell = sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
-                    if(cell && localAppServices.updateSequencerCellUI) localAppServices.updateSequencerCellUI(cell, track.type, isActive);
+                    // The updateSequencerCellUI function is now exported and used here
+                    updateSequencerCellUI(sequencerWindow.element, track.type, row, col, isActive);
                 }
             }
         });
@@ -1017,8 +1015,6 @@ export function renderDrumSamplerPads(track) {
     });
 }
 
-// highlightPlayingStep is now defined in main.js and passed via appServices if needed by Track.js
-// For direct UI updates from sequencer events, it would be called from main.js's transport event listeners.
 export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
@@ -1032,5 +1028,20 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
         else if (trackType === 'DrumSampler') activeClass = 'active-drum-sampler';
         else if (trackType === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
         if (activeClass) cell.classList.add(activeClass);
+    }
+}
+
+// Added export for highlightPlayingStep
+export function highlightPlayingStep(trackId, col) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) return;
+    const seqWindow = window.openWindows[`sequencerWin-${trackId}`];
+    if (seqWindow && seqWindow.element && !seqWindow.isMinimized) {
+        const gridElement = seqWindow.element.querySelector('.sequencer-grid-layout');
+        if (!gridElement) return;
+        const previouslyPlaying = gridElement.querySelector('.sequencer-step-cell.playing');
+        if (previouslyPlaying) previouslyPlaying.classList.remove('playing');
+        const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`);
+        currentCells.forEach(cell => cell.classList.add('playing'));
     }
 }
