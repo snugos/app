@@ -1996,4 +1996,3 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
-
