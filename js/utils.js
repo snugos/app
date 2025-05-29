@@ -256,4 +256,3 @@ export function bbsTimeToSeconds(bbsString) {
         return null; // Parsing failed
     }
 }
-
