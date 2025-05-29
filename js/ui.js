@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Double Sequence Length. Version: daw_ui_js_double_sequence_final_added');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Effects Rack Context Menu. Version: daw_ui_js_effects_rack_context_menu');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -1550,7 +1550,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     return html;
 }
 
-// --- MODIFIED openTrackSequencerWindow (with Erase Sequence and Double Sequence Length) ---
+// --- MODIFIED openTrackSequencerWindow (with Erase Sequence & Double Sequence Length) ---
  function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track) {
@@ -1724,7 +1724,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         const oldLength = currentTrackForMenu.sequenceLength;
                         const newLength = oldLength * 2;
                         
-                        // Determine the number of rows based on track type, ensuring it's consistent
                         let numRows = 0;
                         if (currentTrackForMenu.type === 'Synth' || currentTrackForMenu.type === 'InstrumentSampler') {
                             numRows = Constants.synthPitches.length;
@@ -1732,18 +1731,21 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                             numRows = currentTrackForMenu.slices ? (currentTrackForMenu.slices.length > 0 ? currentTrackForMenu.slices.length : Constants.numSlices) : Constants.numSlices;
                         } else if (currentTrackForMenu.type === 'DrumSampler') {
                             numRows = Constants.numDrumSamplerPads;
-                        } else { // Fallback or for unknown types
-                            numRows = originalSequenceData.length;
+                        } else { 
+                            numRows = originalSequenceData.length; // Fallback, though should match a type
+                        }
+                        // Ensure originalSequenceData has the correct number of rows for iteration, padding with empty arrays if necessary
+                        while (originalSequenceData.length < numRows) {
+                            originalSequenceData.push([]);
                         }
 
 
                         const doubledSequenceData = Array(numRows).fill(null).map(() => Array(newLength).fill(null));
 
                         for (let r = 0; r < numRows; r++) {
-                            // Ensure originalRow exists and is an array, even if sparse
-                            const originalRow = (originalSequenceData[r] && Array.isArray(originalSequenceData[r])) ? originalSequenceData[r] : [];
+                            const originalRow = originalSequenceData[r] || []; // Handle potentially sparse rows from original
                             for (let c = 0; c < oldLength; c++) {
-                                if (originalRow[c]) { // If the step existed
+                                if (originalRow[c]) { 
                                     doubledSequenceData[r][c] = JSON.parse(JSON.stringify(originalRow[c]));
                                     doubledSequenceData[r][c + oldLength] = JSON.parse(JSON.stringify(originalRow[c]));
                                 }
@@ -1751,6 +1753,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         }
                         
                         currentTrackForMenu.sequenceData = doubledSequenceData;
+                        // Important: Set the length property on the track *before* calling setSequenceLength
                         currentTrackForMenu.sequenceLength = newLength; 
                         
                         currentTrackForMenu.setSequenceLength(newLength, true); 
@@ -1937,8 +1940,6 @@ function drawInstrumentWaveform(track) {
     }
 }
 // --- END Waveform Drawing Functions ---
-
-// ... (Other UI functions like renderSamplePads, updateSliceEditorUI, etc. should be here) ...
 
 function renderSamplePads(track) { 
     const inspector = track.inspectorWindow?.element;
