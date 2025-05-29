@@ -1926,4 +1926,3 @@ export {
     renderDrumSamplerPads,
     highlightPlayingStep
 };
-
