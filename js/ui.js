@@ -1,5 +1,5 @@
 // js/ui.js
-console.log('[ui.js] TOP OF FILE PARSING - Adding Erase Sequence. Version: daw_ui_js_erase_sequence_final_final');
+console.log('[ui.js] TOP OF FILE PARSING - Adding Erase Sequence and verifying all exports. Version: daw_ui_js_with_erase_sequence_final_final_verified');
 
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupDropZoneListeners as utilSetupDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
@@ -311,7 +311,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     return html;
 }
 
-// Definition of applySliceEdits
+// Definition of applySliceEdits (Ensured this is present)
 function applySliceEdits(trackId) {
     const track = typeof window.getTrackById === 'function' ? window.getTrackById(trackId) : null;
     if (!track || track.type !== 'Sampler') {
@@ -1679,8 +1679,36 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
                         showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000);
                     },
                     disabled: (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type))
+                },
+                { separator: true },
+                {
+                    label: "Erase Sequence",
+                    action: () => {
+                        if (!currentTrackForMenu) return;
+                        if (typeof window.captureStateForUndo === 'function') window.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`);
+                        
+                        let numRowsForErase = 0;
+                        if (currentTrackForMenu.type === 'Synth' || currentTrackForMenu.type === 'InstrumentSampler') {
+                            numRowsForErase = Constants.synthPitches.length;
+                        } else if (currentTrackForMenu.type === 'Sampler') {
+                            // Use the current number of slices for the sampler track
+                            numRowsForErase = currentTrackForMenu.slices ? currentTrackForMenu.slices.length : Constants.numSlices;
+                        } else if (currentTrackForMenu.type === 'DrumSampler') {
+                            numRowsForErase = Constants.numDrumSamplerPads;
+                        }
+                        
+                        currentTrackForMenu.sequenceData = Array(numRowsForErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null));
+                        
+                        currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); 
+
+                        if(typeof window.openTrackSequencerWindow === 'function'){
+                            console.log(`[UI - Sequencer Context] Forcing redraw of sequencer for track ${currentTrackForMenu.id} after erase.`);
+                            window.openTrackSequencerWindow(currentTrackForMenu.id, true, null);
+                        }
+                        showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000);
+                        console.log('[UI - Sequencer Context] Erased sequence for track:', currentTrackForMenu.id);
+                    }
                 }
-                // "Erase Sequence" and step-specific items would go here in the future
             ];
             
             if (typeof createContextMenu === 'function') {
