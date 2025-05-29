@@ -4,6 +4,9 @@ export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
 export const MAX_BARS = 32; // Maximum number of bars a sequence can have
 
+export const MIN_TEMPO = 30; // Minimum tempo in BPM
+export const MAX_TEMPO = 300; // Maximum tempo in BPM
+
 export const synthPitches = [
     'C2', 'C#2', 'D2', 'D#2', 'E2', 'F2', 'F#2', 'G2', 'G#2', 'A2', 'A#2', 'B2',
     'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3',
