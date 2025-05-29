@@ -422,7 +422,6 @@ export async function handleMIDIMessage(message) {
         }
     } else if (command === 128 || (command === 144 && velocityByte === 0)) { // Note Off
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            // *** THIS IS THE FIRST BUG FIX ***
             currentArmedTrack.instrument.triggerRelease(time + 0.05);
         } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
             if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
@@ -433,6 +432,8 @@ export async function handleMIDIMessage(message) {
 }
 
 async function handleComputerKeyDown(e) {
+    console.log('[EventHandlers] handleComputerKeyDown triggered. Key:', e.code, 'Target:', e.target.tagName); // 1. Log key press & target
+
     if (e.code === 'Space') {
         e.preventDefault();
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
@@ -442,7 +443,11 @@ async function handleComputerKeyDown(e) {
         }
         return;
     }
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        console.log('[EventHandlers] Input field focused, ignoring key for note play.');
+        return;
+    }
+
 
     if (e.code === 'KeyZ' || e.code === 'KeyX') {
         if (!currentlyPressedComputerKeys[e.code]) {
@@ -456,19 +461,36 @@ async function handleComputerKeyDown(e) {
         return;
     }
 
-    if (e.repeat || currentlyPressedComputerKeys[e.code]) return;
+    if (e.repeat || currentlyPressedComputerKeys[e.code]) {
+        console.log('[EventHandlers] Key repeat or already pressed, skipping. Code:', e.code);
+        return;
+    }
     currentlyPressedComputerKeys[e.code] = true;
     if(localAppServices.uiElements?.keyboardIndicatorGlobalEl) localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.add('active');
 
     const time = Tone.now();
     const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
-    if (baseComputerKeyNote === undefined) return;
+    console.log('[EventHandlers] baseComputerKeyNote:', baseComputerKeyNote, 'for key:', e.code); // Log base note
+
+    if (baseComputerKeyNote === undefined) {
+        console.log('[EventHandlers] Key not mapped for notes.');
+        // delete currentlyPressedComputerKeys[e.code]; // Keep it pressed for keyup, but don't play
+        return;
+    }
 
     const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-    if (computerKeyNote < 0 || computerKeyNote > 127) return;
+    console.log('[EventHandlers] computerKeyNote (with octave shift):', computerKeyNote); // Log final note
+
+    if (computerKeyNote < 0 || computerKeyNote > 127) {
+        console.log('[EventHandlers] Note out of MIDI range.');
+        return;
+    }
 
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+    console.log('[EventHandlers] audioReady from initAudioContextAndMasterMeter:', audioReady); // Log audioReady status
+
     if (!audioReady) {
+        console.warn('[EventHandlers] Audio not ready, note play aborted.');
         delete currentlyPressedComputerKeys[e.code];
         if(localAppServices.uiElements?.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).filter(k => k !== 'KeyZ' && k !== 'KeyX').length === 0) {
             localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.remove('active');
@@ -506,30 +528,57 @@ async function handleComputerKeyDown(e) {
     }
 
     const currentArmedTrackId = getArmedTrackId();
-    if (!currentArmedTrackId) return;
-    const currentArmedTrack = getTrackById(currentArmedTrackId);
-    if (!currentArmedTrack) return;
+    console.log('[EventHandlers] currentArmedTrackId for note play:', currentArmedTrackId); // Log armed track ID
 
-    if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.instrument) {
-        currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
+    if (!currentArmedTrackId) {
+        console.log('[EventHandlers] No track armed, note play aborted.');
+        return;
+    }
+    const currentArmedTrack = getTrackById(currentArmedTrackId);
+    console.log('[EventHandlers] currentArmedTrack for note play:', currentArmedTrack ? currentArmedTrack.name : 'null', 'Type:', currentArmedTrack ? currentArmedTrack.type : 'N/A'); // Log armed track object
+
+    if (!currentArmedTrack) {
+        console.warn('[EventHandlers] Armed track object not found, note play aborted.');
+        return;
+    }
+
+    if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code]) {
+        if (currentArmedTrack.instrument) {
+            console.log('[EventHandlers] Synth track armed. Instrument:', currentArmedTrack.instrument.name, 'Disposed:', currentArmedTrack.instrument.disposed, 'Volume:', currentArmedTrack.instrument.volume?.value);
+            console.log('[EventHandlers] Playing Synth note:', Tone.Frequency(computerKeyNote, "midi").toNote(), 'at time:', time, 'with velocity:', Constants.defaultVelocity);
+            currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
+        } else {
+            console.warn('[EventHandlers] Synth track armed, but instrument is NULL.');
+        }
     } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined && localAppServices.playSlicePreview) {
         const sliceIdx = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length) {
+            console.log('[EventHandlers] Playing Sampler slice:', sliceIdx);
             localAppServices.playSlicePreview(currentArmedTrack.id, sliceIdx, Constants.defaultVelocity);
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined && localAppServices.playDrumSamplerPadPreview) {
         const padIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
         if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads) {
+            console.log('[EventHandlers] Playing DrumSampler pad:', padIndex);
             localAppServices.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, Constants.defaultVelocity);
         }
-    } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler?.loaded) {
-        if (!currentArmedTrack.instrumentSamplerIsPolyphonic) currentArmedTrack.toneSampler.releaseAll(time);
-        currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
+    } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler) {
+        if (currentArmedTrack.toneSampler.loaded) {
+            console.log('[EventHandlers] InstrumentSampler track armed. ToneSampler loaded. Poly:', currentArmedTrack.instrumentSamplerIsPolyphonic);
+            if (!currentArmedTrack.instrumentSamplerIsPolyphonic) currentArmedTrack.toneSampler.releaseAll(time);
+            console.log('[EventHandlers] Playing InstrumentSampler note:', Tone.Frequency(computerKeyNote, "midi").toNote());
+            currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
+        } else {
+            console.warn('[EventHandlers] InstrumentSampler armed, but toneSampler not loaded.');
+        }
+    } else {
+        console.log('[EventHandlers] No matching condition to play note for track type:', currentArmedTrack.type, 'and key map:', Constants.computerKeySynthMap[e.code] ? 'SynthMap' : (Constants.computerKeySamplerMap[e.code] ? 'SamplerMap' : 'None'));
     }
 }
 
 function handleComputerKeyUp(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.code === 'Space') return;
+    console.log('[EventHandlers] handleComputerKeyUp triggered. Key:', e.code); // Log key up
 
     const isOctaveKey = (e.code === 'KeyZ' || e.code === 'KeyX');
     if (isOctaveKey) {
@@ -538,7 +587,7 @@ function handleComputerKeyUp(e) {
         const time = Tone.now();
         const currentArmedTrack = getTrackById(getArmedTrackId());
         if (currentArmedTrack) {
-            // *** THIS IS THE SECOND BUG FIX AREA ***
+            console.log('[EventHandlers KeyUp] currentArmedTrack:', currentArmedTrack.name, 'Type:', currentArmedTrack.type);
             const isSynthKey = Constants.computerKeySynthMap[e.code] !== undefined;
             const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
 
@@ -546,11 +595,14 @@ function handleComputerKeyUp(e) {
                 const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
                 if (computerKeyNote >= 0 && computerKeyNote <= 127) {
                     if (currentArmedTrack.type === 'Synth' && isSynthKey && currentArmedTrack.instrument) {
+                        console.log('[EventHandlers KeyUp] Releasing Synth note:', Tone.Frequency(computerKeyNote, "midi").toNote());
                         currentArmedTrack.instrument.triggerRelease(time + 0.05);
                     } else if (currentArmedTrack.type === 'InstrumentSampler' && isSynthKey && currentArmedTrack.toneSampler?.loaded) {
                         if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
+                            console.log('[EventHandlers KeyUp] Releasing InstrumentSampler note:', Tone.Frequency(computerKeyNote, "midi").toNote());
                             currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
                         }
+                        // For monophonic InstrumentSampler, releaseAll is handled on next note attack.
                     }
                 }
             }
