@@ -388,33 +388,44 @@ export class SnugWindow {
     }
 
     close(isReconstruction = false) {
+        console.log(`[SnugWindow ${this.id}] close() called. Title: "${this.title}". IsReconstruction: ${isReconstruction}`); // Added log
         if (this.onCloseCallback && typeof this.onCloseCallback === 'function') {
-            try { this.onCloseCallback(); }
+            try { 
+                console.log(`[SnugWindow ${this.id}] Executing onCloseCallback.`); // Added log
+                this.onCloseCallback(); 
+            }
             catch (e) { console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e); }
         }
 
-        if (this.taskbarButton) try { this.taskbarButton.remove(); } catch(e) { /* ignore */ }
-        if (this.element) try { this.element.remove(); } catch(e) { /* ignore */ }
+        if (this.taskbarButton) {
+            try { 
+                console.log(`[SnugWindow ${this.id}] Removing taskbar button.`); // Added log
+                this.taskbarButton.remove(); 
+            } catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing taskbar button:`, e.message); }
+        }
+        if (this.element) {
+            try {
+                console.log(`[SnugWindow ${this.id}] Removing window element from DOM.`); // Added log
+                this.element.remove(); 
+            } catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing window element:`, e.message); }
+        }
 
         const oldWindowTitle = this.title;
         if (this.appServices.removeWindowFromStore) {
+            console.log(`[SnugWindow ${this.id}] Calling appServices.removeWindowFromStore.`); // Added log
             this.appServices.removeWindowFromStore(this.id);
         } else {
-            console.warn("[SnugWindow] removeWindowFromStore service not available.");
+            console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available.`); // Added log
         }
-
-
-        // Use appServices to notify main.js or state.js to clear track window references
-        // This specific service might not exist, but the general idea is to decouple
-        // if (this.appServices.clearTrackWindowReference) {
-        // this.appServices.clearTrackWindowReference(this.id);
-        // }
 
         const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
         if (!isCurrentlyReconstructing && !isReconstruction) {
+            console.log(`[SnugWindow ${this.id}] Capturing undo state for closing window.`); // Added log
             this._captureUndo(`Close window "${oldWindowTitle}"`);
         }
+        console.log(`[SnugWindow ${this.id}] close() finished.`); // Added log
     }
+
 
     focus(skipUndo = false) {
         if (this.isMinimized) { this.restore(skipUndo); return; }
