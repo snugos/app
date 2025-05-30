@@ -1009,9 +1009,7 @@ export class Track {
         this.clipPlayers.forEach((player, clipId) => {
             if (player && !player.disposed) {
                 try {
-                    // It's important to stop the player on the Transport timeline
-                    // and then dispose of it.
-                    player.stop(Tone.Transport.now()); // Stop immediately on the transport
+                    player.stop(Tone.Transport.now()); 
                     player.dispose();
                     console.log(`[Track ${this.id}] Stopped and disposed player for clip ${clipId}`);
                 } catch(e) {
@@ -1022,7 +1020,7 @@ export class Track {
         this.clipPlayers.clear();
     }
 
-    updateAudioClipPosition(clipId, newStartTime) {
+    async updateAudioClipPosition(clipId, newStartTime) {
         if (this.type !== 'Audio') return;
     
         const clip = this.audioClips.find(c => c.id === clipId);
@@ -1040,22 +1038,16 @@ export class Track {
                 
                 this.stopPlayback(); // Stop all current playback for this track
                 
-                // Use a short delay to allow Tone.Transport to process the stop events
-                // before re-scheduling. This can sometimes help with event queue race conditions.
-                setTimeout(() => {
-                    const lookaheadDuration = 300; 
-                    const currentTransportTime = Tone.Transport.seconds;
-                    const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
-                                              Tone.Transport.loopEnd : 
-                                              (currentTransportTime + lookaheadDuration);
-                    
-                    console.log(`[Track ${this.id}] Re-scheduling all clips on track from ${currentTransportTime} to ${transportStopTime}.`);
-                    this.schedulePlayback(currentTransportTime, transportStopTime);
-                }, 50); // 50ms delay, can be adjusted
-
+                // Re-schedule all clips for this track from the current transport time onwards
+                const lookaheadDuration = 300; 
+                const currentTransportTime = Tone.Transport.seconds;
+                const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
+                                          Tone.Transport.loopEnd : 
+                                          (currentTransportTime + lookaheadDuration);
+                
+                console.log(`[Track ${this.id}] Re-scheduling all clips on track from ${currentTransportTime} to ${transportStopTime}.`);
+                await this.schedulePlayback(currentTransportTime, transportStopTime); 
             }
-            // If transport is stopped, the main play button handler will call schedulePlayback with transportStartTime = 0
-            // which will pick up the new clip.startTime.
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
         }
