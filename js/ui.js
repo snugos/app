@@ -1053,7 +1053,7 @@ export function renderSamplePads(track) {
     });
 }
 
-export function updateSliceEditorUI(track) { 
+function updateSliceEditorUI(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler' || !track.slices?.length) return;
     const selectedInfo = inspectorWindow.element.querySelector(`#selectedSliceInfo-${track.id}`);
