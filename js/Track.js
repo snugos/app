@@ -1,7 +1,7 @@
 // js/Track.js - Track Class Module
 
 import * as Constants from './constants.js';
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js'; // Aliased import
+import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
 
 
@@ -207,11 +207,7 @@ export class Track {
             } else if (currentOutput && !currentOutput.disposed) {
                 currentOutput.connect(this.gainNode);
             }
-        } else if (sourceNodes.length === 0 && this.type !== 'Sampler' && this.type !== 'DrumSampler') {
-            // For types like Synth, if instrument is null, there's no source yet.
-            // This is fine, instrument will connect when initialized.
         }
-
 
         if (this.gainNode && !this.gainNode.disposed && this.trackMeter && !this.trackMeter.disposed) {
             this.gainNode.connect(this.trackMeter);
@@ -295,8 +291,6 @@ export class Track {
 
         try {
             let targetObject = effectWrapper.toneNode;
-            const paramDef = this.appServices.effectsRegistryAccess?.getEffectParamDefinitions(effectWrapper.type)?.find(p => p.key === paramPath);
-
             for (let i = 0; i < keys.length - 1; i++) {
                 targetObject = targetObject[keys[i]];
                 if (typeof targetObject === 'undefined') {
@@ -394,7 +388,7 @@ export class Track {
                         } finally {
                             URL.revokeObjectURL(objectURL);
                         }
-                    } else if (this.samplerAudioData.status !== 'error') { // If not already set to error by catch blocks
+                    } else if (this.samplerAudioData.status !== 'error') {
                         this.samplerAudioData.status = this.samplerAudioData.dbKey ? 'missing_db' : 'error';
                     }
                 }
@@ -472,7 +466,7 @@ export class Track {
                 }
                 this.setupToneSampler();
             }
-        } catch (error) { // Catch any top-level errors during resource initialization
+        } catch (error) {
             console.error(`[Track ${this.id}] Overall error in fullyInitializeAudioResources for ${this.type}:`, error);
             if (this.appServices.showNotification) this.appServices.showNotification(`Major error loading audio for ${this.name}.`, 4000);
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sampleLoadError');
@@ -738,14 +732,13 @@ export class Track {
 
 
             if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
-                 let notePlayedThisStep = false; // FIX: Ensure only one note per step for MonoSynth
+                 let notePlayedThisStep = false;
                  for (let rowIndex = 0; rowIndex < Constants.synthPitches.length; rowIndex++) {
                     const pitchName = Constants.synthPitches[rowIndex];
                     const step = this.sequenceData[rowIndex]?.[col];
                     if (step?.active && !notePlayedThisStep) {
                         this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity * Constants.defaultVelocity);
                         notePlayedThisStep = true;
-                        // break; // Optional: if you truly only want the 'highest' or 'first'
                     }
                 }
             } else if (this.type === 'Sampler') {
@@ -799,10 +792,8 @@ export class Track {
                     const padData = this.drumSamplerPads[padIndex];
                     if (step?.active && padData && this.drumPadPlayers[padIndex]?.loaded) {
                         const player = this.drumPadPlayers[padIndex];
-                        if (player.numberOfOutputs === 0 || !player.connectedTo(effectsChainStartPoint)) {
-                            try { player.disconnect(); } catch(e) {/*ignore*/}
-                            player.connect(effectsChainStartPoint);
-                        }
+                        // ** FIX: Remove faulty player.connectedTo check **
+                        // The connection is managed by rebuildEffectChain.
                         player.volume.value = Tone.gainToDb(padData.volume * step.velocity);
                         player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
