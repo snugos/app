@@ -1186,7 +1186,10 @@ function highlightPlayingStep(trackId, col) {
 
 // --- Timeline UI Functions ---
 function renderTimeline() {
-    const tracksArea = document.getElementById('timeline-tracks-area');
+    const timelineWindow = localAppServices.getWindowById('timeline');
+    if (!timelineWindow || !timelineWindow.element) return;
+
+    const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
     const tracks = getTracksState(); 
     if (!tracksArea || !tracks) {
         console.warn("Timeline area or tracks not found for rendering.");
@@ -1200,17 +1203,15 @@ function renderTimeline() {
         lane.className = 'timeline-track-lane';
         lane.dataset.trackId = track.id;
         
-        // Optional: Add track name to the lane
         const nameEl = document.createElement('div');
+        nameEl.className = 'timeline-track-lane-name';
         nameEl.textContent = track.name;
-        nameEl.style.position = 'absolute';
-        nameEl.style.left = '5px';
-        nameEl.style.top = '2px';
-        nameEl.style.fontSize = '10px';
-        nameEl.style.color = '#a0a0a0';
-        nameEl.style.pointerEvents = 'none'; // So it doesn't interfere with clip interaction
         lane.appendChild(nameEl);
 
+        const clipsContainer = document.createElement('div');
+        clipsContainer.style.position = 'relative';
+        clipsContainer.style.width = '100%';
+        clipsContainer.style.height = '100%';
 
         if (track.type === 'Audio' && track.audioClips) {
             track.audioClips.forEach(clip => {
@@ -1219,60 +1220,120 @@ function renderTimeline() {
                 clipEl.textContent = clip.name || `Clip ${clip.id.slice(-4)}`;
                 clipEl.title = `${clip.name || 'Audio Clip'} (${clip.duration.toFixed(2)}s)`;
                 
-                const pixelsPerSecond = 30; // Example: 30 pixels per second of audio. TODO: Make this dynamic with zoom.
+                const pixelsPerSecond = 30;
                 clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`; // Ensure a minimum width for visibility
+                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
 
-                lane.appendChild(clipEl);
+                clipsContainer.appendChild(clipEl);
             });
         }
+        lane.appendChild(clipsContainer);
         tracksArea.appendChild(lane);
     });
 }
 
- function updatePlayheadPosition() {
-    const playhead = document.getElementById('timeline-playhead');
-    const timelineContainer = document.getElementById('timeline-container'); // Cache this if accessed frequently
-    const timelineRuler = document.getElementById('timeline-ruler'); 
-    const timelineTracksArea = document.getElementById('timeline-tracks-area'); 
+function updatePlayheadPosition() {
+    const timelineWindow = localAppServices.getWindowById('timeline');
+    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
+        if (document.getElementById('timeline-playhead')) {
+             document.getElementById('timeline-playhead').style.display = 'none';
+        }
+        return;
+    }
+    
+    const playhead = timelineWindow.element.querySelector('#timeline-playhead');
+    const timelineContainer = timelineWindow.element.querySelector('.window-content'); 
+    const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler'); 
+    const timelineTracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container');
 
     if (!playhead || typeof Tone === 'undefined' || !timelineContainer) return;
+    
+    playhead.style.display = 'block';
 
-    const pixelsPerSecond = 30; // Should match renderTimeline or be dynamic. TODO: Make this dynamic.
+    const pixelsPerSecond = 30;
 
     if (Tone.Transport.state === 'started') {
+        // Adjust the left position of the playhead relative to the timeline content
         const newPosition = Tone.Transport.seconds * pixelsPerSecond;
         playhead.style.transform = `translateX(${newPosition}px)`;
 
         const containerWidth = timelineContainer.offsetWidth;
         const playheadOffsetInContainer = newPosition - timelineContainer.scrollLeft;
 
-        if (playheadOffsetInContainer > containerWidth * 0.8) { 
-            timelineContainer.scrollLeft += playheadOffsetInContainer - (containerWidth * 0.8);
-        } else if (playheadOffsetInContainer < containerWidth * 0.2 && timelineContainer.scrollLeft > 0) { 
-            timelineContainer.scrollLeft -= (containerWidth * 0.2) - playheadOffsetInContainer;
+        // Auto-scroll logic
+        if (playheadOffsetInContainer > containerWidth) { 
+            timelineContainer.scrollLeft = newPosition - containerWidth + 20; 
+        } else if (playheadOffsetInContainer < 120 && timelineContainer.scrollLeft > 0) { // Keep some space from the track names
+            timelineContainer.scrollLeft = newPosition - 120;
         }
         if (timelineContainer.scrollLeft < 0) timelineContainer.scrollLeft = 0;
 
     } else if (Tone.Transport.state === 'stopped') {
-        playhead.style.transform = `translateX(0px)`; 
-        timelineContainer.scrollLeft = 0; 
+        playhead.style.transform = `translateX(0px)`;
     }
     
-    // Synchronize scroll of ruler and tracks area with the main timeline container
-    // This ensures the content within these elements scrolls with the container's scrollbar
     if (timelineRuler) {
-        timelineRuler.style.transform = `translateX(-${timelineContainer.scrollLeft}px)`;
-    }
-    if (timelineTracksArea) {
-        timelineTracksArea.style.transform = `translateX(-${timelineContainer.scrollLeft}px)`;
+        timelineRuler.style.left = `-${timelineContainer.scrollLeft}px`;
     }
 }
 
-// Keep existing exports and add the new ones
+
+function openTimelineWindow(savedState = null) {
+    const windowId = 'timeline';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+    
+    const contentHTML = `
+        <div id="timeline-container">
+            <div id="timeline-header">
+                <div id="timeline-ruler"></div>
+            </div>
+            <div id="timeline-tracks-container">
+                <div id="timeline-tracks-area"></div>
+            </div>
+            <div id="timeline-playhead"></div>
+        </div>
+    `;
+    
+    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const timelineOptions = {
+        width: Math.min(1000, desktopEl.offsetWidth - 40),
+        height: 250,
+        x: 20,
+        y: 30, // Position it below the default inspector
+        minWidth: 400,
+        minHeight: 150,
+        initialContentKey: windowId,
+    };
+     if (savedState) {
+        Object.assign(timelineOptions, {
+            x: parseInt(savedState.left, 10),
+            y: parseInt(savedState.top, 10),
+            width: parseInt(savedState.width, 10),
+            height: parseInt(savedState.height, 10),
+            zIndex: savedState.zIndex,
+            isMinimized: savedState.isMinimized
+        });
+    }
+
+    const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
+
+    if (timelineWindow?.element) {
+        const contentArea = timelineWindow.element.querySelector('.window-content');
+        if (contentArea) {
+            contentArea.addEventListener('scroll', () => updatePlayheadPosition());
+        }
+        renderTimeline();
+    }
+    return timelineWindow;
+}
+
+
+// --- CONSOLIDATED EXPORT BLOCK ---
 export {
-    // initializeUIModule, // Already exported by being at top level
-    // createKnob, // Already exported
     openTrackInspectorWindow,
     renderEffectsList,
     renderEffectControls,
@@ -1294,6 +1355,7 @@ export {
     updateDrumPadControlsUI,
     updateSequencerCellUI,
     highlightPlayingStep,
-    renderTimeline,          // Added export
-    updatePlayheadPosition   // Added export
+    renderTimeline,
+    updatePlayheadPosition,
+    openTimelineWindow
 };
