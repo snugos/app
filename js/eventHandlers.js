@@ -85,10 +85,6 @@ export function initializePrimaryEventListeners(appContext) {
         uiCache.menuOpenMixer?.addEventListener('click', () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); uiCache.startMenu?.classList.add('hidden'); });
         uiCache.menuOpenMasterEffects?.addEventListener('click', () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); uiCache.startMenu?.classList.add('hidden'); });
 
-        // Removed background menu item listeners
-        // uiCache.menuUploadCustomBg?.addEventListener('click', ...);
-        // uiCache.menuRemoveCustomBg?.addEventListener('click', ...);
-
         uiCache.menuToggleFullScreen?.addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
@@ -111,7 +107,6 @@ export function initializePrimaryEventListeners(appContext) {
         document.addEventListener('keydown', handleComputerKeyDown);
         document.addEventListener('keyup', handleComputerKeyUp);
 
-        // Desktop Context Menu for Background Options
         if (uiCache.desktop) {
             uiCache.desktop.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
@@ -121,7 +116,7 @@ export function initializePrimaryEventListeners(appContext) {
                         action: () => {
                             if (localAppServices.triggerCustomBackgroundUpload) {
                                 localAppServices.triggerCustomBackgroundUpload();
-                            } else if (uiCache.customBgInput) { // Fallback if service not yet on appServices
+                            } else if (uiCache.customBgInput) { 
                                 uiCache.customBgInput.click();
                             }
                         }
@@ -219,49 +214,64 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
     if (recordBtnGlobal) {
         recordBtnGlobal.addEventListener('click', async () => {
+            console.log("[EventHandlers] Record button clicked.");
             const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
             if (!audioReady) {
                 showNotification("Audio system not ready for recording.", 3000);
+                console.warn("[EventHandlers] Audio system not ready for recording.");
                 return;
             }
+
             if (!isTrackRecording()) {
+                console.log("[EventHandlers] Attempting to start recording.");
                 const currentArmedTrackId = getArmedTrackId();
                 if (currentArmedTrackId === null) {
                     showNotification("No track armed for recording.", 3000);
+                    console.warn("[EventHandlers] No track armed.");
                     return;
                 }
                 const trackToRecord = getTrackById(currentArmedTrackId);
-                if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
+                if (!trackToRecord) { 
+                    showNotification("Armed track not found.", 3000); 
+                    console.warn("[EventHandlers] Armed track not found by ID:", currentArmedTrackId);
+                    return; 
+                }
+                console.log(`[EventHandlers] Armed track: ${trackToRecord.name}, Type: ${trackToRecord.type}`);
 
                 let recordingInitialized = false;
                 if (trackToRecord.type === 'Audio') {
                     if (localAppServices.startAudioRecording) {
-                        // Wait for the recording to actually start before proceeding
-                        recordingInitialized = await localAppServices.startAudioRecording();
+                        console.log("[EventHandlers] Calling startAudioRecording for Audio track.");
+                        // Pass the trackToRecord object directly
+                        recordingInitialized = await localAppServices.startAudioRecording(trackToRecord);
+                        console.log("[EventHandlers] startAudioRecording returned:", recordingInitialized);
                     } else {
                         showNotification("Audio recording function not available.", 3000);
+                        console.error("[EventHandlers] localAppServices.startAudioRecording is not defined.");
                         return; 
                     }
                 } else {
                     // For non-audio tracks, recording is just enabling sequence input
+                    console.log("[EventHandlers] Non-audio track, setting recordingInitialized to true.");
                     recordingInitialized = true;
                 }
 
-                // Only proceed if recording was successfully initialized
                 if (!recordingInitialized) {
-                    // startAudioRecording already shows a notification on failure
-                    // showNotification("Recording could not be started.", 3000); 
+                    console.warn("[EventHandlers] Recording initialization failed.");
+                    // Notification is handled by startAudioRecording if it fails
                     return;
                 }
                 
+                console.log("[EventHandlers] Recording initialized successfully. Setting state.");
                 setIsRecording(true);
                 setRecordingTrackId(currentArmedTrackId);
 
-                // Make sure transport is at the beginning before capturing start time
                 if (Tone.Transport.state !== 'started') {
+                    console.log("[EventHandlers] Transport not started, resetting position to 0.");
                     Tone.Transport.position = 0;
                 }
                 setRecordingStartTime(Tone.Transport.seconds); 
+                console.log("[EventHandlers] Recording start time set to:", Tone.Transport.seconds);
 
                 recordBtnGlobal.textContent = 'Stop Rec'; 
                 recordBtnGlobal.classList.add('recording');
@@ -270,16 +280,20 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
 
                 if (Tone.Transport.state !== 'started') {
+                    console.log("[EventHandlers] Starting transport for recording.");
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                     Tone.Transport.start();
                 }
-            } else {
-                 const recordedTrack = getTrackById(getRecordingTrackId());
+            } else { // If already recording, stop it
+                console.log("[EventHandlers] Attempting to stop recording.");
+                const recordedTrack = getTrackById(getRecordingTrackId());
                 if (recordedTrack && recordedTrack.type === 'Audio') {
                     if (localAppServices.stopAudioRecording) {
+                        console.log("[EventHandlers] Calling stopAudioRecording for Audio track.");
                         await localAppServices.stopAudioRecording();
                     } else {
                         showNotification("Audio stopping function not available.", 3000);
+                        console.error("[EventHandlers] localAppServices.stopAudioRecording is not defined.");
                     }
                 }
                 
@@ -288,6 +302,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 showNotification("Recording stopped.", 2000);
                 captureStateForUndo(`Stop Recording (Track: ${recordedTrack?.name || 'Unknown'})`);
                 setRecordingTrackId(null);
+                console.log("[EventHandlers] Recording stopped and state reset.");
             }
         });
     }
