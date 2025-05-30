@@ -1038,84 +1038,24 @@ export class Track {
             if (Tone.Transport.state === 'started') {
                 console.log(`[Track ${this.id}] Transport is running. Re-scheduling audio for this track after clip move.`);
                 
-                // Stop only the player for the moved clip
-                const playerToStop = this.clipPlayers.get(clip.id);
-                if (playerToStop && !playerToStop.disposed) {
-                    console.log(`[Track ${this.id}] Stopping and disposing player for moved clip ${clip.id}`);
-                    playerToStop.stop(Tone.Transport.now());
-                    playerToStop.dispose();
-                    this.clipPlayers.delete(clip.id);
-                }
-    
-                // Re-schedule just this clip
-                // This requires knowing the overall playback context (transportStartTime, transportStopTime)
-                // For simplicity during a live move, we might just re-schedule this single clip
-                // based on its new start time and the current transport position.
-                // A more robust solution might involve a full track re-schedule if overlaps are complex.
+                this.stopPlayback(); // Stop all current playback for this track
                 
-                const lookaheadDuration = 300; // How far ahead to schedule
-                const currentTransportTime = Tone.Transport.seconds;
-                const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
-                                          Tone.Transport.loopEnd : 
-                                          (currentTransportTime + lookaheadDuration);
+                // Use a short delay to allow Tone.Transport to process the stop events
+                // before re-scheduling. This can sometimes help with event queue race conditions.
+                setTimeout(() => {
+                    const lookaheadDuration = 300; 
+                    const currentTransportTime = Tone.Transport.seconds;
+                    const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
+                                              Tone.Transport.loopEnd : 
+                                              (currentTransportTime + lookaheadDuration);
+                    
+                    console.log(`[Track ${this.id}] Re-scheduling all clips on track from ${currentTransportTime} to ${transportStopTime}.`);
+                    this.schedulePlayback(currentTransportTime, transportStopTime);
+                }, 50); // 50ms delay, can be adjusted
 
-                // Create and schedule only the moved clip
-                (async () => {
-                    console.log(`[Track ${this.id}] Re-evaluating moved clip: ${clip.id}, new startTime: ${clip.startTime}`);
-                    const clipEndTime = clip.startTime + clip.duration;
-                    if (clipEndTime <= currentTransportTime || clip.startTime >= transportStopTime) {
-                        console.log(`[Track ${this.id}] Moved clip ${clip.id} is now outside playback range. Skipping re-schedule.`);
-                        return; 
-                    }
-
-                    const player = new Tone.Player();
-                    this.clipPlayers.set(clip.id, player); // Add new player instance
-
-                    try {
-                        const audioBlob = await getAudio(clip.dbKey);
-                        if (audioBlob) {
-                            const url = URL.createObjectURL(audioBlob);
-                            console.log(`[Track ${this.id}] Re-loading audio for moved clip ${clip.id} from URL: ${url}`);
-                            
-                            player.onload = () => {
-                                console.log(`[Track ${this.id}] Audio re-loaded for moved clip ${clip.id}. Revoking URL: ${url}`);
-                                URL.revokeObjectURL(url);
-            
-                                const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
-                                    ? this.activeEffects[0].toneNode
-                                    : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
-            
-                                if (destinationNode) player.connect(destinationNode);
-                                else player.toDestination();
-                                
-                                const offsetIntoClip = Math.max(0, currentTransportTime - clip.startTime);
-                                const durationFromOffset = clip.duration - offsetIntoClip;
-                                const effectiveStartTimeForPlayer = clip.startTime + offsetIntoClip; // This is the absolute transport time
-                                const effectivePlayDuration = Math.min(durationFromOffset, transportStopTime - effectiveStartTimeForPlayer);
-            
-                                if (effectivePlayDuration > 0) {
-                                     console.log(`[Track ${this.id}] Re-scheduling moved clip ${clip.id} to start at transport time ${effectiveStartTimeForPlayer} (offset: ${offsetIntoClip}s, duration: ${effectivePlayDuration}s)`);
-                                     player.start(effectiveStartTimeForPlayer, offsetIntoClip, effectivePlayDuration);
-                                } else {
-                                    player.dispose(); 
-                                    this.clipPlayers.delete(clip.id);
-                                }
-                            };
-                            player.onerror = (error) => {
-                                console.error(`[Track ${this.id}] Error re-loading audio for moved clip ${clip.id}:`, error);
-                                URL.revokeObjectURL(url);
-                                if (this.clipPlayers.has(clip.id)) { this.clipPlayers.get(clip.id).dispose(); this.clipPlayers.delete(clip.id); }
-                            };
-                            await player.load(url);
-                        } else {
-                            player.dispose(); this.clipPlayers.delete(clip.id);
-                        }
-                    } catch (error) {
-                        console.error(`[Track ${this.id}] Error in re-scheduling moved clip ${clip.id}:`, error);
-                        if (this.clipPlayers.has(clip.id)) { this.clipPlayers.get(clip.id).dispose(); this.clipPlayers.delete(clip.id); }
-                    }
-                })();
             }
+            // If transport is stopped, the main play button handler will call schedulePlayback with transportStartTime = 0
+            // which will pick up the new clip.startTime.
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
         }
