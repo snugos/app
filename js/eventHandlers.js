@@ -1,6 +1,6 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
-import { showNotification, showConfirmationDialog } from './utils.js';
+import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js'; // Added createContextMenu
 import {
     getTracksState as getTracks,
     getTrackByIdState as getTrackById,
@@ -52,6 +52,16 @@ export function initializePrimaryEventListeners(appContext) {
 
 
         uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu?.classList.add('hidden'); });
+        
+        // Timeline Menu Item
+        const menuOpenTimeline = document.getElementById('menuOpenTimeline'); // Get by ID as it's not in uiCache yet
+        if (menuOpenTimeline) {
+            menuOpenTimeline.addEventListener('click', () => {
+                if (localAppServices.openTimelineWindow) localAppServices.openTimelineWindow();
+                if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
+            });
+        }
+
 
         uiCache.menuUndo?.addEventListener('click', () => {
             if (!uiCache.menuUndo.classList.contains('disabled') && localAppServices.undoLastAction) {
@@ -75,15 +85,9 @@ export function initializePrimaryEventListeners(appContext) {
         uiCache.menuOpenMixer?.addEventListener('click', () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); uiCache.startMenu?.classList.add('hidden'); });
         uiCache.menuOpenMasterEffects?.addEventListener('click', () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); uiCache.startMenu?.classList.add('hidden'); });
 
-
-        uiCache.menuUploadCustomBg?.addEventListener('click', () => {
-            if (appContext.triggerCustomBackgroundUpload) appContext.triggerCustomBackgroundUpload();
-            uiCache.startMenu?.classList.add('hidden');
-        });
-        uiCache.menuRemoveCustomBg?.addEventListener('click', () => {
-            if (appContext.removeCustomDesktopBackground) appContext.removeCustomDesktopBackground();
-            uiCache.startMenu?.classList.add('hidden');
-        });
+        // Removed background menu item listeners
+        // uiCache.menuUploadCustomBg?.addEventListener('click', ...);
+        // uiCache.menuRemoveCustomBg?.addEventListener('click', ...);
 
         uiCache.menuToggleFullScreen?.addEventListener('click', () => {
             if (!document.fullscreenElement) {
@@ -106,6 +110,35 @@ export function initializePrimaryEventListeners(appContext) {
 
         document.addEventListener('keydown', handleComputerKeyDown);
         document.addEventListener('keyup', handleComputerKeyUp);
+
+        // Desktop Context Menu for Background Options
+        if (uiCache.desktop) {
+            uiCache.desktop.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                const menuItems = [
+                    {
+                        label: "Upload Custom Background...",
+                        action: () => {
+                            if (localAppServices.triggerCustomBackgroundUpload) {
+                                localAppServices.triggerCustomBackgroundUpload();
+                            } else if (uiCache.customBgInput) { // Fallback if service not yet on appServices
+                                uiCache.customBgInput.click();
+                            }
+                        }
+                    },
+                    {
+                        label: "Remove Custom Background",
+                        action: () => {
+                            if (localAppServices.removeCustomDesktopBackground) {
+                                localAppServices.removeCustomDesktopBackground();
+                            }
+                        }
+                    }
+                ];
+                createContextMenu(event, menuItems, localAppServices);
+            });
+        }
+
 
         if (typeof Tone !== 'undefined' && Tone.Transport) {
             let transportEventsInitialized = localAppServices.getTransportEventsInitialized ? localAppServices.getTransportEventsInitialized() : false;
@@ -160,14 +193,11 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 Tone.Transport.position = 0;
                 document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 
-                // Schedule playback for all audio tracks
                 const tracks = getTracks();
                 if (tracks) {
                     tracks.forEach(track => {
                         if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
-                            // For simplicity, play the whole timeline.
-                            // A more advanced version would get start/end from a selection or loop region.
-                            track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); // Play up to 5 minutes if no loop
+                            track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); 
                         }
                     });
                 }
@@ -175,7 +205,6 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
             } else {
                 Tone.Transport.pause();
-                 // Stop playback for all audio tracks
                 const tracks = getTracks();
                 if (tracks) {
                     tracks.forEach(track => {
@@ -204,19 +233,18 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 const trackToRecord = getTrackById(currentArmedTrackId);
                 if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
 
-                // Start audio recording if it's an Audio track
                 if (trackToRecord.type === 'Audio') {
                     if (localAppServices.startAudioRecording) {
                         await localAppServices.startAudioRecording();
                     } else {
                         showNotification("Audio recording function not available.", 3000);
-                        return; // Don't proceed if audio recording can't start
+                        return; 
                     }
                 }
 
                 setIsRecording(true);
                 setRecordingTrackId(currentArmedTrackId);
-                setRecordingStartTime(Tone.Transport.seconds); // Record start time relative to transport
+                setRecordingStartTime(Tone.Transport.seconds); 
                 recordBtnGlobal.textContent = 'Stop Rec'; recordBtnGlobal.classList.add('recording');
 
                 showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
@@ -227,8 +255,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     Tone.Transport.start();
                 }
             } else {
-                const recordedTrack = getTrackById(getRecordingTrackId());
-                // Stop audio recording if it was an Audio track
+                 const recordedTrack = getTrackById(getRecordingTrackId());
                 if (recordedTrack && recordedTrack.type === 'Audio') {
                     if (localAppServices.stopAudioRecording) {
                         await localAppServices.stopAudioRecording();
