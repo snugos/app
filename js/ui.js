@@ -1037,7 +1037,7 @@ export function drawInstrumentWaveform(track) {
     }
 }
 
-export function renderSamplePads(track) { 
+function renderSamplePads(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
