@@ -188,8 +188,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 const tracks = getTracks();
                 let scheduleFromTime = Tone.Transport.seconds; 
                 
-                // ALWAYS cancel previous transport events before rescheduling
-                Tone.Transport.cancel(0); 
+                Tone.Transport.cancel(0); // ALWAYS cancel previous transport events before rescheduling
                 console.log("[EventHandlers] Called Tone.Transport.cancel(0) before play/resume.");
 
                 if (Tone.Transport.state === 'paused') {
@@ -202,7 +201,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 }
                 
-                const lookahead = Tone.Transport.loopEnd > 0 && Tone.Transport.loop ? 
+                const lookahead = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
                                   Tone.Transport.loopEnd : 
                                   (scheduleFromTime + 300); // Default lookahead
 
