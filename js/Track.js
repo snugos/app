@@ -930,12 +930,11 @@ export class Track {
         if (this.type !== 'Audio') return;
         console.log(`[Track ${this.id}] schedulePlayback called. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
     
-        this.stopPlayback(); // Clear any previously scheduled players for this track
+        this.stopPlayback(); 
     
         this.audioClips.forEach(async clip => {
             console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clip.startTime}, clip.duration: ${clip.duration}`);
             
-            // Determine if the clip is within the playback range
             const clipEndTime = clip.startTime + clip.duration;
             if (clipEndTime <= transportStartTime || clip.startTime >= transportStopTime) {
                 console.log(`[Track ${this.id}] Clip ${clip.id} is outside playback range. Skipping.`);
@@ -953,7 +952,7 @@ export class Track {
                     
                     player.onload = () => {
                         console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
-                        URL.revokeObjectURL(url); // Revoke object URL AFTER loading
+                        URL.revokeObjectURL(url); 
     
                         const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
                             ? this.activeEffects[0].toneNode
@@ -966,22 +965,13 @@ export class Track {
                             player.toDestination(); 
                         }
                         
-                        // Calculate the offset within the clip if transportStartTime is after clip.startTime
                         const offsetIntoClip = Math.max(0, transportStartTime - clip.startTime);
-                        // Calculate how much of the clip is left to play from this offset
                         const durationFromOffset = clip.duration - offsetIntoClip;
-                        // Calculate the actual duration to play within the transport's current playback segment
-                        // The playback should start at clip.startTime (absolute) but only the part that falls
-                        // between transportStartTime and transportStopTime should play.
                         const effectiveStartTimeForPlayer = clip.startTime + offsetIntoClip;
                         const effectivePlayDuration = Math.min(durationFromOffset, transportStopTime - effectiveStartTimeForPlayer);
-
-
+    
                         if (effectivePlayDuration > 0) {
-                             console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${effectiveStartTimeForPlayer} (offset into clip: ${offsetIntoClip}s, play duration: ${effectivePlayDuration}s)`);
-                             // The first argument to player.start is the Tone.Transport time to start
-                             // The second is the offset within the audio buffer
-                             // The third is the duration to play from that offset
+                             console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${effectiveStartTimeForPlayer} (offset: ${offsetIntoClip}s, duration: ${effectivePlayDuration}s)`);
                              player.start(effectiveStartTimeForPlayer, offsetIntoClip, effectivePlayDuration);
                         } else {
                             console.log(`[Track ${this.id}] Clip ${clip.id} has zero play duration in this segment. Disposing player.`);
@@ -991,14 +981,13 @@ export class Track {
                     };
                     player.onerror = (error) => {
                         console.error(`[Track ${this.id}] Error loading audio for clip ${clip.id}:`, error);
-                        URL.revokeObjectURL(url); // Also revoke on error
+                        URL.revokeObjectURL(url); 
                         if (this.clipPlayers.has(clip.id)) {
                             this.clipPlayers.get(clip.id).dispose();
                             this.clipPlayers.delete(clip.id);
                         }
                     };
-                    // player.load(url) returns a promise that resolves when loaded
-                    await player.load(url); // Explicitly await load before scheduling
+                    await player.load(url); 
 
                 } else {
                     console.warn(`[Track ${this.id}] Could not retrieve audio blob for clip ${clip.id} (dbKey: ${clip.dbKey})`);
@@ -1033,33 +1022,30 @@ export class Track {
 
     updateAudioClipPosition(clipId, newStartTime) {
         if (this.type !== 'Audio') return;
-        
+    
         const clip = this.audioClips.find(c => c.id === clipId);
         if (clip) {
             const oldStartTime = clip.startTime;
-            clip.startTime = Math.max(0, newStartTime); // Ensure start time isn't negative
+            clip.startTime = Math.max(0, newStartTime);
             console.log(`[Track ${this.id}] Updated clip ${clipId} startTime from ${oldStartTime} to ${clip.startTime}`);
-            
-            // If transport is running, we might need to stop the old player and reschedule this clip
-            if (Tone.Transport.state === 'started') {
-                const playerToStop = this.clipPlayers.get(clip.id);
-                if (playerToStop && !playerToStop.disposed) {
-                    console.log(`[Track ${this.id}] Transport running. Stopping player for moved clip ${clip.id}`);
-                    playerToStop.stop(); // Stop playback immediately
-                    playerToStop.dispose(); // Dispose of the old player
-                    this.clipPlayers.delete(clip.id); // Remove from map
-                }
-                // Re-schedule all clips on this track to ensure correct overlaps and timing
-                // This is simpler than trying to manage individual player reschedules during active playback
-                console.log(`[Track ${this.id}] Re-scheduling all clips on track due to move during playback.`);
-                // Use a reasonable lookahead for the transport stop time
-                const lookahead = Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : (Tone.Transport.seconds + 300);
-                this.schedulePlayback(Tone.Transport.seconds, lookahead);
-            }
-            
+    
             if (this.appServices.renderTimeline) {
-                this.appServices.renderTimeline();
+                this.appServices.renderTimeline(); 
             }
+    
+            if (Tone.Transport.state === 'started') {
+                console.log(`[Track ${this.id}] Transport is running. Re-scheduling audio for this track after clip move.`);
+                this.stopPlayback(); // Stop all current playback for this track
+                
+                const lookaheadDuration = 300; 
+                const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
+                                          Tone.Transport.loopEnd : 
+                                          (Tone.Transport.seconds + lookaheadDuration);
+                
+                // Schedule all clips for this track from the current transport time onwards
+                this.schedulePlayback(Tone.Transport.seconds, transportStopTime);
+            }
+            // If transport is stopped, the main play button handler will call schedulePlayback with transportStartTime = 0
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
         }
