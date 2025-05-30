@@ -193,17 +193,18 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 return;
             }
 
-            if (Tone.Transport.state !== 'started') { 
+            if (Tone.Transport.state !== 'started') { // This means it's 'stopped' or 'paused'
                 const tracks = getTracks();
                 let scheduleFromTime = Tone.Transport.seconds; 
                 
-                console.log(`[EventHandlers] Play/Resume: Current transport state: ${Tone.Transport.state}, current time: ${scheduleFromTime}`);
+                console.log(`[EventHandlers] Play/Resume: Current transport state: ${Tone.Transport.state}, current time before ops: ${scheduleFromTime}`);
                 Tone.Transport.cancel(0); 
                 console.log("[EventHandlers] Called Tone.Transport.cancel(0) before play/resume.");
 
                 if (Tone.Transport.state === 'paused') {
                     console.log("[EventHandlers] Resuming transport from pause. Scheduling from:", scheduleFromTime);
-                } else { 
+                    Tone.Transport.position = scheduleFromTime; // Explicitly set position before start
+                } else { // Was 'stopped'
                     console.log("[EventHandlers] Starting transport from beginning.");
                     Tone.Transport.position = 0; 
                     scheduleFromTime = 0; 
@@ -222,10 +223,11 @@ export function attachGlobalControlEvents(globalControlsElements) {
                         }
                     }
                 }
-                Tone.Transport.start(Tone.Transport.now() + 0.05, scheduleFromTime); // Add small offset to Tone.now()
-                console.log(`[EventHandlers] Tone.Transport.start called with scheduleTime: ${scheduleFromTime}`);
+                // Start the transport. The second arg to start() is the offset from which to resume/start.
+                Tone.Transport.start(Tone.Transport.now() + 0.05, scheduleFromTime); 
+                console.log(`[EventHandlers] Tone.Transport.start called. Target start time: ${scheduleFromTime}`);
 
-            } else { 
+            } else { // Transport is 'started', so this is a PAUSE
                 console.log("[EventHandlers] Pausing transport.");
                 Tone.Transport.pause();
                 const tracks = getTracks();
