@@ -3,6 +3,7 @@
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
+// setupGenericDropZoneListeners is imported here and will be used for the fix
 import { showNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
@@ -337,7 +338,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             break;
         case 'samplerLoaded':
         case 'instrumentSamplerLoaded':
-        case 'sampleSliced':
             if (inspectorWindow?.element && !inspectorWindow.isMinimized) {
                 if (track.type === 'Sampler') { drawWaveform(track); renderSamplePads(track); updateSliceEditorUI(track); }
                 else if (track.type === 'InstrumentSampler') drawInstrumentWaveform(track);
@@ -347,10 +347,28 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 if(dzContainer) {
                     const audioData = track.type === 'Sampler' ? track.samplerAudioData : track.instrumentSamplerSettings;
                     const inputId = track.type === 'Sampler' ? `fileInput-${track.id}` : `instrumentFileInput-${track.id}`;
+                    // This line re-creates the drop zone's inner HTML
                     dzContainer.innerHTML = createDropZoneHTML(track.id, inputId, track.type, null, {originalFileName: audioData.fileName, status: 'loaded'});
+                    
+                    // Re-attach onchange for the file input
                     const fileInputEl = dzContainer.querySelector(`#${inputId}`);
                     const loadFn = appServices.loadSampleFile; 
                     if (fileInputEl && loadFn) fileInputEl.onchange = (e) => loadFn(e, track.id, track.type);
+
+                    // *** MODIFIED/ADDED: Re-attach D&D listeners to the new drop zone div ***
+                    const newDropZoneDiv = dzContainer.querySelector('.drop-zone');
+                    if (newDropZoneDiv) {
+                        setupGenericDropZoneListeners(
+                            newDropZoneDiv,
+                            track.id,
+                            track.type,
+                            null, // padIndexOrSliceId is null for main sampler/instrument sampler drop zones
+                            appServices.loadSoundFromBrowserToTarget,
+                            appServices.loadSampleFile,
+                            appServices.getTrackById // Pass the getTrackById service
+                        );
+                    }
+                    // *** END OF MODIFICATION ***
                 }
             }
             break;
@@ -362,28 +380,59 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             break;
         case 'sampleLoadError':
             if (inspectorWindow?.element && !inspectorWindow.isMinimized) {
-                let dzContainerId, audioDataKey, inputIdBase;
+                let dzContainerId, audioDataKey, inputIdBase, targetDropZoneElement;
+                
                 if (track.type === 'DrumSampler' && typeof detail === 'number') {
+                    // For drum pads, D&D listeners are re-attached by updateDrumPadControlsUI in ui.js
+                    // No explicit D&D re-attachment needed here for drum pads.
                     dzContainerId = `#drumPadDropZoneContainer-${track.id}-${detail}`;
                     audioDataKey = track.drumSamplerPads[detail];
                     inputIdBase = `drumPadFileInput-${track.id}-${detail}`;
+                     targetDropZoneElement = inspectorWindow.element.querySelector(dzContainerId);
+                     if (targetDropZoneElement) {
+                        targetDropZoneElement.innerHTML = createDropZoneHTML(track.id, inputIdBase, track.type, detail, {originalFileName: audioDataKey.fileName, status: 'error'});
+                        const fileInputEl = targetDropZoneElement.querySelector(`#${inputIdBase}`);
+                        const loadDrumFn = appServices.loadDrumSamplerPadFile;
+                        if (fileInputEl && loadDrumFn) {
+                            fileInputEl.onchange = (e) => loadDrumFn(e, track.id, detail);
+                        }
+                        // D&D listeners for drum pads are handled by updateDrumPadControlsUI
+                    }
+
                 } else if (track.type === 'Sampler') {
-                    dzContainerId = `#dropZoneContainer-${track.id}-sampler`; audioDataKey = track.samplerAudioData; inputIdBase = `fileInput-${track.id}`;
+                    dzContainerId = `#dropZoneContainer-${track.id}-sampler`; 
+                    audioDataKey = track.samplerAudioData; 
+                    inputIdBase = `fileInput-${track.id}`;
                 } else if (track.type === 'InstrumentSampler') {
-                    dzContainerId = `#dropZoneContainer-${track.id}-instrumentsampler`; audioDataKey = track.instrumentSamplerSettings; inputIdBase = `instrumentFileInput-${track.id}`;
+                    dzContainerId = `#dropZoneContainer-${track.id}-instrumentsampler`; 
+                    audioDataKey = track.instrumentSamplerSettings; 
+                    inputIdBase = `instrumentFileInput-${track.id}`;
                 }
 
-                if (dzContainerId && audioDataKey) {
-                    const dzContainer = inspectorWindow.element.querySelector(dzContainerId);
-                    if (dzContainer) {
-                        dzContainer.innerHTML = createDropZoneHTML(track.id, inputIdBase, track.type, (track.type === 'DrumSampler' ? detail : null), {originalFileName: audioDataKey.fileName, status: 'error'});
-                        const fileInputEl = dzContainer.querySelector(`#${inputIdBase}`);
-                        const loadDrumFn = appServices.loadDrumSamplerPadFile;
+                if (dzContainerId && audioDataKey && (track.type === 'Sampler' || track.type === 'InstrumentSampler')) {
+                    targetDropZoneElement = inspectorWindow.element.querySelector(dzContainerId);
+                    if (targetDropZoneElement) {
+                        targetDropZoneElement.innerHTML = createDropZoneHTML(track.id, inputIdBase, track.type, null, {originalFileName: audioDataKey.fileName, status: 'error'});
+                        const fileInputEl = targetDropZoneElement.querySelector(`#${inputIdBase}`);
                         const loadSampleFn = appServices.loadSampleFile;
-                        if (fileInputEl) {
-                            if (track.type === 'DrumSampler' && loadDrumFn) fileInputEl.onchange = (e) => loadDrumFn(e, track.id, detail);
-                            else if (loadSampleFn) fileInputEl.onchange = (e) => loadSampleFn(e, track.id, track.type);
+                        if (fileInputEl && loadSampleFn) {
+                            fileInputEl.onchange = (e) => loadSampleFn(e, track.id, track.type);
                         }
+
+                        // *** MODIFIED/ADDED: Re-attach D&D listeners for Sampler/InstrumentSampler on error ***
+                        const newDropZoneDiv = targetDropZoneElement.querySelector('.drop-zone');
+                        if (newDropZoneDiv) {
+                            setupGenericDropZoneListeners(
+                                newDropZoneDiv,
+                                track.id,
+                                track.type,
+                                null, // padIndexOrSliceId for main sampler drop zones
+                                appServices.loadSoundFromBrowserToTarget,
+                                appServices.loadSampleFile,
+                                appServices.getTrackById
+                            );
+                        }
+                        // *** END OF MODIFICATION ***
                     }
                 }
             }
