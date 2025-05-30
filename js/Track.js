@@ -1045,15 +1045,22 @@ export class Track {
                 Tone.Transport.pause(); // Pause the transport
                 console.log(`[Track ${this.id}] Transport paused for rescheduling.`);
                 
-                // Stop and clear players for *this specific track*
-                this.stopPlayback();
-                
-                // Globally cancel all transport events to ensure a clean slate
-                Tone.Transport.cancel(0);
+                // Stop and clear players for ALL audio tracks first
+                const allTracks = this.appServices.getTracks ? this.appServices.getTracks() : [];
+                allTracks.forEach(t => { 
+                    if (t.type === 'Audio' && typeof t.stopPlayback === 'function') {
+                        console.log(`[Track ${this.id} in updateAudioClipPosition] Stopping playback for track ${t.id}`);
+                        t.stopPlayback();
+                    }
+                });
+
+                Tone.Transport.cancel(0); // Clear ALL transport events
                 console.log(`[Track ${this.id}] Called Tone.Transport.cancel(0) globally.`);
                 
-                // Re-schedule all audio tracks from the captured playhead position
-                const allTracks = this.appServices.getTracks ? this.appServices.getTracks() : [];
+                // Transport position is maintained by pause, no need to reset it here unless specifically desired
+                // Tone.Transport.position = currentPlayheadPosition; 
+                // console.log(`[Track ${this.id}] Transport position remains at ${currentPlayheadPosition} (after pause).`);
+
                 const lookaheadDuration = 300; 
                 const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
                                           Tone.Transport.loopEnd : 
@@ -1066,7 +1073,7 @@ export class Track {
                     }
                 }
                 
-                // Restart the transport from the captured position with a small delay
+                // Restart the transport from the captured position
                 Tone.Transport.start(Tone.Transport.now() + 0.1, currentPlayheadPosition); 
                 console.log(`[Track ${this.id}] Restarted transport from ${currentPlayheadPosition}s after rescheduling.`);
             }
