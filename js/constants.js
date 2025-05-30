@@ -27,11 +27,7 @@ export const samplerMIDINoteStart = 36; // C2
 
 export const defaultVelocity = 0.7;
 
-export const defaultDesktopBg = '#FFB6C1';
-// export const defaultTaskbarBg = '#c0c0c0'; // These are now primarily CSS driven
-// export const defaultWindowBg = '#c0c0c0';
-// export const defaultWindowContentBg = '#c0c0c0';
-
+export const defaultDesktopBg = '#101010'; // Updated to match style.css for consistency
 
 export const MAX_HISTORY_STATES = 30;
 
