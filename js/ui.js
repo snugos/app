@@ -1072,7 +1072,7 @@ export function updateSliceEditorUI(track) {
     if (track.inspectorControls.sliceEnvRelease) track.inspectorControls.sliceEnvRelease.setValue(env.release);
 }
 
-export function renderDrumSamplerPads(track) { 
+function renderDrumSamplerPads(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'DrumSampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#drumPadsGridContainer-${track.id}`);
