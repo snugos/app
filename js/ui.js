@@ -934,9 +934,21 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const seqOptions = { width: Math.min(900, (desktopEl?.offsetWidth || 900) - 40), height: 400, minWidth: 400, minHeight: 250, initialContentKey: windowId, onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); } };
     if (savedState) Object.assign(seqOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+    
     const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name}`, contentDOM, seqOptions);
 
     if (sequencerWindow?.element) {
+        // Cache all step cells for performance and store the last played column index
+        const allCells = Array.from(sequencerWindow.element.querySelectorAll('.sequencer-step-cell'));
+        sequencerWindow.stepCellsGrid = [];
+        // Ensure track.sequenceLength is valid before using it for grid dimensions
+        const currentSequenceLength = track.sequenceLength || Constants.defaultStepsPerBar;
+        for (let i = 0; i < rows; i++) {
+            sequencerWindow.stepCellsGrid[i] = allCells.slice(i * currentSequenceLength, (i + 1) * currentSequenceLength);
+        }
+        sequencerWindow.lastPlayedCol = -1;
+
+
         if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
@@ -1171,16 +1183,33 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
 export function highlightPlayingStep(trackId, col) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') return; 
+
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     const seqWindow = openWindows.get(`sequencerWin-${trackId}`);
 
-    if (seqWindow && seqWindow.element && !seqWindow.isMinimized) {
-        const gridElement = seqWindow.element.querySelector('.sequencer-grid-layout');
-        if (!gridElement) return;
-        const previouslyPlaying = gridElement.querySelector('.sequencer-step-cell.playing');
-        if (previouslyPlaying) previouslyPlaying.classList.remove('playing');
-        const currentCells = gridElement.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`);
-        currentCells.forEach(cell => cell.classList.add('playing'));
+    if (seqWindow && seqWindow.element && !seqWindow.isMinimized && seqWindow.stepCellsGrid) {
+        // If there was a previously playing column, remove the 'playing' class from it
+        if (seqWindow.lastPlayedCol !== -1 && seqWindow.lastPlayedCol < track.sequenceLength) {
+            for (let i = 0; i < seqWindow.stepCellsGrid.length; i++) {
+                const cell = seqWindow.stepCellsGrid[i]?.[seqWindow.lastPlayedCol];
+                if (cell) {
+                    cell.classList.remove('playing');
+                }
+            }
+        }
+
+        // Add the 'playing' class to the current column
+        if (col < track.sequenceLength) {
+            for (let i = 0; i < seqWindow.stepCellsGrid.length; i++) {
+                const cell = seqWindow.stepCellsGrid[i]?.[col];
+                if (cell) {
+                    cell.classList.add('playing');
+                }
+            }
+        }
+        
+        // Store the current column index for the next update
+        seqWindow.lastPlayedCol = col;
     }
 }
 
@@ -1214,7 +1243,7 @@ export function renderTimeline() {
         clipsContainer.style.position = 'relative'; 
         clipsContainer.style.width = 'calc(100% - 120px)'; 
         clipsContainer.style.height = '100%';
-        clipsContainer.style.marginLeft = '120px'; 
+        // clipsContainer.style.marginLeft = '120px'; // Removed, as clips are positioned absolutely within the lane
 
         if (track.type === 'Audio' && track.audioClips) {
             track.audioClips.forEach(clip => {
@@ -1226,6 +1255,52 @@ export function renderTimeline() {
                 const pixelsPerSecond = 30; 
                 clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
                 clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
+
+                // --- ADD DRAG-AND-DROP LOGIC ---
+                clipEl.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const startX = e.clientX;
+                    // Use parseFloat to ensure we get a number, and handle cases where style.left might be empty
+                    const initialLeftPixels = parseFloat(clipEl.style.left) || 0;
+                    let originalStartTime = clip.startTime; // Store original for undo comparison
+
+                    function onMouseMove(moveEvent) {
+                        const dx = moveEvent.clientX - startX;
+                        const newLeftPixels = initialLeftPixels + dx;
+                        clipEl.style.left = `${Math.max(0, newLeftPixels)}px`; // Prevent dragging before time 0
+                    }
+
+                    function onMouseUp(upEvent) {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+
+                        // Calculate the new start time
+                        const finalLeftPixels = parseFloat(clipEl.style.left) || 0;
+                        const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond); // Ensure non-negative
+                        
+                        // Only update and capture undo state if the position actually changed significantly
+                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) { // Threshold for change
+                            if (localAppServices.captureStateForUndo) {
+                                localAppServices.captureStateForUndo(`Move clip on track "${track.name}"`);
+                            }
+                            // Call the method on the track object to update its internal state
+                            if (track.updateAudioClipPosition) {
+                                track.updateAudioClipPosition(clip.id, newStartTime);
+                            } else {
+                                console.error("Track.updateAudioClipPosition method not found!");
+                            }
+                        } else {
+                            // If it didn't move significantly, snap it back to its original visual position
+                            clipEl.style.left = `${originalStartTime * pixelsPerSecond}px`;
+                        }
+                    }
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+                // --- END OF DRAG-AND-DROP LOGIC ---
 
                 clipsContainer.appendChild(clipEl);
             });
@@ -1253,36 +1328,47 @@ export function updatePlayheadPosition() {
     playhead.style.display = 'block';
 
     const pixelsPerSecond = 30; 
-    const trackNameWidth = 120; 
+    const trackNameWidth = 120; // This should match the CSS for .timeline-track-lane-name
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        playhead.style.transform = `translateX(${rawNewPosition}px)`;
+        // The playhead's left style is relative to its parent, which is timeline-container.
+        // The trackNameWidth offset is needed because the visual start of the "playable" area is after the track names.
+        playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
 
-        const scrollableContent = timelineContentArea;
-        const containerWidth = scrollableContent.offsetWidth - trackNameWidth; 
+
+        // Auto-scroll logic
+        const scrollableContent = timelineContentArea; // The window-content is the scrollable part
+        const containerWidth = scrollableContent.clientWidth - trackNameWidth; 
+        
+        // Playhead's position relative to the visible part of the scrollable content area (excluding track names)
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
 
-
-        if (playheadVisualPositionInScrollable > containerWidth) { 
-            scrollableContent.scrollLeft = rawNewPosition - containerWidth + 20; 
-        } else if (playheadVisualPositionInScrollable < 0 && scrollableContent.scrollLeft > 0) { 
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.1); 
+        if (playheadVisualPositionInScrollable > containerWidth * 0.8) { // Scroll if playhead is in the last 20%
+            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; 
+        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) { // Scroll if playhead is in the first 20%
+            scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20); 
         }
         if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
 
 
     } else if (Tone.Transport.state === 'stopped') {
-        playhead.style.transform = `translateX(0px)`;
+         playhead.style.left = `${trackNameWidth}px`; // Reset to start of playable area
     }
     
+    // Sync ruler and tracks area scroll with the main content area's scroll
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
     if (timelineTracksContainer && timelineContentArea) {
-         const tracksArea = timelineTracksContainer.querySelector('#timeline-tracks-area');
-         if (tracksArea) {
-            tracksArea.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
+         const tracksDisplayArea = timelineTracksContainer.querySelector('#timeline-tracks-area');
+         if (tracksDisplayArea) {
+            // The tracks area itself should not be translated if clips are positioned absolutely within it.
+            // Instead, the parent (timeline-tracks-container) handles the overflow.
+            // However, if #timeline-tracks-area is wider than its container and meant to scroll,
+            // then this translation would be correct. Given the current CSS, this might be redundant
+            // if .window-content is the primary scroller.
+            // For now, let's assume .window-content handles all horizontal scrolling.
          }
     }
 }
@@ -1311,7 +1397,7 @@ export function openTimelineWindow(savedState = null) {
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const timelineOptions = {
-        width: Math.max(600, Math.min(1200, desktopEl.offsetWidth - 60)), 
+        width: Math.max(600, Math.min(1200, (desktopEl?.offsetWidth || 1200) - 60)), 
         height: 250,
         x: 30, 
         y: 50, 
@@ -1339,16 +1425,15 @@ export function openTimelineWindow(savedState = null) {
     if (timelineWindow?.element) {
         const contentArea = timelineWindow.element.querySelector('.window-content');
         if (contentArea) {
+            // The scroll event on .window-content will handle syncing ruler and playhead
             contentArea.addEventListener('scroll', () => {
                 const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-                const tracksDisplayArea = timelineWindow.element.querySelector('#timeline-tracks-area'); 
+                 // The tracks area itself (#timeline-tracks-area) should be wide enough not to need its own scroll sync
+                // if clips are positioned absolutely and its parent (#timeline-tracks-container) or .window-content handles scrolling.
                 if (ruler) {
                     ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
-                if (tracksDisplayArea) { 
-                   tracksDisplayArea.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
-                }
-                 updatePlayheadPosition(); 
+                updatePlayheadPosition(); 
             });
         }
         renderTimeline(); 
