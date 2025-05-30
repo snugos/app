@@ -8,7 +8,7 @@ import { storeAudio, getAudio } from './db.js';
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
-        this.type = type;
+        this.type = type; // The track's type is stored as an instance property
         this.appServices = appServices;
 
         this.name = initialData?.name || `${type} Track ${this.id}`;
@@ -101,14 +101,15 @@ export class Track {
         this.instrument = null;
         this.sequenceLength = initialData?.sequenceLength || Constants.defaultStepsPerBar;
         let numRowsForGrid;
-        if (type === 'Synth' || type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
-        else if (type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
-        else if (type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
-        else if (type === 'Audio') numRowsForGrid = 0; // Audio tracks don't use grid sequencer
+        // Use this.type here
+        if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
+        else if (this.type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
+        else if (this.type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
+        else if (this.type === 'Audio') numRowsForGrid = 0; // Audio tracks don't use grid sequencer
         else numRowsForGrid = 0;
 
         const loadedSequenceData = initialData?.sequenceData;
-        if (type !== 'Audio') { // Audio tracks don't have sequenceData in the same way
+        if (this.type !== 'Audio') { // Audio tracks don't have sequenceData in the same way
             this.sequenceData = Array(numRowsForGrid).fill(null).map((_, rIndex) => {
                 const row = Array(this.sequenceLength).fill(null);
                 if (loadedSequenceData && loadedSequenceData[rIndex]) {
@@ -760,9 +761,10 @@ export class Track {
         }
         this.sequenceLength = newLengthInSteps;
         let numRows;
+        // *** FIXED: Changed 'type' to 'this.type' in the following conditions ***
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
-        else if (type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
-        else if (type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
+        else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
+        else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
         else numRows = (this.sequenceData && this.sequenceData.length > 0) ? this.sequenceData.length : 0;
 
         const currentSequenceData = this.sequenceData || [];
