@@ -729,26 +729,50 @@ export function clearAllMasterEffectNodes() {
 }
 
 // --- Audio Recording Functions ---
-export async function startAudioRecording(track) { 
-    console.log("[Audio] startAudioRecording called for track:", track?.name);
+export async function startAudioRecording(track, isMonitoringEnabled) { 
+    console.log("[Audio] startAudioRecording called for track:", track?.name, "Monitoring:", isMonitoringEnabled);
 
     // Ensure previous instances are closed and disposed
     if (mic && mic.state === "started") {
         console.log("[Audio] Closing existing mic before starting new one.");
-        try { await mic.close(); } catch (e) { console.warn("[Audio] Error closing existing mic:", e); }
+        try { 
+            // mic.close() is synchronous in Tone.js UserMedia
+            mic.close(); 
+            console.log("[Audio] Existing mic closed.");
+        } catch (e) { console.warn("[Audio] Error closing existing mic:", e); }
     }
+     if (mic && !mic.disposed) { // UserMedia doesn't have .disposed, but we can try to dispose if it's a Tone object
+        try {
+            // mic.dispose(); // UserMedia doesn't have dispose
+            console.log("[Audio] Nullifying previous mic instance.");
+        } catch(e) { console.warn("[Audio] Error disposing previous mic instance", e); }
+    }
+    mic = null;
+
+
     if (recorder && recorder.state === "started") {
         console.log("[Audio] Stopping existing recorder before starting new one.");
-        try { await recorder.stop(); } catch (e) { console.warn("[Audio] Error stopping existing recorder:", e); }
+        try { 
+            await recorder.stop(); 
+            console.log("[Audio] Existing recorder stopped.");
+        } catch (e) { console.warn("[Audio] Error stopping existing recorder:", e); }
     }
     if (recorder && !recorder.disposed) {
         console.log("[Audio] Disposing existing recorder.");
         try { recorder.dispose(); } catch (e) { console.warn("[Audio] Error disposing existing recorder:", e); }
     }
+    recorder = null;
     
-    // Always create new instances for a fresh start
-    mic = new Tone.UserMedia();
-    console.log("[Audio] New Tone.UserMedia instance created.");
+    // ALWAYS create new instances for a fresh start.
+    mic = new Tone.UserMedia({
+        audio: {
+            echoCancellation: false,
+            autoGainControl: false,
+            noiseSuppression: false,
+            latency: 0 // Request lowest possible latency
+        }
+    });
+    console.log("[Audio] New Tone.UserMedia instance created with high-quality constraints.");
     recorder = new Tone.Recorder();
     console.log("[Audio] New Tone.Recorder instance created.");
 
@@ -766,9 +790,21 @@ export async function startAudioRecording(track) {
         await mic.open();
         console.log("[Audio] Microphone opened successfully. State:", mic.state);
         
-        console.log("[Audio] Connecting mic to track inputChannel and recorder.");
-        mic.connect(track.inputChannel); 
-        mic.connect(recorder); 
+        if (isMonitoringEnabled) {
+            console.log("[Audio] Monitoring is ON. Connecting mic to track inputChannel.");
+            mic.connect(track.inputChannel); 
+        } else {
+            console.log("[Audio] Monitoring is OFF. Mic will not be connected to the track for live playback.");
+            // Ensure mic is disconnected from track's input channel if it was previously connected
+            try {
+                mic.disconnect(track.inputChannel);
+                console.log("[Audio] Disconnected mic from track inputChannel (monitoring off).");
+            } catch(e) {
+                // May error if not previously connected, which is fine.
+            }
+        }
+        mic.connect(recorder); // Always connect to the recorder
+        console.log("[Audio] Mic connected to recorder.");
         
         console.log("[Audio] Starting recorder...");
         await recorder.start();
@@ -789,8 +825,13 @@ export async function startAudioRecording(track) {
 
 export async function stopAudioRecording() {
     console.log("[Audio] stopAudioRecording called.");
-    if (!recorder) { // No need to check mic here as recorder depends on mic
+    if (!recorder) { 
         console.warn("[Audio] Recorder not initialized. Cannot stop recording.");
+        if (mic && mic.state === "started") { // If mic exists and was started, try to close it
+            console.log("[Audio] Mic was started, closing it (recorder was null).");
+            try { mic.close(); } catch(e) { console.warn("[Audio] Error closing mic (recorder null):", e); }
+        }
+        mic = null; // Nullify mic as well
         return;
     }
     
@@ -812,6 +853,7 @@ export async function stopAudioRecording() {
         console.log("[Audio] Closing microphone.");
         try {
             mic.close();
+            console.log("[Audio] Microphone closed.");
         } catch (e) {
             console.warn("[Audio] Error closing mic:", e);
         }
@@ -819,15 +861,14 @@ export async function stopAudioRecording() {
         console.warn("[Audio] Mic was not in 'started' state before attempting to close, current state:", mic.state);
     }
     
-    // Dispose recorder and mic after stopping/closing to ensure they are fresh for next use
     if (recorder && !recorder.disposed) {
         console.log("[Audio] Disposing recorder instance.");
         recorder.dispose();
     }
     recorder = null; 
 
-    if (mic && !mic.disposed) { // UserMedia doesn't have a .disposed, check if it's our instance
-        console.log("[Audio] Nullifying mic instance. (UserMedia is closed, not disposed like effects)");
+    if (mic) { // UserMedia doesn't have a .disposed, just nullify
+        console.log("[Audio] Nullifying mic instance.");
     }
     mic = null;
 
@@ -852,7 +893,7 @@ export async function stopAudioRecording() {
     } else if (blob && blob.size === 0) {
         console.warn("[Audio] Recording was empty.");
         showNotification("Recording was empty.", 2000);
-    } else if (!blob && recorder?.state === "started") { // If blob is undefined but recorder was started
+    } else if (!blob && recorder?.state === "started") { 
         console.warn("[Audio] Recorder was started but stop() did not yield a blob.");
     }
 }
