@@ -930,7 +930,7 @@ export class Track {
         if (this.type !== 'Audio') return;
         console.log(`[Track ${this.id}] schedulePlayback called. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
     
-        this.stopPlayback(); 
+        this.stopPlayback(); // Ensure all previous players for this track are stopped and cleared
     
         for (const clip of this.audioClips) { 
             const clipActualStartOnTransport = clip.startTime;
@@ -945,7 +945,7 @@ export class Track {
 
             console.log(`[Track ${this.id}] Clip ${clip.id} - Effective Play Start: ${effectivePlayStartOnTransport}, Effective Play End: ${effectivePlayEndOnTransport}, Calculated Play Duration in Window: ${playDurationInWindow}`);
 
-            if (playDurationInWindow <= 1e-3) { 
+            if (playDurationInWindow <= 1e-3) { // Use a small epsilon for float comparisons
                 console.log(`[Track ${this.id}] Clip ${clip.id} has no/negligible audible portion in current schedule window. Skipping. Play Duration in Window: ${playDurationInWindow}`);
                 continue; 
             }
@@ -1042,8 +1042,8 @@ export class Track {
                 const currentPlayheadPosition = Tone.Transport.seconds;
                 console.log(`[Track ${this.id}] Transport is running at ${currentPlayheadPosition}s. Handling clip move.`);
                 
-                Tone.Transport.stop(); // Stop transport
-                console.log(`[Track ${this.id}] Transport stopped for rescheduling.`);
+                Tone.Transport.pause(); // Pause instead of stop, might be gentler
+                console.log(`[Track ${this.id}] Transport paused for rescheduling.`);
                 
                 Tone.Transport.cancel(0); // Clear ALL transport events
                 console.log(`[Track ${this.id}] Called Tone.Transport.cancel(0) globally.`);
@@ -1055,8 +1055,9 @@ export class Track {
                     }
                 });
                 
-                Tone.Transport.position = currentPlayheadPosition; // Reset transport position
-                console.log(`[Track ${this.id}] Transport position reset to ${currentPlayheadPosition}.`);
+                // Transport position is already at currentPlayheadPosition due to pause
+                // Tone.Transport.position = currentPlayheadPosition; 
+                // console.log(`[Track ${this.id}] Transport position remains at ${currentPlayheadPosition}.`);
 
                 const lookaheadDuration = 300; 
                 const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
@@ -1070,7 +1071,8 @@ export class Track {
                     }
                 }
                 
-                Tone.Transport.start(Tone.Transport.now() + 0.05, currentPlayheadPosition); 
+                // Restart the transport from the captured position
+                Tone.Transport.start(Tone.Transport.now() + 0.1, currentPlayheadPosition); 
                 console.log(`[Track ${this.id}] Restarted transport from ${currentPlayheadPosition}s after rescheduling.`);
             }
         } else {
