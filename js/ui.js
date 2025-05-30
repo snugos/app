@@ -13,7 +13,7 @@ import {
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
 
- function initializeUIModule(appServicesFromMain) {
+function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
     // Ensure effectsRegistryAccess is available if ui.js needs it directly
     // (though it's usually main.js orchestrating this)
