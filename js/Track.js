@@ -102,18 +102,23 @@ export class Track {
         if (type === 'Synth' || type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
         else if (type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
         else if (type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
+        else if (type === 'Audio') numRowsForGrid = 0; // Audio tracks don't use grid sequencer
         else numRowsForGrid = 0;
 
         const loadedSequenceData = initialData?.sequenceData;
-        this.sequenceData = Array(numRowsForGrid).fill(null).map((_, rIndex) => {
-            const row = Array(this.sequenceLength).fill(null);
-            if (loadedSequenceData && loadedSequenceData[rIndex]) {
-                for (let c = 0; c < Math.min(this.sequenceLength, loadedSequenceData[rIndex].length); c++) {
-                    row[c] = loadedSequenceData[rIndex][c];
+        if (type !== 'Audio') { // Audio tracks don't have sequenceData in the same way
+            this.sequenceData = Array(numRowsForGrid).fill(null).map((_, rIndex) => {
+                const row = Array(this.sequenceLength).fill(null);
+                if (loadedSequenceData && loadedSequenceData[rIndex]) {
+                    for (let c = 0; c < Math.min(this.sequenceLength, loadedSequenceData[rIndex].length); c++) {
+                        row[c] = loadedSequenceData[rIndex][c];
+                    }
                 }
-            }
-            return row;
-        });
+                return row;
+            });
+        } else {
+            this.sequenceData = []; // No sequence data for audio tracks
+        }
         this.sequence = null;
 
         this.waveformCanvasCtx = null;
@@ -122,12 +127,13 @@ export class Track {
         this.automation = initialData?.automation || { volume: [] };
         this.inspectorControls = {};
 
-        this.audioClips = [];
-        this.inputChannel = null;
-        this.clipPlayers = new Map();
+        // Properties for Audio Track Type
+        this.audioClips = []; // Array to store audio clip metadata
+        this.inputChannel = null; // Tone.Channel for receiving audio from microphone
+        this.clipPlayers = new Map(); // To manage playback instances of audio clips
 
-        if (initialData?.audioClips) {
-            this.audioClips = initialData.audioClips;
+        if (initialData?.audioClips && Array.isArray(initialData.audioClips)) {
+            this.audioClips = JSON.parse(JSON.stringify(initialData.audioClips));
         }
     }
 
@@ -142,23 +148,28 @@ export class Track {
     }
 
     async initializeAudioNodes() {
+        // Dispose existing nodes if they exist
         if (this.gainNode && !this.gainNode.disposed) { try { this.gainNode.dispose(); } catch(e) {console.warn(`[Track ${this.id}] Error disposing old gainNode:`, e.message)} }
         if (this.trackMeter && !this.trackMeter.disposed) { try { this.trackMeter.dispose(); } catch(e) {console.warn(`[Track ${this.id}] Error disposing old trackMeter:`, e.message)} }
+        if (this.inputChannel && !this.inputChannel.disposed && this.type === 'Audio') { // Only dispose if it's an audio track's input channel
+            try { this.inputChannel.dispose(); } catch(e) {console.warn(`[Track ${this.id}] Error disposing old inputChannel:`, e.message)}
+        }
 
+
+        // Create new nodes
         this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
-        this.outputNode = this.gainNode;
+        this.outputNode = this.gainNode; // Default output is the gainNode
 
+        // For Audio tracks, create an input channel that connects to the gainNode
+        // This channel will receive audio from the microphone during recording
         if (this.type === 'Audio') {
-            if (this.inputChannel && !this.inputChannel.disposed) {
-                this.inputChannel.dispose();
-            }
-            this.inputChannel = new Tone.Channel().connect(this.gainNode);
+            this.inputChannel = new Tone.Channel(); // Don't connect yet, rebuildEffectChain will handle it
         }
 
         this.rebuildEffectChain();
     }
-
+    
     rebuildEffectChain() {
         if (!this.gainNode || this.gainNode.disposed) {
             console.error(`Track ${this.id} has no valid gainNode. Aborting chain rebuild.`);
@@ -176,12 +187,18 @@ export class Track {
             if (!this.slicerIsPolyphonic && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                 sourceNodes.push(this.slicerMonoGain);
             }
+            // Polyphonic sampler players are created on demand and connect directly to effects/gain
         } else if (this.type === 'Audio') {
-            sourceNodes.push(this.inputChannel);
+            // For Audio tracks, the source is the inputChannel, which is then routed through effects.
+            // Playback of clips will also route through effects.
+            if (this.inputChannel && !this.inputChannel.disposed) {
+                 sourceNodes.push(this.inputChannel);
+            }
         }
 
+
         const allManagedNodes = [
-            ...sourceNodes,
+            ...sourceNodes, // This now includes inputChannel for Audio tracks
             ...this.activeEffects.map(e => e.toneNode),
             this.gainNode,
             this.trackMeter
@@ -199,13 +216,20 @@ export class Track {
         }
 
         let currentOutput = sourceNodes.length > 0 ? (sourceNodes.length === 1 ? sourceNodes[0] : sourceNodes) : null;
+        
+        // Special handling for sampler types where source might be null initially for polyphonic playback
         if (this.type === 'Sampler' && this.slicerIsPolyphonic) {
+            currentOutput = null; // Polyphonic players connect directly later
+        }
+        // For Audio tracks, if inputChannel is the source, it's handled. Clip players connect directly.
+        if (this.type === 'Audio' && !this.inputChannel) { // If inputChannel isn't ready, use null
             currentOutput = null;
         }
 
+
         this.activeEffects.forEach(effectWrapper => {
             if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
-                if (currentOutput) {
+                if (currentOutput) { // If there's a source (like inputChannel or instrument)
                     if (Array.isArray(currentOutput)) {
                         currentOutput.forEach(outNode => {
                             if (outNode && !outNode.disposed) outNode.connect(effectWrapper.toneNode);
@@ -214,10 +238,11 @@ export class Track {
                         currentOutput.connect(effectWrapper.toneNode);
                     }
                 }
-                currentOutput = effectWrapper.toneNode;
+                currentOutput = effectWrapper.toneNode; // The output of this effect becomes the input for the next
             }
         });
 
+        // Connect the end of the source/effects chain to the main gainNode
         if (currentOutput) {
             if (Array.isArray(currentOutput)) {
                 currentOutput.forEach(outNode => {
@@ -226,7 +251,11 @@ export class Track {
             } else if (currentOutput && !currentOutput.disposed) {
                 currentOutput.connect(this.gainNode);
             }
+        } else if (this.type === 'Audio' && this.inputChannel && !this.inputChannel.disposed && this.activeEffects.length === 0) {
+            // If it's an audio track with no effects, connect inputChannel directly to gainNode
+            this.inputChannel.connect(this.gainNode);
         }
+
 
         if (this.gainNode && !this.gainNode.disposed && this.trackMeter && !this.trackMeter.disposed) {
             this.gainNode.connect(this.trackMeter);
@@ -362,7 +391,7 @@ export class Track {
 
     async fullyInitializeAudioResources() {
         if (!this.gainNode || this.gainNode.disposed) {
-            await this.initializeAudioNodes();
+            await this.initializeAudioNodes(); // This will also call rebuildEffectChain
         }
 
         try {
@@ -485,14 +514,22 @@ export class Track {
                 }
                 this.setupToneSampler();
             }
+            // For Audio tracks, clips are loaded on demand during playback scheduling or when displayed on timeline.
+            // No bulk loading here for audio clips, but ensure inputChannel is set up.
+            if (this.type === 'Audio' && (!this.inputChannel || this.inputChannel.disposed)) {
+                await this.initializeAudioNodes(); // Ensures inputChannel is created
+            }
+
         } catch (error) {
             console.error(`[Track ${this.id}] Overall error in fullyInitializeAudioResources for ${this.type}:`, error);
             if (this.appServices.showNotification) this.appServices.showNotification(`Major error loading audio for ${this.name}.`, 4000);
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sampleLoadError');
         }
 
-        this.setSequenceLength(this.sequenceLength, true);
-        this.rebuildEffectChain();
+        if (this.type !== 'Audio') { // Audio tracks don't use Tone.Sequence
+            this.setSequenceLength(this.sequenceLength, true);
+        }
+        this.rebuildEffectChain(); // Ensure chain is correct after all resources are potentially loaded
     }
 
     async initializeInstrument() {
@@ -501,7 +538,7 @@ export class Track {
                 this.instrument.dispose();
             }
             this.instrument = new Tone.MonoSynth(this.synthParams);
-            this.rebuildEffectChain();
+            // No need to call rebuildEffectChain here, as fullyInitializeAudioResources will do it
         }
     }
 
@@ -546,7 +583,7 @@ export class Track {
                             }
                         }
                     });
-                    this.rebuildEffectChain();
+                    // No rebuildEffectChain here, fullyInitializeAudioResources handles it
                 } catch (e) {
                     console.error(`[Track ${this.id}] Error creating Tone.Sampler:`, e);
                     if (this.appServices.showNotification) this.appServices.showNotification(`Error creating instrument sampler for ${this.name}.`, 3000);
@@ -676,6 +713,7 @@ export class Track {
     }
 
     doubleSequence() {
+        if (this.type === 'Audio') return; // Audio tracks don't use this
         this._captureUndoState(`Double Sequence Length for ${this.name}`);
 
         const oldLength = this.sequenceLength;
@@ -707,6 +745,8 @@ export class Track {
     }
 
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
+        if (this.type === 'Audio') return; // Audio tracks don't use Tone.Sequence
+
         const oldActualLength = this.sequenceLength;
         newLengthInSteps = Math.max(Constants.STEPS_PER_BAR, parseInt(newLengthInSteps) || Constants.defaultStepsPerBar);
         newLengthInSteps = Math.ceil(newLengthInSteps / Constants.STEPS_PER_BAR) * Constants.STEPS_PER_BAR;
@@ -811,9 +851,7 @@ export class Track {
                     const padData = this.drumSamplerPads[padIndex];
                     if (step?.active && padData && this.drumPadPlayers[padIndex]?.loaded) {
                         const player = this.drumPadPlayers[padIndex];
-                        // ** FIX: Remove faulty player.connectedTo check **
-                        // The connection is managed by rebuildEffectChain.
-                        player.volume.value = Tone.gainToDb(padData.volume * step.velocity);
+                        player.volume.value = Tone.dbToGain(padData.volume * step.velocity);
                         player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
                     }
@@ -841,10 +879,10 @@ export class Track {
     async addAudioClip(blob, startTime) {
         if (this.type !== 'Audio') return;
         const clipId = `clip_${this.id}_${Date.now()}`;
-        const dbKey = `clip_${this.id}_${Date.now()}.wav`;
+        const dbKey = `clip_${this.id}_${Date.now()}.wav`; // Store as WAV
 
         try {
-            await storeAudio(dbKey, blob);
+            await storeAudio(dbKey, blob); // Assumes blob is already in WAV format
             const duration = await this.getBlobDuration(blob);
 
             const newClip = {
@@ -871,30 +909,64 @@ export class Track {
     
     async getBlobDuration(blob) {
         const tempUrl = URL.createObjectURL(blob);
-        const audioContext = Tone.context.rawContext;
-        const arrayBuffer = await fetch(tempUrl).then(res => res.arrayBuffer());
-        URL.revokeObjectURL(tempUrl);
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        return audioBuffer.duration;
+        const audioContext = Tone.context.rawContext; // Get the underlying AudioContext
+        try {
+            const arrayBuffer = await fetch(tempUrl).then(res => res.arrayBuffer());
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            return audioBuffer.duration;
+        } catch (e) {
+            console.error("Error getting blob duration:", e);
+            return 0; // Fallback duration
+        } finally {
+            URL.revokeObjectURL(tempUrl);
+        }
     }
 
     schedulePlayback(transportStartTime, transportStopTime) {
         if (this.type !== 'Audio') return;
 
+        // Clear any previously scheduled players for this track
+        this.stopPlayback();
+
         this.audioClips.forEach(async clip => {
+            // Check if the clip overlaps with the current transport's playback segment
+            // For simplicity, we'll assume playback starts from transportStartTime
             if (clip.startTime + clip.duration < transportStartTime || clip.startTime > transportStopTime) {
-                return;
+                return; // Clip is not in the playback range
             }
 
             const player = new Tone.Player();
-            this.clipPlayers.set(clip.id, player);
+            this.clipPlayers.set(clip.id, player); // Store player to manage it
 
-            const audioBlob = await getAudio(clip.dbKey);
-            if (audioBlob) {
-                const url = URL.createObjectURL(audioBlob);
-                await player.load(url);
-                player.connect(this.gainNode);
-                player.start(clip.startTime);
+            try {
+                const audioBlob = await getAudio(clip.dbKey);
+                if (audioBlob) {
+                    const url = URL.createObjectURL(audioBlob);
+                    await player.load(url);
+                    
+                    // Connect player to the track's effect chain or gain node
+                    const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
+                        ? this.activeEffects[0].toneNode
+                        : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
+
+                    if (destinationNode) {
+                        player.connect(destinationNode);
+                    } else {
+                        console.warn(`[Track ${this.id}] No valid destination for audio clip player.`);
+                        player.toDestination(); // Fallback to master directly if no track destination
+                    }
+                    
+                    // Schedule the player to start at its stored startTime relative to transport
+                    player.start(clip.startTime);
+                    // Player will stop automatically when its audio finishes
+                    // If you need to stop it at a specific transport time, use Tone.Transport.scheduleOnce
+                }
+            } catch (error) {
+                console.error(`Error loading or scheduling clip ${clip.id}:`, error);
+                if (this.clipPlayers.has(clip.id)) {
+                    this.clipPlayers.get(clip.id).dispose();
+                    this.clipPlayers.delete(clip.id);
+                }
             }
         });
     }
@@ -902,8 +974,12 @@ export class Track {
     stopPlayback() {
         this.clipPlayers.forEach((player, id) => {
             if (player && !player.disposed) {
-                player.stop();
-                player.dispose();
+                try {
+                    player.stop();
+                    player.dispose();
+                } catch(e) {
+                    console.warn(`Error stopping/disposing player for clip ${id}:`, e);
+                }
             }
         });
         this.clipPlayers.clear();
@@ -918,8 +994,8 @@ export class Track {
         this.activeEffects.forEach(effect => { if (effect.toneNode && !effect.toneNode.disposed) effect.toneNode.dispose(); });
         if (this.gainNode && !this.gainNode.disposed) { this.gainNode.dispose(); }
         if (this.trackMeter && !this.trackMeter.disposed) { this.trackMeter.dispose(); }
-        if (this.inputChannel && !this.inputChannel.disposed) { this.inputChannel.dispose(); }
-        this.stopPlayback();
+        if (this.inputChannel && !this.inputChannel.disposed) { this.inputChannel.dispose(); } // Dispose inputChannel
+        this.stopPlayback(); // Stop and dispose any active clip players
 
         if (this.appServices.closeAllTrackWindows) {
             this.appServices.closeAllTrackWindows(this.id);
