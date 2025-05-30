@@ -926,19 +926,19 @@ export class Track {
         }
     }
 
-    schedulePlayback(transportStartTime, transportStopTime) {
+    async schedulePlayback(transportStartTime, transportStopTime) {
         if (this.type !== 'Audio') return;
         console.log(`[Track ${this.id}] schedulePlayback called. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
     
         this.stopPlayback(); 
     
-        this.audioClips.forEach(async clip => {
+        for (const clip of this.audioClips) { // Use for...of to allow await inside loop
             console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clip.startTime}, clip.duration: ${clip.duration}`);
             
             const clipEndTime = clip.startTime + clip.duration;
             if (clipEndTime <= transportStartTime || clip.startTime >= transportStopTime) {
                 console.log(`[Track ${this.id}] Clip ${clip.id} is outside playback range. Skipping.`);
-                return; 
+                continue; 
             }
     
             const player = new Tone.Player();
@@ -950,45 +950,36 @@ export class Track {
                     const url = URL.createObjectURL(audioBlob);
                     console.log(`[Track ${this.id}] Loading audio for clip ${clip.id} from URL: ${url}`);
                     
-                    player.onload = () => {
-                        console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
-                        URL.revokeObjectURL(url); 
+                    // Await player.load() before proceeding
+                    await player.load(url);
+                    console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
+                    URL.revokeObjectURL(url); 
     
-                        const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
-                            ? this.activeEffects[0].toneNode
-                            : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
-    
-                        if (destinationNode) {
-                            player.connect(destinationNode);
-                        } else {
-                            console.warn(`[Track ${this.id}] No valid destination for audio clip player. Connecting to master.`);
-                            player.toDestination(); 
-                        }
-                        
-                        const offsetIntoClip = Math.max(0, transportStartTime - clip.startTime);
-                        const durationFromOffset = clip.duration - offsetIntoClip;
-                        const effectiveStartTimeForPlayer = clip.startTime + offsetIntoClip;
-                        const effectivePlayDuration = Math.min(durationFromOffset, transportStopTime - effectiveStartTimeForPlayer);
-    
-                        if (effectivePlayDuration > 0) {
-                             console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${effectiveStartTimeForPlayer} (offset: ${offsetIntoClip}s, duration: ${effectivePlayDuration}s)`);
-                             player.start(effectiveStartTimeForPlayer, offsetIntoClip, effectivePlayDuration);
-                        } else {
-                            console.log(`[Track ${this.id}] Clip ${clip.id} has zero play duration in this segment. Disposing player.`);
-                            player.dispose(); 
-                            this.clipPlayers.delete(clip.id);
-                        }
-                    };
-                    player.onerror = (error) => {
-                        console.error(`[Track ${this.id}] Error loading audio for clip ${clip.id}:`, error);
-                        URL.revokeObjectURL(url); 
-                        if (this.clipPlayers.has(clip.id)) {
-                            this.clipPlayers.get(clip.id).dispose();
-                            this.clipPlayers.delete(clip.id);
-                        }
-                    };
-                    await player.load(url); 
+                    const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
+                        ? this.activeEffects[0].toneNode
+                        : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
 
+                    if (destinationNode) {
+                        player.connect(destinationNode);
+                    } else {
+                        console.warn(`[Track ${this.id}] No valid destination for audio clip player. Connecting to master.`);
+                        player.toDestination(); 
+                    }
+                    
+                    const offsetIntoClip = Math.max(0, transportStartTime - clip.startTime);
+                    const durationFromOffset = clip.duration - offsetIntoClip;
+                    // Corrected effectiveStartTimeForPlayer to be relative to Tone.Transport's timeline
+                    const scheduleTimeForPlayer = clip.startTime + offsetIntoClip;
+                    const effectivePlayDuration = Math.min(durationFromOffset, transportStopTime - scheduleTimeForPlayer);
+
+                    if (effectivePlayDuration > 0) {
+                         console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${scheduleTimeForPlayer} (offset in buffer: ${offsetIntoClip}s, play duration: ${effectivePlayDuration}s)`);
+                         player.start(scheduleTimeForPlayer, offsetIntoClip, effectivePlayDuration);
+                    } else {
+                        console.log(`[Track ${this.id}] Clip ${clip.id} has zero play duration in this segment. Disposing player.`);
+                        player.dispose(); 
+                        this.clipPlayers.delete(clip.id);
+                    }
                 } else {
                     console.warn(`[Track ${this.id}] Could not retrieve audio blob for clip ${clip.id} (dbKey: ${clip.dbKey})`);
                     player.dispose();
@@ -1001,7 +992,7 @@ export class Track {
                     this.clipPlayers.delete(clip.id);
                 }
             }
-        });
+        }
     }
 
     stopPlayback() {
@@ -1039,6 +1030,8 @@ export class Track {
                 this.stopPlayback(); // Stop all current playback for this track
                 
                 // Re-schedule all clips for this track from the current transport time onwards
+                // A short delay might not be necessary if stopPlayback is robust enough.
+                // However, direct re-scheduling might be cleaner.
                 const lookaheadDuration = 300; 
                 const currentTransportTime = Tone.Transport.seconds;
                 const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
@@ -1048,6 +1041,8 @@ export class Track {
                 console.log(`[Track ${this.id}] Re-scheduling all clips on track from ${currentTransportTime} to ${transportStopTime}.`);
                 await this.schedulePlayback(currentTransportTime, transportStopTime); 
             }
+            // If transport is stopped, the main play button's handler will call schedulePlayback with transportStartTime = 0
+            // which will pick up the new clip.startTime.
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
         }
