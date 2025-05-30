@@ -446,20 +446,26 @@ function buildTrackInspectorContentDOM(track) {
     else if (track.type === 'Sampler') specificControlsHTML = buildSamplerSpecificInspectorDOM(track);
     else if (track.type === 'DrumSampler') specificControlsHTML = buildDrumSamplerSpecificInspectorDOM(track);
     else if (track.type === 'InstrumentSampler') specificControlsHTML = buildInstrumentSamplerSpecificInspectorDOM(track);
-    // Audio tracks currently have no specific inspector controls.
+    // Audio tracks currently have no specific inspector controls beyond the monitor button.
 
     const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     let sequencerButtonHTML = '';
-    if (track.type !== 'Audio') { // Only show sequencer button for non-audio tracks
+    if (track.type !== 'Audio') { 
         sequencerButtonHTML = `<button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Sequencer</button>`;
+    }
+    
+    let monitorButtonHTML = '';
+    if (track.type === 'Audio') {
+        monitorButtonHTML = `<button id="monitorBtn-${track.id}" title="Toggle Input Monitoring" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMonitoringEnabled ? 'active' : ''}">Monitor</button>`;
     }
 
 
     return `
         <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 dark:text-slate-300 overflow-y-auto h-full">
-            <div class="common-controls grid grid-cols-3 gap-1 mb-1">
+            <div class="common-controls grid ${track.type === 'Audio' ? 'grid-cols-4' : 'grid-cols-3'} gap-1 mb-1">
                 <button id="muteBtn-${track.id}" title="Mute Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'Unmute' : 'Mute'}</button>
                 <button id="soloBtn-${track.id}" title="Solo Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
+                ${monitorButtonHTML}
                 <button id="armInputBtn-${track.id}" title="Arm for MIDI/Keyboard Input or Audio Recording" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${armedTrackId === track.id ? 'armed' : ''}">Arm</button>
             </div>
             <div id="volumeKnob-${track.id}-placeholder" class="mb-1"></div>
@@ -502,6 +508,23 @@ function initializeCommonInspectorControls(track, winEl) {
     winEl.querySelector(`#muteBtn-${track.id}`)?.addEventListener('click', () => handleTrackMute(track.id));
     winEl.querySelector(`#soloBtn-${track.id}`)?.addEventListener('click', () => handleTrackSolo(track.id));
     winEl.querySelector(`#armInputBtn-${track.id}`)?.addEventListener('click', () => handleTrackArm(track.id));
+    
+    const monitorBtn = winEl.querySelector(`#monitorBtn-${track.id}`);
+    if (monitorBtn) {
+        monitorBtn.addEventListener('click', () => {
+            if (track.type === 'Audio') { // Ensure it's an audio track
+                track.isMonitoringEnabled = !track.isMonitoringEnabled;
+                monitorBtn.classList.toggle('active', track.isMonitoringEnabled);
+                showNotification(`Input Monitoring ${track.isMonitoringEnabled ? 'ON' : 'OFF'} for ${track.name}`, 2000);
+                if (localAppServices.captureStateForUndo) {
+                    localAppServices.captureStateForUndo(`Toggle Monitoring for ${track.name} to ${track.isMonitoringEnabled ? 'ON' : 'OFF'}`);
+                }
+                // Note: The actual monitoring connection/disconnection happens in startAudioRecording
+                // based on this flag. If recording is active, this won't change current monitoring.
+            }
+        });
+    }
+
     winEl.querySelector(`#removeTrackBtn-${track.id}`)?.addEventListener('click', () => handleRemoveTrack(track.id));
     winEl.querySelector(`#openEffectsBtn-${track.id}`)?.addEventListener('click', () => handleOpenEffectsRack(track.id));
     
@@ -1242,9 +1265,9 @@ export function renderTimeline() {
 
         const clipsContainer = document.createElement('div');
         clipsContainer.style.position = 'relative'; 
-        clipsContainer.style.width = 'calc(100% - 120px)'; 
+        clipsContainer.style.width = 'calc(100% - 120px)'; // Assuming 120px is track name width
         clipsContainer.style.height = '100%';
-        // clipsContainer.style.marginLeft = '120px'; // Removed, as clips are positioned absolutely within the lane
+        // clipsContainer.style.marginLeft = '120px'; // This might not be needed if clips are positioned relative to lane
 
         if (track.type === 'Audio' && track.audioClips) {
             track.audioClips.forEach(clip => {
@@ -1263,37 +1286,32 @@ export function renderTimeline() {
                     e.stopPropagation();
 
                     const startX = e.clientX;
-                    // Use parseFloat to ensure we get a number, and handle cases where style.left might be empty
                     const initialLeftPixels = parseFloat(clipEl.style.left) || 0;
-                    let originalStartTime = clip.startTime; // Store original for undo comparison
+                    let originalStartTime = clip.startTime; 
 
                     function onMouseMove(moveEvent) {
                         const dx = moveEvent.clientX - startX;
                         const newLeftPixels = initialLeftPixels + dx;
-                        clipEl.style.left = `${Math.max(0, newLeftPixels)}px`; // Prevent dragging before time 0
+                        clipEl.style.left = `${Math.max(0, newLeftPixels)}px`; 
                     }
 
                     function onMouseUp(upEvent) {
                         document.removeEventListener('mousemove', onMouseMove);
                         document.removeEventListener('mouseup', onMouseUp);
 
-                        // Calculate the new start time
                         const finalLeftPixels = parseFloat(clipEl.style.left) || 0;
-                        const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond); // Ensure non-negative
+                        const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond); 
                         
-                        // Only update and capture undo state if the position actually changed significantly
-                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) { // Threshold for change
+                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) { 
                             if (localAppServices.captureStateForUndo) {
                                 localAppServices.captureStateForUndo(`Move clip on track "${track.name}"`);
                             }
-                            // Call the method on the track object to update its internal state
                             if (track.updateAudioClipPosition) {
                                 track.updateAudioClipPosition(clip.id, newStartTime);
                             } else {
                                 console.error("Track.updateAudioClipPosition method not found!");
                             }
                         } else {
-                            // If it didn't move significantly, snap it back to its original visual position
                             clipEl.style.left = `${originalStartTime * pixelsPerSecond}px`;
                         }
                     }
@@ -1321,7 +1339,7 @@ export function updatePlayheadPosition() {
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
     const timelineContentArea = timelineWindow.element.querySelector('.window-content'); 
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler'); 
-    const timelineTracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container');
+    // const timelineTracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); // Not directly used for playhead logic here
 
 
     if (!playhead || typeof Tone === 'undefined' || !timelineContentArea) return;
@@ -1329,49 +1347,33 @@ export function updatePlayheadPosition() {
     playhead.style.display = 'block';
 
     const pixelsPerSecond = 30; 
-    const trackNameWidth = 120; // This should match the CSS for .timeline-track-lane-name
+    const trackNameWidth = 120; 
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        // The playhead's left style is relative to its parent, which is timeline-container.
-        // The trackNameWidth offset is needed because the visual start of the "playable" area is after the track names.
         playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
 
-
-        // Auto-scroll logic
-        const scrollableContent = timelineContentArea; // The window-content is the scrollable part
+        const scrollableContent = timelineContentArea; 
         const containerWidth = scrollableContent.clientWidth - trackNameWidth; 
-        
-        // Playhead's position relative to the visible part of the scrollable content area (excluding track names)
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
 
-        if (playheadVisualPositionInScrollable > containerWidth * 0.8) { // Scroll if playhead is in the last 20%
+        if (playheadVisualPositionInScrollable > containerWidth * 0.8) { 
             scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; 
-        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) { // Scroll if playhead is in the first 20%
+        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) { 
             scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20); 
         }
         if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
 
-
     } else if (Tone.Transport.state === 'stopped') {
-         playhead.style.left = `${trackNameWidth}px`; // Reset to start of playable area
+         playhead.style.left = `${trackNameWidth}px`; 
     }
     
-    // Sync ruler and tracks area scroll with the main content area's scroll
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
-    if (timelineTracksContainer && timelineContentArea) {
-         const tracksDisplayArea = timelineTracksContainer.querySelector('#timeline-tracks-area');
-         if (tracksDisplayArea) {
-            // The tracks area itself should not be translated if clips are positioned absolutely within it.
-            // Instead, the parent (timeline-tracks-container) handles the overflow.
-            // However, if #timeline-tracks-area is wider than its container and meant to scroll,
-            // then this translation would be correct. Given the current CSS, this might be redundant
-            // if .window-content is the primary scroller.
-            // For now, let's assume .window-content handles all horizontal scrolling.
-         }
-    }
+    // The #timeline-tracks-area itself is wide and its parent #timeline-tracks-container or .window-content handles scrolling.
+    // So, direct transform on #timeline-tracks-area for scrolling might be redundant or conflict.
+    // The playhead and ruler sync with .window-content scroll.
 }
 
 export function openTimelineWindow(savedState = null) {
@@ -1426,11 +1428,8 @@ export function openTimelineWindow(savedState = null) {
     if (timelineWindow?.element) {
         const contentArea = timelineWindow.element.querySelector('.window-content');
         if (contentArea) {
-            // The scroll event on .window-content will handle syncing ruler and playhead
             contentArea.addEventListener('scroll', () => {
                 const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-                 // The tracks area itself (#timeline-tracks-area) should be wide enough not to need its own scroll sync
-                // if clips are positioned absolutely and its parent (#timeline-tracks-container) or .window-content handles scrolling.
                 if (ruler) {
                     ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
