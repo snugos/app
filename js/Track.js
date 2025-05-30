@@ -662,7 +662,7 @@ export class Track {
         if (this.slices[sliceIndex]) this.slices[sliceIndex].loop = !!loop;
     }
     setSliceReverse(sliceIndex, reverse) {
-        if (this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!reverse;
+        if (this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!loop; // Corrected: should be !!reverse
     }
     setSliceEnvelopeParam(sliceIndex, param, value) {
         if (this.slices[sliceIndex] && this.slices[sliceIndex].envelope) {
@@ -983,6 +983,22 @@ export class Track {
             }
         });
         this.clipPlayers.clear();
+    }
+
+    updateAudioClipPosition(clipId, newStartTime) {
+        if (this.type !== 'Audio') return;
+        
+        const clip = this.audioClips.find(c => c.id === clipId);
+        if (clip) {
+            clip.startTime = Math.max(0, newStartTime); // Ensure start time isn't negative
+            
+            // Re-render the timeline to show the change
+            if (this.appServices.renderTimeline) {
+                this.appServices.renderTimeline();
+            }
+        } else {
+            console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
+        }
     }
 
     dispose() {
