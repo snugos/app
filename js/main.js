@@ -11,16 +11,18 @@ import {
 } from './eventHandlers.js';
 import {
     initializeStateModule,
-    // State Getters (renamed with 'State' suffix)
+    // State Getters
     getTracksState, getTrackByIdState, getOpenWindowsState, getWindowByIdState, getHighestZState,
-    getMasterEffectsState, getMasterGainNodeState, getMidiAccessState, getActiveMIDIInputState,
+    getMasterEffectsState, getMasterGainValueState, // Corrected: getMasterGainValueState
+    getMidiAccessState, getActiveMIDIInputState,
     getLoadedZipFilesState, getSoundLibraryFileTreesState, getCurrentLibraryNameState,
     getCurrentSoundFileTreeState, getCurrentSoundBrowserPathState, getPreviewPlayerState,
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState,
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState,
-    // State Setters (renamed with 'State' suffix)
+    // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
-    setMasterEffectsState, setMasterGainNodeState, setMidiAccessState, setActiveMIDIInputState,
+    setMasterEffectsState, setMasterGainValueState, // Corrected: setMasterGainValueState
+    setMidiAccessState, setActiveMIDIInputState,
     setLoadedZipFilesState, setSoundLibraryFileTreesState, setCurrentLibraryNameState,
     setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
@@ -36,7 +38,8 @@ import {
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample, addMasterEffectToAudio,
     removeMasterEffectFromAudio, updateMasterEffectParamInAudio, reorderMasterEffectInAudio,
-    getMimeTypeFromFilename, getMasterEffectsBusInputNode // Getter for the actual Tone.js node
+    getMimeTypeFromFilename, getMasterEffectsBusInputNode,
+    getActualMasterGainNode as getActualMasterGainNodeFromAudio // Added import for actual node
 } from './audio.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -48,7 +51,7 @@ import {
     openMasterEffectsRackWindow
 } from './ui.js';
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v1)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v2)");
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -63,7 +66,6 @@ const uiElementsCache = {
     sampleFileInput: null,
     notificationArea: null,
     modalContainer: null,
-    // Start Menu Items
     menuAddSynthTrack: null,
     menuAddSamplerTrack: null,
     menuAddDrumSamplerTrack: null,
@@ -80,7 +82,6 @@ const uiElementsCache = {
     menuUploadCustomBg: null,
     menuRemoveCustomBg: null,
     menuToggleFullScreen: null,
-    // Global Controls (will be populated when window opens)
     playBtnGlobal: null,
     recordBtnGlobal: null,
     tempoGlobalInput: null,
@@ -93,8 +94,6 @@ const uiElementsCache = {
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
 
-// --- AppServices Object (centralized access to services and state) ---
-// This object will be built up and passed around.
 const appServices = {
     // UI Module Functions
     openTrackInspectorWindow, openTrackEffectsRackWindow, openTrackSequencerWindow,
@@ -107,14 +106,17 @@ const appServices = {
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
     playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile,
     autoSliceSample, getMimeTypeFromFilename,
-    // State Module Getters (wrapped for consistent naming if desired, or direct)
+    getMasterEffectsBusInputNode,
+    getActualMasterGainNode: getActualMasterGainNodeFromAudio, // Provide actual Tone.Gain node
+
+    // State Module Getters
     getTracks: getTracksState,
     getTrackById: getTrackByIdState,
     getOpenWindows: getOpenWindowsState,
     getWindowById: getWindowByIdState,
     getHighestZ: getHighestZState,
-    getMasterEffects: getMasterEffectsState, // Gets the state representation
-    getMasterGainNode: getMasterGainNodeState, // Gets the state representation of master gain
+    getMasterEffects: getMasterEffectsState,
+    getMasterGainValue: getMasterGainValueState, // Corrected: Gets the *value*
     getMidiAccess: getMidiAccessState,
     getActiveMIDIInput: getActiveMIDIInputState,
     getLoadedZipFiles: getLoadedZipFilesState,
@@ -131,15 +133,14 @@ const appServices = {
     getActiveSequencerTrackId: getActiveSequencerTrackIdState,
     getUndoStack: getUndoStackState,
     getRedoStack: getRedoStackState,
-    getMasterEffectsBusInputNode, // Direct from audio.js for Tone.js node
 
-    // State Module Setters (wrapped for consistent naming)
+    // State Module Setters
     addWindowToStore: addWindowToStoreState,
     removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState,
     incrementHighestZ: incrementHighestZState,
     setMasterEffects: setMasterEffectsState,
-    setMasterGainNode: setMasterGainNodeState,
+    setMasterGainValue: setMasterGainValueState, // Corrected: Sets the *value*
     setMidiAccess: setMidiAccessState,
     setActiveMIDIInput: setActiveMIDIInputState,
     setLoadedZipFiles: setLoadedZipFilesState,
@@ -156,7 +157,7 @@ const appServices = {
     setRecordingStartTime: setRecordingStartTimeState,
     setActiveSequencerTrackId: setActiveSequencerTrackIdState,
 
-    // Core State Actions (wrapped)
+    // Core State Actions
     addTrack: addTrackToStateInternal,
     removeTrack: removeTrackFromStateInternal,
     captureStateForUndo: captureStateForUndoInternal,
@@ -169,7 +170,7 @@ const appServices = {
     handleProjectFileLoad: handleProjectFileLoadInternal,
     exportToWav: exportToWavInternal,
 
-    // Event Handler Passthroughs (if needed, or eventHandlers directly use appServices)
+    // Event Handler Passthroughs
     selectMIDIInput, handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer,
 
@@ -197,7 +198,7 @@ const appServices = {
     },
     closeAllWindows: (isReconstruction = false) => {
         getOpenWindowsState().forEach(win => win.close(isReconstruction));
-        openWindowsMap.clear(); // Reset after closing all
+        openWindowsMap.clear();
     },
     closeAllTrackWindows: (trackIdToClose) => {
         const windowIdsToClose = [
@@ -208,23 +209,21 @@ const appServices = {
         windowIdsToClose.forEach(winId => {
             const win = getWindowByIdState(winId);
             if (win && typeof win.close === 'function') {
-                win.close(true); // true for silent close
+                win.close(true);
             }
         });
     },
-    updateTrackUI: handleTrackUIUpdate, // Central UI update router
-    createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices), // Pass appServices to SnugWindow
-    uiElementsCache: uiElementsCache, // Provide cached DOM elements
+    updateTrackUI: handleTrackUIUpdate,
+    createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
+    uiElementsCache: uiElementsCache,
 
     // Master Effects Chain - State and Audio interaction
-    // These now interact with both state.js (for serializable data) and audio.js (for Tone.js nodes)
     addMasterEffect: async (effectType) => {
         const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
         if (!isReconstructing) captureStateForUndoInternal(`Add ${effectType} to Master`);
-        const defaultParams = appServices.getEffectDefaultParams(effectType); // Assuming this is exposed via appServices
-        const effectIdInState = addMasterEffectToState(effectType, defaultParams); // Add to state.js
-        await audioAddMasterEffectToChain(effectIdInState, effectType, defaultParams); // Add to audio.js and get ToneNode
-        // No need to call rebuildMasterEffectChain here, audio.js should handle it
+        const defaultParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
+        const effectIdInState = addMasterEffectToState(effectType, defaultParams);
+        await audioAddMasterEffectToChain(effectIdInState, effectType, defaultParams);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
     removeMasterEffect: async (effectId) => {
@@ -232,37 +231,67 @@ const appServices = {
         if (effect) {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
             if (!isReconstructing) captureStateForUndoInternal(`Remove ${effect.type} from Master`);
-            removeMasterEffectFromState(effectId); // Remove from state.js
-            await removeMasterEffectFromAudio(effectId); // Remove from audio.js
+            removeMasterEffectFromState(effectId);
+            await audioRemoveMasterEffectFromChain(effectId);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         }
     },
     updateMasterEffectParam: (effectId, paramPath, value) => {
-        updateMasterEffectParamInState(effectId, paramPath, value); // Update state.js
-        updateMasterEffectParamInAudio(effectId, paramPath, value); // Update audio.js
-        // Potentially a targeted UI update for this specific control
+        updateMasterEffectParamInState(effectId, paramPath, value);
+        audioUpdateMasterEffectParamInChain(effectId, paramPath, value);
     },
     reorderMasterEffect: (effectId, newIndex) => {
         const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
         if (!isReconstructing) captureStateForUndoInternal(`Reorder Master effect`);
-        reorderMasterEffectInState(effectId, newIndex); // Reorder in state.js
-        reorderMasterEffectInAudio(effectId, newIndex); // Reorder in audio.js (which calls rebuild)
+        reorderMasterEffectInState(effectId, newIndex);
+        audioReorderMasterEffectInChain(effectId, newIndex);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
-    getEffectDefaultParams: (effectType) => { // Helper for addMasterEffect
-        // This function might live in effectsRegistry.js and be exposed via appServices
-        const { AVAILABLE_EFFECTS, getEffectDefaultParams: getParams } = appServices.effectsRegistryAccess;
-        return getParams(effectType);
+    setActualMasterVolume: (volumeValue) => { // New service to set Tone.Gain
+        const actualMasterNode = getActualMasterGainNodeFromAudio();
+        if (actualMasterNode && actualMasterNode.gain) {
+            actualMasterNode.gain.value = volumeValue;
+        }
     },
-    // Access to effects registry for UI and other modules
     effectsRegistryAccess: {
-        AVAILABLE_EFFECTS: null, // Will be populated from effectsRegistry.js
-        getEffectParamDefinitions: null, // Will be populated
+        AVAILABLE_EFFECTS: null,
+        getEffectParamDefinitions: null,
+        getEffectDefaultParams: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag, // Internal flag
-    _isReconstructingDAW_flag: false, // Internal flag for undo/redo/load
-};
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag,
+    _isReconstructingDAW_flag: false,
+    // For eventhandlers to know if transport events have been set up
+    _transportEventsInitialized_flag: false,
+    getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
+    setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = value; },
+    // For UI to update track meters
+    updateTrackMeterUI: (trackId, level, isClipping) => {
+        const inspectorWindow = getWindowByIdState(`trackInspector-${trackId}`);
+        const mixerWindow = getWindowByIdState('mixer');
 
+        if (inspectorWindow && !inspectorWindow.isMinimized && inspectorWindow.element) {
+            const meterBar = inspectorWindow.element.querySelector(`#trackMeterBar-${trackId}`);
+            if (meterBar) {
+                meterBar.style.width = `${Math.min(100, level * 100)}%`;
+                meterBar.classList.toggle('clipping', isClipping);
+            }
+        }
+        if (mixerWindow && !mixerWindow.isMinimized && mixerWindow.element) {
+            const meterBar = mixerWindow.element.querySelector(`#mixerTrackMeterBar-${trackId}`);
+            if (meterBar) {
+                meterBar.style.width = `${Math.min(100, level * 100)}%`;
+                meterBar.classList.toggle('clipping', isClipping);
+            }
+        }
+    },
+    // For UI to update master effects rack if it's open
+    updateMasterEffectsRackUI: () => {
+        const masterRackWindow = getWindowByIdState('masterEffectsRack');
+        if (masterRackWindow && masterRackWindow.element && !masterRackWindow.isMinimized) {
+            renderEffectsList(null, 'master', masterRackWindow.element.querySelector('#effectsList-master'), masterRackWindow.element.querySelector('#effectControlsContainer-master'));
+        }
+    },
+};
 
 // --- UI Update Router ---
 function handleTrackUIUpdate(trackId, reason, detail) {
@@ -290,7 +319,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 if (armBtn) armBtn.classList.toggle('armed', getArmedTrackIdState() === track.id);
             }
             if (mixerWindow && !mixerWindow.isMinimized) {
-                updateMixerWindow(); // Redraw the whole mixer
+                updateMixerWindow();
             }
             break;
         case 'effectsListChanged':
@@ -318,11 +347,11 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                     const inputId = track.type === 'Sampler' ? `fileInput-${track.id}` : `instrumentFileInput-${track.id}`;
                     dzContainer.innerHTML = createDropZoneHTML(track.id, inputId, track.type, null, {originalFileName: audioData.fileName, status: 'loaded'});
                     const fileInputEl = dzContainer.querySelector(`#${inputId}`);
-                    if (fileInputEl) fileInputEl.onchange = (e) => loadSampleFile(e, track.id, track.type);
+                    if (fileInputEl) fileInputEl.onchange = (e) => loadSampleFile(e, track.id, track.type); // loadSampleFile is from audio.js, accessed via appServices
                 }
             }
             break;
-        case 'drumPadLoaded': // detail here would be padIndex
+        case 'drumPadLoaded':
              if (inspectorWindow && !inspectorWindow.isMinimized && inspectorWindow.element) {
                 updateDrumPadControlsUI(track);
                 renderDrumSamplerPads(track);
@@ -330,13 +359,13 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             break;
         case 'sequencerContentChanged':
             if (sequencerWindow && !sequencerWindow.isMinimized && sequencerWindow.element) {
-                 openTrackSequencerWindow(trackId, true, sequencerWindow.options); // forceRedraw = true
+                 openTrackSequencerWindow(trackId, true, sequencerWindow.options);
             }
             break;
         case 'sampleLoadError':
             if (inspectorWindow && !inspectorWindow.isMinimized && inspectorWindow.element) {
                 let dzContainerId, audioDataKey, inputIdBase;
-                if (track.type === 'DrumSampler' && typeof detail === 'number') { // detail is padIndex
+                if (track.type === 'DrumSampler' && typeof detail === 'number') {
                     dzContainerId = `#drumPadDropZoneContainer-${track.id}-${detail}`;
                     audioDataKey = track.drumSamplerPads[detail];
                     inputIdBase = `drumPadFileInput-${track.id}-${detail}`;
@@ -357,16 +386,15 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                         const fileInputEl = dzContainer.querySelector(`#${inputIdBase}`);
                         if (fileInputEl) {
                             if (track.type === 'DrumSampler') {
-                                fileInputEl.onchange = (e) => loadDrumSamplerPadFile(e, track.id, detail);
+                                fileInputEl.onchange = (e) => loadDrumSamplerPadFile(e, track.id, detail); // from audio.js
                             } else {
-                                fileInputEl.onchange = (e) => loadSampleFile(e, track.id, track.type);
+                                fileInputEl.onchange = (e) => loadSampleFile(e, track.id, track.type); // from audio.js
                             }
                         }
                     }
                 }
             }
             break;
-        // Add other cases as needed
     }
 }
 
@@ -408,25 +436,22 @@ async function initializeSnugOS() {
     const effectsRegistry = await import('./effectsRegistry.js');
     appServices.effectsRegistryAccess.AVAILABLE_EFFECTS = effectsRegistry.AVAILABLE_EFFECTS;
     appServices.effectsRegistryAccess.getEffectParamDefinitions = effectsRegistry.getEffectParamDefinitions;
-    appServices.effectsRegistryAccess.getEffectDefaultParams = effectsRegistry.getEffectDefaultParams; // Make sure this is exported from effectsRegistry
+    appServices.effectsRegistryAccess.getEffectDefaultParams = effectsRegistry.getEffectDefaultParams;
+    appServices.effectsRegistryAccess.synthEngineControlDefinitions = effectsRegistry.synthEngineControlDefinitions;
+
 
     applyDesktopBackground(localStorage.getItem(DESKTOP_BACKGROUND_KEY));
     if (uiElementsCache.customBgInput) {
         uiElementsCache.customBgInput.addEventListener('change', handleCustomBackgroundUpload);
     }
 
-    // Initialize all modules, passing appServices
     initializeStateModule(appServices);
     initializeUIModule(appServices);
     initializeAudioModule(appServices);
     initializeEventHandlersModule(appServices);
 
+    initializePrimaryEventListeners(appServices);
 
-    // Primary event listeners (e.g., Start Menu) now use appServices for actions
-    // and uiElementsCache for DOM elements
-    initializePrimaryEventListeners(appServices); // eventHandlers.js will use appServices
-
-    // Open global controls and get references to its elements
     openGlobalControlsWindow((elements) => {
         uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
         uiElementsCache.recordBtnGlobal = elements.recordBtnGlobal;
@@ -436,29 +461,27 @@ async function initializeSnugOS() {
         uiElementsCache.masterMeterBarGlobal = elements.masterMeterBarGlobal;
         uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal;
         uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
-        // Pass the now populated globalControlsUI part of uiElementsCache
-        attachGlobalControlEvents(elements); // eventHandlers.js will use these
-        setupMIDI(); // eventHandlers.js
-    }, null /* no saved state for initial open */);
+        attachGlobalControlEvents(elements);
+        setupMIDI();
+    }, null);
 
     Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true));
 
     requestAnimationFrame(updateMetersLoop);
-    appServices.updateUndoRedoButtonsUI(null, null); // Initial UI state for undo/redo
+    appServices.updateUndoRedoButtonsUI(null, null);
 
     showNotification("Welcome to SnugOS!", 2500);
     console.log("[Main] SnugOS Initialized.");
 }
 
 function updateMetersLoop() {
-    // Pass the cached global master meter bar, and the direct element for mixer if open
     const mixerWindow = getWindowByIdState('mixer');
     const mixerMasterMeterBar = mixerWindow && !mixerWindow.isMinimized && mixerWindow.element ? mixerWindow.element.querySelector('#mixerMasterMeterBar') : null;
 
     updateMeters(
-        uiElementsCache.masterMeterBarGlobal, // Global controls meter bar
-        mixerMasterMeterBar,                  // Mixer's master meter bar (if visible)
-        getTracksState()                      // Current tracks from state
+        uiElementsCache.masterMeterBarGlobal,
+        mixerMasterMeterBar,
+        getTracksState()
     );
     requestAnimationFrame(updateMetersLoop);
 }
@@ -512,8 +535,8 @@ window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
     if (getTracksState().length > 0 || getUndoStackState().length > 0) {
         e.preventDefault();
-        e.returnValue = ''; // Standard for most browsers
+        e.returnValue = '';
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v1)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v2)");
