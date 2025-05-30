@@ -1230,7 +1230,7 @@ export function renderTimeline() {
     });
 }
 
-export function updatePlayheadPosition() {
+ function updatePlayheadPosition() {
     const playhead = document.getElementById('timeline-playhead');
     const timelineContainer = document.getElementById('timeline-container'); // Cache this if accessed frequently
     const timelineRuler = document.getElementById('timeline-ruler'); 
