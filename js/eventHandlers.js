@@ -50,6 +50,7 @@ export function initializePrimaryEventListeners(appContext) {
         uiCache.menuAddInstrumentSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
         uiCache.menuAddAudioTrack?.addEventListener('click', () => { localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
 
+
         uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu?.classList.add('hidden'); });
 
         uiCache.menuUndo?.addEventListener('click', () => {
@@ -158,9 +159,31 @@ export function attachGlobalControlEvents(globalControlsElements) {
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.position = 0;
                 document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+                
+                // Schedule playback for all audio tracks
+                const tracks = getTracks();
+                if (tracks) {
+                    tracks.forEach(track => {
+                        if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
+                            // For simplicity, play the whole timeline.
+                            // A more advanced version would get start/end from a selection or loop region.
+                            track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); // Play up to 5 minutes if no loop
+                        }
+                    });
+                }
                 Tone.Transport.start();
+
             } else {
                 Tone.Transport.pause();
+                 // Stop playback for all audio tracks
+                const tracks = getTracks();
+                if (tracks) {
+                    tracks.forEach(track => {
+                        if (track.type === 'Audio' && typeof track.stopPlayback === 'function') {
+                            track.stopPlayback();
+                        }
+                    });
+                }
             }
         });
     }
@@ -181,15 +204,19 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 const trackToRecord = getTrackById(currentArmedTrackId);
                 if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
 
+                // Start audio recording if it's an Audio track
                 if (trackToRecord.type === 'Audio') {
                     if (localAppServices.startAudioRecording) {
                         await localAppServices.startAudioRecording();
+                    } else {
+                        showNotification("Audio recording function not available.", 3000);
+                        return; // Don't proceed if audio recording can't start
                     }
                 }
 
                 setIsRecording(true);
                 setRecordingTrackId(currentArmedTrackId);
-                setRecordingStartTime(Tone.Transport.seconds);
+                setRecordingStartTime(Tone.Transport.seconds); // Record start time relative to transport
                 recordBtnGlobal.textContent = 'Stop Rec'; recordBtnGlobal.classList.add('recording');
 
                 showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
@@ -200,15 +227,18 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     Tone.Transport.start();
                 }
             } else {
-                 if (localAppServices.stopAudioRecording) {
-                    const recordedTrack = getTrackById(getRecordingTrackId());
-                    if(recordedTrack && recordedTrack.type === 'Audio') {
+                const recordedTrack = getTrackById(getRecordingTrackId());
+                // Stop audio recording if it was an Audio track
+                if (recordedTrack && recordedTrack.type === 'Audio') {
+                    if (localAppServices.stopAudioRecording) {
                         await localAppServices.stopAudioRecording();
+                    } else {
+                        showNotification("Audio stopping function not available.", 3000);
                     }
                 }
+                
                 setIsRecording(false);
                 recordBtnGlobal.textContent = 'Record'; recordBtnGlobal.classList.remove('recording');
-                const recordedTrack = getTrackById(getRecordingTrackId());
                 showNotification("Recording stopped.", 2000);
                 captureStateForUndo(`Stop Recording (Track: ${recordedTrack?.name || 'Unknown'})`);
                 setRecordingTrackId(null);
@@ -347,9 +377,10 @@ export async function handleMIDIMessage(message) {
     const currentArmedTrackId = getArmedTrackId();
     const currentRecordingTrackId = getRecordingTrackId();
 
+    // MIDI Recording for Sequencer (non-Audio tracks)
     if (isTrackRecording() && currentArmedTrackId === currentRecordingTrackId && command === 144 && velocityByte > 0) {
         const track = getTrackById(currentRecordingTrackId);
-        if (track) {
+        if (track && track.type !== 'Audio') { // Only for non-Audio tracks
             const currentTimeInSeconds = Tone.Transport.seconds;
             const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
             let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
@@ -382,31 +413,34 @@ export async function handleMIDIMessage(message) {
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
-    if (command === 144 && velocityByte > 0) {
-        if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
-        } else if (currentArmedTrack.type === 'Sampler' && localAppServices.playSlicePreview) {
-            const sliceIdx = note - Constants.samplerMIDINoteStart;
-            if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length) {
-                localAppServices.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
+    // Live MIDI Input (non-Audio tracks)
+    if (currentArmedTrack.type !== 'Audio') {
+        if (command === 144 && velocityByte > 0) {
+            if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
+                currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
+            } else if (currentArmedTrack.type === 'Sampler' && localAppServices.playSlicePreview) {
+                const sliceIdx = note - Constants.samplerMIDINoteStart;
+                if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length) {
+                    localAppServices.playSlicePreview(currentArmedTrack.id, sliceIdx, normVel);
+                }
+            } else if (currentArmedTrack.type === 'DrumSampler' && localAppServices.playDrumSamplerPadPreview) {
+                const padIndex = note - Constants.samplerMIDINoteStart;
+                if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads) {
+                    localAppServices.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
+                }
+            } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
+                if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
+                    currentArmedTrack.toneSampler.releaseAll(time);
+                }
+                currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
             }
-        } else if (currentArmedTrack.type === 'DrumSampler' && localAppServices.playDrumSamplerPadPreview) {
-            const padIndex = note - Constants.samplerMIDINoteStart;
-            if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads) {
-                localAppServices.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, normVel);
-            }
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
-            if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                currentArmedTrack.toneSampler.releaseAll(time);
-            }
-            currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
-        }
-    } else if (command === 128 || (command === 144 && velocityByte === 0)) {
-        if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
-            currentArmedTrack.instrument.triggerRelease(time + 0.05);
-        } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
-            if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                 currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
+        } else if (command === 128 || (command === 144 && velocityByte === 0)) {
+            if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
+                currentArmedTrack.instrument.triggerRelease(time + 0.05);
+            } else if (currentArmedTrack.type === 'InstrumentSampler' && currentArmedTrack.toneSampler?.loaded) {
+                if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
+                     currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(note, "midi").toNote(), time + 0.05);
+                }
             }
         }
     }
@@ -439,7 +473,6 @@ async function handleComputerKeyDown(e) {
 
     const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
     
-    // ** FIX: This guard is critical to prevent NaN errors **
     if (baseComputerKeyNote === undefined || e.repeat || currentlyPressedComputerKeys[e.code]) {
         return;
     }
@@ -466,7 +499,11 @@ async function handleComputerKeyDown(e) {
         return;
     }
 
-    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * 12); // Using literal 12 for octave shift
+    // Do not play notes via computer keyboard for Audio tracks
+    if (currentArmedTrack.type === 'Audio') return;
+
+
+    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * 12); 
     if (computerKeyNote < 0 || computerKeyNote > 127) {
         console.warn(`[EventHandlers] Note ${computerKeyNote} is out of MIDI range.`);
         return;
@@ -475,13 +512,12 @@ async function handleComputerKeyDown(e) {
     const time = Tone.now();
     const noteToPlay = Tone.Frequency(computerKeyNote, "midi").toNote();
 
-    // Check if the note to play is valid before triggering anything
     if (!noteToPlay) {
         console.error(`[EventHandlers] Could not determine a valid note for MIDI value ${computerKeyNote}.`);
         return;
     }
     
-    // Live note playing logic
+    // Live note playing logic (non-Audio tracks)
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code]) {
         if (currentArmedTrack.instrument) {
             currentArmedTrack.instrument.triggerAttack(noteToPlay, time, Constants.defaultVelocity);
@@ -503,8 +539,8 @@ async function handleComputerKeyDown(e) {
         currentArmedTrack.toneSampler.triggerAttack(noteToPlay, time, Constants.defaultVelocity);
     }
     
-    // Recording logic
-    if (isTrackRecording() && getRecordingTrackId() === currentArmedTrackId) {
+    // Recording logic (non-Audio tracks)
+    if (isTrackRecording() && getRecordingTrackId() === currentArmedTrackId && currentArmedTrack.type !== 'Audio') {
         const track = currentArmedTrack;
         const currentTimeInSeconds = Tone.Transport.seconds;
         const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
@@ -545,7 +581,7 @@ function handleComputerKeyUp(e) {
     } else if (currentlyPressedComputerKeys[e.code]) {
         const time = Tone.now();
         const currentArmedTrack = getTrackById(getArmedTrackId());
-        if (currentArmedTrack) {
+        if (currentArmedTrack && currentArmedTrack.type !== 'Audio') { // Only process key up for non-Audio tracks
             const isSynthKey = Constants.computerKeySynthMap[e.code] !== undefined;
             const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
 
