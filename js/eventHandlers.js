@@ -184,6 +184,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 return;
             }
             if (Tone.Transport.state !== 'started') {
+                Tone.Transport.cancel(0); // Clear any previously scheduled transport events
                 Tone.Transport.position = 0;
                 document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 
@@ -191,6 +192,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 if (tracks) {
                     tracks.forEach(track => {
                         if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
+                            // When starting from the beginning, transportStartTime is 0
                             track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); 
                         }
                     });
@@ -241,7 +243,6 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 if (trackToRecord.type === 'Audio') {
                     if (localAppServices.startAudioRecording) {
                         console.log("[EventHandlers] Calling startAudioRecording for Audio track. Monitoring:", trackToRecord.isMonitoringEnabled);
-                        // Pass the trackToRecord object AND its monitoring state
                         recordingInitialized = await localAppServices.startAudioRecording(trackToRecord, trackToRecord.isMonitoringEnabled);
                         console.log("[EventHandlers] startAudioRecording returned:", recordingInitialized);
                     } else {
@@ -250,14 +251,12 @@ export function attachGlobalControlEvents(globalControlsElements) {
                         return; 
                     }
                 } else {
-                    // For non-audio tracks, recording is just enabling sequence input
                     console.log("[EventHandlers] Non-audio track, setting recordingInitialized to true.");
                     recordingInitialized = true;
                 }
 
                 if (!recordingInitialized) {
                     console.warn("[EventHandlers] Recording initialization failed.");
-                    // Notification and state reset should be handled by startAudioRecording if it fails
                     return;
                 }
                 
@@ -283,7 +282,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                     Tone.Transport.start();
                 }
-            } else { // If already recording, stop it
+            } else { 
                 console.log("[EventHandlers] Attempting to stop recording.");
                 const recordedTrack = getTrackById(getRecordingTrackId());
                 if (recordedTrack && recordedTrack.type === 'Audio') {
