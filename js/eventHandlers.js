@@ -233,24 +233,43 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 const trackToRecord = getTrackById(currentArmedTrackId);
                 if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
 
+                let recordingInitialized = false;
                 if (trackToRecord.type === 'Audio') {
                     if (localAppServices.startAudioRecording) {
-                        await localAppServices.startAudioRecording();
+                        // Wait for the recording to actually start before proceeding
+                        recordingInitialized = await localAppServices.startAudioRecording();
                     } else {
                         showNotification("Audio recording function not available.", 3000);
                         return; 
                     }
+                } else {
+                    // For non-audio tracks, recording is just enabling sequence input
+                    recordingInitialized = true;
                 }
 
+                // Only proceed if recording was successfully initialized
+                if (!recordingInitialized) {
+                    // startAudioRecording already shows a notification on failure
+                    // showNotification("Recording could not be started.", 3000); 
+                    return;
+                }
+                
                 setIsRecording(true);
                 setRecordingTrackId(currentArmedTrackId);
+
+                // Make sure transport is at the beginning before capturing start time
+                if (Tone.Transport.state !== 'started') {
+                    Tone.Transport.position = 0;
+                }
                 setRecordingStartTime(Tone.Transport.seconds); 
-                recordBtnGlobal.textContent = 'Stop Rec'; recordBtnGlobal.classList.add('recording');
+
+                recordBtnGlobal.textContent = 'Stop Rec'; 
+                recordBtnGlobal.classList.add('recording');
 
                 showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
                 captureStateForUndo(`Start Recording on ${trackToRecord.name}`);
+
                 if (Tone.Transport.state !== 'started') {
-                    Tone.Transport.position = 0;
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                     Tone.Transport.start();
                 }
