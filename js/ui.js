@@ -536,7 +536,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     </div>`;
 }
 
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { 
+export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { 
     if (!listDiv) return;
     listDiv.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
@@ -583,7 +583,7 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     });
 }
 
-function renderEffectControls(owner, ownerType, effectId, controlsContainer) { 
+export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { 
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
@@ -663,7 +663,7 @@ function showAddEffectModal(owner, ownerType) {
 }
 
 // --- Window Opening Functions ---
-function openTrackEffectsRackWindow(trackId, savedState = null) { 
+export function openTrackEffectsRackWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
@@ -681,7 +681,7 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
     return rackWindow;
 }
 
-function openMasterEffectsRackWindow(savedState = null) { 
+export function openMasterEffectsRackWindow(savedState = null) { 
     const windowId = 'masterEffectsRack';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -697,7 +697,7 @@ function openMasterEffectsRackWindow(savedState = null) {
     return rackWindow;
 }
 
-function openGlobalControlsWindow(onReadyCallback, savedState = null) { 
+export function openGlobalControlsWindow(onReadyCallback, savedState = null) { 
     const windowId = 'globalControls';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) {
@@ -718,7 +718,7 @@ function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     return newWindow;
 }
 
-function openSoundBrowserWindow(savedState = null) { 
+export function openSoundBrowserWindow(savedState = null) { 
     const windowId = 'soundBrowser';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -765,7 +765,7 @@ function openSoundBrowserWindow(savedState = null) {
     return browserWindow;
 }
 
-function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
+export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -788,7 +788,7 @@ function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, has
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
 
-function renderSoundBrowserDirectory(pathArray, treeNode) { 
+export function renderSoundBrowserDirectory(pathArray, treeNode) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl || !treeNode) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -833,7 +833,7 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 }
 
 // --- Mixer Window ---
-function openMixerWindow(savedState = null) { 
+export function openMixerWindow(savedState = null) { 
     const windowId = 'mixer';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -848,14 +848,14 @@ function openMixerWindow(savedState = null) {
     return mixerWindow;
 }
 
-function updateMixerWindow() { 
+export function updateMixerWindow() { 
     const mixerWindow = localAppServices.getWindowById ? localAppServices.getWindowById('mixer') : null;
     if (!mixerWindow?.element || mixerWindow.isMinimized) return;
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (container) renderMixer(container);
 }
 
-function renderMixer(container) { 
+export function renderMixer(container) { 
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     container.innerHTML = '';
     const masterTrackDiv = document.createElement('div');
@@ -975,7 +975,7 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
 }
 
 // --- UI Update & Drawing Functions ---
-function drawWaveform(track) { 
+export function drawWaveform(track) { 
     if (!track?.waveformCanvasCtx || !track.audioBuffer?.loaded) {
         if (track?.waveformCanvasCtx) {
             const canvas = track.waveformCanvasCtx.canvas;
@@ -1014,7 +1014,7 @@ function drawWaveform(track) {
     });
 }
 
-function drawInstrumentWaveform(track) { 
+export function drawInstrumentWaveform(track) { 
     if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
         if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message, similar to drawWaveform */ } return;
     }
@@ -1037,7 +1037,7 @@ function drawInstrumentWaveform(track) {
     }
 }
 
-function renderSamplePads(track) { 
+export function renderSamplePads(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
@@ -1053,7 +1053,7 @@ function renderSamplePads(track) {
     });
 }
 
-function updateSliceEditorUI(track) { 
+export function updateSliceEditorUI(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler' || !track.slices?.length) return;
     const selectedInfo = inspectorWindow.element.querySelector(`#selectedSliceInfo-${track.id}`);
@@ -1072,7 +1072,7 @@ function updateSliceEditorUI(track) {
     if (track.inspectorControls.sliceEnvRelease) track.inspectorControls.sliceEnvRelease.setValue(env.release);
 }
 
-function renderDrumSamplerPads(track) { 
+export function renderDrumSamplerPads(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'DrumSampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#drumPadsGridContainer-${track.id}`);
@@ -1088,7 +1088,7 @@ function renderDrumSamplerPads(track) {
     });
 }
 
-function updateDrumPadControlsUI(track) { 
+export function updateDrumPadControlsUI(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow || !inspectorWindow.element || track.type !== 'DrumSampler' || !track.drumSamplerPads) return;
     const inspector = inspectorWindow.element;
@@ -1152,7 +1152,7 @@ function updateDrumPadControlsUI(track) {
 }
 
 
-function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) { 
+export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) { 
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
@@ -1168,7 +1168,7 @@ function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isAc
     }
 }
 
-function highlightPlayingStep(trackId, col) { 
+export function highlightPlayingStep(trackId, col) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') return; 
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
@@ -1341,11 +1341,11 @@ export function openTimelineWindow(savedState = null) {
         if (contentArea) {
             contentArea.addEventListener('scroll', () => {
                 const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-                const tracksDisplayArea = timelineWindow.element.querySelector('#timeline-tracks-area'); // This is the one that needs to move
+                const tracksDisplayArea = timelineWindow.element.querySelector('#timeline-tracks-area'); 
                 if (ruler) {
                     ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
-                if (tracksDisplayArea) { // Corrected to move the tracks area itself
+                if (tracksDisplayArea) { 
                    tracksDisplayArea.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
                  updatePlayheadPosition(); 
@@ -1355,10 +1355,3 @@ export function openTimelineWindow(savedState = null) {
     }
     return timelineWindow;
 }
-
-
-// --- CONSOLIDATED EXPORT BLOCK (Corrected) ---
-// Functions are already exported individually where defined.
-// This block is no longer needed if all functions above use `export function ...`.
-// If any were missed, they should be added here or exported individually.
-// For now, assuming all are individually exported.
