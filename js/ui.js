@@ -1152,7 +1152,7 @@ export function updateDrumPadControlsUI(track) {
 }
 
 
-export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) { 
+function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) { 
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
