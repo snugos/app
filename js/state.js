@@ -88,7 +88,7 @@ export function getClipboardDataState() { return clipboardDataGlobal; }
 export function getArmedTrackIdState() { return armedTrackId; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
-export function getRecordingTrackIdState() { return recordingTrackIdGlobal; } // This is correctly exported
+export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
@@ -348,7 +348,7 @@ export async function redoLastActionInternal() {
 // --- Project Data Handling ---
 export function gatherProjectDataInternal() {
     const projectData = {
-        version: "5.8.2", // Increment for audioClips
+        version: "5.8.2", // Incremented for audioClips
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: masterGainValueState,
@@ -372,8 +372,8 @@ export function gatherProjectDataInternal() {
                     type: effect.type,
                     params: JSON.parse(JSON.stringify(effect.params))
                 })),
-                sequenceLength: track.sequenceLength,
-                sequenceData: JSON.parse(JSON.stringify(track.sequenceData)),
+                sequenceLength: track.sequenceLength, // Will be undefined for Audio tracks, which is fine
+                sequenceData: JSON.parse(JSON.stringify(track.sequenceData)), // Will be empty for Audio tracks
                 automation: JSON.parse(JSON.stringify(track.automation)),
                 selectedSliceForEdit: track.selectedSliceForEdit,
                 waveformZoom: track.waveformZoom,
@@ -414,6 +414,9 @@ export function gatherProjectDataInternal() {
                 };
             } else if (track.type === 'Audio') {
                 trackData.audioClips = JSON.parse(JSON.stringify(track.audioClips || []));
+                 // Audio tracks don't have sequenceLength/Data in the same way, so remove them if they got added by default
+                delete trackData.sequenceLength;
+                delete trackData.sequenceData;
             }
             return trackData;
         }),
@@ -448,7 +451,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     masterEffectsChainState = [];
 
     if (appServices.closeAllWindows) appServices.closeAllWindows(true);
-    if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); // Clears the map in state.js
+    if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); 
     highestZ = 100;
 
 
@@ -475,8 +478,8 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
         for (const effectData of projectData.masterEffects) {
             const effectIdInState = addMasterEffectToState(effectData.type, effectData.params);
-            if (appServices.audioAddMasterEffectToChain) { // Ensure this service is available
-                 await appServices.audioAddMasterEffectToChain(effectIdInState, effectData.type, effectData.params);
+            if (appServices.addMasterEffectToAudio) { 
+                 await appServices.addMasterEffectToAudio(effectIdInState, effectData.type, effectData.params);
             }
         }
     }
@@ -515,7 +518,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     tracks.forEach(t => {
         t.isSoloed = (t.id === getSoloedTrackIdState());
         t.applySoloState();
-        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged'); // Update UI for all tracks based on solo
+        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged'); 
     });
 
     if (gs && gs.activeMIDIInputId && appServices.selectMIDIInput) {
@@ -524,7 +527,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
 
     if(appServices.updateMixerWindow) appServices.updateMixerWindow();
     if(appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-    if(appServices.renderTimeline) appServices.renderTimeline(); // Render timeline after project reconstruction
+    if(appServices.renderTimeline) appServices.renderTimeline(); 
     
     updateInternalUndoRedoState();
 
@@ -642,7 +645,7 @@ export async function exportToWavInternal() {
         });
 
         recorder.start();
-        Tone.Transport.start("+0.1", 0);
+        Tone.Transport.start("+0.1", 0); // Start transport slightly after recorder
 
         await new Promise(resolve => setTimeout(resolve, maxDuration * 1000));
 
