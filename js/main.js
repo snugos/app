@@ -63,7 +63,7 @@ import {
     updatePlayheadPosition // Added for timeline
 } from './ui.js';
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v9 - Timeline)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v10 - Timeline Finalized)");
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -71,14 +71,13 @@ const uiElementsCache = {
     taskbarButtonsContainer: null, taskbarTempoDisplay: null, loadProjectInput: null,
     customBgInput: null, sampleFileInput: null, notificationArea: null, modalContainer: null,
     menuAddSynthTrack: null, menuAddSamplerTrack: null, menuAddDrumSamplerTrack: null,
-    menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null, // Added Audio Track Menu
+    menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null, 
     menuOpenSoundBrowser: null, menuUndo: null, menuRedo: null,
     menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null,
     menuOpenMixer: null, menuOpenMasterEffects: null, menuUploadCustomBg: null,
     menuRemoveCustomBg: null, menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null,
     tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
-    // Timeline elements (optional to cache if frequently accessed, but getElementById is fine too)
     timelineContainer: null, timelineRuler: null, timelineTracksArea: null, timelinePlayhead: null
 };
 
@@ -91,8 +90,8 @@ const appServices = {
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep,
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
     updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
-    createKnబ్, updateSequencerCellUI, showNotification, createContextMenu,
-    renderTimeline, // Added renderTimeline service
+    createKnob, updateSequencerCellUI, showNotification, createContextMenu,
+    renderTimeline, 
     // Audio Module Functions
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
     playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile,
@@ -100,8 +99,8 @@ const appServices = {
     getMasterEffectsBusInputNode,
     getActualMasterGainNode: getActualMasterGainNodeFromAudio,
     clearAllMasterEffectNodes: clearAllMasterEffectNodesInAudio,
-    startAudioRecording, // Added recording service
-    stopAudioRecording,  // Added recording service
+    startAudioRecording, 
+    stopAudioRecording,  
 
     // State Module Getters
     getTracks: getTracksState, getTrackById: getTrackByIdState,
@@ -356,7 +355,7 @@ async function initializeSnugOS() {
             uiElementsCache[key] = document.getElementById(key);
         }
     });
-    // Cache timeline elements
+    
     uiElementsCache.timelineContainer = document.getElementById('timeline-container');
     uiElementsCache.timelineRuler = document.getElementById('timeline-ruler');
     uiElementsCache.timelineTracksArea = document.getElementById('timeline-tracks-area');
@@ -397,7 +396,7 @@ async function initializeSnugOS() {
 
     Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true));
 
-    if (appServices.renderTimeline) appServices.renderTimeline(); // Initial render of the timeline
+    if (appServices.renderTimeline) appServices.renderTimeline(); 
 
     requestAnimationFrame(updateMetersLoop);
     appServices.updateUndoRedoButtonsUI(null, null);
@@ -410,7 +409,7 @@ function updateMetersLoop() {
     const mixerWindow = getWindowByIdState('mixer');
     const mixerMasterMeterBar = mixerWindow?.element && !mixerWindow.isMinimized ? mixerWindow.element.querySelector('#mixerMasterMeterBar') : null;
     updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, getTracksState());
-    updatePlayheadPosition(); // Update playhead position in the loop
+    updatePlayheadPosition(); 
     requestAnimationFrame(updateMetersLoop);
 }
 
@@ -467,4 +466,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v9 - Timeline)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v10 - Timeline Finalized)");
