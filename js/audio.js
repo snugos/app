@@ -1,7 +1,7 @@
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 import * as Constants from './constants.js';
 import { showNotification } from './utils.js';
-// getEffectDefaultParams will now be accessed via appServices.effectsRegistryAccess
+// getEffectDefaultParams will now be accessed via appServices.effectsRegistry
 import { createEffectInstance } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
 import { getRecordingTrackIdState, getRecordingStartTimeState } from './state.js'; // Import state getters
@@ -722,24 +722,33 @@ export async function startAudioRecording() {
     const track = localAppServices.getTrackById(trackId); // From appServices (main.js)
 
     if (!track || track.type !== 'Audio' || !track.inputChannel || track.inputChannel.disposed) {
-        showNotification("Recording failed: Armed track is not a valid audio track or input channel is missing.", 3000);
+        showNotification("Recording failed: Armed track is not a valid audio track or input channel is missing.", 4000);
+        // Reset recording state
         if(localAppServices.setIsRecording) localAppServices.setIsRecording(false);
         if(localAppServices.setRecordingTrackId) localAppServices.setRecordingTrackId(null);
         if(localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
-        return;
+        return false; // Return failure
     }
 
     try {
+        console.log("[Audio] Opening microphone...");
         await mic.open();
+        console.log("[Audio] Microphone opened successfully.");
+        
         mic.connect(track.inputChannel); // For monitoring (goes through track's effects and gain)
         mic.connect(recorder); // Also send raw mic input to recorder
+        
         await recorder.start();
+        console.log("[Audio] Recorder started.");
+        return true; // Return success
     } catch (error) {
         console.error("Error starting microphone/recorder:", error);
-        showNotification("Could not start recording. Microphone access denied or other error.", 4000);
+        showNotification("Could not start recording. Check microphone permissions.", 5000);
+        // Reset recording state
         if(localAppServices.setIsRecording) localAppServices.setIsRecording(false);
         if(localAppServices.setRecordingTrackId) localAppServices.setRecordingTrackId(null);
         if(localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
+        return false; // Return failure
     }
 }
 
