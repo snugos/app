@@ -755,7 +755,15 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const libSelect = browserWindow.element.querySelector('#librarySelect');
         if (Constants.soundLibraries) Object.keys(Constants.soundLibraries).forEach(libName => { const opt = document.createElement('option'); opt.value = libName; opt.textContent = libName; libSelect.appendChild(opt); });
-        libSelect.addEventListener('change', (e) => { const lib = e.target.value; if (lib && localAppServices.fetchSoundLibrary) localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]); else if (!lib && localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(null); });
+        libSelect.addEventListener('change', (e) => { 
+            const lib = e.target.value; 
+            console.log(`[UI SoundBrowser] Library selected: ${lib}`); // Added log
+            if (lib && localAppServices.fetchSoundLibrary) {
+                localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]);
+            } else if (!lib && localAppServices.updateSoundBrowserDisplayForLibrary) {
+                localAppServices.updateSoundBrowserDisplayForLibrary(null);
+            } 
+        });
         browserWindow.element.querySelector('#upDirectoryBtn').addEventListener('click', () => {
             const currentPath = localAppServices.getCurrentSoundBrowserPath ? localAppServices.getCurrentSoundBrowserPath() : [];
             if (currentPath.length > 0) {
@@ -790,8 +798,12 @@ export function openSoundBrowserWindow(savedState = null) {
 }
 
 export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
+    console.log(`[UI updateSoundBrowserDisplayForLibrary] Called for: ${libraryName}, isLoading: ${isLoading}, hasError: ${hasError}`); // Added log
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
-    if (!browserWindowEl) return;
+    if (!browserWindowEl) {
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Sound Browser window element not found. Aborting.`); // Added log
+        return;
+    }
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
     const libSelect = browserWindowEl.querySelector('#librarySelect');
     const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
@@ -799,18 +811,38 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(libraryName);
     if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]);
 
-    if (libSelect && libSelect.value !== libraryName) libSelect.value = libraryName || "";
-    if (!libraryName) { listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>'; pathDisplay.textContent = '/'; if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null); return; }
+    if (libSelect && libSelect.value !== libraryName) {
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Setting libSelect.value to: ${libraryName || ""}`); // Added log
+        libSelect.value = libraryName || "";
+    }
+    if (!libraryName) { 
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>'; 
+        pathDisplay.textContent = '/'; 
+        if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null); 
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] No libraryName, UI set to "Select a library".`); // Added log
+        return; 
+    }
 
-    if (isLoading || (localAppServices.getLoadedZipFiles && localAppServices.getLoadedZipFiles()[libraryName] === "loading")) { listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`; }
-    else if (hasError) { listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`; }
+    if (isLoading || (localAppServices.getLoadedZipFiles && localAppServices.getLoadedZipFiles()[libraryName] === "loading")) { 
+        listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`; 
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] UI set to "Loading ${libraryName}...".`); // Added log
+    }
+    else if (hasError) { 
+        listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`; 
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] UI set to "Error: Library '${libraryName}' failed.".`); // Added log
+    }
     else if (localAppServices.getSoundLibraryFileTrees && localAppServices.getSoundLibraryFileTrees()[libraryName]) {
         if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(localAppServices.getSoundLibraryFileTrees()[libraryName]);
         if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Library ${libraryName} data found, rendering directory.`); // Added log
     }
-    else { listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found.</p>`; }
+    else { 
+        listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`; 
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Library ${libraryName} data NOT found, UI set to error.`); // Added log
+    }
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
+
 
 export function renderSoundBrowserDirectory(pathArray, treeNode) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
