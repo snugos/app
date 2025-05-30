@@ -1185,7 +1185,7 @@ export function highlightPlayingStep(trackId, col) {
 }
 
 // --- Timeline UI Functions ---
-export function renderTimeline() {
+function renderTimeline() {
     const tracksArea = document.getElementById('timeline-tracks-area');
     const tracks = getTracksState(); 
     if (!tracksArea || !tracks) {
