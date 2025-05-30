@@ -48,6 +48,7 @@ export function initializePrimaryEventListeners(appContext) {
         uiCache.menuAddSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
         uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
         uiCache.menuAddInstrumentSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuAddAudioTrack?.addEventListener('click', () => { localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
 
         uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu?.classList.add('hidden'); });
 
@@ -180,6 +181,12 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 const trackToRecord = getTrackById(currentArmedTrackId);
                 if (!trackToRecord) { showNotification("Armed track not found.", 3000); return; }
 
+                if (trackToRecord.type === 'Audio') {
+                    if (localAppServices.startAudioRecording) {
+                        await localAppServices.startAudioRecording();
+                    }
+                }
+
                 setIsRecording(true);
                 setRecordingTrackId(currentArmedTrackId);
                 setRecordingStartTime(Tone.Transport.seconds);
@@ -193,6 +200,12 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     Tone.Transport.start();
                 }
             } else {
+                 if (localAppServices.stopAudioRecording) {
+                    const recordedTrack = getTrackById(getRecordingTrackId());
+                    if(recordedTrack && recordedTrack.type === 'Audio') {
+                        await localAppServices.stopAudioRecording();
+                    }
+                }
                 setIsRecording(false);
                 recordBtnGlobal.textContent = 'Record'; recordBtnGlobal.classList.remove('recording');
                 const recordedTrack = getTrackById(getRecordingTrackId());
