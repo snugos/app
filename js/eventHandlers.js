@@ -153,6 +153,15 @@ export function initializePrimaryEventListeners(appContext) {
                 Tone.Transport.on('stop', () => {
                     if (localAppServices.uiElementsCache?.playBtnGlobal) localAppServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+                    // When transport stops globally, ensure all audio track players are also stopped.
+                    const tracks = getTracks();
+                    if (tracks) {
+                        tracks.forEach(track => {
+                            if (track.type === 'Audio' && typeof track.stopPlayback === 'function') {
+                                track.stopPlayback();
+                            }
+                        });
+                    }
                     if (isTrackRecording()) {
                         setIsRecording(false);
                         if(localAppServices.uiElementsCache?.recordBtnGlobal) { localAppServices.uiElementsCache.recordBtnGlobal.textContent = 'Record'; localAppServices.uiElementsCache.recordBtnGlobal.classList.remove('recording');}
@@ -184,7 +193,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 return;
             }
 
-            if (Tone.Transport.state !== 'started') { // This means it's 'stopped' or 'paused'
+            if (Tone.Transport.state !== 'started') { 
                 const tracks = getTracks();
                 let scheduleFromTime = Tone.Transport.seconds; 
                 
@@ -194,8 +203,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
                 if (Tone.Transport.state === 'paused') {
                     console.log("[EventHandlers] Resuming transport from pause. Scheduling from:", scheduleFromTime);
-                    // Position is already where it was paused.
-                } else { // Was 'stopped'
+                } else { 
                     console.log("[EventHandlers] Starting transport from beginning.");
                     Tone.Transport.position = 0; 
                     scheduleFromTime = 0; 
@@ -214,10 +222,10 @@ export function attachGlobalControlEvents(globalControlsElements) {
                         }
                     }
                 }
-                Tone.Transport.start(Tone.Transport.now(), scheduleFromTime); 
+                Tone.Transport.start(Tone.Transport.now() + 0.05, scheduleFromTime); // Add small offset to Tone.now()
                 console.log(`[EventHandlers] Tone.Transport.start called with scheduleTime: ${scheduleFromTime}`);
 
-            } else { // Transport is 'started', so this is a PAUSE
+            } else { 
                 console.log("[EventHandlers] Pausing transport.");
                 Tone.Transport.pause();
                 const tracks = getTracks();
@@ -285,6 +293,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
                 if (Tone.Transport.state !== 'started') {
                     console.log("[EventHandlers] Transport not started, resetting position to 0.");
+                    Tone.Transport.cancel(0); // Clear transport before starting for recording
                     Tone.Transport.position = 0;
                 }
                 setRecordingStartTime(Tone.Transport.seconds); 
@@ -299,6 +308,15 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 if (Tone.Transport.state !== 'started') {
                     console.log("[EventHandlers] Starting transport for recording.");
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+                    // Schedule audio tracks if starting transport from 0 for recording
+                    const tracks = getTracks();
+                    if(tracks) {
+                        for (const track of tracks) {
+                            if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
+                                await track.schedulePlayback(0, 300); // Schedule from beginning
+                            }
+                        }
+                    }
                     Tone.Transport.start();
                 }
             } else { 
