@@ -250,7 +250,6 @@ function buildSynthEngineControls(track, container, engineType) {
     });
 }
 
-// *** THIS IS THE NEWLY ADDED FUNCTION ***
 function initializeSynthSpecificControls(track, winEl) {
     const engineType = track.synthEngineType || 'MonoSynth';
     const container = winEl.querySelector(`#synthEngineControls-${track.id}`);
@@ -535,7 +534,8 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
             </div>`;
         item.querySelector('.effect-name').addEventListener('click', () => {
             renderEffectControls(owner, ownerType, effect.id, controlsContainer);
-            listDiv.querySelectorAll('.effect-item.bg-blue-100,.effect-item.dark\\:bg-blue-700').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
+            // FIX: Escape colons for Tailwind dark mode classes
+            listDiv.querySelectorAll('.bg-blue-100,.dark\\:bg-blue-700').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
             item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
         });
         item.querySelector('.up-btn').addEventListener('click', () => {
@@ -754,7 +754,12 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
         const text = document.createElement('span'); text.textContent = name; listItem.appendChild(text);
         if (nodeData.type === 'folder') { listItem.addEventListener('click', () => { window.currentSoundBrowserPath.push(name); renderSoundBrowserDirectory(window.currentSoundBrowserPath, nodeData.children); }); }
         else {
-            listItem.addEventListener('click', () => { listDiv.querySelectorAll('.bg-blue-200').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600')); listItem.classList.add('bg-blue-200', 'dark:bg-blue-600'); window.selectedSoundForPreview = { fileName: name, fullPath: nodeData.fullPath, libraryName: window.currentLibraryName }; if(previewBtn) previewBtn.disabled = false; });
+            listItem.addEventListener('click', () => {
+                // FIX: Escape colons for Tailwind dark mode classes
+                listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-blue-600').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
+                listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
+                window.selectedSoundForPreview = { fileName: name, fullPath: nodeData.fullPath, libraryName: window.currentLibraryName }; if(previewBtn) previewBtn.disabled = false;
+            });
             listItem.addEventListener('dragstart', (e) => { e.dataTransfer.setData("application/json", JSON.stringify({ fileName: name, fullPath: nodeData.fullPath, libraryName: window.currentLibraryName, type: 'sound-browser-item' })); e.dataTransfer.effectAllowed = "copy"; });
         }
         listDiv.appendChild(listItem);
