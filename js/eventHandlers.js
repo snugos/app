@@ -223,8 +223,9 @@ export function attachGlobalControlEvents(globalControlsElements) {
                         }
                     }
                 }
-                // Start the transport. The second arg to start() is the offset from which to resume/start.
-                Tone.Transport.start(Tone.Transport.now() + 0.05, scheduleFromTime); 
+                // Start the transport. The first arg is 'now' or a time to start, second is offset.
+                // For resuming, scheduleFromTime is the offset.
+                Tone.Transport.start(Tone.Transport.now() + 0.02, scheduleFromTime); // Small offset to ensure scheduling completes
                 console.log(`[EventHandlers] Tone.Transport.start called. Target start time: ${scheduleFromTime}`);
 
             } else { // Transport is 'started', so this is a PAUSE
@@ -319,7 +320,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                             }
                         }
                     }
-                    Tone.Transport.start();
+                    Tone.Transport.start(Tone.Transport.now() + 0.05, 0); // Start from beginning
                 }
             } else { 
                 console.log("[EventHandlers] Attempting to stop recording.");
