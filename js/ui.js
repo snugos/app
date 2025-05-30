@@ -14,9 +14,25 @@ import { getTracksState } from './state.js';
 
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
+let selectedSoundForPreviewData = null; // Holds data for the sound selected for preview
 
 export function initializeUIModule(appServicesFromMain) { 
     localAppServices = { ...localAppServices, ...appServicesFromMain };
+
+    // Wire up the getter and setter for selectedSoundForPreview if they are not already provided
+    // This allows ui.js to manage this specific piece of state if not handled globally.
+    if (!localAppServices.getSelectedSoundForPreview) {
+        console.log('[UI Init] getSelectedSoundForPreview service not found in appServices, wiring locally.');
+        localAppServices.getSelectedSoundForPreview = () => selectedSoundForPreviewData;
+    }
+    if (!localAppServices.setSelectedSoundForPreview) {
+        console.log('[UI Init] setSelectedSoundForPreview service not found in appServices, wiring locally.');
+        localAppServices.setSelectedSoundForPreview = (data) => {
+            console.log('[UI setSelectedSoundForPreview] Setting selected sound data:', JSON.stringify(data));
+            selectedSoundForPreviewData = data;
+        };
+    }
+
     if (!localAppServices.effectsRegistryAccess) {
         console.warn("[UI Module] effectsRegistryAccess not found in appServices. Effect-related UI might be limited.");
         localAppServices.effectsRegistryAccess = {
@@ -847,9 +863,6 @@ export function openSoundBrowserWindow(savedState = null) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(libSelect.value);
                 }
             } else if (libSelect && !libSelect.value && libSelect.options.length > 1) {
-                 // If "Select Library..." is chosen, but other libraries might be loaded,
-                 // we could try to pick the first available loaded one, or just ensure "Select Library..." is shown.
-                 // For now, if no specific lib is in state and dropdown is empty, ensure "Select Library..." message.
                 console.log(`[UI SoundBrowser Open] No specific library in state, dropdown on "Select Library...". Ensuring default message.`);
                  if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(null);
@@ -930,7 +943,9 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : '';
     pathDisplay.textContent = `/${currentLibName}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
 
-    if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview(null);
+    if (localAppServices.setSelectedSoundForPreview) { // Ensure it's cleared when directory changes
+        localAppServices.setSelectedSoundForPreview(null);
+    }
     if(previewBtn) previewBtn.disabled = true;
 
     const items = [];
@@ -955,7 +970,15 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
             listItem.addEventListener('click', () => {
                 listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-blue-600').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
                 listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
-                if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview({ fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName });
+                const soundToSelect = { fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName };
+                console.log('[UI SoundFile Click] Sound selected:', JSON.stringify(soundToSelect)); 
+                if (localAppServices.setSelectedSoundForPreview) {
+                    localAppServices.setSelectedSoundForPreview(soundToSelect);
+                    const checkSelected = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : { error: 'getSelectedSoundForPreview service not found' };
+                    console.log('[UI SoundFile Click] State after setSelectedSoundForPreview (via getter):', JSON.stringify(checkSelected));
+                } else {
+                    console.warn('[UI SoundFile Click] setSelectedSoundForPreview service not available.');
+                }
                 if(previewBtn) previewBtn.disabled = false;
             });
             listItem.addEventListener('dragstart', (e) => { e.dataTransfer.setData("application/json", JSON.stringify({ fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName, type: 'sound-browser-item' })); e.dataTransfer.effectAllowed = "copy"; });
@@ -1544,12 +1567,6 @@ export function openTimelineWindow(savedState = null) {
                 updatePlayheadPosition(); 
             });
         }
-        
-        // *** MODIFIED SECTION TO HANDLE INITIALLY SELECTED/LOADED LIBRARY ON SOUND BROWSER OPEN ***
-        // This logic was for SoundBrowser, not Timeline. Removing from here.
-        // The renderTimeline() call below is correct for the timeline window.
-        // *** END OF MODIFIED SECTION (REMOVAL) ***
-        
         renderTimeline(); 
     }
     return timelineWindow;
