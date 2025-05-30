@@ -761,8 +761,8 @@ export class Track {
         this.sequenceLength = newLengthInSteps;
         let numRows;
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
-        else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
+        else if (type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
+        else if (type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
         else numRows = (this.sequenceData && this.sequenceData.length > 0) ? this.sequenceData.length : 0;
 
         const currentSequenceData = this.sequenceData || [];
@@ -930,18 +930,20 @@ export class Track {
         if (this.type !== 'Audio') return;
         console.log(`[Track ${this.id}] schedulePlayback called. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
     
-        this.stopPlayback(); 
+        this.stopPlayback(); // Ensure all previous players for this track are stopped and cleared
     
-        for (const clip of this.audioClips) { 
+        for (const clip of this.audioClips) { // Use for...of to allow await inside loop
             console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clip.startTime}, clip.duration: ${clip.duration}`);
             
             const clipEndTime = clip.startTime + clip.duration;
+            // Only schedule if the clip has some part within the playback window
             if (clipEndTime <= transportStartTime || clip.startTime >= transportStopTime) {
                 console.log(`[Track ${this.id}] Clip ${clip.id} is outside playback range. Skipping.`);
                 continue; 
             }
     
             const player = new Tone.Player();
+            // Store the player instance immediately so stopPlayback can find it if needed
             this.clipPlayers.set(clip.id, player); 
     
             try {
@@ -950,7 +952,7 @@ export class Track {
                     const url = URL.createObjectURL(audioBlob);
                     console.log(`[Track ${this.id}] Loading audio for clip ${clip.id} from URL: ${url}`);
                     
-                    // Await player.load() before proceeding
+                    // Await player.load() before proceeding with scheduling
                     await player.load(url);
                     console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
                     URL.revokeObjectURL(url); 
@@ -966,6 +968,7 @@ export class Track {
                         player.toDestination(); 
                     }
                     
+                    // Calculate the playback segment of the clip relevant to the current transport window
                     const offsetIntoClipBuffer = Math.max(0, transportStartTime - clip.startTime);
                     const actualScheduleTime = clip.startTime + offsetIntoClipBuffer;
                     const remainingClipDurationAfterOffset = clip.duration - offsetIntoClipBuffer;
@@ -996,7 +999,8 @@ export class Track {
 
     stopPlayback() {
         console.log(`[Track ${this.id}] stopPlayback called. Current players in map: ${this.clipPlayers.size}`);
-        const playersToStop = Array.from(this.clipPlayers.values()); // Iterate over a copy
+        // Create an array of players to iterate over, to avoid issues with modifying the map during iteration.
+        const playersToStop = Array.from(this.clipPlayers.values());
     
         playersToStop.forEach(player => {
             if (player && !player.disposed) {
@@ -1005,13 +1009,10 @@ export class Track {
                     player.stop(Tone.Transport.now()); 
                     player.dispose();
                     // Find the key for this player to log it (optional, but good for debugging)
-                    for (const [clipId, p] of this.clipPlayers.entries()) { // Iterate original map to find key
-                        if (p === player) {
-                            console.log(`[Track ${this.id}] Stopped and disposed player for clip ${clipId}`);
-                            // this.clipPlayers.delete(clipId); // Deleting here might be problematic if map is modified during iteration elsewhere
-                            break; 
-                        }
-                    }
+                    // This part is tricky as the player is already disposed, can't reliably get its ID from the map if it was removed
+                    // For logging, it's better to log before disposing if an ID is needed.
+                    // However, the main goal is to stop and dispose.
+                    // console.log(`[Track ${this.id}] Stopped and disposed a player.`);
                 } catch (e) {
                     console.warn(`[Track ${this.id}] Error stopping/disposing a player:`, e);
                 }
