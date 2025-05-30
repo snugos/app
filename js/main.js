@@ -28,7 +28,6 @@ import {
     setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
-    // ** CORRECTED: Added missing state function imports for master effects **
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -40,8 +39,12 @@ import {
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
-    loadSampleFile, loadDrumSamplerPadFile, autoSliceSample, addMasterEffectToAudio,
-    removeMasterEffectFromAudio, updateMasterEffectParamInAudio, reorderMasterEffectInAudio,
+    loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
+    // Correctly named imports from audio.js for master effects
+    addMasterEffectToAudio,
+    removeMasterEffectFromAudio,
+    updateMasterEffectParamInAudio,
+    reorderMasterEffectInAudio,
     getMimeTypeFromFilename, getMasterEffectsBusInputNode,
     getActualMasterGainNode as getActualMasterGainNodeFromAudio,
     clearAllMasterEffectNodes as clearAllMasterEffectNodesInAudio
@@ -56,7 +59,7 @@ import {
     openMasterEffectsRackWindow
 } from './ui.js';
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v7)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v8)");
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -178,9 +181,9 @@ const appServices = {
         const isReconstructing = appServices.getIsReconstructingDAW();
         if (!isReconstructing) captureStateForUndoInternal(`Add ${effectType} to Master`);
         const defaultParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
-        // Call the imported state function directly
         const effectIdInState = addMasterEffectToState(effectType, defaultParams);
-        await audioAddMasterEffectToChain(effectIdInState, effectType, defaultParams);
+        // ** CORRECTED: Call the imported function directly **
+        await addMasterEffectToAudio(effectIdInState, effectType, defaultParams);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
     removeMasterEffect: async (effectId) => {
@@ -188,23 +191,23 @@ const appServices = {
         if (effect) {
             const isReconstructing = appServices.getIsReconstructingDAW();
             if (!isReconstructing) captureStateForUndoInternal(`Remove ${effect.type} from Master`);
-            // Call the imported state function directly
             removeMasterEffectFromState(effectId);
-            await audioRemoveMasterEffectFromChain(effectId);
+            // ** CORRECTED: Call the imported function directly **
+            await removeMasterEffectFromAudio(effectId);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         }
     },
     updateMasterEffectParam: (effectId, paramPath, value) => {
-        // Call the imported state function directly
         updateMasterEffectParamInState(effectId, paramPath, value);
-        audioUpdateMasterEffectParamInAudio(effectId, paramPath, value);
+        // ** CORRECTED: Call the imported function directly **
+        updateMasterEffectParamInAudio(effectId, paramPath, value);
     },
     reorderMasterEffect: (effectId, newIndex) => {
         const isReconstructing = appServices.getIsReconstructingDAW();
         if (!isReconstructing) captureStateForUndoInternal(`Reorder Master effect`);
-        // Call the imported state function directly
         reorderMasterEffectInState(effectId, newIndex);
-        audioReorderMasterEffectInAudio(effectId, newIndex);
+        // ** CORRECTED: Call the imported function directly **
+        reorderMasterEffectInAudio(effectId, newIndex);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
     setActualMasterVolume: (volumeValue) => {
@@ -294,8 +297,8 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                     const inputId = track.type === 'Sampler' ? `fileInput-${track.id}` : `instrumentFileInput-${track.id}`;
                     dzContainer.innerHTML = createDropZoneHTML(track.id, inputId, track.type, null, {originalFileName: audioData.fileName, status: 'loaded'});
                     const fileInputEl = dzContainer.querySelector(`#${inputId}`);
-                    const loadFn = appServices.loadSampleFile || loadSampleFile;
-                    if (fileInputEl) fileInputEl.onchange = (e) => loadFn(e, track.id, track.type);
+                    const loadFn = appServices.loadSampleFile; // Ensure this is correctly passed/available
+                    if (fileInputEl && loadFn) fileInputEl.onchange = (e) => loadFn(e, track.id, track.type);
                 }
             }
             break;
@@ -323,11 +326,11 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                     if (dzContainer) {
                         dzContainer.innerHTML = createDropZoneHTML(track.id, inputIdBase, track.type, (track.type === 'DrumSampler' ? detail : null), {originalFileName: audioDataKey.fileName, status: 'error'});
                         const fileInputEl = dzContainer.querySelector(`#${inputIdBase}`);
-                        const loadDrumFn = appServices.loadDrumSamplerPadFile || loadDrumSamplerPadFile;
-                        const loadSampleFn = appServices.loadSampleFile || loadSampleFile;
+                        const loadDrumFn = appServices.loadDrumSamplerPadFile;
+                        const loadSampleFn = appServices.loadSampleFile;
                         if (fileInputEl) {
-                            if (track.type === 'DrumSampler') fileInputEl.onchange = (e) => loadDrumFn(e, track.id, detail);
-                            else fileInputEl.onchange = (e) => loadSampleFn(e, track.id, track.type);
+                            if (track.type === 'DrumSampler' && loadDrumFn) fileInputEl.onchange = (e) => loadDrumFn(e, track.id, detail);
+                            else if (loadSampleFn) fileInputEl.onchange = (e) => loadSampleFn(e, track.id, track.type);
                         }
                     }
                 }
@@ -449,4 +452,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v7)"); // Version bump
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v8)");
