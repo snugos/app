@@ -14,10 +14,8 @@ import { getTracksState } from './state.js'; // Added for renderTimeline
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
 
-export function initializeUIModule(appServicesFromMain) { // Added export keyword
+export function initializeUIModule(appServicesFromMain) { 
     localAppServices = { ...localAppServices, ...appServicesFromMain };
-    // Ensure effectsRegistryAccess is available if ui.js needs it directly
-    // (though it's usually main.js orchestrating this)
     if (!localAppServices.effectsRegistryAccess) {
         console.warn("[UI Module] effectsRegistryAccess not found in appServices. Effect-related UI might be limited.");
         localAppServices.effectsRegistryAccess = {
@@ -27,14 +25,13 @@ export function initializeUIModule(appServicesFromMain) { // Added export keywor
             synthEngineControlDefinitions: {} 
         };
     }
-     // Make sure synthEngineControlDefinitions is also available
     if (!localAppServices.effectsRegistryAccess.synthEngineControlDefinitions) {
         localAppServices.effectsRegistryAccess.synthEngineControlDefinitions = {};
     }
 }
 
 // --- Knob UI ---
-export function createKnob(options) { // Added export keyword
+export function createKnob(options) { 
     const container = document.createElement('div');
     container.className = 'knob-container';
 
@@ -477,7 +474,7 @@ function buildTrackInspectorContentDOM(track) {
         </div>`;
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) { // Added export keyword
+export function openTrackInspectorWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
@@ -508,7 +505,7 @@ function initializeCommonInspectorControls(track, winEl) {
     winEl.querySelector(`#openEffectsBtn-${track.id}`)?.addEventListener('click', () => handleOpenEffectsRack(track.id));
     
     const sequencerBtn = winEl.querySelector(`#openSequencerBtn-${track.id}`);
-    if (sequencerBtn) { // Check if it exists (won't for Audio tracks)
+    if (sequencerBtn) { 
         sequencerBtn.addEventListener('click', () => handleOpenSequencer(track.id));
     }
 
@@ -525,7 +522,6 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
     else if (track.type === 'Sampler') initializeSamplerSpecificControls(track, winEl);
     else if (track.type === 'DrumSampler') initializeDrumSamplerSpecificControls(track, winEl);
     else if (track.type === 'InstrumentSampler') initializeInstrumentSamplerSpecificControls(track, winEl);
-    // No specific controls for 'Audio' track type in the inspector for now
 }
 
 // --- Modular Effects Rack UI ---
@@ -540,7 +536,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     </div>`;
 }
 
-export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { // Added export keyword
+export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { 
     if (!listDiv) return;
     listDiv.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
@@ -587,7 +583,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
     });
 }
 
-export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { // Added export keyword
+export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { 
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
@@ -635,7 +631,6 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                     const newValue = !currentValue;
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
                     if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, newValue);
-                    // Re-render to update button state will be handled by main.js UI update logic
                 });
                 controlWrapper.appendChild(button);
             }
@@ -668,7 +663,7 @@ function showAddEffectModal(owner, ownerType) {
 }
 
 // --- Window Opening Functions ---
-export function openTrackEffectsRackWindow(trackId, savedState = null) { // Added export keyword
+export function openTrackEffectsRackWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
@@ -686,7 +681,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) { // Adde
     return rackWindow;
 }
 
-export function openMasterEffectsRackWindow(savedState = null) { // Added export keyword
+export function openMasterEffectsRackWindow(savedState = null) { 
     const windowId = 'masterEffectsRack';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -702,7 +697,7 @@ export function openMasterEffectsRackWindow(savedState = null) { // Added export
     return rackWindow;
 }
 
-export function openGlobalControlsWindow(onReadyCallback, savedState = null) { // Added export keyword
+export function openGlobalControlsWindow(onReadyCallback, savedState = null) { 
     const windowId = 'globalControls';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) {
@@ -723,7 +718,7 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) { /
     return newWindow;
 }
 
-export function openSoundBrowserWindow(savedState = null) { // Added export keyword
+export function openSoundBrowserWindow(savedState = null) { 
     const windowId = 'soundBrowser';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -770,7 +765,7 @@ export function openSoundBrowserWindow(savedState = null) { // Added export keyw
     return browserWindow;
 }
 
-export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { // Added export keyword
+export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -793,7 +788,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
 
-export function renderSoundBrowserDirectory(pathArray, treeNode) { // Added export keyword
+export function renderSoundBrowserDirectory(pathArray, treeNode) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl || !treeNode) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -838,13 +833,13 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) { // Added expo
 }
 
 // --- Mixer Window ---
-export function openMixerWindow(savedState = null) { // Added export keyword
+export function openMixerWindow(savedState = null) { 
     const windowId = 'mixer';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
 
     const contentContainer = document.createElement('div'); contentContainer.id = 'mixerContentContainer';
-    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800'; // Use theme colors
+    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800'; 
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const mixerOptions = { width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40), height: 300, minWidth: 300, minHeight: 200, initialContentKey: windowId };
     if (savedState) Object.assign(mixerOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
@@ -853,14 +848,14 @@ export function openMixerWindow(savedState = null) { // Added export keyword
     return mixerWindow;
 }
 
-export function updateMixerWindow() { // Added export keyword
+export function updateMixerWindow() { 
     const mixerWindow = localAppServices.getWindowById ? localAppServices.getWindowById('mixer') : null;
     if (!mixerWindow?.element || mixerWindow.isMinimized) return;
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (container) renderMixer(container);
 }
 
-export function renderMixer(container) { // Added export keyword
+export function renderMixer(container) { 
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     container.innerHTML = '';
     const masterTrackDiv = document.createElement('div');
@@ -914,9 +909,9 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     html += `</div></div>`; return html;
 }
 
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { // Added export keyword
+export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
-    if (!track || track.type === 'Audio') return null; // Don't open for Audio tracks
+    if (!track || track.type === 'Audio') return null; 
     const windowId = `sequencerWin-${trackId}`;
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
 
@@ -980,7 +975,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
 }
 
 // --- UI Update & Drawing Functions ---
-export function drawWaveform(track) { // Added export keyword
+export function drawWaveform(track) { 
     if (!track?.waveformCanvasCtx || !track.audioBuffer?.loaded) {
         if (track?.waveformCanvasCtx) {
             const canvas = track.waveformCanvasCtx.canvas;
@@ -1019,7 +1014,7 @@ export function drawWaveform(track) { // Added export keyword
     });
 }
 
-export function drawInstrumentWaveform(track) { // Added export keyword
+export function drawInstrumentWaveform(track) { 
     if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
         if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message, similar to drawWaveform */ } return;
     }
@@ -1042,7 +1037,7 @@ export function drawInstrumentWaveform(track) { // Added export keyword
     }
 }
 
-export function renderSamplePads(track) { // Added export keyword
+export function renderSamplePads(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
@@ -1058,7 +1053,7 @@ export function renderSamplePads(track) { // Added export keyword
     });
 }
 
-export function updateSliceEditorUI(track) { // Added export keyword
+export function updateSliceEditorUI(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler' || !track.slices?.length) return;
     const selectedInfo = inspectorWindow.element.querySelector(`#selectedSliceInfo-${track.id}`);
@@ -1077,7 +1072,7 @@ export function updateSliceEditorUI(track) { // Added export keyword
     if (track.inspectorControls.sliceEnvRelease) track.inspectorControls.sliceEnvRelease.setValue(env.release);
 }
 
-export function renderDrumSamplerPads(track) { // Added export keyword
+export function renderDrumSamplerPads(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'DrumSampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#drumPadsGridContainer-${track.id}`);
@@ -1093,7 +1088,7 @@ export function renderDrumSamplerPads(track) { // Added export keyword
     });
 }
 
-export function updateDrumPadControlsUI(track) { // Added export keyword
+export function updateDrumPadControlsUI(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow || !inspectorWindow.element || track.type !== 'DrumSampler' || !track.drumSamplerPads) return;
     const inspector = inspectorWindow.element;
@@ -1157,7 +1152,7 @@ export function updateDrumPadControlsUI(track) { // Added export keyword
 }
 
 
-export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) { // Added export keyword
+export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) { 
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
@@ -1173,9 +1168,9 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
     }
 }
 
-export function highlightPlayingStep(trackId, col) { // Added export keyword
+export function highlightPlayingStep(trackId, col) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
-    if (!track || track.type === 'Audio') return; // Don't highlight for Audio tracks
+    if (!track || track.type === 'Audio') return; 
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     const seqWindow = openWindows.get(`sequencerWin-${trackId}`);
 
@@ -1192,17 +1187,30 @@ export function highlightPlayingStep(trackId, col) { // Added export keyword
 // --- Timeline UI Functions ---
 export function renderTimeline() {
     const tracksArea = document.getElementById('timeline-tracks-area');
-    const tracks = getTracksState(); // Make sure getTracksState is correctly imported/available
-    if (!tracksArea || !tracks) return;
+    const tracks = getTracksState(); 
+    if (!tracksArea || !tracks) {
+        console.warn("Timeline area or tracks not found for rendering.");
+        return;
+    }
 
-    tracksArea.innerHTML = ''; // Clear existing track lanes
+    tracksArea.innerHTML = ''; 
     
     tracks.forEach(track => {
         const lane = document.createElement('div');
         lane.className = 'timeline-track-lane';
         lane.dataset.trackId = track.id;
-        // You can add track name or other indicators to the lane here if desired
-        // e.g., const nameEl = document.createElement('div'); nameEl.textContent = track.name; lane.appendChild(nameEl);
+        
+        // Optional: Add track name to the lane
+        const nameEl = document.createElement('div');
+        nameEl.textContent = track.name;
+        nameEl.style.position = 'absolute';
+        nameEl.style.left = '5px';
+        nameEl.style.top = '2px';
+        nameEl.style.fontSize = '10px';
+        nameEl.style.color = '#a0a0a0';
+        nameEl.style.pointerEvents = 'none'; // So it doesn't interfere with clip interaction
+        lane.appendChild(nameEl);
+
 
         if (track.type === 'Audio' && track.audioClips) {
             track.audioClips.forEach(clip => {
@@ -1211,11 +1219,9 @@ export function renderTimeline() {
                 clipEl.textContent = clip.name || `Clip ${clip.id.slice(-4)}`;
                 clipEl.title = `${clip.name || 'Audio Clip'} (${clip.duration.toFixed(2)}s)`;
                 
-                // This will need a "pixels per second" calculation.
-                // For now, let's use a fixed value. This should ideally be tied to a zoom level.
-                const pixelsPerSecond = 30; // Example: 30 pixels per second of audio
+                const pixelsPerSecond = 30; // Example: 30 pixels per second of audio. TODO: Make this dynamic with zoom.
                 clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${clip.duration * pixelsPerSecond}px`;
+                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`; // Ensure a minimum width for visibility
 
                 lane.appendChild(clipEl);
             });
@@ -1226,72 +1232,68 @@ export function renderTimeline() {
 
 export function updatePlayheadPosition() {
     const playhead = document.getElementById('timeline-playhead');
-    const timelineRuler = document.getElementById('timeline-ruler'); // For scroll sync
-    const timelineTracksArea = document.getElementById('timeline-tracks-area'); // For scroll sync
+    const timelineContainer = document.getElementById('timeline-container'); // Cache this if accessed frequently
+    const timelineRuler = document.getElementById('timeline-ruler'); 
+    const timelineTracksArea = document.getElementById('timeline-tracks-area'); 
 
-    if (!playhead || typeof Tone === 'undefined' || !localAppServices.uiElementsCache?.timelineContainer) return;
+    if (!playhead || typeof Tone === 'undefined' || !timelineContainer) return;
+
+    const pixelsPerSecond = 30; // Should match renderTimeline or be dynamic. TODO: Make this dynamic.
 
     if (Tone.Transport.state === 'started') {
-        const pixelsPerSecond = 30; // Should match renderTimeline or be dynamic
         const newPosition = Tone.Transport.seconds * pixelsPerSecond;
         playhead.style.transform = `translateX(${newPosition}px)`;
 
-        // Keep playhead in view by scrolling the timeline container
-        const container = localAppServices.uiElementsCache.timelineContainer;
-        const containerWidth = container.offsetWidth;
-        const playheadOffsetInContainer = newPosition - container.scrollLeft;
+        const containerWidth = timelineContainer.offsetWidth;
+        const playheadOffsetInContainer = newPosition - timelineContainer.scrollLeft;
 
-        if (playheadOffsetInContainer > containerWidth * 0.8) { // If playhead is past 80% of view
-            container.scrollLeft += playheadOffsetInContainer - (containerWidth * 0.8);
-        } else if (playheadOffsetInContainer < containerWidth * 0.2 && container.scrollLeft > 0) { // If playhead is before 20% of view
-            container.scrollLeft -= (containerWidth * 0.2) - playheadOffsetInContainer;
+        if (playheadOffsetInContainer > containerWidth * 0.8) { 
+            timelineContainer.scrollLeft += playheadOffsetInContainer - (containerWidth * 0.8);
+        } else if (playheadOffsetInContainer < containerWidth * 0.2 && timelineContainer.scrollLeft > 0) { 
+            timelineContainer.scrollLeft -= (containerWidth * 0.2) - playheadOffsetInContainer;
         }
-        // Ensure scrollLeft doesn't go negative
-        if (container.scrollLeft < 0) container.scrollLeft = 0;
-
+        if (timelineContainer.scrollLeft < 0) timelineContainer.scrollLeft = 0;
 
     } else if (Tone.Transport.state === 'stopped') {
-        playhead.style.transform = `translateX(0px)`; // Reset on stop
-        if (localAppServices.uiElementsCache.timelineContainer) {
-            localAppServices.uiElementsCache.timelineContainer.scrollLeft = 0; // Reset scroll on stop
-        }
+        playhead.style.transform = `translateX(0px)`; 
+        timelineContainer.scrollLeft = 0; 
     }
-     // Synchronize scroll of ruler and tracks area with the main timeline container
-    if (timelineRuler && localAppServices.uiElementsCache.timelineContainer) {
-        timelineRuler.style.marginLeft = `-${localAppServices.uiElementsCache.timelineContainer.scrollLeft}px`;
+    
+    // Synchronize scroll of ruler and tracks area with the main timeline container
+    // This ensures the content within these elements scrolls with the container's scrollbar
+    if (timelineRuler) {
+        timelineRuler.style.transform = `translateX(-${timelineContainer.scrollLeft}px)`;
     }
-    if (timelineTracksArea && localAppServices.uiElementsCache.timelineContainer) {
-        timelineTracksArea.style.marginLeft = `-${localAppServices.uiElementsCache.timelineContainer.scrollLeft}px`;
+    if (timelineTracksArea) {
+        timelineTracksArea.style.transform = `translateX(-${timelineContainer.scrollLeft}px)`;
     }
 }
 
-
-// --- CONSOLIDATED EXPORT BLOCK ---
-// (Ensure all previously exported functions are still here if they were, and add new ones)
-// export {
-//     initializeUIModule,
-//     createKnob,
-//     openTrackInspectorWindow,
-//     renderEffectsList,
-//     renderEffectControls,
-//     openTrackEffectsRackWindow,
-//     openMasterEffectsRackWindow,
-//     openGlobalControlsWindow,
-//     openSoundBrowserWindow,
-//     updateSoundBrowserDisplayForLibrary,
-//     renderSoundBrowserDirectory,
-//     openMixerWindow,
-//     updateMixerWindow,
-//     renderMixer,
-//     openTrackSequencerWindow,
-//     drawWaveform,
-//     drawInstrumentWaveform,
-//     renderSamplePads,
-//     updateSliceEditorUI,
-//     renderDrumSamplerPads,
-//     updateDrumPadControlsUI,
-//     updateSequencerCellUI,
-//     highlightPlayingStep,
-//     renderTimeline,          // Added export
-//     updatePlayheadPosition   // Added export
-// };
+// Keep existing exports and add the new ones
+export {
+    // initializeUIModule, // Already exported by being at top level
+    // createKnob, // Already exported
+    openTrackInspectorWindow,
+    renderEffectsList,
+    renderEffectControls,
+    openTrackEffectsRackWindow,
+    openMasterEffectsRackWindow,
+    openGlobalControlsWindow,
+    openSoundBrowserWindow,
+    updateSoundBrowserDisplayForLibrary,
+    renderSoundBrowserDirectory,
+    openMixerWindow,
+    updateMixerWindow,
+    renderMixer,
+    openTrackSequencerWindow,
+    drawWaveform,
+    drawInstrumentWaveform,
+    renderSamplePads,
+    updateSliceEditorUI,
+    renderDrumSamplerPads,
+    updateDrumPadControlsUI,
+    updateSequencerCellUI,
+    highlightPlayingStep,
+    renderTimeline,          // Added export
+    updatePlayheadPosition   // Added export
+};
