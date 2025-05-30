@@ -392,8 +392,10 @@ export async function handleMIDIMessage(message) {
                 if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
                 track.sequenceData[rowIndex][currentStep] = { active: true, velocity: normVel };
 
-                if (localAppServices.updateSequencerCellUI) {
-                    localAppServices.updateSequencerCellUI(track.id, rowIndex, currentStep, true);
+                // Corrected call to updateSequencerCellUI
+                const sequencerWindow = window.openWindows[`sequencerWin-${track.id}`];
+                if (sequencerWindow && sequencerWindow.element && localAppServices.updateSequencerCellUI) {
+                     localAppServices.updateSequencerCellUI(sequencerWindow.element, track.type, rowIndex, currentStep, true);
                 }
             }
         }
@@ -435,28 +437,31 @@ export async function handleMIDIMessage(message) {
 }
 
 async function handleComputerKeyDown(e) {
-    console.log('[EventHandlers] handleComputerKeyDown triggered. Key:', e.code, 'Target:', e.target.tagName);
+    // 1. Ignore input if a text field is focused
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
 
+    // 2. Handle global shortcuts like the Spacebar for play/pause
     if (e.code === 'Space') {
         e.preventDefault();
-        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
-            if (localAppServices.uiElements?.playBtnGlobal && typeof localAppServices.uiElements.playBtnGlobal.click === 'function') {
-                localAppServices.uiElements.playBtnGlobal.click();
-            }
+        if (localAppServices.uiElements?.playBtnGlobal && typeof localAppServices.uiElements.playBtnGlobal.click === 'function') {
+            localAppServices.uiElements.playBtnGlobal.click();
         }
         return;
     }
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
-        console.log('[EventHandlers] Input field focused, ignoring key for note play.');
-        return;
-    }
-
-
+    
+    // 3. Handle octave shifts (Z and X keys)
     if (e.code === 'KeyZ' || e.code === 'KeyX') {
         if (!currentlyPressedComputerKeys[e.code]) {
-            if (e.code === 'KeyZ' && currentOctaveShift > MIN_OCTAVE_SHIFT) currentOctaveShift--;
-            else if (e.code === 'KeyX' && currentOctaveShift < MAX_OCTAVE_SHIFT) currentOctaveShift++;
-            else { showNotification(`Octave limit reached.`, 1000); return; }
+            if (e.code === 'KeyZ' && currentOctaveShift > MIN_OCTAVE_SHIFT) {
+                currentOctaveShift--;
+            } else if (e.code === 'KeyX' && currentOctaveShift < MAX_OCTAVE_SHIFT) {
+                currentOctaveShift++;
+            } else {
+                showNotification(`Octave limit reached.`, 1000);
+                return;
+            }
             showNotification(`Octave: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 1000);
         }
         currentlyPressedComputerKeys[e.code] = true;
@@ -464,120 +469,104 @@ async function handleComputerKeyDown(e) {
         return;
     }
 
-    if (e.repeat || currentlyPressedComputerKeys[e.code]) {
-        console.log('[EventHandlers] Key repeat or already pressed, skipping. Code:', e.code);
+    // 4. Check for note-playing keys and prevent repeats
+    const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
+    if (baseComputerKeyNote === undefined || e.repeat || currentlyPressedComputerKeys[e.code]) {
         return;
     }
     currentlyPressedComputerKeys[e.code] = true;
     if(localAppServices.uiElements?.keyboardIndicatorGlobalEl) localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.add('active');
 
-    const time = Tone.now();
-    const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
-    console.log('[EventHandlers] baseComputerKeyNote:', baseComputerKeyNote, 'for key:', e.code);
-
-    if (baseComputerKeyNote === undefined) {
-        console.log('[EventHandlers] Key not mapped for notes.');
-        return;
-    }
-
-    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
-    console.log('[EventHandlers] computerKeyNote (with octave shift):', computerKeyNote);
-
-    if (computerKeyNote < 0 || computerKeyNote > 127) {
-        console.log('[EventHandlers] Note out of MIDI range.');
-        return;
-    }
-
+    // 5. Ensure audio is ready
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
-    console.log('[EventHandlers] audioReady from initAudioContextAndMasterMeter:', audioReady);
-
     if (!audioReady) {
         console.warn('[EventHandlers] Audio not ready, note play aborted.');
+        // Clean up pressed key state if audio fails
         delete currentlyPressedComputerKeys[e.code];
         if(localAppServices.uiElements?.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).filter(k => k !== 'KeyZ' && k !== 'KeyX').length === 0) {
             localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.remove('active');
         }
         return;
     }
-
-    const currentRecordingTrackId = getRecordingTrackId();
-    if (isTrackRecording() && getArmedTrackId() === currentRecordingTrackId) {
-        const track = getTrackById(currentRecordingTrackId);
-        if (track) {
-            const currentTimeInSeconds = Tone.Transport.seconds;
-            const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
-            let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
-            currentStep = (currentStep % track.sequenceLength + track.sequenceLength) % track.sequenceLength;
-            let rowIndex = -1;
-            if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && Constants.computerKeySynthMap[e.code]) {
-                const pitchName = Tone.Frequency(computerKeyNote, "midi").toNote();
-                rowIndex = Constants.synthPitches.indexOf(pitchName);
-            } else if (track.type === 'Sampler' && Constants.computerKeySamplerMap[e.code]) {
-                 rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
-                 if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
-            } else if (track.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code]) {
-                 rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
-                 if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
-            }
-            if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
-                if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
-                track.sequenceData[rowIndex][currentStep] = { active: true, velocity: Constants.defaultVelocity };
-                if (localAppServices.updateSequencerCellUI) {
-                    localAppServices.updateSequencerCellUI(track.id, rowIndex, currentStep, true);
-                }
-            }
-        }
-    }
-
+    
+    // 6. Get the armed track
     const currentArmedTrackId = getArmedTrackId();
-    console.log('[EventHandlers] currentArmedTrackId for note play:', currentArmedTrackId);
-
-    // *** THIS IS THE CORRECTED LOGIC ***
-    if (currentArmedTrackId === null || typeof currentArmedTrackId === 'undefined') {
-        console.log('[EventHandlers] No track armed (currentArmedTrackId is null or undefined), note play aborted.');
+    if (currentArmedTrackId === null) {
+        console.log('[EventHandlers] No track armed. Note play aborted.');
         return;
     }
     const currentArmedTrack = getTrackById(currentArmedTrackId);
-    console.log('[EventHandlers] currentArmedTrack for note play:', currentArmedTrack ? currentArmedTrack.name : 'null', 'Type:', currentArmedTrack ? currentArmedTrack.type : 'N/A');
-
     if (!currentArmedTrack) {
-        console.warn('[EventHandlers] Armed track object not found, note play aborted.');
+        console.warn(`[EventHandlers] Armed track with ID ${currentArmedTrackId} not found. Note play aborted.`);
         return;
     }
 
+    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
+    if (computerKeyNote < 0 || computerKeyNote > 127) {
+        return;
+    }
+
+    const time = Tone.now();
+
+    // 7. Handle live note playing based on track type
+    console.log(`[EventHandlers] Attempting to play note on armed track: ${currentArmedTrack.name} (Type: ${currentArmedTrack.type})`);
+    
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code]) {
         if (currentArmedTrack.instrument) {
-            console.log('[EventHandlers] Synth track armed. Instrument:', currentArmedTrack.instrument.name, 'Disposed:', currentArmedTrack.instrument.disposed, 'Volume:', currentArmedTrack.instrument.volume?.value);
-            console.log('[EventHandlers] Playing Synth note:', Tone.Frequency(computerKeyNote, "midi").toNote(), 'at time:', time, 'with velocity:', Constants.defaultVelocity);
             currentArmedTrack.instrument.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
-        } else {
-            console.warn('[EventHandlers] Synth track armed, but instrument is NULL.');
         }
     } else if (currentArmedTrack.type === 'Sampler' && Constants.computerKeySamplerMap[e.code] !== undefined && localAppServices.playSlicePreview) {
         const sliceIdx = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
         if (sliceIdx >= 0 && sliceIdx < currentArmedTrack.slices.length) {
-            console.log('[EventHandlers] Playing Sampler slice:', sliceIdx);
             localAppServices.playSlicePreview(currentArmedTrack.id, sliceIdx, Constants.defaultVelocity);
         }
     } else if (currentArmedTrack.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code] !== undefined && localAppServices.playDrumSamplerPadPreview) {
         const padIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
         if (padIndex >= 0 && padIndex < Constants.numDrumSamplerPads) {
-            console.log('[EventHandlers] Playing DrumSampler pad:', padIndex);
             localAppServices.playDrumSamplerPadPreview(currentArmedTrack.id, padIndex, Constants.defaultVelocity);
         }
-    } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler) {
-        if (currentArmedTrack.toneSampler.loaded) {
-            console.log('[EventHandlers] InstrumentSampler track armed. ToneSampler loaded. Poly:', currentArmedTrack.instrumentSamplerIsPolyphonic);
-            if (!currentArmedTrack.instrumentSamplerIsPolyphonic) currentArmedTrack.toneSampler.releaseAll(time);
-            console.log('[EventHandlers] Playing InstrumentSampler note:', Tone.Frequency(computerKeyNote, "midi").toNote());
-            currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
-        } else {
-            console.warn('[EventHandlers] InstrumentSampler armed, but toneSampler not loaded.');
+    } else if (currentArmedTrack.type === 'InstrumentSampler' && Constants.computerKeySynthMap[e.code] && currentArmedTrack.toneSampler?.loaded) {
+        if (!currentArmedTrack.instrumentSamplerIsPolyphonic) {
+            currentArmedTrack.toneSampler.releaseAll(time);
         }
-    } else {
-        console.log('[EventHandlers] No matching condition to play note for track type:', currentArmedTrack.type, 'and key map:', Constants.computerKeySynthMap[e.code] ? 'SynthMap' : (Constants.computerKeySamplerMap[e.code] ? 'SamplerMap' : 'None'));
+        currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
+    }
+    
+    // 8. Handle recording the note to the sequencer if active
+    if (isTrackRecording() && getRecordingTrackId() === currentArmedTrackId) {
+        const track = currentArmedTrack;
+        const currentTimeInSeconds = Tone.Transport.seconds;
+        const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
+        let currentStep = Math.round(currentTimeInSeconds / sixteenthNoteDuration);
+        currentStep = (currentStep % track.sequenceLength + track.sequenceLength) % track.sequenceLength;
+        
+        let rowIndex = -1;
+        if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && Constants.computerKeySynthMap[e.code]) {
+            const pitchName = Tone.Frequency(computerKeyNote, "midi").toNote();
+            rowIndex = Constants.synthPitches.indexOf(pitchName);
+        } else if (track.type === 'Sampler' && Constants.computerKeySamplerMap[e.code]) {
+            rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numSlices);
+            if (rowIndex < 0 || rowIndex >= track.slices.length) rowIndex = -1;
+        } else if (track.type === 'DrumSampler' && Constants.computerKeySamplerMap[e.code]) {
+            rowIndex = (baseComputerKeyNote - Constants.samplerMIDINoteStart) + (currentOctaveShift * Constants.numDrumSamplerPads);
+            if (rowIndex < 0 || rowIndex >= Constants.numDrumSamplerPads) rowIndex = -1;
+        }
+
+        if (rowIndex !== -1 && currentStep >= 0 && currentStep < track.sequenceLength) {
+            if (!track.sequenceData[rowIndex]) {
+                track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
+            }
+            track.sequenceData[rowIndex][currentStep] = { active: true, velocity: Constants.defaultVelocity };
+            
+            // Corrected call to updateSequencerCellUI
+            const sequencerWindow = window.openWindows[`sequencerWin-${track.id}`];
+            if (sequencerWindow && sequencerWindow.element && localAppServices.updateSequencerCellUI) {
+                 localAppServices.updateSequencerCellUI(sequencerWindow.element, track.type, rowIndex, currentStep, true);
+            }
+        }
     }
 }
+
 
 function handleComputerKeyUp(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.code === 'Space') return;
