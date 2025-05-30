@@ -930,18 +930,20 @@ export class Track {
         if (this.type !== 'Audio') return;
         console.log(`[Track ${this.id}] schedulePlayback called. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
     
-        this.stopPlayback(); 
+        this.stopPlayback(); // Ensure all previous players for this track are stopped and cleared
     
         for (const clip of this.audioClips) { 
             console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clip.startTime}, clip.duration: ${clip.duration}`);
             
             const clipEndTime = clip.startTime + clip.duration;
+            // Only schedule if the clip has some part within the playback window
             if (clipEndTime <= transportStartTime || clip.startTime >= transportStopTime) {
                 console.log(`[Track ${this.id}] Clip ${clip.id} is outside playback range. Skipping.`);
                 continue; 
             }
     
             const player = new Tone.Player();
+            // Store the player instance immediately so stopPlayback can find it if needed
             this.clipPlayers.set(clip.id, player); 
     
             try {
@@ -950,7 +952,7 @@ export class Track {
                     const url = URL.createObjectURL(audioBlob);
                     console.log(`[Track ${this.id}] Loading audio for clip ${clip.id} from URL: ${url}`);
                     
-                    // Await player.load() before proceeding
+                    // Await player.load() before proceeding with scheduling
                     await player.load(url);
                     console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
                     URL.revokeObjectURL(url); 
@@ -966,18 +968,19 @@ export class Track {
                         player.toDestination(); 
                     }
                     
-                    const offsetIntoClip = Math.max(0, transportStartTime - clip.startTime);
-                    const durationFromOffset = clip.duration - offsetIntoClip;
-                    const scheduleTimeForPlayer = clip.startTime + offsetIntoClip;
-                    const effectivePlayDuration = Math.min(durationFromOffset, transportStopTime - scheduleTimeForPlayer);
+                    // Calculate the playback segment of the clip relevant to the current transport window
+                    const offsetIntoClipBuffer = Math.max(0, transportStartTime - clip.startTime);
+                    const actualScheduleTime = clip.startTime + offsetIntoClipBuffer;
+                    const remainingClipDurationAfterOffset = clip.duration - offsetIntoClipBuffer;
+                    const playDurationInWindow = Math.min(remainingClipDurationAfterOffset, transportStopTime - actualScheduleTime);
 
-                    if (effectivePlayDuration > 0) {
-                         console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${scheduleTimeForPlayer} (offset in buffer: ${offsetIntoClip}s, play duration: ${effectivePlayDuration}s)`);
-                         player.start(scheduleTimeForPlayer, offsetIntoClip, effectivePlayDuration);
+                    if (playDurationInWindow > 0) {
+                         console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${actualScheduleTime} (offset in buffer: ${offsetIntoClipBuffer}s, play duration: ${playDurationInWindow}s)`);
+                         player.start(actualScheduleTime, offsetIntoClipBuffer, playDurationInWindow);
                     } else {
                         console.log(`[Track ${this.id}] Clip ${clip.id} has zero play duration in this segment. Disposing player.`);
                         player.dispose(); 
-                        this.clipPlayers.delete(clip.id);
+                        this.clipPlayers.delete(clip.id); // Remove from map if not playing
                     }
                 } else {
                     console.warn(`[Track ${this.id}] Could not retrieve audio blob for clip ${clip.id} (dbKey: ${clip.dbKey})`);
@@ -987,7 +990,7 @@ export class Track {
             } catch (error) {
                 console.error(`[Track ${this.id}] Error in schedulePlayback for clip ${clip.id}:`, error);
                 if (this.clipPlayers.has(clip.id)) {
-                    this.clipPlayers.get(clip.id).dispose();
+                    this.clipPlayers.get(clip.id).dispose(); // Ensure disposal on error
                     this.clipPlayers.delete(clip.id);
                 }
             }
@@ -995,20 +998,31 @@ export class Track {
     }
 
     stopPlayback() {
-        console.log(`[Track ${this.id}] stopPlayback called. Clearing ${this.clipPlayers.size} players.`);
-        this.clipPlayers.forEach((player, clipId) => {
+        console.log(`[Track ${this.id}] stopPlayback called. Current players in map: ${this.clipPlayers.size}`);
+        // Create an array of players to iterate over, to avoid issues with modifying the map during iteration.
+        const playersToStop = Array.from(this.clipPlayers.values());
+    
+        playersToStop.forEach(player => {
             if (player && !player.disposed) {
                 try {
-                    player.stop(Tone.Transport.now()); 
+                    player.stop(Tone.Transport.now()); // Stop playback immediately on the transport timeline
                     player.dispose();
-                    console.log(`[Track ${this.id}] Stopped and disposed player for clip ${clipId}`);
-                } catch(e) {
-                    console.warn(`[Track ${this.id}] Error stopping/disposing player for clip ${clipId}:`, e);
+                    // Find the key for this player to log it (optional, but good for debugging)
+                    for (const [clipId, p] of this.clipPlayers.entries()) {
+                        if (p === player) {
+                            console.log(`[Track ${this.id}] Stopped and disposed player for clip ${clipId}`);
+                            break; 
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`[Track ${this.id}] Error stopping/disposing a player:`, e);
                 }
             }
         });
-        this.clipPlayers.clear();
+        this.clipPlayers.clear(); // Clear the map after all players are processed
+        console.log(`[Track ${this.id}] clipPlayers map cleared. Size now: ${this.clipPlayers.size}`);
     }
+    
 
     async updateAudioClipPosition(clipId, newStartTime) {
         if (this.type !== 'Audio') return;
@@ -1036,12 +1050,8 @@ export class Track {
                                           (currentTransportTime + lookaheadDuration);
                 
                 console.log(`[Track ${this.id}] Re-scheduling all clips on track from ${currentTransportTime} to ${transportStopTime}.`);
-                // No need for setTimeout if schedulePlayback is robust and stopPlayback clears effectively.
                 await this.schedulePlayback(currentTransportTime, transportStopTime); 
             }
-            // If transport is stopped, the main play button's handler (in eventHandlers.js)
-            // will call schedulePlayback for all tracks with transportStartTime = 0,
-            // which will pick up the new clip.startTime.
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
         }
