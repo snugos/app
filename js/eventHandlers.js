@@ -2,32 +2,43 @@
 import * as Constants from './constants.js';
 import { showNotification, showConfirmationDialog } from './utils.js'; // createContextMenu is also in utils
 import {
-    getTracks, getTrackById, captureStateForUndo,
-    setSoloedTrackId, getSoloedTrackId,
-    setArmedTrackId, getArmedTrackId,
-    setActiveSequencerTrackId, getActiveSequencerTrackId,
-    setIsRecording, isTrackRecording,
-    setRecordingTrackId, getRecordingTrackId,
-    setRecordingStartTime,
-    removeTrackFromState as coreRemoveTrackFromState // Renamed to avoid conflict if exporting removeTrack
+    getTracksState as getTracks, // Alias to keep usage similar if preferred, or update calls
+    getTrackByIdState as getTrackById, // Alias
+    captureStateForUndoInternal as captureStateForUndo, // CORRECTED IMPORT and aliased
+    setSoloedTrackIdState as setSoloedTrackId, // Alias
+    getSoloedTrackIdState as getSoloedTrackId, // Alias
+    setArmedTrackIdState as setArmedTrackId, // Alias
+    getArmedTrackIdState as getArmedTrackId, // Alias
+    setActiveSequencerTrackIdState as setActiveSequencerTrackId, // Alias
+    getActiveSequencerTrackIdState as getActiveSequencerTrackId, // Alias
+    setIsRecordingState as setIsRecording, // Alias
+    isTrackRecordingState as isTrackRecording, // Alias
+    setRecordingTrackIdState as setRecordingTrackId, // Alias
+    getRecordingTrackIdState as getRecordingTrackId, // Alias
+    setRecordingStartTimeState as setRecordingStartTime, // Alias
+    removeTrackFromStateInternal as coreRemoveTrackFromState
 } from './state.js';
 
-// These will be initialized by main.js
+// These will be initialized by main.js via appServices
 let localAppServices = {
     // UI functions
     openTrackInspectorWindow: () => {},
     openTrackEffectsRackWindow: () => {},
     openTrackSequencerWindow: () => {},
     updateSequencerCellUI: () => {},
-    openGlobalControlsWindow: () => {}, // For tempo click
+    openGlobalControlsWindow: () => {},
     // Audio functions
     initAudioContextAndMasterMeter: async () => false,
-    // Main.js managed UI elements (passed in via appContext to initializePrimaryEventListeners)
-    // playBtnGlobal: null, // Reference to the global play button
-    // recordBtnGlobal: null, // Reference to the global record button
-    // midiInputSelectGlobal: null, // Reference to MIDI select dropdown
-    // midiIndicatorGlobalEl: null,
-    // keyboardIndicatorGlobalEl: null,
+    // UI Elements Cache (from main.js)
+    uiElementsCache: {},
+    // Other services from main.js
+    updateTrackUI: () => {},
+    playSlicePreview: () => {},
+    playDrumSamplerPadPreview: () => {},
+    selectMIDIInput: () => {}, // This will be the actual function from appServices
+    // For direct state access if still needed, though ideally through appServices getters/setters
+    // getTrackById: getTrackById, // Already aliased from import
+    // getTracks: getTracks, // Already aliased
 };
 
 export function initializeEventHandlersModule(appServicesFromMain) {
@@ -37,82 +48,68 @@ export function initializeEventHandlersModule(appServicesFromMain) {
 
 export let currentlyPressedComputerKeys = {};
 let currentOctaveShift = 0;
-const MAX_OCTAVE_SHIFT = 2;
 const MIN_OCTAVE_SHIFT = -2;
-const OCTAVE_SHIFT_AMOUNT = 12;
+const MAX_OCTAVE_SHIFT = 2;
+// const OCTAVE_SHIFT_AMOUNT = 12; // Already in Constants.js, but ensure it's used consistently if needed here.
 
-// appContext here will be passed from main.js, containing necessary functions
+// appContext here will be passed from main.js, containing necessary functions and cached DOM elements
 export function initializePrimaryEventListeners(appContext) {
-    // Store appContext for use in other event handlers if they are not instance methods
-    // or if they need access to parts of appContext not directly passed.
-    // For now, directly use what's destructured.
-    const {
-        addTrack, // from state.js via main
-        openSoundBrowserWindow, // from ui.js via main
-        undoLastAction, redoLastAction, // from state.js via main
-        saveProject, loadProject, exportToWav, // from state.js via main
-        openGlobalControlsWindow, // from ui.js via main
-        openMixerWindow, // from ui.js via main
-        openMasterEffectsRackWindow, // from ui.js via main
-        handleProjectFileLoad, // from state.js via main
-        triggerCustomBackgroundUpload, // from main.js
-        removeCustomDesktopBackground // from main.js
-    } = appContext;
-
+    // localAppServices is already populated by initializeEventHandlersModule
+    // appContext here is primarily for direct actions not fitting the appServices model,
+    // or for passing cached DOM elements if not already in localAppServices.uiElementsCache
+    const uiCache = appContext.uiElementsCache || {};
 
     try {
-        const startButton = document.getElementById('startButton');
-        const startMenu = document.getElementById('startMenu');
-        startButton?.addEventListener('click', (e) => {
+        uiCache.startButton?.addEventListener('click', (e) => {
             e.stopPropagation();
-            startMenu?.classList.toggle('hidden');
+            uiCache.startMenu?.classList.toggle('hidden');
         });
         document.addEventListener('click', (e) => {
-            if (startMenu && !startMenu.classList.contains('hidden') && !startMenu.contains(e.target) && e.target !== startButton) {
-                startMenu.classList.add('hidden');
+            if (uiCache.startMenu && !uiCache.startMenu.classList.contains('hidden') && !uiCache.startMenu.contains(e.target) && e.target !== uiCache.startButton) {
+                uiCache.startMenu.classList.add('hidden');
             }
         });
 
-        document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => { addTrack('Synth', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => { addTrack('Sampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => { addTrack('DrumSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuAddInstrumentSamplerTrack')?.addEventListener('click', () => { addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); startMenu?.classList.add('hidden'); });
+        uiCache.menuAddSynthTrack?.addEventListener('click', () => { localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuAddSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuAddInstrumentSamplerTrack?.addEventListener('click', () => { localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu?.classList.add('hidden'); });
 
-        document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => { if(openSoundBrowserWindow) openSoundBrowserWindow(); startMenu?.classList.add('hidden'); });
+        uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu?.classList.add('hidden'); });
 
-        document.getElementById('menuUndo')?.addEventListener('click', () => {
-            if (!document.getElementById('menuUndo').classList.contains('disabled') && undoLastAction) {
-                undoLastAction(); startMenu?.classList.add('hidden');
+        uiCache.menuUndo?.addEventListener('click', () => {
+            if (!uiCache.menuUndo.classList.contains('disabled') && localAppServices.undoLastAction) {
+                localAppServices.undoLastAction(); uiCache.startMenu?.classList.add('hidden');
             }
         });
-        document.getElementById('menuRedo')?.addEventListener('click', () => {
-            if (!document.getElementById('menuRedo').classList.contains('disabled') && redoLastAction) {
-                redoLastAction(); startMenu?.classList.add('hidden');
+        uiCache.menuRedo?.addEventListener('click', () => {
+            if (!uiCache.menuRedo.classList.contains('disabled') && localAppServices.redoLastAction) {
+                localAppServices.redoLastAction(); uiCache.startMenu?.classList.add('hidden');
             }
         });
 
-        document.getElementById('menuSaveProject')?.addEventListener('click', () => { if(saveProject) saveProject(); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuLoadProject')?.addEventListener('click', () => {
-            if (loadProject) loadProject(); // loadProject (from state.js) now handles clicking the input
-            startMenu?.classList.add('hidden');
+        uiCache.menuSaveProject?.addEventListener('click', () => { if(localAppServices.saveProject) localAppServices.saveProject(); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuLoadProject?.addEventListener('click', () => {
+            if (localAppServices.loadProject) localAppServices.loadProject();
+            uiCache.startMenu?.classList.add('hidden');
         });
-        document.getElementById('menuExportWav')?.addEventListener('click', () => { if(exportToWav) exportToWav(); startMenu?.classList.add('hidden'); });
+        uiCache.menuExportWav?.addEventListener('click', () => { if(localAppServices.exportToWav) localAppServices.exportToWav(); uiCache.startMenu?.classList.add('hidden'); });
 
-        document.getElementById('menuOpenGlobalControls')?.addEventListener('click', () => { if(openGlobalControlsWindow) openGlobalControlsWindow(attachGlobalControlEvents); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuOpenMixer')?.addEventListener('click', () => { if(openMixerWindow) openMixerWindow(); startMenu?.classList.add('hidden'); });
-        document.getElementById('menuOpenMasterEffects')?.addEventListener('click', () => { if(openMasterEffectsRackWindow) openMasterEffectsRackWindow(); startMenu?.classList.add('hidden'); });
+        uiCache.menuOpenGlobalControls?.addEventListener('click', () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(attachGlobalControlEvents); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuOpenMixer?.addEventListener('click', () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); uiCache.startMenu?.classList.add('hidden'); });
+        uiCache.menuOpenMasterEffects?.addEventListener('click', () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); uiCache.startMenu?.classList.add('hidden'); });
 
 
-        document.getElementById('menuUploadCustomBg')?.addEventListener('click', () => {
-            if (triggerCustomBackgroundUpload) triggerCustomBackgroundUpload();
-            startMenu?.classList.add('hidden');
+        uiCache.menuUploadCustomBg?.addEventListener('click', () => {
+            if (appContext.triggerCustomBackgroundUpload) appContext.triggerCustomBackgroundUpload();
+            uiCache.startMenu?.classList.add('hidden');
         });
-        document.getElementById('menuRemoveCustomBg')?.addEventListener('click', () => {
-            if (removeCustomDesktopBackground) removeCustomDesktopBackground();
-            startMenu?.classList.add('hidden');
+        uiCache.menuRemoveCustomBg?.addEventListener('click', () => {
+            if (appContext.removeCustomDesktopBackground) appContext.removeCustomDesktopBackground();
+            uiCache.startMenu?.classList.add('hidden');
         });
 
-        document.getElementById('menuToggleFullScreen')?.addEventListener('click', () => {
+        uiCache.menuToggleFullScreen?.addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
                     showNotification(`Error entering full screen: ${err.message}`, 3000);
@@ -120,66 +117,57 @@ export function initializePrimaryEventListeners(appContext) {
             } else {
                 if (document.exitFullscreen) document.exitFullscreen();
             }
-            startMenu?.classList.add('hidden');
+            uiCache.startMenu?.classList.add('hidden');
         });
 
-        document.getElementById('taskbarTempoDisplay')?.addEventListener('click', () => {
-            // Use the openGlobalControlsWindow from the passed appContext
-            if(openGlobalControlsWindow) openGlobalControlsWindow(attachGlobalControlEvents);
+        uiCache.taskbarTempoDisplay?.addEventListener('click', () => {
+            if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(attachGlobalControlEvents);
         });
 
-        const loadProjectInputEl = document.getElementById('loadProjectInput');
-        if (loadProjectInputEl && handleProjectFileLoad) { // handleProjectFileLoad from state.js via appContext
-            loadProjectInputEl.addEventListener('change', handleProjectFileLoad);
+        if (uiCache.loadProjectInput && localAppServices.handleProjectFileLoad) {
+            uiCache.loadProjectInput.addEventListener('change', localAppServices.handleProjectFileLoad);
         }
 
         document.addEventListener('keydown', handleComputerKeyDown);
         document.addEventListener('keyup', handleComputerKeyUp);
 
-        // Transport events are global to Tone.js, no direct appContext needed here
-        // but the UI updates they trigger might use appContext.uiElements
-        if (typeof window !== 'undefined' && !window.transportEventsInitialized && typeof Tone !== 'undefined' && Tone.Transport) {
-            Tone.Transport.on('start', () => {
-                if (appContext.uiElements?.playBtnGlobal) appContext.uiElements.playBtnGlobal.textContent = 'Pause';
-                // Also update the main play button if it's separate and managed by main.js
-                const mainPlayBtn = document.getElementById('playBtn'); // Assuming an ID for a main play button if it exists
-                if (mainPlayBtn) mainPlayBtn.textContent = 'Pause';
-            });
-            Tone.Transport.on('pause', () => {
-                if (appContext.uiElements?.playBtnGlobal) appContext.uiElements.playBtnGlobal.textContent = 'Play';
-                const mainPlayBtn = document.getElementById('playBtn');
-                if (mainPlayBtn) mainPlayBtn.textContent = 'Play';
-
-                if (isTrackRecording()) { // isTrackRecording from state.js
-                    setIsRecording(false); // from state.js
-                    if(appContext.uiElements?.recordBtnGlobal) { appContext.uiElements.recordBtnGlobal.textContent = 'Record'; appContext.uiElements.recordBtnGlobal.classList.remove('recording');}
-                    showNotification("Recording stopped due to transport pause.", 2000);
-                    captureStateForUndo(`Stop Recording (transport paused)`); // from state.js
-                    setRecordingTrackId(null); // from state.js
-                }
-            });
-            Tone.Transport.on('stop', () => {
-                if (appContext.uiElements?.playBtnGlobal) appContext.uiElements.playBtnGlobal.textContent = 'Play';
-                const mainPlayBtn = document.getElementById('playBtn');
-                if (mainPlayBtn) mainPlayBtn.textContent = 'Play';
-
-                document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                if (isTrackRecording()) {
-                    setIsRecording(false);
-                    if(appContext.uiElements?.recordBtnGlobal) { appContext.uiElements.recordBtnGlobal.textContent = 'Record'; appContext.uiElements.recordBtnGlobal.classList.remove('recording');}
-                    showNotification("Recording stopped due to transport stop.", 2000);
-                    captureStateForUndo(`Stop Recording (transport stopped)`);
-                    setRecordingTrackId(null);
-                }
-            });
-            if (typeof window !== 'undefined') window.transportEventsInitialized = true;
+        // Transport events
+        if (typeof Tone !== 'undefined' && Tone.Transport) {
+            // Use a flag from appServices if main.js manages this, or a local flag
+            let transportEventsInitialized = localAppServices.getTransportEventsInitialized ? localAppServices.getTransportEventsInitialized() : false;
+            if (!transportEventsInitialized) {
+                Tone.Transport.on('start', () => {
+                    if (localAppServices.uiElementsCache?.playBtnGlobal) localAppServices.uiElementsCache.playBtnGlobal.textContent = 'Pause';
+                });
+                Tone.Transport.on('pause', () => {
+                    if (localAppServices.uiElementsCache?.playBtnGlobal) localAppServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
+                    if (isTrackRecording()) {
+                        setIsRecording(false);
+                        if(localAppServices.uiElementsCache?.recordBtnGlobal) { localAppServices.uiElementsCache.recordBtnGlobal.textContent = 'Record'; localAppServices.uiElementsCache.recordBtnGlobal.classList.remove('recording');}
+                        showNotification("Recording stopped due to transport pause.", 2000);
+                        captureStateForUndo(`Stop Recording (transport paused)`);
+                        setRecordingTrackId(null);
+                    }
+                });
+                Tone.Transport.on('stop', () => {
+                    if (localAppServices.uiElementsCache?.playBtnGlobal) localAppServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
+                    document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+                    if (isTrackRecording()) {
+                        setIsRecording(false);
+                        if(localAppServices.uiElementsCache?.recordBtnGlobal) { localAppServices.uiElementsCache.recordBtnGlobal.textContent = 'Record'; localAppServices.uiElementsCache.recordBtnGlobal.classList.remove('recording');}
+                        showNotification("Recording stopped due to transport stop.", 2000);
+                        captureStateForUndo(`Stop Recording (transport stopped)`);
+                        setRecordingTrackId(null);
+                    }
+                });
+                if (localAppServices.setTransportEventsInitialized) localAppServices.setTransportEventsInitialized(true);
+            }
         }
     } catch (error) {
         console.error("[EventHandlers] Error during initializePrimaryEventListeners:", error);
     }
 }
 
-// globalControlsElements are passed from main.js after the window is created
 export function attachGlobalControlEvents(globalControlsElements) {
     if (!globalControlsElements) {
         console.error("[EventHandlers] attachGlobalControlEvents: globalControlsElements is null.");
@@ -213,7 +201,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
             }
             if (!isTrackRecording()) {
                 const currentArmedTrackId = getArmedTrackId();
-                if (currentArmedTrackId === null) { // Explicitly check for null
+                if (currentArmedTrackId === null) {
                     showNotification("No track armed for recording.", 3000);
                     return;
                 }
@@ -224,10 +212,9 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 setRecordingTrackId(currentArmedTrackId);
                 setRecordingStartTime(Tone.Transport.seconds);
                 recordBtnGlobal.textContent = 'Stop Rec'; recordBtnGlobal.classList.add('recording');
-                // Update main record button if it exists and is managed
-                if (localAppServices.uiElements?.mainRecordBtn) {
-                    localAppServices.uiElements.mainRecordBtn.textContent = 'Stop Rec';
-                    localAppServices.uiElements.mainRecordBtn.classList.add('recording');
+                if (localAppServices.uiElementsCache?.mainRecordBtn) { // Example if main has another button
+                    localAppServices.uiElementsCache.mainRecordBtn.textContent = 'Stop Rec';
+                    localAppServices.uiElementsCache.mainRecordBtn.classList.add('recording');
                 }
 
                 showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
@@ -240,9 +227,9 @@ export function attachGlobalControlEvents(globalControlsElements) {
             } else {
                 setIsRecording(false);
                 recordBtnGlobal.textContent = 'Record'; recordBtnGlobal.classList.remove('recording');
-                if (localAppServices.uiElements?.mainRecordBtn) {
-                    localAppServices.uiElements.mainRecordBtn.textContent = 'Record';
-                    localAppServices.uiElements.mainRecordBtn.classList.remove('recording');
+                if (localAppServices.uiElementsCache?.mainRecordBtn) {
+                    localAppServices.uiElementsCache.mainRecordBtn.textContent = 'Record';
+                    localAppServices.uiElementsCache.mainRecordBtn.classList.remove('recording');
                 }
                 const recordedTrack = getTrackById(getRecordingTrackId());
                 showNotification("Recording stopped.", 2000);
@@ -268,45 +255,53 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
     if (midiInputSelectGlobal) {
         midiInputSelectGlobal.onchange = () => {
-            const oldMidiName = (typeof window !== 'undefined' && window.activeMIDIInput) ? window.activeMIDIInput.name : "No MIDI Input";
+            const activeMIDI = localAppServices.getActiveMIDIInput ? localAppServices.getActiveMIDIInput() : null;
+            const oldMidiName = activeMIDI ? activeMIDI.name : "No MIDI Input";
             const newMidiId = midiInputSelectGlobal.value;
-            const newMidiDevice = (typeof window !== 'undefined' && window.midiAccess && newMidiId) ? window.midiAccess.inputs.get(newMidiId) : null;
+
+            const midiAccess = localAppServices.getMidiAccess ? localAppServices.getMidiAccess() : null;
+            const newMidiDevice = (midiAccess && newMidiId) ? midiAccess.inputs.get(newMidiId) : null;
             const newMidiName = newMidiDevice ? newMidiDevice.name : "No MIDI Input";
+
             if (oldMidiName !== newMidiName) {
                  captureStateForUndo(`Change MIDI Input to ${newMidiName}`);
             }
-            selectMIDIInput(newMidiId); // Pass ID directly
+            if (localAppServices.selectMIDIInput) localAppServices.selectMIDIInput(newMidiId);
         };
     }
 }
 
 
 export async function setupMIDI() {
-    if (typeof window === 'undefined') return; // Guard for non-browser environments
-
-    if (navigator.requestMIDIAccess) {
-        try {
-            window.midiAccess = await navigator.requestMIDIAccess();
-            populateMIDIInputs();
-            window.midiAccess.onstatechange = populateMIDIInputs;
-        } catch (e) {
-            console.error("[EventHandlers] Could not access MIDI devices.", e);
-            showNotification(`Could not access MIDI: ${e.message}.`, 6000);
-        }
-    } else {
+    if (typeof window === 'undefined' || !navigator.requestMIDIAccess) {
         showNotification("Web MIDI API not supported in this browser.", 3000);
+        return;
+    }
+
+    try {
+        const midiAccess = await navigator.requestMIDIAccess();
+        if (localAppServices.setMidiAccess) localAppServices.setMidiAccess(midiAccess);
+        populateMIDIInputs();
+        midiAccess.onstatechange = populateMIDIInputs;
+    } catch (e) {
+        console.error("[EventHandlers] Could not access MIDI devices.", e);
+        showNotification(`Could not access MIDI: ${e.message}.`, 6000);
     }
 }
 
 function populateMIDIInputs() {
-    if (typeof window === 'undefined' || !window.midiAccess || !localAppServices.uiElements?.midiInputSelectGlobal) {
+    const midiAccess = localAppServices.getMidiAccess ? localAppServices.getMidiAccess() : null;
+    const midiSelect = localAppServices.uiElementsCache?.midiInputSelectGlobal;
+
+    if (!midiAccess || !midiSelect) {
         return;
     }
-    const midiSelect = localAppServices.uiElements.midiInputSelectGlobal;
-    const previouslySelectedId = window.activeMIDIInput ? window.activeMIDIInput.id : midiSelect.value;
-    midiSelect.innerHTML = '<option value="">No MIDI Input</option>';
 
-    const inputs = window.midiAccess.inputs;
+    const activeMIDI = localAppServices.getActiveMIDIInput ? localAppServices.getActiveMIDIInput() : null;
+    const previouslySelectedId = activeMIDI ? activeMIDI.id : midiSelect.value;
+    midiSelect.innerHTML = '<option value="">No MIDI Input</option>'; // Clear existing
+
+    const inputs = midiAccess.inputs;
     if (inputs.size > 0) {
         inputs.forEach(input => {
             const option = document.createElement('option');
@@ -316,29 +311,35 @@ function populateMIDIInputs() {
         });
     }
 
-    if (previouslySelectedId && window.midiAccess.inputs.get(previouslySelectedId)) {
+    // Try to reselect previous or first
+    if (previouslySelectedId && inputs.get(previouslySelectedId)) {
         midiSelect.value = previouslySelectedId;
+    } else if (inputs.size > 0) {
+        midiSelect.value = inputs.values().next().value.id; // Select first available
     } else {
-        midiSelect.value = "";
+        midiSelect.value = ""; // No inputs available
     }
-    selectMIDIInput(midiSelect.value, true); // true to skip notification/undo
+    if (localAppServices.selectMIDIInput) localAppServices.selectMIDIInput(midiSelect.value, true); // true to skip notification/undo
 }
 
 export function selectMIDIInput(selectedId, skipUndoCaptureAndNotification = false) {
-    if (typeof window === 'undefined') return;
+    // This function is now primarily called by appServices.selectMIDIInput in main.js
+    // which handles the state update (activeMIDIInputGlobal)
+    const midiAccess = localAppServices.getMidiAccess ? localAppServices.getMidiAccess() : null;
+    let activeMIDI = localAppServices.getActiveMIDIInput ? localAppServices.getActiveMIDIInput() : null;
 
-    if (window.activeMIDIInput) {
-        window.activeMIDIInput.onmidimessage = null;
+    if (activeMIDI) {
+        activeMIDI.onmidimessage = null; // Clear old listener
     }
-    window.activeMIDIInput = null;
+    activeMIDI = null; // Reset
 
-    if (window.midiAccess && selectedId) {
-        const inputDevice = window.midiAccess.inputs.get(selectedId);
+    if (midiAccess && selectedId) {
+        const inputDevice = midiAccess.inputs.get(selectedId);
         if (inputDevice) {
-            window.activeMIDIInput = inputDevice;
-            window.activeMIDIInput.onmidimessage = handleMIDIMessage; // handleMIDIMessage defined below
+            activeMIDI = inputDevice;
+            activeMIDI.onmidimessage = handleMIDIMessage;
             if (!skipUndoCaptureAndNotification) {
-                showNotification(`MIDI Input: ${window.activeMIDIInput.name} selected.`, 2000);
+                showNotification(`MIDI Input: ${activeMIDI.name} selected.`, 2000);
             }
         } else {
              if (!skipUndoCaptureAndNotification) showNotification("Selected MIDI input not found.", 2000);
@@ -346,8 +347,11 @@ export function selectMIDIInput(selectedId, skipUndoCaptureAndNotification = fal
     } else {
         if (!skipUndoCaptureAndNotification && selectedId === "") showNotification("MIDI Input deselected.", 1500);
     }
-    if (localAppServices.uiElements?.midiIndicatorGlobalEl) {
-        localAppServices.uiElements.midiIndicatorGlobalEl.classList.toggle('active', !!window.activeMIDIInput);
+    // Update global state via appServices
+    if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(activeMIDI);
+
+    if (localAppServices.uiElementsCache?.midiIndicatorGlobal) {
+        localAppServices.uiElementsCache.midiIndicatorGlobal.classList.toggle('active', !!activeMIDI);
     }
 }
 
@@ -357,9 +361,9 @@ export async function handleMIDIMessage(message) {
     const time = Tone.now();
     const normVel = velocityByte / 127;
 
-    if (localAppServices.uiElements?.midiIndicatorGlobalEl) {
-        localAppServices.uiElements.midiIndicatorGlobalEl.classList.add('active');
-        setTimeout(() => localAppServices.uiElements.midiIndicatorGlobalEl.classList.remove('active'), 100);
+    if (localAppServices.uiElementsCache?.midiIndicatorGlobal) {
+        localAppServices.uiElementsCache.midiIndicatorGlobal.classList.add('active');
+        setTimeout(() => localAppServices.uiElementsCache.midiIndicatorGlobal.classList.remove('active'), 100);
     }
 
     if (command === 144 && velocityByte > 0) { // Note On
@@ -367,8 +371,10 @@ export async function handleMIDIMessage(message) {
         if (!audioReady) return;
     }
 
-    const currentRecordingTrackId = getRecordingTrackId();
-    if (isTrackRecording() && getArmedTrackId() === currentRecordingTrackId && command === 144 && velocityByte > 0) {
+    const currentArmedTrackId = getArmedTrackId(); // Uses aliased state getter
+    const currentRecordingTrackId = getRecordingTrackId(); // Uses aliased state getter
+
+    if (isTrackRecording() && currentArmedTrackId === currentRecordingTrackId && command === 144 && velocityByte > 0) {
         const track = getTrackById(currentRecordingTrackId);
         if (track) {
             const currentTimeInSeconds = Tone.Transport.seconds;
@@ -392,8 +398,7 @@ export async function handleMIDIMessage(message) {
                 if (!track.sequenceData[rowIndex]) track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
                 track.sequenceData[rowIndex][currentStep] = { active: true, velocity: normVel };
 
-                // Corrected call to updateSequencerCellUI
-                const sequencerWindow = window.openWindows[`sequencerWin-${track.id}`];
+                const sequencerWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`sequencerWin-${track.id}`) : null;
                 if (sequencerWindow && sequencerWindow.element && localAppServices.updateSequencerCellUI) {
                      localAppServices.updateSequencerCellUI(sequencerWindow.element, track.type, rowIndex, currentStep, true);
                 }
@@ -401,12 +406,11 @@ export async function handleMIDIMessage(message) {
         }
     }
 
-    const currentArmedTrackId = getArmedTrackId();
-    if (currentArmedTrackId === null) return; // Explicitly check for null
+    if (currentArmedTrackId === null) return;
     const currentArmedTrack = getTrackById(currentArmedTrackId);
     if (!currentArmedTrack) return;
 
-    if (command === 144 && velocityByte > 0) {
+    if (command === 144 && velocityByte > 0) { // Note On
         if (currentArmedTrack.type === 'Synth' && currentArmedTrack.instrument) {
             currentArmedTrack.instrument.triggerAttack(Tone.Frequency(note, "midi").toNote(), time, normVel);
         } else if (currentArmedTrack.type === 'Sampler' && localAppServices.playSlicePreview) {
@@ -437,21 +441,18 @@ export async function handleMIDIMessage(message) {
 }
 
 async function handleComputerKeyDown(e) {
-    // 1. Ignore input if a text field is focused
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
         return;
     }
 
-    // 2. Handle global shortcuts like the Spacebar for play/pause
     if (e.code === 'Space') {
         e.preventDefault();
-        if (localAppServices.uiElements?.playBtnGlobal && typeof localAppServices.uiElements.playBtnGlobal.click === 'function') {
-            localAppServices.uiElements.playBtnGlobal.click();
+        if (localAppServices.uiElementsCache?.playBtnGlobal && typeof localAppServices.uiElementsCache.playBtnGlobal.click === 'function') {
+            localAppServices.uiElementsCache.playBtnGlobal.click();
         }
         return;
     }
     
-    // 3. Handle octave shifts (Z and X keys)
     if (e.code === 'KeyZ' || e.code === 'KeyX') {
         if (!currentlyPressedComputerKeys[e.code]) {
             if (e.code === 'KeyZ' && currentOctaveShift > MIN_OCTAVE_SHIFT) {
@@ -465,34 +466,30 @@ async function handleComputerKeyDown(e) {
             showNotification(`Octave: ${currentOctaveShift >= 0 ? '+' : ''}${currentOctaveShift}`, 1000);
         }
         currentlyPressedComputerKeys[e.code] = true;
-        if(localAppServices.uiElements?.keyboardIndicatorGlobalEl) localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.add('active');
+        if(localAppServices.uiElementsCache?.keyboardIndicatorGlobal) localAppServices.uiElementsCache.keyboardIndicatorGlobal.classList.add('active');
         return;
     }
 
-    // 4. Check for note-playing keys and prevent repeats
     const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
     if (baseComputerKeyNote === undefined || e.repeat || currentlyPressedComputerKeys[e.code]) {
         return;
     }
     currentlyPressedComputerKeys[e.code] = true;
-    if(localAppServices.uiElements?.keyboardIndicatorGlobalEl) localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.add('active');
+    if(localAppServices.uiElementsCache?.keyboardIndicatorGlobal) localAppServices.uiElementsCache.keyboardIndicatorGlobal.classList.add('active');
 
-    // 5. Ensure audio is ready
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
         console.warn('[EventHandlers] Audio not ready, note play aborted.');
-        // Clean up pressed key state if audio fails
         delete currentlyPressedComputerKeys[e.code];
-        if(localAppServices.uiElements?.keyboardIndicatorGlobalEl && Object.keys(currentlyPressedComputerKeys).filter(k => k !== 'KeyZ' && k !== 'KeyX').length === 0) {
-            localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.remove('active');
+        if(localAppServices.uiElementsCache?.keyboardIndicatorGlobal && Object.keys(currentlyPressedComputerKeys).filter(k => k !== 'KeyZ' && k !== 'KeyX').length === 0) {
+            localAppServices.uiElementsCache.keyboardIndicatorGlobal.classList.remove('active');
         }
         return;
     }
     
-    // 6. Get the armed track
     const currentArmedTrackId = getArmedTrackId();
     if (currentArmedTrackId === null) {
-        console.log('[EventHandlers] No track armed. Note play aborted.');
+        // console.log('[EventHandlers] No track armed. Note play aborted.');
         return;
     }
     const currentArmedTrack = getTrackById(currentArmedTrackId);
@@ -501,15 +498,14 @@ async function handleComputerKeyDown(e) {
         return;
     }
 
-    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
+    const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * Constants.OCTAVE_SHIFT_AMOUNT); // Use constant if defined
     if (computerKeyNote < 0 || computerKeyNote > 127) {
         return;
     }
 
     const time = Tone.now();
-
-    // 7. Handle live note playing based on track type
-    console.log(`[EventHandlers] Attempting to play note on armed track: ${currentArmedTrack.name} (Type: ${currentArmedTrack.type})`);
+    
+    // console.log(`[EventHandlers] Attempting to play note on armed track: ${currentArmedTrack.name} (Type: ${currentArmedTrack.type})`);
     
     if (currentArmedTrack.type === 'Synth' && Constants.computerKeySynthMap[e.code]) {
         if (currentArmedTrack.instrument) {
@@ -532,7 +528,6 @@ async function handleComputerKeyDown(e) {
         currentArmedTrack.toneSampler.triggerAttack(Tone.Frequency(computerKeyNote, "midi").toNote(), time, Constants.defaultVelocity);
     }
     
-    // 8. Handle recording the note to the sequencer if active
     if (isTrackRecording() && getRecordingTrackId() === currentArmedTrackId) {
         const track = currentArmedTrack;
         const currentTimeInSeconds = Tone.Transport.seconds;
@@ -557,9 +552,7 @@ async function handleComputerKeyDown(e) {
                 track.sequenceData[rowIndex] = Array(track.sequenceLength).fill(null);
             }
             track.sequenceData[rowIndex][currentStep] = { active: true, velocity: Constants.defaultVelocity };
-            
-            // Corrected call to updateSequencerCellUI
-            const sequencerWindow = window.openWindows[`sequencerWin-${track.id}`];
+            const sequencerWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`sequencerWin-${track.id}`) : null;
             if (sequencerWindow && sequencerWindow.element && localAppServices.updateSequencerCellUI) {
                  localAppServices.updateSequencerCellUI(sequencerWindow.element, track.type, rowIndex, currentStep, true);
             }
@@ -570,7 +563,7 @@ async function handleComputerKeyDown(e) {
 
 function handleComputerKeyUp(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.code === 'Space') return;
-    console.log('[EventHandlers] handleComputerKeyUp triggered. Key:', e.code);
+    // console.log('[EventHandlers] handleComputerKeyUp triggered. Key:', e.code);
 
     const isOctaveKey = (e.code === 'KeyZ' || e.code === 'KeyX');
     if (isOctaveKey) {
@@ -579,22 +572,21 @@ function handleComputerKeyUp(e) {
         const time = Tone.now();
         const currentArmedTrack = getTrackById(getArmedTrackId());
         if (currentArmedTrack) {
-            console.log('[EventHandlers KeyUp] currentArmedTrack:', currentArmedTrack.name, 'Type:', currentArmedTrack.type);
+            // console.log('[EventHandlers KeyUp] currentArmedTrack:', currentArmedTrack.name, 'Type:', currentArmedTrack.type);
             const isSynthKey = Constants.computerKeySynthMap[e.code] !== undefined;
             const baseComputerKeyNote = Constants.computerKeySynthMap[e.code] || Constants.computerKeySamplerMap[e.code];
 
             if (baseComputerKeyNote !== undefined) {
-                const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * OCTAVE_SHIFT_AMOUNT);
+                const computerKeyNote = baseComputerKeyNote + (currentOctaveShift * Constants.OCTAVE_SHIFT_AMOUNT); // Use constant
                 if (computerKeyNote >= 0 && computerKeyNote <= 127) {
                     if (currentArmedTrack.type === 'Synth' && isSynthKey && currentArmedTrack.instrument) {
-                        console.log('[EventHandlers KeyUp] Releasing Synth note:', Tone.Frequency(computerKeyNote, "midi").toNote());
+                        // console.log('[EventHandlers KeyUp] Releasing Synth note:', Tone.Frequency(computerKeyNote, "midi").toNote());
                         currentArmedTrack.instrument.triggerRelease(time + 0.05);
                     } else if (currentArmedTrack.type === 'InstrumentSampler' && isSynthKey && currentArmedTrack.toneSampler?.loaded) {
                         if (currentArmedTrack.instrumentSamplerIsPolyphonic) {
-                            console.log('[EventHandlers KeyUp] Releasing InstrumentSampler note:', Tone.Frequency(computerKeyNote, "midi").toNote());
+                            // console.log('[EventHandlers KeyUp] Releasing InstrumentSampler note:', Tone.Frequency(computerKeyNote, "midi").toNote());
                             currentArmedTrack.toneSampler.triggerRelease(Tone.Frequency(computerKeyNote, "midi").toNote(), time + 0.05);
                         }
-                        // For monophonic InstrumentSampler, releaseAll is handled on next note attack.
                     }
                 }
             }
@@ -603,13 +595,11 @@ function handleComputerKeyUp(e) {
     }
 
     const noteKeysPressed = Object.keys(currentlyPressedComputerKeys).some(key => key !== 'KeyZ' && key !== 'KeyX');
-    if(localAppServices.uiElements?.keyboardIndicatorGlobalEl && !noteKeysPressed && !currentlyPressedComputerKeys['KeyZ'] && !currentlyPressedComputerKeys['KeyX']) {
-        localAppServices.uiElements.keyboardIndicatorGlobalEl.classList.remove('active');
+    if(localAppServices.uiElementsCache?.keyboardIndicatorGlobal && !noteKeysPressed && !currentlyPressedComputerKeys['KeyZ'] && !currentlyPressedComputerKeys['KeyX']) {
+        localAppServices.uiElementsCache.keyboardIndicatorGlobal.classList.remove('active');
     }
 }
 
-// These handlers are called by UI elements (e.g., buttons in inspector or mixer)
-// They primarily interact with the state module.
 export function handleTrackMute(trackId) {
     const track = getTrackById(trackId);
     if (!track) return;
@@ -654,13 +644,16 @@ export function handleRemoveTrack(trackId) {
         'Confirm Delete Track',
         `Are you sure you want to remove track "${track.name}"? This can be undone.`,
         () => {
-            coreRemoveTrackFromState(trackId); // This is the imported removeTrackFromState from state.js
+            // Use appServices to call the state function for removal
+            if (localAppServices.removeTrack) {
+                localAppServices.removeTrack(trackId);
+            } else {
+                coreRemoveTrackFromState(trackId); // Fallback if appServices not fully wired
+            }
         }
     );
 }
 
-// These are called by UI elements to open windows.
-// They now use the localAppServices which should be populated by main.js with UI functions.
 export function handleOpenTrackInspector(trackId) {
     if (localAppServices.openTrackInspectorWindow) localAppServices.openTrackInspectorWindow(trackId);
 }
