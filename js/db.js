@@ -14,29 +14,26 @@ let dbPromise = null;
 function getDB() {
     if (!dbPromise) {
         dbPromise = new Promise((resolve, reject) => {
-            // Request to open the database
+            if (!window.indexedDB) {
+                console.error('[DB] IndexedDB not supported by this browser.');
+                return reject(new Error('IndexedDB not supported. Audio samples cannot be saved locally.'));
+            }
             const request = indexedDB.open(DB_NAME, DB_VERSION);
 
             request.onerror = (event) => {
                 console.error('[DB] Database error:', event.target.error);
-                reject('Error opening database');
+                reject(new Error('Error opening database: ' + (event.target.error?.message || 'Unknown error')));
             };
 
             request.onsuccess = (event) => {
-                console.log('[DB] Database opened successfully.');
+                // console.log('[DB] Database opened successfully.');
                 resolve(event.target.result);
             };
 
-            // This event is only triggered if the version number changes
-            // or if the database is created for the first time.
             request.onupgradeneeded = (event) => {
                 console.log('[DB] Database upgrade needed.');
                 const db = event.target.result;
-                // Create object store if it doesn't exist
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    // We can use a key path if our objects have a unique property,
-                    // or allow keys to be passed in explicitly (as we do with storeAudio).
-                    // If keys are passed explicitly, no keyPath or autoIncrement is needed here.
                     db.createObjectStore(STORE_NAME);
                     console.log(`[DB] Object store "${STORE_NAME}" created.`);
                 }
@@ -53,21 +50,30 @@ function getDB() {
  * @returns {Promise<IDBValidKey>} A promise that resolves with the key under which the blob was stored.
  */
 export async function storeAudio(key, audioBlob) {
-    const db = await getDB();
+    let db;
+    try {
+        db = await getDB();
+    } catch (dbError) {
+        console.error("[DB] Failed to get DB for storing audio:", dbError);
+        throw dbError; // Re-throw the error to be caught by the caller
+    }
+
     return new Promise((resolve, reject) => {
-        // Start a new transaction with 'readwrite' access
         const transaction = db.transaction(STORE_NAME, 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
-        // Store the blob. The key is provided explicitly.
         const request = store.put(audioBlob, key);
 
         request.onsuccess = () => {
-            console.log(`[DB] Audio stored successfully with key: ${key}`);
-            resolve(request.result); // request.result will be the key
+            // console.log(`[DB] Audio stored successfully with key: ${key}`);
+            resolve(request.result);
         };
         request.onerror = (event) => {
             console.error(`[DB] Error storing audio with key ${key}:`, event.target.error);
-            reject('Error storing audio: ' + event.target.error.message);
+            reject(new Error('Error storing audio: ' + (event.target.error?.message || 'Unknown DB error')));
+        };
+        transaction.onerror = (event) => { // Catch transaction-level errors too
+            console.error(`[DB] Transaction error storing audio with key ${key}:`, event.target.error);
+            reject(new Error('Transaction error storing audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
         };
     });
 }
@@ -78,7 +84,14 @@ export async function storeAudio(key, audioBlob) {
  * @returns {Promise<Blob|null>} A promise that resolves with the audio blob, or null if not found.
  */
 export async function getAudio(key) {
-    const db = await getDB();
+    let db;
+    try {
+        db = await getDB();
+    } catch (dbError) {
+        console.error("[DB] Failed to get DB for retrieving audio:", dbError);
+        throw dbError;
+    }
+
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_NAME, 'readonly');
         const store = transaction.objectStore(STORE_NAME);
@@ -86,16 +99,20 @@ export async function getAudio(key) {
 
         request.onsuccess = () => {
             if (request.result) {
-                console.log(`[DB] Audio retrieved successfully for key: ${key}`);
-                resolve(request.result); // This will be the Blob
+                // console.log(`[DB] Audio retrieved successfully for key: ${key}`);
+                resolve(request.result);
             } else {
-                console.warn(`[DB] No audio found for key: ${key}`);
-                resolve(null);
+                // console.warn(`[DB] No audio found for key: ${key}`);
+                resolve(null); // Resolve with null if not found, not an error
             }
         };
         request.onerror = (event) => {
             console.error(`[DB] Error retrieving audio for key ${key}:`, event.target.error);
-            reject('Error retrieving audio: ' + event.target.error.message);
+            reject(new Error('Error retrieving audio: ' + (event.target.error?.message || 'Unknown DB error')));
+        };
+        transaction.onerror = (event) => {
+            console.error(`[DB] Transaction error retrieving audio for key ${key}:`, event.target.error);
+            reject(new Error('Transaction error retrieving audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
         };
     });
 }
@@ -106,19 +123,29 @@ export async function getAudio(key) {
  * @returns {Promise<void>} A promise that resolves when the audio is deleted.
  */
 export async function deleteAudio(key) {
-    const db = await getDB();
+    let db;
+    try {
+        db = await getDB();
+    } catch (dbError) {
+        console.error("[DB] Failed to get DB for deleting audio:", dbError);
+        throw dbError;
+    }
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_NAME, 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
         const request = store.delete(key);
 
         request.onsuccess = () => {
-            console.log(`[DB] Audio deleted successfully for key: ${key}`);
+            // console.log(`[DB] Audio deleted successfully for key: ${key}`);
             resolve();
         };
         request.onerror = (event) => {
             console.error(`[DB] Error deleting audio for key ${key}:`, event.target.error);
-            reject('Error deleting audio: ' + event.target.error.message);
+            reject(new Error('Error deleting audio: ' + (event.target.error?.message || 'Unknown DB error')));
+        };
+        transaction.onerror = (event) => {
+            console.error(`[DB] Transaction error deleting audio for key ${key}:`, event.target.error);
+            reject(new Error('Transaction error deleting audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
         };
     });
 }
@@ -128,7 +155,13 @@ export async function deleteAudio(key) {
  * @returns {Promise<void>} A promise that resolves when the store is cleared.
  */
 export async function clearAllAudio() {
-    const db = await getDB();
+    let db;
+    try {
+        db = await getDB();
+    } catch (dbError) {
+        console.error("[DB] Failed to get DB for clearing audio:", dbError);
+        throw dbError;
+    }
     return new Promise((resolve, reject) => {
         const transaction = db.transaction(STORE_NAME, 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
@@ -140,7 +173,11 @@ export async function clearAllAudio() {
         };
         request.onerror = (event) => {
             console.error('[DB] Error clearing audio database:', event.target.error);
-            reject('Error clearing audio database: ' + event.target.error.message);
+            reject(new Error('Error clearing audio database: ' + (event.target.error?.message || 'Unknown DB error')));
+        };
+        transaction.onerror = (event) => {
+            console.error(`[DB] Transaction error clearing audio database:`, event.target.error);
+            reject(new Error('Transaction error clearing audio database: ' + (event.target.error?.message || 'Unknown DB transaction error')));
         };
     });
 }
