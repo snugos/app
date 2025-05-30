@@ -49,14 +49,19 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
         return true;
     }
     try {
+        console.log('[Audio] Attempting Tone.start()');
         await Tone.start();
+        console.log('[Audio] Tone.start() completed. Context state:', Tone.context.state);
         if (Tone.context.state === 'running') {
             if(!audioContextInitialized) {
+                console.log('[Audio] First time setup for master bus.');
                 setupMasterBus();
             } else if (!masterMeterNode || masterMeterNode.disposed) {
+                console.log('[Audio] Master meter node missing, re-setting up master bus.');
                 setupMasterBus();
             }
             audioContextInitialized = true;
+            console.log('[Audio] Audio context initialized and running.');
             return true;
         } else {
             console.warn('[Audio] Audio context NOT running after Tone.start(). State:', Tone.context.state);
@@ -77,11 +82,13 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 }
 
 function setupMasterBus() {
+    console.log('[Audio] Setting up master bus...');
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
         if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) {
              try {masterEffectsBusInputNode.dispose();} catch(e){console.warn("[Audio] Error disposing old master bus input", e.message)}
         }
         masterEffectsBusInputNode = new Tone.Gain().toDestination(); // Temp connect
+        console.log('[Audio] Master effects bus input node created.');
     }
 
     if (!masterGainNodeActual || masterGainNodeActual.disposed) {
@@ -91,6 +98,7 @@ function setupMasterBus() {
         const initialMasterVolumeValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
         masterGainNodeActual = new Tone.Gain(initialMasterVolumeValue);
         if (localAppServices.setMasterGainValue) localAppServices.setMasterGainValue(masterGainNodeActual.gain.value);
+        console.log('[Audio] Master gain node actual created.');
     }
 
     if (!masterMeterNode || masterMeterNode.disposed) {
@@ -98,12 +106,16 @@ function setupMasterBus() {
             try { masterMeterNode.dispose(); } catch(e) { console.warn("[Audio] Error disposing old master meter", e.message); }
         }
         masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
+        console.log('[Audio] Master meter node created.');
     }
     rebuildMasterEffectChain();
+    console.log('[Audio] Master bus setup complete.');
 }
 
 export function rebuildMasterEffectChain() {
+    console.log('[Audio] Rebuilding master effect chain...');
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed || !masterGainNodeActual || masterGainNodeActual.disposed) {
+        console.log('[Audio] Master bus components not fully ready, attempting setup...');
         setupMasterBus();
         if (!masterEffectsBusInputNode || !masterGainNodeActual) {
             console.error('[Audio] Master bus components still not ready after setup attempt. Aborting chain rebuild.');
@@ -122,12 +134,14 @@ export function rebuildMasterEffectChain() {
 
     let currentAudioPathEnd = masterEffectsBusInputNode;
     const masterEffectsState = localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : [];
+    console.log('[Audio] Master effects in state:', masterEffectsState.length);
 
     masterEffectsState.forEach(effectState => {
         const effectNode = activeMasterEffectNodes.get(effectState.id);
         if (effectNode && !effectNode.disposed) {
             if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
                 try {
+                    console.log(`[Audio] Connecting master chain to existing effect: ${effectState.type}`);
                     currentAudioPathEnd.connect(effectNode);
                     currentAudioPathEnd = effectNode;
                 } catch (e) {
@@ -137,7 +151,7 @@ export function rebuildMasterEffectChain() {
                 currentAudioPathEnd = effectNode;
             }
         } else {
-            // Attempt to recreate if missing (e.g., after project load before full init)
+            console.warn(`[Audio] Master effect node for ${effectState.type} (ID: ${effectState.id}) not found or disposed. Attempting recreation.`);
             const recreatedNode = createEffectInstance(effectState.type, effectState.params);
             if (recreatedNode) {
                 activeMasterEffectNodes.set(effectState.id, recreatedNode);
@@ -145,34 +159,40 @@ export function rebuildMasterEffectChain() {
                     currentAudioPathEnd.connect(recreatedNode);
                 }
                 currentAudioPathEnd = recreatedNode;
-                console.warn(`[Audio] Recreated missing master effect node for ${effectState.type} (ID: ${effectState.id}) during rebuild.`);
+                console.log(`[Audio] Recreated and connected missing master effect node for ${effectState.type} (ID: ${effectState.id}).`);
             } else {
-                console.warn(`[Audio] Master effect node for ${effectState.type} (ID: ${effectState.id}) not found and could not be recreated.`);
+                console.warn(`[Audio] Master effect node for ${effectState.type} (ID: ${effectState.id}) could not be recreated.`);
             }
         }
     });
 
     if (currentAudioPathEnd && !currentAudioPathEnd.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
+            console.log('[Audio] Connecting end of master effect chain to masterGainNodeActual.');
             currentAudioPathEnd.connect(masterGainNodeActual);
         } catch (e) {
             console.error(`[Audio] Error connecting master chain output to masterGainNode:`, e);
         }
+    } else {
+        console.warn('[Audio] Could not connect master chain output to masterGainNodeActual. Current end:', currentAudioPathEnd, 'Master Gain:', masterGainNodeActual);
     }
 
     if (masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
+            console.log('[Audio] Connecting masterGainNodeActual to destination and meter.');
             masterGainNodeActual.toDestination();
             if (masterMeterNode && !masterMeterNode.disposed) {
                 masterGainNodeActual.connect(masterMeterNode);
             } else {
-                 console.warn("[Audio] Master meter node not available for connection during rebuild.");
-                 // Attempt to re-create meter if necessary
+                 console.warn("[Audio] Master meter node not available for connection during rebuild. Attempting to re-create.");
                 masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
                 masterGainNodeActual.connect(masterMeterNode);
             }
         } catch (e) { console.error("[Audio] Error connecting masterGainNode to destination/meter:", e); }
+    } else {
+         console.warn('[Audio] masterGainNodeActual not available for final connection.');
     }
+    console.log('[Audio] Master effect chain rebuild complete.');
 }
 
 
@@ -711,73 +731,113 @@ export function clearAllMasterEffectNodes() {
 
 // --- Audio Recording Functions ---
 export async function startAudioRecording() {
+    console.log("[Audio] startAudioRecording called.");
     if (!mic) {
+        console.log("[Audio] Mic not initialized, creating new Tone.UserMedia().");
         mic = new Tone.UserMedia();
     }
     if (!recorder) {
+        console.log("[Audio] Recorder not initialized, creating new Tone.Recorder().");
         recorder = new Tone.Recorder();
     }
 
-    const trackId = getRecordingTrackIdState(); // From state.js via import
-    const track = localAppServices.getTrackById(trackId); // From appServices (main.js)
+    const trackId = getRecordingTrackIdState();
+    const track = localAppServices.getTrackById(trackId);
 
     if (!track || track.type !== 'Audio' || !track.inputChannel || track.inputChannel.disposed) {
-        showNotification("Recording failed: Armed track is not a valid audio track or input channel is missing.", 4000);
-        // Reset recording state
+        const errorMsg = `Recording failed: Armed track (ID: ${trackId}) is not a valid audio track or input channel is missing/disposed. Track type: ${track?.type}. Input channel valid: ${track?.inputChannel && !track?.inputChannel.disposed}`;
+        console.error(`[Audio] ${errorMsg}`);
+        showNotification(errorMsg, 4000);
         if(localAppServices.setIsRecording) localAppServices.setIsRecording(false);
         if(localAppServices.setRecordingTrackId) localAppServices.setRecordingTrackId(null);
         if(localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
-        return false; // Return failure
+        return false; 
     }
+    console.log(`[Audio] Attempting to record on track: ${track.name} (ID: ${track.id})`);
 
     try {
         console.log("[Audio] Opening microphone...");
         await mic.open();
-        console.log("[Audio] Microphone opened successfully.");
+        console.log("[Audio] Microphone opened successfully. State:", mic.state);
         
-        mic.connect(track.inputChannel); // For monitoring (goes through track's effects and gain)
-        mic.connect(recorder); // Also send raw mic input to recorder
+        console.log("[Audio] Connecting mic to track inputChannel and recorder.");
+        mic.connect(track.inputChannel); 
+        mic.connect(recorder); 
         
+        console.log("[Audio] Starting recorder...");
         await recorder.start();
-        console.log("[Audio] Recorder started.");
-        return true; // Return success
+        console.log("[Audio] Recorder started. State:", recorder.state);
+        return true; 
     } catch (error) {
-        console.error("Error starting microphone/recorder:", error);
-        showNotification("Could not start recording. Check microphone permissions.", 5000);
-        // Reset recording state
+        console.error("[Audio] Error starting microphone/recorder:", error);
+        let userMessage = "Could not start recording. Check microphone permissions.";
+        if (error.name === "NotAllowedError" || error.message.toLowerCase().includes("permission denied")) {
+            userMessage = "Microphone permission denied. Please allow microphone access in browser settings.";
+        } else if (error.name === "NotFoundError" || error.message.toLowerCase().includes("no device")) {
+            userMessage = "No microphone found. Please connect a microphone.";
+        }
+        showNotification(userMessage, 5000);
         if(localAppServices.setIsRecording) localAppServices.setIsRecording(false);
         if(localAppServices.setRecordingTrackId) localAppServices.setRecordingTrackId(null);
         if(localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
-        return false; // Return failure
+        return false; 
     }
 }
 
 export async function stopAudioRecording() {
-    if (!recorder || !mic || recorder.state !== "started") {
-        if (mic && mic.state === "started") mic.close(); // Close mic if it was opened but recorder didn't start
+    console.log("[Audio] stopAudioRecording called.");
+    if (!recorder || !mic ) {
+        console.warn("[Audio] Recorder or mic not initialized. Cannot stop recording.");
+        if (mic && mic.state === "started") {
+            console.log("[Audio] Mic was started, closing it.");
+            mic.close();
+        }
+        return;
+    }
+    if (recorder.state !== "started") {
+        console.warn("[Audio] Recorder was not started. Current state:", recorder.state);
+         if (mic.state === "started") {
+            console.log("[Audio] Mic was started, closing it.");
+            mic.close();
+        }
         return;
     }
 
-    try {
-        const blob = await recorder.stop();
-        mic.close();
 
-        const trackId = getRecordingTrackIdState(); // From state.js via import
-        const startTime = getRecordingStartTimeState(); // From state.js via import
-        const track = localAppServices.getTrackById(trackId); // From appServices (main.js)
+    try {
+        console.log("[Audio] Stopping recorder...");
+        const blob = await recorder.stop();
+        console.log("[Audio] Recorder stopped. Blob received, size:", blob.size, "type:", blob.type);
+        
+        if (mic.state === "started") {
+            console.log("[Audio] Closing microphone.");
+            mic.close();
+        } else {
+            console.warn("[Audio] Mic was not in 'started' state before closing, current state:", mic.state);
+        }
+
+
+        const trackId = getRecordingTrackIdState(); 
+        const startTime = getRecordingStartTimeState(); 
+        const track = localAppServices.getTrackById(trackId); 
 
         if (track && blob.size > 0) {
+            console.log(`[Audio] Processing recorded blob for track ${track.name} (ID: ${trackId}), startTime: ${startTime}`);
             if (typeof track.addAudioClip === 'function') {
                 await track.addAudioClip(blob, startTime);
             } else {
-                console.error("Track object does not have addAudioClip method.");
-                 showNotification("Error: Could not process recorded audio.", 3000);
+                console.error("[Audio] Track object does not have addAudioClip method.");
+                 showNotification("Error: Could not process recorded audio (internal error).", 3000);
             }
         } else if (blob.size === 0) {
+            console.warn("[Audio] Recording was empty.");
             showNotification("Recording was empty.", 2000);
+        } else if (!track) {
+            console.error(`[Audio] Recorded track (ID: ${trackId}) not found after stopping recorder.`);
+            showNotification("Error: Recorded track not found.", 3000);
         }
     } catch (error) {
-        console.error("Error stopping recording or processing audio:", error);
+        console.error("[Audio] Error stopping recording or processing audio:", error);
         showNotification("Error finalizing recording.", 3000);
     }
 }
