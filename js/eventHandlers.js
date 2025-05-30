@@ -183,29 +183,46 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 showNotification("Audio system not ready. Please try again.", 3000);
                 return;
             }
-            if (Tone.Transport.state !== 'started') {
-                Tone.Transport.cancel(0); // Clear any previously scheduled transport events
-                Tone.Transport.position = 0;
-                document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                
-                const tracks = getTracks();
-                if (tracks) {
-                    tracks.forEach(track => {
-                        if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
-                            // When starting from the beginning, transportStartTime is 0
-                            track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); 
-                        }
-                    });
-                }
-                Tone.Transport.start();
 
-            } else {
+            if (Tone.Transport.state !== 'started') { // This means it's 'stopped' or 'paused'
+                const tracks = getTracks();
+                if (Tone.Transport.state === 'paused') {
+                    console.log("[EventHandlers] Resuming transport from pause.");
+                    // Transport will resume. We need to ensure clips are scheduled from current pos.
+                    if (tracks) {
+                        const currentTime = Tone.Transport.seconds;
+                        const lookahead = Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : (currentTime + 300);
+                        tracks.forEach(track => {
+                            if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
+                                console.log(`[EventHandlers] Re-scheduling track ${track.id} from ${currentTime} on resume.`);
+                                track.schedulePlayback(currentTime, lookahead);
+                            }
+                        });
+                    }
+                    Tone.Transport.start(); // Resume
+                } else { // Was 'stopped'
+                    console.log("[EventHandlers] Starting transport from beginning.");
+                    Tone.Transport.cancel(0); 
+                    Tone.Transport.position = 0;
+                    document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
+                    if (tracks) {
+                        tracks.forEach(track => {
+                            if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
+                                track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); 
+                            }
+                        });
+                    }
+                    Tone.Transport.start();
+                }
+            } else { // Transport is 'started', so this is a PAUSE
+                console.log("[EventHandlers] Pausing transport.");
                 Tone.Transport.pause();
                 const tracks = getTracks();
                 if (tracks) {
                     tracks.forEach(track => {
                         if (track.type === 'Audio' && typeof track.stopPlayback === 'function') {
-                            track.stopPlayback();
+                            // This stops and disposes players, effectively unscheduling them.
+                            track.stopPlayback(); 
                         }
                     });
                 }
