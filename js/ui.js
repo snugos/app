@@ -1014,7 +1014,7 @@ export function drawWaveform(track) {
     });
 }
 
-export function drawInstrumentWaveform(track) { 
+function drawInstrumentWaveform(track) { 
     if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
         if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message, similar to drawWaveform */ } return;
     }
