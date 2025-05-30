@@ -94,7 +94,7 @@ body {
 
 .window-content {
     flex-grow: 1; 
-    padding: 10px; /* More padding */
+    padding: 0; /* Remove padding for windows that need edge-to-edge content like the timeline */
     background-color: #181818; /* Main content area - very dark */
     overflow: auto; 
     color: #e0e0e0; /* Light grey text for content */
@@ -650,41 +650,48 @@ input::placeholder,
 
 /* --- Timeline Styling --- */
 #timeline-container {
-    position: absolute;
-    top: 0;
-    left: 0;
+    height: 100%; /* Fill the window content area */
     width: 100%;
-    height: 150px; /* Default height, can be made resizable later */
     background-color: #1c1c1c;
     display: flex;
     flex-direction: column;
-    z-index: 50; /* Below windows but above desktop */
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden; /* Let the parent .window-content handle scrolling */
+    position: relative;
 }
 
 #timeline-header {
     height: 20px;
     background-color: #2a2a2a;
     border-bottom: 1px solid #3a3a3a;
-    position: sticky;
-    top: 0;
-    z-index: 3;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
 }
 
 #timeline-ruler {
-    width: 4000px; /* A large width to allow for scrolling */
+    width: 4000px; 
     height: 100%;
     background-image:
         repeating-linear-gradient(to right, #555 0 1px, transparent 1px 100%),
         repeating-linear-gradient(to right, #444 0 1px, transparent 1px 100%);
-    background-size: 120px 100%, 30px 100%; /* Represents bars and beats at 120bpm */
+    background-size: 120px 100%, 30px 100%; 
     background-position: left top;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#timeline-tracks-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
 }
 
 #timeline-tracks-area {
-    width: 4000px; /* Match the ruler width */
-    flex-grow: 1;
+    width: 4000px;
     position: relative;
 }
 
@@ -695,27 +702,46 @@ input::placeholder,
     box-sizing: border-box;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
 }
-
 .timeline-track-lane:nth-child(even) {
     background-color: #1a1a1a;
+}
+.timeline-track-lane-name {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: #2f2f2f;
+    padding: 0 8px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #3a3a3a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 120px;
+    max-width: 120px;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 #timeline-playhead {
     position: absolute;
-    top: 0;
-    left: 0; /* Position will be updated by JS */
+    top: 0; /* Starts at the top of the container */
+    left: 120px; /* Start after the track names area */
     width: 2px;
     height: 100%;
-    background-color: #00ffff; /* Cyan color like the sequencer playing step */
+    background-color: #00ffff;
     z-index: 4;
-    pointer-events: none; /* So it doesn't interfere with mouse events */
+    pointer-events: none;
 }
 
 .audio-clip {
     position: absolute;
-    height: 90%;
-    top: 5%;
+    height: 80%;
+    top: 10%;
     background-color: #008080;
     border: 1px solid #009090;
     border-radius: 3px;
@@ -726,4 +752,5 @@ input::placeholder,
     padding: 2px 4px;
     white-space: nowrap;
     text-overflow: ellipsis;
+    cursor: grab;
 }
