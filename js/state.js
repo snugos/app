@@ -2,16 +2,16 @@
 import * as Constants from './constants.js';
 import { showNotification, showConfirmationDialog } from './utils.js';
 import { Track } from './Track.js';
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js'; // Renamed to avoid conflict
+import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js';
 import {
     rebuildMasterEffectChain as audioRebuildMasterEffectChain,
-    addMasterEffectToAudio as audioAddMasterEffectToChain, // CORRECTED IMPORT
+    addMasterEffectToAudio as audioAddMasterEffectToChain,
     removeMasterEffectFromAudio as audioRemoveMasterEffectFromChain,
     updateMasterEffectParamInAudio as audioUpdateMasterEffectParamInChain,
     reorderMasterEffectInAudio as audioReorderMasterEffectInChain,
     initAudioContextAndMasterMeter as audioInitAudioContextAndMasterMeter
 } from './audio.js';
-import { getAudio, storeAudio } from './db.js'; // Ensure storeAudio is imported if used directly by state (though likely via audio.js)
+import { getAudio, storeAudio } from './db.js';
 
 // --- Centralized State Variables ---
 let tracks = [];
@@ -22,8 +22,8 @@ let openWindowsMap = new Map();
 let highestZ = 100;
 
 // Master Audio Chain
-let masterEffectsChainState = []; // Stores { id, type, params }
-let masterGainValueState = Tone.dbToGain(0); // Stores the gain value, not the node
+let masterEffectsChainState = [];
+let masterGainValueState = Tone.dbToGain(0);
 
 // MIDI State
 let midiAccessGlobal = null;
@@ -35,7 +35,7 @@ let soundLibraryFileTreesGlobal = {};
 let currentLibraryNameGlobal = null;
 let currentSoundFileTreeGlobal = null;
 let currentSoundBrowserPathGlobal = [];
-let previewPlayerGlobal = null; // This would be a Tone.Player instance, managed by audio.js but state might track its existence/URL
+let previewPlayerGlobal = null;
 
 // Clipboard
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
@@ -53,17 +53,13 @@ let undoStack = [];
 let redoStack = [];
 
 // --- AppServices Placeholder (will be populated by main.js) ---
-let appServices = {
-    // This object will be filled by main.js with functions from other modules
-    // and accessors for the state managed here.
-};
+let appServices = {};
 
 export function initializeStateModule(services) {
     appServices = { ...appServices, ...services };
     if (!Array.isArray(masterEffectsChainState)) {
         masterEffectsChainState = [];
     }
-    // console.log('[State] initializeStateModule: armedTrackId is initially:', armedTrackId);
 }
 
 // --- Getters for Centralized State ---
@@ -92,7 +88,7 @@ export function getClipboardDataState() { return clipboardDataGlobal; }
 export function getArmedTrackIdState() { return armedTrackId; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
-export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
+export function getRecordingTrackIdState() { return recordingTrackIdGlobal; } // This is correctly exported
 export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
@@ -150,21 +146,19 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         highlightPlayingStep: appServices.highlightPlayingStep,
         autoSliceSample: appServices.autoSliceSample,
         closeTrackWindows: appServices.closeAllTrackWindows,
-        getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode, // Pass this down
-        showNotification: appServices.showNotification, // Pass for track-internal notifications
-        effectsRegistryAccess: appServices.effectsRegistryAccess, // Pass for Track's addEffect
+        getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
+        showNotification: appServices.showNotification,
+        effectsRegistryAccess: appServices.effectsRegistryAccess,
     };
     const newTrack = new Track(newTrackId, type, initialData, trackAppServices);
     tracks.push(newTrack);
 
-    // Initialize audio nodes after track is added to the main array
     if (typeof newTrack.initializeAudioNodes === 'function') {
         await newTrack.initializeAudioNodes();
     }
 
     try {
-        await newTrack.fullyInitializeAudioResources(); // This will load samples from DB etc.
-        // console.log(`[State] Audio resources initialized for track ${newTrack.id} (${newTrack.name}).`);
+        await newTrack.fullyInitializeAudioResources();
         if (isBrandNewUserTrack) {
             showNotification(`${newTrack.name} added.`, 2000);
             if (appServices.openTrackInspectorWindow) {
@@ -177,7 +171,6 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
     } catch (error) {
         console.error(`[State] Error in fullyInitializeAudioResources for track ${newTrack.id}:`, error);
         showNotification(`Error setting up ${type} track "${newTrack.name}": ${error.message}`, 5000);
-        // Still open inspector even if some resources failed, to allow user to fix (e.g. re-link sample)
         if (isBrandNewUserTrack && appServices.openTrackInspectorWindow) {
             appServices.openTrackInspectorWindow(newTrack.id);
         }
@@ -195,16 +188,15 @@ export function removeTrackFromStateInternal(trackId) {
     const track = tracks[trackIndex];
     captureStateForUndoInternal(`Remove Track "${track.name}"`);
 
-    track.dispose(); // This should handle closing its windows via appServices.closeAllTrackWindows
+    track.dispose();
     tracks.splice(trackIndex, 1);
 
     if (armedTrackId === trackId) setArmedTrackIdState(null);
     if (soloedTrackId === trackId) {
         setSoloedTrackIdState(null);
-        // Re-evaluate solo states for all tracks
         tracks.forEach(t => {
-            t.isSoloed = false; // Reset all
-            t.applySoloState(); // Will unmute if no other track is soloed
+            t.isSoloed = false;
+            t.applySoloState();
             if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
         });
     }
@@ -217,8 +209,7 @@ export function removeTrackFromStateInternal(trackId) {
 
 
 // --- Master Effects Chain Management ---
-export function addMasterEffectToState(effectType, initialParamsFromAudio) {
-    // This is called by appServices.addMasterEffect (in main.js) AFTER audio.js creates the ToneNode
+export function addMasterEffectToState(effectType, initialParams) {
     const effectId = `mastereffect_${effectType}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const defaultParams = appServices.effectsRegistryAccess?.getEffectDefaultParams
         ? appServices.effectsRegistryAccess.getEffectDefaultParams(effectType)
@@ -227,9 +218,9 @@ export function addMasterEffectToState(effectType, initialParamsFromAudio) {
     masterEffectsChainState.push({
         id: effectId,
         type: effectType,
-        params: initialParamsFromAudio || defaultParams // Store serializable params
+        params: initialParams || defaultParams
     });
-    return effectId; // Return ID so audio.js can map its ToneNode if needed, or main.js can track
+    return effectId;
 }
 
 export function removeMasterEffectFromState(effectId) {
@@ -256,7 +247,7 @@ export function reorderMasterEffectInState(effectId, newIndex) {
     const oldIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
     if (oldIndex === -1 || oldIndex === newIndex) return;
     const maxValidInsertIndex = masterEffectsChainState.length;
-    const clampedNewIndex = Math.max(0, Math.min(newIndex, maxValidInsertIndex -1)); // Corrected for splice
+    const clampedNewIndex = Math.max(0, Math.min(newIndex, maxValidInsertIndex -1));
 
     const [effectToMove] = masterEffectsChainState.splice(oldIndex, 1);
     masterEffectsChainState.splice(clampedNewIndex, 0, effectToMove);
@@ -274,15 +265,14 @@ function updateInternalUndoRedoState() {
 }
 
 export function captureStateForUndoInternal(description = "Unknown action") {
-    // console.log("[State] Capturing state for undo:", description);
     try {
-        const currentState = gatherProjectDataInternal(); // Use internal gatherer
-        currentState.description = description; // Add description to the state object itself
-        undoStack.push(JSON.parse(JSON.stringify(currentState))); // Deep copy
+        const currentState = gatherProjectDataInternal();
+        currentState.description = description;
+        undoStack.push(JSON.parse(JSON.stringify(currentState)));
         if (undoStack.length > Constants.MAX_HISTORY_STATES) {
             undoStack.shift();
         }
-        redoStack = []; // Clear redo stack on new action
+        redoStack = [];
         updateInternalUndoRedoState();
     } catch (error) {
         console.error("[State] Error capturing state for undo:", error);
@@ -298,22 +288,22 @@ export async function undoLastActionInternal() {
     try {
         const stateToRestore = undoStack.pop();
         const currentStateForRedo = gatherProjectDataInternal();
-        currentStateForRedo.description = stateToRestore.description; // Preserve description
-        redoStack.push(JSON.parse(JSON.stringify(currentStateForRedo))); // Deep copy
+        currentStateForRedo.description = stateToRestore.description;
+        redoStack.push(JSON.parse(JSON.stringify(currentStateForRedo)));
         if (redoStack.length > Constants.MAX_HISTORY_STATES) {
             redoStack.shift();
         }
 
         showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
         appServices._isReconstructingDAW_flag = true;
-        await reconstructDAWInternal(stateToRestore, true); // Pass isUndoRedo flag
+        await reconstructDAWInternal(stateToRestore, true);
         appServices._isReconstructingDAW_flag = false;
         updateInternalUndoRedoState();
     } catch (error) {
         appServices._isReconstructingDAW_flag = false;
         console.error("[State] Error during undo:", error);
         showNotification(`Error during undo operation: ${error.message}. Project may be unstable.`, 4000);
-        updateInternalUndoRedoState(); // Still update UI for undo/redo buttons
+        updateInternalUndoRedoState();
     }
 }
 
@@ -325,15 +315,15 @@ export async function redoLastActionInternal() {
     try {
         const stateToRestore = redoStack.pop();
         const currentStateForUndo = gatherProjectDataInternal();
-        currentStateForUndo.description = stateToRestore.description; // Preserve description
-        undoStack.push(JSON.parse(JSON.stringify(currentStateForUndo))); // Deep copy
+        currentStateForUndo.description = stateToRestore.description;
+        undoStack.push(JSON.parse(JSON.stringify(currentStateForUndo)));
         if (undoStack.length > Constants.MAX_HISTORY_STATES) {
             undoStack.shift();
         }
 
         showNotification(`Redoing: ${stateToRestore.description || 'last action'}...`, 2000);
         appServices._isReconstructingDAW_flag = true;
-        await reconstructDAWInternal(stateToRestore, true); // Pass isUndoRedo flag
+        await reconstructDAWInternal(stateToRestore, true);
         appServices._isReconstructingDAW_flag = false;
         updateInternalUndoRedoState();
     } catch (error) {
@@ -348,16 +338,16 @@ export async function redoLastActionInternal() {
 // --- Project Data Handling ---
 export function gatherProjectDataInternal() {
     const projectData = {
-        version: "5.8.0", // Increment version for state structure changes
+        version: "5.8.1", // Increment for any structural change
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
-            masterVolume: masterGainValueState, // Use stored value
+            masterVolume: masterGainValueState,
             activeMIDIInputId: activeMIDIInputGlobal ? activeMIDIInputGlobal.id : null,
             soloedTrackId: soloedTrackId,
             armedTrackId: armedTrackId,
             highestZIndex: highestZ,
         },
-        masterEffects: masterEffectsChainState.map(effect => ({ // Use stored state
+        masterEffects: masterEffectsChainState.map(effect => ({
             id: effect.id,
             type: effect.type,
             params: JSON.parse(JSON.stringify(effect.params))
@@ -366,33 +356,29 @@ export function gatherProjectDataInternal() {
             const trackData = {
                 id: track.id, type: track.type, name: track.name,
                 isMuted: track.isMuted,
-                volume: track.previousVolumeBeforeMute, // Storing this is important
+                volume: track.previousVolumeBeforeMute,
                 activeEffects: track.activeEffects.map(effect => ({
                     id: effect.id,
                     type: effect.type,
-                    params: JSON.parse(JSON.stringify(effect.params)) // Stored params
+                    params: JSON.parse(JSON.stringify(effect.params))
                 })),
                 sequenceLength: track.sequenceLength,
                 sequenceData: JSON.parse(JSON.stringify(track.sequenceData)),
-                automation: JSON.parse(JSON.stringify(track.automation)), // If you implement automation
-                // Sampler specific
+                automation: JSON.parse(JSON.stringify(track.automation)),
                 selectedSliceForEdit: track.selectedSliceForEdit,
                 waveformZoom: track.waveformZoom,
                 waveformScrollOffset: track.waveformScrollOffset,
                 slicerIsPolyphonic: track.slicerIsPolyphonic,
-                // Drum Sampler specific
                 selectedDrumPadForEdit: track.selectedDrumPadForEdit,
-                // Instrument Sampler specific
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
             };
              if (track.type === 'Synth') {
                 trackData.synthEngineType = track.synthEngineType || 'MonoSynth';
                 trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams));
             } else if (track.type === 'Sampler') {
-                trackData.samplerAudioData = { // Store serializable parts
+                trackData.samplerAudioData = {
                     fileName: track.samplerAudioData.fileName,
-                    dbKey: track.samplerAudioData.dbKey, // Key to retrieve from IndexedDB
-                    // audioBufferDataURL is large, rely on dbKey for reconstruction
+                    dbKey: track.samplerAudioData.dbKey,
                     status: track.samplerAudioData.dbKey ? 'missing_db' : (track.samplerAudioData.fileName ? 'missing' : 'empty')
                 };
                 trackData.slices = JSON.parse(JSON.stringify(track.slices));
@@ -419,8 +405,8 @@ export function gatherProjectDataInternal() {
             }
             return trackData;
         }),
-        windowStates: Array.from(openWindowsMap.values()).map(win => { // Use stored map
-             if (!win || !win.element) return null; // Should not happen if map is clean
+        windowStates: Array.from(openWindowsMap.values()).map(win => {
+             if (!win || !win.element) return null;
             return {
                 id: win.id, title: win.title,
                 left: win.element.style.left, top: win.element.style.top,
@@ -435,32 +421,25 @@ export function gatherProjectDataInternal() {
 }
 
 export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
-    appServices._isReconstructingDAW_flag = true; // Set flag via appServices
-    // console.log("[State] Starting DAW Reconstruction. Is Undo/Redo:", isUndoRedo);
+    appServices._isReconstructingDAW_flag = true;
 
-    // Stop transport and clear existing audio elements
     if (Tone.Transport.state === 'started') Tone.Transport.stop();
-    Tone.Transport.cancel(); // Clear all scheduled Tone.Transport events
+    Tone.Transport.cancel();
 
-    // Ensure audio context is ready before doing anything else
-    await audioInitAudioContextAndMasterMeter(true); // User interaction might be needed if not already running
+    await audioInitAudioContextAndMasterMeter(true);
 
-    // Dispose existing tracks and clear state
-    tracks.forEach(track => track.dispose()); // Track.dispose should handle its Tone.js nodes
+    tracks.forEach(track => track.dispose());
     tracks = [];
     trackIdCounter = 0;
 
-    // Dispose existing master effect Tone.js nodes (managed by audio.js)
     if (appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes();
-    masterEffectsChainState = []; // Clear state representation
+    masterEffectsChainState = [];
 
-    // Close all UI windows
-    if (appServices.closeAllWindows) appServices.closeAllWindows(true); // true for silent close
-    openWindowsMap.clear();
+    if (appServices.closeAllWindows) appServices.closeAllWindows(true);
+    if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); // Clears the map in state.js
     highestZ = 100;
 
 
-    // Reset core state variables before loading from projectData
     setArmedTrackIdState(null);
     setSoloedTrackIdState(null);
     setActiveSequencerTrackIdState(null);
@@ -468,48 +447,38 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     setRecordingTrackIdState(null);
     if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
 
-    // Load global settings
     const gs = projectData.globalSettings || {};
     Tone.Transport.bpm.value = gs.tempo || 120;
-    masterGainValueState = gs.masterVolume ?? Tone.dbToGain(0);
-    // Apply master volume to the actual Tone.Gain node in audio.js
-    if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(masterGainValueState);
+    setMasterGainValueState(gs.masterVolume ?? Tone.dbToGain(0));
+    if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
+
 
     if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
-    highestZ = gs.highestZIndex || 100;
+    setHighestZState(gs.highestZIndex || 100);
 
     setArmedTrackIdState(gs.armedTrackId || null);
     setSoloedTrackIdState(gs.soloedTrackId || null);
 
 
-    // Reconstruct master effects chain (state and audio nodes)
     if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
         for (const effectData of projectData.masterEffects) {
-            // Add to state (just params)
             const effectIdInState = addMasterEffectToState(effectData.type, effectData.params);
-            // Add to audio (creates ToneNode and connects)
-            if (appServices.audioAddMasterEffectToChain) { // Check if function exists
+            if (appServices.audioAddMasterEffectToChain) {
                  await appServices.audioAddMasterEffectToChain(effectIdInState, effectData.type, effectData.params);
-            } else {
-                console.error("audioAddMasterEffectToChain service not found in appServices during reconstructDAW");
             }
         }
-        // audioRebuildMasterEffectChain() will be called by audioAddMasterEffectToChain or at the end
     }
 
 
-    // Reconstruct tracks
     const trackPromises = (projectData.tracks || []).map(trackData => addTrackToStateInternal(trackData.type, trackData, false));
     await Promise.all(trackPromises);
 
-    // Reconstruct window states
     if (projectData.windowStates) {
         const sortedWindowStates = projectData.windowStates.sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
         for (const winState of sortedWindowStates) {
             if (!winState || !winState.id) continue;
             const key = winState.initialContentKey || winState.id;
 
-            // Use appServices to open windows
             if (key === 'globalControls' && appServices.openGlobalControlsWindow) appServices.openGlobalControlsWindow(null, winState);
             else if (key === 'mixer' && appServices.openMixerWindow) appServices.openMixerWindow(winState);
             else if (key === 'soundBrowser' && appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow(winState);
@@ -527,33 +496,26 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         }
     }
 
-    // Ensure all track audio resources are fully loaded (samples, etc.)
-    // This might have been partially done during addTrackToStateInternal, but this ensures completion.
     const resourcePromises = tracks.map(track => track.fullyInitializeAudioResources());
     await Promise.all(resourcePromises);
 
 
-    // Apply solo state to all tracks now that they are all loaded
     tracks.forEach(t => {
-        t.isSoloed = (t.id === soloedTrackId);
-        t.applySoloState(); // This should use appServices.getSoloedTrackId
-        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
+        t.isSoloed = (t.id === getSoloedTrackIdState());
+        t.applySoloState();
+        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged'); // Update UI for all tracks based on solo
     });
 
-    // Select MIDI input
     if (gs && gs.activeMIDIInputId && appServices.selectMIDIInput) {
-        appServices.selectMIDIInput(gs.activeMIDIInputId, true); // true for silent selection
+        appServices.selectMIDIInput(gs.activeMIDIInputId, true);
     }
 
-    // Final UI updates
     if(appServices.updateMixerWindow) appServices.updateMixerWindow();
-    if(appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI(); // For master effects rack
+    if(appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     updateInternalUndoRedoState();
 
-    appServices._isReconstructingDAW_flag = false; // Clear flag
+    appServices._isReconstructingDAW_flag = false;
     if (!isUndoRedo) showNotification(`Project loaded successfully.`, 3500);
-    // console.log("[State DEBUG] armedTrackId at END of reconstructDAW:", armedTrackId);
-    // console.log("[State] DAW Reconstructed successfully.");
 }
 
 
@@ -594,10 +556,9 @@ export async function handleProjectFileLoadInternal(event) {
         reader.onload = async (e) => {
             try {
                 const projectData = JSON.parse(e.target.result);
-                undoStack = []; // Clear undo/redo stacks for a fresh project
+                undoStack = [];
                 redoStack = [];
-                await reconstructDAWInternal(projectData, false); // false as it's not an undo/redo
-                // Capture initial state of loaded project as first undo step
+                await reconstructDAWInternal(projectData, false);
                 captureStateForUndoInternal("Load Project: " + file.name.substring(0, 20));
             } catch (error) {
                 console.error("[State] Error loading project from file:", error);
@@ -612,7 +573,7 @@ export async function handleProjectFileLoadInternal(event) {
     } else if (file) {
         showNotification("Invalid file type. Please select a .snug project file.", 3000);
     }
-    if (event.target) event.target.value = null; // Reset file input
+    if (event.target) event.target.value = null;
 }
 
 export async function exportToWavInternal() {
@@ -626,9 +587,9 @@ export async function exportToWavInternal() {
 
         if (Tone.Transport.state === 'started') {
             Tone.Transport.stop();
-            await new Promise(resolve => setTimeout(resolve, 200)); // Allow time for stop to propagate
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
-        Tone.Transport.position = 0; // Reset transport position
+        Tone.Transport.position = 0;
         let maxDuration = 0;
         tracks.forEach(track => {
             if (track.sequence && track.sequenceLength > 0) {
@@ -637,17 +598,15 @@ export async function exportToWavInternal() {
                 if (trackDuration > maxDuration) maxDuration = trackDuration;
             }
         });
-        if (maxDuration === 0) maxDuration = 5; // Default duration if no sequence
-        maxDuration += 1; // Add a bit of tail
+        if (maxDuration === 0) maxDuration = 5;
+        maxDuration += 1;
 
         const recorder = new Tone.Recorder();
-        // Ensure we record from the final master output *before* it hits the absolute destination
-        // This should be the output of masterGainNodeActual from audio.js
         const recordSource = appServices.getActualMasterGainNode ? appServices.getActualMasterGainNode() : null;
 
         if (!recordSource || recordSource.disposed) {
             showNotification("Master output node not available for recording.", 4000);
-            console.error("[State ExportWAV] Master output node (masterGainNodeActual) is not available or disposed.");
+            console.error("[State ExportWAV] Master output node is not available or disposed.");
             return;
         }
         recordSource.connect(recorder);
@@ -655,15 +614,13 @@ export async function exportToWavInternal() {
         showNotification(`Recording for export (${maxDuration.toFixed(1)}s)...`, Math.max(3000, maxDuration * 1000 + 1000));
 
         recorder.start();
-        Tone.Transport.start("+0.1", 0); // Start transport slightly in the future from time 0
+        Tone.Transport.start("+0.1", 0);
 
-        // Wait for the duration of the recording
         await new Promise(resolve => setTimeout(resolve, maxDuration * 1000));
 
-        const recording = await recorder.stop(); // Stop recording
-        Tone.Transport.stop(); // Stop transport
+        const recording = await recorder.stop();
+        Tone.Transport.stop();
 
-        // Clean up
         try {
             recordSource.disconnect(recorder);
         } catch (e) {
@@ -671,7 +628,6 @@ export async function exportToWavInternal() {
         }
         recorder.dispose();
 
-        // Create a download link for the recording
         const url = URL.createObjectURL(recording);
         const a = document.createElement('a');
         a.href = url;
