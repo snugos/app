@@ -192,7 +192,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 if (Tone.Transport.state === 'paused') {
                     console.log("[EventHandlers] Resuming transport from pause.");
                     if (tracks) {
-                        for (const track of tracks) { 
+                        for (const track of tracks) { // USE FOR...OF FOR ASYNC/AWAIT
                             if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
                                 console.log(`[EventHandlers] Re-scheduling track ${track.id} from ${currentTime} on resume.`);
                                 await track.schedulePlayback(currentTime, lookahead); 
@@ -205,7 +205,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     Tone.Transport.position = 0;
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                     if (tracks) {
-                         for (const track of tracks) { 
+                         for (const track of tracks) { // USE FOR...OF FOR ASYNC/AWAIT
                             if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
                                 await track.schedulePlayback(0, lookahead); 
                             }
@@ -218,7 +218,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 Tone.Transport.pause();
                 const tracks = getTracks();
                 if (tracks) {
-                    tracks.forEach(track => {
+                    tracks.forEach(track => { // Standard forEach is fine here as stopPlayback is synchronous in its effect on players
                         if (track.type === 'Audio' && typeof track.stopPlayback === 'function') {
                             track.stopPlayback(); 
                         }
