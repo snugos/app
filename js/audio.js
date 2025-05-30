@@ -4,7 +4,8 @@ import { showNotification } from './utils.js';
 // getEffectDefaultParams will now be accessed via appServices.effectsRegistry
 import { createEffectInstance } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
-import { getRecordingTrackIdState, getRecordingStartTimeState } from './state.js'; // Import state getters
+// getRecordingTrackIdState is no longer needed here for startAudioRecording
+import { getRecordingStartTimeState } from './state.js'; 
 
 
 let masterEffectsBusInputNode = null;
@@ -730,7 +731,8 @@ export function clearAllMasterEffectNodes() {
 }
 
 // --- Audio Recording Functions ---
-export async function startAudioRecording() {
+// Modified to accept the track object as a parameter
+export async function startAudioRecording(track) { // track object is now a parameter
     console.log("[Audio] startAudioRecording called.");
     if (!mic) {
         console.log("[Audio] Mic not initialized, creating new Tone.UserMedia().");
@@ -741,16 +743,12 @@ export async function startAudioRecording() {
         recorder = new Tone.Recorder();
     }
 
-    const trackId = getRecordingTrackIdState();
-    const track = localAppServices.getTrackById(trackId);
-
+    // Track object is now passed directly, no need to get it from state here
     if (!track || track.type !== 'Audio' || !track.inputChannel || track.inputChannel.disposed) {
-        const errorMsg = `Recording failed: Armed track (ID: ${trackId}) is not a valid audio track or input channel is missing/disposed. Track type: ${track?.type}. Input channel valid: ${track?.inputChannel && !track?.inputChannel.disposed}`;
+        const errorMsg = `Recording failed: Passed track (ID: ${track?.id}) is not a valid audio track or input channel is missing/disposed. Track type: ${track?.type}. Input channel valid: ${track?.inputChannel && !track?.inputChannel.disposed}`;
         console.error(`[Audio] ${errorMsg}`);
         showNotification(errorMsg, 4000);
-        if(localAppServices.setIsRecording) localAppServices.setIsRecording(false);
-        if(localAppServices.setRecordingTrackId) localAppServices.setRecordingTrackId(null);
-        if(localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
+        // Resetting global recording state should be handled by the caller (eventHandlers.js) if initialization fails
         return false; 
     }
     console.log(`[Audio] Attempting to record on track: ${track.name} (ID: ${track.id})`);
@@ -777,9 +775,7 @@ export async function startAudioRecording() {
             userMessage = "No microphone found. Please connect a microphone.";
         }
         showNotification(userMessage, 5000);
-        if(localAppServices.setIsRecording) localAppServices.setIsRecording(false);
-        if(localAppServices.setRecordingTrackId) localAppServices.setRecordingTrackId(null);
-        if(localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
+        // Resetting global recording state should be handled by the caller (eventHandlers.js)
         return false; 
     }
 }
@@ -803,7 +799,6 @@ export async function stopAudioRecording() {
         return;
     }
 
-
     try {
         console.log("[Audio] Stopping recorder...");
         const blob = await recorder.stop();
@@ -816,13 +811,13 @@ export async function stopAudioRecording() {
             console.warn("[Audio] Mic was not in 'started' state before closing, current state:", mic.state);
         }
 
-
-        const trackId = getRecordingTrackIdState(); 
+        // Get the recordingTrackId from the global state, which should have been set correctly by eventHandlers.js
+        const recordingTrackId = localAppServices.getRecordingTrackId ? localAppServices.getRecordingTrackId() : null;
         const startTime = getRecordingStartTimeState(); 
-        const track = localAppServices.getTrackById(trackId); 
+        const track = recordingTrackId !== null ? localAppServices.getTrackById(recordingTrackId) : null; 
 
         if (track && blob.size > 0) {
-            console.log(`[Audio] Processing recorded blob for track ${track.name} (ID: ${trackId}), startTime: ${startTime}`);
+            console.log(`[Audio] Processing recorded blob for track ${track.name} (ID: ${track.id}), startTime: ${startTime}`);
             if (typeof track.addAudioClip === 'function') {
                 await track.addAudioClip(blob, startTime);
             } else {
@@ -833,7 +828,7 @@ export async function stopAudioRecording() {
             console.warn("[Audio] Recording was empty.");
             showNotification("Recording was empty.", 2000);
         } else if (!track) {
-            console.error(`[Audio] Recorded track (ID: ${trackId}) not found after stopping recorder.`);
+            console.error(`[Audio] Recorded track (ID: ${recordingTrackId}) not found after stopping recorder.`);
             showNotification("Error: Recorded track not found.", 3000);
         }
     } catch (error) {
