@@ -755,15 +755,17 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const libSelect = browserWindow.element.querySelector('#librarySelect');
         if (Constants.soundLibraries) Object.keys(Constants.soundLibraries).forEach(libName => { const opt = document.createElement('option'); opt.value = libName; opt.textContent = libName; libSelect.appendChild(opt); });
+        
         libSelect.addEventListener('change', (e) => { 
             const lib = e.target.value; 
-            console.log(`[UI SoundBrowser] Library selected: ${lib}`); // Added log
+            console.log(`[UI SoundBrowser] Library selected via dropdown: ${lib}`);
             if (lib && localAppServices.fetchSoundLibrary) {
-                localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]);
+                localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]); // This will call updateSoundBrowserDisplayForLibrary
             } else if (!lib && localAppServices.updateSoundBrowserDisplayForLibrary) {
                 localAppServices.updateSoundBrowserDisplayForLibrary(null);
             } 
         });
+        
         browserWindow.element.querySelector('#upDirectoryBtn').addEventListener('click', () => {
             const currentPath = localAppServices.getCurrentSoundBrowserPath ? localAppServices.getCurrentSoundBrowserPath() : [];
             if (currentPath.length > 0) {
@@ -772,36 +774,110 @@ export function openSoundBrowserWindow(savedState = null) {
                 if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory(newPath, localAppServices.getCurrentSoundFileTree ? localAppServices.getCurrentSoundFileTree() : null);
             }
         });
+
         browserWindow.element.querySelector('#previewSoundBtn').addEventListener('click', () => {
             const selectedSound = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : null;
+            console.log('[UI PreviewButton] Clicked. Selected Sound:', JSON.stringify(selectedSound)); 
+
             if (selectedSound && typeof Tone !== 'undefined') {
                 let previewPlayer = localAppServices.getPreviewPlayer ? localAppServices.getPreviewPlayer() : null;
-                if (previewPlayer && !previewPlayer.disposed) { previewPlayer.stop(); previewPlayer.dispose(); }
+                if (previewPlayer && !previewPlayer.disposed) {
+                    console.log('[UI PreviewButton] Disposing existing preview player.');
+                    previewPlayer.stop(); previewPlayer.dispose();
+                }
                 const { fullPath, libraryName } = selectedSound;
+                console.log(`[UI PreviewButton] Attempting to preview: ${fullPath} from ${libraryName}`);
+
                 const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
                 if (loadedZips?.[libraryName] && loadedZips[libraryName] !== "loading") {
                     const zipEntry = loadedZips[libraryName].file(fullPath);
                     if (zipEntry) {
+                        console.log(`[UI PreviewButton] Found zipEntry for ${fullPath}. Converting to blob.`);
                         zipEntry.async("blob").then(blob => {
+                            console.log(`[UI PreviewButton] Blob created for ${fullPath}, size: ${blob.size}. Creating Object URL.`);
                             const url = URL.createObjectURL(blob);
-                            previewPlayer = new Tone.Player(url, () => { previewPlayer.start(); URL.revokeObjectURL(url); }).toDestination();
+                            console.log(`[UI PreviewButton] Object URL: ${url}. Creating Tone.Player.`);
+                            previewPlayer = new Tone.Player(url, () => {
+                                console.log(`[UI PreviewButton] Tone.Player loaded for ${url}. Starting playback.`);
+                                previewPlayer.start();
+                                URL.revokeObjectURL(url);
+                                console.log(`[UI PreviewButton] Object URL revoked for ${url}.`);
+                            }).toDestination();
+                            previewPlayer.onerror = (err) => { 
+                                console.error(`[UI PreviewButton] Tone.Player error for ${url}:`, err);
+                                showNotification("Error playing preview: " + err.message, 3000);
+                                URL.revokeObjectURL(url); 
+                            };
                             if (localAppServices.setPreviewPlayer) localAppServices.setPreviewPlayer(previewPlayer);
-                        }).catch(err => showNotification("Error loading preview: " + err.message, 2000));
+                        }).catch(err => {
+                            console.error(`[UI PreviewButton] Error converting zipEntry to blob for ${fullPath}:`, err);
+                            showNotification("Error loading preview data: " + err.message, 2000);
+                        });
+                    } else {
+                        console.warn(`[UI PreviewButton] ZipEntry not found for ${fullPath} in ${libraryName}.`);
+                        showNotification("Preview error: Sound file not found in library.", 2000);
                     }
+                } else {
+                    console.warn(`[UI PreviewButton] Library ${libraryName} not loaded or is loading. Loaded zips:`, loadedZips);
+                    showNotification("Preview error: Library not ready.", 2000);
                 }
+            } else if (!selectedSound) {
+                console.warn('[UI PreviewButton] No sound selected for preview.');
+            } else if (typeof Tone === 'undefined') {
+                console.error('[UI PreviewButton] Tone is undefined!');
             }
         });
-        const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
-        if (currentLibName && localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(currentLibName);
+
+        // *** MODIFIED SECTION TO HANDLE INITIALLY SELECTED/LOADED LIBRARY ***
+        if (!savedState) { 
+            const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
+            const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
+            
+            console.log(`[UI SoundBrowser Open] Initial check. Current lib in state: ${currentLibNameFromState}, Dropdown value: ${libSelect?.value}`);
+
+            if (currentLibNameFromState && soundTrees[currentLibNameFromState] && libSelect) {
+                console.log(`[UI SoundBrowser Open] State has current library '${currentLibNameFromState}' with loaded data. Updating UI.`);
+                libSelect.value = currentLibNameFromState;
+                if (localAppServices.updateSoundBrowserDisplayForLibrary) {
+                    localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
+                }
+            } else if (libSelect && libSelect.options.length > 1 && libSelect.value && soundTrees[libSelect.value]) {
+                console.log(`[UI SoundBrowser Open] No specific library in state, but dropdown has valid selection: '${libSelect.value}' with loaded data. Updating UI.`);
+                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
+                    localAppServices.updateSoundBrowserDisplayForLibrary(libSelect.value);
+                }
+            } else if (libSelect && !libSelect.value && libSelect.options.length > 1) {
+                 // If "Select Library..." is chosen, but other libraries might be loaded,
+                 // we could try to pick the first available loaded one, or just ensure "Select Library..." is shown.
+                 // For now, if no specific lib is in state and dropdown is empty, ensure "Select Library..." message.
+                console.log(`[UI SoundBrowser Open] No specific library in state, dropdown on "Select Library...". Ensuring default message.`);
+                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
+                    localAppServices.updateSoundBrowserDisplayForLibrary(null);
+                }
+            } else {
+                console.log(`[UI SoundBrowser Open] No specific library in state, and dropdown has no other valid selection or data not loaded. Defaulting to "Select Library..." message.`);
+                if (localAppServices.updateSoundBrowserDisplayForLibrary) {
+                    localAppServices.updateSoundBrowserDisplayForLibrary(null);
+                }
+            }
+        } else if (savedState && localAppServices.getCurrentLibraryName && localAppServices.updateSoundBrowserDisplayForLibrary) {
+            const currentLibNameFromState = localAppServices.getCurrentLibraryName();
+            console.log(`[UI SoundBrowser Open] Restoring from savedState. Current lib in state: ${currentLibNameFromState}`);
+             if (currentLibNameFromState && libSelect) {
+                libSelect.value = currentLibNameFromState;
+                localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
+            }
+        }
+        // *** END OF MODIFIED SECTION ***
     }
     return browserWindow;
 }
 
 export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
-    console.log(`[UI updateSoundBrowserDisplayForLibrary] Called for: ${libraryName}, isLoading: ${isLoading}, hasError: ${hasError}`); // Added log
+    console.log(`[UI updateSoundBrowserDisplayForLibrary] Called for: ${libraryName}, isLoading: ${isLoading}, hasError: ${hasError}`); 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Sound Browser window element not found. Aborting.`); // Added log
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Sound Browser window element not found. Aborting.`); 
         return;
     }
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -811,34 +887,34 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(libraryName);
     if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]);
 
-    if (libSelect && libSelect.value !== libraryName) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Setting libSelect.value to: ${libraryName || ""}`); // Added log
+    if (libSelect && libSelect.value !== (libraryName || "")) { // Ensure empty string for null libraryName to match option value
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Setting libSelect.value to: '${libraryName || ""}' (was '${libSelect.value}')`); 
         libSelect.value = libraryName || "";
     }
     if (!libraryName) { 
         listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>'; 
         pathDisplay.textContent = '/'; 
         if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null); 
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] No libraryName, UI set to "Select a library".`); // Added log
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] No libraryName, UI set to "Select a library".`); 
         return; 
     }
 
     if (isLoading || (localAppServices.getLoadedZipFiles && localAppServices.getLoadedZipFiles()[libraryName] === "loading")) { 
         listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`; 
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] UI set to "Loading ${libraryName}...".`); // Added log
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] UI set to "Loading ${libraryName}...".`); 
     }
     else if (hasError) { 
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`; 
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] UI set to "Error: Library '${libraryName}' failed.".`); // Added log
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] UI set to "Error: Library '${libraryName}' failed.".`); 
     }
     else if (localAppServices.getSoundLibraryFileTrees && localAppServices.getSoundLibraryFileTrees()[libraryName]) {
         if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(localAppServices.getSoundLibraryFileTrees()[libraryName]);
         if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Library ${libraryName} data found, rendering directory.`); // Added log
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Library ${libraryName} data found, rendering directory.`); 
     }
     else { 
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`; 
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Library ${libraryName} data NOT found, UI set to error.`); // Added log
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Library ${libraryName} data NOT found, UI set to error.`); 
     }
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
@@ -1468,6 +1544,12 @@ export function openTimelineWindow(savedState = null) {
                 updatePlayheadPosition(); 
             });
         }
+        
+        // *** MODIFIED SECTION TO HANDLE INITIALLY SELECTED/LOADED LIBRARY ON SOUND BROWSER OPEN ***
+        // This logic was for SoundBrowser, not Timeline. Removing from here.
+        // The renderTimeline() call below is correct for the timeline window.
+        // *** END OF MODIFIED SECTION (REMOVAL) ***
+        
         renderTimeline(); 
     }
     return timelineWindow;
