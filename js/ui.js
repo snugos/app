@@ -2,18 +2,34 @@
 import { SnugWindow } from './SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupGenericDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
 import * as Constants from './constants.js';
+// Event handlers are now mostly called via appServices from main.js,
+// but direct calls might still exist or be transitioned.
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 
-import { AVAILABLE_EFFECTS, getEffectParamDefinitions, synthEngineControlDefinitions } from './effectsRegistry.js';
 
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
 
-function initializeUIModule(appServicesFromMain) {
+export function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
+    // Ensure effectsRegistryAccess is available if ui.js needs it directly
+    // (though it's usually main.js orchestrating this)
+    if (!localAppServices.effectsRegistryAccess) {
+        console.warn("[UI Module] effectsRegistryAccess not found in appServices. Effect-related UI might be limited.");
+        localAppServices.effectsRegistryAccess = {
+            AVAILABLE_EFFECTS: {},
+            getEffectParamDefinitions: () => [],
+            getEffectDefaultParams: () => ({}),
+            synthEngineControlDefinitions: {} // Added this line
+        };
+    }
+     // Make sure synthEngineControlDefinitions is also available
+    if (!localAppServices.effectsRegistryAccess.synthEngineControlDefinitions) {
+        localAppServices.effectsRegistryAccess.synthEngineControlDefinitions = {};
+    }
 }
 
 // --- Knob UI ---
@@ -103,14 +119,14 @@ function createKnob(options) {
     }
     knobEl.addEventListener('mousedown', (e) => handleInteraction(e, false));
     knobEl.addEventListener('touchstart', (e) => handleInteraction(e, true), { passive: false });
-    setValue(currentValue, false);
+    setValue(currentValue, false); // Initialize visual
     return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
 }
 
 // --- Specific Inspector DOM Builders ---
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
-    const definitions = synthEngineControlDefinitions[engineType] || [];
+    const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     let controlsHTML = `<div id="synthEngineControls-${track.id}" class="grid grid-cols-2 md:grid-cols-3 gap-2 p-1">`;
     definitions.forEach(def => { controlsHTML += `<div id="${def.idPrefix}-${track.id}-placeholder"></div>`; });
     controlsHTML += `</div>`;
@@ -204,7 +220,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
 
 // --- Specific Inspector Control Initializers ---
 function buildSynthEngineControls(track, container, engineType) {
-    const definitions = synthEngineControlDefinitions[engineType] || [];
+    const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     definitions.forEach(def => {
         const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
         if (!placeholder) return;
@@ -217,7 +233,7 @@ function buildSynthEngineControls(track, container, engineType) {
             } else { currentValObj = undefined; break; }
         }
         initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
-        if (def.path.endsWith('.value') && track.instrument?.get) {
+        if (def.path.endsWith('.value') && track.instrument?.get) { // For Tone.Signal parameters
             const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
             const signalValue = track.instrument.get(signalPath)?.value;
             if (signalValue !== undefined) initialValue = signalValue;
@@ -268,13 +284,13 @@ function initializeSamplerSpecificControls(track, winEl) {
         if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'Sampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
         if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'Sampler'); };
     }
-    renderSamplePads(track); // Renders the clickable slice pads
+    renderSamplePads(track);
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
     if (canvas) {
-        track.waveformCanvasCtx = canvas.getContext('2d'); // Store context on track for drawing
+        track.waveformCanvasCtx = canvas.getContext('2d');
         if(track.audioBuffer?.loaded) drawWaveform(track);
     }
-    updateSliceEditorUI(track); // Populates slice editor controls
+    updateSliceEditorUI(track);
 
     const createAndPlaceKnob = (placeholderId, options) => {
         const placeholder = winEl.querySelector(`#${placeholderId}`);
@@ -333,8 +349,8 @@ function initializeSamplerSpecificControls(track, winEl) {
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
-    renderDrumSamplerPads(track); // Renders the clickable drum pads
-    updateDrumPadControlsUI(track); // Populates controls for the selected pad
+    renderDrumSamplerPads(track);
+    updateDrumPadControlsUI(track);
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
@@ -458,17 +474,16 @@ function openTrackInspectorWindow(trackId, savedState = null) {
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
     const windowId = `trackInspector-${trackId}`;
-    // Use window.openWindows for checking if already open, as SnugWindow manages this globally
-    if (window.openWindows && window.openWindows[windowId] && !savedState) {
-        window.openWindows[windowId].restore(); return window.openWindows[windowId];
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore(); return openWindows.get(windowId);
     }
 
     const contentDOM = buildTrackInspectorContentDOM(track);
     const inspectorOptions = { width: 320, height: 450, minWidth: 280, minHeight: 350, initialContentKey: windowId, onCloseCallback: () => { /* main.js can clear track.inspectorWindow if needed */ } };
-    if (savedState) { /* Apply saved state */ Object.assign(inspectorOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized }); }
+    if (savedState) { Object.assign(inspectorOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized }); }
 
-    // Pass localAppServices to SnugWindow constructor
-    const inspectorWindow = new SnugWindow(windowId, `Inspector: ${track.name}`, contentDOM, inspectorOptions, localAppServices);
+    const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, inspectorOptions);
 
     if (inspectorWindow?.element) {
         initializeCommonInspectorControls(track, inspectorWindow.element);
@@ -514,15 +529,17 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     if (!listDiv) return;
     listDiv.innerHTML = '';
-    const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (window.masterEffectsChain || []);
+    const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
 
     if (!effectsArray || effectsArray.length === 0) {
         listDiv.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
         if (controlsContainer) controlsContainer.innerHTML = ''; return;
     }
 
+    const AVAILABLE_EFFECTS_LOCAL = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
+
     effectsArray.forEach((effect, index) => {
-        const effectDef = AVAILABLE_EFFECTS[effect.type];
+        const effectDef = AVAILABLE_EFFECTS_LOCAL[effect.type];
         const displayName = effectDef ? effectDef.displayName : effect.type;
         const item = document.createElement('div');
         item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs';
@@ -534,7 +551,6 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
             </div>`;
         item.querySelector('.effect-name').addEventListener('click', () => {
             renderEffectControls(owner, ownerType, effect.id, controlsContainer);
-            // FIX: Escape colons for Tailwind dark mode classes
             listDiv.querySelectorAll('.bg-blue-100,.dark\\:bg-blue-700').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
             item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
         });
@@ -542,20 +558,18 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
             if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.reorderEffect(effect.id, index - 1);
             else if (localAppServices.reorderMasterEffect) localAppServices.reorderMasterEffect(effect.id, index - 1);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
+            // Re-render is handled by state update -> UI update pattern in main.js if appServices.updateMasterEffectsRackUI is called
         });
         item.querySelector('.down-btn').addEventListener('click', () => {
             if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Reorder effect on ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.reorderEffect(effect.id, index + 1);
             else if (localAppServices.reorderMasterEffect) localAppServices.reorderMasterEffect(effect.id, index + 1);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
         });
         item.querySelector('.remove-btn').addEventListener('click', () => {
             if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Remove ${effect.type} from ${ownerType === 'track' ? owner.name : 'Master'}`);
             if (ownerType === 'track') owner.removeEffect(effect.id);
             else if (localAppServices.removeMasterEffect) localAppServices.removeMasterEffect(effect.id);
-            renderEffectsList(owner, ownerType, listDiv, controlsContainer);
-            if (controlsContainer) controlsContainer.innerHTML = '';
+            // No need to clear controlsContainer here, re-render will handle it or it'll show "Select an effect"
         });
         listDiv.appendChild(item);
     });
@@ -564,10 +578,14 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
 function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
-    const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (window.masterEffectsChain || []);
+    const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
     const effectWrapper = effectsArray.find(e => e.id === effectId);
+
     if (!effectWrapper) { controlsContainer.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">Select an effect.</p>'; return; }
-    const effectDef = AVAILABLE_EFFECTS[effectWrapper.type];
+
+    const AVAILABLE_EFFECTS_LOCAL = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
+    const effectDef = AVAILABLE_EFFECTS_LOCAL[effectWrapper.type];
+
     if (!effectDef) { controlsContainer.innerHTML = `<p class="text-xs text-red-500">Error: Definition for "${effectWrapper.type}" not found.</p>`; return; }
 
     const titleEl = document.createElement('h4');
@@ -605,7 +623,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
                     const newValue = !currentValue;
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
                     if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, newValue);
-                    renderEffectControls(owner, ownerType, effectId, controlsContainer); // Re-render to update button
+                    // Re-render to update button state will be handled by main.js UI update logic
                 });
                 controlWrapper.appendChild(button);
             }
@@ -618,7 +636,8 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
 function showAddEffectModal(owner, ownerType) {
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
     let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
-    for (const effectKey in AVAILABLE_EFFECTS) { modalContentHTML += `<li class="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS[effectKey].displayName}</li>`; }
+    const AVAILABLE_EFFECTS_LOCAL = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
+    for (const effectKey in AVAILABLE_EFFECTS_LOCAL) { modalContentHTML += `<li class="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`; }
     modalContentHTML += `</ul></div>`;
     const modal = showCustomModal(`Add Effect to ${ownerName}`, modalContentHTML, [], 'add-effect-modal');
     if (modal?.contentDiv) {
@@ -626,13 +645,9 @@ function showAddEffectModal(owner, ownerType) {
             item.addEventListener('click', () => {
                 const effectType = item.dataset.effectType;
                 if (ownerType === 'track' && owner) {
-                    owner.addEffect(effectType); // Track method handles its own undo
-                    const rackWindow = window.openWindows[`effectsRack-${owner.id}`];
-                    if (rackWindow?.element) renderEffectsList(owner, ownerType, rackWindow.element.querySelector(`#effectsList-${owner.id}`), rackWindow.element.querySelector(`#effectControlsContainer-${owner.id}`));
+                    owner.addEffect(effectType); // Track method handles its own undo and UI update via appServices
                 } else if (ownerType === 'master' && localAppServices.addMasterEffect) {
-                    localAppServices.addMasterEffect(effectType); // This service function should handle undo
-                    const masterRackWindow = window.openWindows['masterEffectsRack'];
-                    if (masterRackWindow?.element) renderEffectsList(null, 'master', masterRackWindow.element.querySelector(`#effectsList-master`), masterRackWindow.element.querySelector(`#effectControlsContainer-master`));
+                    localAppServices.addMasterEffect(effectType); // This service function handles undo and UI update
                 }
                 modal.overlay.remove();
             });
@@ -645,11 +660,13 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
-    if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
+
     const contentDOM = buildModularEffectsRackDOM(track, 'track');
     const rackOptions = { width: 350, height: 400, minWidth: 300, minHeight: 250, initialContentKey: windowId };
     if (savedState) Object.assign(rackOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    const rackWindow = new SnugWindow(windowId, `Effects: ${track.name}`, contentDOM, rackOptions, localAppServices);
+    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, contentDOM, rackOptions);
     if (rackWindow?.element) {
         renderEffectsList(track, 'track', rackWindow.element.querySelector(`#effectsList-${track.id}`), rackWindow.element.querySelector(`#effectControlsContainer-${track.id}`));
         rackWindow.element.querySelector(`#addEffectBtn-${track.id}`)?.addEventListener('click', () => showAddEffectModal(track, 'track'));
@@ -659,11 +676,13 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
 
 function openMasterEffectsRackWindow(savedState = null) {
     const windowId = 'masterEffectsRack';
-    if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
+
     const contentDOM = buildModularEffectsRackDOM(null, 'master');
     const rackOptions = { width: 350, height: 400, minWidth: 300, minHeight: 250, initialContentKey: windowId };
     if (savedState) Object.assign(rackOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    const rackWindow = new SnugWindow(windowId, 'Master Effects Rack', contentDOM, rackOptions, localAppServices);
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', contentDOM, rackOptions);
     if (rackWindow?.element) {
         renderEffectsList(null, 'master', rackWindow.element.querySelector(`#effectsList-master`), rackWindow.element.querySelector(`#effectControlsContainer-master`));
         rackWindow.element.querySelector(`#addEffectBtn-master`)?.addEventListener('click', () => showAddEffectModal(null, 'master'));
@@ -673,8 +692,9 @@ function openMasterEffectsRackWindow(savedState = null) {
 
 function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     const windowId = 'globalControls';
-    if (window.openWindows[windowId] && !savedState) {
-        const win = window.openWindows[windowId];
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        const win = openWindows.get(windowId);
         win.restore();
         if (typeof onReadyCallback === 'function' && win.element) {
             onReadyCallback({ playBtnGlobal: win.element.querySelector('#playBtnGlobal'), recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'), tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'), midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'), masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'), masterMeterBarGlobal: win.element.querySelector('#masterMeterBarGlobal'), midiIndicatorGlobal: win.element.querySelector('#midiIndicatorGlobal'), keyboardIndicatorGlobal: win.element.querySelector('#keyboardIndicatorGlobal') });
@@ -684,7 +704,7 @@ function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300"> <div class="grid grid-cols-2 gap-2 items-center"> <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button> <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button> </div> <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div> <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div> <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div> </div>`;
     const options = { width: 280, height: 290, minWidth: 250, minHeight: 270, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    const newWindow = new SnugWindow(windowId, 'Global Controls', contentHTML, options, localAppServices);
+    const newWindow = localAppServices.createWindow(windowId, 'Global Controls', contentHTML, options);
     if (newWindow?.element && typeof onReadyCallback === 'function') {
         onReadyCallback({ playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'), recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'), tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'), midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'), masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'), masterMeterBarGlobal: newWindow.element.querySelector('#masterMeterBarGlobal'), midiIndicatorGlobal: newWindow.element.querySelector('#midiIndicatorGlobal'), keyboardIndicatorGlobal: newWindow.element.querySelector('#keyboardIndicatorGlobal') });
     }
@@ -693,74 +713,113 @@ function openGlobalControlsWindow(onReadyCallback, savedState = null) {
 
 function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
-    if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
+
     const contentHTML = `<div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full dark:text-slate-300"> <div class="flex space-x-1 mb-1"> <select id="librarySelect" class="flex-grow p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">Select Library...</option> </select> <button id="upDirectoryBtn" class="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500" title="Up Directory">↑</button> </div> <div id="currentPathDisplay" class="text-xs text-gray-600 dark:text-slate-400 truncate mb-1">/</div> <div id="soundBrowserList" class="min-h-[100px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600 overflow-y-auto"> <p class="text-gray-500 dark:text-slate-400 italic">Select a library to browse sounds.</p> </div> <div id="soundPreviewControls" class="mt-1 text-center"> <button id="previewSoundBtn" class="px-2 py-1 text-xs border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-slate-500" disabled>Preview</button> </div> </div>`;
     const browserOptions = { width: 380, height: 450, minWidth: 300, minHeight: 300, initialContentKey: windowId };
     if (savedState) Object.assign(browserOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    const browserWindow = new SnugWindow(windowId, 'Sound Browser', contentHTML, browserOptions, localAppServices);
+    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions);
+
     if (browserWindow?.element) {
         const libSelect = browserWindow.element.querySelector('#librarySelect');
         if (Constants.soundLibraries) Object.keys(Constants.soundLibraries).forEach(libName => { const opt = document.createElement('option'); opt.value = libName; opt.textContent = libName; libSelect.appendChild(opt); });
         libSelect.addEventListener('change', (e) => { const lib = e.target.value; if (lib && localAppServices.fetchSoundLibrary) localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]); else if (!lib && localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(null); });
-        browserWindow.element.querySelector('#upDirectoryBtn').addEventListener('click', () => { if (window.currentSoundBrowserPath?.length > 0) { window.currentSoundBrowserPath.pop(); if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory(window.currentSoundBrowserPath, window.currentSoundFileTree); } });
+        browserWindow.element.querySelector('#upDirectoryBtn').addEventListener('click', () => {
+            const currentPath = localAppServices.getCurrentSoundBrowserPath ? localAppServices.getCurrentSoundBrowserPath() : [];
+            if (currentPath.length > 0) {
+                const newPath = [...currentPath]; newPath.pop();
+                if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath(newPath);
+                if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory(newPath, localAppServices.getCurrentSoundFileTree ? localAppServices.getCurrentSoundFileTree() : null);
+            }
+        });
         browserWindow.element.querySelector('#previewSoundBtn').addEventListener('click', () => {
-            if (window.selectedSoundForPreview && typeof Tone !== 'undefined') {
-                if (window.previewPlayer && !window.previewPlayer.disposed) { window.previewPlayer.stop(); window.previewPlayer.dispose(); }
-                const { fullPath, libraryName } = window.selectedSoundForPreview;
-                if (window.loadedZipFiles?.[libraryName] && window.loadedZipFiles[libraryName] !== "loading") {
-                    const zipEntry = window.loadedZipFiles[libraryName].file(fullPath);
-                    if (zipEntry) zipEntry.async("blob").then(blob => { const url = URL.createObjectURL(blob); window.previewPlayer = new Tone.Player(url, () => { window.previewPlayer.start(); URL.revokeObjectURL(url); }).toDestination(); }).catch(err => showNotification("Error loading preview: " + err.message, 2000));
+            const selectedSound = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : null;
+            if (selectedSound && typeof Tone !== 'undefined') {
+                let previewPlayer = localAppServices.getPreviewPlayer ? localAppServices.getPreviewPlayer() : null;
+                if (previewPlayer && !previewPlayer.disposed) { previewPlayer.stop(); previewPlayer.dispose(); }
+                const { fullPath, libraryName } = selectedSound;
+                const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
+                if (loadedZips?.[libraryName] && loadedZips[libraryName] !== "loading") {
+                    const zipEntry = loadedZips[libraryName].file(fullPath);
+                    if (zipEntry) {
+                        zipEntry.async("blob").then(blob => {
+                            const url = URL.createObjectURL(blob);
+                            previewPlayer = new Tone.Player(url, () => { previewPlayer.start(); URL.revokeObjectURL(url); }).toDestination();
+                            if (localAppServices.setPreviewPlayer) localAppServices.setPreviewPlayer(previewPlayer);
+                        }).catch(err => showNotification("Error loading preview: " + err.message, 2000));
+                    }
                 }
             }
         });
-        if (window.currentLibraryName && localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(window.currentLibraryName);
+        const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
+        if (currentLibName && localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(currentLibName);
     }
     return browserWindow;
 }
 
 function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) {
-    const browserWindowEl = window.openWindows['soundBrowser']?.element;
+    const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
     const libSelect = browserWindowEl.querySelector('#librarySelect');
     const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
-    window.currentLibraryName = libraryName; window.currentSoundBrowserPath = [];
+
+    if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(libraryName);
+    if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]);
+
     if (libSelect && libSelect.value !== libraryName) libSelect.value = libraryName || "";
-    if (!libraryName) { listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>'; pathDisplay.textContent = '/'; window.currentSoundFileTree = null; return; }
-    if (isLoading || (window.loadedZipFiles && window.loadedZipFiles[libraryName] === "loading")) { listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`; }
+    if (!libraryName) { listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>'; pathDisplay.textContent = '/'; if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null); return; }
+
+    if (isLoading || (localAppServices.getLoadedZipFiles && localAppServices.getLoadedZipFiles()[libraryName] === "loading")) { listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`; }
     else if (hasError) { listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`; }
-    else if (window.soundLibraryFileTrees?.[libraryName]) { window.currentSoundFileTree = window.soundLibraryFileTrees[libraryName]; if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], window.currentSoundFileTree); }
+    else if (localAppServices.getSoundLibraryFileTrees && localAppServices.getSoundLibraryFileTrees()[libraryName]) {
+        if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(localAppServices.getSoundLibraryFileTrees()[libraryName]);
+        if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
+    }
     else { listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found.</p>`; }
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
 
 function renderSoundBrowserDirectory(pathArray, treeNode) {
-    const browserWindowEl = window.openWindows['soundBrowser']?.element;
+    const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl || !treeNode) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
     const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
     const previewBtn = browserWindowEl.querySelector('#previewSoundBtn');
-    listDiv.innerHTML = ''; pathDisplay.textContent = `/${window.currentLibraryName || ''}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
-    window.selectedSoundForPreview = null; if(previewBtn) previewBtn.disabled = true;
+    listDiv.innerHTML = '';
+    const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : '';
+    pathDisplay.textContent = `/${currentLibName}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
+
+    if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview(null);
+    if(previewBtn) previewBtn.disabled = true;
+
     const items = [];
     for (const name in treeNode) { if (treeNode[name]?.type) items.push({ name, type: treeNode[name].type, nodeData: treeNode[name] }); }
     items.sort((a, b) => { if (a.type === 'folder' && b.type !== 'folder') return -1; if (a.type !== 'folder' && b.type === 'folder') return 1; return a.name.localeCompare(b.name); });
     if (items.length === 0) { listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Empty folder.</p>'; return; }
+
     items.forEach(itemObj => {
         const {name, nodeData} = itemObj; const listItem = document.createElement('div');
         listItem.className = 'p-1 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-xs flex items-center';
         listItem.draggable = nodeData.type === 'file';
         const icon = document.createElement('span'); icon.className = 'mr-1.5'; icon.textContent = nodeData.type === 'folder' ? '📁' : '🎵'; listItem.appendChild(icon);
         const text = document.createElement('span'); text.textContent = name; listItem.appendChild(text);
-        if (nodeData.type === 'folder') { listItem.addEventListener('click', () => { window.currentSoundBrowserPath.push(name); renderSoundBrowserDirectory(window.currentSoundBrowserPath, nodeData.children); }); }
-        else {
+        if (nodeData.type === 'folder') {
             listItem.addEventListener('click', () => {
-                // FIX: Escape colons for Tailwind dark mode classes
+                const newPath = [...pathArray, name];
+                if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath(newPath);
+                renderSoundBrowserDirectory(newPath, nodeData.children);
+            });
+        }
+        else { // File
+            listItem.addEventListener('click', () => {
                 listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-blue-600').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
                 listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
-                window.selectedSoundForPreview = { fileName: name, fullPath: nodeData.fullPath, libraryName: window.currentLibraryName }; if(previewBtn) previewBtn.disabled = false;
+                if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview({ fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName });
+                if(previewBtn) previewBtn.disabled = false;
             });
-            listItem.addEventListener('dragstart', (e) => { e.dataTransfer.setData("application/json", JSON.stringify({ fileName: name, fullPath: nodeData.fullPath, libraryName: window.currentLibraryName, type: 'sound-browser-item' })); e.dataTransfer.effectAllowed = "copy"; });
+            listItem.addEventListener('dragstart', (e) => { e.dataTransfer.setData("application/json", JSON.stringify({ fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName, type: 'sound-browser-item' })); e.dataTransfer.effectAllowed = "copy"; });
         }
         listDiv.appendChild(listItem);
     });
@@ -769,18 +828,21 @@ function renderSoundBrowserDirectory(pathArray, treeNode) {
 // --- Mixer Window ---
 function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
-    if (window.openWindows[windowId] && !savedState) { window.openWindows[windowId].restore(); return window.openWindows[windowId]; }
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
+
     const contentContainer = document.createElement('div'); contentContainer.id = 'mixerContentContainer';
-    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800';
-    const mixerOptions = { width: Math.min(800, (document.getElementById('desktop')?.offsetWidth || 800) - 40), height: 300, minWidth: 300, minHeight: 200, initialContentKey: windowId };
+    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800'; // Use theme colors
+    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const mixerOptions = { width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40), height: 300, minWidth: 300, minHeight: 200, initialContentKey: windowId };
     if (savedState) Object.assign(mixerOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    const mixerWindow = new SnugWindow(windowId, 'Mixer', contentContainer, mixerOptions, localAppServices);
+    const mixerWindow = localAppServices.createWindow(windowId, 'Mixer', contentContainer, mixerOptions);
     if (mixerWindow?.element) updateMixerWindow();
     return mixerWindow;
 }
 
 function updateMixerWindow() {
-    const mixerWindow = window.openWindows['mixer'];
+    const mixerWindow = localAppServices.getWindowById ? localAppServices.getWindowById('mixer') : null;
     if (!mixerWindow?.element || mixerWindow.isMinimized) return;
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (container) renderMixer(container);
@@ -795,8 +857,16 @@ function renderMixer(container) {
     container.appendChild(masterTrackDiv);
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#masterVolumeKnob-mixer-placeholder');
     if (masterVolKnobPlaceholder) {
-        const masterVolume = (window.masterGainNode?.gain?.value !== undefined) ? window.masterGainNode.gain.value : Tone.dbToGain(0);
-        const masterVolKnob = createKnob({ label: 'Master Vol', min: 0, max: 1.2, step: 0.01, initialValue: masterVolume, decimals: 2, onValueChange: (val, o, fromInteraction) => { if (window.masterGainNode?.gain) { window.masterGainNode.gain.value = val; if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Master Volume to ${val.toFixed(2)}`); } } });
+        const masterGainNode = localAppServices.getMasterGainNode ? localAppServices.getMasterGainNode() : null;
+        const masterVolume = (masterGainNode !== null) ? masterGainNode : Tone.dbToGain(0); // Get gain value from state
+        const masterVolKnob = createKnob({ label: 'Master Vol', min: 0, max: 1.2, step: 0.01, initialValue: masterVolume, decimals: 2, onValueChange: (val, o, fromInteraction) => {
+            const mgNode = localAppServices.getMasterGainNodeActual ? localAppServices.getMasterGainNodeActual() : null; // Get actual Tone.Gain
+            if (mgNode?.gain) {
+                mgNode.gain.value = val;
+                if (localAppServices.setMasterGainNode) localAppServices.setMasterGainNode(val); // Update state
+                if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Master Volume to ${val.toFixed(2)}`);
+            }
+         } });
         masterVolKnobPlaceholder.innerHTML = ''; masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
@@ -804,12 +874,12 @@ function renderMixer(container) {
         const trackDiv = document.createElement('div');
         trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
         trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div> <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div> <div class="grid grid-cols-2 gap-0.5 my-1"> <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button> <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button> </div> <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5"> <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div>`;
-        trackDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); createContextMenu(e, [ {label: "Open Inspector", action: () => handleOpenTrackInspector(track.id)}, {label: "Open Effects Rack", action: () => handleOpenEffectsRack(track.id)}, {label: "Open Sequencer", action: () => handleOpenSequencer(track.id)}, {separator: true}, {label: track.isMuted ? "Unmute" : "Mute", action: () => handleTrackMute(track.id)}, {label: track.isSoloed ? "Unsolo" : "Solo", action: () => handleTrackSolo(track.id)}, {label: (localAppServices.getArmedTrackId && localAppServices.getArmedTrackId() === track.id) ? "Disarm Input" : "Arm for Input", action: () => handleTrackArm(track.id)}, {separator: true}, {label: "Remove Track", action: () => handleRemoveTrack(track.id)} ]); });
+        trackDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); createContextMenu(e, [ {label: "Open Inspector", action: () => localAppServices.handleOpenTrackInspector(track.id)}, {label: "Open Effects Rack", action: () => localAppServices.handleOpenEffectsRack(track.id)}, {label: "Open Sequencer", action: () => localAppServices.handleOpenSequencer(track.id)}, {separator: true}, {label: track.isMuted ? "Unmute" : "Mute", action: () => localAppServices.handleTrackMute(track.id)}, {label: track.isSoloed ? "Unsolo" : "Solo", action: () => localAppServices.handleTrackSolo(track.id)}, {label: (localAppServices.getArmedTrackId && localAppServices.getArmedTrackId() === track.id) ? "Disarm Input" : "Arm for Input", action: () => localAppServices.handleTrackArm(track.id)}, {separator: true}, {label: "Remove Track", action: () => localAppServices.handleRemoveTrack(track.id)} ]); });
         container.appendChild(trackDiv);
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) { const volKnob = createKnob({ label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }); volKnobPlaceholder.innerHTML = ''; volKnobPlaceholder.appendChild(volKnob.element); }
-        trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', () => handleTrackMute(track.id));
-        trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', () => handleTrackSolo(track.id));
+        trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', () => localAppServices.handleTrackMute(track.id));
+        trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
     });
 }
 
@@ -839,8 +909,16 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `sequencerWin-${trackId}`;
-    if (forceRedraw && window.openWindows[windowId]) { try { window.openWindows[windowId].close(true); } catch (e) {} }
-    if (window.openWindows[windowId] && !forceRedraw && !savedState) { window.openWindows[windowId].restore(); if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId); return window.openWindows[windowId]; }
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+
+    if (forceRedraw && openWindows.has(windowId)) {
+        try { openWindows.get(windowId).close(true); } catch (e) {console.warn("Error closing existing sequencer window for redraw:", e)}
+    }
+    if (openWindows.has(windowId) && !forceRedraw && !savedState) {
+        openWindows.get(windowId).restore();
+        if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
+        return openWindows.get(windowId);
+    }
 
     let rows, rowLabels; const numBars = Math.max(1, track.sequenceLength / Constants.STEPS_PER_BAR);
     if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; }
@@ -849,9 +927,10 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
     else { rows = 0; rowLabels = []; }
 
     const contentDOM = buildSequencerContentDOM(track, rows, rowLabels, numBars);
-    const seqOptions = { width: Math.min(900, (document.getElementById('desktop')?.offsetWidth || 900) - 40), height: 400, minWidth: 400, minHeight: 250, initialContentKey: windowId, onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); } };
+    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const seqOptions = { width: Math.min(900, (desktopEl?.offsetWidth || 900) - 40), height: 400, minWidth: 400, minHeight: 250, initialContentKey: windowId, onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); } };
     if (savedState) Object.assign(seqOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    const sequencerWindow = new SnugWindow(windowId, `Sequencer: ${track.name}`, contentDOM, seqOptions, localAppServices);
+    const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name}`, contentDOM, seqOptions);
 
     if (sequencerWindow?.element) {
         if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
@@ -860,12 +939,13 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
             const currentTrackForMenu = localAppServices.getTrackById ? localAppServices.getTrackById(track.id) : null; if (!currentTrackForMenu) return;
+            const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
             const menuItems = [
-                { label: "Copy Sequence", action: () => { if (typeof window !== 'undefined') { window.clipboardData = { type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData || [])), sequenceLength: currentTrackForMenu.sequenceLength }; showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000); } } },
-                { label: "Paste Sequence", action: () => { if (typeof window !== 'undefined' && (!window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data)) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (window.clipboardData.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`); currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(window.clipboardData.data)); currentTrackForMenu.setSequenceLength(window.clipboardData.sequenceLength, true); showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (typeof window === 'undefined' || !window.clipboardData || window.clipboardData.type !== 'sequence' || !window.clipboardData.data || (window.clipboardData.sourceTrackType && currentTrackForMenu && window.clipboardData.sourceTrackType !== currentTrackForMenu.type)) },
+                { label: "Copy Sequence", action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData || [])), sequenceLength: currentTrackForMenu.sequenceLength }); showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000); } } },
+                { label: "Paste Sequence", action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`); currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(clipboard.data)); currentTrackForMenu.setSequenceLength(clipboard.sequenceLength, true); showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (!clipboard || clipboard.type !== 'sequence' || !clipboard.data || (clipboard.sourceTrackType && currentTrackForMenu && clipboard.sourceTrackType !== currentTrackForMenu.type)) },
                 { separator: true },
                 { label: "Erase Sequence", action: () => { showConfirmationDialog(`Erase Sequence for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`); let numRowsErase = currentTrackForMenu.sequenceData.length; currentTrackForMenu.sequenceData = Array(numRowsErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null)); currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
-                { label: "Double Sequence Length", action: () => { const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000); /* UI update handled by track.doubleSequence -> setSequenceLength -> appServices.updateTrackUI */ } }
+                { label: "Double Sequence Length", action: () => { const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000); } }
             ];
             createContextMenu(event, menuItems);
         };
@@ -875,7 +955,7 @@ function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = nul
             const targetCell = e.target.closest('.sequencer-step-cell');
             if (targetCell) {
                 const row = parseInt(targetCell.dataset.row, 10); const col = parseInt(targetCell.dataset.col, 10);
-                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { // Simple click, no modifiers
                     if (!track.sequenceData[row]) track.sequenceData[row] = Array(track.sequenceLength).fill(null);
                     const currentStepData = track.sequenceData[row][col]; const isActive = !(currentStepData?.active);
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
@@ -896,7 +976,7 @@ function drawWaveform(track) {
         if (track?.waveformCanvasCtx) {
             const canvas = track.waveformCanvasCtx.canvas;
             track.waveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-            track.waveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#334155' : '#e0e0e0';
+            track.waveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#334155' : '#e0e0e0'; // Use theme-aware colors
             track.waveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
             track.waveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#94a3b8' : '#a0a0a0';
             track.waveformCanvasCtx.textAlign = 'center';
@@ -907,9 +987,9 @@ function drawWaveform(track) {
     const canvas = track.waveformCanvasCtx.canvas; const ctx = track.waveformCanvasCtx;
     const buffer = track.audioBuffer.get(); const data = buffer.getChannelData(0);
     const step = Math.ceil(data.length / canvas.width); const amp = canvas.height / 2;
-    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0';
+    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0'; // Darker/Lighter background
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.lineWidth = 1; ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6';
+    ctx.lineWidth = 1; ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#60a5fa' : '#3b82f6'; // Theme-aware stroke
     ctx.beginPath(); ctx.moveTo(0, amp);
     for (let i = 0; i < canvas.width; i++) {
         let min = 1.0; let max = -1.0;
@@ -932,14 +1012,14 @@ function drawWaveform(track) {
 
 function drawInstrumentWaveform(track) {
     if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
-        if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message */ } return;
+        if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message, similar to drawWaveform */ } return;
     }
     const canvas = track.instrumentWaveformCanvasCtx.canvas; const ctx = track.instrumentWaveformCanvasCtx;
     const buffer = track.instrumentSamplerSettings.audioBuffer.get(); const data = buffer.getChannelData(0);
     const step = Math.ceil(data.length / canvas.width); const amp = canvas.height / 2;
     ctx.fillStyle = canvas.classList.contains('dark') ? '#1e293b' : '#f0f0f0';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.lineWidth = 1; ctx.strokeStyle = canvas.classList.contains('dark') ? '#34d399' : '#10b981';
+    ctx.lineWidth = 1; ctx.strokeStyle = canvas.classList.contains('dark') ? '#34d399' : '#10b981'; // Theme-aware stroke
     ctx.beginPath(); ctx.moveTo(0, amp);
     for (let i = 0; i < canvas.width; i++) { let min = 1.0; let max = -1.0; for (let j = 0; j < step; j++) { const datum = data[(i * step) + j]; if (datum < min) min = datum; if (datum > max) max = datum; } ctx.lineTo(i, (1 + min) * amp); ctx.lineTo(i, (1 + max) * amp); }
     ctx.lineTo(canvas.width, amp); ctx.stroke();
@@ -954,7 +1034,7 @@ function drawInstrumentWaveform(track) {
 }
 
 function renderSamplePads(track) {
-    const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
+    const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#samplePadsContainer-${track.id}`);
     if (!padsContainer) return;
@@ -970,7 +1050,7 @@ function renderSamplePads(track) {
 }
 
 function updateSliceEditorUI(track) {
-    const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
+    const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'Sampler' || !track.slices?.length) return;
     const selectedInfo = inspectorWindow.element.querySelector(`#selectedSliceInfo-${track.id}`);
     if (selectedInfo) selectedInfo.textContent = track.selectedSliceForEdit + 1;
@@ -989,7 +1069,7 @@ function updateSliceEditorUI(track) {
 }
 
 function renderDrumSamplerPads(track) {
-    const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
+    const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow?.element || track.type !== 'DrumSampler') return;
     const padsContainer = inspectorWindow.element.querySelector(`#drumPadsGridContainer-${track.id}`);
     if (!padsContainer) return;
@@ -1005,7 +1085,7 @@ function renderDrumSamplerPads(track) {
 }
 
 function updateDrumPadControlsUI(track) {
-    const inspectorWindow = window.openWindows[`trackInspector-${track.id}`];
+    const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow || !inspectorWindow.element || track.type !== 'DrumSampler' || !track.drumSamplerPads) return;
     const inspector = inspectorWindow.element;
 
@@ -1087,7 +1167,9 @@ function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isAc
 function highlightPlayingStep(trackId, col) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return;
-    const seqWindow = window.openWindows[`sequencerWin-${trackId}`];
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    const seqWindow = openWindows.get(`sequencerWin-${trackId}`);
+
     if (seqWindow && seqWindow.element && !seqWindow.isMinimized) {
         const gridElement = seqWindow.element.querySelector('.sequencer-grid-layout');
         if (!gridElement) return;
@@ -1120,7 +1202,7 @@ export {
     renderSamplePads,
     updateSliceEditorUI,
     renderDrumSamplerPads,
-    updateDrumPadControlsUI, // Ensured this is exported
+    updateDrumPadControlsUI,
     updateSequencerCellUI,
     highlightPlayingStep
 };
