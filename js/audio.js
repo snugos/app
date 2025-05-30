@@ -741,11 +741,9 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
                 console.log("[Audio] Existing mic closed.");
             } catch (e) { console.warn("[Audio] Error closing existing mic:", e); }
         }
-        // UserMedia doesn't have a .dispose() method. Setting to null is enough.
         mic = null;
         console.log("[Audio] Previous mic instance nullified.");
     }
-
 
     if (recorder) {
         if (recorder.state === "started") {
@@ -764,15 +762,15 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
     }
     
     // ALWAYS create new instances for a fresh start.
-    mic = new Tone.UserMedia({
+    mic = new Tone.UserMedia({ // These are ideal constraints
         audio: {
             echoCancellation: false,
             autoGainControl: false,
             noiseSuppression: false,
-            latency: 0 // Request lowest possible latency
+            latency: 0
         }
     });
-    console.log("[Audio] New Tone.UserMedia instance created with high-quality constraints.");
+    console.log("[Audio] New Tone.UserMedia instance created with initial constraints.");
     recorder = new Tone.Recorder();
     console.log("[Audio] New Tone.Recorder instance created.");
 
@@ -786,19 +784,40 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
     console.log(`[Audio] Attempting to record on track: ${track.name} (ID: ${track.id})`);
 
     try {
-        console.log("[Audio] Opening microphone...");
-        await mic.open();
-        console.log("[Audio] Microphone opened successfully. State:", mic.state);
+        // --- ADD DEVICE ENUMERATION LOGGING ---
+        if (Tone.UserMedia.enumerateDevices) {
+            try {
+                const devices = await Tone.UserMedia.enumerateDevices();
+                console.log("[Audio] Available media devices:", devices);
+                const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+                console.log("[Audio] Available audio input devices:", audioInputDevices);
+                if (audioInputDevices.length > 0) {
+                    audioInputDevices.forEach(device => {
+                        console.log(`[Audio] Input Device: ${device.label || 'Unknown Label'} (ID: ${device.deviceId})`);
+                    });
+                } else {
+                    console.warn("[Audio] No audio input devices found by enumerateDevices.");
+                }
+            } catch (enumError) {
+                console.error("[Audio] Error enumerating devices:", enumError);
+            }
+        } else {
+            console.warn("[Audio] Tone.UserMedia.enumerateDevices is not available.");
+        }
+        // --- END DEVICE ENUMERATION LOGGING ---
+
+
+        console.log("[Audio] Opening microphone (mic.open())...");
+        await mic.open(); 
+        console.log("[Audio] Microphone opened successfully. State:", mic.state, "Selected device label (from mic.label):", mic.label);
         
         if (isMonitoringEnabled) {
             console.log("[Audio] Monitoring is ON. Connecting mic to track inputChannel.");
             mic.connect(track.inputChannel); 
         } else {
             console.log("[Audio] Monitoring is OFF. Mic will not be connected to the track for live playback.");
-            // Ensure mic is disconnected from track's input channel if it was previously connected
             try {
-                if (track.inputChannel && mic.numberOfOutputs > 0) { // Check if mic is connected to anything
-                     // Attempt to disconnect specifically from the track's input channel
+                if (track.inputChannel && mic.numberOfOutputs > 0) { 
                     const isConnectedToInputChannel = mic._outputs.some(output => output.input === track.inputChannel);
                     if(isConnectedToInputChannel) {
                         mic.disconnect(track.inputChannel);
@@ -809,7 +828,7 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
                 console.warn("[Audio] Error trying to disconnect mic from input channel (might be okay if not connected):", e);
             }
         }
-        mic.connect(recorder); // Always connect to the recorder
+        mic.connect(recorder); 
         console.log("[Audio] Mic connected to recorder.");
         
         console.log("[Audio] Starting recorder...");
@@ -873,7 +892,6 @@ export async function stopAudioRecording() {
         } else {
             console.warn("[Audio] Mic was not in 'started' state before attempting to close, current state:", mic.state);
         }
-        // UserMedia doesn't have a .dispose() method. Setting to null is the cleanup.
         mic = null;
         console.log("[Audio] Mic instance nullified.");
     }
@@ -903,11 +921,11 @@ export async function stopAudioRecording() {
              console.error(`[Audio] Recorded track (ID: ${recordingTrackId}) not found after stopping recorder.`);
             showNotification("Error: Recorded track not found.", 3000);
         }
-    } else if (blob && blob.size === 0) { // Check if blob exists before checking its size
+    } else if (blob && blob.size === 0) { 
         console.warn("[Audio] Recording was empty.");
         showNotification("Recording was empty.", 2000);
     } else if (!blob && recorder?.state === "started") { 
-        // This case should ideally not be reached if recorder.stop() was called.
+        // This case should ideally not be reached if recorder.stop() was called and succeeded.
         console.warn("[Audio] Recorder was in 'started' state but stop() did not yield a blob or errored before yielding.");
     }
 }
