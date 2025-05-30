@@ -199,6 +199,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         updateTrackUI: appServices.updateTrackUI,
         highlightPlayingStep: appServices.highlightPlayingStep,
         autoSliceSample: appServices.autoSliceSample,
+        // *** ENSURE THIS KEY IS CORRECT ***
         closeAllTrackWindows: appServices.closeAllTrackWindows, 
         getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
         showNotification: appServices.showNotification,
@@ -436,12 +437,14 @@ export function gatherProjectDataInternal() {
                 selectedDrumPadForEdit: track.selectedDrumPadForEdit,
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
                 
-                // New multi-sequence properties
                 sequences: JSON.parse(JSON.stringify(track.sequences || [])),
                 activeSequenceId: track.activeSequenceId,
                 timelineClips: JSON.parse(JSON.stringify(track.timelineClips || [])),
             };
             
+            delete trackData.sequenceLength; 
+            delete trackData.sequenceData;
+
              if (track.type === 'Synth') {
                 trackData.synthEngineType = track.synthEngineType || 'MonoSynth';
                 trackData.synthParams = JSON.parse(JSON.stringify(track.synthParams));
@@ -473,7 +476,6 @@ export function gatherProjectDataInternal() {
                     status: track.instrumentSamplerSettings.dbKey ? 'missing_db' : (track.instrumentSamplerSettings.originalFileName ? 'missing' : 'empty')
                 };
             }
-            // Audio tracks don't have .sequences or .activeSequenceId
             if (track.type === 'Audio') {
                 delete trackData.sequences;
                 delete trackData.activeSequenceId;
@@ -674,7 +676,7 @@ export async function exportToWavInternal() {
 
         if (currentPlaybackMode === 'timeline') {
             tracks.forEach(track => {
-                track.timelineClips.forEach(clip => { // Iterate over timelineClips
+                track.timelineClips.forEach(clip => { 
                     if (clip.startTime + clip.duration > maxDuration) {
                         maxDuration = clip.startTime + clip.duration;
                     }
@@ -682,8 +684,8 @@ export async function exportToWavInternal() {
             });
         } else { // 'pattern' mode
             tracks.forEach(track => {
-                if (track.type !== 'Audio') { // Only non-audio tracks have patternPlayerSequence
-                    const activeSeq = track.getActiveSequence(); // Get the currently active sequence for the track
+                if (track.type !== 'Audio') { 
+                    const activeSeq = track.getActiveSequence(); 
                     if (activeSeq && activeSeq.length > 0) {
                         const sixteenthNoteTime = Tone.Time("16n").toSeconds();
                         const trackDuration = activeSeq.length * sixteenthNoteTime;
@@ -711,7 +713,7 @@ export async function exportToWavInternal() {
         
         tracks.forEach(track => {
             if (typeof track.schedulePlayback === 'function') { 
-                track.schedulePlayback(0, maxDuration); // schedulePlayback should handle mode internally
+                track.schedulePlayback(0, maxDuration); 
             }
         });
 
