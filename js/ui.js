@@ -1168,7 +1168,7 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
     }
 }
 
-export function highlightPlayingStep(trackId, col) { 
+function highlightPlayingStep(trackId, col) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') return; 
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
