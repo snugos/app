@@ -909,7 +909,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     html += `</div></div>`; return html;
 }
 
-function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
+export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') return null; 
     const windowId = `sequencerWin-${trackId}`;
