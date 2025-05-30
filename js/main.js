@@ -40,7 +40,6 @@ import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
-    // Correctly named imports from audio.js for master effects
     addMasterEffectToAudio,
     removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio,
@@ -48,8 +47,8 @@ import {
     getMimeTypeFromFilename, getMasterEffectsBusInputNode,
     getActualMasterGainNode as getActualMasterGainNodeFromAudio,
     clearAllMasterEffectNodes as clearAllMasterEffectNodesInAudio,
-    startAudioRecording, // Added for recording
-    stopAudioRecording // Added for recording
+    startAudioRecording, 
+    stopAudioRecording 
 } from './audio.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -59,11 +58,12 @@ import {
     renderEffectsList, renderEffectControls, createKnob,
     updateSequencerCellUI,
     openMasterEffectsRackWindow,
-    renderTimeline, // Added for timeline
-    updatePlayheadPosition // Added for timeline
+    renderTimeline, 
+    updatePlayheadPosition,
+    openTimelineWindow // Added for timeline window
 } from './ui.js';
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v10 - Timeline Finalized)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v11 - Timeline Window)");
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -72,16 +72,54 @@ const uiElementsCache = {
     customBgInput: null, sampleFileInput: null, notificationArea: null, modalContainer: null,
     menuAddSynthTrack: null, menuAddSamplerTrack: null, menuAddDrumSamplerTrack: null,
     menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null, 
-    menuOpenSoundBrowser: null, menuUndo: null, menuRedo: null,
+    menuOpenSoundBrowser: null, 
+    menuOpenTimeline: null, // Added Timeline menu item
+    menuUndo: null, menuRedo: null,
     menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null,
-    menuOpenMixer: null, menuOpenMasterEffects: null, menuUploadCustomBg: null,
-    menuRemoveCustomBg: null, menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null,
+    menuOpenMixer: null, menuOpenMasterEffects: null, 
+    // menuUploadCustomBg and menuRemoveCustomBg are removed as they are no longer in Start Menu
+    menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null,
     tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
-    timelineContainer: null, timelineRuler: null, timelineTracksArea: null, timelinePlayhead: null
+    // Timeline elements are now inside a window, so not cached globally here.
+    // They will be accessed via the window instance if needed.
 };
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
+
+// Forward declaration for functions used in appServices
+function handleCustomBackgroundUpload(event) {
+    const file = event.target.files[0];
+    if (file?.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataURL = e.target.result;
+            try {
+                localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataURL);
+                applyDesktopBackground(dataURL);
+                showNotification("Custom background applied.", 2000);
+            } catch (error) {
+                console.error("Error saving background to localStorage:", error);
+                showNotification("Could not save background: Storage full or image too large.", 4000);
+            }
+        };
+        reader.onerror = (err) => {
+            console.error("Error reading background file:", err);
+            showNotification("Error reading background file.", 3000);
+        };
+        reader.readAsDataURL(file);
+    } else if (file) {
+        showNotification("Invalid file type. Please select an image.", 3000);
+    }
+    if (event.target) event.target.value = null;
+}
+
+function removeCustomDesktopBackground() {
+    localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
+    applyDesktopBackground(null);
+    showNotification("Custom background removed.", 2000);
+}
+
 
 const appServices = {
     // UI Module Functions
@@ -92,6 +130,8 @@ const appServices = {
     updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
     createKnob, updateSequencerCellUI, showNotification, createContextMenu,
     renderTimeline, 
+    openTimelineWindow, // Added openTimelineWindow service
+    
     // Audio Module Functions
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
     playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile,
@@ -254,6 +294,13 @@ const appServices = {
             renderEffectsList(null, 'master', masterRackWindow.element.querySelector('#effectsList-master'), masterRackWindow.element.querySelector('#effectControlsContainer-master'));
         }
     },
+    // Background handling functions for context menu
+    triggerCustomBackgroundUpload: () => {
+        if (uiElementsCache.customBgInput) {
+            uiElementsCache.customBgInput.click();
+        }
+    },
+    removeCustomDesktopBackground: removeCustomDesktopBackground,
 };
 
 // --- UI Update Router ---
@@ -349,19 +396,13 @@ async function initializeSnugOS() {
     console.log("[Main] Initializing SnugOS...");
 
     Object.keys(uiElementsCache).forEach(key => {
-        if (!key.startsWith('menu') && key !== 'playBtnGlobal' && key !== 'recordBtnGlobal' && key !== 'tempoGlobalInput' && key !== 'midiInputSelectGlobal' && key !== 'masterMeterContainerGlobal' && key !== 'masterMeterBarGlobal' && key !== 'midiIndicatorGlobal' && key !== 'keyboardIndicatorGlobal') {
-            uiElementsCache[key] = document.getElementById(key);
-        } else if (key.startsWith('menu')) {
-            uiElementsCache[key] = document.getElementById(key);
+        // Cache elements that are always present or frequently accessed
+        // Menu items are handled by eventhandlers.js directly by ID if not found in cache
+        if (document.getElementById(key)) { // Check if element exists before caching
+             uiElementsCache[key] = document.getElementById(key);
         }
     });
     
-    uiElementsCache.timelineContainer = document.getElementById('timeline-container');
-    uiElementsCache.timelineRuler = document.getElementById('timeline-ruler');
-    uiElementsCache.timelineTracksArea = document.getElementById('timeline-tracks-area');
-    uiElementsCache.timelinePlayhead = document.getElementById('timeline-playhead');
-
-
     const effectsRegistry = await import('./effectsRegistry.js');
     appServices.effectsRegistryAccess.AVAILABLE_EFFECTS = effectsRegistry.AVAILABLE_EFFECTS;
     appServices.effectsRegistryAccess.getEffectParamDefinitions = effectsRegistry.getEffectParamDefinitions;
@@ -370,16 +411,16 @@ async function initializeSnugOS() {
 
 
     applyDesktopBackground(localStorage.getItem(DESKTOP_BACKGROUND_KEY));
-    if (uiElementsCache.customBgInput) {
+    if (uiElementsCache.customBgInput) { // This listener is for the hidden input file element
         uiElementsCache.customBgInput.addEventListener('change', handleCustomBackgroundUpload);
     }
 
     initializeStateModule(appServices);
     initializeUIModule(appServices);
     initializeAudioModule(appServices);
-    initializeEventHandlersModule(appServices);
+    initializeEventHandlersModule(appServices); // Pass appServices here
 
-    initializePrimaryEventListeners(appServices);
+    initializePrimaryEventListeners(appServices); // Pass appServices here
 
     openGlobalControlsWindow((elements) => {
         uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
@@ -396,8 +437,11 @@ async function initializeSnugOS() {
 
     Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true));
 
-    if (appServices.renderTimeline) appServices.renderTimeline(); 
-
+    // Open timeline window by default on startup
+    if (appServices.openTimelineWindow) {
+        appServices.openTimelineWindow();
+    }
+    
     requestAnimationFrame(updateMetersLoop);
     appServices.updateUndoRedoButtonsUI(null, null);
 
@@ -426,37 +470,7 @@ function applyDesktopBackground(imageUrl) {
     }
 }
 
-function handleCustomBackgroundUpload(event) {
-    const file = event.target.files[0];
-    if (file?.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const dataURL = e.target.result;
-            try {
-                localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataURL);
-                applyDesktopBackground(dataURL);
-                showNotification("Custom background applied.", 2000);
-            } catch (error) {
-                console.error("Error saving background to localStorage:", error);
-                showNotification("Could not save background: Storage full or image too large.", 4000);
-            }
-        };
-        reader.onerror = (err) => {
-            console.error("Error reading background file:", err);
-            showNotification("Error reading background file.", 3000);
-        };
-        reader.readAsDataURL(file);
-    } else if (file) {
-        showNotification("Invalid file type. Please select an image.", 3000);
-    }
-    if (event.target) event.target.value = null;
-}
-
-function removeCustomDesktopBackground() {
-    localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
-    applyDesktopBackground(null);
-    showNotification("Custom background removed.", 2000);
-}
+// handleCustomBackgroundUpload and removeCustomDesktopBackground are now defined above appServices
 
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
@@ -466,4 +480,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v10 - Timeline Finalized)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v11 - Timeline Window)");
