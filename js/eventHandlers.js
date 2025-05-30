@@ -1,6 +1,6 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
-import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js'; // Added createContextMenu
+import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js'; 
 import {
     getTracksState as getTracks,
     getTrackByIdState as getTrackById,
@@ -53,8 +53,7 @@ export function initializePrimaryEventListeners(appContext) {
 
         uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu?.classList.add('hidden'); });
         
-        // Timeline Menu Item
-        const menuOpenTimeline = document.getElementById('menuOpenTimeline'); // Get by ID as it's not in uiCache yet
+        const menuOpenTimeline = document.getElementById('menuOpenTimeline'); 
         if (menuOpenTimeline) {
             menuOpenTimeline.addEventListener('click', () => {
                 if (localAppServices.openTimelineWindow) localAppServices.openTimelineWindow();
@@ -241,9 +240,9 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 let recordingInitialized = false;
                 if (trackToRecord.type === 'Audio') {
                     if (localAppServices.startAudioRecording) {
-                        console.log("[EventHandlers] Calling startAudioRecording for Audio track.");
-                        // Pass the trackToRecord object directly
-                        recordingInitialized = await localAppServices.startAudioRecording(trackToRecord);
+                        console.log("[EventHandlers] Calling startAudioRecording for Audio track. Monitoring:", trackToRecord.isMonitoringEnabled);
+                        // Pass the trackToRecord object AND its monitoring state
+                        recordingInitialized = await localAppServices.startAudioRecording(trackToRecord, trackToRecord.isMonitoringEnabled);
                         console.log("[EventHandlers] startAudioRecording returned:", recordingInitialized);
                     } else {
                         showNotification("Audio recording function not available.", 3000);
@@ -258,7 +257,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
                 if (!recordingInitialized) {
                     console.warn("[EventHandlers] Recording initialization failed.");
-                    // Notification is handled by startAudioRecording if it fails
+                    // Notification and state reset should be handled by startAudioRecording if it fails
                     return;
                 }
                 
