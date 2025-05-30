@@ -18,7 +18,7 @@ import {
     getLoadedZipFilesState, getSoundLibraryFileTreesState, getCurrentLibraryNameState,
     getCurrentSoundFileTreeState, getCurrentSoundBrowserPathState, getPreviewPlayerState,
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState,
-    getRecordingTrackIdState, // ***** CORRECTED: Added this missing import *****
+    getRecordingTrackIdState,
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
@@ -28,6 +28,9 @@ import {
     setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
+    // ** CORRECTED: Added missing state function imports for master effects **
+    addMasterEffectToState, removeMasterEffectFromState,
+    updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -53,7 +56,7 @@ import {
     openMasterEffectsRackWindow
 } from './ui.js';
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v5)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v6)");
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -98,7 +101,7 @@ const appServices = {
     getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState, getPreviewPlayer: getPreviewPlayerState,
     getClipboardData: getClipboardDataState, getArmedTrackId: getArmedTrackIdState,
     getSoloedTrackId: getSoloedTrackIdState, isTrackRecording: isTrackRecordingState,
-    getRecordingTrackId: getRecordingTrackIdState, // Ensured this is correctly aliased
+    getRecordingTrackId: getRecordingTrackIdState,
     getActiveSequencerTrackId: getActiveSequencerTrackIdState,
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
 
@@ -174,7 +177,7 @@ const appServices = {
         const isReconstructing = appServices.getIsReconstructingDAW();
         if (!isReconstructing) captureStateForUndoInternal(`Add ${effectType} to Master`);
         const defaultParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
-        const effectIdInState = addMasterEffectToState(effectType, defaultParams);
+        const effectIdInState = addMasterEffectToState(effectType, defaultParams); // Now defined
         await audioAddMasterEffectToChain(effectIdInState, effectType, defaultParams);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
@@ -183,19 +186,19 @@ const appServices = {
         if (effect) {
             const isReconstructing = appServices.getIsReconstructingDAW();
             if (!isReconstructing) captureStateForUndoInternal(`Remove ${effect.type} from Master`);
-            removeMasterEffectFromState(effectId);
+            removeMasterEffectFromState(effectId); // Now defined
             await audioRemoveMasterEffectFromChain(effectId);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         }
     },
     updateMasterEffectParam: (effectId, paramPath, value) => {
-        updateMasterEffectParamInState(effectId, paramPath, value);
+        updateMasterEffectParamInState(effectId, paramPath, value); // Now defined
         audioUpdateMasterEffectParamInAudio(effectId, paramPath, value);
     },
     reorderMasterEffect: (effectId, newIndex) => {
         const isReconstructing = appServices.getIsReconstructingDAW();
         if (!isReconstructing) captureStateForUndoInternal(`Reorder Master effect`);
-        reorderMasterEffectInState(effectId, newIndex);
+        reorderMasterEffectInState(effectId, newIndex); // Now defined
         audioReorderMasterEffectInAudio(effectId, newIndex);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
@@ -333,8 +336,10 @@ async function initializeSnugOS() {
     console.log("[Main] Initializing SnugOS...");
 
     Object.keys(uiElementsCache).forEach(key => {
-        if (key !== 'playBtnGlobal' && key !== 'recordBtnGlobal' && key !== 'tempoGlobalInput' && key !== 'midiInputSelectGlobal' && key !== 'masterMeterContainerGlobal' && key !== 'masterMeterBarGlobal' && key !== 'midiIndicatorGlobal' && key !== 'keyboardIndicatorGlobal') {
-            uiElementsCache[key] = document.getElementById(key) || document.getElementById(key.replace(/([A-Z])/g, "-$1").toLowerCase());
+        if (!key.startsWith('menu') && key !== 'playBtnGlobal' && key !== 'recordBtnGlobal' && key !== 'tempoGlobalInput' && key !== 'midiInputSelectGlobal' && key !== 'masterMeterContainerGlobal' && key !== 'masterMeterBarGlobal' && key !== 'midiIndicatorGlobal' && key !== 'keyboardIndicatorGlobal') {
+            uiElementsCache[key] = document.getElementById(key);
+        } else if (key.startsWith('menu')) {
+            uiElementsCache[key] = document.getElementById(key);
         }
     });
 
@@ -439,4 +444,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v5)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v6)");
