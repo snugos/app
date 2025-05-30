@@ -1085,6 +1085,7 @@ export class Track {
     }
 
     dispose() {
+        console.log(`[Track ${this.id} Dispose] Starting disposal for track: ${this.name}`); // Added log
         if (this.sequence && !this.sequence.disposed) { this.sequence.stop(); this.sequence.clear(); this.sequence.dispose(); }
         if (this.instrument && !this.instrument.disposed) { this.instrument.dispose(); }
         if (this.toneSampler && !this.toneSampler.disposed) { this.toneSampler.dispose(); }
@@ -1097,11 +1098,15 @@ export class Track {
         this.stopPlayback(); 
 
         if (this.appServices.closeAllTrackWindows) {
+            console.log(`[Track ${this.id} Dispose] Calling appServices.closeAllTrackWindows for track ID: ${this.id}`); // Added log
             this.appServices.closeAllTrackWindows(this.id);
+        } else {
+            console.warn(`[Track ${this.id} Dispose] appServices.closeAllTrackWindows NOT FOUND.`); // Added log
         }
 
         this.audioBuffer = null;
         this.drumSamplerPads.forEach(p => p.audioBuffer = null);
         if (this.instrumentSamplerSettings) this.instrumentSamplerSettings.audioBuffer = null;
+        console.log(`[Track ${this.id} Dispose] Finished disposal for track: ${this.name}`); // Added log
     }
 }
