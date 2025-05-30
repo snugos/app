@@ -146,7 +146,8 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         updateTrackUI: appServices.updateTrackUI,
         highlightPlayingStep: appServices.highlightPlayingStep,
         autoSliceSample: appServices.autoSliceSample,
-        closeTrackWindows: appServices.closeAllTrackWindows,
+        // *** FIXED: Changed key from closeTrackWindows to closeAllTrackWindows ***
+        closeAllTrackWindows: appServices.closeAllTrackWindows, 
         getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
         showNotification: appServices.showNotification,
         effectsRegistryAccess: appServices.effectsRegistryAccess,
