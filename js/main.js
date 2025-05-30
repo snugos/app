@@ -56,7 +56,7 @@ import {
     openMasterEffectsRackWindow
 } from './ui.js';
 
-console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v6)");
+console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v7)");
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -173,11 +173,13 @@ const appServices = {
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     uiElementsCache: uiElementsCache,
 
+    // Master Effects Chain - State and Audio interaction
     addMasterEffect: async (effectType) => {
         const isReconstructing = appServices.getIsReconstructingDAW();
         if (!isReconstructing) captureStateForUndoInternal(`Add ${effectType} to Master`);
         const defaultParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
-        const effectIdInState = addMasterEffectToState(effectType, defaultParams); // Now defined
+        // Call the imported state function directly
+        const effectIdInState = addMasterEffectToState(effectType, defaultParams);
         await audioAddMasterEffectToChain(effectIdInState, effectType, defaultParams);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
@@ -186,19 +188,22 @@ const appServices = {
         if (effect) {
             const isReconstructing = appServices.getIsReconstructingDAW();
             if (!isReconstructing) captureStateForUndoInternal(`Remove ${effect.type} from Master`);
-            removeMasterEffectFromState(effectId); // Now defined
+            // Call the imported state function directly
+            removeMasterEffectFromState(effectId);
             await audioRemoveMasterEffectFromChain(effectId);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         }
     },
     updateMasterEffectParam: (effectId, paramPath, value) => {
-        updateMasterEffectParamInState(effectId, paramPath, value); // Now defined
+        // Call the imported state function directly
+        updateMasterEffectParamInState(effectId, paramPath, value);
         audioUpdateMasterEffectParamInAudio(effectId, paramPath, value);
     },
     reorderMasterEffect: (effectId, newIndex) => {
         const isReconstructing = appServices.getIsReconstructingDAW();
         if (!isReconstructing) captureStateForUndoInternal(`Reorder Master effect`);
-        reorderMasterEffectInState(effectId, newIndex); // Now defined
+        // Call the imported state function directly
+        reorderMasterEffectInState(effectId, newIndex);
         audioReorderMasterEffectInAudio(effectId, newIndex);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
@@ -444,4 +449,4 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
-console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v6)");
+console.log("SCRIPT EXECUTION FINISHED - SnugOS (main.js refactored v7)"); // Version bump
