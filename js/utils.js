@@ -1,8 +1,5 @@
 // js/utils.js - Utility Functions Module
 
-// It's good practice to ensure Tone is available if used, though direct import isn't needed
-// if Tone is always available globally from its own script tag before this module runs.
-
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
@@ -13,20 +10,17 @@ export function showNotification(message, duration = 3000) {
     notification.className = 'notification-message';
     notification.textContent = message;
     notificationArea.appendChild(notification);
-    // Trigger the transition
     setTimeout(() => {
         notification.classList.add('show');
-    }, 10); // Small delay to ensure transition occurs
+    }, 10);
 
-    // Remove after duration
     setTimeout(() => {
         notification.classList.remove('show');
-        // Remove from DOM after transition
         setTimeout(() => {
             if (notification.parentElement) {
                 notificationArea.removeChild(notification);
             }
-        }, 300); // Match CSS transition duration
+        }, 300);
     }, duration);
 }
 
@@ -37,7 +31,6 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
         return null;
     }
 
-    // Remove any existing modal first
     if (modalContainer.firstChild) {
         modalContainer.firstChild.remove();
     }
@@ -70,7 +63,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
             button.textContent = btnConfig.text;
             button.onclick = () => {
                 if (btnConfig.action) btnConfig.action();
-                if (btnConfig.closesModal !== false) overlay.remove(); // Default to close unless specified
+                if (btnConfig.closesModal !== false) overlay.remove();
             };
             buttonsDiv.appendChild(button);
         });
@@ -80,7 +73,6 @@ export function showCustomModal(title, contentHTML, buttonsConfig, modalClass = 
     overlay.appendChild(dialog);
     modalContainer.appendChild(overlay);
 
-    // Focus the first button if available
     const firstButton = dialog.querySelector('.modal-buttons button');
     if (firstButton) firstButton.focus();
 
@@ -127,7 +119,6 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
         }
     }
 
-
     return `
         <div class="drop-zone ${statusClass}" id="${dropZoneId}" ${dataAttributes}>
             ${currentFileText}
@@ -137,8 +128,7 @@ export function createDropZoneHTML(trackId, inputId, trackTypeHintForLoad, padOr
         </div>`.trim();
 }
 
-// Renamed to avoid conflict if ui.js also has a setupDropZoneListeners
-export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback) {
+export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndexOrSliceId = null, loadSoundCallback, loadFileCallback, getTrackByIdCallback) {
     if (!dropZoneElement) {
         console.error("[Utils] setupGenericDropZoneListeners: dropZoneElement is null for trackId:", trackId, "type:", trackTypeHint, "pad/slice:", padIndexOrSliceId);
         return;
@@ -192,10 +182,8 @@ export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTyp
             const simulatedEvent = { target: { files: [file] } };
             if (loadFileCallback) {
                 if (dzTrackType === 'DrumSampler') {
-                    // This relies on getTrackById being available, which is a state function.
-                    // For a pure util, this logic might be better placed in ui.js or passed in.
-                    // For now, assuming window.getTrackById might still be a fallback or main.js handles it.
-                    const trackForFallback = typeof window !== 'undefined' && typeof window.getTrackById === 'function' ? window.getTrackById(dzTrackId) : null;
+                    // Use the passed getTrackByIdCallback if available
+                    const trackForFallback = getTrackByIdCallback ? getTrackByIdCallback(dzTrackId) : null;
                     const finalPadIndex = (typeof numericIndexForCallback === 'number' && !isNaN(numericIndexForCallback))
                         ? numericIndexForCallback
                         : ( (trackForFallback ? trackForFallback.selectedDrumPadForEdit : 0) || 0);
@@ -240,7 +228,7 @@ export function bbsTimeToSeconds(bbsString) {
 
 let activeContextMenu = null;
 
-export function createContextMenu(event, menuItems) {
+export function createContextMenu(event, menuItems, appServicesForZIndex = null) {
     event.preventDefault();
     event.stopPropagation();
 
@@ -252,12 +240,14 @@ export function createContextMenu(event, menuItems) {
     const menu = document.createElement('div');
     menu.id = 'snug-context-menu';
     menu.className = 'context-menu';
-    menu.style.position = 'fixed';
+    menu.style.position = 'fixed'; // Keep fixed for global positioning relative to viewport
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
-    // Ensure highestZIndex is accessed safely if it's on window
-    const currentHighestZ = (typeof window !== 'undefined' && window.highestZIndex) ? window.highestZIndex : 100;
-    menu.style.zIndex = currentHighestZ + 100;
+
+    // Use appServices for z-index if provided, otherwise fallback
+    const currentHighestZ = appServicesForZIndex?.getHighestZ ? appServicesForZIndex.getHighestZ() :
+                           (typeof window !== 'undefined' && window.highestZIndex ? window.highestZIndex : 100);
+    menu.style.zIndex = currentHighestZ + 100; // Ensure context menu is on top
 
     const ul = document.createElement('ul');
     menuItems.forEach(itemConfig => {
@@ -286,6 +276,7 @@ export function createContextMenu(event, menuItems) {
     document.body.appendChild(menu);
     activeContextMenu = menu;
 
+    // Adjust position if out of viewport
     const menuRect = menu.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
@@ -305,7 +296,7 @@ export function createContextMenu(event, menuItems) {
             document.removeEventListener('contextmenu', closeListener, { capture: true });
         }
     };
-    setTimeout(() => {
+    setTimeout(() => { // Add listeners after current event bubble phase
         document.addEventListener('click', closeListener, { capture: true });
         document.addEventListener('contextmenu', closeListener, { capture: true });
     }, 0);
