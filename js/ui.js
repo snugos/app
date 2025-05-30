@@ -1088,7 +1088,7 @@ export function renderDrumSamplerPads(track) {
     });
 }
 
-export function updateDrumPadControlsUI(track) { 
+function updateDrumPadControlsUI(track) { 
     const inspectorWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
     if (!inspectorWindow || !inspectorWindow.element || track.type !== 'DrumSampler' || !track.drumSamplerPads) return;
     const inspector = inspectorWindow.element;
