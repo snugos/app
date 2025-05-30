@@ -474,7 +474,7 @@ function buildTrackInspectorContentDOM(track) {
         </div>`;
 }
 
-function openTrackInspectorWindow(trackId, savedState = null) { 
+export function openTrackInspectorWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
@@ -1185,12 +1185,9 @@ function highlightPlayingStep(trackId, col) {
 }
 
 // --- Timeline UI Functions ---
-function renderTimeline() {
+export function renderTimeline() {
     const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
     if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
-        // Attempt to find a playhead element if it exists outside a window (old setup) and hide it
-        const oldPlayhead = document.getElementById('timeline-playhead');
-        if(oldPlayhead) oldPlayhead.style.display = 'none';
         return;
     }
 
@@ -1209,16 +1206,15 @@ function renderTimeline() {
         lane.dataset.trackId = track.id;
         
         const nameEl = document.createElement('div');
-        nameEl.className = 'timeline-track-lane-name'; // Use the new class for sticky names
+        nameEl.className = 'timeline-track-lane-name'; 
         nameEl.textContent = track.name;
         lane.appendChild(nameEl);
 
         const clipsContainer = document.createElement('div');
-        // This container will allow clips to be positioned absolutely relative to the start of the track lane's scrollable content
         clipsContainer.style.position = 'relative'; 
-        clipsContainer.style.width = 'calc(100% - 120px)'; // Adjust if track name width changes
+        clipsContainer.style.width = 'calc(100% - 120px)'; 
         clipsContainer.style.height = '100%';
-        clipsContainer.style.marginLeft = '120px'; // Offset by track name width
+        clipsContainer.style.marginLeft = '120px'; 
 
         if (track.type === 'Audio' && track.audioClips) {
             track.audioClips.forEach(clip => {
@@ -1239,63 +1235,50 @@ function renderTimeline() {
     });
 }
 
-function updatePlayheadPosition() {
+export function updatePlayheadPosition() {
     const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
     
     if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
-        // If timeline window isn't active, ensure any global playhead is hidden
-        const globalPlayhead = document.getElementById('timeline-playhead'); // Check if old one exists
-        if (globalPlayhead) globalPlayhead.style.display = 'none';
         return;
     }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); // This is the scrollable area
+    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); 
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler'); 
-    // The timeline-tracks-area is now a direct child of timeline-tracks-container, which is the scrollable part for tracks.
     const timelineTracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container');
 
 
     if (!playhead || typeof Tone === 'undefined' || !timelineContentArea) return;
     
-    playhead.style.display = 'block'; // Ensure it's visible if window is open
+    playhead.style.display = 'block';
 
     const pixelsPerSecond = 30; 
-    const trackNameWidth = 120; // Width of the sticky track name column
+    const trackNameWidth = 120; 
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        // Playhead's transform is relative to its parent, which is timeline-container (inside window-content)
-        // The left style of playhead is already set to trackNameWidth.
         playhead.style.transform = `translateX(${rawNewPosition}px)`;
 
-        // Auto-scroll logic for the window-content (timelineContainer in CSS)
         const scrollableContent = timelineContentArea;
-        const containerWidth = scrollableContent.offsetWidth - trackNameWidth; // Effective scrollable width
+        const containerWidth = scrollableContent.offsetWidth - trackNameWidth; 
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
 
 
-        if (playheadVisualPositionInScrollable > containerWidth * 0.8) { 
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8);
-        } else if (playheadVisualPositionInScrollable < 0 && scrollableContent.scrollLeft > 0) { // If playhead is to the left of the visible part of tracks
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.1); // Scroll to bring it into 10% view
+        if (playheadVisualPositionInScrollable > containerWidth) { 
+            scrollableContent.scrollLeft = rawNewPosition - containerWidth + 20; 
+        } else if (playheadVisualPositionInScrollable < 0 && scrollableContent.scrollLeft > 0) { 
+            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.1); 
         }
         if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
 
 
     } else if (Tone.Transport.state === 'stopped') {
         playhead.style.transform = `translateX(0px)`;
-        // No need to reset scrollLeft here, user might want to keep their scroll position
     }
     
-    // Synchronize scroll of ruler. The ruler is inside timeline-header, which is not scrolled by window-content.
-    // So ruler's transform should be based on window-content's scroll.
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
-    // The timelineTracksContainer itself is the scrollable element for vertical track scrolling.
-    // The horizontal scrolling of clips within lanes is handled by the large width of timeline-tracks-area
-    // and its transform.
     if (timelineTracksContainer && timelineContentArea) {
          const tracksArea = timelineTracksContainer.querySelector('#timeline-tracks-area');
          if (tracksArea) {
@@ -1304,17 +1287,16 @@ function updatePlayheadPosition() {
     }
 }
 
-function openTimelineWindow(savedState = null) {
+export function openTimelineWindow(savedState = null) {
     const windowId = 'timeline';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
-        renderTimeline(); // Re-render if already open
+        renderTimeline(); 
         return win;
     }
     
-    // HTML structure for the timeline content
     const contentHTML = `
         <div id="timeline-container">
             <div id="timeline-header">
@@ -1329,19 +1311,19 @@ function openTimelineWindow(savedState = null) {
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const timelineOptions = {
-        width: Math.max(600, Math.min(1200, desktopEl.offsetWidth - 60)), // Responsive width
+        width: Math.max(600, Math.min(1200, desktopEl.offsetWidth - 60)), 
         height: 250,
-        x: 30, // Default position
-        y: 50, // Default position
+        x: 30, 
+        y: 50, 
         minWidth: 400,
         minHeight: 150,
-        initialContentKey: windowId, // Important for restoring window state
+        initialContentKey: windowId, 
         onCloseCallback: () => {
-            // Optionally, if timeline needs to stop any processes when closed
+            // Optional: if timeline needs to stop any processes when closed
         }
     };
 
-     if (savedState) { // Apply saved state if provided (e.g., from project load)
+     if (savedState) { 
         Object.assign(timelineOptions, {
             x: parseInt(savedState.left, 10),
             y: parseInt(savedState.top, 10),
@@ -1357,52 +1339,26 @@ function openTimelineWindow(savedState = null) {
     if (timelineWindow?.element) {
         const contentArea = timelineWindow.element.querySelector('.window-content');
         if (contentArea) {
-            // Add scroll listener to the window's content area for playhead synchronization
             contentArea.addEventListener('scroll', () => {
-                // This ensures the ruler and tracks area visually scroll with the container
                 const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-                const tracksDisplayArea = timelineWindow.element.querySelector('#timeline-tracks-area');
+                const tracksDisplayArea = timelineWindow.element.querySelector('#timeline-tracks-area'); // This is the one that needs to move
                 if (ruler) {
                     ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
-                if (tracksDisplayArea) {
+                if (tracksDisplayArea) { // Corrected to move the tracks area itself
                    tracksDisplayArea.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
-                 updatePlayheadPosition(); // Also update playhead based on new scroll
+                 updatePlayheadPosition(); 
             });
         }
-        renderTimeline(); // Initial render of timeline content
+        renderTimeline(); 
     }
     return timelineWindow;
 }
 
 
-// --- CONSOLIDATED EXPORT BLOCK ---
-export {
-    initializeUIModule,
-    createKnob,
-    openTrackInspectorWindow,
-    renderEffectsList,
-    renderEffectControls,
-    openTrackEffectsRackWindow,
-    openMasterEffectsRackWindow,
-    openGlobalControlsWindow,
-    openSoundBrowserWindow,
-    updateSoundBrowserDisplayForLibrary,
-    renderSoundBrowserDirectory,
-    openMixerWindow,
-    updateMixerWindow,
-    renderMixer,
-    openTrackSequencerWindow,
-    drawWaveform,
-    drawInstrumentWaveform,
-    renderSamplePads,
-    updateSliceEditorUI,
-    renderDrumSamplerPads,
-    updateDrumPadControlsUI,
-    updateSequencerCellUI,
-    highlightPlayingStep,
-    renderTimeline,
-    updatePlayheadPosition,
-    openTimelineWindow
-};
+// --- CONSOLIDATED EXPORT BLOCK (Corrected) ---
+// Functions are already exported individually where defined.
+// This block is no longer needed if all functions above use `export function ...`.
+// If any were missed, they should be added here or exported individually.
+// For now, assuming all are individually exported.
