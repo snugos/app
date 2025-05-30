@@ -186,29 +186,31 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
             if (Tone.Transport.state !== 'started') { // This means it's 'stopped' or 'paused'
                 const tracks = getTracks();
-                const currentTime = Tone.Transport.seconds; 
-                const lookahead = Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : (currentTime + 300);
+                let scheduleFromTime = Tone.Transport.seconds; 
+                
+                // ALWAYS cancel previous transport events before rescheduling
+                Tone.Transport.cancel(0); 
+                console.log("[EventHandlers] Called Tone.Transport.cancel(0) before play/resume.");
 
                 if (Tone.Transport.state === 'paused') {
-                    console.log("[EventHandlers] Resuming transport from pause.");
-                    if (tracks) {
-                        for (const track of tracks) { // USE FOR...OF FOR ASYNC/AWAIT
-                            if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
-                                console.log(`[EventHandlers] Re-scheduling track ${track.id} from ${currentTime} on resume.`);
-                                await track.schedulePlayback(currentTime, lookahead); 
-                            }
-                        }
-                    }
+                    console.log("[EventHandlers] Resuming transport from pause. Current time:", scheduleFromTime);
+                    // Position is already where it was paused.
                 } else { // Was 'stopped'
                     console.log("[EventHandlers] Starting transport from beginning.");
-                    Tone.Transport.cancel(0); 
-                    Tone.Transport.position = 0;
+                    Tone.Transport.position = 0; // Reset position for a fresh start
+                    scheduleFromTime = 0; // Schedule from the very beginning
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-                    if (tracks) {
-                         for (const track of tracks) { // USE FOR...OF FOR ASYNC/AWAIT
-                            if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
-                                await track.schedulePlayback(0, lookahead); 
-                            }
+                }
+                
+                const lookahead = Tone.Transport.loopEnd > 0 && Tone.Transport.loop ? 
+                                  Tone.Transport.loopEnd : 
+                                  (scheduleFromTime + 300); // Default lookahead
+
+                if (tracks) {
+                    for (const track of tracks) { // Use for...of for async/await
+                        if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
+                            console.log(`[EventHandlers] Scheduling track ${track.id} from ${scheduleFromTime} to ${lookahead}.`);
+                            await track.schedulePlayback(scheduleFromTime, lookahead); 
                         }
                     }
                 }
@@ -218,7 +220,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 Tone.Transport.pause();
                 const tracks = getTracks();
                 if (tracks) {
-                    tracks.forEach(track => { // Standard forEach is fine here as stopPlayback is synchronous in its effect on players
+                    tracks.forEach(track => { 
                         if (track.type === 'Audio' && typeof track.stopPlayback === 'function') {
                             track.stopPlayback(); 
                         }
