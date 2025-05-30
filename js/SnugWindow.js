@@ -1,21 +1,12 @@
-// js/SnugWindow.js - SnugWindow Class Module
+// js/SnugWindow.js - SnugWindow Class Module (Improved)
 
-console.log('[SnugWindow.js EXECUTION START] This file is being parsed. (Refactored - uses appServices)');
+import { createContextMenu } from './utils.js';
 
-// Removed direct imports from state.js:
-// import { captureStateForUndo, getTracks } from './state.js';
-// These will now be accessed via this.appServices if needed within SnugWindow specific logic,
-// or handled by the calling module (e.g., main.js for context menu actions).
-
-import { createContextMenu } from './utils.js'; // createContextMenu is a utility
-
-const defaultWindowBg = '#282828'; // Or from CSS variables
-const defaultWindowContentBg = '#282828'; // Or from CSS variables
+const defaultWindowBg = '#282828';
+const defaultWindowContentBg = '#282828';
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
-        // console.log(`[SnugWindow CONSTRUCTOR START] ID: ${id}, Title: "${title}"`); // Kept for debugging if needed
-
         this.id = id;
         this.title = title;
         this.isMinimized = false;
@@ -24,9 +15,9 @@ export class SnugWindow {
         this.onCloseCallback = options.onCloseCallback || (() => {});
         this.isMaximized = false;
         this.restoreState = {};
-        this.appServices = appServices; // Store appServices
+        this.appServices = appServices; // appServices now includes state accessors
 
-        const desktopEl = document.getElementById('desktop');
+        const desktopEl = this.appServices.domCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
             console.error(`[SnugWindow CRITICAL ${id}] Desktop element with ID 'desktop' not found.`);
             this.element = null;
@@ -35,7 +26,7 @@ export class SnugWindow {
 
         const defaultWidth = options.width || Math.min(350, desktopEl.offsetWidth - 40);
         const defaultHeight = options.height || Math.min(250, desktopEl.offsetHeight - 80);
-        const taskbarHeightVal = document.getElementById('taskbar')?.offsetHeight || 30;
+        const taskbarHeightVal = document.getElementById('taskbar')?.offsetHeight || 30; // Taskbar might be dynamic
 
         const maxX = Math.max(5, desktopEl.offsetWidth - defaultWidth - 10);
         const maxY = Math.max(5, desktopEl.offsetHeight - defaultHeight - 10 - taskbarHeightVal);
@@ -43,7 +34,8 @@ export class SnugWindow {
         let initialX = options.x;
         let initialY = options.y;
 
-        const openWindowCount = (typeof window !== 'undefined' && window.openWindows) ? Object.keys(window.openWindows).length : 0;
+        // Access openWindows via appServices
+        const openWindowCount = this.appServices.getOpenWindows ? Object.keys(this.appServices.getOpenWindows()).length : 0;
         if (initialX === undefined || initialY === undefined) {
             const cascadeOffset = 20 + (openWindowCount % 10) * 25;
             initialX = Math.max(5, Math.min(cascadeOffset, maxX));
@@ -74,10 +66,9 @@ export class SnugWindow {
         this.element.style.width = `${this.options.width}px`;
         this.element.style.height = `${this.options.height}px`;
 
-        if (typeof window.highestZIndex === 'undefined' || window.highestZIndex === null || isNaN(parseInt(window.highestZIndex))) {
-            window.highestZIndex = 100;
-        }
-        this.element.style.zIndex = options.zIndex !== undefined ? options.zIndex : ++window.highestZIndex;
+        // Access highestZIndex via appServices
+        const zIndexToSet = options.zIndex !== undefined ? options.zIndex : (this.appServices.incrementHighestZIndex ? this.appServices.incrementHighestZIndex() : 101);
+        this.element.style.zIndex = zIndexToSet;
         this.element.style.backgroundColor = `var(--window-bg, ${defaultWindowBg})`;
 
         let buttonsHTML = '';
@@ -103,10 +94,13 @@ export class SnugWindow {
         this.element.appendChild(this.contentArea);
         desktopEl.appendChild(this.element);
 
-        if (typeof window.openWindows !== 'object' || window.openWindows === null) {
-            window.openWindows = {};
+        // Add to centralized store via appServices
+        if (this.appServices.addWindowToStore) {
+            this.appServices.addWindowToStore(this.id, this);
+        } else {
+            console.warn("[SnugWindow] addWindowToStore service not available.");
         }
-        window.openWindows[this.id] = this;
+
 
         this.makeDraggable();
         if (this.options.resizable) {
@@ -127,7 +121,7 @@ export class SnugWindow {
         this.createTaskbarButton();
 
         if (options.isMinimized) {
-            this.minimize(true);
+            this.minimize(true); // true to skip undo
         }
     }
 
@@ -143,7 +137,7 @@ export class SnugWindow {
     makeDraggable() {
         if (!this.titleBar) return;
         let offsetX, offsetY, isDragging = false;
-        const desktopEl = document.getElementById('desktop');
+        const desktopEl = this.appServices.domCache?.desktop || document.getElementById('desktop');
         let initialX, initialY;
 
         this.titleBar.addEventListener('mousedown', (e) => {
@@ -176,7 +170,9 @@ export class SnugWindow {
                 if (this.titleBar) this.titleBar.style.cursor = 'grab';
                 document.body.style.userSelect = '';
                 if (this.element.offsetLeft !== initialX || this.element.offsetTop !== initialY) {
-                    this._captureUndo(`Move window "${this.title}"`);
+                   if (!this.appServices.getIsReconstructingDAW || !this.appServices.getIsReconstructingDAW()) {
+                        this._captureUndo(`Move window "${this.title}"`);
+                    }
                 }
             }
         });
@@ -220,14 +216,16 @@ export class SnugWindow {
                 document.body.style.cursor = '';
                 document.body.style.userSelect = '';
                 if (this.element.style.width !== originalStyleWidth || this.element.style.height !== originalStyleHeight) {
-                   this._captureUndo(`Resize window "${this.title}"`);
+                   if (!this.appServices.getIsReconstructingDAW || !this.appServices.getIsReconstructingDAW()) {
+                       this._captureUndo(`Resize window "${this.title}"`);
+                   }
                 }
             }
         });
     }
 
     toggleMaximize() {
-        const desktopEl = document.getElementById('desktop');
+        const desktopEl = this.appServices.domCache?.desktop || document.getElementById('desktop');
         const taskbarEl = document.getElementById('taskbar');
         if (!desktopEl || !taskbarEl) return;
 
@@ -256,7 +254,9 @@ export class SnugWindow {
             this.isMaximized = true;
             if (maximizeButton) maximizeButton.innerHTML = '❐';
         }
-        this._captureUndo(`${wasMaximized ? "Restore" : "Maximize"} window "${this.title}"`);
+        if (!this.appServices.getIsReconstructingDAW || !this.appServices.getIsReconstructingDAW()) {
+            this._captureUndo(`${wasMaximized ? "Restore" : "Maximize"} window "${this.title}"`);
+        }
         this.focus();
     }
 
@@ -273,7 +273,7 @@ export class SnugWindow {
         this.taskbarButton.addEventListener('click', () => {
             if (this.isMinimized) { this.restore(); }
             else {
-                const currentHighestZ = (typeof window !== 'undefined' && window.highestZIndex) ? window.highestZIndex : 100;
+                const currentHighestZ = this.appServices.getHighestZIndex ? this.appServices.getHighestZIndex() : 100;
                 if (this.element && parseInt(this.element.style.zIndex) === currentHighestZ) {
                     this.minimize();
                 } else {
@@ -312,7 +312,7 @@ export class SnugWindow {
             }
 
             let currentTrack = null;
-            if (trackId !== null && this.appServices.getTrackById) { // Use appServices
+            if (trackId !== null && this.appServices.getTrackById) {
                  currentTrack = this.appServices.getTrackById(trackId);
             }
 
@@ -328,7 +328,6 @@ export class SnugWindow {
                     menuItems.push({ label: "Open Sequencer", action: () => this.appServices.handleOpenSequencer(trackId) });
                 }
             }
-            // createContextMenu is imported from utils.js
             createContextMenu(event, menuItems);
         });
         this.updateTaskbarButtonActiveState();
@@ -336,7 +335,7 @@ export class SnugWindow {
 
     updateTaskbarButtonActiveState() {
         if (this.taskbarButton && this.element) {
-            const currentHighestZ = (typeof window !== 'undefined' && window.highestZIndex) ? window.highestZIndex : 100;
+            const currentHighestZ = this.appServices.getHighestZIndex ? this.appServices.getHighestZIndex() : 100;
             const isActive = !this.isMinimized && parseInt(this.element.style.zIndex) === currentHighestZ;
             this.taskbarButton.classList.toggle('active', isActive);
             this.taskbarButton.classList.toggle('minimized-on-taskbar', this.isMinimized && !isActive);
@@ -351,12 +350,15 @@ export class SnugWindow {
                 this.taskbarButton.classList.add('minimized-on-taskbar');
                 this.taskbarButton.classList.remove('active');
             }
-            if (!skipUndo) this._captureUndo(`Minimize window "${this.title}"`);
+            if (!skipUndo && (!this.appServices.getIsReconstructingDAW || !this.appServices.getIsReconstructingDAW())) {
+                 this._captureUndo(`Minimize window "${this.title}"`);
+            }
+
 
             let nextHighestZ = -1;
             let windowToFocus = null;
-            // window.openWindows is still global
-            Object.values(window.openWindows || {}).forEach(win => {
+            const openWindows = this.appServices.getOpenWindows ? this.appServices.getOpenWindows() : {};
+            Object.values(openWindows).forEach(win => {
                 if (win && win.element && !win.isMinimized && win.id !== this.id) {
                     const z = parseInt(win.element.style.zIndex);
                     if (z > nextHighestZ) {
@@ -367,7 +369,7 @@ export class SnugWindow {
             });
             if (windowToFocus) windowToFocus.focus(true);
             else {
-                 Object.values(window.openWindows || {}).forEach(win => win?.updateTaskbarButtonActiveState?.());
+                 Object.values(openWindows).forEach(win => win?.updateTaskbarButtonActiveState?.());
             }
         }
     }
@@ -376,8 +378,10 @@ export class SnugWindow {
         if (this.isMinimized && this.element) {
             this.isMinimized = false;
             this.element.classList.remove('minimized');
-            this.focus(true);
-            if (!skipUndo) this._captureUndo(`Restore window "${this.title}"`);
+            this.focus(true); // skipUndo for focus when restoring
+            if (!skipUndo && (!this.appServices.getIsReconstructingDAW || !this.appServices.getIsReconstructingDAW())) {
+                this._captureUndo(`Restore window "${this.title}"`);
+            }
         } else if (this.element) {
             this.focus(skipUndo);
         }
@@ -393,17 +397,19 @@ export class SnugWindow {
         if (this.element) try { this.element.remove(); } catch(e) { /* ignore */ }
 
         const oldWindowTitle = this.title;
-        // window.openWindows is still global
-        if (window.openWindows && typeof window.openWindows === 'object') {
-            delete window.openWindows[this.id];
+        // Remove from centralized store via appServices
+        if (this.appServices.removeWindowFromStore) {
+            this.appServices.removeWindowFromStore(this.id);
+        } else {
+            console.warn("[SnugWindow] removeWindowFromStore service not available.");
         }
 
-        // Use appServices to notify main.js or state.js to clear track window references
-        if (this.appServices.clearTrackWindowReference) {
+
+        if (this.appServices.clearTrackWindowReference) { // This service might be in main.js or state.js
             this.appServices.clearTrackWindowReference(this.id);
         }
 
-        const isCurrentlyReconstructing = (typeof window !== 'undefined' && window.isReconstructingDAW);
+        const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
         if (!isCurrentlyReconstructing && !isReconstruction) {
             this._captureUndo(`Close window "${oldWindowTitle}"`);
         }
@@ -413,34 +419,35 @@ export class SnugWindow {
         if (this.isMinimized) { this.restore(skipUndo); return; }
         if (!this.element) return;
 
-        const currentHighestZGlobal = (typeof window !== 'undefined' && window.highestZIndex) ? window.highestZIndex : 100;
+        const currentHighestZGlobal = this.appServices.getHighestZIndex ? this.appServices.getHighestZIndex() : 100;
         const currentZ = parseInt(this.element.style.zIndex);
 
-        if (currentZ < currentHighestZGlobal || Object.keys(window.openWindows || {}).length === 1) {
-            if (typeof window.highestZIndex === 'undefined' || isNaN(parseInt(window.highestZIndex))) {
-                 window.highestZIndex = 100;
+        if (currentZ < currentHighestZGlobal || Object.keys(this.appServices.getOpenWindows ? this.appServices.getOpenWindows() : {}).length === 1) {
+            if (this.appServices.incrementHighestZIndex) {
+                this.element.style.zIndex = this.appServices.incrementHighestZIndex();
+            } else {
+                 this.element.style.zIndex = currentHighestZGlobal + 1; // Fallback, less ideal
+                 if(this.appServices.setHighestZIndex) this.appServices.setHighestZIndex(currentHighestZGlobal + 1);
             }
-            this.element.style.zIndex = ++window.highestZIndex;
-        } else if (currentZ > currentHighestZGlobal) {
-            window.highestZIndex = currentZ;
+        } else if (currentZ > currentHighestZGlobal && this.appServices.setHighestZIndex) {
+            this.appServices.setHighestZIndex(currentZ);
         }
 
-        if (window.openWindows && typeof window.openWindows === 'object') {
-            Object.values(window.openWindows).forEach(win => {
-                if (win && win.taskbarButton && typeof win.updateTaskbarButtonActiveState === 'function') {
-                    win.updateTaskbarButtonActiveState();
-                }
-            });
-        }
+        const openWindows = this.appServices.getOpenWindows ? this.appServices.getOpenWindows() : {};
+        Object.values(openWindows).forEach(win => {
+            if (win && win.taskbarButton && typeof win.updateTaskbarButtonActiveState === 'function') {
+                win.updateTaskbarButtonActiveState();
+            }
+        });
     }
 
-    applyState(state) {
+    applyState(state) { // Called during project reconstruction
         if (!this.element) return;
         this.element.style.left = state.left;
         this.element.style.top = state.top;
         this.element.style.width = state.width;
         this.element.style.height = state.height;
-        this.element.style.zIndex = state.zIndex;
+        this.element.style.zIndex = state.zIndex; // zIndex is directly applied
         if (this.titleBar) this.titleBar.querySelector('span').textContent = state.title;
         this.title = state.title;
         if (this.taskbarButton) {
@@ -449,9 +456,9 @@ export class SnugWindow {
         }
 
         if (state.isMinimized && !this.isMinimized) {
-            this.minimize(true);
+            this.minimize(true); // true to skip undo
         } else if (!state.isMinimized && this.isMinimized) {
-            this.restore(true);
+            this.restore(true); // true to skip undo
         }
         this.updateTaskbarButtonActiveState();
     }
