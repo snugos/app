@@ -1,6 +1,7 @@
 // js/ui.js
 import { SnugWindow } from './SnugWindow.js';
-import { showNotification, createDropZoneHTML, setupGenericDropZoneListeners, showCustomModal, createContextMenu } from './utils.js';
+// Added showConfirmationDialog to the import statement
+import { showNotification, createDropZoneHTML, setupGenericDropZoneListeners, showCustomModal, createContextMenu, showConfirmationDialog } from './utils.js';
 import * as Constants from './constants.js';
 // Event handlers are now mostly called via appServices from main.js,
 // but direct calls might still exist or be transitioned.
