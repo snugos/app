@@ -16,6 +16,8 @@ export class Track {
             this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
         } else if (type === 'Synth') {
             this.name = initialData?.name || `MonoSynth ${this.id}`;
+        } else if (type === 'Audio') {
+            this.name = initialData?.name || `Audio ${this.id}`;
         }
 
         this.isMuted = initialData?.isMuted || false;
@@ -119,6 +121,14 @@ export class Track {
 
         this.automation = initialData?.automation || { volume: [] };
         this.inspectorControls = {};
+
+        this.audioClips = [];
+        this.inputChannel = null;
+        this.clipPlayers = new Map();
+
+        if (initialData?.audioClips) {
+            this.audioClips = initialData.audioClips;
+        }
     }
 
     getDefaultSynthParams() {
@@ -138,6 +148,13 @@ export class Track {
         this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
         this.outputNode = this.gainNode;
+
+        if (this.type === 'Audio') {
+            if (this.inputChannel && !this.inputChannel.disposed) {
+                this.inputChannel.dispose();
+            }
+            this.inputChannel = new Tone.Channel().connect(this.gainNode);
+        }
 
         this.rebuildEffectChain();
     }
@@ -159,6 +176,8 @@ export class Track {
             if (!this.slicerIsPolyphonic && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                 sourceNodes.push(this.slicerMonoGain);
             }
+        } else if (this.type === 'Audio') {
+            sourceNodes.push(this.inputChannel);
         }
 
         const allManagedNodes = [
@@ -819,6 +838,77 @@ export class Track {
         }
     }
 
+    async addAudioClip(blob, startTime) {
+        if (this.type !== 'Audio') return;
+        const clipId = `clip_${this.id}_${Date.now()}`;
+        const dbKey = `clip_${this.id}_${Date.now()}.wav`;
+
+        try {
+            await storeAudio(dbKey, blob);
+            const duration = await this.getBlobDuration(blob);
+
+            const newClip = {
+                id: clipId,
+                dbKey: dbKey,
+                startTime: startTime,
+                duration: duration,
+                name: `Rec ${new Date().toLocaleTimeString()}`
+            };
+
+            this.audioClips.push(newClip);
+
+            if (this.appServices.renderTimeline) {
+                this.appServices.renderTimeline();
+            }
+
+        } catch (error) {
+            console.error("Error adding audio clip:", error);
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification("Failed to save recorded clip.", 3000);
+            }
+        }
+    }
+    
+    async getBlobDuration(blob) {
+        const tempUrl = URL.createObjectURL(blob);
+        const audioContext = Tone.context.rawContext;
+        const arrayBuffer = await fetch(tempUrl).then(res => res.arrayBuffer());
+        URL.revokeObjectURL(tempUrl);
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        return audioBuffer.duration;
+    }
+
+    schedulePlayback(transportStartTime, transportStopTime) {
+        if (this.type !== 'Audio') return;
+
+        this.audioClips.forEach(async clip => {
+            if (clip.startTime + clip.duration < transportStartTime || clip.startTime > transportStopTime) {
+                return;
+            }
+
+            const player = new Tone.Player();
+            this.clipPlayers.set(clip.id, player);
+
+            const audioBlob = await getAudio(clip.dbKey);
+            if (audioBlob) {
+                const url = URL.createObjectURL(audioBlob);
+                await player.load(url);
+                player.connect(this.gainNode);
+                player.start(clip.startTime);
+            }
+        });
+    }
+
+    stopPlayback() {
+        this.clipPlayers.forEach((player, id) => {
+            if (player && !player.disposed) {
+                player.stop();
+                player.dispose();
+            }
+        });
+        this.clipPlayers.clear();
+    }
+
     dispose() {
         if (this.sequence && !this.sequence.disposed) { this.sequence.stop(); this.sequence.clear(); this.sequence.dispose(); }
         if (this.instrument && !this.instrument.disposed) { this.instrument.dispose(); }
@@ -828,6 +918,8 @@ export class Track {
         this.activeEffects.forEach(effect => { if (effect.toneNode && !effect.toneNode.disposed) effect.toneNode.dispose(); });
         if (this.gainNode && !this.gainNode.disposed) { this.gainNode.dispose(); }
         if (this.trackMeter && !this.trackMeter.disposed) { this.trackMeter.dispose(); }
+        if (this.inputChannel && !this.inputChannel.disposed) { this.inputChannel.dispose(); }
+        this.stopPlayback();
 
         if (this.appServices.closeAllTrackWindows) {
             this.appServices.closeAllTrackWindows(this.id);
