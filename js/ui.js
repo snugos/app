@@ -474,7 +474,7 @@ function buildTrackInspectorContentDOM(track) {
         </div>`;
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) { 
+function openTrackInspectorWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
 
@@ -536,7 +536,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     </div>`;
 }
 
-export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { 
+function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { 
     if (!listDiv) return;
     listDiv.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
@@ -583,7 +583,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
     });
 }
 
-export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { 
+function renderEffectControls(owner, ownerType, effectId, controlsContainer) { 
     if (!controlsContainer) return;
     controlsContainer.innerHTML = '';
     const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : (localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : []);
@@ -663,7 +663,7 @@ function showAddEffectModal(owner, ownerType) {
 }
 
 // --- Window Opening Functions ---
-export function openTrackEffectsRackWindow(trackId, savedState = null) { 
+function openTrackEffectsRackWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
@@ -681,7 +681,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     return rackWindow;
 }
 
-export function openMasterEffectsRackWindow(savedState = null) { 
+function openMasterEffectsRackWindow(savedState = null) { 
     const windowId = 'masterEffectsRack';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -697,7 +697,7 @@ export function openMasterEffectsRackWindow(savedState = null) {
     return rackWindow;
 }
 
-export function openGlobalControlsWindow(onReadyCallback, savedState = null) { 
+function openGlobalControlsWindow(onReadyCallback, savedState = null) { 
     const windowId = 'globalControls';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) {
@@ -718,7 +718,7 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     return newWindow;
 }
 
-export function openSoundBrowserWindow(savedState = null) { 
+function openSoundBrowserWindow(savedState = null) { 
     const windowId = 'soundBrowser';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -765,7 +765,7 @@ export function openSoundBrowserWindow(savedState = null) {
     return browserWindow;
 }
 
-export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
+function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -788,7 +788,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
 
-export function renderSoundBrowserDirectory(pathArray, treeNode) { 
+function renderSoundBrowserDirectory(pathArray, treeNode) { 
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl || !treeNode) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
@@ -833,7 +833,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
 }
 
 // --- Mixer Window ---
-export function openMixerWindow(savedState = null) { 
+function openMixerWindow(savedState = null) { 
     const windowId = 'mixer';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
@@ -848,14 +848,14 @@ export function openMixerWindow(savedState = null) {
     return mixerWindow;
 }
 
-export function updateMixerWindow() { 
+function updateMixerWindow() { 
     const mixerWindow = localAppServices.getWindowById ? localAppServices.getWindowById('mixer') : null;
     if (!mixerWindow?.element || mixerWindow.isMinimized) return;
     const container = mixerWindow.element.querySelector('#mixerContentContainer');
     if (container) renderMixer(container);
 }
 
-export function renderMixer(container) { 
+function renderMixer(container) { 
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     container.innerHTML = '';
     const masterTrackDiv = document.createElement('div');
@@ -909,7 +909,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     html += `</div></div>`; return html;
 }
 
-export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
+function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') return null; 
     const windowId = `sequencerWin-${trackId}`;
@@ -975,7 +975,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
 }
 
 // --- UI Update & Drawing Functions ---
-export function drawWaveform(track) { 
+function drawWaveform(track) { 
     if (!track?.waveformCanvasCtx || !track.audioBuffer?.loaded) {
         if (track?.waveformCanvasCtx) {
             const canvas = track.waveformCanvasCtx.canvas;
