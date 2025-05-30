@@ -932,7 +932,7 @@ export class Track {
     
         this.stopPlayback(); 
     
-        for (const clip of this.audioClips) { // Use for...of to allow await inside loop
+        for (const clip of this.audioClips) { 
             console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clip.startTime}, clip.duration: ${clip.duration}`);
             
             const clipEndTime = clip.startTime + clip.duration;
@@ -968,7 +968,6 @@ export class Track {
                     
                     const offsetIntoClip = Math.max(0, transportStartTime - clip.startTime);
                     const durationFromOffset = clip.duration - offsetIntoClip;
-                    // Corrected effectiveStartTimeForPlayer to be relative to Tone.Transport's timeline
                     const scheduleTimeForPlayer = clip.startTime + offsetIntoClip;
                     const effectivePlayDuration = Math.min(durationFromOffset, transportStopTime - scheduleTimeForPlayer);
 
@@ -1030,8 +1029,6 @@ export class Track {
                 this.stopPlayback(); // Stop all current playback for this track
                 
                 // Re-schedule all clips for this track from the current transport time onwards
-                // A short delay might not be necessary if stopPlayback is robust enough.
-                // However, direct re-scheduling might be cleaner.
                 const lookaheadDuration = 300; 
                 const currentTransportTime = Tone.Transport.seconds;
                 const transportStopTime = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
@@ -1039,9 +1036,11 @@ export class Track {
                                           (currentTransportTime + lookaheadDuration);
                 
                 console.log(`[Track ${this.id}] Re-scheduling all clips on track from ${currentTransportTime} to ${transportStopTime}.`);
+                // No need for setTimeout if schedulePlayback is robust and stopPlayback clears effectively.
                 await this.schedulePlayback(currentTransportTime, transportStopTime); 
             }
-            // If transport is stopped, the main play button's handler will call schedulePlayback with transportStartTime = 0
+            // If transport is stopped, the main play button's handler (in eventHandlers.js)
+            // will call schedulePlayback for all tracks with transportStartTime = 0,
             // which will pick up the new clip.startTime.
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
