@@ -933,19 +933,21 @@ export class Track {
         this.stopPlayback(); // Ensure all previous players for this track are stopped and cleared
     
         for (const clip of this.audioClips) { 
-            console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clip.startTime}, clip.duration: ${clip.duration}`);
-            
             const clipActualStartOnTransport = clip.startTime;
             const clipActualEndOnTransport = clip.startTime + clip.duration;
 
+            console.log(`[Track ${this.id}] Evaluating clip: ${clip.id}, clip.startTime: ${clipActualStartOnTransport}, clip.duration: ${clip.duration}, clipActualEnd: ${clipActualEndOnTransport}`);
+            
             // Determine the effective playback window for this clip within the transport's current scheduling window
             const effectivePlayStartOnTransport = Math.max(clipActualStartOnTransport, transportStartTime);
             const effectivePlayEndOnTransport = Math.min(clipActualEndOnTransport, transportStopTime);
             
             const playDurationInWindow = effectivePlayEndOnTransport - effectivePlayStartOnTransport;
 
+            console.log(`[Track ${this.id}] Clip ${clip.id} - Effective Play Start: ${effectivePlayStartOnTransport}, Effective Play End: ${effectivePlayEndOnTransport}, Calculated Play Duration in Window: ${playDurationInWindow}`);
+
             if (playDurationInWindow <= 1e-3) { // Use a small epsilon for float comparisons
-                console.log(`[Track ${this.id}] Clip ${clip.id} has no audible portion in current schedule window (or is too short). Skipping. Duration in window: ${playDurationInWindow}`);
+                console.log(`[Track ${this.id}] Clip ${clip.id} has no audible portion in current schedule window (or is too short). Skipping. Play Duration in Window: ${playDurationInWindow}`);
                 continue; 
             }
             
@@ -960,24 +962,34 @@ export class Track {
                     const url = URL.createObjectURL(audioBlob);
                     console.log(`[Track ${this.id}] Loading audio for clip ${clip.id} from URL: ${url}`);
                     
-                    // Await player.load() before proceeding with scheduling
-                    await player.load(url);
-                    console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
-                    URL.revokeObjectURL(url); 
+                    player.onload = () => {
+                        console.log(`[Track ${this.id}] Audio loaded for clip ${clip.id}. Revoking URL: ${url}`);
+                        URL.revokeObjectURL(url); 
     
-                    const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
-                        ? this.activeEffects[0].toneNode
-                        : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
+                        const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
+                            ? this.activeEffects[0].toneNode
+                            : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
+    
+                        if (destinationNode) {
+                            player.connect(destinationNode);
+                        } else {
+                            console.warn(`[Track ${this.id}] No valid destination for audio clip player. Connecting to master.`);
+                            player.toDestination(); 
+                        }
+                        
+                        console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${effectivePlayStartOnTransport} (offset in buffer: ${offsetIntoClipBuffer}s, play duration: ${playDurationInWindow}s)`);
+                        player.start(effectivePlayStartOnTransport, offsetIntoClipBuffer, playDurationInWindow);
+                    };
+                    player.onerror = (error) => {
+                        console.error(`[Track ${this.id}] Error loading audio for clip ${clip.id}:`, error);
+                        URL.revokeObjectURL(url); 
+                        if (this.clipPlayers.has(clip.id)) {
+                            if(!player.disposed) player.dispose();
+                            this.clipPlayers.delete(clip.id);
+                        }
+                    };
+                    await player.load(url); 
 
-                    if (destinationNode) {
-                        player.connect(destinationNode);
-                    } else {
-                        console.warn(`[Track ${this.id}] No valid destination for audio clip player. Connecting to master.`);
-                        player.toDestination(); 
-                    }
-                    
-                    console.log(`[Track ${this.id}] Scheduling clip ${clip.id} to start at transport time ${effectivePlayStartOnTransport} (offset in buffer: ${offsetIntoClipBuffer}s, play duration: ${playDurationInWindow}s)`);
-                    player.start(effectivePlayStartOnTransport, offsetIntoClipBuffer, playDurationInWindow);
                 } else {
                     console.warn(`[Track ${this.id}] Could not retrieve audio blob for clip ${clip.id} (dbKey: ${clip.dbKey})`);
                     if (!player.disposed) player.dispose();
@@ -1031,11 +1043,9 @@ export class Track {
                 console.log(`[Track ${this.id}] Transport is running. Re-scheduling audio for this track after clip move.`);
                 
                 this.stopPlayback(); // Stop all current playback for this track
-                
-                // Aggressively clear all transport events to ensure a clean slate
-                Tone.Transport.cancel(0);
+                Tone.Transport.cancel(0); // Clear ALL transport events
                 console.log(`[Track ${this.id}] Called Tone.Transport.cancel(0) after clip move during playback.`);
-
+                
                 // Re-schedule all audio tracks from the current transport time onwards
                 const tracks = this.appServices.getTracks ? this.appServices.getTracks() : [];
                 const lookaheadDuration = 300; 
@@ -1045,7 +1055,7 @@ export class Track {
                                           (currentTransportTime + lookaheadDuration);
                 
                 console.log(`[Track ${this.id}] Re-scheduling ALL audio tracks from ${currentTransportTime} to ${transportStopTime}.`);
-                for (const t of tracks) {
+                for (const t of tracks) { // Use for...of for async/await
                     if (t.type === 'Audio' && typeof t.schedulePlayback === 'function') {
                         await t.schedulePlayback(currentTransportTime, transportStopTime);
                     }
