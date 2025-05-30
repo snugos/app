@@ -214,7 +214,7 @@ export function attachGlobalControlEvents(globalControlsElements) {
                         }
                     }
                 }
-                Tone.Transport.start(Tone.Transport.now(), scheduleFromTime); // Start/Resume from the determined scheduleFromTime
+                Tone.Transport.start(Tone.Transport.now(), scheduleFromTime); 
                 console.log(`[EventHandlers] Tone.Transport.start called with scheduleTime: ${scheduleFromTime}`);
 
             } else { // Transport is 'started', so this is a PAUSE
