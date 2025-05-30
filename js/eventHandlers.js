@@ -186,12 +186,13 @@ export function attachGlobalControlEvents(globalControlsElements) {
 
             if (Tone.Transport.state !== 'started') { // This means it's 'stopped' or 'paused'
                 const tracks = getTracks();
+                const currentTime = Tone.Transport.seconds; // Get current time before potentially resetting
+                const lookahead = Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : (currentTime + 300);
+
                 if (Tone.Transport.state === 'paused') {
                     console.log("[EventHandlers] Resuming transport from pause.");
-                    // Transport will resume. We need to ensure clips are scheduled from current pos.
+                    // When resuming, players were stopped. Re-schedule them from current transport time.
                     if (tracks) {
-                        const currentTime = Tone.Transport.seconds;
-                        const lookahead = Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : (currentTime + 300);
                         tracks.forEach(track => {
                             if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
                                 console.log(`[EventHandlers] Re-scheduling track ${track.id} from ${currentTime} on resume.`);
@@ -199,7 +200,6 @@ export function attachGlobalControlEvents(globalControlsElements) {
                             }
                         });
                     }
-                    Tone.Transport.start(); // Resume
                 } else { // Was 'stopped'
                     console.log("[EventHandlers] Starting transport from beginning.");
                     Tone.Transport.cancel(0); 
@@ -208,12 +208,12 @@ export function attachGlobalControlEvents(globalControlsElements) {
                     if (tracks) {
                         tracks.forEach(track => {
                             if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
-                                track.schedulePlayback(0, Tone.Transport.loopEnd > 0 ? Tone.Transport.loopEnd : 300); 
+                                track.schedulePlayback(0, lookahead); // Start from time 0
                             }
                         });
                     }
-                    Tone.Transport.start();
                 }
+                Tone.Transport.start(); // Start or Resume
             } else { // Transport is 'started', so this is a PAUSE
                 console.log("[EventHandlers] Pausing transport.");
                 Tone.Transport.pause();
@@ -221,7 +221,6 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 if (tracks) {
                     tracks.forEach(track => {
                         if (track.type === 'Audio' && typeof track.stopPlayback === 'function') {
-                            // This stops and disposes players, effectively unscheduling them.
                             track.stopPlayback(); 
                         }
                     });
