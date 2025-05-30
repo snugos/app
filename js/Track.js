@@ -21,6 +21,8 @@ export class Track {
         }
 
         this.isMuted = initialData?.isMuted || false;
+        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : true; // Default to ON for Audio tracks
+
         const currentSoloedId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
         this.isSoloed = currentSoloedId === this.id;
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
@@ -662,7 +664,7 @@ export class Track {
         if (this.slices[sliceIndex]) this.slices[sliceIndex].loop = !!loop;
     }
     setSliceReverse(sliceIndex, reverse) {
-        if (this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!loop; // Corrected: should be !!reverse
+        if (this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!reverse; 
     }
     setSliceEnvelopeParam(sliceIndex, param, value) {
         if (this.slices[sliceIndex] && this.slices[sliceIndex].envelope) {
@@ -930,7 +932,6 @@ export class Track {
 
         this.audioClips.forEach(async clip => {
             // Check if the clip overlaps with the current transport's playback segment
-            // For simplicity, we'll assume playback starts from transportStartTime
             if (clip.startTime + clip.duration < transportStartTime || clip.startTime > transportStopTime) {
                 return; // Clip is not in the playback range
             }
@@ -943,8 +944,8 @@ export class Track {
                 if (audioBlob) {
                     const url = URL.createObjectURL(audioBlob);
                     await player.load(url);
+                    URL.revokeObjectURL(url); // Revoke object URL after loading into buffer
                     
-                    // Connect player to the track's effect chain or gain node
                     const destinationNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
                         ? this.activeEffects[0].toneNode
                         : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
@@ -953,13 +954,23 @@ export class Track {
                         player.connect(destinationNode);
                     } else {
                         console.warn(`[Track ${this.id}] No valid destination for audio clip player.`);
-                        player.toDestination(); // Fallback to master directly if no track destination
+                        player.toDestination(); 
                     }
                     
-                    // Schedule the player to start at its stored startTime relative to transport
-                    player.start(clip.startTime);
-                    // Player will stop automatically when its audio finishes
-                    // If you need to stop it at a specific transport time, use Tone.Transport.scheduleOnce
+                    const offsetIntoClip = Math.max(0, transportStartTime - clip.startTime);
+                    const remainingDurationInClip = clip.duration - offsetIntoClip;
+                    const playDuration = Math.min(remainingDurationInClip, transportStopTime - (clip.startTime + offsetIntoClip));
+
+                    if (playDuration > 0) {
+                         player.start(clip.startTime + offsetIntoClip, offsetIntoClip, playDuration);
+                    } else {
+                        player.dispose(); // Dispose if not playing
+                        this.clipPlayers.delete(clip.id);
+                    }
+                } else {
+                    console.warn(`[Track ${this.id}] Could not retrieve audio blob for clip ${clip.id} (dbKey: ${clip.dbKey})`);
+                    player.dispose();
+                    this.clipPlayers.delete(clip.id);
                 }
             } catch (error) {
                 console.error(`Error loading or scheduling clip ${clip.id}:`, error);
@@ -1010,8 +1021,8 @@ export class Track {
         this.activeEffects.forEach(effect => { if (effect.toneNode && !effect.toneNode.disposed) effect.toneNode.dispose(); });
         if (this.gainNode && !this.gainNode.disposed) { this.gainNode.dispose(); }
         if (this.trackMeter && !this.trackMeter.disposed) { this.trackMeter.dispose(); }
-        if (this.inputChannel && !this.inputChannel.disposed) { this.inputChannel.dispose(); } // Dispose inputChannel
-        this.stopPlayback(); // Stop and dispose any active clip players
+        if (this.inputChannel && !this.inputChannel.disposed) { this.inputChannel.dispose(); } 
+        this.stopPlayback(); 
 
         if (this.appServices.closeAllTrackWindows) {
             this.appServices.closeAllTrackWindows(this.id);
