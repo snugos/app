@@ -1,59 +1,55 @@
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 import * as Constants from './constants.js';
 import { showNotification } from './utils.js';
-import { createEffectInstance } from './effectsRegistry.js'; // getEffectDefaultParams removed, will get from appServices
+// getEffectDefaultParams will now be accessed via appServices.effectsRegistryAccess
+import { createEffectInstance } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
 
-// Local references to Tone.js nodes for the master chain.
-// These are managed by this module, state.js holds serializable representations.
 let masterEffectsBusInputNode = null;
 let masterGainNodeActual = null; // The actual Tone.Gain node for master volume
 let masterMeterNode = null;
-let activeMasterEffectNodes = new Map(); // Map effectId (from state) to Tone.js node instance
+let activeMasterEffectNodes = new Map();
 
 let audioContextInitialized = false;
 
-let localAppServices = {}; // Will be populated by main.js
+let localAppServices = {};
 
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
-// Getter for other modules to connect to the start of the master effects chain
 export function getMasterEffectsBusInputNode() {
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
-        setupMasterBus(); // Ensure it's created if not already
+        setupMasterBus();
     }
     return masterEffectsBusInputNode;
 }
 
+// New getter for the actual Tone.js master gain node
+export function getActualMasterGainNode() {
+    if (!masterGainNodeActual || masterGainNodeActual.disposed) {
+        setupMasterBus(); // Ensure it's created if needed
+    }
+    return masterGainNodeActual;
+}
+
 
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
-    // console.log('[Audio] initAudioContextAndMasterMeter called. isUserInitiated:', isUserInitiated, 'Current Tone.context.state:', Tone.context.state, 'audioContextInitialized:', audioContextInitialized);
-
     if (audioContextInitialized && Tone.context.state === 'running') {
         if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed || !masterGainNodeActual || masterGainNodeActual.disposed) {
-            // console.log('[Audio] Context running, but master bus needs setup.');
-            setupMasterBus(); // This will also set up the meter if needed.
+            setupMasterBus();
         }
-        // console.log('[Audio] Context already running and initialized.');
         return true;
     }
     try {
-        // console.log('[Audio] Attempting Tone.start(). Current state:', Tone.context.state);
         await Tone.start();
-        // console.log('[Audio] Tone.start() completed. New state:', Tone.context.state);
-
         if (Tone.context.state === 'running') {
             if(!audioContextInitialized) {
-                // console.log('[Audio] First time setup for master bus after Tone.start()');
-                setupMasterBus(); // Sets up bus input, gain, meter, and connects them
+                setupMasterBus();
             } else if (!masterMeterNode || masterMeterNode.disposed) {
-                // If context was running but meter was missing (e.g. after project load before interaction)
-                setupMasterBus(); // Re-ensure meter is setup
+                setupMasterBus();
             }
             audioContextInitialized = true;
-            // console.log('[Audio] Audio context now running and initialized successfully.');
             return true;
         } else {
             console.warn('[Audio] Audio context NOT running after Tone.start(). State:', Tone.context.state);
@@ -74,54 +70,40 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 }
 
 function setupMasterBus() {
-    // console.log('[Audio] setupMasterBus called.');
-
-    // Setup Master Effects Bus Input Node
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
         if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) {
              try {masterEffectsBusInputNode.dispose();} catch(e){console.warn("[Audio] Error disposing old master bus input", e.message)}
         }
-        masterEffectsBusInputNode = new Tone.Gain().toDestination(); // Temporarily connect to dest to keep alive
-        // console.log('[Audio] Master effects bus input created.');
+        masterEffectsBusInputNode = new Tone.Gain().toDestination(); // Temp connect
     }
 
-    // Setup Master Gain Node
     if (!masterGainNodeActual || masterGainNodeActual.disposed) {
         if (masterGainNodeActual && !masterGainNodeActual.disposed) {
             try {masterGainNodeActual.dispose();} catch(e){console.warn("[Audio] Error disposing old master gain node", e.message)}
         }
-        const initialMasterVolume = localAppServices.getMasterGainNode && localAppServices.getMasterGainNode() !== null ? localAppServices.getMasterGainNode() : Tone.dbToGain(0);
-        masterGainNodeActual = new Tone.Gain(initialMasterVolume);
-        if (localAppServices.setMasterGainNode) localAppServices.setMasterGainNode(masterGainNodeActual.gain.value); // Update state
-        // console.log('[Audio] Master gain node created.');
+        const initialMasterVolumeValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
+        masterGainNodeActual = new Tone.Gain(initialMasterVolumeValue);
+        if (localAppServices.setMasterGainValue) localAppServices.setMasterGainValue(masterGainNodeActual.gain.value);
     }
 
-    // Setup Master Meter Node
     if (!masterMeterNode || masterMeterNode.disposed) {
         if (masterMeterNode && !masterMeterNode.disposed) {
             try { masterMeterNode.dispose(); } catch(e) { console.warn("[Audio] Error disposing old master meter", e.message); }
         }
         masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
-        // console.log('[Audio] Master meter created.');
     }
-
-    // Rebuild connections for the master chain
     rebuildMasterEffectChain();
 }
 
 export function rebuildMasterEffectChain() {
-    // console.log('[Audio] rebuildMasterEffectChain called.');
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed || !masterGainNodeActual || masterGainNodeActual.disposed) {
-        // console.log('[Audio] Master bus components not ready for rebuild, ensuring setupMasterBus.');
-        setupMasterBus(); // This will call rebuildMasterEffectChain again if components were created.
-        // If setupMasterBus didn't create them (e.g., Tone.start() hasn't run), we can't proceed.
+        setupMasterBus();
         if (!masterEffectsBusInputNode || !masterGainNodeActual) {
             console.error('[Audio] Master bus components still not ready after setup attempt. Aborting chain rebuild.');
             return;
         }
     }
 
-    // Disconnect existing chain from bus input onwards
     try { masterEffectsBusInputNode.disconnect(); } catch(e) { /* ignore */ }
     activeMasterEffectNodes.forEach(node => {
         if (node && !node.disposed) try { node.disconnect(); } catch(e) { /*ignore*/ }
@@ -130,7 +112,6 @@ export function rebuildMasterEffectChain() {
     if (masterMeterNode && !masterMeterNode.disposed) {
         try { masterGainNodeActual.disconnect(masterMeterNode); } catch(e) { /* ignore */ }
     }
-
 
     let currentAudioPathEnd = masterEffectsBusInputNode;
     const masterEffectsState = localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : [];
@@ -149,11 +130,21 @@ export function rebuildMasterEffectChain() {
                 currentAudioPathEnd = effectNode;
             }
         } else {
-            console.warn(`[Audio] Master effect node for ${effectState.type} (ID: ${effectState.id}) not found or disposed during rebuild.`);
+            // Attempt to recreate if missing (e.g., after project load before full init)
+            const recreatedNode = createEffectInstance(effectState.type, effectState.params);
+            if (recreatedNode) {
+                activeMasterEffectNodes.set(effectState.id, recreatedNode);
+                if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
+                    currentAudioPathEnd.connect(recreatedNode);
+                }
+                currentAudioPathEnd = recreatedNode;
+                console.warn(`[Audio] Recreated missing master effect node for ${effectState.type} (ID: ${effectState.id}) during rebuild.`);
+            } else {
+                console.warn(`[Audio] Master effect node for ${effectState.type} (ID: ${effectState.id}) not found and could not be recreated.`);
+            }
         }
     });
 
-    // Connect end of effects chain (or bus input if no effects) to master gain
     if (currentAudioPathEnd && !currentAudioPathEnd.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
             currentAudioPathEnd.connect(masterGainNodeActual);
@@ -162,26 +153,23 @@ export function rebuildMasterEffectChain() {
         }
     }
 
-    // Connect master gain to destination and meter
     if (masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
             masterGainNodeActual.toDestination();
             if (masterMeterNode && !masterMeterNode.disposed) {
                 masterGainNodeActual.connect(masterMeterNode);
             } else {
-                console.warn("[Audio] Master meter node not available for connection during rebuild.");
+                 console.warn("[Audio] Master meter node not available for connection during rebuild.");
+                 // Attempt to re-create meter if necessary
+                masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
+                masterGainNodeActual.connect(masterMeterNode);
             }
         } catch (e) { console.error("[Audio] Error connecting masterGainNode to destination/meter:", e); }
     }
-
-    // Individual tracks connect to masterEffectsBusInputNode, so their chains should be fine
-    // unless their internal structure also needs rebuilding (handled by Track class itself).
-    // console.log('[Audio] rebuildMasterEffectChain finished.');
 }
 
 
 export async function addMasterEffectToAudio(effectIdInState, effectType, initialParams) {
-    // Called by appServices.addMasterEffect after state.js updates its list
     const toneNode = createEffectInstance(effectType, initialParams);
     if (toneNode) {
         activeMasterEffectNodes.set(effectIdInState, toneNode);
@@ -192,7 +180,6 @@ export async function addMasterEffectToAudio(effectIdInState, effectType, initia
 }
 
 export async function removeMasterEffectFromAudio(effectId) {
-    // Called by appServices.removeMasterEffect after state.js updates
     const nodeToRemove = activeMasterEffectNodes.get(effectId);
     if (nodeToRemove && !nodeToRemove.disposed) {
         try {
@@ -211,7 +198,6 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
         console.warn(`[Audio] Master effect node for ID ${effectId} not found for param update.`);
         return;
     }
-    // Logic to set param on Tone.js node (similar to Track.updateEffectParam)
     try {
         const keys = paramPath.split('.');
         let targetObject = effectNode;
@@ -222,10 +208,10 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
         const finalParamKey = keys[keys.length - 1];
         const paramInstance = targetObject[finalParamKey];
 
-        if (paramInstance && typeof paramInstance.value !== 'undefined') { // Is a Signal/Param
+        if (paramInstance && typeof paramInstance.value !== 'undefined') {
             if (typeof paramInstance.rampTo === 'function') paramInstance.rampTo(value, 0.02);
             else paramInstance.value = value;
-        } else { // Direct property
+        } else {
             targetObject[finalParamKey] = value;
         }
     } catch (err) {
@@ -234,8 +220,6 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
 }
 
 export function reorderMasterEffectInAudio(effectIdIgnored, newIndexIgnored) {
-    // The actual reordering of Tone.js nodes happens in rebuildMasterEffectChain
-    // which reads the already reordered list from state.js.
     rebuildMasterEffectChain();
 }
 
@@ -245,8 +229,9 @@ export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) 
 
     if (masterMeterNode && typeof masterMeterNode.getValue === 'function' && !masterMeterNode.disposed) {
         const masterLevelValue = masterMeterNode.getValue();
-        const level = Tone.dbToGain(masterLevelValue); // Assumes masterLevelValue is in dB
-        const isClipping = masterLevelValue > -0.1;
+        const level = Tone.dbToGain(Array.isArray(masterLevelValue) ? masterLevelValue[0] : masterLevelValue);
+        const isClipping = (Array.isArray(masterLevelValue) ? masterLevelValue[0] : masterLevelValue) > -0.1;
+
 
         if (globalMasterMeterBar) {
             globalMasterMeterBar.style.width = `${Math.min(100, level * 100)}%`;
@@ -260,11 +245,12 @@ export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) 
 
     (tracks || []).forEach(track => {
         if (track && track.trackMeter && typeof track.trackMeter.getValue === 'function' && !track.trackMeter.disposed) {
-            const meterValue = track.trackMeter.getValue(); // Assumes this is in dB
-            const level = Tone.dbToGain(meterValue);
-            const isClipping = meterValue > -0.1;
+            const meterValue = track.trackMeter.getValue();
+            const level = Tone.dbToGain(Array.isArray(meterValue) ? meterValue[0] : meterValue);
+            const isClipping = (Array.isArray(meterValue) ? meterValue[0] : meterValue) > -0.1;
 
-            if (localAppServices.updateTrackMeterUI) { // This would be a new service call
+
+            if (localAppServices.updateTrackMeterUI) {
                 localAppServices.updateTrackMeterUI(track.id, level, isClipping);
             }
         }
@@ -287,9 +273,11 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     const totalPitchShift = (sliceData.pitchShift || 0) + additionalPitchShiftInSemitones;
     const playbackRate = Math.pow(2, totalPitchShift / 12);
     let playDuration = sliceData.duration / playbackRate;
-    if (sliceData.loop) playDuration = Math.min(playDuration, 2); // Limit looped preview duration
+    if (sliceData.loop) playDuration = Math.min(playDuration, 2);
 
-    const actualDestination = track.gainNode && !track.gainNode.disposed ? track.gainNode : getMasterEffectsBusInputNode();
+    const actualDestination = (track.activeEffects.length > 0 && track.activeEffects[0].toneNode && !track.activeEffects[0].toneNode.disposed)
+        ? track.activeEffects[0].toneNode
+        : (track.gainNode && !track.gainNode.disposed ? track.gainNode : getMasterEffectsBusInputNode());
 
 
     if (!track.slicerIsPolyphonic) {
@@ -303,7 +291,6 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         }
         const player = track.slicerMonoPlayer; const env = track.slicerMonoEnvelope; const gain = track.slicerMonoGain;
 
-        // Ensure mono slicer output is connected to the track's main output path
         if (gain && !gain.disposed && actualDestination && !actualDestination.disposed) {
             try { gain.disconnect(); } catch(e) {/*ignore*/}
             gain.connect(actualDestination);
@@ -323,7 +310,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
             const releaseTime = time + playDuration - (sliceData.envelope.release || 0.1);
             env.triggerRelease(Math.max(time, releaseTime));
         }
-    } else { // Polyphonic
+    } else {
         const tempPlayer = new Tone.Player(track.audioBuffer);
         const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
         const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * velocity);
@@ -349,9 +336,11 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     }
     const player = track.drumPadPlayers[padIndex];
     const padData = track.drumSamplerPads[padIndex];
-    const actualDestination = track.gainNode && !track.gainNode.disposed ? track.gainNode : getMasterEffectsBusInputNode();
+    const actualDestination = (track.activeEffects.length > 0 && track.activeEffects[0].toneNode && !track.activeEffects[0].toneNode.disposed)
+        ? track.activeEffects[0].toneNode
+        : (track.gainNode && !track.gainNode.disposed ? track.gainNode : getMasterEffectsBusInputNode());
 
-    // Ensure player is connected to the track's output path
+
     if (player && !player.disposed && actualDestination && !actualDestination.disposed) {
         try { player.disconnect(); } catch(e) {/*ignore*/}
         player.connect(actualDestination);
@@ -388,7 +377,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
     }
 
     let objectURLForTone = null;
-    let base64DataURL = null; // For storing in state for reconstruction without re-fetch if possible
+    let base64DataURL = null;
 
     try {
         objectURLForTone = URL.createObjectURL(fileObject);
@@ -401,13 +390,13 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
 
         const dbKeySuffix = trackTypeHint === 'DrumSampler' ? `drumPad-${padIndex}-${sourceName.replace(/[^a-zA-Z0-9-_]/g, '_')}` : `${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9-_]/g, '_')}`;
         const dbKey = `track-${track.id}-${dbKeySuffix}`;
-        await storeAudio(dbKey, fileObject); // Store the original File/Blob object
+        await storeAudio(dbKey, fileObject);
 
         const newAudioBuffer = await new Tone.Buffer().load(objectURLForTone);
 
         if (trackTypeHint === 'Sampler') {
             if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
-            track.disposeSlicerMonoNodes(); // Important for sampler type
+            track.disposeSlicerMonoNodes();
             track.audioBuffer = newAudioBuffer;
             track.samplerAudioData = { fileName: sourceName, audioBufferDataURL: base64DataURL, dbKey: dbKey, status: 'loaded' };
             if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) track.setupSlicerMonoNodes();
@@ -432,14 +421,13 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             padData.audioBuffer = newAudioBuffer; padData.audioBufferDataURL = base64DataURL;
             padData.originalFileName = sourceName; padData.dbKey = dbKey; padData.status = 'loaded';
             track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer);
-            // Drum pad players need to be connected to the track's output chain
             if (track.drumPadPlayers[padIndex] && track.gainNode && !track.gainNode.disposed) {
                  track.drumPadPlayers[padIndex].connect(track.gainNode);
             }
             if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'drumPadLoaded', padIndex);
         }
 
-        track.rebuildEffectChain(); // Ensure the new audio source is part of the chain
+        track.rebuildEffectChain();
         showNotification(`Sample "${sourceName}" loaded for ${track.name}${trackTypeHint === 'DrumSampler' ? ` (Pad ${padIndex+1})` : ''}.`, 2000);
 
     } catch (error) {
@@ -467,7 +455,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     let providedBlob, sourceName;
     const isUrlSource = typeof eventOrUrl === 'string';
     const isDirectFile = eventOrUrl instanceof File;
-    const isBlobEvent = eventOrUrl instanceof Blob; // For files from ZIP
+    const isBlobEvent = eventOrUrl instanceof Blob;
 
     if (isUrlSource) {
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample";
@@ -479,11 +467,11 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             console.error(`[Audio] Error fetching sample from URL ${eventOrUrl}:`, e);
             showNotification(`Error fetching sample "${sourceName}": ${e.message}`, 3000); return;
         }
-    } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) { // From file input
+    } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
         providedBlob = eventOrUrl.target.files[0]; sourceName = providedBlob.name;
-    } else if (isDirectFile) { // From drag-and-drop of a File object
+    } else if (isDirectFile) {
         providedBlob = eventOrUrl; sourceName = providedBlob.name;
-    } else if (isBlobEvent) { // From ZIP extraction (already a Blob)
+    } else if (isBlobEvent) {
         providedBlob = eventOrUrl; sourceName = fileNameForUrl || "loaded_blob_sample";
     }
      else { showNotification("No file selected or invalid source.", 3000); return; }
@@ -690,11 +678,26 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
         });
     }
     track.selectedSliceForEdit = 0;
-    // This might re-trigger sequence creation, ensure it's handled gracefully
     track.setSequenceLength(track.sequenceLength, true);
 
     if (localAppServices.updateTrackUI) {
         localAppServices.updateTrackUI(track.id, 'sampleSliced');
     }
     showNotification(`Sample auto-sliced into ${numSlicesToCreate} parts.`, 2000);
+}
+
+// Function to clear all master effect Tone.js nodes (used during project reconstruction)
+export function clearAllMasterEffectNodes() {
+    activeMasterEffectNodes.forEach(node => {
+        if (node && !node.disposed) {
+            try {
+                node.dispose();
+            } catch (e) {
+                console.warn("[Audio] Error disposing a master effect node during clearAll:", e);
+            }
+        }
+    });
+    activeMasterEffectNodes.clear();
+    // After clearing, the chain needs to be rebuilt to connect bus input to master gain directly
+    rebuildMasterEffectChain();
 }
