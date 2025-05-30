@@ -188,32 +188,35 @@ export function attachGlobalControlEvents(globalControlsElements) {
                 const tracks = getTracks();
                 let scheduleFromTime = Tone.Transport.seconds; 
                 
-                Tone.Transport.cancel(0); // ALWAYS cancel previous transport events before rescheduling
+                console.log(`[EventHandlers] Play/Resume: Current transport state: ${Tone.Transport.state}, current time: ${scheduleFromTime}`);
+                Tone.Transport.cancel(0); 
                 console.log("[EventHandlers] Called Tone.Transport.cancel(0) before play/resume.");
 
                 if (Tone.Transport.state === 'paused') {
-                    console.log("[EventHandlers] Resuming transport from pause. Current time:", scheduleFromTime);
+                    console.log("[EventHandlers] Resuming transport from pause. Scheduling from:", scheduleFromTime);
                     // Position is already where it was paused.
                 } else { // Was 'stopped'
                     console.log("[EventHandlers] Starting transport from beginning.");
-                    Tone.Transport.position = 0; // Reset position for a fresh start
-                    scheduleFromTime = 0; // Schedule from the very beginning
+                    Tone.Transport.position = 0; 
+                    scheduleFromTime = 0; 
                     document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
                 }
                 
                 const lookahead = Tone.Transport.loop && Tone.Transport.loopEnd > 0 ? 
                                   Tone.Transport.loopEnd : 
-                                  (scheduleFromTime + 300); // Default lookahead
+                                  (scheduleFromTime + 300); 
 
                 if (tracks) {
-                    for (const track of tracks) { // Use for...of for async/await
+                    for (const track of tracks) { 
                         if (track.type === 'Audio' && typeof track.schedulePlayback === 'function') {
                             console.log(`[EventHandlers] Scheduling track ${track.id} from ${scheduleFromTime} to ${lookahead}.`);
                             await track.schedulePlayback(scheduleFromTime, lookahead); 
                         }
                     }
                 }
-                Tone.Transport.start(); 
+                Tone.Transport.start(Tone.Transport.now(), scheduleFromTime); // Start/Resume from the determined scheduleFromTime
+                console.log(`[EventHandlers] Tone.Transport.start called with scheduleTime: ${scheduleFromTime}`);
+
             } else { // Transport is 'started', so this is a PAUSE
                 console.log("[EventHandlers] Pausing transport.");
                 Tone.Transport.pause();
