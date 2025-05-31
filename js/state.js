@@ -41,14 +41,13 @@ let previewPlayerGlobal = null;
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
 
 // Transport/Sequencing State
-let activeSequencerTrackId = null; // Refers to track ID whose sequencer is active for pattern playback
+let activeSequencerTrackId = null; 
 let soloedTrackId = null;
 let armedTrackId = null;
 let isRecordingGlobal = false;
 let recordingTrackIdGlobal = null;
 let recordingStartTime = 0;
 
-// --- NEW: Global Playback Mode ---
 let globalPlaybackMode = 'pattern'; // 'pattern' or 'timeline'
 
 // Undo/Redo
@@ -63,7 +62,6 @@ export function initializeStateModule(services) {
     if (!Array.isArray(masterEffectsChainState)) {
         masterEffectsChainState = [];
     }
-    // Expose getPlaybackMode through appServices if main.js needs it
     if (appServices && !appServices.getPlaybackMode) {
         appServices.getPlaybackMode = getPlaybackModeState;
     }
@@ -140,7 +138,6 @@ export function setPlaybackModeState(mode) {
             globalPlaybackMode = mode;
             console.log(`[State] Playback mode set to: ${globalPlaybackMode}`);
             
-            // Stop transport and clear all scheduled events when mode changes
             if (Tone.Transport.state === 'started') {
                 Tone.Transport.stop();
             }
@@ -150,25 +147,20 @@ export function setPlaybackModeState(mode) {
             }
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
 
-
-            // Re-initialize sequences for all tracks based on the new mode
-            // This ensures pattern players are stopped/started correctly.
             const currentTracks = getTracksState();
             currentTracks.forEach(track => {
                 if (track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
-                    track.recreateToneSequence(true); // true to force restart if needed
+                    track.recreateToneSequence(true); 
                 }
-                // Also, ensure audio track players are cleared if switching away from timeline
                 if (mode === 'pattern' && track.type === 'Audio' && typeof track.stopPlayback === 'function') {
                     track.stopPlayback();
                 }
             });
 
-
-            if (appServices.onPlaybackModeChange) { // Callback for UI updates
+            if (appServices.onPlaybackModeChange) { 
                 appServices.onPlaybackModeChange(globalPlaybackMode);
             }
-             if (appServices.renderTimeline) appServices.renderTimeline(); // Re-render timeline to potentially update clip appearance based on mode
+             if (appServices.renderTimeline) appServices.renderTimeline(); 
         }
     } else {
         console.warn(`[State] Invalid playback mode: ${mode}`);
@@ -193,13 +185,22 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         newTrackId = trackIdCounter++;
     }
 
+    // Ensure appServices is populated before creating trackAppServices
+    if (Object.keys(appServices).length === 0 && localAppServices && Object.keys(localAppServices).length > 0) {
+        // This case might happen if state.js is initialized before main.js fully populates appServices
+        // It's a defensive measure.
+        console.warn("[State addTrackToStateInternal] appServices was empty, using localAppServices fallback for trackAppServices. This might indicate an initialization order issue.");
+        appServices = localAppServices; // Use the one passed to initializeStateModule
+    }
+
+
     const trackAppServices = {
         getSoloedTrackId: getSoloedTrackIdState,
         captureStateForUndo: captureStateForUndoInternal,
         updateTrackUI: appServices.updateTrackUI,
         highlightPlayingStep: appServices.highlightPlayingStep,
         autoSliceSample: appServices.autoSliceSample,
-        // *** ENSURE THIS KEY IS CORRECT ***
+        // *** THIS IS THE CRITICAL FIX ***
         closeAllTrackWindows: appServices.closeAllTrackWindows, 
         getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
         showNotification: appServices.showNotification,
