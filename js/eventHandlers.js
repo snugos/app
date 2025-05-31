@@ -17,8 +17,8 @@ import {
     getRecordingTrackIdState as getRecordingTrackId,
     setRecordingStartTimeState as setRecordingStartTime,
     removeTrackFromStateInternal as coreRemoveTrackFromState,
-    getPlaybackModeState, 
-    setPlaybackModeState 
+    getPlaybackModeState,
+    setPlaybackModeState
 } from './state.js'; //
 
 let localAppServices = {};
@@ -42,7 +42,7 @@ export function initializePrimaryEventListeners(appContext) {
             console.log('[EventHandlers initializePrimaryEventListeners] Start Button found in uiCache. Attaching listener.'); //
             uiCache.startButton.addEventListener('click', (e) => {
                 console.log('[EventHandlers] Start Button clicked.');  //
-                e.stopPropagation(); 
+                e.stopPropagation();
                 if (uiCache.startMenu) {
                     console.log(`[EventHandlers] Start Menu found. Current classes before toggle: '${uiCache.startMenu.className}'`);  //
                     uiCache.startMenu.classList.toggle('hidden'); // MODIFIED LINE
@@ -61,7 +61,7 @@ export function initializePrimaryEventListeners(appContext) {
                     console.log('[EventHandlers] Desktop clicked, closing Start Menu.'); //
                     uiCache.startMenu.classList.add('hidden'); // MODIFIED LINE
                 }
-                const activeContextMenu = document.querySelector('.custom-context-menu'); //
+                const activeContextMenu = document.querySelector('.context-menu'); // Use class selector
                 if (activeContextMenu) {
                     console.log('[EventHandlers] Desktop clicked, closing active context menu.'); //
                     activeContextMenu.remove();
@@ -70,7 +70,7 @@ export function initializePrimaryEventListeners(appContext) {
         } else {
              console.error('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!'); //
         }
-        
+
         if (uiCache.desktop) {
             uiCache.desktop.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
@@ -93,7 +93,7 @@ export function initializePrimaryEventListeners(appContext) {
                     { separator: true }, //
                     { label: "Toggle Full Screen", action: toggleFullScreen } //
                 ];
-                createContextMenu(e, menuItems); //
+                createContextMenu(e, menuItems, localAppServices); // Pass appServices for z-index
             });
         }
 
@@ -103,7 +103,7 @@ export function initializePrimaryEventListeners(appContext) {
         uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuAddInstrumentSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuAddAudioTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
-        
+
         uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuOpenTimeline?.addEventListener('click', () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuOpenGlobalControls?.addEventListener('click', () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); uiCache.startMenu.classList.add('hidden'); }); //
@@ -112,13 +112,13 @@ export function initializePrimaryEventListeners(appContext) {
 
         uiCache.menuUndo?.addEventListener('click', () => { if(localAppServices.undoLastAction) localAppServices.undoLastAction(); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuRedo?.addEventListener('click', () => { if(localAppServices.redoLastAction) localAppServices.redoLastAction(); uiCache.startMenu.classList.add('hidden'); }); //
-        
+
         uiCache.menuSaveProject?.addEventListener('click', () => { if(localAppServices.saveProject) localAppServices.saveProject(); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuLoadProject?.addEventListener('click', () => { if(localAppServices.loadProject) localAppServices.loadProject(); uiCache.startMenu.classList.add('hidden'); }); //
         uiCache.menuExportWav?.addEventListener('click', () => { if(localAppServices.exportToWav) localAppServices.exportToWav(); uiCache.startMenu.classList.add('hidden'); }); //
-        
+
         uiCache.menuToggleFullScreen?.addEventListener('click', () => { toggleFullScreen(); uiCache.startMenu.classList.add('hidden'); }); //
-        
+
         if (uiCache.loadProjectInput) {
             uiCache.loadProjectInput.addEventListener('change', (e) => {
                 if (localAppServices.handleProjectFileLoad) {
@@ -143,7 +143,7 @@ export function attachGlobalControlEvents(elements) {
             const transport = Tone.Transport; //
             const currentTransportTime = transport.seconds; //
             console.log(`[EventHandlers Play/Resume] Clicked. Current transport state: ${transport.state}, current time: ${currentTransportTime}`); //
-            
+
             // Stop all tracks first to clear their scheduled events or stop pattern players
             const tracks = getTracks(); //
             console.log(`[EventHandlers Play/Resume] Stopping playback for ${tracks.length} tracks before rescheduling.`); //
@@ -163,22 +163,35 @@ export function attachGlobalControlEvents(elements) {
                     transport.position = 0; // Ensure starting from the beginning if fully stopped //
                 }
                 console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`); //
-                
+
+                // >>> MODIFICATION START <<<
+                // Explicitly set loop properties to keep the transport running
+                transport.loopStart = 0;
+                transport.loopEnd = 3600; // Loop for a very long time (1 hour)
+                transport.loop = true;
+                console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}`);
+                // >>> MODIFICATION END <<<
+
                 console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${startTime}.`); //
                 for (const track of tracks) {
                     if (typeof track.schedulePlayback === 'function') {
                         // schedulePlayback in Track.js will now handle mode-specific logic
-                        await track.schedulePlayback(startTime, transport.loopEnd > 0 ? transport.loopEnd : startTime + 300);  //
+                        // Pass the transport's loopEnd to ensure tracks schedule within this boundary if needed
+                        await track.schedulePlayback(startTime, transport.loopEnd);
                     }
                 }
+                // >>> ADDED LOGGING BEFORE START <<<
+                console.log(`[EventHandlers Play/Resume] BEFORE transport.start - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
                 transport.start(Tone.now() + 0.05, startTime); // Start with a slight delay from the specified time //
                 playBtnGlobal.textContent = 'Pause'; //
             } else { // 'started'
                 console.log(`[EventHandlers Play/Resume] Pausing transport.`); //
                 transport.pause(); //
+                // When pausing, we want the loop settings to remain for the next play.
                 playBtnGlobal.textContent = 'Play'; //
             }
-            console.log(`[EventHandlers Play/Resume] Logic completed. New transport state: ${transport.state}`); //
+            // >>> ADDED LOGGING AFTER START/PAUSE <<<
+            console.log(`[EventHandlers Play/Resume] AFTER transport.start/pause - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
         });
     }
 
@@ -192,7 +205,7 @@ export function attachGlobalControlEvents(elements) {
             const trackToRecordId = getArmedTrackId(); //
             const trackToRecord = trackToRecordId !== null ? getTrackById(trackToRecordId) : null; //
 
-            if (!isCurrentlyRec) { 
+            if (!isCurrentlyRec) {
                 console.log("[EventHandlers] Attempting to start recording."); //
                 if (!trackToRecord) {
                     showNotification("No track armed for recording.", 2000); //
@@ -207,9 +220,9 @@ export function attachGlobalControlEvents(elements) {
                     } else {
                         console.error("[EventHandlers] startAudioRecording service not available."); //
                     }
-                } else { 
+                } else {
                     console.log("[EventHandlers] Non-audio track, setting recordingInitialized to true."); //
-                    recordingInitialized = true; 
+                    recordingInitialized = true;
                 }
 
                 if (recordingInitialized) {
@@ -223,7 +236,7 @@ export function attachGlobalControlEvents(elements) {
                     }
                     setRecordingStartTime(Tone.Transport.seconds); //
                     console.log(`[EventHandlers] Recording start time set to: ${Tone.Transport.seconds}`); //
-                    
+
                     if (Tone.Transport.state !== 'started') { //
                         console.log("[EventHandlers] Starting transport for recording."); //
                         Tone.Transport.start(); //
@@ -233,7 +246,7 @@ export function attachGlobalControlEvents(elements) {
                     console.warn("[EventHandlers] Recording initialization failed."); //
                 }
 
-            } else { 
+            } else {
                 console.log("[EventHandlers] Attempting to stop recording."); //
                 if (localAppServices.stopAudioRecording && getRecordingTrackId() !== null && getTrackById(getRecordingTrackId())?.type === 'Audio') { //
                     await localAppServices.stopAudioRecording(); //
@@ -254,11 +267,11 @@ export function attachGlobalControlEvents(elements) {
                 if (localAppServices.updateTaskbarTempoDisplay) localAppServices.updateTaskbarTempoDisplay(newTempo); //
             }
         });
-        tempoGlobalInput.addEventListener('change', (e) => { 
+        tempoGlobalInput.addEventListener('change', (e) => {
              if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Tempo to ${Tone.Transport.bpm.value.toFixed(1)}`); //
         });
     }
-    
+
     if (midiInputSelectGlobal && localAppServices.selectMIDIInput) {
         midiInputSelectGlobal.addEventListener('change', (e) => localAppServices.selectMIDIInput(e.target.value)); //
     }
@@ -311,7 +324,7 @@ function onMIDISuccess(midiAccess) {
 
     midiAccess.onstatechange = (event) => {
         console.log(`[MIDI] State change: ${event.port.name}, ${event.port.state}`); //
-        setupMIDI(); 
+        setupMIDI();
     };
 }
 
@@ -385,7 +398,7 @@ document.addEventListener('keydown', (event) => {
     const activeEl = document.activeElement; //
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) { //
         if (key === 'escape') activeEl.blur();  //
-        return; 
+        return;
     }
     if (event.metaKey || event.ctrlKey) return;  //
 
@@ -401,7 +414,7 @@ document.addEventListener('keydown', (event) => {
 
     const armedTrack = getTrackById(getArmedTrackId()); //
     if (!armedTrack || !armedTrack.instrument || armedTrack.instrument.disposed) return; //
-    
+
     let midiNote = keyToMIDIMap[event.key];  //
     if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; //
 
@@ -456,7 +469,7 @@ export function handleTrackSolo(trackId) {
     captureStateForUndo(`Toggle Solo for ${track.name}`); //
     if (currentSoloed === trackId) {  //
         setSoloedTrackId(null); //
-    } else { 
+    } else {
         setSoloedTrackId(trackId); //
     }
     getTracks().forEach(t => {
