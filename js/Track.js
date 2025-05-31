@@ -917,7 +917,6 @@ export class Track {
     recreateToneSequence(forceRestart = false) {
         if (this.type === 'Audio') return;
         const currentPlaybackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern';
-        // >>> ADDED LOG <<<
         console.log(`[Track ${this.id} recreateToneSequence] Called. ActiveSeqID: ${this.activeSequenceId}. Current Playback Mode: ${currentPlaybackMode}`);
 
         if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
@@ -949,15 +948,19 @@ export class Track {
 
         const sequenceDataForTone = activeSeq.data;
         const sequenceLengthForTone = activeSeq.length;
-        // >>> ADDED LOG <<<
-        console.log(`[Track ${this.id} recreateToneSequence] Creating Tone.Sequence for '${activeSeq.name}' with ${sequenceLengthForTone} steps and ${sequenceDataForTone.length} rows for PATTERN mode.`);
+        // >>> MODIFIED LOG <<<
+        console.log(`[Track ${this.id} recreateToneSequence] Creating Tone.Sequence for '${activeSeq.name}' with ${sequenceLengthForTone} steps and ${sequenceDataForTone.length} rows for PATTERN mode. Data snapshot:`, JSON.stringify(sequenceDataForTone.slice(0, 2)));
 
         if(sequenceDataForTone.length === 0 && sequenceLengthForTone > 0){
             console.warn(`[Track ${this.id} recreateToneSequence] Sequence data has 0 rows, but length is ${sequenceLengthForTone}. This might lead to issues or an empty sequence.`);
         }
+        // >>> ADDED LOG <<<
+        if (sequenceLengthForTone === 0) {
+            console.warn(`[Track ${this.id} recreateToneSequence] sequenceLengthForTone is 0. Tone.Sequence will likely not fire events.`);
+        }
+
 
         this.patternPlayerSequence = new Tone.Sequence((time, col) => {
-            // >>> ADDED LOG <<<
             console.log(`[Track ${this.id} PATTERN PLAYING] Time: ${time}, Column: ${col}, Type: ${this.type}`);
 
             const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern';
@@ -1071,7 +1074,9 @@ export class Track {
 
         this.patternPlayerSequence.loop = true;
         this.patternPlayerSequence.start(0);
-        console.log(`[Track ${this.id} recreateToneSequence] Tone.Sequence for '${activeSeq.name}' created and started for PATTERN mode.`);
+        // >>> ADDED LOG <<<
+        console.log(`[Track ${this.id} recreateToneSequence] Tone.Sequence for '${activeSeq.name}' created. Events scheduled: ${this.patternPlayerSequence.length}, State: ${this.patternPlayerSequence.state}, Loop: ${this.patternPlayerSequence.loop}`);
+
 
         if (this.appServices.updateTrackUI) {
             this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
@@ -1130,7 +1135,6 @@ export class Track {
 
     async schedulePlayback(transportStartTime, transportStopTime) {
         const playbackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern';
-        // >>> ADDED LOG <<<
         console.log(`[Track ${this.id} (${this.type})] schedulePlayback. Mode: ${playbackMode}. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
 
         this.stopPlayback(); // Clear previous players for this track (both timeline and pattern)
