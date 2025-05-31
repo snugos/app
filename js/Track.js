@@ -105,7 +105,6 @@ export class Track {
         this.gainNode = null; this.trackMeter = null; this.outputNode = null;
         this.instrument = null; 
 
-        // --- NEW/MODIFIED: Multiple Sequences and Timeline Clip Data ---
         this.sequences = []; 
         this.activeSequenceId = null; 
         this.timelineClips = initialData?.timelineClips || []; 
@@ -930,7 +929,7 @@ export class Track {
 
         if (currentPlaybackMode !== 'pattern') {
             console.log(`[Track ${this.id} recreateToneSequence] Playback mode is '${currentPlaybackMode}'. Not creating pattern player sequence.`);
-            return; // Don't create a pattern player if we are in timeline mode
+            return; 
         }
 
         const activeSeq = this.getActiveSequence();
@@ -942,9 +941,9 @@ export class Track {
             console.warn(`[Track ${this.id} recreateToneSequence] Active sequence '${activeSeq.name}' has invalid or no data. Aborting. Data:`, activeSeq.data);
             return;
         }
-        if (activeSeq.length === 0) { 
-            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence '${activeSeq.name}' has 0 steps. Aborting Tone.Sequence creation.`);
-            return;
+        if (activeSeq.length === 0 || activeSeq.length === undefined || !Number.isFinite(activeSeq.length) || activeSeq.length < Constants.STEPS_PER_BAR) { 
+            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence '${activeSeq.name}' has invalid length: ${activeSeq.length}. Defaulting to ${Constants.defaultStepsPerBar}.`);
+            activeSeq.length = Constants.defaultStepsPerBar; // Ensure a valid length
         }
         
         const sequenceDataForTone = activeSeq.data;
@@ -955,10 +954,12 @@ export class Track {
             console.warn(`[Track ${this.id} recreateToneSequence] Sequence data has 0 rows, but length is ${sequenceLengthForTone}. This might lead to issues or an empty sequence.`);
         }
 
-
         this.patternPlayerSequence = new Tone.Sequence((time, col) => {
             const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern'; 
-            if (playbackModeCheck !== 'pattern') { // Double check mode at playback time
+            if (playbackModeCheck !== 'pattern') { 
+                if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
+                    this.patternPlayerSequence.stop();
+                }
                 return;
             }
 
@@ -1124,11 +1125,16 @@ export class Track {
 
     async schedulePlayback(transportStartTime, transportStopTime) {
         const playbackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern';
-        console.log(`[Track ${this.id} (${this.type})] schedulePlayback called. Mode: ${playbackMode}. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
-        this.stopPlayback(); // Clear previous players for this track
+        console.log(`[Track ${this.id} (${this.type})] schedulePlayback. Mode: ${playbackMode}. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
+        
+        this.stopPlayback(); // Clear previous players for this track (both timeline and pattern)
 
         if (playbackMode === 'timeline') {
             console.log(`[Track ${this.id}] In TIMELINE mode. Scheduling ${this.timelineClips.length} timeline clips.`);
+            if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
+                console.log(`[Track ${this.id}] Timeline mode: Stopping active patternPlayerSequence.`);
+                this.patternPlayerSequence.stop(); // Ensure pattern sequence is stopped
+            }
             for (const clip of this.timelineClips) {
                 const clipActualStartOnTransport = clip.startTime;
                 const clipActualEndOnTransport = clip.startTime + clip.duration;
@@ -1137,7 +1143,7 @@ export class Track {
                 let playDurationInWindow = effectivePlayEndOnTransport - effectivePlayStartOnTransport;
 
                 if (playDurationInWindow <= 1e-3) {
-                    console.log(`[Track ${this.id}] Clip ${clip.id} (${clip.type}) outside/negligible in window. Skipping.`);
+                    // console.log(`[Track ${this.id}] Clip ${clip.id} (${clip.type}) outside/negligible in window. Skipping.`);
                     continue;
                 }
                 
@@ -1228,16 +1234,18 @@ export class Track {
                 }
             }
         } else { // 'pattern' mode
+            if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) {
+                console.log(`[Track ${this.id}] Pattern mode: patternPlayerSequence is null or disposed. Attempting to recreate.`);
+                this.recreateToneSequence(true); // Ensure it's created if not already
+            }
             if (this.patternPlayerSequence && this.patternPlayerSequence.state !== 'started' && Tone.Transport.state === 'started') {
                 console.log(`[Track ${this.id}] Starting patternPlayerSequence at transport time: ${Tone.Transport.seconds} for PATTERN mode.`);
-                this.patternPlayerSequence.start(Tone.Transport.seconds); 
+                this.patternPlayerSequence.start(transportStartTime); // Start from the given transportStartTime
             } else if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started' && Tone.Transport.state !== 'started') {
                 this.patternPlayerSequence.stop();
                  console.log(`[Track ${this.id}] Stopped patternPlayerSequence because transport is not started.`);
             } else if (this.patternPlayerSequence && this.patternPlayerSequence.state !== 'started' && Tone.Transport.state !== 'started') {
-                console.log(`[Track ${this.id}] PatternPlayerSequence and Transport are both stopped. No action.`);
-            } else if (!this.patternPlayerSequence) {
-                console.warn(`[Track ${this.id}] PatternPlayerSequence is null. Cannot start for pattern mode.`);
+                console.log(`[Track ${this.id}] PatternPlayerSequence and Transport are both stopped. No action for patternPlayerSequence.`);
             }
         }
     }
@@ -1263,10 +1271,10 @@ export class Track {
             this.patternPlayerSequence.stop();
             console.log(`[Track ${this.id}] Stopped patternPlayerSequence.`);
         }
-        // When stopping, also cancel any manually scheduled Tone.Transport events for sequence clips
-        // This is important for timeline mode sequence clips.
-        // Tone.Transport.cancel(0); // This was too broad. We need a more targeted way if timeline events are scheduled manually.
-        // For now, the Tone.Part or individual player disposal for sequence clips should handle this.
+        // When stopping globally, it's good to cancel scheduled events.
+        // However, this might be too broad if called from individual track logic not related to global stop.
+        // For now, let's assume global stop implies cancelling all.
+        // Tone.Transport.cancel(0); // This was moved to the global play/stop handlers
     }
     
 
