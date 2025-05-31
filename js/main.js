@@ -20,7 +20,7 @@ import {
     getCurrentSoundFileTreeState, getCurrentSoundBrowserPathState, getPreviewPlayerState,
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState,
     getRecordingTrackIdState,
-    getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState,
+    getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState, 
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -29,6 +29,7 @@ import {
     setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
+    setPlaybackModeState, 
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -61,7 +62,7 @@ import {
     openMasterEffectsRackWindow,
     renderTimeline, 
     updatePlayheadPosition,
-    openTimelineWindow // Added for timeline window
+    openTimelineWindow 
 } from './ui.js';
 
 console.log("SCRIPT EXECUTION STARTED - SnugOS (main.js refactored v11 - Timeline Window)");
@@ -74,16 +75,14 @@ const uiElementsCache = {
     menuAddSynthTrack: null, menuAddSamplerTrack: null, menuAddDrumSamplerTrack: null,
     menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null, 
     menuOpenSoundBrowser: null, 
-    menuOpenTimeline: null, // Added Timeline menu item
+    menuOpenTimeline: null, 
     menuUndo: null, menuRedo: null,
     menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null,
     menuOpenMixer: null, menuOpenMasterEffects: null, 
-    // menuUploadCustomBg and menuRemoveCustomBg are removed as they are no longer in Start Menu
     menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null,
     tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
-    // Timeline elements are now inside a window, so not cached globally here.
-    // They will be accessed via the window instance if needed.
+    playbackModeToggleBtnGlobal: null, 
 };
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
@@ -131,7 +130,7 @@ const appServices = {
     updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
     createKnob, updateSequencerCellUI, showNotification, createContextMenu,
     renderTimeline, 
-    openTimelineWindow, // Added openTimelineWindow service
+    openTimelineWindow, 
     
     // Audio Module Functions
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
@@ -157,6 +156,7 @@ const appServices = {
     getRecordingTrackId: getRecordingTrackIdState,
     getActiveSequencerTrackId: getActiveSequencerTrackIdState,
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
+    getPlaybackMode: getPlaybackModeState, 
 
     // State Module Setters
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
@@ -170,6 +170,7 @@ const appServices = {
     setSoloedTrackId: setSoloedTrackIdState, setIsRecording: setIsRecordingState,
     setRecordingTrackId: setRecordingTrackIdState, setRecordingStartTime: setRecordingStartTimeState,
     setActiveSequencerTrackId: setActiveSequencerTrackIdState,
+    setPlaybackMode: setPlaybackModeState, 
 
     // Core State Actions
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
@@ -214,12 +215,21 @@ const appServices = {
         if(map && typeof map.clear === 'function') map.clear();
     },
     closeAllTrackWindows: (trackIdToClose) => {
+        console.log(`[Main appServices.closeAllTrackWindows] Called for trackId: ${trackIdToClose}`); 
         const windowIdsToClose = [
             `trackInspector-${trackIdToClose}`, `effectsRack-${trackIdToClose}`, `sequencerWin-${trackIdToClose}`
         ];
+        console.log(`[Main appServices.closeAllTrackWindows] Window IDs to attempt closing:`, windowIdsToClose); 
         windowIdsToClose.forEach(winId => {
-            const win = getWindowByIdState(winId);
-            if (win && typeof win.close === 'function') win.close(true);
+            const win = getWindowByIdState(winId); 
+            if (win && typeof win.close === 'function') {
+                console.log(`[Main appServices.closeAllTrackWindows] Found window '${winId}'. Calling its close() method.`); 
+                win.close(true); 
+            } else if (win) {
+                console.warn(`[Main appServices.closeAllTrackWindows] Found window '${winId}', but it has no close method or is not a function.`); 
+            } else {
+                console.log(`[Main appServices.closeAllTrackWindows] Window '${winId}' NOT found in state.`); 
+            }
         });
     },
     updateTrackUI: handleTrackUIUpdate,
@@ -295,13 +305,26 @@ const appServices = {
             renderEffectsList(null, 'master', masterRackWindow.element.querySelector('#effectsList-master'), masterRackWindow.element.querySelector('#effectControlsContainer-master'));
         }
     },
-    // Background handling functions for context menu
     triggerCustomBackgroundUpload: () => {
         if (uiElementsCache.customBgInput) {
             uiElementsCache.customBgInput.click();
         }
     },
     removeCustomDesktopBackground: removeCustomDesktopBackground,
+    onPlaybackModeChange: (newMode) => { 
+        console.log(`[Main appServices.onPlaybackModeChange] Called with newMode: ${newMode}`);
+        if (uiElementsCache.playbackModeToggleBtnGlobal) {
+            uiElementsCache.playbackModeToggleBtnGlobal.textContent = newMode === 'timeline' ? 'Mode: Timeline' : 'Mode: Pattern';
+            uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('active', newMode === 'timeline');
+            console.log(`[Main appServices.onPlaybackModeChange] Button text updated to: ${uiElementsCache.playbackModeToggleBtnGlobal.textContent}`);
+        } else {
+            console.warn("[Main appServices.onPlaybackModeChange] Playback mode toggle button not found in UI cache (uiElementsCache.playbackModeToggleBtnGlobal).");
+        }
+        if (appServices.renderTimeline) {
+            console.log("[Main appServices.onPlaybackModeChange] Calling renderTimeline.");
+            appServices.renderTimeline();
+        }
+    }
 };
 
 // --- UI Update Router ---
@@ -347,44 +370,41 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 if(dzContainer) {
                     const audioData = track.type === 'Sampler' ? track.samplerAudioData : track.instrumentSamplerSettings;
                     const inputId = track.type === 'Sampler' ? `fileInput-${track.id}` : `instrumentFileInput-${track.id}`;
-                    // This line re-creates the drop zone's inner HTML
                     dzContainer.innerHTML = createDropZoneHTML(track.id, inputId, track.type, null, {originalFileName: audioData.fileName, status: 'loaded'});
                     
-                    // Re-attach onchange for the file input
                     const fileInputEl = dzContainer.querySelector(`#${inputId}`);
                     const loadFn = appServices.loadSampleFile; 
                     if (fileInputEl && loadFn) fileInputEl.onchange = (e) => loadFn(e, track.id, track.type);
 
-                    // *** MODIFIED/ADDED: Re-attach D&D listeners to the new drop zone div ***
                     const newDropZoneDiv = dzContainer.querySelector('.drop-zone');
                     if (newDropZoneDiv) {
                         setupGenericDropZoneListeners(
                             newDropZoneDiv,
                             track.id,
                             track.type,
-                            null, // padIndexOrSliceId is null for main sampler/instrument sampler drop zones
+                            null, 
                             appServices.loadSoundFromBrowserToTarget,
                             appServices.loadSampleFile,
-                            appServices.getTrackById // Pass the getTrackById service
+                            appServices.getTrackById 
                         );
                     }
-                    // *** END OF MODIFICATION ***
                 }
             }
             break;
         case 'drumPadLoaded':
              if (inspectorWindow?.element && !inspectorWindow.isMinimized) { updateDrumPadControlsUI(track); renderDrumSamplerPads(track); }
             break;
-        case 'sequencerContentChanged':
-            if (sequencerWindow?.element && !sequencerWindow.isMinimized) openTrackSequencerWindow(trackId, true, sequencerWindow.options);
+        case 'sequencerContentChanged': 
+            if (sequencerWindow?.element && !sequencerWindow.isMinimized) {
+                openTrackSequencerWindow(trackId, true, sequencerWindow.options);
+            }
+            if (appServices.renderTimeline) appServices.renderTimeline();
             break;
         case 'sampleLoadError':
             if (inspectorWindow?.element && !inspectorWindow.isMinimized) {
                 let dzContainerId, audioDataKey, inputIdBase, targetDropZoneElement;
                 
                 if (track.type === 'DrumSampler' && typeof detail === 'number') {
-                    // For drum pads, D&D listeners are re-attached by updateDrumPadControlsUI in ui.js
-                    // No explicit D&D re-attachment needed here for drum pads.
                     dzContainerId = `#drumPadDropZoneContainer-${track.id}-${detail}`;
                     audioDataKey = track.drumSamplerPads[detail];
                     inputIdBase = `drumPadFileInput-${track.id}-${detail}`;
@@ -396,7 +416,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                         if (fileInputEl && loadDrumFn) {
                             fileInputEl.onchange = (e) => loadDrumFn(e, track.id, detail);
                         }
-                        // D&D listeners for drum pads are handled by updateDrumPadControlsUI
                     }
 
                 } else if (track.type === 'Sampler') {
@@ -418,21 +437,18 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                         if (fileInputEl && loadSampleFn) {
                             fileInputEl.onchange = (e) => loadSampleFn(e, track.id, track.type);
                         }
-
-                        // *** MODIFIED/ADDED: Re-attach D&D listeners for Sampler/InstrumentSampler on error ***
                         const newDropZoneDiv = targetDropZoneElement.querySelector('.drop-zone');
                         if (newDropZoneDiv) {
                             setupGenericDropZoneListeners(
                                 newDropZoneDiv,
                                 track.id,
                                 track.type,
-                                null, // padIndexOrSliceId for main sampler drop zones
+                                null, 
                                 appServices.loadSoundFromBrowserToTarget,
                                 appServices.loadSampleFile,
                                 appServices.getTrackById
                             );
                         }
-                        // *** END OF MODIFICATION ***
                     }
                 }
             }
@@ -445,9 +461,7 @@ async function initializeSnugOS() {
     console.log("[Main] Initializing SnugOS...");
 
     Object.keys(uiElementsCache).forEach(key => {
-        // Cache elements that are always present or frequently accessed
-        // Menu items are handled by eventhandlers.js directly by ID if not found in cache
-        if (document.getElementById(key)) { // Check if element exists before caching
+        if (document.getElementById(key)) { 
              uiElementsCache[key] = document.getElementById(key);
         }
     });
@@ -460,16 +474,16 @@ async function initializeSnugOS() {
 
 
     applyDesktopBackground(localStorage.getItem(DESKTOP_BACKGROUND_KEY));
-    if (uiElementsCache.customBgInput) { // This listener is for the hidden input file element
+    if (uiElementsCache.customBgInput) { 
         uiElementsCache.customBgInput.addEventListener('change', handleCustomBackgroundUpload);
     }
 
     initializeStateModule(appServices);
     initializeUIModule(appServices);
     initializeAudioModule(appServices);
-    initializeEventHandlersModule(appServices); // Pass appServices here
+    initializeEventHandlersModule(appServices); 
 
-    initializePrimaryEventListeners(appServices); // Pass appServices here
+    initializePrimaryEventListeners(appServices); 
 
     openGlobalControlsWindow((elements) => {
         uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
@@ -480,19 +494,21 @@ async function initializeSnugOS() {
         uiElementsCache.masterMeterBarGlobal = elements.masterMeterBarGlobal;
         uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal;
         uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
-        attachGlobalControlEvents(elements);
+        uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal; 
+        attachGlobalControlEvents(elements); 
         setupMIDI();
     }, null);
 
     Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true));
 
-    // Open timeline window by default on startup
     if (appServices.openTimelineWindow) {
         appServices.openTimelineWindow();
     }
     
     requestAnimationFrame(updateMetersLoop);
     appServices.updateUndoRedoButtonsUI(null, null);
+    if (appServices.onPlaybackModeChange) appServices.onPlaybackModeChange(getPlaybackModeState());
+
 
     showNotification("Welcome to SnugOS!", 2500);
     console.log("[Main] SnugOS Initialized.");
@@ -519,7 +535,6 @@ function applyDesktopBackground(imageUrl) {
     }
 }
 
-// handleCustomBackgroundUpload and removeCustomDesktopBackground are now defined above appServices
 
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
