@@ -27,6 +27,7 @@ export class SnugWindow {
         const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
         const safeDesktopHeight = (desktopEl && typeof desktopEl.offsetHeight === 'number' && desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768;
 
+        // Sanitize minWidth and minHeight first
         const optMinWidth = parseFloat(options.minWidth);
         const optMinHeight = parseFloat(options.minHeight);
         const minW = Number.isFinite(optMinWidth) && optMinWidth > 0 ? optMinWidth : 150;
@@ -34,34 +35,36 @@ export class SnugWindow {
 
         let optWidth = parseFloat(options.width);
         let optHeight = parseFloat(options.height);
-        let optX = parseFloat(options.x);
-        let optY = parseFloat(options.y);
         
         let w = Number.isFinite(optWidth) && optWidth >= minW ? optWidth : Math.max(minW, Math.min(350, safeDesktopWidth - 40));
         let h = Number.isFinite(optHeight) && optHeight >= minH ? optHeight : Math.max(minH, Math.min(250, safeDesktopHeight - 80));
         
+        // Ensure w and h are not NaN after calculations, using minW/minH as final fallback
+        w = Number.isFinite(w) && w > 0 ? w : minW;
+        h = Number.isFinite(h) && h > 0 ? h : minH;
+
         const taskbarHeightVal = (this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar'))?.offsetHeight || 30;
-        const maxX = Math.max(5, safeDesktopWidth - w - 10);
-        const maxY = Math.max(5, safeDesktopHeight - h - 10 - taskbarHeightVal);
+        const maxX = Math.max(5, safeDesktopWidth - w - 10); // Use sanitized w
+        const maxY = Math.max(5, safeDesktopHeight - h - 10 - taskbarHeightVal); // Use sanitized h
         
         const openWindowCount = this.appServices.getOpenWindows ? this.appServices.getOpenWindows().size : 0;
         const cascadeOffset = 20 + (openWindowCount % 10) * 25;
 
+        let optX = parseFloat(options.x);
+        let optY = parseFloat(options.y);
+
         let x = Number.isFinite(optX) ? Math.max(5, Math.min(optX, maxX)) : Math.max(5, Math.min(cascadeOffset, maxX));
         let y = Number.isFinite(optY) ? Math.max(5, Math.min(optY, maxY)) : Math.max(5, Math.min(cascadeOffset, maxY));
         
-        // Ensure all calculated dimensions are finite before assigning to this.options
         const finalX = Number.isFinite(x) ? x : 50;
         const finalY = Number.isFinite(y) ? y : 50;
-        const finalWidth = Number.isFinite(w) && w > 0 ? w : minW; // Ensure positive width
-        const finalHeight = Number.isFinite(h) && h > 0 ? h : minH; // Ensure positive height
 
         this.options = {
-            ...options, // Spread original options first
-            x: finalX,   // Override with sanitized values
+            ...options, 
+            x: finalX,   
             y: finalY,
-            width: finalWidth,
-            height: finalHeight,
+            width: w, // Already sanitized to be finite and positive or minW
+            height: h, // Already sanitized to be finite and positive or minH
             minWidth: minW,
             minHeight: minH,
             closable: options.closable !== undefined ? options.closable : true,
@@ -76,11 +79,12 @@ export class SnugWindow {
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
         
-        // Critical check and application of styles
-        if (!Number.isFinite(this.options.x)) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: X is NaN (${this.options.x}). Defaulting.`); this.options.x = 50;}
-        if (!Number.isFinite(this.options.y)) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Y is NaN (${this.options.y}). Defaulting.`); this.options.y = 50;}
-        if (!Number.isFinite(this.options.width) || this.options.width <= 0) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Width is NaN or invalid (${this.options.width}). Defaulting to minWidth.`); this.options.width = this.options.minWidth;}
-        if (!Number.isFinite(this.options.height) || this.options.height <= 0) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Height is NaN or invalid (${this.options.height}). Defaulting to minHeight.`); this.options.height = this.options.minHeight;}
+        // Log values immediately before setting styles
+        console.log(`[SnugWindow ${this.id} StyleSet] Applying left: ${this.options.x}, top: ${this.options.y}, width: ${this.options.width}, height: ${this.options.height}`);
+        if (!Number.isFinite(this.options.x)) console.error(`[SnugWindow ${this.id}] STYLE ERROR: X is NaN or not finite (${this.options.x}).`);
+        if (!Number.isFinite(this.options.y)) console.error(`[SnugWindow ${this.id}] STYLE ERROR: Y is NaN or not finite (${this.options.y}).`);
+        if (!Number.isFinite(this.options.width) || this.options.width <= 0) console.error(`[SnugWindow ${this.id}] STYLE ERROR: Width is NaN, zero, or negative (${this.options.width}).`);
+        if (!Number.isFinite(this.options.height) || this.options.height <= 0) console.error(`[SnugWindow ${this.id}] STYLE ERROR: Height is NaN, zero, or negative (${this.options.height}).`);
 
         this.element.style.left = `${this.options.x}px`; 
         this.element.style.top = `${this.options.y}px`; 
@@ -142,7 +146,7 @@ export class SnugWindow {
         this.element.addEventListener('mousedown', () => this.focus(), true);
         this.createTaskbarButton();
 
-        if (this.options.isMinimized) { // Check this.options.isMinimized, not options.isMinimized
+        if (this.options.isMinimized) { 
             this.minimize(true); 
         }
     }
