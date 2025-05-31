@@ -21,73 +21,64 @@ export class SnugWindow {
         if (!desktopEl) {
             console.error(`[SnugWindow CRITICAL ${id}] Desktop element not found. Cannot create window.`);
             this.element = null;
-            return; // Exit if desktop isn't found
+            return; 
         }
 
-        // Robust default dimension calculation
         const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
         const safeDesktopHeight = (desktopEl && typeof desktopEl.offsetHeight === 'number' && desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768;
 
         let optWidth = parseFloat(options.width);
         let optHeight = parseFloat(options.height);
+        let optX = parseFloat(options.x);
+        let optY = parseFloat(options.y);
+        
+        const minWidth = Number.isFinite(parseFloat(options.minWidth)) && parseFloat(options.minWidth) > 0 ? parseFloat(options.minWidth) : 150;
+        const minHeight = Number.isFinite(parseFloat(options.minHeight)) && parseFloat(options.minHeight) > 0 ? parseFloat(options.minHeight) : 100;
 
-        const defaultWidth = Number.isFinite(optWidth) && optWidth > 0 ? optWidth : Math.max(150, Math.min(350, safeDesktopWidth - 40));
-        const defaultHeight = Number.isFinite(optHeight) && optHeight > 0 ? optHeight : Math.max(100, Math.min(250, safeDesktopHeight - 80));
+        let w = Number.isFinite(optWidth) && optWidth >= minWidth ? optWidth : Math.max(minWidth, Math.min(350, safeDesktopWidth - 40));
+        let h = Number.isFinite(optHeight) && optHeight >= minHeight ? optHeight : Math.max(minHeight, Math.min(250, safeDesktopHeight - 80));
         
         const taskbarHeightVal = (this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar'))?.offsetHeight || 30;
 
-        const maxX = Math.max(5, safeDesktopWidth - defaultWidth - 10);
-        const maxY = Math.max(5, safeDesktopHeight - defaultHeight - 10 - taskbarHeightVal);
-
-        let initialX = parseFloat(options.x);
-        let initialY = parseFloat(options.y);
-
+        const maxX = Math.max(5, safeDesktopWidth - w - 10);
+        const maxY = Math.max(5, safeDesktopHeight - h - 10 - taskbarHeightVal);
+        
         const openWindowCount = this.appServices.getOpenWindows ? this.appServices.getOpenWindows().size : 0;
-        
-        if (!Number.isFinite(initialX)) {
-            const cascadeOffset = 20 + (openWindowCount % 10) * 25;
-            initialX = Math.max(5, Math.min(cascadeOffset, maxX));
-        } else {
-            initialX = Math.max(5, Math.min(initialX, maxX));
-        }
-        
-        if (!Number.isFinite(initialY)) {
-            const cascadeOffset = 20 + (openWindowCount % 10) * 25;
-            initialY = Math.max(5, Math.min(cascadeOffset, maxY));
-        } else {
-            initialY = Math.max(5, Math.min(initialY, maxY));
-        }
+        const cascadeOffset = 20 + (openWindowCount % 10) * 25;
+
+        let x = Number.isFinite(optX) ? Math.max(5, Math.min(optX, maxX)) : Math.max(5, Math.min(cascadeOffset, maxX));
+        let y = Number.isFinite(optY) ? Math.max(5, Math.min(optY, maxY)) : Math.max(5, Math.min(cascadeOffset, maxY));
         
         this.options = {
-            x: Number.isFinite(initialX) ? initialX : 50,
-            y: Number.isFinite(initialY) ? initialY : 50,
-            width: Number.isFinite(defaultWidth) && defaultWidth > (options.minWidth || 150) ? defaultWidth : (options.minWidth || 150),
-            height: Number.isFinite(defaultHeight) && defaultHeight > (options.minHeight || 100) ? defaultHeight : (options.minHeight || 100),
-            minWidth: options.minWidth || 150,
-            minHeight: options.minHeight || 100,
+            ...options, // Spread original options first
+            x: Number.isFinite(x) ? x : 50, // Fallback if somehow still NaN
+            y: Number.isFinite(y) ? y : 50, // Fallback
+            width: Number.isFinite(w) ? w : minWidth, // Fallback
+            height: Number.isFinite(h) ? h : minHeight, // Fallback
+            minWidth: minWidth,
+            minHeight: minHeight,
             closable: options.closable !== undefined ? options.closable : true,
             minimizable: options.minimizable !== undefined ? options.minimizable : true,
             resizable: options.resizable !== undefined ? options.resizable : true,
-            ...options // Spread other options like initialContentKey, zIndex, isMinimized
         };
-        // Ensure final dimensions are not NaN before applying
-        this.options.width = Number.isFinite(this.options.width) ? this.options.width : 350;
-        this.options.height = Number.isFinite(this.options.height) ? this.options.height : 250;
-        this.options.x = Number.isFinite(this.options.x) ? this.options.x : 50;
-        this.options.y = Number.isFinite(this.options.y) ? this.options.y : 50;
-
-        console.log(`[SnugWindow ${this.id} Constructor] Calculated options:`, JSON.stringify(this.options));
+        
+        console.log(`[SnugWindow ${this.id} Constructor] Initial raw options:`, JSON.stringify(options));
+        console.log(`[SnugWindow ${this.id} Constructor] Calculated final options:`, JSON.stringify(this.options));
 
 
         this.element = document.createElement('div');
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
         
-        // Apply styles only if values are finite numbers
-        if (Number.isFinite(this.options.x)) this.element.style.left = `${this.options.x}px`; else console.error(`[SnugWindow ${this.id}] Invalid x: ${this.options.x}`);
-        if (Number.isFinite(this.options.y)) this.element.style.top = `${this.options.y}px`; else console.error(`[SnugWindow ${this.id}] Invalid y: ${this.options.y}`);
-        if (Number.isFinite(this.options.width)) this.element.style.width = `${this.options.width}px`; else console.error(`[SnugWindow ${this.id}] Invalid width: ${this.options.width}`);
-        if (Number.isFinite(this.options.height)) this.element.style.height = `${this.options.height}px`; else console.error(`[SnugWindow ${this.id}] Invalid height: ${this.options.height}`);
+        if (!Number.isFinite(this.options.x)) { console.error(`[SnugWindow ${this.id}] FATAL: X is NaN before style set:`, this.options.x); this.options.x = 50;}
+        if (!Number.isFinite(this.options.y)) { console.error(`[SnugWindow ${this.id}] FATAL: Y is NaN before style set:`, this.options.y); this.options.y = 50;}
+        if (!Number.isFinite(this.options.width) || this.options.width <=0) { console.error(`[SnugWindow ${this.id}] FATAL: Width is NaN or invalid before style set:`, this.options.width); this.options.width = this.options.minWidth;}
+        if (!Number.isFinite(this.options.height) || this.options.height <=0) { console.error(`[SnugWindow ${this.id}] FATAL: Height is NaN or invalid before style set:`, this.options.height); this.options.height = this.options.minHeight;}
+
+        this.element.style.left = `${this.options.x}px`; 
+        this.element.style.top = `${this.options.y}px`; 
+        this.element.style.width = `${this.options.width}px`; 
+        this.element.style.height = `${this.options.height}px`;
 
 
         const initialZIndex = Number.isFinite(parseFloat(options.zIndex)) ? parseFloat(options.zIndex) : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
@@ -100,7 +91,7 @@ export class SnugWindow {
         this.element.style.backgroundColor = defaultWindowBg; 
 
         let buttonsHTML = '';
-        if (this.options.closable) { buttonsHTML += `<button class="window-close-btn" title="Close">X</button>`; } // Moved close to be first for standard OS layout
+        if (this.options.closable) { buttonsHTML += `<button class="window-close-btn" title="Close">X</button>`; } 
         if (this.options.minimizable) { buttonsHTML += `<button class="window-minimize-btn" title="Minimize">_</button>`; }
         if (this.options.resizable) { buttonsHTML += `<button class="window-maximize-btn" title="Maximize">□</button>`; }
 
