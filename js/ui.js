@@ -19,8 +19,6 @@ let selectedSoundForPreviewData = null; // Holds data for the sound selected for
 export function initializeUIModule(appServicesFromMain) { 
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 
-    // Wire up the getter and setter for selectedSoundForPreview if they are not already provided
-    // This allows ui.js to manage this specific piece of state if not handled globally.
     if (!localAppServices.getSelectedSoundForPreview) {
         console.log('[UI Init] getSelectedSoundForPreview service not found in appServices, wiring locally.');
         localAppServices.getSelectedSoundForPreview = () => selectedSoundForPreviewData;
@@ -462,7 +460,6 @@ function buildTrackInspectorContentDOM(track) {
     else if (track.type === 'Sampler') specificControlsHTML = buildSamplerSpecificInspectorDOM(track);
     else if (track.type === 'DrumSampler') specificControlsHTML = buildDrumSamplerSpecificInspectorDOM(track);
     else if (track.type === 'InstrumentSampler') specificControlsHTML = buildInstrumentSamplerSpecificInspectorDOM(track);
-    // Audio tracks currently have no specific inspector controls beyond the monitor button.
 
     const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     let sequencerButtonHTML = '';
@@ -474,7 +471,6 @@ function buildTrackInspectorContentDOM(track) {
     if (track.type === 'Audio') {
         monitorButtonHTML = `<button id="monitorBtn-${track.id}" title="Toggle Input Monitoring" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMonitoringEnabled ? 'active' : ''}">Monitor</button>`;
     }
-
 
     return `
         <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 dark:text-slate-300 overflow-y-auto h-full">
@@ -535,8 +531,6 @@ function initializeCommonInspectorControls(track, winEl) {
                 if (localAppServices.captureStateForUndo) {
                     localAppServices.captureStateForUndo(`Toggle Monitoring for ${track.name} to ${track.isMonitoringEnabled ? 'ON' : 'OFF'}`);
                 }
-                // Note: The actual monitoring connection/disconnection happens in startAudioRecording
-                // based on this flag. If recording is active, this won't change current monitoring.
             }
         });
     }
@@ -744,16 +738,36 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         const win = openWindows.get(windowId);
         win.restore();
         if (typeof onReadyCallback === 'function' && win.element) {
-            onReadyCallback({ playBtnGlobal: win.element.querySelector('#playBtnGlobal'), recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'), tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'), midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'), masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'), masterMeterBarGlobal: win.element.querySelector('#masterMeterBarGlobal'), midiIndicatorGlobal: win.element.querySelector('#midiIndicatorGlobal'), keyboardIndicatorGlobal: win.element.querySelector('#keyboardIndicatorGlobal') });
+            onReadyCallback({ 
+                playBtnGlobal: win.element.querySelector('#playBtnGlobal'), 
+                recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'), 
+                tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'), 
+                midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'), 
+                masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'), 
+                masterMeterBarGlobal: win.element.querySelector('#masterMeterBarGlobal'), 
+                midiIndicatorGlobal: win.element.querySelector('#midiIndicatorGlobal'), 
+                keyboardIndicatorGlobal: win.element.querySelector('#keyboardIndicatorGlobal'),
+                playbackModeToggleBtnGlobal: win.element.querySelector('#playbackModeToggleBtnGlobal') 
+            });
         }
         return win;
     }
-    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300"> <div class="grid grid-cols-2 gap-2 items-center"> <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button> <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button> </div> <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div> <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div> <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div> </div>`;
-    const options = { width: 280, height: 290, minWidth: 250, minHeight: 270, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
+    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300"> <div class="grid grid-cols-2 gap-2 items-center"> <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button> <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button> </div> <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div> <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div> <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div> <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Pattern/Timeline)" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Pattern</button> </div> </div>`;
+    const options = { width: 280, height: 330, minWidth: 250, minHeight: 310, closable: true, minimizable: true, resizable: true, initialContentKey: windowId }; 
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
     const newWindow = localAppServices.createWindow(windowId, 'Global Controls', contentHTML, options);
     if (newWindow?.element && typeof onReadyCallback === 'function') {
-        onReadyCallback({ playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'), recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'), tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'), midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'), masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'), masterMeterBarGlobal: newWindow.element.querySelector('#masterMeterBarGlobal'), midiIndicatorGlobal: newWindow.element.querySelector('#midiIndicatorGlobal'), keyboardIndicatorGlobal: newWindow.element.querySelector('#keyboardIndicatorGlobal') });
+        onReadyCallback({ 
+            playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'), 
+            recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'), 
+            tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'), 
+            midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'), 
+            masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'), 
+            masterMeterBarGlobal: newWindow.element.querySelector('#masterMeterBarGlobal'), 
+            midiIndicatorGlobal: newWindow.element.querySelector('#midiIndicatorGlobal'), 
+            keyboardIndicatorGlobal: newWindow.element.querySelector('#keyboardIndicatorGlobal'),
+            playbackModeToggleBtnGlobal: newWindow.element.querySelector('#playbackModeToggleBtnGlobal')
+        });
     }
     return newWindow;
 }
@@ -764,13 +778,12 @@ export function openSoundBrowserWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
-        // When restoring an already open window, ensure its content reflects current state
         const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
         if (currentLibNameFromState && localAppServices.updateSoundBrowserDisplayForLibrary) {
             console.log(`[UI SoundBrowser Re-Open/Restore] Updating display for already selected library: ${currentLibNameFromState}`);
             localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
         } else if (localAppServices.updateSoundBrowserDisplayForLibrary) {
-             localAppServices.updateSoundBrowserDisplayForLibrary(null); // Default to "Select Library" if none active
+             localAppServices.updateSoundBrowserDisplayForLibrary(null); 
         }
         return win;
     }
@@ -864,7 +877,6 @@ export function openSoundBrowserWindow(savedState = null) {
             }
         });
 
-        // *** REFINED LOGIC FOR INITIAL DISPLAY WHEN WINDOW OPENS ***
         if (!savedState) { 
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
@@ -895,7 +907,6 @@ export function openSoundBrowserWindow(savedState = null) {
                 localAppServices.updateSoundBrowserDisplayForLibrary(null);
             }
         }
-        // *** END OF REFINED LOGIC ***
     }
     return browserWindow;
 }
@@ -906,7 +917,6 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
 
     if (!browserWindowEl) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Sound Browser window element NOT FOUND. Aborting DOM updates.`);
-        // Still update global state if it's a successful load and no global lib is active
         if (libraryName && !isLoading && !hasError) {
             const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
@@ -925,11 +935,10 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
 
     console.log(`[UI updateSoundBrowserDisplayForLibrary] Window visible: ${isWindowVisible}, Current dropdown: '${currentDropdownSelection}', Target library: '${libraryName}'`);
 
-    // Decision logic for UI update
-    let shouldChangeVisibleLibrary = false;
+    let performFullUIUpdate = false;
+
     if (!isWindowVisible) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. No DOM update.`);
-        // Update global state if it's a successful load and no global lib is active
         if (libraryName && !isLoading && !hasError) {
             const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
@@ -937,34 +946,30 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
                  console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. Library '${libraryName}' loaded. Set as current in global state (as no global lib was active).`);
             }
         }
+        return; 
+    }
+
+    if (libraryName === currentDropdownSelection) {
+        performFullUIUpdate = true;
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Update current view for '${libraryName}'.`);
+    } else if (currentDropdownSelection === "" && libraryName && !isLoading && !hasError) {
+        performFullUIUpdate = true;
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Set initial view to '${libraryName}' from 'Select Library...'.`);
+    } else if (libraryName && !isLoading && !hasError) {
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Update for '${libraryName}' (isLoading: ${isLoading}, hasError: ${hasError}), but current view is '${currentDropdownSelection}'.`);
+        const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
+        if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
+            localAppServices.setCurrentLibraryName(libraryName);
+             console.log(`[UI updateSoundBrowserDisplayForLibrary] Background load of '${libraryName}' successful. Set as current in global state (as no global lib was active).`);
+        }
+        return; 
+    } else if ((isLoading || hasError) && libraryName !== currentDropdownSelection) {
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Loading/Error for non-selected library '${libraryName}'. Current view: '${currentDropdownSelection}'.`);
         return;
     }
 
-    // Window IS visible from this point onwards
-    if (libraryName === currentDropdownSelection) {
-        // Update is for the currently selected library (e.g., from loading to loaded/error)
-        shouldChangeVisibleLibrary = true;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Update current view for '${libraryName}'.`);
-    } else if (currentDropdownSelection === "" && libraryName && !isLoading && !hasError) {
-        // Dropdown is on "Select Library...", and a library just loaded successfully
-        shouldChangeVisibleLibrary = true;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Set initial view to '${libraryName}' from 'Select Library...'.`);
-    } else {
-        // Update is for a library different from the current selection,
-        // or it's a loading/error update for a non-selected library. Don't change visible UI.
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Update for '${libraryName}' (isLoading: ${isLoading}, hasError: ${hasError}), but current view is '${currentDropdownSelection}'.`);
-        // Still ensure global state for current library is set if it was null and this is a successful load
-        if (libraryName && !isLoading && !hasError) {
-            const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
-            if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
-                localAppServices.setCurrentLibraryName(libraryName);
-                console.log(`[UI updateSoundBrowserDisplayForLibrary] Background load of '${libraryName}' successful. Set as current in global state (as no global lib was active).`);
-            }
-        }
-        return; // Explicitly return to avoid further processing for this case
-    }
 
-    if (shouldChangeVisibleLibrary) {
+    if (performFullUIUpdate) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Proceeding with UI update for '${libraryName}'.`);
         if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(libraryName);
         if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]);
@@ -973,13 +978,11 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
             libSelect.value = libraryName || "";
         }
     } else {
-        // This path should not be reached if logic above is correct
-        console.error(`[UI updateSoundBrowserDisplayForLibrary] LOGIC ERROR: Reached unexpected state for '${libraryName}'.`);
+        console.error(`[UI updateSoundBrowserDisplayForLibrary] LOGIC ERROR: Reached unexpected state for '${libraryName}'. No UI update performed when one might have been expected.`);
         return;
     }
 
-    // Actual rendering of list content
-    if (!libraryName) { // This will only be reached if shouldChangeVisibleLibrary was true for a null libraryName
+    if (!libraryName) { 
         listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>';
         pathDisplay.textContent = '/';
         if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null);
@@ -1015,7 +1018,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : '';
     pathDisplay.textContent = `/${currentLibName}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
 
-    if (localAppServices.setSelectedSoundForPreview) { // Ensure it's cleared when directory changes
+    if (localAppServices.setSelectedSoundForPreview) { 
         localAppServices.setSelectedSoundForPreview(null);
     }
     if(previewBtn) previewBtn.disabled = true;
@@ -1116,15 +1119,22 @@ export function renderMixer(container) {
 
 // --- Sequencer Window ---
 function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
-    const stepsPerBar = Constants.STEPS_PER_BAR; const totalSteps = numBars * stepsPerBar;
+    const stepsPerBar = Constants.STEPS_PER_BAR; 
+    const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar; 
+    
     let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" class="w-12 p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[10px] text-gray-500 dark:text-slate-400">${(i % stepsPerBar === 0) ? (Math.floor(i / stepsPerBar) + 1) : ((i % 4 === 0) ? '&#x2022;' : '')}</div>`; }
+    
+    const activeSequence = track.getActiveSequence();
+    const sequenceData = activeSequence ? activeSequence.data : [];
+
     for (let i = 0; i < rows; i++) {
         let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
         html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px]" title="${rowLabels[i] || ''}">${labelText}</div>`;
         for (let j = 0; j < totalSteps; j++) {
-            const stepData = track.sequenceData[i]?.[j]; let activeClass = '';
+            const stepData = sequenceData[i]?.[j]; 
+            let activeClass = '';
             if (stepData?.active) { if (track.type === 'Synth') activeClass = 'active-synth'; else if (track.type === 'Sampler') activeClass = 'active-sampler'; else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler'; else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler'; }
             let beatBlockClass = (Math.floor((j % stepsPerBar) / 4) % 2 === 0) ? 'bg-gray-50 dark:bg-slate-700' : 'bg-white dark:bg-slate-750';
             if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-400 dark:border-l-slate-600';
@@ -1137,39 +1147,97 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
+    console.log(`[UI openTrackSequencerWindow] Called for track ${trackId}. Force redraw: ${forceRedraw}`);
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
-    if (!track || track.type === 'Audio') return null; 
+    if (!track || track.type === 'Audio') {
+        console.warn(`[UI openTrackSequencerWindow] Track ${trackId} not found or is Audio type. Aborting.`);
+        return null; 
+    }
     const windowId = `sequencerWin-${trackId}`;
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
 
     if (forceRedraw && openWindows.has(windowId)) {
-        try { openWindows.get(windowId).close(true); } catch (e) {console.warn("Error closing existing sequencer window for redraw:", e)}
+        const existingWindow = openWindows.get(windowId);
+        if (existingWindow && typeof existingWindow.close === 'function') {
+            try { 
+                console.log(`[UI openTrackSequencerWindow] Force redraw: Closing existing window ${windowId}`);
+                existingWindow.close(true); 
+            } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
+        } else {
+            console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not an instance.`);
+        }
     }
     if (openWindows.has(windowId) && !forceRedraw && !savedState) {
-        openWindows.get(windowId).restore();
-        if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
-        return openWindows.get(windowId);
+        const win = openWindows.get(windowId);
+        if (win && typeof win.restore === 'function') {
+            console.log(`[UI openTrackSequencerWindow] Restoring existing window ${windowId}`);
+            win.restore();
+            if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
+            return win;
+        } else {
+            console.warn(`[UI openTrackSequencerWindow] Window ${windowId} in map but cannot be restored.`);
+        }
     }
 
-    let rows, rowLabels; const numBars = Math.max(1, track.sequenceLength / Constants.STEPS_PER_BAR);
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) {
+        console.error(`[UI openTrackSequencerWindow] Track ${trackId} has no active sequence. Cannot open sequencer.`);
+        return null;
+    }
+
+    let rows, rowLabels; 
+    const numBars = activeSequence.length > 0 ? Math.max(1, activeSequence.length / Constants.STEPS_PER_BAR) : 1; 
+
     if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; }
     else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({ length: rows }, (_, i) => `Slice ${i + 1}`); }
     else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({ length: rows }, (_, i) => `Pad ${i + 1}`); }
     else { rows = 0; rowLabels = []; }
 
     const contentDOM = buildSequencerContentDOM(track, rows, rowLabels, numBars);
-    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
-    const seqOptions = { width: Math.min(900, (desktopEl?.offsetWidth || 900) - 40), height: 400, minWidth: 400, minHeight: 250, initialContentKey: windowId, onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); } };
-    if (savedState) Object.assign(seqOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
     
-    const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name}`, contentDOM, seqOptions);
+    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024; // Fallback
+    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
+
+
+    let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
+    let calculatedHeight = 400; // Default height
+
+    // Ensure calculated dimensions are finite and positive
+    if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) {
+        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedWidth (${calculatedWidth}), defaulting to 600.`);
+        calculatedWidth = 600;
+    }
+    if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) {
+        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedHeight (${calculatedHeight}), defaulting to 400.`);
+        calculatedHeight = 400;
+    }
+
+
+    const seqOptions = { 
+        width: calculatedWidth, 
+        height: calculatedHeight, 
+        minWidth: 400, 
+        minHeight: 250, 
+        initialContentKey: windowId, 
+        onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); } 
+    };
+    if (savedState) {
+        if (Number.isFinite(parseInt(savedState.left,10))) seqOptions.x = parseInt(savedState.left,10);
+        if (Number.isFinite(parseInt(savedState.top,10))) seqOptions.y = parseInt(savedState.top,10);
+        if (Number.isFinite(parseInt(savedState.width,10))) seqOptions.width = parseInt(savedState.width,10);
+        if (Number.isFinite(parseInt(savedState.height,10))) seqOptions.height = parseInt(savedState.height,10);
+        if (Number.isFinite(parseInt(savedState.zIndex))) seqOptions.zIndex = parseInt(savedState.zIndex);
+        seqOptions.isMinimized = savedState.isMinimized;
+    }
+    
+    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Creating window with options:`, JSON.stringify(seqOptions));
+    const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name} - ${activeSequence.name}`, contentDOM, seqOptions);
 
     if (sequencerWindow?.element) {
-        // Cache all step cells for performance and store the last played column index
         const allCells = Array.from(sequencerWindow.element.querySelectorAll('.sequencer-step-cell'));
         sequencerWindow.stepCellsGrid = [];
-        // Ensure track.sequenceLength is valid before using it for grid dimensions
-        const currentSequenceLength = track.sequenceLength || Constants.defaultStepsPerBar;
+        const currentSequenceLength = activeSequence.length || Constants.defaultStepsPerBar;
         for (let i = 0; i < rows; i++) {
             sequencerWindow.stepCellsGrid[i] = allCells.slice(i * currentSequenceLength, (i + 1) * currentSequenceLength);
         }
@@ -1182,33 +1250,50 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
             const currentTrackForMenu = localAppServices.getTrackById ? localAppServices.getTrackById(track.id) : null; if (!currentTrackForMenu) return;
+            const currentActiveSeq = currentTrackForMenu.getActiveSequence(); if(!currentActiveSeq) return;
             const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
             const menuItems = [
-                { label: "Copy Sequence", action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentTrackForMenu.sequenceData || [])), sequenceLength: currentTrackForMenu.sequenceLength }); showNotification(`Sequence for "${currentTrackForMenu.name}" copied.`, 2000); } } },
-                { label: "Paste Sequence", action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentTrackForMenu.name}`); currentTrackForMenu.sequenceData = JSON.parse(JSON.stringify(clipboard.data)); currentTrackForMenu.setSequenceLength(clipboard.sequenceLength, true); showNotification(`Sequence pasted into "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (!clipboard || clipboard.type !== 'sequence' || !clipboard.data || (clipboard.sourceTrackType && currentTrackForMenu && clipboard.sourceTrackType !== currentTrackForMenu.type)) },
+                { label: `Copy "${currentActiveSeq.name}"`, action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentActiveSeq.data || [])), sequenceLength: currentActiveSeq.length }); showNotification(`Sequence "${currentActiveSeq.name}" copied.`, 2000); } } },
+                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (!clipboard || clipboard.type !== 'sequence' || !clipboard.data || (clipboard.sourceTrackType && currentTrackForMenu && clipboard.sourceTrackType !== currentTrackForMenu.type)) },
                 { separator: true },
-                { label: "Erase Sequence", action: () => { showConfirmationDialog(`Erase Sequence for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence for ${currentTrackForMenu.name}`); let numRowsErase = currentTrackForMenu.sequenceData.length; currentTrackForMenu.sequenceData = Array(numRowsErase).fill(null).map(() => Array(currentTrackForMenu.sequenceLength).fill(null)); currentTrackForMenu.setSequenceLength(currentTrackForMenu.sequenceLength, true); showNotification(`Sequence erased for "${currentTrackForMenu.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
-                { label: "Double Sequence Length", action: () => { const currentNumBars = currentTrackForMenu.sequenceLength / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentTrackForMenu.name}".`, 2000); } }
+                { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
+                { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } }
             ];
             createContextMenu(event, menuItems);
         };
         if (grid) grid.addEventListener('contextmenu', sequencerContextMenuHandler);
         if (controlsDiv) controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
+        
         if (grid) grid.addEventListener('click', (e) => {
             const targetCell = e.target.closest('.sequencer-step-cell');
             if (targetCell) {
                 const row = parseInt(targetCell.dataset.row, 10); const col = parseInt(targetCell.dataset.col, 10);
+                const currentActiveSeq = track.getActiveSequence(); 
+                if (!currentActiveSeq || !currentActiveSeq.data) return; 
+
                 if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { 
-                    if (!track.sequenceData[row]) track.sequenceData[row] = Array(track.sequenceLength).fill(null);
-                    const currentStepData = track.sequenceData[row][col]; const isActive = !(currentStepData?.active);
-                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name}`);
-                    track.sequenceData[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
+                    if (!currentActiveSeq.data[row]) currentActiveSeq.data[row] = Array(currentActiveSeq.length).fill(null);
+                    const currentStepData = currentActiveSeq.data[row][col]; 
+                    const isActive = !(currentStepData?.active);
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name} (${currentActiveSeq.name})`);
+                    currentActiveSeq.data[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
                     updateSequencerCellUI(sequencerWindow.element, track.type, row, col, isActive);
                 }
             }
         });
         const lengthInput = sequencerWindow.element.querySelector(`#seqLengthInput-${track.id}`);
-        if (lengthInput) lengthInput.addEventListener('change', (e) => { const newNumBars = parseInt(e.target.value, 10); if (!isNaN(newNumBars) && newNumBars >= 1 && newNumBars <= (Constants.MAX_BARS || 16)) track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); else e.target.value = track.sequenceLength / Constants.STEPS_PER_BAR; });
+        if (lengthInput) {
+            lengthInput.value = numBars; 
+            lengthInput.addEventListener('change', (e) => { 
+                const newNumBars = parseInt(e.target.value, 10); 
+                const activeSeqForLengthChange = track.getActiveSequence();
+                if (activeSeqForLengthChange && !isNaN(newNumBars) && newNumBars >= 1 && newNumBars <= (Constants.MAX_BARS || 16)) {
+                    track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); 
+                } else if (activeSeqForLengthChange) {
+                    e.target.value = activeSeqForLengthChange.length / Constants.STEPS_PER_BAR; 
+                }
+            });
+        }
     }
     return sequencerWindow;
 }
@@ -1415,8 +1500,10 @@ export function highlightPlayingStep(trackId, col) {
     const seqWindow = openWindows.get(`sequencerWin-${trackId}`);
 
     if (seqWindow && seqWindow.element && !seqWindow.isMinimized && seqWindow.stepCellsGrid) {
-        // If there was a previously playing column, remove the 'playing' class from it
-        if (seqWindow.lastPlayedCol !== -1 && seqWindow.lastPlayedCol < track.sequenceLength) {
+        const activeSeq = track.getActiveSequence();
+        const currentSeqLength = activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
+
+        if (seqWindow.lastPlayedCol !== -1 && seqWindow.lastPlayedCol < currentSeqLength) {
             for (let i = 0; i < seqWindow.stepCellsGrid.length; i++) {
                 const cell = seqWindow.stepCellsGrid[i]?.[seqWindow.lastPlayedCol];
                 if (cell) {
@@ -1425,8 +1512,7 @@ export function highlightPlayingStep(trackId, col) {
             }
         }
 
-        // Add the 'playing' class to the current column
-        if (col < track.sequenceLength) {
+        if (col < currentSeqLength) {
             for (let i = 0; i < seqWindow.stepCellsGrid.length; i++) {
                 const cell = seqWindow.stepCellsGrid[i]?.[col];
                 if (cell) {
@@ -1434,8 +1520,6 @@ export function highlightPlayingStep(trackId, col) {
                 }
             }
         }
-        
-        // Store the current column index for the next update
         seqWindow.lastPlayedCol = col;
     }
 }
@@ -1468,26 +1552,38 @@ export function renderTimeline() {
 
         const clipsContainer = document.createElement('div');
         clipsContainer.style.position = 'relative'; 
-        clipsContainer.style.width = 'calc(100% - 120px)'; // Assuming 120px is track name width
+        clipsContainer.style.width = 'calc(100% - 120px)'; 
         clipsContainer.style.height = '100%';
-        // clipsContainer.style.marginLeft = '120px'; // This might not be needed if clips are positioned relative to lane
 
-        if (track.type === 'Audio' && track.audioClips) {
-            track.audioClips.forEach(clip => {
+        if (track.timelineClips && Array.isArray(track.timelineClips)) {
+            track.timelineClips.forEach(clip => {
                 const clipEl = document.createElement('div');
-                clipEl.className = 'audio-clip';
-                clipEl.textContent = clip.name || `Clip ${clip.id.slice(-4)}`;
-                clipEl.title = `${clip.name || 'Audio Clip'} (${clip.duration.toFixed(2)}s)`;
+                let clipText = clip.name || `Clip ${clip.id.slice(-4)}`;
+                let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration.toFixed(2)}s)`;
+                
+                if (clip.type === 'audio') {
+                    clipEl.className = 'audio-clip'; 
+                } else if (clip.type === 'sequence') {
+                    clipEl.className = 'sequence-clip'; 
+                    const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
+                    if (sourceSeq) {
+                        clipText = sourceSeq.name; 
+                        clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration.toFixed(2)}s)`;
+                    }
+                } else {
+                    clipEl.className = 'unknown-clip'; 
+                }
+                
+                clipEl.textContent = clipText;
+                clipEl.title = clipTitle;
                 
                 const pixelsPerSecond = 30; 
                 clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
                 clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
 
-                // --- ADD DRAG-AND-DROP LOGIC ---
                 clipEl.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-
                     const startX = e.clientX;
                     const initialLeftPixels = parseFloat(clipEl.style.left) || 0;
                     let originalStartTime = clip.startTime; 
@@ -1498,10 +1594,9 @@ export function renderTimeline() {
                         clipEl.style.left = `${Math.max(0, newLeftPixels)}px`; 
                     }
 
-                    function onMouseUp(upEvent) {
+                    function onMouseUp() {
                         document.removeEventListener('mousemove', onMouseMove);
                         document.removeEventListener('mouseup', onMouseUp);
-
                         const finalLeftPixels = parseFloat(clipEl.style.left) || 0;
                         const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond); 
                         
@@ -1509,8 +1604,8 @@ export function renderTimeline() {
                             if (localAppServices.captureStateForUndo) {
                                 localAppServices.captureStateForUndo(`Move clip on track "${track.name}"`);
                             }
-                            if (track.updateAudioClipPosition) {
-                                track.updateAudioClipPosition(clip.id, newStartTime);
+                            if (track.updateAudioClipPosition) { 
+                                track.updateAudioClipPosition(clip.id, newStartTime); 
                             } else {
                                 console.error("Track.updateAudioClipPosition method not found!");
                             }
@@ -1518,12 +1613,9 @@ export function renderTimeline() {
                             clipEl.style.left = `${originalStartTime * pixelsPerSecond}px`;
                         }
                     }
-
                     document.addEventListener('mousemove', onMouseMove);
                     document.addEventListener('mouseup', onMouseUp);
                 });
-                // --- END OF DRAG-AND-DROP LOGIC ---
-
                 clipsContainer.appendChild(clipEl);
             });
         }
@@ -1542,8 +1634,6 @@ export function updatePlayheadPosition() {
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
     const timelineContentArea = timelineWindow.element.querySelector('.window-content'); 
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler'); 
-    // const timelineTracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); // Not directly used for playhead logic here
-
 
     if (!playhead || typeof Tone === 'undefined' || !timelineContentArea) return;
     
@@ -1574,9 +1664,6 @@ export function updatePlayheadPosition() {
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
-    // The #timeline-tracks-area itself is wide and its parent #timeline-tracks-container or .window-content handles scrolling.
-    // So, direct transform on #timeline-tracks-area for scrolling might be redundant or conflict.
-    // The playhead and ruler sync with .window-content scroll.
 }
 
 export function openTimelineWindow(savedState = null) {
@@ -1602,17 +1689,16 @@ export function openTimelineWindow(savedState = null) {
     `;
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
     const timelineOptions = {
-        width: Math.max(600, Math.min(1200, (desktopEl?.offsetWidth || 1200) - 60)), 
+        width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)), 
         height: 250,
         x: 30, 
         y: 50, 
         minWidth: 400,
         minHeight: 150,
         initialContentKey: windowId, 
-        onCloseCallback: () => {
-            // Optional: if timeline needs to stop any processes when closed
-        }
+        onCloseCallback: () => {}
     };
 
      if (savedState) { 
