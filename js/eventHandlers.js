@@ -22,8 +22,9 @@ import {
 } from './state.js'; //
 
 let localAppServices = {};
-// >>> MODIFICATION START: Variable to hold the keep-alive source <<<
-let transportKeepAliveSource = null;
+// >>> MODIFICATION START: Variables for BufferSource keep-alive <<<
+let transportKeepAliveBufferSource = null;
+let silentKeepAliveBuffer = null;
 // >>> MODIFICATION END <<<
 
 export function initializeEventHandlersModule(appServicesFromMain) {
@@ -157,11 +158,20 @@ export function attachGlobalControlEvents(elements) {
             transport.cancel(0);
             console.log(`[EventHandlers Play/Resume] Called Tone.Transport.cancel(0).`);
 
+            // >>> MODIFICATION START: Stop and dispose previous keep-alive source <<<
+            if (transportKeepAliveBufferSource && !transportKeepAliveBufferSource.disposed) {
+                transportKeepAliveBufferSource.stop(0);
+                transportKeepAliveBufferSource.dispose();
+                transportKeepAliveBufferSource = null;
+                console.log(`[EventHandlers Play/Resume] Disposed previous keep-alive buffer source.`);
+            }
+            // >>> MODIFICATION END <<<
+
             if (transport.state === 'stopped' || transport.state === 'paused') {
                 let startTime = 0;
                 if (transport.state === 'paused') {
                     startTime = currentTransportTime;
-                } else {
+                } else { // Was stopped
                     transport.position = 0;
                 }
                 console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`);
@@ -171,23 +181,28 @@ export function attachGlobalControlEvents(elements) {
                 transport.loop = true;
                 console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}`);
 
-                // >>> MODIFICATION START: Robust Keep-Alive with silent Oscillator <<<
-                if (transportKeepAliveSource && !transportKeepAliveSource.disposed) {
-                    transportKeepAliveSource.stop(0);
-                    transportKeepAliveSource.dispose();
-                    transportKeepAliveSource = null;
-                    console.log(`[EventHandlers Play/Resume] Disposed previous keep-alive source.`);
+                // >>> MODIFICATION START: Robust Keep-Alive with silent BufferSource <<<
+                if (!silentKeepAliveBuffer && Tone.context) { // Create silent buffer once
+                    try {
+                        silentKeepAliveBuffer = Tone.context.createBuffer(1, 1, Tone.context.sampleRate);
+                        // You can optionally fill it with zeros, but an empty buffer is often fine.
+                        // const channelData = silentKeepAliveBuffer.getChannelData(0);
+                        // for (let i = 0; i < channelData.length; i++) { channelData[i] = 0; }
+                        console.log("[EventHandlers Play/Resume] Created silent keep-alive buffer.");
+                    } catch (e) {
+                        console.error("[EventHandlers Play/Resume] Error creating silent buffer:", e);
+                        silentKeepAliveBuffer = null; // Ensure it's null if creation failed
+                    }
                 }
 
-                // Create a silent oscillator that runs for the duration of the loop
-                // Connect it to destination to ensure it's processed, but make it silent.
-                transportKeepAliveSource = new Tone.Oscillator(0, "sine").toDestination(); // Frequency 0 should be silent
-                transportKeepAliveSource.volume.value = -Infinity; // Ensure absolute silence
-
-                // Schedule its start and stop relative to the transport's timeline
-                // This source's existence should keep the transport active.
-                transportKeepAliveSource.start(startTime).stop(transport.loopEnd);
-                console.log(`[EventHandlers Play/Resume] Scheduled SILENT keep-alive Oscillator from ${startTime}s to ${transport.loopEnd}s.`);
+                if (silentKeepAliveBuffer) {
+                    transportKeepAliveBufferSource = new Tone.BufferSource(silentKeepAliveBuffer).toDestination();
+                    transportKeepAliveBufferSource.loop = true;
+                    transportKeepAliveBufferSource.start(startTime); // Start relative to transport's timeline
+                    console.log(`[EventHandlers Play/Resume] Scheduled SILENT looping keep-alive BufferSource starting at transport time ${startTime}s.`);
+                } else {
+                    console.warn("[EventHandlers Play/Resume] Could not create/use silent buffer for keep-alive.");
+                }
                 // >>> MODIFICATION END <<<
 
                 console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${startTime}.`);
@@ -197,18 +212,22 @@ export function attachGlobalControlEvents(elements) {
                     }
                 }
                 console.log(`[EventHandlers Play/Resume] BEFORE transport.start - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
-                transport.start(Tone.now() + 0.05, startTime);
+                if (transport.state === 'stopped') {
+                    transport.start(Tone.now() + 0.05); // If fully stopped, start without offset initially
+                } else { // paused
+                    transport.start(Tone.now() + 0.05, startTime); // If paused, resume from startTime
+                }
                 playBtnGlobal.textContent = 'Pause';
 
             } else { // 'started'
                 console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                 transport.pause();
-                // >>> MODIFICATION START: Stop and dispose keep-alive source on pause <<<
-                if (transportKeepAliveSource && !transportKeepAliveSource.disposed) {
-                    transportKeepAliveSource.stop(Tone.now()); // Stop it at the current transport time
-                    transportKeepAliveSource.dispose();
-                    transportKeepAliveSource = null;
-                    console.log(`[EventHandlers Play/Resume] Stopped and disposed keep-alive source on pause.`);
+                // >>> MODIFICATION START: Stop and dispose keep-alive BufferSource on pause <<<
+                if (transportKeepAliveBufferSource && !transportKeepAliveBufferSource.disposed) {
+                    transportKeepAliveBufferSource.stop(Tone.now()); // Stop immediately in audio context time
+                    transportKeepAliveBufferSource.dispose();
+                    transportKeepAliveBufferSource = null;
+                    console.log(`[EventHandlers Play/Resume] Stopped and disposed keep-alive buffer source on pause.`);
                 }
                 // >>> MODIFICATION END <<<
                 playBtnGlobal.textContent = 'Play';
@@ -216,8 +235,6 @@ export function attachGlobalControlEvents(elements) {
             console.log(`[EventHandlers Play/Resume] AFTER transport.start/pause - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
         });
     }
-
-    // ... (rest of the event handlers remain the same) ...
 
     if (recordBtnGlobal) {
         recordBtnGlobal.addEventListener('click', async () => {
