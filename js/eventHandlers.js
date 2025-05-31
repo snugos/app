@@ -22,10 +22,8 @@ import {
 } from './state.js'; //
 
 let localAppServices = {};
-// >>> MODIFICATION START: Variables for BufferSource keep-alive <<<
 let transportKeepAliveBufferSource = null;
 let silentKeepAliveBuffer = null;
-// >>> MODIFICATION END <<<
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
@@ -49,7 +47,7 @@ export function initializePrimaryEventListeners(appContext) {
                 e.stopPropagation();
                 if (uiCache.startMenu) {
                     console.log(`[EventHandlers] Start Menu found. Current classes before toggle: '${uiCache.startMenu.className}'`);  //
-                    uiCache.startMenu.classList.toggle('hidden'); // MODIFIED LINE
+                    uiCache.startMenu.classList.toggle('hidden');
                     console.log(`[EventHandlers] Start Menu after toggle. New classes: '${uiCache.startMenu.className}'`);  //
                 } else {
                     console.error('[EventHandlers] Start Menu (uiCache.startMenu) not found when Start Button clicked!');  //
@@ -61,11 +59,11 @@ export function initializePrimaryEventListeners(appContext) {
 
         if (uiCache.desktop) {
             uiCache.desktop.addEventListener('click', () => {
-                if (uiCache.startMenu && !uiCache.startMenu.classList.contains('hidden')) { // MODIFIED CONDITION
+                if (uiCache.startMenu && !uiCache.startMenu.classList.contains('hidden')) {
                     console.log('[EventHandlers] Desktop clicked, closing Start Menu.'); //
-                    uiCache.startMenu.classList.add('hidden'); // MODIFIED LINE
+                    uiCache.startMenu.classList.add('hidden');
                 }
-                const activeContextMenu = document.querySelector('.context-menu'); // Use class selector
+                const activeContextMenu = document.querySelector('.context-menu');
                 if (activeContextMenu) {
                     console.log('[EventHandlers] Desktop clicked, closing active context menu.'); //
                     activeContextMenu.remove();
@@ -80,48 +78,48 @@ export function initializePrimaryEventListeners(appContext) {
                 e.preventDefault();
                 console.log('[EventHandlers] Desktop context menu triggered.'); //
                 const menuItems = [
-                    { label: "Add Synth Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); } }, //
-                    { label: "Add Slicer Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); } }, //
-                    { label: "Add Sampler (Pads)", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); } }, //
-                    { label: "Add Instrument Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); } }, //
-                    { label: "Add Audio Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); } }, //
-                    { separator: true }, //
-                    { label: "Open Sound Browser", action: () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); } }, //
-                    { label: "Open Timeline", action: () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); } }, //
-                    { label: "Open Global Controls", action: () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); } }, //
-                    { label: "Open Mixer", action: () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); } }, //
-                    { label: "Open Master Effects", action: () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); } }, //
-                    { separator: true }, //
-                    { label: "Upload Custom Background", action: () => { if(localAppServices.triggerCustomBackgroundUpload) localAppServices.triggerCustomBackgroundUpload(); } }, //
-                    { label: "Remove Custom Background", action: () => { if(localAppServices.removeCustomDesktopBackground) localAppServices.removeCustomDesktopBackground(); } }, //
-                    { separator: true }, //
-                    { label: "Toggle Full Screen", action: toggleFullScreen } //
+                    { label: "Add Synth Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Slicer Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Sampler (Pads)", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Instrument Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Audio Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); } },
+                    { separator: true },
+                    { label: "Open Sound Browser", action: () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); } },
+                    { label: "Open Timeline", action: () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); } },
+                    { label: "Open Global Controls", action: () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); } },
+                    { label: "Open Mixer", action: () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); } },
+                    { label: "Open Master Effects", action: () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); } },
+                    { separator: true },
+                    { label: "Upload Custom Background", action: () => { if(localAppServices.triggerCustomBackgroundUpload) localAppServices.triggerCustomBackgroundUpload(); } },
+                    { label: "Remove Custom Background", action: () => { if(localAppServices.removeCustomDesktopBackground) localAppServices.removeCustomDesktopBackground(); } },
+                    { separator: true },
+                    { label: "Toggle Full Screen", action: toggleFullScreen }
                 ];
-                createContextMenu(e, menuItems, localAppServices); // Pass appServices for z-index
+                createContextMenu(e, menuItems, localAppServices);
             });
         }
 
 
-        uiCache.menuAddSynthTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuAddSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuAddInstrumentSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuAddAudioTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); }); //
+        uiCache.menuAddSynthTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuAddSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuAddInstrumentSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuAddAudioTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.add('hidden'); });
 
-        uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuOpenTimeline?.addEventListener('click', () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuOpenGlobalControls?.addEventListener('click', () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuOpenMixer?.addEventListener('click', () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuOpenMasterEffects?.addEventListener('click', () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); uiCache.startMenu.classList.add('hidden'); }); //
+        uiCache.menuOpenSoundBrowser?.addEventListener('click', () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuOpenTimeline?.addEventListener('click', () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuOpenGlobalControls?.addEventListener('click', () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuOpenMixer?.addEventListener('click', () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuOpenMasterEffects?.addEventListener('click', () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); uiCache.startMenu.classList.add('hidden'); });
 
-        uiCache.menuUndo?.addEventListener('click', () => { if(localAppServices.undoLastAction) localAppServices.undoLastAction(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuRedo?.addEventListener('click', () => { if(localAppServices.redoLastAction) localAppServices.redoLastAction(); uiCache.startMenu.classList.add('hidden'); }); //
+        uiCache.menuUndo?.addEventListener('click', () => { if(localAppServices.undoLastAction) localAppServices.undoLastAction(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuRedo?.addEventListener('click', () => { if(localAppServices.redoLastAction) localAppServices.redoLastAction(); uiCache.startMenu.classList.add('hidden'); });
 
-        uiCache.menuSaveProject?.addEventListener('click', () => { if(localAppServices.saveProject) localAppServices.saveProject(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuLoadProject?.addEventListener('click', () => { if(localAppServices.loadProject) localAppServices.loadProject(); uiCache.startMenu.classList.add('hidden'); }); //
-        uiCache.menuExportWav?.addEventListener('click', () => { if(localAppServices.exportToWav) localAppServices.exportToWav(); uiCache.startMenu.classList.add('hidden'); }); //
+        uiCache.menuSaveProject?.addEventListener('click', () => { if(localAppServices.saveProject) localAppServices.saveProject(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuLoadProject?.addEventListener('click', () => { if(localAppServices.loadProject) localAppServices.loadProject(); uiCache.startMenu.classList.add('hidden'); });
+        uiCache.menuExportWav?.addEventListener('click', () => { if(localAppServices.exportToWav) localAppServices.exportToWav(); uiCache.startMenu.classList.add('hidden'); });
 
-        uiCache.menuToggleFullScreen?.addEventListener('click', () => { toggleFullScreen(); uiCache.startMenu.classList.add('hidden'); }); //
+        uiCache.menuToggleFullScreen?.addEventListener('click', () => { toggleFullScreen(); uiCache.startMenu.classList.add('hidden'); });
 
         if (uiCache.loadProjectInput) {
             uiCache.loadProjectInput.addEventListener('change', (e) => {
@@ -132,12 +130,12 @@ export function initializePrimaryEventListeners(appContext) {
         }
 
     } catch (error) {
-        console.error("[EventHandlers] Error in initializePrimaryEventListeners:", error); //
+        console.error("[EventHandlers] Error in initializePrimaryEventListeners:", error);
     }
 }
 
 export function attachGlobalControlEvents(elements) {
-    const { playBtnGlobal, recordBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements; //
+    const { playBtnGlobal, recordBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
 
     if (playBtnGlobal) {
         playBtnGlobal.addEventListener('click', async () => {
@@ -158,21 +156,23 @@ export function attachGlobalControlEvents(elements) {
             transport.cancel(0);
             console.log(`[EventHandlers Play/Resume] Called Tone.Transport.cancel(0).`);
 
-            // >>> MODIFICATION START: Stop and dispose previous keep-alive source <<<
             if (transportKeepAliveBufferSource && !transportKeepAliveBufferSource.disposed) {
                 transportKeepAliveBufferSource.stop(0);
                 transportKeepAliveBufferSource.dispose();
                 transportKeepAliveBufferSource = null;
                 console.log(`[EventHandlers Play/Resume] Disposed previous keep-alive buffer source.`);
             }
-            // >>> MODIFICATION END <<<
 
             if (transport.state === 'stopped' || transport.state === 'paused') {
                 let startTime = 0;
-                if (transport.state === 'paused') {
+                const wasPaused = transport.state === 'paused';
+                const wasStopped = transport.state === 'stopped';
+
+                if (wasPaused) {
                     startTime = currentTransportTime;
                 } else { // Was stopped
                     transport.position = 0;
+                    startTime = 0;
                 }
                 console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`);
 
@@ -181,25 +181,25 @@ export function attachGlobalControlEvents(elements) {
                 transport.loop = true;
                 console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}`);
 
-                // >>> MODIFICATION START: Robust Keep-Alive with silent BufferSource <<<
-                if (!silentKeepAliveBuffer && Tone.context) { // Create silent buffer once
+                // >>> MODIFICATION START: Create and start keep-alive source more directly <<<
+                if (!silentKeepAliveBuffer && Tone.context) {
                     try {
                         silentKeepAliveBuffer = Tone.context.createBuffer(1, 1, Tone.context.sampleRate);
-                        // You can optionally fill it with zeros, but an empty buffer is often fine.
-                        // const channelData = silentKeepAliveBuffer.getChannelData(0);
-                        // for (let i = 0; i < channelData.length; i++) { channelData[i] = 0; }
+                        const channelData = silentKeepAliveBuffer.getChannelData(0);
+                        channelData[0] = 0;
                         console.log("[EventHandlers Play/Resume] Created silent keep-alive buffer.");
                     } catch (e) {
                         console.error("[EventHandlers Play/Resume] Error creating silent buffer:", e);
-                        silentKeepAliveBuffer = null; // Ensure it's null if creation failed
+                        silentKeepAliveBuffer = null;
                     }
                 }
 
                 if (silentKeepAliveBuffer) {
                     transportKeepAliveBufferSource = new Tone.BufferSource(silentKeepAliveBuffer).toDestination();
                     transportKeepAliveBufferSource.loop = true;
-                    transportKeepAliveBufferSource.start(startTime); // Start relative to transport's timeline
-                    console.log(`[EventHandlers Play/Resume] Scheduled SILENT looping keep-alive BufferSource starting at transport time ${startTime}s.`);
+                    // Start the keep-alive source in audio context time, slightly ahead, for its full loop duration
+                    transportKeepAliveBufferSource.start(Tone.now() + 0.02, 0, transport.loopEnd);
+                    console.log(`[EventHandlers Play/Resume] Scheduled SILENT looping keep-alive BufferSource in audio context time.`);
                 } else {
                     console.warn("[EventHandlers Play/Resume] Could not create/use silent buffer for keep-alive.");
                 }
@@ -211,28 +211,30 @@ export function attachGlobalControlEvents(elements) {
                         await track.schedulePlayback(startTime, transport.loopEnd);
                     }
                 }
-                console.log(`[EventHandlers Play/Resume] BEFORE transport.start - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
-                if (transport.state === 'stopped') {
-                    transport.start(Tone.now() + 0.05); // If fully stopped, start without offset initially
-                } else { // paused
-                    transport.start(Tone.now() + 0.05, startTime); // If paused, resume from startTime
+
+                console.log(`[EventHandlers Play/Resume] BEFORE transport.start - Loop: ${transport.loop}, Position: ${transport.position}, State: ${transport.state}`);
+                if (wasStopped) {
+                    transport.start(Tone.now() + 0.05); // Start from current transport.position (which is 0)
+                } else { // wasPaused
+                    transport.start(Tone.now() + 0.05, startTime); // Resume from offset
                 }
                 playBtnGlobal.textContent = 'Pause';
 
             } else { // 'started'
                 console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                 transport.pause();
-                // >>> MODIFICATION START: Stop and dispose keep-alive BufferSource on pause <<<
                 if (transportKeepAliveBufferSource && !transportKeepAliveBufferSource.disposed) {
-                    transportKeepAliveBufferSource.stop(Tone.now()); // Stop immediately in audio context time
+                    transportKeepAliveBufferSource.stop(Tone.now()); // Stop in audio context time
                     transportKeepAliveBufferSource.dispose();
                     transportKeepAliveBufferSource = null;
                     console.log(`[EventHandlers Play/Resume] Stopped and disposed keep-alive buffer source on pause.`);
                 }
-                // >>> MODIFICATION END <<<
                 playBtnGlobal.textContent = 'Play';
             }
-            console.log(`[EventHandlers Play/Resume] AFTER transport.start/pause - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
+            // Add a slight delay before this final log to allow Tone.js to update its state
+             setTimeout(() => {
+                console.log(`[EventHandlers Play/Resume] FINAL CHECK - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
+            }, 100);
         });
     }
 
