@@ -125,7 +125,7 @@ export class Track {
                 } else if (this.type === 'DrumSampler') {
                     numRowsForGrid = Constants.numDrumSamplerPads;
                 } else {
-                    numRowsForGrid = 1; // Fallback, should ideally not happen for known types
+                    numRowsForGrid = 1; 
                     console.warn(`[Track ${this.id} Constructor] Unknown track type for sequence rows: ${this.type}. Defaulting to 1 row.`);
                 }
                 if (numRowsForGrid === 0 && (this.type === 'Synth' || this.type === 'InstrumentSampler' || this.type === 'Sampler' || this.type === 'DrumSampler')) {
@@ -917,7 +917,8 @@ export class Track {
     
     recreateToneSequence(forceRestart = false) {
         if (this.type === 'Audio') return;
-        console.log(`[Track ${this.id} recreateToneSequence] Called. ActiveSeqID: ${this.activeSequenceId}`);
+        const currentPlaybackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern';
+        console.log(`[Track ${this.id} recreateToneSequence] Called. ActiveSeqID: ${this.activeSequenceId}. Current Playback Mode: ${currentPlaybackMode}`);
 
         if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
             console.log(`[Track ${this.id} recreateToneSequence] Disposing existing Tone.Sequence.`);
@@ -925,6 +926,11 @@ export class Track {
             this.patternPlayerSequence.clear();
             this.patternPlayerSequence.dispose();
             this.patternPlayerSequence = null;
+        }
+
+        if (currentPlaybackMode !== 'pattern') {
+            console.log(`[Track ${this.id} recreateToneSequence] Playback mode is '${currentPlaybackMode}'. Not creating pattern player sequence.`);
+            return; // Don't create a pattern player if we are in timeline mode
         }
 
         const activeSeq = this.getActiveSequence();
@@ -943,7 +949,7 @@ export class Track {
         
         const sequenceDataForTone = activeSeq.data;
         const sequenceLengthForTone = activeSeq.length; 
-        console.log(`[Track ${this.id} recreateToneSequence] Creating Tone.Sequence for '${activeSeq.name}' with ${sequenceLengthForTone} steps and ${sequenceDataForTone.length} rows.`);
+        console.log(`[Track ${this.id} recreateToneSequence] Creating Tone.Sequence for '${activeSeq.name}' with ${sequenceLengthForTone} steps and ${sequenceDataForTone.length} rows for PATTERN mode.`);
 
         if(sequenceDataForTone.length === 0 && sequenceLengthForTone > 0){
             console.warn(`[Track ${this.id} recreateToneSequence] Sequence data has 0 rows, but length is ${sequenceLengthForTone}. This might lead to issues or an empty sequence.`);
@@ -951,11 +957,8 @@ export class Track {
 
 
         this.patternPlayerSequence = new Tone.Sequence((time, col) => {
-            const playbackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern'; 
-            if (playbackMode !== 'pattern') {
-                if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
-                    this.patternPlayerSequence.stop();
-                }
+            const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern'; 
+            if (playbackModeCheck !== 'pattern') { // Double check mode at playback time
                 return;
             }
 
@@ -982,7 +985,6 @@ export class Track {
                     const pitchName = Constants.synthPitches[rowIndex];
                     const step = sequenceDataForTone[rowIndex]?.[col];
                     if (step?.active && !notePlayedThisStep) {
-                        // console.log(`[Track ${this.id} SeqCallback] Synth: Playing ${pitchName} at col ${col} vel ${step.velocity}`);
                         this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity * Constants.defaultVelocity);
                         notePlayedThisStep = true; 
                     }
@@ -1063,7 +1065,7 @@ export class Track {
 
         this.patternPlayerSequence.loop = true; 
         this.patternPlayerSequence.start(0); 
-        console.log(`[Track ${this.id} recreateToneSequence] Tone.Sequence for '${activeSeq.name}' created and started.`);
+        console.log(`[Track ${this.id} recreateToneSequence] Tone.Sequence for '${activeSeq.name}' created and started for PATTERN mode.`);
 
         if (this.appServices.updateTrackUI) { 
             this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
@@ -1123,7 +1125,7 @@ export class Track {
     async schedulePlayback(transportStartTime, transportStopTime) {
         const playbackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'pattern';
         console.log(`[Track ${this.id} (${this.type})] schedulePlayback called. Mode: ${playbackMode}. Transport Start: ${transportStartTime}, Stop: ${transportStopTime}`);
-        this.stopPlayback(); 
+        this.stopPlayback(); // Clear previous players for this track
 
         if (playbackMode === 'timeline') {
             console.log(`[Track ${this.id}] In TIMELINE mode. Scheduling ${this.timelineClips.length} timeline clips.`);
@@ -1173,15 +1175,13 @@ export class Track {
 
                         for(let stepIndex = 0; stepIndex < totalEventsInSourceSeq; stepIndex++) {
                             const timeWithinSourceSeq = stepIndex * sixteenthTime;
-                            // Calculate the absolute transport time for this step within the clip
                             const actualTransportTimeForStep = clipActualStartOnTransport + timeWithinSourceSeq;
 
-                            // Check if this step falls within the current playback window of this clip instance
                             if (actualTransportTimeForStep >= effectivePlayStartOnTransport && actualTransportTimeForStep < effectivePlayEndOnTransport) {
                                 for (let rowIndex = 0; rowIndex < sourceSequence.data.length; rowIndex++) {
                                     const stepData = sourceSequence.data[rowIndex]?.[stepIndex];
                                     if (stepData?.active) {
-                                        Tone.Transport.scheduleOnce((time) => { // 'time' here is actualTransportTimeForStep
+                                        Tone.Transport.scheduleOnce((time) => { 
                                             const currentGlobalSoloId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
                                             const isEffectivelyMuted = this.isMuted || (currentGlobalSoloId !== null && currentGlobalSoloId !== this.id);
                                             if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) return;
@@ -1192,11 +1192,10 @@ export class Track {
 
                                             if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
                                                 const pitchName = Constants.synthPitches[rowIndex];
-                                                if (pitchName) this.instrument.triggerAttackRelease(pitchName, "16n", time, stepData.velocity * Constants.defaultVelocity); // Use "16n" for duration
+                                                if (pitchName) this.instrument.triggerAttackRelease(pitchName, "16n", time, stepData.velocity * Constants.defaultVelocity); 
                                             } else if (this.type === 'Sampler' && this.audioBuffer?.loaded) {
-                                                // Simplified Slicer playback for timeline - polyphonic only for now
                                                 const sliceData = this.slices[rowIndex];
-                                                if (sliceData?.duration > 0) {
+                                                if (sliceData?.duration > 0) { 
                                                     const tempPlayer = new Tone.Player(this.audioBuffer);
                                                     const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
                                                     const tempGain = new Tone.Gain(stepData.velocity * sliceData.volume);
@@ -1204,7 +1203,6 @@ export class Track {
                                                     const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                                                     let playDuration = sliceData.duration / playbackRate;
                                                     tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse;
-                                                    // For timeline sequence clips, individual notes don't loop within themselves.
                                                     tempPlayer.loop = false; 
                                                     tempPlayer.start(time, sliceData.offset, playDuration);
                                                     tempEnv.triggerAttack(time);
@@ -1231,10 +1229,15 @@ export class Track {
             }
         } else { // 'pattern' mode
             if (this.patternPlayerSequence && this.patternPlayerSequence.state !== 'started' && Tone.Transport.state === 'started') {
-                console.log(`[Track ${this.id}] Starting patternPlayerSequence at transport time: ${Tone.Transport.seconds}`);
+                console.log(`[Track ${this.id}] Starting patternPlayerSequence at transport time: ${Tone.Transport.seconds} for PATTERN mode.`);
                 this.patternPlayerSequence.start(Tone.Transport.seconds); 
             } else if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started' && Tone.Transport.state !== 'started') {
                 this.patternPlayerSequence.stop();
+                 console.log(`[Track ${this.id}] Stopped patternPlayerSequence because transport is not started.`);
+            } else if (this.patternPlayerSequence && this.patternPlayerSequence.state !== 'started' && Tone.Transport.state !== 'started') {
+                console.log(`[Track ${this.id}] PatternPlayerSequence and Transport are both stopped. No action.`);
+            } else if (!this.patternPlayerSequence) {
+                console.warn(`[Track ${this.id}] PatternPlayerSequence is null. Cannot start for pattern mode.`);
             }
         }
     }
@@ -1261,9 +1264,9 @@ export class Track {
             console.log(`[Track ${this.id}] Stopped patternPlayerSequence.`);
         }
         // When stopping, also cancel any manually scheduled Tone.Transport events for sequence clips
-        Tone.Transport.cancel(0); // This might be too broad if other tracks need their events.
-                                   // A more targeted approach would be to store event IDs and cancel only those.
-                                   // For now, this ensures sequence notes from timeline mode stop.
+        // This is important for timeline mode sequence clips.
+        // Tone.Transport.cancel(0); // This was too broad. We need a more targeted way if timeline events are scheduled manually.
+        // For now, the Tone.Part or individual player disposal for sequence clips should handle this.
     }
     
 
