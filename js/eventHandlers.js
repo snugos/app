@@ -22,6 +22,9 @@ import {
 } from './state.js'; //
 
 let localAppServices = {};
+// >>> MODIFICATION START: Variable to hold the keep-alive source <<<
+let transportKeepAliveSource = null;
+// >>> MODIFICATION END <<<
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
@@ -137,47 +140,57 @@ export function attachGlobalControlEvents(elements) {
 
     if (playBtnGlobal) {
         playBtnGlobal.addEventListener('click', async () => {
-            const audioReady = await localAppServices.initAudioContextAndMasterMeter(true); //
+            const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
             if (!audioReady) return;
 
-            const transport = Tone.Transport; //
-            const currentTransportTime = transport.seconds; //
-            console.log(`[EventHandlers Play/Resume] Clicked. Current transport state: ${transport.state}, current time: ${currentTransportTime}`); //
+            const transport = Tone.Transport;
+            const currentTransportTime = transport.seconds;
+            console.log(`[EventHandlers Play/Resume] Clicked. Current transport state: ${transport.state}, current time: ${currentTransportTime}`);
 
-            // Stop all tracks first to clear their scheduled events or stop pattern players
-            const tracks = getTracks(); //
-            console.log(`[EventHandlers Play/Resume] Stopping playback for ${tracks.length} tracks before rescheduling.`); //
+            const tracks = getTracks();
+            console.log(`[EventHandlers Play/Resume] Stopping playback for ${tracks.length} tracks before rescheduling.`);
             tracks.forEach(track => {
                 if (typeof track.stopPlayback === 'function') {
                     track.stopPlayback();
                 }
             });
-            transport.cancel(0); // Clear any globally scheduled Tone.Transport events //
-            console.log(`[EventHandlers Play/Resume] Called Tone.Transport.cancel(0).`); //
+            transport.cancel(0);
+            console.log(`[EventHandlers Play/Resume] Called Tone.Transport.cancel(0).`);
 
-            if (transport.state === 'stopped' || transport.state === 'paused') { //
-                let startTime = 0; //
-                if (transport.state === 'paused') { //
-                    startTime = currentTransportTime; // Resume from where it was paused //
-                } else { // Was stopped
-                    transport.position = 0; // Ensure starting from the beginning if fully stopped //
+            if (transport.state === 'stopped' || transport.state === 'paused') {
+                let startTime = 0;
+                if (transport.state === 'paused') {
+                    startTime = currentTransportTime;
+                } else {
+                    transport.position = 0;
                 }
-                console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`); //
+                console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`);
 
-                // >>> MODIFICATION START <<<
                 transport.loopStart = 0;
-                transport.loopEnd = 3600; // Loop for a very long time (1 hour)
+                transport.loopEnd = 3600; // 1 hour
                 transport.loop = true;
-                // Schedule a dummy event to keep the transport alive if no other events are present
-                const keepAliveEventId = transport.scheduleOnce(() => {
-                    // This callback does nothing, it's just to keep the transport running.
-                    // We will clear this event when transport is explicitly stopped or paused.
-                    console.log(`[EventHandlers Play/Resume] Transport keep-alive event fired at ${transport.loopEnd - 0.1}s. This is expected.`);
-                }, transport.loopEnd - 0.1); // Schedule it just before the loop would end
-                console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}. Keep-alive event ID: ${keepAliveEventId}`);
+                console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}`);
+
+                // >>> MODIFICATION START: Robust Keep-Alive with silent Oscillator <<<
+                if (transportKeepAliveSource && !transportKeepAliveSource.disposed) {
+                    transportKeepAliveSource.stop(0);
+                    transportKeepAliveSource.dispose();
+                    transportKeepAliveSource = null;
+                    console.log(`[EventHandlers Play/Resume] Disposed previous keep-alive source.`);
+                }
+
+                // Create a silent oscillator that runs for the duration of the loop
+                // Connect it to destination to ensure it's processed, but make it silent.
+                transportKeepAliveSource = new Tone.Oscillator(0, "sine").toDestination(); // Frequency 0 should be silent
+                transportKeepAliveSource.volume.value = -Infinity; // Ensure absolute silence
+
+                // Schedule its start and stop relative to the transport's timeline
+                // This source's existence should keep the transport active.
+                transportKeepAliveSource.start(startTime).stop(transport.loopEnd);
+                console.log(`[EventHandlers Play/Resume] Scheduled SILENT keep-alive Oscillator from ${startTime}s to ${transport.loopEnd}s.`);
                 // >>> MODIFICATION END <<<
 
-                console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${startTime}.`); //
+                console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${startTime}.`);
                 for (const track of tracks) {
                     if (typeof track.schedulePlayback === 'function') {
                         await track.schedulePlayback(startTime, transport.loopEnd);
@@ -186,17 +199,25 @@ export function attachGlobalControlEvents(elements) {
                 console.log(`[EventHandlers Play/Resume] BEFORE transport.start - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
                 transport.start(Tone.now() + 0.05, startTime);
                 playBtnGlobal.textContent = 'Pause';
+
             } else { // 'started'
                 console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                 transport.pause();
-                // Clear any keep-alive events when pausing
-                transport.cancel(transport.loopEnd - 0.1); // Attempt to cancel the specific keep-alive
-                console.log(`[EventHandlers Play/Resume] Cleared keep-alive event on pause (if it existed).`);
+                // >>> MODIFICATION START: Stop and dispose keep-alive source on pause <<<
+                if (transportKeepAliveSource && !transportKeepAliveSource.disposed) {
+                    transportKeepAliveSource.stop(Tone.now()); // Stop it at the current transport time
+                    transportKeepAliveSource.dispose();
+                    transportKeepAliveSource = null;
+                    console.log(`[EventHandlers Play/Resume] Stopped and disposed keep-alive source on pause.`);
+                }
+                // >>> MODIFICATION END <<<
                 playBtnGlobal.textContent = 'Play';
             }
             console.log(`[EventHandlers Play/Resume] AFTER transport.start/pause - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
         });
     }
+
+    // ... (rest of the event handlers remain the same) ...
 
     if (recordBtnGlobal) {
         recordBtnGlobal.addEventListener('click', async () => {
