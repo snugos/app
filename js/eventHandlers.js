@@ -34,10 +34,13 @@ const MAX_OCTAVE_SHIFT = 2;
 
 export function initializePrimaryEventListeners(appContext) {
     const uiCache = appContext.uiElementsCache || {};
+    console.log('[EventHandlers initializePrimaryEventListeners] Initializing. uiCache available:', !!uiCache);
+
 
     try {
         // --- START BUTTON ---
         if (uiCache.startButton) {
+            console.log('[EventHandlers initializePrimaryEventListeners] Start Button found in uiCache. Attaching listener.');
             uiCache.startButton.addEventListener('click', (e) => {
                 console.log('[EventHandlers] Start Button clicked.'); 
                 e.stopPropagation(); 
@@ -46,11 +49,11 @@ export function initializePrimaryEventListeners(appContext) {
                     uiCache.startMenu.classList.toggle('show');
                     console.log(`[EventHandlers] Start Menu after toggle. New classes: '${uiCache.startMenu.className}'`); 
                 } else {
-                    console.error('[EventHandlers] Start Menu (uiCache.startMenu) not found!'); 
+                    console.error('[EventHandlers] Start Menu (uiCache.startMenu) not found when Start Button clicked!'); 
                 }
             });
         } else {
-            console.error('[EventHandlers] Start Button (uiCache.startButton) not found!');
+            console.error('[EventHandlers initializePrimaryEventListeners] Start Button (uiCache.startButton) NOT found in uiCache!');
         }
 
         // --- DESKTOP CLICK (to close start menu) ---
@@ -67,7 +70,7 @@ export function initializePrimaryEventListeners(appContext) {
                 }
             });
         } else {
-             console.error('[EventHandlers] Desktop element (uiCache.desktop) not found!');
+             console.error('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!');
         }
         
         // --- DESKTOP CONTEXT MENU ---
@@ -143,17 +146,18 @@ export function attachGlobalControlEvents(elements) {
 
             const transport = Tone.Transport;
             const currentTransportTime = transport.seconds;
-            console.log(`[EventHandlers] Play/Resume: Current transport state: ${transport.state}, current time before ops: ${currentTransportTime}`);
+            console.log(`[EventHandlers Play/Resume] Current transport state: ${transport.state}, current time before ops: ${currentTransportTime}`);
             
             transport.cancel(0); 
-            console.log(`[EventHandlers] Called Tone.Transport.cancel(0) before play/resume.`);
+            console.log(`[EventHandlers Play/Resume] Called Tone.Transport.cancel(0).`);
 
 
             if (transport.state === 'stopped') {
                 transport.position = 0; 
-                console.log(`[EventHandlers] Starting transport from beginning.`);
+                console.log(`[EventHandlers Play/Resume] Starting transport from beginning.`);
                 
                 const tracks = getTracks();
+                console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from 0.`);
                 for (const track of tracks) {
                     if (typeof track.schedulePlayback === 'function') {
                         await track.schedulePlayback(0, transport.loopEnd > 0 ? transport.loopEnd : 300); 
@@ -162,8 +166,9 @@ export function attachGlobalControlEvents(elements) {
                 transport.start();
                 playBtnGlobal.textContent = 'Pause';
             } else if (transport.state === 'paused') {
-                console.log(`[EventHandlers] Resuming transport from pause. Scheduling from: ${currentTransportTime}`);
+                console.log(`[EventHandlers Play/Resume] Resuming transport from pause. Scheduling from: ${currentTransportTime}`);
                 const tracks = getTracks();
+                 console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${currentTransportTime}.`);
                 for (const track of tracks) {
                     if (typeof track.schedulePlayback === 'function') {
                          await track.schedulePlayback(currentTransportTime, transport.loopEnd > 0 ? transport.loopEnd : currentTransportTime + 300);
@@ -172,11 +177,11 @@ export function attachGlobalControlEvents(elements) {
                 transport.start(undefined, currentTransportTime); 
                 playBtnGlobal.textContent = 'Pause';
             } else { // 'started'
-                console.log(`[EventHandlers] Pausing transport.`);
+                console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                 transport.pause();
                 playBtnGlobal.textContent = 'Play';
             }
-            console.log(`[EventHandlers] Tone.Transport.start/pause logic completed. Current state: ${transport.state}`);
+            console.log(`[EventHandlers Play/Resume] Logic completed. Current transport state: ${transport.state}`);
         });
     }
 
@@ -261,7 +266,6 @@ export function attachGlobalControlEvents(elements) {
         midiInputSelectGlobal.addEventListener('change', (e) => localAppServices.selectMIDIInput(e.target.value));
     }
 
-    // --- Playback Mode Toggle Button Listener ---
     if (playbackModeToggleBtnGlobal) {
         console.log("[EventHandlers attachGlobalControlEvents] Playback mode toggle button FOUND. Attaching listener.");
         playbackModeToggleBtnGlobal.addEventListener('click', () => {
@@ -503,4 +507,16 @@ export function handleOpenEffectsRack(trackId) {
 }
 export function handleOpenSequencer(trackId) {
     if (localAppServices.openTrackSequencerWindow) localAppServices.openTrackSequencerWindow(trackId);
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            showNotification(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, 3000);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
 }
