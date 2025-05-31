@@ -38,7 +38,6 @@ export function initializePrimaryEventListeners(appContext) {
 
 
     try {
-        // --- START BUTTON ---
         if (uiCache.startButton) {
             console.log('[EventHandlers initializePrimaryEventListeners] Start Button found in uiCache. Attaching listener.');
             uiCache.startButton.addEventListener('click', (e) => {
@@ -56,7 +55,6 @@ export function initializePrimaryEventListeners(appContext) {
             console.error('[EventHandlers initializePrimaryEventListeners] Start Button (uiCache.startButton) NOT found in uiCache!');
         }
 
-        // --- DESKTOP CLICK (to close start menu) ---
         if (uiCache.desktop) {
             uiCache.desktop.addEventListener('click', () => {
                 if (uiCache.startMenu && uiCache.startMenu.classList.contains('show')) {
@@ -73,7 +71,6 @@ export function initializePrimaryEventListeners(appContext) {
              console.error('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!');
         }
         
-        // --- DESKTOP CONTEXT MENU ---
         if (uiCache.desktop) {
             uiCache.desktop.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
@@ -101,7 +98,6 @@ export function initializePrimaryEventListeners(appContext) {
         }
 
 
-        // Start Menu Item Event Listeners
         uiCache.menuAddSynthTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.remove('show'); });
         uiCache.menuAddSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.remove('show'); });
         uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.remove('show'); });
@@ -146,42 +142,43 @@ export function attachGlobalControlEvents(elements) {
 
             const transport = Tone.Transport;
             const currentTransportTime = transport.seconds;
-            console.log(`[EventHandlers Play/Resume] Current transport state: ${transport.state}, current time before ops: ${currentTransportTime}`);
+            console.log(`[EventHandlers Play/Resume] Clicked. Current transport state: ${transport.state}, current time: ${currentTransportTime}`);
             
-            transport.cancel(0); 
+            // Stop all tracks first to clear their scheduled events or stop pattern players
+            const tracks = getTracks();
+            console.log(`[EventHandlers Play/Resume] Stopping playback for ${tracks.length} tracks before rescheduling.`);
+            tracks.forEach(track => {
+                if (typeof track.stopPlayback === 'function') {
+                    track.stopPlayback();
+                }
+            });
+            transport.cancel(0); // Clear any globally scheduled Tone.Transport events
             console.log(`[EventHandlers Play/Resume] Called Tone.Transport.cancel(0).`);
 
-
-            if (transport.state === 'stopped') {
-                transport.position = 0; 
-                console.log(`[EventHandlers Play/Resume] Starting transport from beginning.`);
+            if (transport.state === 'stopped' || transport.state === 'paused') {
+                let startTime = 0;
+                if (transport.state === 'paused') {
+                    startTime = currentTransportTime; // Resume from where it was paused
+                } else { // Was stopped
+                    transport.position = 0; // Ensure starting from the beginning if fully stopped
+                }
+                console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`);
                 
-                const tracks = getTracks();
-                console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from 0.`);
+                console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${startTime}.`);
                 for (const track of tracks) {
                     if (typeof track.schedulePlayback === 'function') {
-                        await track.schedulePlayback(0, transport.loopEnd > 0 ? transport.loopEnd : 300); 
+                        // schedulePlayback in Track.js will now handle mode-specific logic
+                        await track.schedulePlayback(startTime, transport.loopEnd > 0 ? transport.loopEnd : startTime + 300); 
                     }
                 }
-                transport.start();
-                playBtnGlobal.textContent = 'Pause';
-            } else if (transport.state === 'paused') {
-                console.log(`[EventHandlers Play/Resume] Resuming transport from pause. Scheduling from: ${currentTransportTime}`);
-                const tracks = getTracks();
-                 console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${currentTransportTime}.`);
-                for (const track of tracks) {
-                    if (typeof track.schedulePlayback === 'function') {
-                         await track.schedulePlayback(currentTransportTime, transport.loopEnd > 0 ? transport.loopEnd : currentTransportTime + 300);
-                    }
-                }
-                transport.start(undefined, currentTransportTime); 
+                transport.start(Tone.now() + 0.05, startTime); // Start with a slight delay from the specified time
                 playBtnGlobal.textContent = 'Pause';
             } else { // 'started'
                 console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                 transport.pause();
                 playBtnGlobal.textContent = 'Play';
             }
-            console.log(`[EventHandlers Play/Resume] Logic completed. Current transport state: ${transport.state}`);
+            console.log(`[EventHandlers Play/Resume] Logic completed. New transport state: ${transport.state}`);
         });
     }
 
