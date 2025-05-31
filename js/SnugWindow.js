@@ -3,7 +3,7 @@
 import { createContextMenu } from './utils.js';
 
 const defaultWindowBg = '#282828';
-const defaultWindowContentBg = '#1e1e1e'; // Matching window content from style.css
+const defaultWindowContentBg = '#1e1e1e'; 
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
@@ -27,19 +27,20 @@ export class SnugWindow {
         const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
         const safeDesktopHeight = (desktopEl && typeof desktopEl.offsetHeight === 'number' && desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768;
 
+        const optMinWidth = parseFloat(options.minWidth);
+        const optMinHeight = parseFloat(options.minHeight);
+        const minW = Number.isFinite(optMinWidth) && optMinWidth > 0 ? optMinWidth : 150;
+        const minH = Number.isFinite(optMinHeight) && optMinHeight > 0 ? optMinHeight : 100;
+
         let optWidth = parseFloat(options.width);
         let optHeight = parseFloat(options.height);
         let optX = parseFloat(options.x);
         let optY = parseFloat(options.y);
         
-        const minWidth = Number.isFinite(parseFloat(options.minWidth)) && parseFloat(options.minWidth) > 0 ? parseFloat(options.minWidth) : 150;
-        const minHeight = Number.isFinite(parseFloat(options.minHeight)) && parseFloat(options.minHeight) > 0 ? parseFloat(options.minHeight) : 100;
-
-        let w = Number.isFinite(optWidth) && optWidth >= minWidth ? optWidth : Math.max(minWidth, Math.min(350, safeDesktopWidth - 40));
-        let h = Number.isFinite(optHeight) && optHeight >= minHeight ? optHeight : Math.max(minHeight, Math.min(250, safeDesktopHeight - 80));
+        let w = Number.isFinite(optWidth) && optWidth >= minW ? optWidth : Math.max(minW, Math.min(350, safeDesktopWidth - 40));
+        let h = Number.isFinite(optHeight) && optHeight >= minH ? optHeight : Math.max(minH, Math.min(250, safeDesktopHeight - 80));
         
         const taskbarHeightVal = (this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar'))?.offsetHeight || 30;
-
         const maxX = Math.max(5, safeDesktopWidth - w - 10);
         const maxY = Math.max(5, safeDesktopHeight - h - 10 - taskbarHeightVal);
         
@@ -49,44 +50,48 @@ export class SnugWindow {
         let x = Number.isFinite(optX) ? Math.max(5, Math.min(optX, maxX)) : Math.max(5, Math.min(cascadeOffset, maxX));
         let y = Number.isFinite(optY) ? Math.max(5, Math.min(optY, maxY)) : Math.max(5, Math.min(cascadeOffset, maxY));
         
+        // Ensure all calculated dimensions are finite before assigning to this.options
+        const finalX = Number.isFinite(x) ? x : 50;
+        const finalY = Number.isFinite(y) ? y : 50;
+        const finalWidth = Number.isFinite(w) && w > 0 ? w : minW; // Ensure positive width
+        const finalHeight = Number.isFinite(h) && h > 0 ? h : minH; // Ensure positive height
+
         this.options = {
             ...options, // Spread original options first
-            x: Number.isFinite(x) ? x : 50, // Fallback if somehow still NaN
-            y: Number.isFinite(y) ? y : 50, // Fallback
-            width: Number.isFinite(w) ? w : minWidth, // Fallback
-            height: Number.isFinite(h) ? h : minHeight, // Fallback
-            minWidth: minWidth,
-            minHeight: minHeight,
+            x: finalX,   // Override with sanitized values
+            y: finalY,
+            width: finalWidth,
+            height: finalHeight,
+            minWidth: minW,
+            minHeight: minH,
             closable: options.closable !== undefined ? options.closable : true,
             minimizable: options.minimizable !== undefined ? options.minimizable : true,
             resizable: options.resizable !== undefined ? options.resizable : true,
         };
         
-        console.log(`[SnugWindow ${this.id} Constructor] Initial raw options:`, JSON.stringify(options));
-        console.log(`[SnugWindow ${this.id} Constructor] Calculated final options:`, JSON.stringify(this.options));
-
+        console.log(`[SnugWindow ${this.id} Constructor] Raw options passed:`, JSON.stringify(options));
+        console.log(`[SnugWindow ${this.id} Constructor] Calculated final this.options:`, JSON.stringify(this.options));
 
         this.element = document.createElement('div');
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
         
-        if (!Number.isFinite(this.options.x)) { console.error(`[SnugWindow ${this.id}] FATAL: X is NaN before style set:`, this.options.x); this.options.x = 50;}
-        if (!Number.isFinite(this.options.y)) { console.error(`[SnugWindow ${this.id}] FATAL: Y is NaN before style set:`, this.options.y); this.options.y = 50;}
-        if (!Number.isFinite(this.options.width) || this.options.width <=0) { console.error(`[SnugWindow ${this.id}] FATAL: Width is NaN or invalid before style set:`, this.options.width); this.options.width = this.options.minWidth;}
-        if (!Number.isFinite(this.options.height) || this.options.height <=0) { console.error(`[SnugWindow ${this.id}] FATAL: Height is NaN or invalid before style set:`, this.options.height); this.options.height = this.options.minHeight;}
+        // Critical check and application of styles
+        if (!Number.isFinite(this.options.x)) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: X is NaN (${this.options.x}). Defaulting.`); this.options.x = 50;}
+        if (!Number.isFinite(this.options.y)) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Y is NaN (${this.options.y}). Defaulting.`); this.options.y = 50;}
+        if (!Number.isFinite(this.options.width) || this.options.width <= 0) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Width is NaN or invalid (${this.options.width}). Defaulting to minWidth.`); this.options.width = this.options.minWidth;}
+        if (!Number.isFinite(this.options.height) || this.options.height <= 0) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Height is NaN or invalid (${this.options.height}). Defaulting to minHeight.`); this.options.height = this.options.minHeight;}
 
         this.element.style.left = `${this.options.x}px`; 
         this.element.style.top = `${this.options.y}px`; 
         this.element.style.width = `${this.options.width}px`; 
         this.element.style.height = `${this.options.height}px`;
 
-
-        const initialZIndex = Number.isFinite(parseFloat(options.zIndex)) ? parseFloat(options.zIndex) : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
+        const initialZIndex = Number.isFinite(parseFloat(this.options.zIndex)) ? parseFloat(this.options.zIndex) : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
         this.element.style.zIndex = initialZIndex;
         if (this.appServices.setHighestZ && initialZIndex > (this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100)) {
             this.appServices.setHighestZ(initialZIndex);
         }
-
 
         this.element.style.backgroundColor = defaultWindowBg; 
 
@@ -94,7 +99,6 @@ export class SnugWindow {
         if (this.options.closable) { buttonsHTML += `<button class="window-close-btn" title="Close">X</button>`; } 
         if (this.options.minimizable) { buttonsHTML += `<button class="window-minimize-btn" title="Minimize">_</button>`; }
         if (this.options.resizable) { buttonsHTML += `<button class="window-maximize-btn" title="Maximize">□</button>`; }
-
 
         this.titleBar = document.createElement('div');
         this.titleBar.className = 'window-title-bar';
@@ -120,7 +124,6 @@ export class SnugWindow {
             console.warn("[SnugWindow] addWindowToStore service not available via appServices.");
         }
 
-
         this.makeDraggable();
         if (this.options.resizable) {
             this.makeResizable();
@@ -139,7 +142,7 @@ export class SnugWindow {
         this.element.addEventListener('mousedown', () => this.focus(), true);
         this.createTaskbarButton();
 
-        if (options.isMinimized) {
+        if (this.options.isMinimized) { // Check this.options.isMinimized, not options.isMinimized
             this.minimize(true); 
         }
     }
@@ -151,7 +154,6 @@ export class SnugWindow {
             console.warn(`[SnugWindow ${this.id}] captureStateForUndo service not available.`);
         }
     }
-
 
     makeDraggable() {
         if (!this.titleBar) return;
