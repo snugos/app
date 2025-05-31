@@ -84,24 +84,29 @@ export class SnugWindow {
         const styleWidth = this.options.width;
         const styleHeight = this.options.height;
 
-        console.log(`[SnugWindow ${this.id} Pre-StyleSet] Attempting to set: left=${styleX}px, top=${styleY}px, width=${styleWidth}px, height=${styleHeight}px`);
+        console.log(`[SnugWindow ${this.id} Pre-StyleSet] Attempting to set: left=${styleX} (type: ${typeof styleX}), top=${styleY} (type: ${typeof styleY}), width=${styleWidth} (type: ${typeof styleWidth}), height=${styleHeight} (type: ${typeof styleHeight})`);
 
-        if (!Number.isFinite(styleX)) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: X is NaN or not finite (${styleX}). Defaulting to 50px.`); this.element.style.left = `50px`;} 
+        if (!Number.isFinite(styleX)) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: X is NaN or not finite (${styleX}). Defaulting to 50px.`); this.element.style.left = `50px`;} 
         else { this.element.style.left = `${styleX}px`; }
 
-        if (!Number.isFinite(styleY)) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: Y is NaN or not finite (${styleY}). Defaulting to 50px.`); this.element.style.top = `50px`;}
+        if (!Number.isFinite(styleY)) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Y is NaN or not finite (${styleY}). Defaulting to 50px.`); this.element.style.top = `50px`;}
         else { this.element.style.top = `${styleY}px`; }
 
-        if (!Number.isFinite(styleWidth) || styleWidth <= 0) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: Width is NaN, zero, or negative (${styleWidth}). Defaulting to minWidth ${this.options.minWidth}px.`); this.element.style.width = `${this.options.minWidth}px`;}
+        if (!Number.isFinite(styleWidth) || styleWidth <= 0) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Width is NaN, zero, or negative (${styleWidth}). Defaulting to minWidth ${this.options.minWidth}px.`); this.element.style.width = `${this.options.minWidth}px`;}
         else { this.element.style.width = `${styleWidth}px`; }
         
-        if (!Number.isFinite(styleHeight) || styleHeight <= 0) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: Height is NaN, zero, or negative (${styleHeight}). Defaulting to minHeight ${this.options.minHeight}px.`); this.element.style.height = `${this.options.minHeight}px`;}
+        if (!Number.isFinite(styleHeight) || styleHeight <= 0) { console.error(`[SnugWindow ${this.id}] STYLE ERROR: Height is NaN, zero, or negative (${styleHeight}). Defaulting to minHeight ${this.options.minHeight}px.`); this.element.style.height = `${this.options.minHeight}px`;}
         else { this.element.style.height = `${styleHeight}px`; }
         // --- END OF AGGRESSIVE LOGGING ---
 
-
         const initialZIndex = Number.isFinite(parseFloat(this.options.zIndex)) ? parseFloat(this.options.zIndex) : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
-        this.element.style.zIndex = initialZIndex;
+        if (!Number.isFinite(initialZIndex)) {
+            console.error(`[SnugWindow ${this.id}] STYLE ERROR: Z-Index is NaN or not finite (${initialZIndex}). Defaulting to 101.`);
+            this.element.style.zIndex = 101;
+        } else {
+            this.element.style.zIndex = initialZIndex;
+        }
+        
         if (this.appServices.setHighestZ && initialZIndex > (this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100)) {
             this.appServices.setHighestZ(initialZIndex);
         }
