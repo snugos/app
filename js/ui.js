@@ -978,8 +978,19 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
             libSelect.value = libraryName || "";
         }
     } else {
-        console.error(`[UI updateSoundBrowserDisplayForLibrary] LOGIC ERROR: Reached unexpected state for '${libraryName}'. No UI update performed when one might have been expected.`);
-        return;
+        // This case should ideally be covered by the returns above.
+        // If libraryName is null (meaning "Select Library..." was chosen by user or is the default state)
+        // and performFullUIUpdate is false (meaning it wasn't an update for the current selection),
+        // we still might need to clear the list if it's a direct call with libraryName = null.
+        if (!libraryName) { // Explicitly handle the "Select Library..." case if no other condition matched
+             performFullUIUpdate = true; // Force UI update to show "Select a library"
+             console.log(`[UI updateSoundBrowserDisplayForLibrary] Condition: Explicitly setting to "Select a library" view.`);
+             if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(null);
+             if (libSelect) libSelect.value = "";
+        } else {
+            console.error(`[UI updateSoundBrowserDisplayForLibrary] LOGIC ERROR: Reached unexpected state for '${libraryName}'. No UI update performed when one might have been expected.`);
+            return;
+        }
     }
 
     if (!libraryName) { 
@@ -1147,7 +1158,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) { 
-    console.log(`[UI openTrackSequencerWindow] Called for track ${trackId}. Force redraw: ${forceRedraw}`);
+    console.log(`[UI openTrackSequencerWindow] Called for track ${trackId}. Force redraw: ${forceRedraw}, SavedState:`, savedState);
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') {
         console.warn(`[UI openTrackSequencerWindow] Track ${trackId} not found or is Audio type. Aborting.`);
@@ -1164,7 +1175,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 existingWindow.close(true); 
             } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
         } else {
-            console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not an instance.`);
+            console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not an instance, or map is missing.`);
         }
     }
     if (openWindows.has(windowId) && !forceRedraw && !savedState) {
@@ -1196,23 +1207,23 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     const contentDOM = buildSequencerContentDOM(track, rows, rowLabels, numBars);
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
-    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024; // Fallback
+    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) 
+                           ? desktopEl.offsetWidth 
+                           : 1024; // More robust fallback
     console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
 
 
     let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
-    let calculatedHeight = 400; // Default height
+    let calculatedHeight = 400; 
 
-    // Ensure calculated dimensions are finite and positive
     if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) {
-        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedWidth (${calculatedWidth}), defaulting to 600.`);
+        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedWidth (${calculatedWidth}) for track ${trackId}, defaulting to 600.`);
         calculatedWidth = 600;
     }
     if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) {
-        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedHeight (${calculatedHeight}), defaulting to 400.`);
+        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedHeight (${calculatedHeight}) for track ${trackId}, defaulting to 400.`);
         calculatedHeight = 400;
     }
-
 
     const seqOptions = { 
         width: calculatedWidth, 
@@ -1225,8 +1236,8 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     if (savedState) {
         if (Number.isFinite(parseInt(savedState.left,10))) seqOptions.x = parseInt(savedState.left,10);
         if (Number.isFinite(parseInt(savedState.top,10))) seqOptions.y = parseInt(savedState.top,10);
-        if (Number.isFinite(parseInt(savedState.width,10))) seqOptions.width = parseInt(savedState.width,10);
-        if (Number.isFinite(parseInt(savedState.height,10))) seqOptions.height = parseInt(savedState.height,10);
+        if (Number.isFinite(parseInt(savedState.width,10)) && parseInt(savedState.width,10) >= seqOptions.minWidth) seqOptions.width = parseInt(savedState.width,10);
+        if (Number.isFinite(parseInt(savedState.height,10)) && parseInt(savedState.height,10) >= seqOptions.minHeight) seqOptions.height = parseInt(savedState.height,10);
         if (Number.isFinite(parseInt(savedState.zIndex))) seqOptions.zIndex = parseInt(savedState.zIndex);
         seqOptions.isMinimized = savedState.isMinimized;
     }
