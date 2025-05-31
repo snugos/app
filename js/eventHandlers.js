@@ -165,32 +165,35 @@ export function attachGlobalControlEvents(elements) {
                 console.log(`[EventHandlers Play/Resume] Starting/Resuming transport from ${startTime}s.`); //
 
                 // >>> MODIFICATION START <<<
-                // Explicitly set loop properties to keep the transport running
                 transport.loopStart = 0;
                 transport.loopEnd = 3600; // Loop for a very long time (1 hour)
                 transport.loop = true;
-                console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}`);
+                // Schedule a dummy event to keep the transport alive if no other events are present
+                const keepAliveEventId = transport.scheduleOnce(() => {
+                    // This callback does nothing, it's just to keep the transport running.
+                    // We will clear this event when transport is explicitly stopped or paused.
+                    console.log(`[EventHandlers Play/Resume] Transport keep-alive event fired at ${transport.loopEnd - 0.1}s. This is expected.`);
+                }, transport.loopEnd - 0.1); // Schedule it just before the loop would end
+                console.log(`[EventHandlers Play/Resume] Explicitly SET transport loop: ${transport.loop}, loopStart: ${transport.loopStart}, loopEnd: ${transport.loopEnd}. Keep-alive event ID: ${keepAliveEventId}`);
                 // >>> MODIFICATION END <<<
 
                 console.log(`[EventHandlers Play/Resume] Scheduling ${tracks.length} tracks for playback from ${startTime}.`); //
                 for (const track of tracks) {
                     if (typeof track.schedulePlayback === 'function') {
-                        // schedulePlayback in Track.js will now handle mode-specific logic
-                        // Pass the transport's loopEnd to ensure tracks schedule within this boundary if needed
                         await track.schedulePlayback(startTime, transport.loopEnd);
                     }
                 }
-                // >>> ADDED LOGGING BEFORE START <<<
                 console.log(`[EventHandlers Play/Resume] BEFORE transport.start - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
-                transport.start(Tone.now() + 0.05, startTime); // Start with a slight delay from the specified time //
-                playBtnGlobal.textContent = 'Pause'; //
+                transport.start(Tone.now() + 0.05, startTime);
+                playBtnGlobal.textContent = 'Pause';
             } else { // 'started'
-                console.log(`[EventHandlers Play/Resume] Pausing transport.`); //
-                transport.pause(); //
-                // When pausing, we want the loop settings to remain for the next play.
-                playBtnGlobal.textContent = 'Play'; //
+                console.log(`[EventHandlers Play/Resume] Pausing transport.`);
+                transport.pause();
+                // Clear any keep-alive events when pausing
+                transport.cancel(transport.loopEnd - 0.1); // Attempt to cancel the specific keep-alive
+                console.log(`[EventHandlers Play/Resume] Cleared keep-alive event on pause (if it existed).`);
+                playBtnGlobal.textContent = 'Play';
             }
-            // >>> ADDED LOGGING AFTER START/PAUSE <<<
             console.log(`[EventHandlers Play/Resume] AFTER transport.start/pause - Loop: ${transport.loop}, LoopStart: ${transport.loopStart}, LoopEnd: ${transport.loopEnd}, Position: ${transport.position}, State: ${transport.state}`);
         });
     }
