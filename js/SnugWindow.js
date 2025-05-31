@@ -15,71 +15,95 @@ export class SnugWindow {
         this.onCloseCallback = options.onCloseCallback || (() => {});
         this.isMaximized = false;
         this.restoreState = {};
-        this.appServices = appServices; // Store appServices for accessing global state and functions
+        this.appServices = appServices; 
 
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
-            console.error(`[SnugWindow CRITICAL ${id}] Desktop element not found.`);
+            console.error(`[SnugWindow CRITICAL ${id}] Desktop element not found. Cannot create window.`);
             this.element = null;
-            return;
+            return; // Exit if desktop isn't found
         }
 
-        const defaultWidth = options.width || Math.min(350, desktopEl.offsetWidth - 40);
-        const defaultHeight = options.height || Math.min(250, desktopEl.offsetHeight - 80);
+        // Robust default dimension calculation
+        const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
+        const safeDesktopHeight = (desktopEl && typeof desktopEl.offsetHeight === 'number' && desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768;
+
+        let optWidth = parseFloat(options.width);
+        let optHeight = parseFloat(options.height);
+
+        const defaultWidth = Number.isFinite(optWidth) && optWidth > 0 ? optWidth : Math.max(150, Math.min(350, safeDesktopWidth - 40));
+        const defaultHeight = Number.isFinite(optHeight) && optHeight > 0 ? optHeight : Math.max(100, Math.min(250, safeDesktopHeight - 80));
+        
         const taskbarHeightVal = (this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar'))?.offsetHeight || 30;
 
-        const maxX = Math.max(5, desktopEl.offsetWidth - defaultWidth - 10);
-        const maxY = Math.max(5, desktopEl.offsetHeight - defaultHeight - 10 - taskbarHeightVal);
+        const maxX = Math.max(5, safeDesktopWidth - defaultWidth - 10);
+        const maxY = Math.max(5, safeDesktopHeight - defaultHeight - 10 - taskbarHeightVal);
 
-        let initialX = options.x;
-        let initialY = options.y;
+        let initialX = parseFloat(options.x);
+        let initialY = parseFloat(options.y);
 
-        // Use appServices to get open window count for cascading
         const openWindowCount = this.appServices.getOpenWindows ? this.appServices.getOpenWindows().size : 0;
-        if (initialX === undefined || initialY === undefined) {
+        
+        if (!Number.isFinite(initialX)) {
             const cascadeOffset = 20 + (openWindowCount % 10) * 25;
             initialX = Math.max(5, Math.min(cascadeOffset, maxX));
-            initialY = Math.max(5, Math.min(cascadeOffset, maxY));
         } else {
             initialX = Math.max(5, Math.min(initialX, maxX));
+        }
+        
+        if (!Number.isFinite(initialY)) {
+            const cascadeOffset = 20 + (openWindowCount % 10) * 25;
+            initialY = Math.max(5, Math.min(cascadeOffset, maxY));
+        } else {
             initialY = Math.max(5, Math.min(initialY, maxY));
         }
-
+        
         this.options = {
-            x: initialX,
-            y: initialY,
-            width: defaultWidth,
-            height: defaultHeight,
+            x: Number.isFinite(initialX) ? initialX : 50,
+            y: Number.isFinite(initialY) ? initialY : 50,
+            width: Number.isFinite(defaultWidth) && defaultWidth > (options.minWidth || 150) ? defaultWidth : (options.minWidth || 150),
+            height: Number.isFinite(defaultHeight) && defaultHeight > (options.minHeight || 100) ? defaultHeight : (options.minHeight || 100),
             minWidth: options.minWidth || 150,
             minHeight: options.minHeight || 100,
             closable: options.closable !== undefined ? options.closable : true,
             minimizable: options.minimizable !== undefined ? options.minimizable : true,
             resizable: options.resizable !== undefined ? options.resizable : true,
-            ...options
+            ...options // Spread other options like initialContentKey, zIndex, isMinimized
         };
+        // Ensure final dimensions are not NaN before applying
+        this.options.width = Number.isFinite(this.options.width) ? this.options.width : 350;
+        this.options.height = Number.isFinite(this.options.height) ? this.options.height : 250;
+        this.options.x = Number.isFinite(this.options.x) ? this.options.x : 50;
+        this.options.y = Number.isFinite(this.options.y) ? this.options.y : 50;
+
+        console.log(`[SnugWindow ${this.id} Constructor] Calculated options:`, JSON.stringify(this.options));
+
 
         this.element = document.createElement('div');
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
-        this.element.style.left = `${this.options.x}px`;
-        this.element.style.top = `${this.options.y}px`;
-        this.element.style.width = `${this.options.width}px`;
-        this.element.style.height = `${this.options.height}px`;
+        
+        // Apply styles only if values are finite numbers
+        if (Number.isFinite(this.options.x)) this.element.style.left = `${this.options.x}px`; else console.error(`[SnugWindow ${this.id}] Invalid x: ${this.options.x}`);
+        if (Number.isFinite(this.options.y)) this.element.style.top = `${this.options.y}px`; else console.error(`[SnugWindow ${this.id}] Invalid y: ${this.options.y}`);
+        if (Number.isFinite(this.options.width)) this.element.style.width = `${this.options.width}px`; else console.error(`[SnugWindow ${this.id}] Invalid width: ${this.options.width}`);
+        if (Number.isFinite(this.options.height)) this.element.style.height = `${this.options.height}px`; else console.error(`[SnugWindow ${this.id}] Invalid height: ${this.options.height}`);
 
-        // Use appServices for z-index management
-        const initialZIndex = options.zIndex !== undefined ? options.zIndex : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
+
+        const initialZIndex = Number.isFinite(parseFloat(options.zIndex)) ? parseFloat(options.zIndex) : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
         this.element.style.zIndex = initialZIndex;
         if (this.appServices.setHighestZ && initialZIndex > (this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100)) {
             this.appServices.setHighestZ(initialZIndex);
         }
 
 
-        this.element.style.backgroundColor = defaultWindowBg; // Use CSS variables or consistent dark theme color
+        this.element.style.backgroundColor = defaultWindowBg; 
 
         let buttonsHTML = '';
+        if (this.options.closable) { buttonsHTML += `<button class="window-close-btn" title="Close">X</button>`; } // Moved close to be first for standard OS layout
         if (this.options.minimizable) { buttonsHTML += `<button class="window-minimize-btn" title="Minimize">_</button>`; }
         if (this.options.resizable) { buttonsHTML += `<button class="window-maximize-btn" title="Maximize">□</button>`; }
-        if (this.options.closable) { buttonsHTML += `<button class="window-close-btn" title="Close">X</button>`; }
+
 
         this.titleBar = document.createElement('div');
         this.titleBar.className = 'window-title-bar';
@@ -125,7 +149,7 @@ export class SnugWindow {
         this.createTaskbarButton();
 
         if (options.isMinimized) {
-            this.minimize(true); // true to skip undo for initial state
+            this.minimize(true); 
         }
     }
 
@@ -184,7 +208,7 @@ export class SnugWindow {
         const resizer = document.createElement('div');
         resizer.className = 'window-resizer';
         this.element.appendChild(resizer);
-        this.element.style.overflow = 'hidden'; // Keep this to contain the resizer
+        this.element.style.overflow = 'hidden'; 
 
         let initialWidth, initialHeight, initialMouseX, initialMouseY, isResizing = false;
         let originalStyleWidth, originalStyleHeight;
@@ -238,7 +262,7 @@ export class SnugWindow {
             this.element.style.width = this.restoreState.width;
             this.element.style.height = this.restoreState.height;
             this.isMaximized = false;
-            if (maximizeButton) maximizeButton.innerHTML = '□'; // Restore icon
+            if (maximizeButton) maximizeButton.innerHTML = '□'; 
         } else {
             this.restoreState = {
                 left: this.element.style.left,
@@ -252,7 +276,7 @@ export class SnugWindow {
             this.element.style.width = `${desktopEl.clientWidth}px`;
             this.element.style.height = `${desktopEl.clientHeight - taskbarHeight}px`;
             this.isMaximized = true;
-            if (maximizeButton) maximizeButton.innerHTML = '❐'; // Maximize icon (could be a different one)
+            if (maximizeButton) maximizeButton.innerHTML = '❐'; 
         }
         this._captureUndo(`${wasMaximized ? "Restore" : "Maximize"} window "${this.title}"`);
         this.focus();
@@ -326,7 +350,7 @@ export class SnugWindow {
                     menuItems.push({ label: "Open Sequencer", action: () => this.appServices.handleOpenSequencer(trackId) });
                 }
             }
-            createContextMenu(event, menuItems); // createContextMenu is imported from utils.js
+            createContextMenu(event, menuItems); 
         });
         this.updateTaskbarButtonActiveState();
     }
@@ -366,9 +390,8 @@ export class SnugWindow {
             }
 
             if (windowToFocus) {
-                windowToFocus.focus(true); // true to skip undo for programmatic focus
+                windowToFocus.focus(true); 
             } else {
-                // If no other window to focus, just update all taskbar buttons
                  if (this.appServices.getOpenWindows) {
                     this.appServices.getOpenWindows().forEach(win => win?.updateTaskbarButtonActiveState?.());
                 }
@@ -380,7 +403,7 @@ export class SnugWindow {
         if (this.isMinimized && this.element) {
             this.isMinimized = false;
             this.element.classList.remove('minimized');
-            this.focus(true); // true to skip undo for programmatic focus/restore
+            this.focus(true); 
             if (!skipUndo) this._captureUndo(`Restore window "${this.title}"`);
         } else if (this.element) {
             this.focus(skipUndo);
@@ -388,10 +411,10 @@ export class SnugWindow {
     }
 
     close(isReconstruction = false) {
-        console.log(`[SnugWindow ${this.id}] close() called. Title: "${this.title}". IsReconstruction: ${isReconstruction}`); // Added log
+        console.log(`[SnugWindow ${this.id}] close() called. Title: "${this.title}". IsReconstruction: ${isReconstruction}`); 
         if (this.onCloseCallback && typeof this.onCloseCallback === 'function') {
             try { 
-                console.log(`[SnugWindow ${this.id}] Executing onCloseCallback.`); // Added log
+                console.log(`[SnugWindow ${this.id}] Executing onCloseCallback.`); 
                 this.onCloseCallback(); 
             }
             catch (e) { console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e); }
@@ -399,31 +422,31 @@ export class SnugWindow {
 
         if (this.taskbarButton) {
             try { 
-                console.log(`[SnugWindow ${this.id}] Removing taskbar button.`); // Added log
+                console.log(`[SnugWindow ${this.id}] Removing taskbar button.`); 
                 this.taskbarButton.remove(); 
             } catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing taskbar button:`, e.message); }
         }
         if (this.element) {
             try {
-                console.log(`[SnugWindow ${this.id}] Removing window element from DOM.`); // Added log
+                console.log(`[SnugWindow ${this.id}] Removing window element from DOM.`); 
                 this.element.remove(); 
             } catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing window element:`, e.message); }
         }
 
         const oldWindowTitle = this.title;
         if (this.appServices.removeWindowFromStore) {
-            console.log(`[SnugWindow ${this.id}] Calling appServices.removeWindowFromStore.`); // Added log
+            console.log(`[SnugWindow ${this.id}] Calling appServices.removeWindowFromStore.`); 
             this.appServices.removeWindowFromStore(this.id);
         } else {
-            console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available.`); // Added log
+            console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available.`); 
         }
 
         const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
         if (!isCurrentlyReconstructing && !isReconstruction) {
-            console.log(`[SnugWindow ${this.id}] Capturing undo state for closing window.`); // Added log
+            console.log(`[SnugWindow ${this.id}] Capturing undo state for closing window.`); 
             this._captureUndo(`Close window "${oldWindowTitle}"`);
         }
-        console.log(`[SnugWindow ${this.id}] close() finished.`); // Added log
+        console.log(`[SnugWindow ${this.id}] close() finished.`); 
     }
 
 
