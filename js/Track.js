@@ -1236,16 +1236,17 @@ export class Track {
         } else { // 'pattern' mode
             if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) {
                 console.log(`[Track ${this.id}] Pattern mode: patternPlayerSequence is null or disposed. Attempting to recreate.`);
-                this.recreateToneSequence(true); // Ensure it's created if not already
-            }
-            if (this.patternPlayerSequence && this.patternPlayerSequence.state !== 'started' && Tone.Transport.state === 'started') {
-                console.log(`[Track ${this.id}] Starting patternPlayerSequence at transport time: ${Tone.Transport.seconds} for PATTERN mode.`);
-                this.patternPlayerSequence.start(transportStartTime); // Start from the given transportStartTime
-            } else if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started' && Tone.Transport.state !== 'started') {
-                this.patternPlayerSequence.stop();
-                 console.log(`[Track ${this.id}] Stopped patternPlayerSequence because transport is not started.`);
-            } else if (this.patternPlayerSequence && this.patternPlayerSequence.state !== 'started' && Tone.Transport.state !== 'started') {
-                console.log(`[Track ${this.id}] PatternPlayerSequence and Transport are both stopped. No action for patternPlayerSequence.`);
+                this.recreateToneSequence(true); // This calls .start(0) on the sequence internally
+            } else {
+                // If the sequence exists but was stopped (e.g., due to stopPlayback or a previous pause),
+                // ensure it's explicitly (re)started with the correct transport offset.
+                // The global transport handler will call Tone.Transport.start(..., transportStartTime) AFTER this.
+                if (this.patternPlayerSequence.state !== 'started') {
+                    console.log(`[Track ${this.id}] Pattern mode: Restarting existing patternPlayerSequence at transport offset: ${transportStartTime}`);
+                    this.patternPlayerSequence.start(transportStartTime);
+                } else {
+                     console.log(`[Track ${this.id}] Pattern mode: patternPlayerSequence is already started. State: ${this.patternPlayerSequence.state}`);
+                }
             }
         }
     }
@@ -1271,10 +1272,6 @@ export class Track {
             this.patternPlayerSequence.stop();
             console.log(`[Track ${this.id}] Stopped patternPlayerSequence.`);
         }
-        // When stopping globally, it's good to cancel scheduled events.
-        // However, this might be too broad if called from individual track logic not related to global stop.
-        // For now, let's assume global stop implies cancelling all.
-        // Tone.Transport.cancel(0); // This was moved to the global play/stop handlers
     }
     
 
