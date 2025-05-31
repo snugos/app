@@ -131,39 +131,54 @@ export function setIsRecordingState(status) { isRecordingGlobal = status; }
 export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
 export function setRecordingStartTimeState(time) { recordingStartTime = time; }
 export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
+
 export function setPlaybackModeState(mode) { 
+    console.log(`[State setPlaybackModeState] Attempting to set mode to: ${mode}. Current mode: ${globalPlaybackMode}`);
     if (mode === 'pattern' || mode === 'timeline') {
         if (globalPlaybackMode !== mode) {
             captureStateForUndoInternal(`Set Playback Mode to ${mode}`);
             globalPlaybackMode = mode;
-            console.log(`[State] Playback mode set to: ${globalPlaybackMode}`);
+            console.log(`[State setPlaybackModeState] Playback mode successfully changed to: ${globalPlaybackMode}`);
             
             if (Tone.Transport.state === 'started') {
+                console.log("[State setPlaybackModeState] Transport was started, stopping it now.");
                 Tone.Transport.stop();
             }
             Tone.Transport.cancel(0);
+            console.log("[State setPlaybackModeState] Tone.Transport events cancelled.");
+
             if (appServices.uiElementsCache?.playBtnGlobal) {
                 appServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
+                 console.log("[State setPlaybackModeState] Play button text reset to 'Play'.");
             }
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
 
             const currentTracks = getTracksState();
+            console.log(`[State setPlaybackModeState] Re-initializing sequences for ${currentTracks.length} tracks.`);
             currentTracks.forEach(track => {
                 if (track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
+                    console.log(`[State setPlaybackModeState] Calling recreateToneSequence for track ${track.id} (${track.name})`);
                     track.recreateToneSequence(true); 
                 }
                 if (mode === 'pattern' && track.type === 'Audio' && typeof track.stopPlayback === 'function') {
+                    console.log(`[State setPlaybackModeState] Stopping audio playback for track ${track.id} (${track.name}) as mode switched to pattern.`);
                     track.stopPlayback();
                 }
             });
 
             if (appServices.onPlaybackModeChange) { 
+                console.log("[State setPlaybackModeState] Calling onPlaybackModeChange callback.");
                 appServices.onPlaybackModeChange(globalPlaybackMode);
             }
-             if (appServices.renderTimeline) appServices.renderTimeline(); 
+             if (appServices.renderTimeline) {
+                console.log("[State setPlaybackModeState] Calling renderTimeline.");
+                appServices.renderTimeline(); 
+            }
+        } else {
+            console.log(`[State setPlaybackModeState] Mode is already ${mode}. No change.`);
         }
     } else {
-        console.warn(`[State] Invalid playback mode: ${mode}`);
+        console.warn(`[State setPlaybackModeState] Invalid playback mode attempted: ${mode}`);
     }
 }
 
@@ -185,12 +200,9 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         newTrackId = trackIdCounter++;
     }
 
-    // Ensure appServices is populated before creating trackAppServices
     if (Object.keys(appServices).length === 0 && localAppServices && Object.keys(localAppServices).length > 0) {
-        // This case might happen if state.js is initialized before main.js fully populates appServices
-        // It's a defensive measure.
         console.warn("[State addTrackToStateInternal] appServices was empty, using localAppServices fallback for trackAppServices. This might indicate an initialization order issue.");
-        appServices = localAppServices; // Use the one passed to initializeStateModule
+        appServices = localAppServices; 
     }
 
 
@@ -200,7 +212,6 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         updateTrackUI: appServices.updateTrackUI,
         highlightPlayingStep: appServices.highlightPlayingStep,
         autoSliceSample: appServices.autoSliceSample,
-        // *** THIS IS THE CRITICAL FIX ***
         closeAllTrackWindows: appServices.closeAllTrackWindows, 
         getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
         showNotification: appServices.showNotification,
