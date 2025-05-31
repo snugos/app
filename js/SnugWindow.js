@@ -27,7 +27,6 @@ export class SnugWindow {
         const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
         const safeDesktopHeight = (desktopEl && typeof desktopEl.offsetHeight === 'number' && desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768;
 
-        // Sanitize minWidth and minHeight first
         const optMinWidth = parseFloat(options.minWidth);
         const optMinHeight = parseFloat(options.minHeight);
         const minW = Number.isFinite(optMinWidth) && optMinWidth > 0 ? optMinWidth : 150;
@@ -35,36 +34,36 @@ export class SnugWindow {
 
         let optWidth = parseFloat(options.width);
         let optHeight = parseFloat(options.height);
+        let optX = parseFloat(options.x);
+        let optY = parseFloat(options.y);
         
         let w = Number.isFinite(optWidth) && optWidth >= minW ? optWidth : Math.max(minW, Math.min(350, safeDesktopWidth - 40));
         let h = Number.isFinite(optHeight) && optHeight >= minH ? optHeight : Math.max(minH, Math.min(250, safeDesktopHeight - 80));
         
-        // Ensure w and h are not NaN after calculations, using minW/minH as final fallback
         w = Number.isFinite(w) && w > 0 ? w : minW;
         h = Number.isFinite(h) && h > 0 ? h : minH;
 
         const taskbarHeightVal = (this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar'))?.offsetHeight || 30;
-        const maxX = Math.max(5, safeDesktopWidth - w - 10); // Use sanitized w
-        const maxY = Math.max(5, safeDesktopHeight - h - 10 - taskbarHeightVal); // Use sanitized h
+        const maxX = Math.max(5, safeDesktopWidth - w - 10); 
+        const maxY = Math.max(5, safeDesktopHeight - h - 10 - taskbarHeightVal); 
         
         const openWindowCount = this.appServices.getOpenWindows ? this.appServices.getOpenWindows().size : 0;
         const cascadeOffset = 20 + (openWindowCount % 10) * 25;
-
-        let optX = parseFloat(options.x);
-        let optY = parseFloat(options.y);
 
         let x = Number.isFinite(optX) ? Math.max(5, Math.min(optX, maxX)) : Math.max(5, Math.min(cascadeOffset, maxX));
         let y = Number.isFinite(optY) ? Math.max(5, Math.min(optY, maxY)) : Math.max(5, Math.min(cascadeOffset, maxY));
         
         const finalX = Number.isFinite(x) ? x : 50;
         const finalY = Number.isFinite(y) ? y : 50;
+        const finalWidth = Number.isFinite(w) ? w : minW; 
+        const finalHeight = Number.isFinite(h) ? h : minH; 
 
         this.options = {
             ...options, 
             x: finalX,   
             y: finalY,
-            width: w, // Already sanitized to be finite and positive or minW
-            height: h, // Already sanitized to be finite and positive or minH
+            width: finalWidth,
+            height: finalHeight,
             minWidth: minW,
             minHeight: minH,
             closable: options.closable !== undefined ? options.closable : true,
@@ -79,17 +78,27 @@ export class SnugWindow {
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
         
-        // Log values immediately before setting styles
-        console.log(`[SnugWindow ${this.id} StyleSet] Applying left: ${this.options.x}, top: ${this.options.y}, width: ${this.options.width}, height: ${this.options.height}`);
-        if (!Number.isFinite(this.options.x)) console.error(`[SnugWindow ${this.id}] STYLE ERROR: X is NaN or not finite (${this.options.x}).`);
-        if (!Number.isFinite(this.options.y)) console.error(`[SnugWindow ${this.id}] STYLE ERROR: Y is NaN or not finite (${this.options.y}).`);
-        if (!Number.isFinite(this.options.width) || this.options.width <= 0) console.error(`[SnugWindow ${this.id}] STYLE ERROR: Width is NaN, zero, or negative (${this.options.width}).`);
-        if (!Number.isFinite(this.options.height) || this.options.height <= 0) console.error(`[SnugWindow ${this.id}] STYLE ERROR: Height is NaN, zero, or negative (${this.options.height}).`);
+        // --- AGGRESSIVE LOGGING AND VALIDATION BEFORE STYLE SET ---
+        const styleX = this.options.x;
+        const styleY = this.options.y;
+        const styleWidth = this.options.width;
+        const styleHeight = this.options.height;
 
-        this.element.style.left = `${this.options.x}px`; 
-        this.element.style.top = `${this.options.y}px`; 
-        this.element.style.width = `${this.options.width}px`; 
-        this.element.style.height = `${this.options.height}px`;
+        console.log(`[SnugWindow ${this.id} Pre-StyleSet] Attempting to set: left=${styleX}px, top=${styleY}px, width=${styleWidth}px, height=${styleHeight}px`);
+
+        if (!Number.isFinite(styleX)) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: X is NaN or not finite (${styleX}). Defaulting to 50px.`); this.element.style.left = `50px`;} 
+        else { this.element.style.left = `${styleX}px`; }
+
+        if (!Number.isFinite(styleY)) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: Y is NaN or not finite (${styleY}). Defaulting to 50px.`); this.element.style.top = `50px`;}
+        else { this.element.style.top = `${styleY}px`; }
+
+        if (!Number.isFinite(styleWidth) || styleWidth <= 0) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: Width is NaN, zero, or negative (${styleWidth}). Defaulting to minWidth ${this.options.minWidth}px.`); this.element.style.width = `${this.options.minWidth}px`;}
+        else { this.element.style.width = `${styleWidth}px`; }
+        
+        if (!Number.isFinite(styleHeight) || styleHeight <= 0) { console.error(`[SnugWindow ${this.id}] CRITICAL STYLE ERROR: Height is NaN, zero, or negative (${styleHeight}). Defaulting to minHeight ${this.options.minHeight}px.`); this.element.style.height = `${this.options.minHeight}px`;}
+        else { this.element.style.height = `${styleHeight}px`; }
+        // --- END OF AGGRESSIVE LOGGING ---
+
 
         const initialZIndex = Number.isFinite(parseFloat(this.options.zIndex)) ? parseFloat(this.options.zIndex) : (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
         this.element.style.zIndex = initialZIndex;
