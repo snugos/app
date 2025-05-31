@@ -41,7 +41,7 @@ let previewPlayerGlobal = null;
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
 
 // Transport/Sequencing State
-let activeSequencerTrackId = null; 
+let activeSequencerTrackId = null;
 let soloedTrackId = null;
 let armedTrackId = null;
 let isRecordingGlobal = false;
@@ -97,11 +97,11 @@ export function getArmedTrackIdState() { return armedTrackId; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
-export function getRecordingStartTimeState() { return recordingStartTime; } 
+export function getRecordingStartTimeState() { return recordingStartTime; }
 export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
-export function getPlaybackModeState() { return globalPlaybackMode; } 
+export function getPlaybackModeState() { return globalPlaybackMode; }
 
 
 // --- Setters for Centralized State (called internally or via appServices) ---
@@ -132,14 +132,15 @@ export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
 export function setRecordingStartTimeState(time) { recordingStartTime = time; }
 export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
 
-export function setPlaybackModeState(mode) { 
+export function setPlaybackModeState(mode) {
+    // >>> ADDED LOG <<<
     console.log(`[State setPlaybackModeState] Attempting to set mode to: ${mode}. Current mode: ${globalPlaybackMode}`);
     if (mode === 'pattern' || mode === 'timeline') {
         if (globalPlaybackMode !== mode) {
             captureStateForUndoInternal(`Set Playback Mode to ${mode}`);
             globalPlaybackMode = mode;
             console.log(`[State setPlaybackModeState] Playback mode successfully changed to: ${globalPlaybackMode}`);
-            
+
             if (Tone.Transport.state === 'started') {
                 console.log("[State setPlaybackModeState] Transport was started, stopping it now.");
                 Tone.Transport.stop();
@@ -158,7 +159,7 @@ export function setPlaybackModeState(mode) {
             currentTracks.forEach(track => {
                 if (track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
                     console.log(`[State setPlaybackModeState] Calling recreateToneSequence for track ${track.id} (${track.name})`);
-                    track.recreateToneSequence(true); 
+                    track.recreateToneSequence(true);
                 }
                 if (mode === 'pattern' && track.type === 'Audio' && typeof track.stopPlayback === 'function') {
                     console.log(`[State setPlaybackModeState] Stopping audio playback for track ${track.id} (${track.name}) as mode switched to pattern.`);
@@ -166,13 +167,13 @@ export function setPlaybackModeState(mode) {
                 }
             });
 
-            if (appServices.onPlaybackModeChange) { 
+            if (appServices.onPlaybackModeChange) {
                 console.log("[State setPlaybackModeState] Calling onPlaybackModeChange callback.");
                 appServices.onPlaybackModeChange(globalPlaybackMode);
             }
              if (appServices.renderTimeline) {
                 console.log("[State setPlaybackModeState] Calling renderTimeline.");
-                appServices.renderTimeline(); 
+                appServices.renderTimeline();
             }
         } else {
             console.log(`[State setPlaybackModeState] Mode is already ${mode}. No change.`);
@@ -202,7 +203,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
 
     if (Object.keys(appServices).length === 0 && localAppServices && Object.keys(localAppServices).length > 0) {
         console.warn("[State addTrackToStateInternal] appServices was empty, using localAppServices fallback for trackAppServices. This might indicate an initialization order issue.");
-        appServices = localAppServices; 
+        appServices = localAppServices;
     }
 
 
@@ -212,12 +213,12 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         updateTrackUI: appServices.updateTrackUI,
         highlightPlayingStep: appServices.highlightPlayingStep,
         autoSliceSample: appServices.autoSliceSample,
-        closeAllTrackWindows: appServices.closeAllTrackWindows, 
+        closeAllTrackWindows: appServices.closeAllTrackWindows,
         getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
         showNotification: appServices.showNotification,
         effectsRegistryAccess: appServices.effectsRegistryAccess,
-        renderTimeline: appServices.renderTimeline, 
-        getPlaybackMode: getPlaybackModeState, 
+        renderTimeline: appServices.renderTimeline,
+        getPlaybackMode: getPlaybackModeState,
     };
     const newTrack = new Track(newTrackId, type, initialData, trackAppServices);
     tracks.push(newTrack);
@@ -237,7 +238,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         if (appServices.updateMixerWindow) {
             appServices.updateMixerWindow();
         }
-        if (appServices.renderTimeline) { 
+        if (appServices.renderTimeline) {
             appServices.renderTimeline();
         }
     } catch (error) {
@@ -249,7 +250,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         if (appServices.updateMixerWindow) {
             appServices.updateMixerWindow();
         }
-         if (appServices.renderTimeline) { 
+         if (appServices.renderTimeline) {
             appServices.renderTimeline();
         }
     }
@@ -280,7 +281,7 @@ export function removeTrackFromStateInternal(trackId) {
     showNotification(`Track "${track.name}" removed.`, 2000);
     if (appServices.updateMixerWindow) appServices.updateMixerWindow();
     if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-    if (appServices.renderTimeline) { 
+    if (appServices.renderTimeline) {
         appServices.renderTimeline();
     }
 }
@@ -416,7 +417,7 @@ export async function redoLastActionInternal() {
 // --- Project Data Handling ---
 export function gatherProjectDataInternal() {
     const projectData = {
-        version: "5.9.0", 
+        version: "5.9.0",
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: masterGainValueState,
@@ -424,7 +425,7 @@ export function gatherProjectDataInternal() {
             soloedTrackId: soloedTrackId,
             armedTrackId: armedTrackId,
             highestZIndex: highestZ,
-            playbackMode: globalPlaybackMode, 
+            playbackMode: globalPlaybackMode,
         },
         masterEffects: masterEffectsChainState.map(effect => ({
             id: effect.id,
@@ -448,13 +449,13 @@ export function gatherProjectDataInternal() {
                 slicerIsPolyphonic: track.slicerIsPolyphonic,
                 selectedDrumPadForEdit: track.selectedDrumPadForEdit,
                 instrumentSamplerIsPolyphonic: track.instrumentSamplerIsPolyphonic,
-                
+
                 sequences: JSON.parse(JSON.stringify(track.sequences || [])),
                 activeSequenceId: track.activeSequenceId,
                 timelineClips: JSON.parse(JSON.stringify(track.timelineClips || [])),
             };
-            
-            delete trackData.sequenceLength; 
+
+            delete trackData.sequenceLength;
             delete trackData.sequenceData;
 
              if (track.type === 'Synth') {
@@ -525,7 +526,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     masterEffectsChainState = [];
 
     if (appServices.closeAllWindows) appServices.closeAllWindows(true);
-    if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); 
+    if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
     highestZ = 100;
 
 
@@ -540,7 +541,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     Tone.Transport.bpm.value = gs.tempo || 120;
     setMasterGainValueState(gs.masterVolume ?? Tone.dbToGain(0));
     if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
-    setPlaybackModeState(gs.playbackMode || 'pattern'); 
+    setPlaybackModeState(gs.playbackMode || 'pattern');
 
 
     if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
@@ -553,7 +554,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
         for (const effectData of projectData.masterEffects) {
             const effectIdInState = addMasterEffectToState(effectData.type, effectData.params);
-            if (appServices.addMasterEffectToAudio) { 
+            if (appServices.addMasterEffectToAudio) {
                  await appServices.addMasterEffectToAudio(effectIdInState, effectData.type, effectData.params);
             }
         }
@@ -593,7 +594,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     tracks.forEach(t => {
         t.isSoloed = (t.id === getSoloedTrackIdState());
         t.applySoloState();
-        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged'); 
+        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
     });
 
     if (gs && gs.activeMIDIInputId && appServices.selectMIDIInput) {
@@ -602,8 +603,8 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
 
     if(appServices.updateMixerWindow) appServices.updateMixerWindow();
     if(appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-    if(appServices.renderTimeline) appServices.renderTimeline(); 
-    
+    if(appServices.renderTimeline) appServices.renderTimeline();
+
     updateInternalUndoRedoState();
 
     appServices._isReconstructingDAW_flag = false;
@@ -683,12 +684,12 @@ export async function exportToWavInternal() {
         }
         Tone.Transport.position = 0;
         let maxDuration = 0;
-        
-        const currentPlaybackMode = getPlaybackModeState(); 
+
+        const currentPlaybackMode = getPlaybackModeState();
 
         if (currentPlaybackMode === 'timeline') {
             tracks.forEach(track => {
-                track.timelineClips.forEach(clip => { 
+                track.timelineClips.forEach(clip => {
                     if (clip.startTime + clip.duration > maxDuration) {
                         maxDuration = clip.startTime + clip.duration;
                     }
@@ -696,8 +697,8 @@ export async function exportToWavInternal() {
             });
         } else { // 'pattern' mode
             tracks.forEach(track => {
-                if (track.type !== 'Audio') { 
-                    const activeSeq = track.getActiveSequence(); 
+                if (track.type !== 'Audio') {
+                    const activeSeq = track.getActiveSequence();
                     if (activeSeq && activeSeq.length > 0) {
                         const sixteenthNoteTime = Tone.Time("16n").toSeconds();
                         const trackDuration = activeSeq.length * sixteenthNoteTime;
@@ -708,8 +709,8 @@ export async function exportToWavInternal() {
         }
 
 
-        if (maxDuration === 0) maxDuration = 5; 
-        maxDuration += 1; 
+        if (maxDuration === 0) maxDuration = 5;
+        maxDuration += 1;
 
         const recorder = new Tone.Recorder();
         const recordSource = appServices.getActualMasterGainNode ? appServices.getActualMasterGainNode() : null;
@@ -722,21 +723,21 @@ export async function exportToWavInternal() {
         recordSource.connect(recorder);
 
         showNotification(`Recording for export (${maxDuration.toFixed(1)}s)...`, Math.max(3000, maxDuration * 1000 + 1000));
-        
+
         tracks.forEach(track => {
-            if (typeof track.schedulePlayback === 'function') { 
-                track.schedulePlayback(0, maxDuration); 
+            if (typeof track.schedulePlayback === 'function') {
+                track.schedulePlayback(0, maxDuration);
             }
         });
 
         recorder.start();
-        Tone.Transport.start("+0.1", 0); 
+        Tone.Transport.start("+0.1", 0);
 
         await new Promise(resolve => setTimeout(resolve, maxDuration * 1000));
 
         const recording = await recorder.stop();
         Tone.Transport.stop();
-        
+
         tracks.forEach(track => {
             if (typeof track.stopPlayback === 'function') {
                 track.stopPlayback();
