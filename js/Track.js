@@ -40,7 +40,7 @@ export class Track {
         this.samplerAudioData = initialData?.samplerAudioData || {
             fileName: null, audioBufferDataURL: null, dbKey: null, status: 'empty'
         };
-        this.audioBuffer = null; // For Slicer Sampler's main audio
+        this.audioBuffer = null; 
         this.slices = initialData?.slices || Array(Constants.numSlices).fill(null).map(() => ({
             offset: 0, duration: 0, userDefined: false, volume: 1.0, pitchShift: 0,
             loop: false, reverse: false,
@@ -61,7 +61,7 @@ export class Track {
             envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty'
         };
         this.instrumentSamplerIsPolyphonic = initialData?.instrumentSamplerIsPolyphonic !== undefined ? initialData.instrumentSamplerIsPolyphonic : true;
-        this.toneSampler = null; // For Instrument Sampler
+        this.toneSampler = null; 
 
         // Drum Sampler specific
         this.drumSamplerPads = initialData?.drumSamplerPads || Array(Constants.numDrumSamplerPads).fill(null).map(() => ({
@@ -103,7 +103,7 @@ export class Track {
 
         // Audio Nodes
         this.gainNode = null; this.trackMeter = null; this.outputNode = null;
-        this.instrument = null; // For Synth type
+        this.instrument = null; 
 
         // --- NEW/MODIFIED: Multiple Sequences and Timeline Clip Data ---
         this.sequences = []; 
@@ -120,21 +120,18 @@ export class Track {
                 if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
                     numRowsForGrid = Constants.synthPitches.length;
                 } else if (this.type === 'Sampler') {
-                    // Slices are initialized with default empty slice objects.
-                    // Use Constants.numSlices as a fallback if this.slices.length is somehow 0.
                     numRowsForGrid = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
-                    if (numRowsForGrid === 0) numRowsForGrid = Constants.numSlices; // Ensure at least some rows for sampler
+                    if (numRowsForGrid === 0) numRowsForGrid = Constants.numSlices; 
                 } else if (this.type === 'DrumSampler') {
                     numRowsForGrid = Constants.numDrumSamplerPads;
                 } else {
-                    numRowsForGrid = 0; 
+                    numRowsForGrid = 1; // Fallback, should ideally not happen for known types
+                    console.warn(`[Track ${this.id} Constructor] Unknown track type for sequence rows: ${this.type}. Defaulting to 1 row.`);
                 }
-                // Ensure numRowsForGrid is at least 1 if it's a sequence-based track, unless it's an unknown type
                 if (numRowsForGrid === 0 && (this.type === 'Synth' || this.type === 'InstrumentSampler' || this.type === 'Sampler' || this.type === 'DrumSampler')) {
-                    console.warn(`[Track ${this.id} Constructor] numRowsForGrid was 0 for type ${this.type}, defaulting to 1 to avoid empty sequence data.`);
-                    numRowsForGrid = 1; // Fallback to prevent empty sequence data array
+                     console.warn(`[Track ${this.id} Constructor] numRowsForGrid was 0 for type ${this.type}, defaulting to 1 to avoid empty sequence data.`);
+                     numRowsForGrid = 1; 
                 }
-
 
                 const defaultSequenceData = Array(numRowsForGrid).fill(null).map(() => Array(Constants.defaultStepsPerBar).fill(null));
                 
@@ -183,19 +180,16 @@ export class Track {
         this.clipPlayers = new Map(); 
     }
 
-    // Helper to get the currently active sequence object
     getActiveSequence() {
         if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences) return null;
         return this.sequences.find(s => s.id === this.activeSequenceId);
     }
     
-    // Helper to get the data of the active sequence
     getActiveSequenceData() {
         const activeSeq = this.getActiveSequence();
         return activeSeq ? activeSeq.data : [];
     }
 
-    // Helper to get the length of the active sequence
     getActiveSequenceLength() {
         const activeSeq = this.getActiveSequence();
         return activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
@@ -755,7 +749,6 @@ export class Track {
         }
     }
 
-    // --- New methods for managing multiple sequences ---
     createNewSequence(name = `Sequence ${this.sequences.length + 1}`) {
         if (this.type === 'Audio') return null;
         const newSeqId = `seq_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
@@ -763,7 +756,7 @@ export class Track {
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
         else if (this.type === 'Sampler') numRowsForGrid = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
         else if (this.type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
-        else numRowsForGrid = 1; // Fallback for unknown type, though should not happen
+        else numRowsForGrid = 1; 
 
         if (numRowsForGrid === 0 && (this.type === 'Synth' || this.type === 'InstrumentSampler' || this.type === 'Sampler' || this.type === 'DrumSampler')) {
              console.warn(`[Track ${this.id} createNewSequence] numRowsForGrid was 0 for type ${this.type}, defaulting to 1.`);
@@ -777,9 +770,9 @@ export class Track {
             length: Constants.defaultStepsPerBar
         };
         this.sequences.push(newSequence);
-        this.activeSequenceId = newSeqId; // Make the new sequence active
+        this.activeSequenceId = newSeqId; 
         this.recreateToneSequence(true); 
-        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged'); // To refresh sequencer window
+        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged'); 
         console.log(`[Track ${this.id}] Created new sequence: ${name} (ID: ${newSeqId})`);
         return newSequence;
     }
@@ -815,8 +808,6 @@ export class Track {
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged'); 
             this.timelineClips.forEach(clip => {
                 if (clip.type === 'sequence' && clip.sourceSequenceId === sequenceId) {
-                    // Optionally update clip name if it's derived from sequence name
-                    // For now, let's assume clip names are independent
                 }
             });
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
@@ -833,7 +824,7 @@ export class Track {
         const newSequence = {
             id: newSeqId,
             name: `${originalSequence.name} Copy`,
-            data: JSON.parse(JSON.stringify(originalSequence.data)), // Deep copy
+            data: JSON.parse(JSON.stringify(originalSequence.data)), 
             length: originalSequence.length
         };
         this.sequences.push(newSequence);
@@ -855,8 +846,7 @@ export class Track {
         }
     }
     
-    // --- Modified methods to work with the active sequence ---
-    doubleSequence() { // Operates on the active sequence
+    doubleSequence() { 
         if (this.type === 'Audio') return;
         const activeSeq = this.getActiveSequence();
         if (!activeSeq) return;
@@ -889,7 +879,7 @@ export class Track {
         if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
     }
 
-    setSequenceLength(newLengthInSteps, skipUndoCapture = false) { // Operates on the active sequence
+    setSequenceLength(newLengthInSteps, skipUndoCapture = false) { 
         if (this.type === 'Audio') return;
         const activeSeq = this.getActiveSequence();
         if (!activeSeq) {
@@ -911,7 +901,7 @@ export class Track {
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
         else if (this.type === 'Sampler') numRows = this.slices.length > 0 ? this.slices.length : Constants.numSlices;
         else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
-        else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1; // Fallback
+        else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1; 
 
         const currentSequenceData = activeSeq.data || [];
         activeSeq.data = Array(numRows).fill(null).map((_, rIndex) => {
@@ -942,7 +932,7 @@ export class Track {
             console.warn(`[Track ${this.id} recreateToneSequence] No active sequence found (ID: ${this.activeSequenceId}). Aborting.`);
             return;
         }
-        if (!activeSeq.data || !Array.isArray(activeSeq.data)) { // Check if data is an array
+        if (!activeSeq.data || !Array.isArray(activeSeq.data)) { 
             console.warn(`[Track ${this.id} recreateToneSequence] Active sequence '${activeSeq.name}' has invalid or no data. Aborting. Data:`, activeSeq.data);
             return;
         }
@@ -957,8 +947,6 @@ export class Track {
 
         if(sequenceDataForTone.length === 0 && sequenceLengthForTone > 0){
             console.warn(`[Track ${this.id} recreateToneSequence] Sequence data has 0 rows, but length is ${sequenceLengthForTone}. This might lead to issues or an empty sequence.`);
-            // Optionally, you could still create an empty sequence of the correct length if that's desired behavior.
-            // For now, let's proceed, Tone.Sequence might handle empty events array.
         }
 
 
@@ -1138,6 +1126,7 @@ export class Track {
         this.stopPlayback(); 
 
         if (playbackMode === 'timeline') {
+            console.log(`[Track ${this.id}] In TIMELINE mode. Scheduling ${this.timelineClips.length} timeline clips.`);
             for (const clip of this.timelineClips) {
                 const clipActualStartOnTransport = clip.startTime;
                 const clipActualEndOnTransport = clip.startTime + clip.duration;
@@ -1145,15 +1134,19 @@ export class Track {
                 const effectivePlayEndOnTransport = Math.min(clipActualEndOnTransport, transportStopTime);
                 let playDurationInWindow = effectivePlayEndOnTransport - effectivePlayStartOnTransport;
 
-                if (playDurationInWindow <= 1e-3) continue;
+                if (playDurationInWindow <= 1e-3) {
+                    console.log(`[Track ${this.id}] Clip ${clip.id} (${clip.type}) outside/negligible in window. Skipping.`);
+                    continue;
+                }
                 
                 const offsetIntoSource = Math.max(0, effectivePlayStartOnTransport - clipActualStartOnTransport);
 
                 if (clip.type === 'audio') {
+                    console.log(`[Track ${this.id}] Scheduling AUDIO clip ${clip.id} ('${clip.name}') at ${effectivePlayStartOnTransport} for ${playDurationInWindow}s (offset ${offsetIntoSource}s)`);
                     const player = new Tone.Player();
                     this.clipPlayers.set(clip.id, player);
                     try {
-                        const audioBlob = await getAudio(clip.sourceId); 
+                        const audioBlob = await getAudio(clip.sourceId);
                         if (audioBlob) {
                             const url = URL.createObjectURL(audioBlob);
                             player.onload = () => {
@@ -1180,16 +1173,15 @@ export class Track {
 
                         for(let stepIndex = 0; stepIndex < totalEventsInSourceSeq; stepIndex++) {
                             const timeWithinSourceSeq = stepIndex * sixteenthTime;
+                            // Calculate the absolute transport time for this step within the clip
                             const actualTransportTimeForStep = clipActualStartOnTransport + timeWithinSourceSeq;
 
-                            // Check if this step falls within the current playback window
+                            // Check if this step falls within the current playback window of this clip instance
                             if (actualTransportTimeForStep >= effectivePlayStartOnTransport && actualTransportTimeForStep < effectivePlayEndOnTransport) {
-                                // Schedule notes for this step
                                 for (let rowIndex = 0; rowIndex < sourceSequence.data.length; rowIndex++) {
                                     const stepData = sourceSequence.data[rowIndex]?.[stepIndex];
                                     if (stepData?.active) {
-                                        Tone.Transport.scheduleOnce((time) => {
-                                            // This callback 'time' is the precise scheduled time by Tone.Transport
+                                        Tone.Transport.scheduleOnce((time) => { // 'time' here is actualTransportTimeForStep
                                             const currentGlobalSoloId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
                                             const isEffectivelyMuted = this.isMuted || (currentGlobalSoloId !== null && currentGlobalSoloId !== this.id);
                                             if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) return;
@@ -1200,10 +1192,25 @@ export class Track {
 
                                             if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
                                                 const pitchName = Constants.synthPitches[rowIndex];
-                                                if (pitchName) this.instrument.triggerAttackRelease(pitchName, "8n", time, stepData.velocity * Constants.defaultVelocity);
+                                                if (pitchName) this.instrument.triggerAttackRelease(pitchName, "16n", time, stepData.velocity * Constants.defaultVelocity); // Use "16n" for duration
                                             } else if (this.type === 'Sampler' && this.audioBuffer?.loaded) {
+                                                // Simplified Slicer playback for timeline - polyphonic only for now
                                                 const sliceData = this.slices[rowIndex];
-                                                if (sliceData?.duration > 0) { /* ... Slicer polyphonic logic from patternPlayer ... */ }
+                                                if (sliceData?.duration > 0) {
+                                                    const tempPlayer = new Tone.Player(this.audioBuffer);
+                                                    const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
+                                                    const tempGain = new Tone.Gain(stepData.velocity * sliceData.volume);
+                                                    tempPlayer.chain(tempEnv, tempGain, effectsChainStartPoint);
+                                                    const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
+                                                    let playDuration = sliceData.duration / playbackRate;
+                                                    tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse;
+                                                    // For timeline sequence clips, individual notes don't loop within themselves.
+                                                    tempPlayer.loop = false; 
+                                                    tempPlayer.start(time, sliceData.offset, playDuration);
+                                                    tempEnv.triggerAttack(time);
+                                                    tempEnv.triggerRelease(time + playDuration * 0.95);
+                                                    Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
+                                                }
                                             } else if (this.type === 'DrumSampler' && this.drumPadPlayers[rowIndex]?.loaded) {
                                                 const player = this.drumPadPlayers[rowIndex];
                                                 const padData = this.drumSamplerPads[rowIndex];
@@ -1212,7 +1219,7 @@ export class Track {
                                                 player.start(time);
                                             } else if (this.type === 'InstrumentSampler' && this.toneSampler?.loaded) {
                                                 const pitchName = Constants.synthPitches[rowIndex];
-                                                if (pitchName) this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "8n", time, stepData.velocity * Constants.defaultVelocity);
+                                                if (pitchName) this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "16n", time, stepData.velocity * Constants.defaultVelocity);
                                             }
                                         }, actualTransportTimeForStep);
                                     }
@@ -1253,11 +1260,15 @@ export class Track {
             this.patternPlayerSequence.stop();
             console.log(`[Track ${this.id}] Stopped patternPlayerSequence.`);
         }
+        // When stopping, also cancel any manually scheduled Tone.Transport events for sequence clips
+        Tone.Transport.cancel(0); // This might be too broad if other tracks need their events.
+                                   // A more targeted approach would be to store event IDs and cancel only those.
+                                   // For now, this ensures sequence notes from timeline mode stop.
     }
     
 
     async updateAudioClipPosition(clipId, newStartTime) {
-        const clip = this.timelineClips.find(c => c.id === clipId); // Works for both 'audio' and 'sequence' types
+        const clip = this.timelineClips.find(c => c.id === clipId); 
         if (clip) {
             const oldStartTime = clip.startTime;
             clip.startTime = Math.max(0, newStartTime); 
