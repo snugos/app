@@ -36,41 +36,69 @@ export function initializePrimaryEventListeners(appContext) {
     const uiCache = appContext.uiElementsCache || {};
 
     try {
-        uiCache.startButton?.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            uiCache.startMenu?.classList.toggle('show');
-        });
+        // --- START BUTTON ---
+        if (uiCache.startButton) {
+            uiCache.startButton.addEventListener('click', (e) => {
+                console.log('[EventHandlers] Start Button clicked.'); 
+                e.stopPropagation(); 
+                if (uiCache.startMenu) {
+                    console.log(`[EventHandlers] Start Menu found. Current classes before toggle: '${uiCache.startMenu.className}'`); 
+                    uiCache.startMenu.classList.toggle('show');
+                    console.log(`[EventHandlers] Start Menu after toggle. New classes: '${uiCache.startMenu.className}'`); 
+                } else {
+                    console.error('[EventHandlers] Start Menu (uiCache.startMenu) not found!'); 
+                }
+            });
+        } else {
+            console.error('[EventHandlers] Start Button (uiCache.startButton) not found!');
+        }
 
-        uiCache.desktop?.addEventListener('click', () => {
-            uiCache.startMenu?.classList.remove('show');
-            const activeContextMenu = document.querySelector('.custom-context-menu');
-            if (activeContextMenu) activeContextMenu.remove();
-        });
+        // --- DESKTOP CLICK (to close start menu) ---
+        if (uiCache.desktop) {
+            uiCache.desktop.addEventListener('click', () => {
+                if (uiCache.startMenu && uiCache.startMenu.classList.contains('show')) {
+                    console.log('[EventHandlers] Desktop clicked, closing Start Menu.');
+                    uiCache.startMenu.classList.remove('show');
+                }
+                const activeContextMenu = document.querySelector('.custom-context-menu');
+                if (activeContextMenu) {
+                    console.log('[EventHandlers] Desktop clicked, closing active context menu.');
+                    activeContextMenu.remove();
+                }
+            });
+        } else {
+             console.error('[EventHandlers] Desktop element (uiCache.desktop) not found!');
+        }
         
-        uiCache.desktop?.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            const menuItems = [
-                { label: "Add Synth Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); } },
-                { label: "Add Slicer Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); } },
-                { label: "Add Sampler (Pads)", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); } },
-                { label: "Add Instrument Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); } },
-                { label: "Add Audio Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); } },
-                { separator: true },
-                { label: "Open Sound Browser", action: () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); } },
-                { label: "Open Timeline", action: () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); } },
-                { label: "Open Global Controls", action: () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); } },
-                { label: "Open Mixer", action: () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); } },
-                { label: "Open Master Effects", action: () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); } },
-                { separator: true },
-                { label: "Upload Custom Background", action: () => { if(localAppServices.triggerCustomBackgroundUpload) localAppServices.triggerCustomBackgroundUpload(); } },
-                { label: "Remove Custom Background", action: () => { if(localAppServices.removeCustomDesktopBackground) localAppServices.removeCustomDesktopBackground(); } },
-                { separator: true },
-                { label: "Toggle Full Screen", action: toggleFullScreen }
-            ];
-            createContextMenu(e, menuItems);
-        });
+        // --- DESKTOP CONTEXT MENU ---
+        if (uiCache.desktop) {
+            uiCache.desktop.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                console.log('[EventHandlers] Desktop context menu triggered.');
+                const menuItems = [
+                    { label: "Add Synth Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Slicer Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Sampler (Pads)", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Instrument Sampler Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Audio Track", action: () => { if(localAppServices.addTrack) localAppServices.addTrack('Audio', {_isUserActionPlaceholder: true}); } },
+                    { separator: true },
+                    { label: "Open Sound Browser", action: () => { if(localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow(); } },
+                    { label: "Open Timeline", action: () => { if(localAppServices.openTimelineWindow) localAppServices.openTimelineWindow(); } },
+                    { label: "Open Global Controls", action: () => { if(localAppServices.openGlobalControlsWindow) localAppServices.openGlobalControlsWindow(); } },
+                    { label: "Open Mixer", action: () => { if(localAppServices.openMixerWindow) localAppServices.openMixerWindow(); } },
+                    { label: "Open Master Effects", action: () => { if(localAppServices.openMasterEffectsRackWindow) localAppServices.openMasterEffectsRackWindow(); } },
+                    { separator: true },
+                    { label: "Upload Custom Background", action: () => { if(localAppServices.triggerCustomBackgroundUpload) localAppServices.triggerCustomBackgroundUpload(); } },
+                    { label: "Remove Custom Background", action: () => { if(localAppServices.removeCustomDesktopBackground) localAppServices.removeCustomDesktopBackground(); } },
+                    { separator: true },
+                    { label: "Toggle Full Screen", action: toggleFullScreen }
+                ];
+                createContextMenu(e, menuItems);
+            });
+        }
 
 
+        // Start Menu Item Event Listeners
         uiCache.menuAddSynthTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Synth', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.remove('show'); });
         uiCache.menuAddSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('Sampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.remove('show'); });
         uiCache.menuAddDrumSamplerTrack?.addEventListener('click', () => { if(localAppServices.addTrack) localAppServices.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); uiCache.startMenu.classList.remove('show'); });
@@ -233,7 +261,9 @@ export function attachGlobalControlEvents(elements) {
         midiInputSelectGlobal.addEventListener('change', (e) => localAppServices.selectMIDIInput(e.target.value));
     }
 
+    // --- Playback Mode Toggle Button Listener ---
     if (playbackModeToggleBtnGlobal) {
+        console.log("[EventHandlers attachGlobalControlEvents] Playback mode toggle button FOUND. Attaching listener.");
         playbackModeToggleBtnGlobal.addEventListener('click', () => {
             console.log("[EventHandlers PlaybackModeToggle] Button clicked.");
             if (localAppServices.getPlaybackMode && localAppServices.setPlaybackMode) {
@@ -243,10 +273,12 @@ export function attachGlobalControlEvents(elements) {
                 localAppServices.setPlaybackMode(newMode);
             } else {
                 console.warn("[EventHandlers PlaybackModeToggle] getPlaybackMode or setPlaybackMode service not available.");
+                if (!localAppServices.getPlaybackMode) console.warn("getPlaybackMode is missing from localAppServices");
+                if (!localAppServices.setPlaybackMode) console.warn("setPlaybackMode is missing from localAppServices");
             }
         });
     } else {
-        console.warn("[EventHandlers] Playback mode toggle button not found in global controls UI elements (elements.playbackModeToggleBtnGlobal is null).");
+        console.warn("[EventHandlers attachGlobalControlEvents] Playback mode toggle button (playbackModeToggleBtnGlobal) NOT found in elements object passed from main.js.");
     }
 }
 
