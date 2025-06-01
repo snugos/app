@@ -48,7 +48,7 @@ let isRecordingGlobal = false;
 let recordingTrackIdGlobal = null;
 let recordingStartTime = 0;
 
-let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline' // UPDATED DEFAULT
+let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 
 // Undo/Redo
 let undoStack = [];
@@ -66,7 +66,7 @@ export function initializeStateModule(services) {
         appServices.getPlaybackMode = getPlaybackModeState;
     }
      if (appServices && !appServices.setPlaybackMode) {
-        appServices.setPlaybackMode = setPlaybackModeStateInternal; // Use internal setter
+        appServices.setPlaybackMode = setPlaybackModeStateInternal;
     }
 }
 
@@ -132,9 +132,9 @@ export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
 export function setRecordingStartTimeState(time) { recordingStartTime = time; }
 export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
 
-// Renamed to avoid conflict if appServices also defines setPlaybackMode
 export function setPlaybackModeStateInternal(mode) {
-    const displayMode = mode === 'sequencer' ? 'Sequencer' : (mode === 'timeline' ? 'Timeline' : mode);
+    // Corrected displayMode for logging consistency
+    const displayMode = mode.charAt(0).toUpperCase() + mode.slice(1);
     console.log(`[State setPlaybackModeStateInternal] Attempting to set mode to: ${mode} (Display: ${displayMode}). Current mode: ${globalPlaybackMode}`);
     if (mode === 'sequencer' || mode === 'timeline') {
         if (globalPlaybackMode !== mode) {
@@ -159,11 +159,9 @@ export function setPlaybackModeStateInternal(mode) {
             console.log(`[State setPlaybackModeStateInternal] Re-initializing sequences/playback for ${currentTracks.length} tracks for new mode: ${globalPlaybackMode}.`);
             currentTracks.forEach(track => {
                 if (track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
-                    // This will now correctly recreate (or not) based on the new globalPlaybackMode
                     console.log(`[State setPlaybackModeStateInternal] Calling recreateToneSequence for track ${track.id} (${track.name})`);
                     track.recreateToneSequence(true);
                 }
-                // If switching to sequencer mode, ensure audio track timeline players are stopped
                 if (globalPlaybackMode === 'sequencer' && track.type === 'Audio' && typeof track.stopPlayback === 'function') {
                     console.log(`[State setPlaybackModeStateInternal] Stopping audio playback for track ${track.id} (${track.name}) as mode switched to sequencer.`);
                     track.stopPlayback();
@@ -185,8 +183,6 @@ export function setPlaybackModeStateInternal(mode) {
         console.warn(`[State setPlaybackModeStateInternal] Invalid playback mode attempted: ${mode}. Expected 'sequencer' or 'timeline'.`);
     }
 }
-// Expose the internal setter through appServices if needed, or ensure eventHandlers calls this one.
-// For now, I'll assume eventHandlers will be updated to call this directly or via an appService pointer.
 export { setPlaybackModeStateInternal as setPlaybackModeState };
 
 
@@ -224,7 +220,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         showNotification: appServices.showNotification,
         effectsRegistryAccess: appServices.effectsRegistryAccess,
         renderTimeline: appServices.renderTimeline,
-        getPlaybackMode: getPlaybackModeState, // Pass the getter for playback mode
+        getPlaybackMode: getPlaybackModeState, 
     };
     const newTrack = new Track(newTrackId, type, initialData, trackAppServices);
     tracks.push(newTrack);
@@ -423,7 +419,7 @@ export async function redoLastActionInternal() {
 // --- Project Data Handling ---
 export function gatherProjectDataInternal() {
     const projectData = {
-        version: "5.9.0", // Consider updating this if structure changes significantly
+        version: "5.9.0", 
         globalSettings: {
             tempo: Tone.Transport.bpm.value,
             masterVolume: masterGainValueState,
@@ -471,7 +467,6 @@ export function gatherProjectDataInternal() {
                 trackData.samplerAudioData = {
                     fileName: track.samplerAudioData.fileName,
                     dbKey: track.samplerAudioData.dbKey,
-                    // Ensure status reflects reality for saving/loading
                     status: track.samplerAudioData.dbKey ? 'missing_db' : (track.samplerAudioData.fileName ? 'missing' : 'empty')
                 };
                 trackData.slices = JSON.parse(JSON.stringify(track.slices));
@@ -548,7 +543,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     Tone.Transport.bpm.value = gs.tempo || 120;
     setMasterGainValueState(gs.masterVolume ?? Tone.dbToGain(0));
     if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
-    setPlaybackModeStateInternal(gs.playbackMode || 'sequencer'); // Use internal setter and new default
+    setPlaybackModeStateInternal(gs.playbackMode || 'sequencer'); 
 
 
     if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
@@ -581,7 +576,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             else if (key === 'mixer' && appServices.openMixerWindow) appServices.openMixerWindow(winState);
             else if (key === 'soundBrowser' && appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow(winState);
             else if (key === 'masterEffectsRack' && appServices.openMasterEffectsRackWindow) appServices.openMasterEffectsRackWindow(winState);
-            else if (key === 'timeline' && appServices.openTimelineWindow) appServices.openTimelineWindow(winState); // Added timeline window
+            else if (key === 'timeline' && appServices.openTimelineWindow) appServices.openTimelineWindow(winState); 
             else if (key.startsWith('trackInspector-') && appServices.openTrackInspectorWindow) {
                 const trackIdNum = parseInt(key.split('-')[1]);
                 if (!isNaN(trackIdNum) && getTrackByIdState(trackIdNum)) appServices.openTrackInspectorWindow(trackIdNum, winState);
@@ -717,8 +712,8 @@ export async function exportToWavInternal() {
         }
 
 
-        if (maxDuration === 0) maxDuration = 5; // Default to 5 seconds if no content
-        maxDuration += 1; // Add a tail
+        if (maxDuration === 0) maxDuration = 5; 
+        maxDuration += 1; 
 
         const recorder = new Tone.Recorder();
         const recordSource = appServices.getActualMasterGainNode ? appServices.getActualMasterGainNode() : null;
