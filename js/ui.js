@@ -1544,18 +1544,31 @@ export function renderTimeline() {
     }
 
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
-    const tracks = getTracksState();
+    const tracks = getTracksState(); // Assuming getTracksState() gives current tracks from state.js
     if (!tracksArea || !tracks) {
         console.warn("Timeline area or tracks not found for rendering inside timeline window.");
         return;
     }
 
-    tracksArea.innerHTML = '';
+    tracksArea.innerHTML = ''; // Clear previous content
+
+    // MODIFICATION START: Read track name width from CSS custom property
+    // Ensure '--timeline-track-name-width' is defined in your style.css, e.g., in :root {}
+    const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
+    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback if CSS var is not defined
+    // MODIFICATION END
+
 
     tracks.forEach(track => {
         const lane = document.createElement('div');
         lane.className = 'timeline-track-lane';
         lane.dataset.trackId = track.id;
+
+        // Placeholder: Add dragover and drop event listeners here for adding clips by dropping
+        // e.g., lane.addEventListener('dragover', handleTimelineLaneDragOver);
+        // e.g., lane.addEventListener('drop', (e) => handleTimelineLaneDrop(e, track.id));
+        // These handlers would need to be defined, likely in eventHandlers.js or main.js
+        // and would call appServices (e.g. track.addSequenceClipToTimeline or track.addExternalAudioFileAsClip)
 
         const nameEl = document.createElement('div');
         nameEl.className = 'timeline-track-lane-name';
@@ -1564,10 +1577,7 @@ export function renderTimeline() {
 
         const clipsContainer = document.createElement('div');
         clipsContainer.style.position = 'relative';
-        // MODIFICATION: Read track name width from CSS variable for clips container width calculation
-        const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-        const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback if CSS var is not defined
-        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`;
+        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`; // Use dynamic width
         clipsContainer.style.height = '100%';
 
 
@@ -1578,24 +1588,24 @@ export function renderTimeline() {
                 let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration.toFixed(2)}s)`;
 
                 if (clip.type === 'audio') {
-                    clipEl.className = 'audio-clip'; // Ensure this class is defined in style.css
+                    clipEl.className = 'audio-clip';
                 } else if (clip.type === 'sequence') {
-                    clipEl.className = 'audio-clip sequence-clip'; // Use audio-clip style as base, add specific if needed
+                    clipEl.className = 'audio-clip sequence-clip';
                     const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
                     if (sourceSeq) {
                         clipText = sourceSeq.name;
                         clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration.toFixed(2)}s)`;
                     }
                 } else {
-                    clipEl.className = 'audio-clip unknown-clip'; // Style for unknown clips
+                    clipEl.className = 'audio-clip unknown-clip';
                 }
 
                 clipEl.textContent = clipText;
                 clipEl.title = clipTitle;
 
-                const pixelsPerSecond = 30; // Define or get from constants/settings
+                const pixelsPerSecond = 30;
                 clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`; // Ensure minimum width
+                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
 
                 clipEl.addEventListener('mousedown', (e) => {
                     e.preventDefault();
@@ -1616,17 +1626,16 @@ export function renderTimeline() {
                         const finalLeftPixels = parseFloat(clipEl.style.left) || 0;
                         const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond);
 
-                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) { // Threshold to confirm actual move
+                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) {
                             if (localAppServices.captureStateForUndo) {
                                 localAppServices.captureStateForUndo(`Move clip on track "${track.name}"`);
                             }
-                            if (track.updateAudioClipPosition) { // Assuming a method exists on the track
+                            if (track.updateAudioClipPosition) {
                                 track.updateAudioClipPosition(clip.id, newStartTime);
                             } else {
                                 console.error("Track.updateAudioClipPosition method not found!");
                             }
                         } else {
-                            // Snap back if not moved significantly
                             clipEl.style.left = `${originalStartTime * pixelsPerSecond}px`;
                         }
                     }
@@ -1649,7 +1658,7 @@ export function updatePlayheadPosition() {
     }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); // This should be the scrollable area
+    const timelineContentArea = timelineWindow.element.querySelector('.window-content');
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler');
 
 
