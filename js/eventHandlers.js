@@ -550,7 +550,7 @@ document.addEventListener('keyup', (event) => {
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
             const finalNote = midiNote + (currentOctaveShift * 12);
              if (finalNote >=0 && finalNote <= 127) { 
-                freq = Tone.Frequency(finalNote, "midi").toNote(); // Assign to outer scope freq
+                freq = Tone.Frequency(finalNote, "midi").toNote(); 
                 armedTrack.instrument.triggerRelease(freq, Tone.now()); 
             }
             delete currentlyPressedComputerKeys[midiNote];
@@ -559,7 +559,7 @@ document.addEventListener('keyup', (event) => {
         console.error("[EventHandlers Keyup] Error during specific note release:", error, 
             "Key:", event.key, 
             "Armed Track ID:", armedTrack ? armedTrack.id : 'N/A',
-            "Instrument Type:", armedTrack && armedTrack.instrument ? armedTrack.instrument.name : 'N/A',
+            "Instrument Type:", armedTrack && armedTrack.instrument ? armedTrack.instrument.name : 'N/A', 
             "Target Frequency:", freq,
             "Calculated MIDI Note:", midiNote
         );
