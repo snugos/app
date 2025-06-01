@@ -1311,6 +1311,87 @@ export class Track {
         }
     }
 
+    // MODIFICATION START: New method to add external audio files as clips
+    async addExternalAudioFileAsClip(audioFileBlob, startTime, clipName = null) {
+        if (this.type !== 'Audio') {
+            console.warn(`[Track ${this.id}] addExternalAudioFileAsClip called on non-Audio track type: ${this.type}`);
+            if (this.appServices.showNotification) this.appServices.showNotification("Audio files can only be added to Audio Tracks.", 3000);
+            return null;
+        }
+        const clipId = `audioclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+        const dbKey = `clip_${this.id}_${audioFileBlob.name.replace(/[^a-zA-Z0-9-_.]/g, '_')}_${audioFileBlob.size}_${Date.now()}`;
+
+        try {
+            await storeAudio(dbKey, audioFileBlob);
+            let duration = 0;
+            try {
+                duration = await this.getBlobDuration(audioFileBlob);
+            } catch (durationError) {
+                console.warn(`[Track ${this.id}] Could not determine duration for external audio clip ${clipId}, defaulting to 0. Error:`, durationError);
+            }
+
+            const newClip = {
+                id: clipId,
+                type: 'audio',
+                sourceId: dbKey,
+                startTime: Math.max(0, startTime),
+                duration: duration,
+                name: clipName || audioFileBlob.name || `Audio Clip ${this.timelineClips.filter(c => c.type === 'audio').length + 1}`
+            };
+
+            this.timelineClips.push(newClip);
+            console.log(`[Track ${this.id}] Added external audio file as clip to timeline:`, newClip);
+            this._captureUndoState(`Add Audio File Clip "${newClip.name}" to ${this.name}`);
+
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return newClip;
+        } catch (error) {
+            console.error(`[Track ${this.id} addExternalAudioFileAsClip] Error:`, error);
+            if (this.appServices.showNotification) this.appServices.showNotification("Failed to save and add audio file clip.", 3000);
+            return null;
+        }
+    }
+    // MODIFICATION END
+
+
+    // MODIFICATION START: New method to add sequence instances as clips
+    addSequenceClipToTimeline(sourceSequenceId, startTime, clipName = null) {
+        if (this.type === 'Audio') {
+            console.warn(`[Track ${this.id}] addSequenceClipToTimeline called on Audio track. Sequences are not applicable.`);
+            if (this.appServices.showNotification) this.appServices.showNotification("Cannot add sequence clips to Audio Tracks.", 3000);
+            return null;
+        }
+
+        const sourceSequence = this.sequences.find(s => s.id === sourceSequenceId);
+        if (!sourceSequence) {
+            console.warn(`[Track ${this.id}] Source sequence with ID ${sourceSequenceId} not found.`);
+            if (this.appServices.showNotification) this.appServices.showNotification("Source sequence not found.", 3000);
+            return null;
+        }
+
+        const clipId = `seqclip_${this.id}_${sourceSequenceId}_${Date.now()}_${Math.random().toString(36).substr(2,7)}`;
+        const sixteenthNoteTime = Tone.Time("16n").toSeconds(); // Duration of one 16th note at current tempo
+        const duration = sourceSequence.length * sixteenthNoteTime;
+
+        const newClip = {
+            id: clipId,
+            type: 'sequence',
+            sourceSequenceId: sourceSequenceId,
+            startTime: Math.max(0, startTime),
+            duration: duration,
+            name: clipName || sourceSequence.name || `Seq Clip ${this.timelineClips.filter(c => c.type === 'sequence').length + 1}`
+        };
+
+        this.timelineClips.push(newClip);
+        console.log(`[Track ${this.id}] Added sequence clip to timeline:`, newClip);
+        this._captureUndoState(`Add Sequence Clip "${newClip.name}" to ${this.name}`);
+
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        return newClip;
+    }
+    // MODIFICATION END
+
+
     async getBlobDuration(blob) {
         if (!blob || blob.size === 0) return 0;
         const tempUrl = URL.createObjectURL(blob);
@@ -1393,11 +1474,13 @@ export class Track {
 
                         for (let stepIdx = 0; stepIdx < sourceSequence.length; stepIdx++) {
                             const timeWithinSeq = stepIdx * sixteenthTime;
-                            const transportTimeForStep = clipActualStart + timeWithinSeq;
+                            // const transportTimeForStep = clipActualStart + timeWithinSeq; // Original calculation for individual scheduling
 
                             // Only consider events within the current playback window for the Part
-                            if (transportTimeForStep >= effectivePlayStart && transportTimeForStep < effectivePlayEnd) {
-                                const eventTimeInPart = timeWithinSeq - offsetIntoSource; // Time relative to the start of the Part's segment
+                            // The eventTimeInPart will be relative to the Part's own start time
+                            if (clipActualStart + timeWithinSeq >= effectivePlayStart && clipActualStart + timeWithinSeq < effectivePlayEnd) {
+                                const eventTimeInPart = (clipActualStart + timeWithinSeq) - effectivePlayStart;
+
 
                                 for (let rowIdx = 0; rowIdx < sourceSequence.data.length; rowIdx++) {
                                     const stepData = sourceSequence.data[rowIdx]?.[stepIdx];
@@ -1412,13 +1495,11 @@ export class Track {
                                             const sliceData = this.slices[rowIdx];
                                             if (sliceData && sliceData.duration > 0 && this.audioBuffer?.loaded) {
                                                noteValue = { type: 'slice', index: rowIdx, data: sliceData };
-                                               // Duration for sampler might be tied to slice or "16n"
                                             }
                                         } else if (this.type === 'DrumSampler') {
                                             const padData = this.drumSamplerPads[rowIdx];
                                             if (padData && this.drumPadPlayers[rowIdx]?.loaded) {
                                                 noteValue = { type: 'drum', index: rowIdx, data: padData };
-                                                // Drum hits are often one-shots, duration might be less relevant or handled by envelope
                                             }
                                         }
 
@@ -1435,7 +1516,7 @@ export class Track {
                         }
 
                         if (events.length > 0) {
-                            const part = new Tone.Part((time, value) => {
+                            const part = new Tone.Part((time, value) => { // time here is audio context time
                                 const soloId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
                                 const muted = this.isMuted || (soloId !== null && soloId !== this.id);
                                 if (!this.gainNode || this.gainNode.disposed || muted) return;
@@ -1448,7 +1529,7 @@ export class Track {
                                 if (this.type === 'Synth' && this.instrument && !this.instrument.disposed && typeof value.note === 'string') {
                                     this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
                                 } else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed && this.toneSampler.loaded && typeof value.note === 'string') {
-                                    let notePlayed = false;
+                                    let notePlayed = false; // This logic is for mono mode within a polyphonic part context
                                     if (!this.instrumentSamplerIsPolyphonic && !notePlayed) {
                                         this.toneSampler.releaseAll(time);
                                         notePlayed = true;
@@ -1478,9 +1559,8 @@ export class Track {
                                             try { if(tempGain && !tempGain.disposed) tempGain.dispose(); } catch(e){}
                                         }, time + playDurationPart + (sliceData.envelope?.release || 0.1) + 0.3);
                                     } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
-                                       // Mono logic for parts
                                         if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
-                                        this.slicerMonoEnvelope.triggerRelease(time); // Ensure any previous note is released
+                                        this.slicerMonoEnvelope.triggerRelease(time);
                                         this.slicerMonoPlayer.buffer = this.audioBuffer;
                                         this.slicerMonoEnvelope.set(sliceData.envelope);
                                         this.slicerMonoGain.gain.value = targetVolumeLinear;
@@ -1489,7 +1569,7 @@ export class Track {
                                         this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDurationPart);
                                         this.slicerMonoEnvelope.triggerAttack(time);
                                         if (!sliceData.loop) {
-                                            const releaseTime = time + playDurationPart - (sliceData.envelope.release * 0.05); // Adjust release timing for part context
+                                            const releaseTime = time + playDurationPart - (sliceData.envelope.release * 0.05);
                                             this.slicerMonoEnvelope.triggerRelease(Math.max(time, releaseTime));
                                         }
                                     }
@@ -1503,9 +1583,11 @@ export class Track {
                                     }
                                 }
                             }, events);
-                            part.loop = false; // Clips are finite; looping would be a clip property
-                            part.start(effectivePlayStart); // Start the Part at the clip's effective start time on the transport
-                            if (playDurationInWindow !== Infinity && playDurationInWindow > 0) {
+                            part.loop = false; // Clips are finite by default
+                            // Start the part at the clip's effective start time on the transport
+                            part.start(effectivePlayStart);
+                            // Stop the part if the playDurationInWindow is finite
+                            if (playDurationInWindow > 0 && playDurationInWindow !== Infinity) {
                                 part.stop(effectivePlayStart + playDurationInWindow);
                             }
                             this.clipPlayers.set(`${clip.id}_part`, part);
