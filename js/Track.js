@@ -1434,38 +1434,24 @@ export class Track {
 }
 ```
 
-**Key changes in this version of `track.js`:**
+**Explanation of the fix:**
 
-1.  **Syntax Error Fix (Line ~1413):** The extraneous `track` identifier in the `console.log` within the `dispose` method has been removed.
-2.  **Drum Sampler Volume in Sequencer:** In the `Tone.Sequence` callback, for `DrumSampler`, the line `player.volume.value = Tone.dbToGain(padData.volume * step.velocity);` has been changed to `player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.8);`. This correctly converts the linear gain (assuming `padData.volume` and `step.velocity` are 0-1) to Decibels, which `Tone.Player.volume` expects. I've also added a `* 0.8` factor to slightly reduce the default drum volume, which can be adjusted.
-3.  **More Detailed Logging in Sequencer Callback:**
-    * Added `TrackGain` to the initial event log.
-    * Added `SynthVol(dB)` for Synth tracks.
-    * Added `SliceVolLin`, `StepVel`, `FinalLinVol` for Sampler tracks.
-    * Added `PadVolLin`, `StepVel`, `TargetVolLin`, `TargetVolDb` for Drum Sampler tracks.
-    * Added `SamplerVol(dB)` for Instrument Sampler tracks.
-    * Added `TargetNode: ${effectsChainStartPoint.toString()}` to see where the instrument is trying to connect.
-    * Added more detailed checks and warnings within the Drum Sampler loop to see if a pad isn't playing due to `step.active` being false, `padData` missing, player not initialized/disposed, or buffer not loaded.
+* The line that previously caused the error was:
+    `console.log(track \`[Track \${this.id} Dispose] Calling appServices.closeAllTrackWindows for track ID: \${this.id}\`);`
+* It has been corrected to:
+    `console.log(\`[Track \${this.id} Dispose] Calling appServices.closeAllTrackWindows for track ID: \${this.id}\`);`
+    The accidental `track` identifier before the template literal (`) has been removed.
 
-**After applying this `track.js` (and ensuring no caching issues):**
+**After applying this corrected `track.js`:**
 
-1.  **Test Synth Track:**
-    * Add a Synth track.
-    * Add notes in its sequencer.
-    * Press Play.
-    * **Check Console:** Look for the `[Track N Synth] Playing...` logs. Note the `SynthVol(dB)` and `TrackGain`. Is the `TargetNode` the track's `GainNode` (or an effect if you added one)?
-    * **Listen:** Do you hear the synth?
+1.  **Crucial:** Clear your browser's cache thoroughly and perform a hard refresh (Ctrl+Shift+R or Cmd+Shift+R). This is essential to ensure the browser loads the corrected file and not an old cached version. Using an incognito/private window can also help.
+2.  **Retry your tests:**
+    * Add a Synth track, add notes to its sequencer, and press play.
+    * Add a Drum Sampler track, load samples, add notes to its sequencer, and press play.
+3.  **Observe the console.** The `SyntaxError` should be gone. Now, focus on the playback logs:
+    * `[Track N Sequencer Event] Time: X.XXX, Col: Y, Type: ZZZ, TrackGain: A.AA`
+    * `[Track N Synth] Playing PITCH... SynthVol(dB): B.BB, StepVel: C.CC, Target: GainNode`
+    * `[Track N DrumSampler] Playing pad P... PadVolLin: D.DD, StepVel: E.EE, TargetVolLin: F.FF, TargetVolDb: G.GG, TargetNode: GainNode`
+    * Look for any warnings about players not being loaded or effectsChainStartPoint being null.
 
-2.  **Test Drum Sampler Track:**
-    * Add a Drum Sampler track.
-    * Load a sample onto Pad 1 (index 0). Make sure it loads successfully.
-    * Open its sequencer. Activate the first step (column 0) for Row 1 (Pad 1).
-    * Press Play.
-    * **Check Console:**
-        * `[Track N DrumSampler] Playing pad 0 at col 0... PadVolLin: 0.70, StepVel: 0.70, TargetVolLin: 0.39, TargetVolDb: -8.13, TargetNode: GainNode` (or similar, with `GainNode` or an effect name).
-        * The `TrackGain` should be `0.70`.
-        * Are there any warnings like "Player buffer not loaded" for pad 0?
-    * **Listen:** Do you hear the drum pad?
-
-If you hear the synth but not the drum sampler (or vice-versa), the detailed logs should give us very specific information about volume levels and connection points to narrow down the problem.
-The `Uncaught Error: Invalid argument to cancelAndHoldAtTime: null` from your last log is related to keyboard input, specifically when a key is released (`eventHandlers.js:499`). The `keyup` handler in `eventHandlers.js` was updated in the previous turn to include more checks before calling `triggerRelease`. Please ensure you have that version of `eventHandlers.js` active. If the error persists with keyboard input, we can look at that separately after getting sequencer playback worki
+If the syntax error is resolved, we can then properly diagnose the audio playback based on these more detailed logs. The keyboard input error (`cancelAndHoldAtTime: null`) might also be resolved if it was indirectly related to the script not loading fully, but we can address that separately if it persists after sequencer playback is worki
