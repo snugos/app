@@ -7,7 +7,7 @@ import * as Constants from './constants.js';
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    selectMIDIInput as eventSelectMIDIInput, // Renamed to avoid conflict if appServices itself has selectMIDIInput
+    selectMIDIInput as eventSelectMIDIInput,
     handleTrackMute as eventHandleTrackMute,
     handleTrackSolo as eventHandleTrackSolo,
     handleTrackArm as eventHandleTrackArm,
@@ -32,10 +32,8 @@ import {
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
     setMidiAccessState, setActiveMIDIInputState,
-    // MODIFICATION: Ensure these are the exact names of the imported functions from state.js
     setLoadedZipFilesState,
     setSoundLibraryFileTreesState,
-    // END MODIFICATION
     setCurrentLibraryNameState, setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
@@ -88,7 +86,7 @@ const uiElementsCache = {
     menuUndo: null, menuRedo: null,
     menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null,
     menuOpenMixer: null, menuOpenMasterEffects: null,
-    menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null,
+    menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null, // MODIFICATION: Added stopBtnGlobal
     tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
     playbackModeToggleBtnGlobal: null,
@@ -141,7 +139,6 @@ function showSafeNotification(message, duration) {
         utilShowNotification(message, duration);
     } else {
         console.warn("showNotification utility not available, logging to console:", message);
-        // alert(message); // Avoid alert if possible as it's disruptive
     }
 }
 
@@ -155,8 +152,8 @@ const appServices = {
     updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
     createKnob, updateSequencerCellUI,
     renderTimeline, openTimelineWindow,
-    showNotification: showSafeNotification, // Use the safer wrapper
-    createContextMenu, // Directly from utils
+    showNotification: showSafeNotification,
+    createContextMenu,
 
     // --- Audio Module Functions ---
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
@@ -188,11 +185,8 @@ const appServices = {
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
     setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState,
     setMidiAccess: setMidiAccessState, setActiveMIDIInput: setActiveMIDIInputState,
-    // MODIFICATION START: Ensure these keys match the function names being called in audio.js
-    // and imported from state.js
     setLoadedZipFilesState: setLoadedZipFilesState,
     setSoundLibraryFileTreesState: setSoundLibraryFileTreesState,
-    // MODIFICATION END
     setCurrentLibraryName: setCurrentLibraryNameState, setCurrentSoundFileTree: setCurrentSoundFileTreeState,
     setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState, setPreviewPlayer: setPreviewPlayerState,
     setClipboardData: setClipboardDataState, setArmedTrackId: setArmedTrackIdState,
@@ -208,7 +202,7 @@ const appServices = {
     exportToWav: exportToWavInternal,
 
     // --- Event Handler Passthroughs (ensure these exist in eventHandlers.js) ---
-    selectMIDIInput: eventSelectMIDIInput, // Using renamed import
+    selectMIDIInput: eventSelectMIDIInput,
     handleTrackMute: eventHandleTrackMute,
     handleTrackSolo: eventHandleTrackSolo,
     handleTrackArm: eventHandleTrackArm,
@@ -217,9 +211,8 @@ const appServices = {
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
     handleOpenSequencer: eventHandleOpenSequencer,
 
-    // Timeline drop handlers (implemented in eventHandlers.js, called by ui.js)
+    // Timeline drop handlers
     handlePlaceSequenceOnTimeline: (dragData, targetTrackId, startTime) => {
-        // Pass appServices to the handler if it needs to call back into other services
         handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(dragData), files: [] } }, targetTrackId, startTime, appServices);
     },
     handleAddAudioFileToTimeline: (file, targetTrackId, startTime) => {
@@ -233,7 +226,7 @@ const appServices = {
             console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);
             return null;
         }
-        const loadedZips = getLoadedZipFilesState(); // Use direct state getter
+        const loadedZips = getLoadedZipFilesState();
         if (loadedZips?.[soundData.libraryName] && loadedZips[soundData.libraryName] !== "loading") {
             const zipEntry = loadedZips[soundData.libraryName].file(soundData.fullPath);
             if (zipEntry) {
@@ -253,6 +246,67 @@ const appServices = {
         return null;
     },
 
+    // MODIFICATION START: Add Panic Stop Service
+    panicStopAllAudio: () => {
+        console.log("[AppServices] Panic Stop All Audio requested.");
+        if (typeof Tone !== 'undefined') {
+            Tone.Transport.stop();
+            Tone.Transport.cancel(0); // Clear all scheduled transport events
+        }
+
+        const tracks = getTracksState();
+        if (tracks) {
+            tracks.forEach(track => {
+                if (track && typeof track.stopPlayback === 'function') {
+                    track.stopPlayback(); // Handles timeline players/parts and patternPlayerSequence
+                }
+                // For synths, ensure all notes are released
+                if (track && track.instrument && typeof track.instrument.releaseAll === 'function') {
+                    track.instrument.releaseAll(Tone.now());
+                }
+                if (track && track.toneSampler && typeof track.toneSampler.releaseAll === 'function') { // InstrumentSampler
+                    track.toneSampler.releaseAll(Tone.now());
+                }
+                // For Sampler (Slicer) mono mode
+                if (track && track.type === 'Sampler' && !track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
+                    if (track.slicerMonoPlayer.state === 'started' && !track.slicerMonoPlayer.disposed) {
+                        try { track.slicerMonoPlayer.stop(Tone.now()); } catch(e) { console.warn("Error stopping mono slicer player", e); }
+                    }
+                    if (!track.slicerMonoEnvelope.disposed) {
+                        try { track.slicerMonoEnvelope.triggerRelease(Tone.now()); } catch(e) { console.warn("Error releasing mono slicer envelope", e); }
+                    }
+                }
+                // For DrumSampler pads
+                if (track && track.type === 'DrumSampler' && track.drumPadPlayers) {
+                    track.drumPadPlayers.forEach(player => {
+                        if (player && player.state === 'started' && !player.disposed) {
+                            try { player.stop(Tone.now()); } catch(e) { console.warn("Error stopping drum pad player", e); }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Update Global Play Button UI
+        if (uiElementsCache.playBtnGlobal) {
+            uiElementsCache.playBtnGlobal.textContent = 'Play';
+        }
+        // If recording, stop the recording state
+        if (isTrackRecordingState()) {
+            const recTrackId = getRecordingTrackIdState();
+            const recTrack = recTrackId !== null ? getTrackByIdState(recTrackId) : null;
+            if (appServices.stopAudioRecording && recTrackId !== null && recTrack?.type === 'Audio') {
+                 appServices.stopAudioRecording(); // This is async but we might not need to await it in a panic
+            }
+            setIsRecordingState(false);
+            setRecordingTrackIdState(null);
+            if(appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
+        }
+
+        console.log("All audio and transport stopped.");
+        showSafeNotification("All audio stopped.", 1500);
+    },
+    // MODIFICATION END
 
     // --- UI Update Triggers / Callbacks defined in main.js ---
     updateTaskbarTempoDisplay: (tempo) => {
@@ -514,14 +568,10 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 break;
             case 'sampleLoadError':
                 if (inspectorElement) {
-                    // ... (logic from previous ui.js improvement to re-render dropzone in error state)
-                    // This logic is quite specific and involves re-creating HTML and re-attaching listeners.
-                    // Ensure it's correctly implemented here or within a dedicated UI function.
                     console.warn(`[Main UI Update] sampleLoadError for track ${trackId}, detail: ${detail}. Inspector UI update for dropzone needed.`);
                     if (track.type === 'DrumSampler' && typeof detail === 'number' && typeof updateDrumPadControlsUI === 'function') {
-                        updateDrumPadControlsUI(track); // This should re-render the dropzone for the specific pad.
+                        updateDrumPadControlsUI(track);
                     } else if ((track.type === 'Sampler' || track.type === 'InstrumentSampler')) {
-                         // Manually re-render the specific dropzone.
                         const dzKey = track.type === 'Sampler' ? 'sampler' : 'instrumentsampler';
                         const dzContainer = inspectorElement.querySelector(`#dropZoneContainer-${track.id}-${dzKey}`);
                         const audioDataSource = track.type === 'Sampler' ? track.samplerAudioData : track.instrumentSamplerSettings;
@@ -559,7 +609,6 @@ async function initializeSnugOS() {
             if (element) {
                  uiElementsCache[key] = element;
             } else {
-                // Only warn for absolutely critical elements if they are expected at this stage
                 if (['desktop', 'taskbar', 'notification-area', 'modalContainer'].includes(key)) {
                     console.warn(`[Main initializeSnugOS] Critical UI Element ID "${key}" not found in DOM.`);
                 }
@@ -581,7 +630,6 @@ async function initializeSnugOS() {
         } catch (registryError) {
             console.error("[Main initializeSnugOS] Failed to import effectsRegistry.js:", registryError);
             showSafeNotification("Critical error: Failed to load audio effects definitions.", 5000);
-            // Potentially halt further initialization or run in a degraded mode
         }
 
 
@@ -592,8 +640,6 @@ async function initializeSnugOS() {
         applyDesktopBackground(localStorage.getItem(DESKTOP_BACKGROUND_KEY));
 
 
-        // Initialize core modules, passing appServices
-        // Order matters: State needs to be up for others, UI needs state, Audio may need state, EventHandlers last.
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function");
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule is not a function");
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function");
@@ -604,10 +650,11 @@ async function initializeSnugOS() {
         } else { console.error("initializePrimaryEventListeners is not a function");}
 
         if (typeof openGlobalControlsWindow === 'function') {
-            openGlobalControlsWindow((elements) => { // This callback sets up elements in uiElementsCache
+            openGlobalControlsWindow((elements) => {
                 if (elements) {
                     uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
                     uiElementsCache.recordBtnGlobal = elements.recordBtnGlobal;
+                    uiElementsCache.stopBtnGlobal = elements.stopBtnGlobal; // MODIFICATION: Cache stop button
                     uiElementsCache.tempoGlobalInput = elements.tempoGlobalInput;
                     uiElementsCache.midiInputSelectGlobal = elements.midiInputSelectGlobal;
                     uiElementsCache.masterMeterContainerGlobal = elements.masterMeterContainerGlobal;
@@ -622,12 +669,10 @@ async function initializeSnugOS() {
             }, null);
         } else { console.error("openGlobalControlsWindow is not a function");}
 
-        // Fetch sound libraries (can happen in background)
         if (Constants.soundLibraries && typeof fetchSoundLibrary === 'function') {
-            Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true)); // true for autofetch
+            Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true));
         }
 
-        // Open timeline window by default
         if (appServices.openTimelineWindow && typeof appServices.openTimelineWindow === 'function') {
             appServices.openTimelineWindow();
         } else { console.warn("appServices.openTimelineWindow not available to open by default."); }
@@ -644,7 +689,6 @@ async function initializeSnugOS() {
     } catch (initError) {
         console.error("CRITICAL ERROR during SnugOS Initialization:", initError);
         showSafeNotification("A critical error occurred during application startup. Please refresh.", 7000);
-        // Display a more permanent error message on the page if possible
         const body = document.body;
         if (body) {
             body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; color: #ccc; background-color: #101010; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;"><h1>Initialization Error</h1><p>SnugOS could not start due to a critical error. Please check the console for details and try refreshing the page.</p><p style="font-size: 0.8em; margin-top: 20px;">Error: ${initError.message}</p></div>`;
@@ -666,7 +710,6 @@ function updateMetersLoop() {
         }
     } catch (loopError) {
         console.warn("[Main updateMetersLoop] Error in UI update loop:", loopError);
-        // Avoid stopping the loop for minor errors, but log them.
     }
     requestAnimationFrame(updateMetersLoop);
 }
@@ -697,14 +740,13 @@ function applyDesktopBackground(imageUrl) {
 // --- Global Event Listeners ---
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
-    // Warn user if there's unsaved work (e.g., non-empty undo stack or existing tracks)
     const tracksExist = getTracksState && getTracksState().length > 0;
     const undoStackExists = getUndoStackState && getUndoStackState().length > 0;
 
     if (tracksExist || undoStackExists) {
-        e.preventDefault(); // Standard way to trigger confirmation
-        e.returnValue = ''; // For older browsers (some require this to be set)
-        return "You have unsaved changes. Are you sure you want to leave?"; // For some browsers
+        e.preventDefault();
+        e.returnValue = '';
+        return "You have unsaved changes. Are you sure you want to leave?";
     }
 });
 
