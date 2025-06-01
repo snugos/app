@@ -754,3 +754,14 @@ input::placeholder,
     text-overflow: ellipsis;
     cursor: grab;
 }
+/* In style.css */
+:root {
+    --timeline-track-name-width: 120px; /* Or your desired width */
+}
+
+/* Ensure .timeline-track-lane-name uses this variable */
+.timeline-track-lane-name {
+    /* ... other styles ... */
+    min-width: var(--timeline-track-name-width);
+    max-width: var(--timeline-track-name-width);
+}
