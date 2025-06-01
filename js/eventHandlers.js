@@ -185,9 +185,9 @@ export function attachGlobalControlEvents(elements) {
                     if (!wasPaused) transport.position = 0;
 
                     console.log(`[EventHandlers Play/Resume] Starting/Resuming from ${startTime.toFixed(2)}s.`);
-                    transport.loop = true;
+                    transport.loop = true; 
                     transport.loopStart = 0;
-                    transport.loopEnd = 3600;
+                    transport.loopEnd = 3600; 
 
                     if (!silentKeepAliveBuffer && Tone.context) {
                         try {
@@ -216,7 +216,7 @@ export function attachGlobalControlEvents(elements) {
             } catch (error) {
                 console.error("[EventHandlers Play/Pause] Error:", error);
                 showNotification(`Error during playback: ${error.message}`, 4000);
-                if (playBtnGlobal) playBtnGlobal.textContent = 'Play';
+                if (playBtnGlobal) playBtnGlobal.textContent = 'Play'; 
             }
         });
     } else { console.warn("[EventHandlers] playBtnGlobal not found in provided elements."); }
@@ -287,8 +287,8 @@ export function attachGlobalControlEvents(elements) {
             } catch (error) {
                 console.error("[EventHandlers Record] Error:", error);
                 showNotification(`Error during recording: ${error.message}`, 4000);
-                if (localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
-                setIsRecording(false); setRecordingTrackId(null);
+                if (localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false); 
+                setIsRecording(false); setRecordingTrackId(null); 
             }
         });
     } else { console.warn("[EventHandlers] recordBtnGlobal not found."); }
@@ -338,7 +338,7 @@ export function setupMIDI() {
     if (navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess()
             .then(onMIDISuccess, onMIDIFailure)
-            .catch(onMIDIFailure);
+            .catch(onMIDIFailure); 
     } else {
         console.warn("WebMIDI is not supported in this browser.");
         showNotification("WebMIDI not supported. Cannot use MIDI devices.", 3000);
@@ -360,7 +360,7 @@ function onMIDISuccess(midiAccess) {
         return;
     }
 
-    selectElement.innerHTML = '<option value="">No MIDI Input</option>';
+    selectElement.innerHTML = '<option value="">No MIDI Input</option>'; 
     for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
         if (input.value) {
             const option = document.createElement('option');
@@ -370,14 +370,14 @@ function onMIDISuccess(midiAccess) {
         }
     }
 
-    const activeMIDIId = getActiveMIDIInputState()?.id;
+    const activeMIDIId = getActiveMIDIInputState()?.id; 
     if (activeMIDIId) {
         selectElement.value = activeMIDIId;
     }
 
     midiAccess.onstatechange = (event) => {
         console.log(`[MIDI] State change: ${event.port.name}, State: ${event.port.state}, Type: ${event.port.type}`);
-        setupMIDI();
+        setupMIDI(); 
         if (localAppServices.showNotification) {
             localAppServices.showNotification(`MIDI device ${event.port.name} ${event.port.state}.`, 2500);
         }
@@ -391,11 +391,11 @@ function onMIDIFailure(msg) {
 
 export function selectMIDIInput(deviceId, silent = false) {
     try {
-        const midi = getMidiAccessState();
-        const currentActiveInput = getActiveMIDIInputState();
+        const midi = getMidiAccessState(); 
+        const currentActiveInput = getActiveMIDIInputState(); 
 
         if (currentActiveInput && typeof currentActiveInput.close === 'function') {
-            currentActiveInput.onmidimessage = null;
+            currentActiveInput.onmidimessage = null; 
             try {
                 currentActiveInput.close();
             } catch (e) {
@@ -414,7 +414,7 @@ export function selectMIDIInput(deviceId, silent = false) {
                 }).catch(err => {
                     console.error(`[MIDI] Error opening port ${input.name}:`, err);
                     if (!silent && localAppServices.showNotification) localAppServices.showNotification(`Error opening MIDI port: ${input.name}`, 3000);
-                    if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null);
+                    if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null); 
                 });
             } else {
                 if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null);
@@ -452,7 +452,7 @@ function handleMIDIMessage(message) {
             }
         } else if (command === 128 || (command === 144 && velocity === 0)) { 
             if (typeof armedTrack.instrument.triggerRelease === 'function') {
-                armedTrack.instrument.triggerRelease(freq, Tone.now() + 0.05);
+                armedTrack.instrument.triggerRelease(freq, Tone.now() + 0.05); 
             }
         }
     } catch (error) {
@@ -481,7 +481,6 @@ document.addEventListener('keydown', (event) => {
                  return;
             }
         }
-
 
         if (key === 'z' && (event.ctrlKey || event.metaKey)) {
             if (localAppServices.undoLastAction) localAppServices.undoLastAction();
@@ -528,8 +527,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
-    // MODIFICATION START: Added more robust checks for keyup error
-    let armedTrack = null; // Define here to be available in catch
+    let armedTrack = null; 
     let midiNote = undefined;
     try {
         const key = event.key.toLowerCase();
@@ -537,23 +535,22 @@ document.addEventListener('keyup', (event) => {
         if (kbdIndicator) kbdIndicator.classList.remove('active');
 
         const armedTrackId = getArmedTrackId();
-        armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null; // Assign to outer scope variable
+        armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null; 
 
-        // No need to proceed if no track is armed or if it's not an instrument track
         if (!armedTrack || !armedTrack.instrument || typeof armedTrack.instrument.triggerRelease !== 'function' || armedTrack.instrument.disposed) {
-            // Clear any potentially stuck keys if the armed track changed or became invalid
             Object.keys(currentlyPressedComputerKeys).forEach(noteKey => delete currentlyPressedComputerKeys[noteKey]);
             return;
         }
 
-        midiNote = keyToMIDIMap[event.key]; // Check with original case first
-        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; // Fallback to lowercase
+        midiNote = keyToMIDIMap[event.key]; 
+        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; 
 
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
             const finalNote = midiNote + (currentOctaveShift * 12);
              if (finalNote >=0 && finalNote <= 127) { 
                 const freq = Tone.Frequency(finalNote, "midi").toNote();
-                armedTrack.instrument.triggerRelease(freq, Tone.now() + 0.05);
+                // MODIFICATION: Use Tone.now() for immediate release, avoid small offset
+                armedTrack.instrument.triggerRelease(freq, Tone.now()); 
             }
             delete currentlyPressedComputerKeys[midiNote];
         }
@@ -566,12 +563,10 @@ document.addEventListener('keyup', (event) => {
             "Instrument Disposed:", armedTrack && armedTrack.instrument ? armedTrack.instrument.disposed : 'N/A',
             "Calculated MIDI Note:", midiNote
         );
-        // Clear the specific key if it was pressed, to prevent it from getting stuck "on"
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
             delete currentlyPressedComputerKeys[midiNote];
         }
     }
-    // MODIFICATION END
 });
 
 
@@ -639,7 +634,7 @@ export function handleRemoveTrack(trackId) {
             console.error("[EventHandlers] showConfirmationDialog function not available.");
             if (confirm(`Are you sure you want to remove track "${track.name}"? This can be undone.`)) {
                 if (localAppServices.removeTrack) localAppServices.removeTrack(trackId);
-                else coreRemoveTrackFromState(trackId);
+                else coreRemoveTrackFromState(trackId); 
             }
             return;
         }
