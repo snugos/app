@@ -752,7 +752,8 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         }
         return win;
     }
-    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300"> <div class="grid grid-cols-2 gap-2 items-center"> <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button> <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button> </div> <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div> <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div> <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div> <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Pattern/Timeline)" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Pattern</button> </div> </div>`;
+    // Changed "Mode: Pattern" to "Mode: Sequencer"
+    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300"> <div class="grid grid-cols-2 gap-2 items-center"> <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button> <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button> </div> <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div> <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div> <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div> <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Sequencer</button> </div> </div>`;
     const options = { width: 280, height: 330, minWidth: 250, minHeight: 310, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
     const newWindow = localAppServices.createWindow(windowId, 'Global Controls', contentHTML, options);
@@ -1563,8 +1564,9 @@ export function renderTimeline() {
 
         const clipsContainer = document.createElement('div');
         clipsContainer.style.position = 'relative';
-        clipsContainer.style.width = 'calc(100% - 120px)';
+        clipsContainer.style.width = 'calc(100% - 120px)'; // Account for track name width
         clipsContainer.style.height = '100%';
+
 
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
             track.timelineClips.forEach(clip => {
@@ -1573,24 +1575,24 @@ export function renderTimeline() {
                 let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration.toFixed(2)}s)`;
 
                 if (clip.type === 'audio') {
-                    clipEl.className = 'audio-clip';
+                    clipEl.className = 'audio-clip'; // Ensure this class is defined in style.css
                 } else if (clip.type === 'sequence') {
-                    clipEl.className = 'sequence-clip'; // You'll need to style this class
+                    clipEl.className = 'audio-clip sequence-clip'; // Use audio-clip style as base, add specific if needed
                     const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
                     if (sourceSeq) {
                         clipText = sourceSeq.name;
                         clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration.toFixed(2)}s)`;
                     }
                 } else {
-                    clipEl.className = 'unknown-clip'; // Style for unknown clips
+                    clipEl.className = 'audio-clip unknown-clip'; // Style for unknown clips
                 }
 
                 clipEl.textContent = clipText;
                 clipEl.title = clipTitle;
 
-                const pixelsPerSecond = 30;
+                const pixelsPerSecond = 30; // Define or get from constants/settings
                 clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
+                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`; // Ensure minimum width
 
                 clipEl.addEventListener('mousedown', (e) => {
                     e.preventDefault();
@@ -1611,7 +1613,7 @@ export function renderTimeline() {
                         const finalLeftPixels = parseFloat(clipEl.style.left) || 0;
                         const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond);
 
-                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) {
+                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) { // Threshold to confirm actual move
                             if (localAppServices.captureStateForUndo) {
                                 localAppServices.captureStateForUndo(`Move clip on track "${track.name}"`);
                             }
@@ -1621,6 +1623,7 @@ export function renderTimeline() {
                                 console.error("Track.updateAudioClipPosition method not found!");
                             }
                         } else {
+                            // Snap back if not moved significantly
                             clipEl.style.left = `${originalStartTime * pixelsPerSecond}px`;
                         }
                     }
@@ -1643,50 +1646,56 @@ export function updatePlayheadPosition() {
     }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    const timelineContentArea = timelineWindow.element.querySelector('.window-content');
+    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); // This should be the scrollable area
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler');
+
 
     if (!playhead || typeof Tone === 'undefined' || !timelineContentArea || !localAppServices.getPlaybackMode) return;
 
     const currentPlaybackMode = localAppServices.getPlaybackMode();
 
-    if (currentPlaybackMode === 'pattern') {
-        playhead.style.display = 'none'; // Hide timeline playhead in pattern mode
+    // Updated check for 'sequencer' mode (assuming internal state value also changes)
+    if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') { // Added 'pattern' for backward compatibility if state isn't changed yet
+        playhead.style.display = 'none'; // Hide timeline playhead in sequencer mode
         if (timelineRuler) { // Keep ruler synced with scroll even if playhead is hidden
              timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
         }
-        return; // Don't update timeline playhead position in pattern mode
+        return;
     }
 
     // If in timeline mode, proceed with existing logic
     playhead.style.display = 'block';
 
-    const pixelsPerSecond = 30;
-    const trackNameWidth = 120;
+    const pixelsPerSecond = 30; // Define or get from constants/settings
+    const trackNameWidth = 120; // Width of the track name column, ensure this matches CSS
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
+        playhead.style.left = `${trackNameWidth + rawNewPosition}px`; // Offset by track name width
 
-        const scrollableContent = timelineContentArea;
-        const containerWidth = scrollableContent.clientWidth - trackNameWidth;
+        // Auto-scroll logic
+        const scrollableContent = timelineContentArea; // The scrollable div
+        const containerWidth = scrollableContent.clientWidth - trackNameWidth; // Visible width for clips
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
 
-        if (playheadVisualPositionInScrollable > containerWidth * 0.8) {
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20;
-        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) {
+        // If playhead is near the right edge, scroll right
+        if (playheadVisualPositionInScrollable > containerWidth * 0.8) { // e.g., 80% of visible width
+            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; // Scroll to keep it within view + a bit of buffer
+        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) { // If near left edge and not at start
             scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
         }
-        if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
+        if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0; // Prevent negative scroll
 
     } else if (Tone.Transport.state === 'stopped') {
-         playhead.style.left = `${trackNameWidth}px`;
+         playhead.style.left = `${trackNameWidth}px`; // Reset to start of clip area
     }
 
+    // Sync ruler with horizontal scroll of the content area
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
 }
+
 
 export function openTimelineWindow(savedState = null) {
     const windowId = 'timeline';
@@ -1694,7 +1703,7 @@ export function openTimelineWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
-        renderTimeline();
+        renderTimeline(); // Re-render on restore
         return win;
     }
 
@@ -1703,8 +1712,8 @@ export function openTimelineWindow(savedState = null) {
             <div id="timeline-header">
                 <div id="timeline-ruler"></div>
             </div>
-            <div id="timeline-tracks-container">
-                <div id="timeline-tracks-area"></div>
+            <div id="timeline-tracks-container"> {/* This will be the scrollable area for tracks */}
+                <div id="timeline-tracks-area"></div> {/* This will be the wide area for all track content */}
             </div>
             <div id="timeline-playhead"></div>
         </div>
@@ -1715,12 +1724,12 @@ export function openTimelineWindow(savedState = null) {
     const timelineOptions = {
         width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)),
         height: 250,
-        x: 30,
-        y: 50,
+        x: 30, // Default position
+        y: 50, // Default position
         minWidth: 400,
         minHeight: 150,
         initialContentKey: windowId,
-        onCloseCallback: () => {}
+        onCloseCallback: () => {} // Define if needed
     };
 
      if (savedState) {
@@ -1737,17 +1746,23 @@ export function openTimelineWindow(savedState = null) {
     const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
 
     if (timelineWindow?.element) {
+        // The scroll listener should be on the .window-content of the SnugWindow instance
+        // or specifically on #timeline-tracks-container if that's the designated scrollable element.
+        // SnugWindow's .window-content is typically the main scrollable area for window content.
         const contentArea = timelineWindow.element.querySelector('.window-content');
         if (contentArea) {
             contentArea.addEventListener('scroll', () => {
                 const ruler = timelineWindow.element.querySelector('#timeline-ruler');
                 if (ruler) {
+                    // The ruler itself doesn't scroll, its content (markings) does via background or child elements.
+                    // The transform should be on the ruler's *content* or the ruler itself if it's positioned absolutely
+                    // and its parent is the one scrolling.
                     ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
-                updatePlayheadPosition();
+                updatePlayheadPosition(); // Update playhead based on scroll
             });
         }
-        renderTimeline();
+        renderTimeline(); // Initial render
     }
     return timelineWindow;
 }
