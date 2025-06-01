@@ -549,7 +549,7 @@ document.addEventListener('keyup', (event) => {
             const finalNote = midiNote + (currentOctaveShift * 12);
              if (finalNote >=0 && finalNote <= 127) { 
                 const freq = Tone.Frequency(finalNote, "midi").toNote();
-                // MODIFICATION: Use Tone.now() for immediate release, avoid small offset
+                // Using Tone.now() for immediate release for QWERTY keys
                 armedTrack.instrument.triggerRelease(freq, Tone.now()); 
             }
             delete currentlyPressedComputerKeys[midiNote];
