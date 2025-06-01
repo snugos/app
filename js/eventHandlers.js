@@ -1,396 +1,773 @@
-// js/effectsRegistry.js - Definitions for modular effects
+// js/eventHandlers.js - Global Event Listeners and Input Handling Module
+import * as Constants from './constants.js';
+import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js';
+import {
+    getTracksState as getTracks,
+    getTrackByIdState as getTrackById,
+    captureStateForUndoInternal as captureStateForUndo,
+    setSoloedTrackIdState as setSoloedTrackId,
+    getSoloedTrackIdState as getSoloedTrackId,
+    setArmedTrackIdState as setArmedTrackId,
+    getArmedTrackIdState as getArmedTrackId,
+    setActiveSequencerTrackIdState as setActiveSequencerTrackId,
+    setIsRecordingState as setIsRecording,
+    isTrackRecordingState as isTrackRecording,
+    setRecordingTrackIdState as setRecordingTrackId,
+    getRecordingTrackIdState as getRecordingTrackId,
+    setRecordingStartTimeState as setRecordingStartTime,
+    removeTrackFromStateInternal as coreRemoveTrackFromState,
+    getPlaybackModeState,
+    setPlaybackModeState,
+    getMidiAccessState, 
+    getActiveMIDIInputState
+} from './state.js';
 
-export const synthEngineControlDefinitions = {
-    MonoSynth: [
-        { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
-        // MODIFICATION: Change default oscillator type for UI
-        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' }, // Was 'sawtooth'
-        // END MODIFICATION
-        { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
-        // MODIFICATION: Change default decay and sustain for UI to match user request
-        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' }, // Was 0.1
-        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' }, // Was 0.9
-        // END MODIFICATION
-        { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
-        { idPrefix: 'filtType', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', path: 'filter.type' },
-        { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 1, defaultValue: 1000, decimals: 0, path: 'filter.frequency.value' },
-        { idPrefix: 'filtQ', label: 'Filt Q', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1, decimals: 1, path: 'filter.Q.value' },
-        { idPrefix: 'filtEnvAttack', label: 'F.Atk', type: 'knob', min:0.001, max:2, step:0.001, defaultValue:0.06, decimals:3, path:'filterEnvelope.attack'},
-        { idPrefix: 'filtEnvDecay', label: 'F.Dec', type: 'knob', min:0.01, max:2, step:0.01, defaultValue:0.2, decimals:2, path:'filterEnvelope.decay'},
-        { idPrefix: 'filtEnvSustain', label: 'F.Sus', type: 'knob', min:0, max:1, step:0.01, defaultValue:0.5, decimals:2, path:'filterEnvelope.sustain'},
-        { idPrefix: 'filtEnvRelease', label: 'F.Rel', type: 'knob', min:0.01, max:5, step:0.01, defaultValue:2, decimals:2, path:'filterEnvelope.release'},
-        { idPrefix: 'filtEnvBaseFreq', label: 'F.Base', type: 'knob', min:20, max:5000, step:1, defaultValue:200, decimals:0, path:'filterEnvelope.baseFrequency'},
-        { idPrefix: 'filtEnvOctaves', label: 'F.Oct', type: 'knob', min:0, max:10, step:0.1, defaultValue:7, decimals:1, path:'filterEnvelope.octaves'},
-    ]
-    // Add other synth engine definitions here
-};
+let localAppServices = {};
+let transportKeepAliveBufferSource = null;
+let silentKeepAliveBuffer = null;
 
-export const AVAILABLE_EFFECTS = {
-    AutoFilter: {
-        displayName: 'Auto Filter',
-        toneClass: 'AutoFilter',
-        params: [
-            { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 2, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'baseFrequency', label: 'Base Freq', type: 'knob', min: 20, max: 2000, step: 10, defaultValue: 200, decimals: 0, displaySuffix: 'Hz', isSignal: true },
-            { key: 'octaves', label: 'Octaves', type: 'knob', min: 1, max: 8, step: 0.1, defaultValue: 2.6, decimals: 1, isSignal: false },
-            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'filter.type', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass'], defaultValue: 'lowpass' },
-        ]
-    },
-    AutoPanner: {
-        displayName: 'Auto Panner',
-        toneClass: 'AutoPanner',
-        params: [
-            { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 2, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'type', label: 'Waveform', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle'], defaultValue: 'sine', isSignal: false },
-        ]
-    },
-    AutoWah: {
-        displayName: 'Auto Wah',
-        toneClass: 'AutoWah',
-        params: [
-            { key: 'baseFrequency', label: 'Base Freq', type: 'knob', min: 50, max: 1000, step: 10, defaultValue: 100, decimals: 0, displaySuffix: 'Hz', isSignal: true },
-            { key: 'octaves', label: 'Octaves', type: 'knob', min: 1, max: 6, step: 0.1, defaultValue: 6, decimals: 1, isSignal: false },
-            { key: 'sensitivity', label: 'Sensitivity', type: 'knob', min: -40, max: 0, step: 1, defaultValue: 0, decimals: 0, displaySuffix: 'dB', isSignal: false },
-            { key: 'Q', label: 'Q', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 2, decimals: 1, isSignal: true },
-            { key: 'gain', label: 'Gain', type: 'knob', min: 0.1, max: 10, step: 0.1, defaultValue: 2, decimals: 1, displaySuffix: '', isSignal: true }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-        ]
-    },
-    BitCrusher: {
-        displayName: 'Bit Crusher',
-        toneClass: 'BitCrusher',
-        params: [
-            { key: 'bits', label: 'Bits', type: 'knob', min: 1, max: 16, step: 1, defaultValue: 4, decimals: 0, isSignal: true }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-        ]
-    },
-    Chebyshev: {
-        displayName: 'Chebyshev',
-        toneClass: 'Chebyshev',
-        params: [
-            { key: 'order', label: 'Order', type: 'knob', min: 1, max: 100, step: 1, defaultValue: 50, decimals: 0, isSignal: false }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'oversample', label: 'Oversample', type: 'select', options: ['none', '2x', '4x'], defaultValue: 'none', isSignal: false }
-        ]
-    },
-    Chorus: {
-        displayName: 'Chorus',
-        toneClass: 'Chorus',
-        params: [
-            { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 1.5, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'delayTime', label: 'Delay', type: 'knob', min: 1, max: 20, step: 0.1, defaultValue: 3.5, decimals: 1, displaySuffix: 'ms', isSignal: false }, 
-            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.7, decimals: 2, isSignal: false }, 
-            { key: 'feedback', label: 'Feedback', type: 'knob', min: 0, max: 0.99, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: true },
-            { key: 'spread', label: 'Spread', type: 'knob', min: 0, max: 180, step: 1, defaultValue: 180, decimals: 0, displaySuffix: '°', isSignal: false }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-            { key: 'type', label: 'Waveform', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle'], defaultValue: 'sine', isSignal: false },
-        ]
-    },
-    Distortion: {
-        displayName: 'Distortion',
-        toneClass: 'Distortion',
-        params: [
-            { key: 'distortion', label: 'Amount', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.4, decimals: 2, isSignal: false }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'oversample', label: 'Oversample', type: 'select', options: ['none', '2x', '4x'], defaultValue: 'none', isSignal: false }
-        ]
-    },
-    FeedbackDelay: {
-        displayName: 'Feedback Delay',
-        toneClass: 'FeedbackDelay',
-        params: [
-            { key: 'delayTime', label: 'Time', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true },
-            { key: 'feedback', label: 'Feedback', type: 'knob', min: 0, max: 0.99, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-        ]
-    },
-    Freeverb: {
-        displayName: 'Freeverb',
-        toneClass: 'Freeverb',
-        params: [
-            { key: 'roomSize', label: 'Room Size', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.7, decimals: 2, isSignal: true },
-            { key: 'dampening', label: 'Dampening', type: 'knob', min: 0, max: 10000, step: 100, defaultValue: 3000, decimals: 0, displaySuffix: 'Hz', isSignal: true }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-        ]
-    },
-    FrequencyShifter: {
-        displayName: 'Freq Shifter',
-        toneClass: 'FrequencyShifter',
-        params: [
-            { key: 'frequency', label: 'Shift Amt', type: 'knob', min: -5000, max: 5000, step: 1, defaultValue: 0, decimals: 0, displaySuffix: 'Hz', isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-        ]
-    },
-    JCReverb: {
-        displayName: 'JC Reverb',
-        toneClass: 'JCReverb',
-        params: [
-            { key: 'roomSize', label: 'Room Size', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-        ]
-    },
-    Phaser: {
-        displayName: 'Phaser',
-        toneClass: 'Phaser',
-        params: [
-            { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 0.5, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'octaves', label: 'Octaves', type: 'knob', min: 0, max: 8, step: 0.1, defaultValue: 3, decimals: 1, isSignal: false }, 
-            { key: 'stages', label: 'Stages', type: 'knob', min: 0, max: 12, step: 1, defaultValue: 10, decimals: 0, isSignal: false }, 
-            { key: 'Q', label: 'Q', type: 'knob', min: 0, max: 20, step: 0.1, defaultValue: 10, decimals: 1, isSignal: true },
-            { key: 'baseFrequency', label: 'Base Freq', type: 'knob', min: 20, max: 2000, step: 10, defaultValue: 350, decimals: 0, displaySuffix: 'Hz', isSignal: false }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-        ]
-    },
-    PingPongDelay: {
-        displayName: 'Ping Pong Delay',
-        toneClass: 'PingPongDelay',
-        params: [
-            { key: 'delayTime', label: 'Time', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true },
-            { key: 'feedback', label: 'Feedback', type: 'knob', min: 0, max: 0.99, step: 0.01, defaultValue: 0.2, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-        ]
-    },
-    PitchShift: {
-        displayName: 'Pitch Shift',
-        toneClass: 'PitchShift',
-        params: [
-            { key: 'pitch', label: 'Pitch', type: 'knob', min: -24, max: 24, step: 1, defaultValue: 0, decimals: 0, displaySuffix: 'st', isSignal: false }, 
-            { key: 'windowSize', label: 'Window', type: 'knob', min: 0.03, max: 0.1, step: 0.001, defaultValue: 0.1, decimals: 3, displaySuffix: 's', isSignal: false }, 
-            { key: 'feedback', label: 'Feedback', type: 'knob', min: 0, max: 0.99, step: 0.01, defaultValue: 0, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-        ]
-    },
-    Reverb: { 
-        displayName: 'Reverb (Algorithmic)',
-        toneClass: 'Reverb',
-        params: [
-            { key: 'decay', label: 'Decay', type: 'knob', min: 0.001, max: 20, step: 0.01, defaultValue: 1.5, decimals: 2, displaySuffix: 's', isSignal: false }, 
-            { key: 'preDelay', label: 'PreDelay', type: 'knob', min: 0, max: 1, step: 0.001, defaultValue: 0.01, decimals: 3, displaySuffix: 's', isSignal: false }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-        ]
-    },
-    StereoWidener: {
-        displayName: 'Stereo Widener',
-        toneClass: 'StereoWidener',
-        params: [
-            { key: 'width', label: 'Width', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-        ]
-    },
-    Tremolo: {
-        displayName: 'Tremolo',
-        toneClass: 'Tremolo',
-        params: [
-            { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 40, step: 0.1, defaultValue: 10, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.5, decimals: 2, isSignal: true },
-            { key: 'spread', label: 'Spread', type: 'knob', min: 0, max: 180, step: 1, defaultValue: 180, decimals: 0, displaySuffix: '°', isSignal: false }, 
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'type', label: 'Waveform', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle'], defaultValue: 'sine', isSignal: false },
-        ]
-    },
-    Vibrato: {
-        displayName: 'Vibrato',
-        toneClass: 'Vibrato',
-        params: [
-            { key: 'maxDelay', label: 'Max Delay', type: 'knob', min: 0, max: 0.01, step: 0.0001, defaultValue: 0.005, decimals: 4, displaySuffix: 's', isSignal: false }, 
-            { key: 'frequency', label: 'Speed', type: 'knob', min: 0.1, max: 20, step: 0.1, defaultValue: 5, decimals: 1, displaySuffix: 'Hz', isSignal: true },
-            { key: 'depth', label: 'Depth', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: true },
-            { key: 'wet', label: 'Wet', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'type', label: 'Waveform', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle'], defaultValue: 'sine', isSignal: false },
-        ]
-    },
-    Compressor: {
-        displayName: 'Compressor',
-        toneClass: 'Compressor',
-        params: [ 
-            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -24, decimals: 0, displaySuffix: 'dB', isSignal: true },
-            { key: 'ratio', label: 'Ratio', type: 'knob', min: 1, max: 20, step: 0.1, defaultValue: 12, decimals: 1, isSignal: true },
-            { key: 'knee', label: 'Knee', type: 'knob', min: 0, max: 40, step: 1, defaultValue: 30, decimals: 0, displaySuffix: 'dB', isSignal: true },
-            { key: 'attack', label: 'Attack', type: 'knob', min: 0.001, max: 1, step: 0.001, defaultValue: 0.003, decimals: 3, displaySuffix: 's', isSignal: true },
-            { key: 'release', label: 'Release', type: 'knob', min: 0.01, max: 1, step: 0.001, defaultValue: 0.25, decimals: 3, displaySuffix: 's', isSignal: true },
-        ]
-    },
-    EQ3: {
-        displayName: '3-Band EQ',
-        toneClass: 'EQ3',
-        params: [ 
-            { key: 'low', label: 'Low Gain', type: 'knob', min: -40, max: 12, step: 0.5, defaultValue: 0, decimals: 1, displaySuffix: 'dB', isSignal: true },
-            { key: 'mid', label: 'Mid Gain', type: 'knob', min: -40, max: 12, step: 0.5, defaultValue: 0, decimals: 1, displaySuffix: 'dB', isSignal: true },
-            { key: 'high', label: 'High Gain', type: 'knob', min: -40, max: 12, step: 0.5, defaultValue: 0, decimals: 1, displaySuffix: 'dB', isSignal: true },
-            { key: 'lowFrequency', label: 'Low Freq', type: 'knob', min: 20, max: 800, step: 10, defaultValue: 400, decimals: 0, displaySuffix: 'Hz', isSignal: true }, 
-            { key: 'highFrequency', label: 'High Freq', type: 'knob', min: 800, max: 18000, step: 100, defaultValue: 2500, decimals: 0, displaySuffix: 'Hz', isSignal: true }, 
-        ]
-    },
-    Filter: { 
-        displayName: 'Filter',
-        toneClass: 'Filter',
-        params: [
-            { key: 'type', label: 'Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass', isSignal: false },
-            { key: 'frequency', label: 'Frequency', type: 'knob', min: 10, max: 20000, step: 1, defaultValue: 1000, decimals: 0, displaySuffix: 'Hz', isSignal: true },
-            { key: 'rolloff', label: 'Rolloff', type: 'select', options: [-12, -24, -48, -96], defaultValue: -12, isSignal: false },
-            { key: 'Q', label: 'Q', type: 'knob', min: 0.0001, max: 100, step: 0.01, defaultValue: 1, decimals: 2, isSignal: true },
-            { key: 'gain', label: 'Gain (Shelf/Peak)', type: 'knob', min: -40, max: 40, step: 0.5, defaultValue: 0, decimals: 1, displaySuffix: 'dB', isSignal: true },
-        ]
-    },
-    Gate: {
-        displayName: 'Gate',
-        toneClass: 'Gate',
-        params: [
-            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -40, decimals: 0, displaySuffix: 'dB', isSignal: false }, 
-            { key: 'smoothing', label: 'Smoothing', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0.1, decimals: 2, isSignal: false }, 
-        ]
-    },
-    Limiter: {
-        displayName: 'Limiter',
-        toneClass: 'Limiter',
-        params: [ 
-            { key: 'threshold', label: 'Threshold', type: 'knob', min: -100, max: 0, step: 1, defaultValue: -12, decimals: 0, displaySuffix: 'dB', isSignal: true },
-        ]
-    },
-    Mono: {
-        displayName: 'Mono',
-        toneClass: 'Mono',
-        params: [] 
-    },
-};
-
-export function createEffectInstance(effectType, initialParams = {}) {
-    if (typeof Tone === 'undefined') {
-        console.error(`[EffectsRegistry createEffectInstance] Tone.js is not loaded. Cannot create effect "${effectType}".`);
-        return null;
+export function initializeEventHandlersModule(appServicesFromMain) {
+    localAppServices = appServicesFromMain || {}; 
+    if (!localAppServices.setPlaybackMode && setPlaybackModeState) {
+        localAppServices.setPlaybackMode = setPlaybackModeState;
     }
-
-    const definition = AVAILABLE_EFFECTS[effectType];
-    if (!definition) {
-        console.error(`[EffectsRegistry createEffectInstance] Effect type definition for "${effectType}" not found.`);
-        return null;
+    if (!localAppServices.getPlaybackMode && getPlaybackModeState) {
+        localAppServices.getPlaybackMode = getPlaybackModeState;
     }
-    if (!Tone[definition.toneClass]) {
-        console.error(`[EffectsRegistry createEffectInstance] Tone class "Tone.${definition.toneClass}" not found for effect type "${effectType}".`);
-        return null;
-    }
+}
 
-    const paramsForInstance = {};
-    if (definition.params && Array.isArray(definition.params)) {
-        definition.params.forEach(pDef => {
-            let valueToUse;
-            const pathKeys = pDef.key.split('.');
-            let tempInitialParam = initialParams;
-            let paramFoundInInitial = true;
+export let currentlyPressedComputerKeys = {};
+let currentOctaveShift = 0;
+const MIN_OCTAVE_SHIFT = -2;
+const MAX_OCTAVE_SHIFT = 2;
 
-            for (const key of pathKeys) {
-                if (tempInitialParam && typeof tempInitialParam === 'object' && tempInitialParam.hasOwnProperty(key)) {
-                    tempInitialParam = tempInitialParam[key];
-                } else {
-                    paramFoundInInitial = false;
-                    break;
-                }
-            }
-            valueToUse = paramFoundInInitial ? tempInitialParam : pDef.defaultValue;
-
-            let currentLevel = paramsForInstance;
-            pathKeys.forEach((key, index) => {
-                if (index === pathKeys.length - 1) {
-                    currentLevel[key] = valueToUse;
-                } else {
-                    currentLevel[key] = currentLevel[key] || {};
-                    currentLevel = currentLevel[key];
-                }
-            });
-        });
-    }
-
-    if (initialParams.hasOwnProperty('wet') && definition.params.some(p => p.key === 'wet')) {
-         if (!paramsForInstance.hasOwnProperty('wet')) { 
-            paramsForInstance.wet = initialParams.wet;
-         }
-    }
-
+export function initializePrimaryEventListeners(appContext) {
+    const services = appContext || localAppServices;
+    const uiCache = services.uiElementsCache || {};
+    console.log('[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:', Object.keys(uiCache));
 
     try {
-        console.log(`[EffectsRegistry createEffectInstance] Attempting to instantiate Tone.${definition.toneClass} with params:`, JSON.parse(JSON.stringify(paramsForInstance)));
-        const instance = new Tone[definition.toneClass](paramsForInstance);
-        return instance;
-    } catch (e) {
-        console.warn(`[EffectsRegistry createEffectInstance] Error during primary instantiation of Tone.${definition.toneClass} with structured params (Error: ${e.message}). Attempting fallback... Params:`, JSON.parse(JSON.stringify(paramsForInstance)));
-        try {
-            const instance = new Tone[definition.toneClass]();
-            if (typeof instance.set === 'function') {
-                console.log(`[EffectsRegistry createEffectInstance Fallback] Using instance.set() for Tone.${definition.toneClass}`);
-                instance.set(paramsForInstance);
-            } else {
-                console.log(`[EffectsRegistry createEffectInstance Fallback] Attempting manual parameter assignment for Tone.${definition.toneClass}`);
-                for (const keyPath in paramsForInstance) {
-                    if (Object.prototype.hasOwnProperty.call(paramsForInstance, keyPath)) {
-                         const value = paramsForInstance[keyPath];
-                         const keys = keyPath.split('.');
-                         let target = instance;
-                         let paramDefForPath = definition.params.find(p => p.key === keyPath);
-
-                         for (let i = 0; i < keys.length - 1; i++) {
-                             if (target && target.hasOwnProperty(keys[i])) {
-                                 target = target[keys[i]];
-                             } else {
-                                 console.warn(`[EffectsRegistry Fallback] Path "${keys.slice(0, i + 1).join('.')}" not found on instance of Tone.${definition.toneClass}`);
-                                 target = null; 
-                                 break;
-                             }
-                         }
-
-                         if (target && typeof target[keys[keys.length-1]] !== 'undefined') {
-                              const finalKey = keys[keys.length-1];
-                              if (target[finalKey] && typeof target[finalKey].value !== 'undefined' && paramDefForPath?.isSignal) {
-                                 target[finalKey].value = value;
-                                 console.log(`[EffectsRegistry Fallback] Set signal ${keyPath}.value = ${value}`);
-                              } else {
-                                 target[finalKey] = value;
-                                 console.log(`[EffectsRegistry Fallback] Set direct property ${keyPath} = ${value}`);
-                              }
-                         } else if (target) {
-                            console.warn(`[EffectsRegistry Fallback] Property "${keys[keys.length-1]}" not found on target for path "${keyPath}" on Tone.${definition.toneClass}. Target object:`, target);
-                         }
-                    }
+        if (uiCache.startButton) {
+            uiCache.startButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (uiCache.startMenu) {
+                    uiCache.startMenu.classList.toggle('hidden');
+                } else {
+                    console.error('[EventHandlers] Start Menu (uiCache.startMenu) not found when Start Button clicked!');
                 }
-            }
-            return instance;
-        } catch (e2) {
-            console.error(`[EffectsRegistry createEffectInstance] CRITICAL: Fallback instantiation for Tone.${definition.toneClass} also failed:`, e2.message, ". Params attempted:", JSON.parse(JSON.stringify(paramsForInstance)));
-            return null;
+            });
+        } else {
+            console.warn('[EventHandlers initializePrimaryEventListeners] Start Button (uiCache.startButton) NOT found in uiCache!');
         }
+
+        if (uiCache.desktop) {
+            uiCache.desktop.addEventListener('click', () => {
+                if (uiCache.startMenu && !uiCache.startMenu.classList.contains('hidden')) {
+                    uiCache.startMenu.classList.add('hidden');
+                }
+                const activeContextMenu = document.querySelector('.context-menu#snug-context-menu');
+                if (activeContextMenu) {
+                    activeContextMenu.remove();
+                }
+            });
+
+            uiCache.desktop.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const menuItems = [
+                    { label: "Add Synth Track", action: () => { if(services.addTrack) services.addTrack('Synth', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Slicer Sampler Track", action: () => { if(services.addTrack) services.addTrack('Sampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Sampler (Pads)", action: () => { if(services.addTrack) services.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Instrument Sampler Track", action: () => { if(services.addTrack) services.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); } },
+                    { label: "Add Audio Track", action: () => { if(services.addTrack) services.addTrack('Audio', {_isUserActionPlaceholder: true}); } },
+                    { separator: true },
+                    { label: "Open Sound Browser", action: () => { if(services.openSoundBrowserWindow) services.openSoundBrowserWindow(); } },
+                    { label: "Open Timeline", action: () => { if(services.openTimelineWindow) services.openTimelineWindow(); } },
+                    { label: "Open Global Controls", action: () => { if(services.openGlobalControlsWindow) services.openGlobalControlsWindow(); } },
+                    { label: "Open Mixer", action: () => { if(services.openMixerWindow) services.openMixerWindow(); } },
+                    { label: "Open Master Effects", action: () => { if(services.openMasterEffectsRackWindow) services.openMasterEffectsRackWindow(); } },
+                    { separator: true },
+                    { label: "Upload Custom Background", action: () => { if(services.triggerCustomBackgroundUpload) services.triggerCustomBackgroundUpload(); } },
+                    { label: "Remove Custom Background", action: () => { if(services.removeCustomDesktopBackground) services.removeCustomDesktopBackground(); } },
+                    { separator: true },
+                    { label: "Toggle Full Screen", action: toggleFullScreen }
+                ];
+                if (typeof createContextMenu === 'function') {
+                    createContextMenu(e, menuItems, services);
+                } else {
+                    console.error("[EventHandlers] createContextMenu function not available.");
+                }
+            });
+        } else {
+             console.warn('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!');
+        }
+
+        const menuActions = {
+            menuAddSynthTrack: () => services.addTrack?.('Synth', {_isUserActionPlaceholder: true}),
+            menuAddSamplerTrack: () => services.addTrack?.('Sampler', {_isUserActionPlaceholder: true}),
+            menuAddDrumSamplerTrack: () => services.addTrack?.('DrumSampler', {_isUserActionPlaceholder: true}),
+            menuAddInstrumentSamplerTrack: () => services.addTrack?.('InstrumentSampler', {_isUserActionPlaceholder: true}),
+            menuAddAudioTrack: () => services.addTrack?.('Audio', {_isUserActionPlaceholder: true}),
+            menuOpenSoundBrowser: () => services.openSoundBrowserWindow?.(),
+            menuOpenTimeline: () => services.openTimelineWindow?.(),
+            menuOpenGlobalControls: () => services.openGlobalControlsWindow?.(),
+            menuOpenMixer: () => services.openMixerWindow?.(),
+            menuOpenMasterEffects: () => services.openMasterEffectsRackWindow?.(),
+            menuUndo: () => services.undoLastAction?.(),
+            menuRedo: () => services.redoLastAction?.(),
+            menuSaveProject: () => services.saveProject?.(),
+            menuLoadProject: () => services.loadProject?.(),
+            menuExportWav: () => services.exportToWav?.(),
+            menuToggleFullScreen: toggleFullScreen,
+        };
+
+        for (const menuItemId in menuActions) {
+            if (uiCache[menuItemId]) {
+                uiCache[menuItemId].addEventListener('click', () => {
+                    menuActions[menuItemId]();
+                    if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
+                });
+            }
+        }
+
+        if (uiCache.loadProjectInput) {
+            uiCache.loadProjectInput.addEventListener('change', (e) => {
+                if (services.handleProjectFileLoad) {
+                    services.handleProjectFileLoad(e);
+                } else {
+                    console.error("[EventHandlers] handleProjectFileLoad service not available.");
+                }
+            });
+        } else {
+            console.warn("[EventHandlers] Load project input (uiCache.loadProjectInput) not found.");
+        }
+
+    } catch (error) {
+        console.error("[EventHandlers initializePrimaryEventListeners] Error during initialization:", error);
+        showNotification("Error setting up primary interactions. Some UI might not work.", 5000);
     }
 }
 
-export function getEffectDefaultParams(effectType) {
-    const definition = AVAILABLE_EFFECTS[effectType];
-    if (!definition || !definition.params || !Array.isArray(definition.params)) {
-        if (!definition) console.warn(`[EffectsRegistry getEffectDefaultParams] No definition found for effect type: ${effectType}`);
-        return {};
+export function attachGlobalControlEvents(elements) {
+    if (!elements) {
+        console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
+        return;
     }
-    const defaults = {};
-    definition.params.forEach(pDef => {
-        const keys = pDef.key.split('.');
-        let currentLevel = defaults;
-        keys.forEach((key, index) => {
-            if (index === keys.length - 1) {
-                currentLevel[key] = pDef.defaultValue;
-            } else {
-                currentLevel[key] = currentLevel[key] || {};
-                currentLevel = currentLevel[key];
+    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
+
+    if (playBtnGlobal) {
+        playBtnGlobal.addEventListener('click', async () => {
+            try {
+                if (!localAppServices.initAudioContextAndMasterMeter) {
+                    console.error("initAudioContextAndMasterMeter service not available.");
+                    showNotification("Audio system error.", 3000); return;
+                }
+                const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+                if (!audioReady) {
+                    showNotification("Audio context not ready. Please interact with the page.", 3000);
+                    return;
+                }
+
+                const transport = Tone.Transport;
+                console.log(`[EventHandlers Play/Resume] Clicked. Transport state: ${transport.state}, time: ${transport.seconds.toFixed(2)}`);
+
+                const tracks = getTracks();
+                tracks.forEach(track => { if (typeof track.stopPlayback === 'function') track.stopPlayback(); });
+                transport.cancel(0);
+
+                if (transportKeepAliveBufferSource && !transportKeepAliveBufferSource.disposed) {
+                    try { transportKeepAliveBufferSource.stop(0); transportKeepAliveBufferSource.dispose(); } catch (e) {}
+                    transportKeepAliveBufferSource = null;
+                }
+
+                if (transport.state === 'stopped' || transport.state === 'paused') {
+                    const wasPaused = transport.state === 'paused';
+                    const startTime = wasPaused ? transport.seconds : 0;
+                    if (!wasPaused) transport.position = 0;
+
+                    console.log(`[EventHandlers Play/Resume] Starting/Resuming from ${startTime.toFixed(2)}s.`);
+                    transport.loop = true; 
+                    transport.loopStart = 0;
+                    transport.loopEnd = 3600; 
+
+                    if (!silentKeepAliveBuffer && Tone.context) {
+                        try {
+                            silentKeepAliveBuffer = Tone.context.createBuffer(1, 1, Tone.context.sampleRate);
+                            silentKeepAliveBuffer.getChannelData(0)[0] = 0;
+                        } catch (e) { console.error("Error creating silent buffer:", e); silentKeepAliveBuffer = null; }
+                    }
+                    if (silentKeepAliveBuffer) {
+                        transportKeepAliveBufferSource = new Tone.BufferSource(silentKeepAliveBuffer).toDestination();
+                        transportKeepAliveBufferSource.loop = true;
+                        transportKeepAliveBufferSource.start(Tone.now() + 0.02, 0, transport.loopEnd);
+                    }
+
+                    for (const track of tracks) {
+                        if (typeof track.schedulePlayback === 'function') {
+                            await track.schedulePlayback(startTime, transport.loopEnd);
+                        }
+                    }
+                    transport.start(Tone.now() + 0.05, startTime);
+                    playBtnGlobal.textContent = 'Pause';
+                } else { 
+                    console.log(`[EventHandlers Play/Resume] Pausing transport.`);
+                    transport.pause();
+                    playBtnGlobal.textContent = 'Play';
+                }
+            } catch (error) {
+                console.error("[EventHandlers Play/Pause] Error:", error);
+                showNotification(`Error during playback: ${error.message}`, 4000);
+                if (playBtnGlobal) playBtnGlobal.textContent = 'Play'; 
             }
         });
-    });
-    return defaults;
+    } else { console.warn("[EventHandlers] playBtnGlobal not found in provided elements."); }
+
+    if (stopBtnGlobal) {
+        stopBtnGlobal.addEventListener('click', () => {
+            console.log("[EventHandlers StopAll] Stop All button clicked.");
+            if (localAppServices.panicStopAllAudio) {
+                localAppServices.panicStopAllAudio();
+            } else {
+                console.error("[EventHandlers StopAll] panicStopAllAudio service not available.");
+                if (typeof Tone !== 'undefined') {
+                    Tone.Transport.stop();
+                    Tone.Transport.cancel(0);
+                }
+                const playButton = localAppServices.uiElementsCache?.playBtnGlobal;
+                if(playButton) playButton.textContent = 'Play';
+                showNotification("Emergency stop executed (minimal).", 2000);
+            }
+        });
+    } else {
+        console.warn("[EventHandlers] stopBtnGlobal not found in provided elements.");
+    }
+
+    if (recordBtnGlobal) {
+        recordBtnGlobal.addEventListener('click', async () => {
+            try {
+                if (!localAppServices.initAudioContextAndMasterMeter) {
+                    console.error("initAudioContextAndMasterMeter service not available.");
+                    showNotification("Audio system error.", 3000); return;
+                }
+                const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+                if (!audioReady) { showNotification("Audio context not ready.", 3000); return; }
+
+                const isCurrentlyRec = isTrackRecording();
+                const trackToRecordId = getArmedTrackId();
+                const trackToRecord = trackToRecordId !== null ? getTrackById(trackToRecordId) : null;
+
+                if (!isCurrentlyRec) {
+                    if (!trackToRecord) { showNotification("No track armed for recording.", 2000); return; }
+                    let recordingInitialized = false;
+                    if (trackToRecord.type === 'Audio') {
+                        if (localAppServices.startAudioRecording) {
+                            recordingInitialized = await localAppServices.startAudioRecording(trackToRecord, trackToRecord.isMonitoringEnabled);
+                        } else { console.error("[EventHandlers] startAudioRecording service not available."); showNotification("Recording service unavailable.", 3000); }
+                    } else { recordingInitialized = true; } 
+
+                    if (recordingInitialized) {
+                        setIsRecording(true);
+                        setRecordingTrackId(trackToRecord.id);
+                        if (Tone.Transport.state !== 'started') { Tone.Transport.cancel(0); Tone.Transport.position = 0; }
+                        setRecordingStartTime(Tone.Transport.seconds);
+                        if (Tone.Transport.state !== 'started') Tone.Transport.start(); 
+                        if (localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(true);
+                        showNotification(`Recording started for ${trackToRecord.name}.`, 2000);
+                    } else { showNotification(`Failed to initialize recording for ${trackToRecord.name}.`, 3000); }
+                } else { 
+                    if (localAppServices.stopAudioRecording && getRecordingTrackId() !== null && getTrackById(getRecordingTrackId())?.type === 'Audio') {
+                        await localAppServices.stopAudioRecording();
+                    } 
+                    setIsRecording(false);
+                    const previouslyRecordingTrackId = getRecordingTrackId();
+                    setRecordingTrackId(null);
+                    if (localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false);
+                    const prevTrack = previouslyRecordingTrackId !== null ? getTrackById(previouslyRecordingTrackId) : null;
+                    showNotification(`Recording stopped${prevTrack ? ` for ${prevTrack.name}` : ''}.`, 2000);
+                }
+            } catch (error) {
+                console.error("[EventHandlers Record] Error:", error);
+                showNotification(`Error during recording: ${error.message}`, 4000);
+                if (localAppServices.updateRecordButtonUI) localAppServices.updateRecordButtonUI(false); 
+                setIsRecording(false); setRecordingTrackId(null); 
+            }
+        });
+    } else { console.warn("[EventHandlers] recordBtnGlobal not found."); }
+
+    if (tempoGlobalInput) {
+        tempoGlobalInput.addEventListener('input', (e) => {
+            try {
+                const newTempo = parseFloat(e.target.value);
+                if (!isNaN(newTempo) && newTempo >= Constants.MIN_TEMPO && newTempo <= Constants.MAX_TEMPO) {
+                    Tone.Transport.bpm.value = newTempo;
+                    if (localAppServices.updateTaskbarTempoDisplay) localAppServices.updateTaskbarTempoDisplay(newTempo);
+                }
+            } catch (error) { console.error("[EventHandlers Tempo Input] Error:", error); }
+        });
+        tempoGlobalInput.addEventListener('change', () => { 
+            if (localAppServices.captureStateForUndo) {
+                localAppServices.captureStateForUndo(`Set Tempo to ${Tone.Transport.bpm.value.toFixed(1)}`);
+            }
+        });
+    } else { console.warn("[EventHandlers] tempoGlobalInput not found."); }
+
+    if (midiInputSelectGlobal) {
+        midiInputSelectGlobal.addEventListener('change', (e) => {
+            if (localAppServices.selectMIDIInput) localAppServices.selectMIDIInput(e.target.value);
+            else console.error("[EventHandlers] selectMIDIInput service not available.");
+        });
+    } else { console.warn("[EventHandlers] midiInputSelectGlobal not found."); }
+
+    if (playbackModeToggleBtnGlobal) {
+        playbackModeToggleBtnGlobal.addEventListener('click', () => {
+            try {
+                const currentGetMode = localAppServices.getPlaybackMode || getPlaybackModeState;
+                const currentSetMode = localAppServices.setPlaybackMode || setPlaybackModeState;
+                if (currentGetMode && currentSetMode) {
+                    const currentMode = currentGetMode();
+                    const newMode = currentMode === 'sequencer' ? 'timeline' : 'sequencer';
+                    currentSetMode(newMode); 
+                } else {
+                    console.warn("[EventHandlers PlaybackModeToggle] getPlaybackMode or setPlaybackMode service not available.");
+                }
+            } catch (error) { console.error("[EventHandlers PlaybackModeToggle] Error:", error); }
+        });
+    } else { console.warn("[EventHandlers] playbackModeToggleBtnGlobal not found."); }
 }
 
-export function getEffectParamDefinitions(effectType) {
-    const definition = AVAILABLE_EFFECTS[effectType];
-    if (!definition) {
-        console.warn(`[EffectsRegistry getEffectParamDefinitions] No definition found for effect type: ${effectType}`);
-        return [];
+export function setupMIDI() {
+    if (navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess()
+            .then(onMIDISuccess, onMIDIFailure)
+            .catch(onMIDIFailure); 
+    } else {
+        console.warn("WebMIDI is not supported in this browser.");
+        showNotification("WebMIDI not supported. Cannot use MIDI devices.", 3000);
     }
-    return definition.params || [];
+}
+
+function onMIDISuccess(midiAccess) {
+    if (localAppServices.setMidiAccess) {
+        localAppServices.setMidiAccess(midiAccess);
+    } else {
+        console.error("[EventHandlers onMIDISuccess] setMidiAccess service not available.");
+    }
+
+    const inputs = midiAccess.inputs.values();
+    const selectElement = localAppServices.uiElementsCache?.midiInputSelectGlobal;
+
+    if (!selectElement) {
+        console.warn("[EventHandlers onMIDISuccess] MIDI input select element not found in UI cache.");
+        return;
+    }
+
+    selectElement.innerHTML = '<option value="">No MIDI Input</option>'; 
+    for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+        if (input.value) {
+            const option = document.createElement('option');
+            option.value = input.value.id;
+            option.textContent = input.value.name || `Unknown MIDI Device ${input.value.id.slice(-4)}`;
+            selectElement.appendChild(option);
+        }
+    }
+
+    const activeMIDIId = getActiveMIDIInputState()?.id; 
+    if (activeMIDIId) {
+        selectElement.value = activeMIDIId;
+    }
+
+    midiAccess.onstatechange = (event) => {
+        console.log(`[MIDI] State change: ${event.port.name}, State: ${event.port.state}, Type: ${event.port.type}`);
+        setupMIDI(); 
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`MIDI device ${event.port.name} ${event.port.state}.`, 2500);
+        }
+    };
+}
+
+function onMIDIFailure(msg) {
+    console.error(`[MIDI] Failed to get MIDI access - ${msg}`);
+    showNotification(`Failed to access MIDI devices: ${msg.toString()}`, 4000);
+}
+
+export function selectMIDIInput(deviceId, silent = false) {
+    try {
+        const midi = getMidiAccessState(); 
+        const currentActiveInput = getActiveMIDIInputState(); 
+
+        if (currentActiveInput && typeof currentActiveInput.close === 'function') {
+            currentActiveInput.onmidimessage = null; 
+            try {
+                currentActiveInput.close();
+            } catch (e) {
+                console.warn(`[MIDI] Error closing previously active input "${currentActiveInput.name}":`, e.message);
+            }
+        }
+
+        if (deviceId && midi && midi.inputs) {
+            const input = midi.inputs.get(deviceId);
+            if (input) {
+                input.open().then((port) => {
+                    port.onmidimessage = handleMIDIMessage;
+                    if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(port);
+                    if (!silent && localAppServices.showNotification) localAppServices.showNotification(`MIDI Input: ${port.name} selected.`, 2000);
+                    console.log(`[MIDI] Input selected: ${port.name}`);
+                }).catch(err => {
+                    console.error(`[MIDI] Error opening port ${input.name}:`, err);
+                    if (!silent && localAppServices.showNotification) localAppServices.showNotification(`Error opening MIDI port: ${input.name}`, 3000);
+                    if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null); 
+                });
+            } else {
+                if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null);
+                if (!silent && localAppServices.showNotification) localAppServices.showNotification("Selected MIDI input not found.", 2000);
+                console.warn(`[MIDI] Input with ID ${deviceId} not found.`);
+            }
+        } else {
+            if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null);
+            if (!silent && deviceId !== "" && localAppServices.showNotification) showNotification("MIDI input disconnected.", 2000);
+        }
+    } catch (error) {
+        console.error("[EventHandlers selectMIDIInput] Error:", error);
+        if (!silent && localAppServices.showNotification) showNotification("Error selecting MIDI input.", 3000);
+    }
+}
+
+function handleMIDIMessage(message) {
+    try {
+        const [command, note, velocity] = message.data;
+        const armedTrackId = getArmedTrackId();
+        const armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null;
+        const midiIndicator = localAppServices.uiElementsCache?.midiIndicatorGlobal;
+
+        if (midiIndicator) {
+            midiIndicator.classList.add('active');
+            setTimeout(() => midiIndicator.classList.remove('active'), 100);
+        }
+
+        if (!armedTrack || !armedTrack.instrument || armedTrack.instrument.disposed) return;
+
+        const freq = Tone.Frequency(note, "midi").toNote();
+        if (command === 144 && velocity > 0) { 
+            if (typeof armedTrack.instrument.triggerAttack === 'function') {
+                armedTrack.instrument.triggerAttack(freq, Tone.now(), velocity / 127);
+            }
+        } else if (command === 128 || (command === 144 && velocity === 0)) { 
+            if (typeof armedTrack.instrument.triggerRelease === 'function') {
+                armedTrack.instrument.triggerRelease(freq, Tone.now() + 0.05); 
+            }
+        }
+    } catch (error) {
+        console.error("[EventHandlers handleMIDIMessage] Error:", error, "Message Data:", message.data);
+    }
+}
+
+const keyToMIDIMap = Constants.computerKeySynthMap || { 
+    'a': 48, 'w': 49, 's': 50, 'e': 51, 'd': 52, 'f': 53, 't': 54, 'g': 55, 'y': 56, 'h': 57, 'u': 58, 'j': 59, 'k': 60
+};
+
+
+document.addEventListener('keydown', (event) => {
+    try {
+        if (event.repeat) return;
+        const key = event.key.toLowerCase();
+        const kbdIndicator = localAppServices.uiElementsCache?.keyboardIndicatorGlobal;
+
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
+            if (key === 'escape') activeEl.blur();
+            return; 
+        }
+        if (event.metaKey || event.ctrlKey) {
+            if (!( (event.ctrlKey || event.metaKey) && (key === 'z' || key === 'y'))) { 
+                 return;
+            }
+        }
+
+        if (key === 'z' && (event.ctrlKey || event.metaKey)) {
+            if (localAppServices.undoLastAction) localAppServices.undoLastAction();
+            return;
+        }
+        if (key === 'y' && (event.ctrlKey || event.metaKey)) {
+             if (localAppServices.redoLastAction) localAppServices.redoLastAction();
+            return;
+        }
+        if (key === 'z' && !(event.ctrlKey || event.metaKey)) {
+            currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
+            if (localAppServices.showNotification) localAppServices.showNotification(`Octave: ${currentOctaveShift}`, 1000);
+            return;
+        }
+        if (key === 'x' && !(event.ctrlKey || event.metaKey)) {
+            currentOctaveShift = Math.min(MAX_OCTAVE_SHIFT, currentOctaveShift + 1);
+            if (localAppServices.showNotification) localAppServices.showNotification(`Octave: ${currentOctaveShift}`, 1000);
+            return;
+        }
+        if (key === ' ' && !(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'))) { 
+            event.preventDefault(); 
+            const playBtn = localAppServices.uiElementsCache?.playBtnGlobal;
+            if (playBtn) playBtn.click();
+            return;
+        }
+
+        const armedTrackId = getArmedTrackId();
+        const armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null;
+        if (!armedTrack || !armedTrack.instrument || armedTrack.instrument.disposed) return;
+
+        let midiNote = keyToMIDIMap[event.key]; 
+        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; 
+
+        if (midiNote !== undefined && !currentlyPressedComputerKeys[midiNote]) {
+            if (kbdIndicator) kbdIndicator.classList.add('active');
+            const finalNote = midiNote + (currentOctaveShift * 12);
+            if (finalNote >=0 && finalNote <= 127 && typeof armedTrack.instrument.triggerAttack === 'function') {
+                const freq = Tone.Frequency(finalNote, "midi").toNote();
+                armedTrack.instrument.triggerAttack(freq, Tone.now(), 0.7);
+                currentlyPressedComputerKeys[midiNote] = true;
+            }
+        }
+    } catch (error) { console.error("[EventHandlers Keydown] Error:", error); }
+});
+
+document.addEventListener('keyup', (event) => {
+    let armedTrack = null; 
+    let midiNote = undefined;
+    let freq = ''; 
+
+    try {
+        const key = event.key.toLowerCase();
+        const kbdIndicator = localAppServices.uiElementsCache?.keyboardIndicatorGlobal;
+        if (kbdIndicator) kbdIndicator.classList.remove('active');
+
+        const armedTrackId = getArmedTrackId();
+        armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null; 
+
+        if (!armedTrack || !armedTrack.instrument || typeof armedTrack.instrument.triggerRelease !== 'function' || armedTrack.instrument.disposed) {
+            Object.keys(currentlyPressedComputerKeys).forEach(noteKey => delete currentlyPressedComputerKeys[noteKey]);
+            return;
+        }
+
+        midiNote = keyToMIDIMap[event.key]; 
+        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; 
+
+        if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
+            const finalNote = midiNote + (currentOctaveShift * 12);
+             if (finalNote >=0 && finalNote <= 127) { 
+                freq = Tone.Frequency(finalNote, "midi").toNote(); 
+                armedTrack.instrument.triggerRelease(freq, Tone.now()); 
+            }
+            delete currentlyPressedComputerKeys[midiNote];
+        }
+    } catch (error) {
+        console.error("[EventHandlers Keyup] Error during specific note release:", error, 
+            "Key:", event.key, 
+            "Armed Track ID:", armedTrack ? armedTrack.id : 'N/A',
+            "Instrument Type:", armedTrack && armedTrack.instrument ? armedTrack.instrument.name : 'N/A', 
+            "Target Frequency:", freq,
+            "Calculated MIDI Note:", midiNote
+        );
+        
+        if (armedTrack && armedTrack.instrument && typeof armedTrack.instrument.releaseAll === 'function' && !armedTrack.instrument.disposed) {
+            try {
+                console.warn(`[EventHandlers Keyup] Forcing releaseAll on ${armedTrack.name} (instrument: ${armedTrack.instrument.name}) due to error on keyup for note ${freq || 'unknown'}.`);
+                armedTrack.instrument.releaseAll(Tone.now());
+            } catch (releaseAllError) {
+                console.error("[EventHandlers Keyup] Error during emergency releaseAll:", releaseAllError);
+            }
+        }
+
+        if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
+            delete currentlyPressedComputerKeys[midiNote]; 
+        }
+    }
+});
+
+
+// --- Track Control Handlers ---
+export function handleTrackMute(trackId) {
+    try {
+        const track = getTrackById(trackId);
+        if (!track) { console.warn(`[EventHandlers] Mute: Track ${trackId} not found.`); return; }
+        captureStateForUndo(`Toggle Mute for ${track.name}`);
+        track.isMuted = !track.isMuted;
+        track.applyMuteState();
+        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(trackId, 'muteChanged');
+    } catch (error) { console.error(`[EventHandlers handleTrackMute] Error for track ${trackId}:`, error); }
+}
+
+export function handleTrackSolo(trackId) {
+    try {
+        const track = getTrackById(trackId);
+        if (!track) { console.warn(`[EventHandlers] Solo: Track ${trackId} not found.`); return; }
+        const currentSoloed = getSoloedTrackId();
+        captureStateForUndo(`Toggle Solo for ${track.name}`);
+        setSoloedTrackId(currentSoloed === trackId ? null : trackId);
+
+        const tracks = getTracks();
+        if (tracks && Array.isArray(tracks)) {
+            tracks.forEach(t => {
+                if (t) {
+                    t.isSoloed = (t.id === getSoloedTrackId());
+                    t.applySoloState();
+                    if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(t.id, 'soloChanged');
+                }
+            });
+        }
+    } catch (error) { console.error(`[EventHandlers handleTrackSolo] Error for track ${trackId}:`, error); }
+}
+
+export function handleTrackArm(trackId) {
+    try {
+        const track = getTrackById(trackId);
+        if (!track) { console.warn(`[EventHandlers] Arm: Track ${trackId} not found.`); return; }
+        const currentArmedId = getArmedTrackId();
+        const isCurrentlyArmed = currentArmedId === track.id;
+        captureStateForUndo(`${isCurrentlyArmed ? "Disarm" : "Arm"} Track "${track.name}" for Input`);
+        setArmedTrackId(isCurrentlyArmed ? null : track.id);
+
+        const newArmedTrack = getTrackById(getArmedTrackId()); 
+        const notificationMessage = newArmedTrack ? `${newArmedTrack.name} armed for input.` : "All tracks disarmed.";
+        if (localAppServices.showNotification) localAppServices.showNotification(notificationMessage, 1500);
+        else showNotification(notificationMessage, 1500); 
+
+        const tracks = getTracks();
+        if (tracks && Array.isArray(tracks)) {
+            tracks.forEach(t => {
+                if (t && localAppServices.updateTrackUI) localAppServices.updateTrackUI(t.id, 'armChanged');
+            });
+        }
+    } catch (error) { console.error(`[EventHandlers handleTrackArm] Error for track ${trackId}:`, error); }
+}
+
+export function handleRemoveTrack(trackId) {
+    try {
+        const track = getTrackById(trackId);
+        if (!track) { console.warn(`[EventHandlers] Remove: Track ${trackId} not found.`); return; }
+        if (typeof showConfirmationDialog !== 'function') {
+            console.error("[EventHandlers] showConfirmationDialog function not available.");
+            if (confirm(`Are you sure you want to remove track "${track.name}"? This can be undone.`)) {
+                if (localAppServices.removeTrack) localAppServices.removeTrack(trackId);
+                else coreRemoveTrackFromState(trackId); 
+            }
+            return;
+        }
+        showConfirmationDialog(
+            'Confirm Delete Track',
+            `Are you sure you want to remove track "${track.name}"? This can be undone.`,
+            () => {
+                if (localAppServices.removeTrack) {
+                    localAppServices.removeTrack(trackId);
+                } else {
+                    console.warn("[EventHandlers] removeTrack service not available, calling coreRemoveTrackFromState.");
+                    coreRemoveTrackFromState(trackId);
+                }
+            }
+        );
+    } catch (error) { console.error(`[EventHandlers handleRemoveTrack] Error for track ${trackId}:`, error); }
+}
+
+export function handleOpenTrackInspector(trackId) {
+    if (localAppServices.openTrackInspectorWindow) {
+        localAppServices.openTrackInspectorWindow(trackId);
+    } else { console.error("[EventHandlers] openTrackInspectorWindow service not available."); }
+}
+export function handleOpenEffectsRack(trackId) {
+    if (localAppServices.openTrackEffectsRackWindow) {
+        localAppServices.openTrackEffectsRackWindow(trackId);
+    } else { console.error("[EventHandlers] openTrackEffectsRackWindow service not available."); }
+}
+export function handleOpenSequencer(trackId) {
+    if (localAppServices.openTrackSequencerWindow) {
+        localAppServices.openTrackSequencerWindow(trackId);
+    } else { console.error("[EventHandlers] openTrackSequencerWindow service not available."); }
+}
+
+function toggleFullScreen() {
+    try {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                const message = `Error attempting to enable full-screen mode: ${err.message} (${err.name})`;
+                if (localAppServices.showNotification) localAppServices.showNotification(message, 3000);
+                else showNotification(message, 3000);
+                console.error(message, err);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    } catch (error) {
+        console.error("[EventHandlers toggleFullScreen] Error:", error);
+        if (localAppServices.showNotification) localAppServices.showNotification("Fullscreen toggle error.", 3000);
+    }
+}
+
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime, appServicesPassed) {
+    const services = appServicesPassed || localAppServices;
+
+    if (!services || !services.getTrackById || !services.showNotification || !services.captureStateForUndo || !services.renderTimeline) {
+        console.error("Required appServices not available in handleTimelineLaneDrop");
+        utilShowNotification("Internal error handling timeline drop.", 3000); 
+        return;
+    }
+
+    const targetTrack = services.getTrackById(targetTrackId);
+    if (!targetTrack) {
+        services.showNotification("Target track not found for drop.", 3000);
+        return;
+    }
+
+    const jsonDataString = event.dataTransfer.getData('application/json');
+    const files = event.dataTransfer.files;
+
+    try {
+        if (jsonDataString) {
+            const droppedData = JSON.parse(jsonDataString);
+            if (droppedData.type === 'sequence-timeline-drag') {
+                if (targetTrack.type === 'Audio') {
+                    services.showNotification("Cannot place sequence clips on Audio tracks.", 3000);
+                    return;
+                }
+                if (typeof targetTrack.addSequenceClipToTimeline === 'function') {
+                    targetTrack.addSequenceClipToTimeline(droppedData.sourceSequenceId, startTime, droppedData.clipName);
+                } else {
+                    services.showNotification("Error: Track cannot accept sequence clips.", 3000);
+                }
+            } else if (droppedData.type === 'sound-browser-item') {
+                if (targetTrack.type !== 'Audio') {
+                    services.showNotification("Sound browser audio files can only be dropped onto Audio Track timeline lanes.", 3000);
+                    return;
+                }
+                if (services.getAudioBlobFromSoundBrowserItem && typeof targetTrack.addExternalAudioFileAsClip === 'function') {
+                    const audioBlob = await services.getAudioBlobFromSoundBrowserItem(droppedData);
+                    if (audioBlob) {
+                        targetTrack.addExternalAudioFileAsClip(audioBlob, startTime, droppedData.fileName);
+                    } else {
+                        services.showNotification(`Could not load audio for "${droppedData.fileName}".`, 3000);
+                    }
+                } else {
+                     services.showNotification("Error: Cannot process sound browser item for timeline.", 3000);
+                }
+            } else {
+                services.showNotification("Unrecognized item dropped on timeline.", 2000);
+            }
+        } else if (files && files.length > 0) {
+            const file = files[0];
+            if (targetTrack.type !== 'Audio') {
+                services.showNotification("Audio files can only be dropped onto Audio Track timeline lanes.", 3000);
+                return;
+            }
+            if (file.type.startsWith('audio/')) {
+                if (typeof targetTrack.addExternalAudioFileAsClip === 'function') {
+                    targetTrack.addExternalAudioFileAsClip(file, startTime, file.name);
+                } else {
+                    services.showNotification("Error: Track cannot accept audio file clips.", 3000);
+                }
+            } else {
+                services.showNotification("Invalid file type. Please drop an audio file.", 3000);
+            }
+        } else {
+            console.log("[EventHandlers handleTimelineLaneDrop] No recognized data in drop event for timeline.");
+        }
+    } catch (e) {
+        console.error("[EventHandlers handleTimelineLaneDrop] Error processing dropped data:", e);
+        services.showNotification("Error processing dropped item.", 3000);
+    }
 }
