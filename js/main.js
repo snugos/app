@@ -207,17 +207,8 @@ const appServices = {
     handleOpenTrackInspector: eventHandleOpenTrackInspector,
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
     handleOpenSequencer: eventHandleOpenSequencer,
+    handleTimelineLaneDrop: handleTimelineLaneDrop, // Add this from eventHandlers
 
-    // Timeline drop handlers
-    handlePlaceSequenceOnTimeline: (dragData, targetTrackId, startTime) => {
-        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(dragData), files: [] } }, targetTrackId, startTime, appServices);
-    },
-    handleAddAudioFileToTimeline: (file, targetTrackId, startTime) => {
-        handleTimelineLaneDrop({ dataTransfer: { files: [file], getData: () => null } }, targetTrackId, startTime, appServices);
-    },
-    handleAddSoundBrowserItemToTimeline: async (soundData, targetTrackId, startTime) => {
-        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(soundData), files: [] } }, targetTrackId, startTime, appServices);
-    },
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
             console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);
@@ -243,10 +234,12 @@ const appServices = {
         return null;
     },
 
-    // MODIFICATION START: Refined Panic Stop Service
+    // MODIFICATION: Refined Panic Stop Service
     panicStopAllAudio: () => {
         console.log("[AppServices] Panic Stop All Audio requested.");
+        
         // 1. Stop transport first to prevent new events from being scheduled by it
+        // and to stop any sequences/parts tied to it.
         if (typeof Tone !== 'undefined') {
             Tone.Transport.stop();
             Tone.Transport.cancel(0); // Clear all scheduled transport events
@@ -255,11 +248,17 @@ const appServices = {
         const tracks = getTracksState();
         if (tracks) {
             tracks.forEach(track => {
+                // Call track's own stopPlayback method first
+                // This should handle its timeline players/parts and its patternPlayerSequence (which it disposes and nullifies)
                 if (track && typeof track.stopPlayback === 'function') {
-                    track.stopPlayback(); // This should handle timeline players/parts and patternPlayerSequence
+                    try {
+                        track.stopPlayback(); 
+                    } catch (e) {
+                        console.warn(`Error in track.stopPlayback() for track ${track.id}:`, e);
+                    }
                 }
 
-                // For synth-like instruments, force release and also quickly ramp down gain
+                // For synth-like instruments, explicitly tell them to release all voices
                 if (track && track.instrument && !track.instrument.disposed) {
                     if (typeof track.instrument.releaseAll === 'function') {
                         try {
@@ -268,12 +267,12 @@ const appServices = {
                             console.warn(`Error during instrument.releaseAll() for track ${track.id}:`, e);
                         }
                     }
-                    // Forcefully ramp down the track's main gain if it's a synth/instrument track
-                    // This is more aggressive than just envelope release for a "panic"
+                    // More aggressive: quickly ramp down the track's main gain for synth types
                     if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && 
                         track.gainNode && track.gainNode.gain && 
                         typeof track.gainNode.gain.cancelScheduledValues === 'function' &&
-                        typeof track.gainNode.gain.linearRampToValueAtTime === 'function') {
+                        typeof track.gainNode.gain.linearRampToValueAtTime === 'function' &&
+                        !track.gainNode.disposed) {
                         console.log(`[AppServices Panic] Ramping down gain for synth track ${track.id}`);
                         try {
                             track.gainNode.gain.cancelScheduledValues(Tone.now());
@@ -283,7 +282,8 @@ const appServices = {
                         }
                     }
                 }
-                // For Sampler (Slicer) mono mode
+                
+                // Specific logic for other sampler types if needed beyond their stopPlayback
                 if (track && track.type === 'Sampler' && !track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
                     if (track.slicerMonoPlayer.state === 'started' && !track.slicerMonoPlayer.disposed) {
                         try { track.slicerMonoPlayer.stop(Tone.now()); } catch(e) { console.warn("Error stopping mono slicer player during panic", e); }
@@ -292,7 +292,6 @@ const appServices = {
                         try { track.slicerMonoEnvelope.triggerRelease(Tone.now()); } catch(e) { console.warn("Error releasing mono slicer envelope during panic", e); }
                     }
                 }
-                // For DrumSampler pads
                 if (track && track.type === 'DrumSampler' && track.drumPadPlayers) {
                     track.drumPadPlayers.forEach(player => {
                         if (player && player.state === 'started' && !player.disposed) {
@@ -312,7 +311,7 @@ const appServices = {
             const recTrackId = getRecordingTrackIdState();
             const recTrack = recTrackId !== null ? getTrackByIdState(recTrackId) : null;
             if (appServices.stopAudioRecording && recTrackId !== null && recTrack?.type === 'Audio') {
-                 appServices.stopAudioRecording();
+                 appServices.stopAudioRecording(); // This is async, but for panic, we might not await
             }
             setIsRecordingState(false);
             setRecordingTrackIdState(null);
