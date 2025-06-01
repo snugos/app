@@ -1564,7 +1564,10 @@ export function renderTimeline() {
 
         const clipsContainer = document.createElement('div');
         clipsContainer.style.position = 'relative';
-        clipsContainer.style.width = 'calc(100% - 120px)'; // Account for track name width
+        // MODIFICATION: Read track name width from CSS variable for clips container width calculation
+        const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
+        const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback if CSS var is not defined
+        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`;
         clipsContainer.style.height = '100%';
 
 
@@ -1654,43 +1657,42 @@ export function updatePlayheadPosition() {
 
     const currentPlaybackMode = localAppServices.getPlaybackMode();
 
-    // Updated check for 'sequencer' mode (assuming internal state value also changes)
-    if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') { // Added 'pattern' for backward compatibility if state isn't changed yet
-        playhead.style.display = 'none'; // Hide timeline playhead in sequencer mode
-        if (timelineRuler) { // Keep ruler synced with scroll even if playhead is hidden
+    if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') {
+        playhead.style.display = 'none';
+        if (timelineRuler) {
              timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
         }
         return;
     }
 
-    // If in timeline mode, proceed with existing logic
     playhead.style.display = 'block';
 
-    const pixelsPerSecond = 30; // Define or get from constants/settings
-    const trackNameWidth = 120; // Width of the track name column, ensure this matches CSS
+    const pixelsPerSecond = 30;
+    // MODIFICATION START: Read track name width from CSS Custom Property
+    // Ensure '--timeline-track-name-width' is defined in your style.css, e.g., in :root {}
+    const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
+    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback if CSS var is not defined or invalid
+    // MODIFICATION END
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        playhead.style.left = `${trackNameWidth + rawNewPosition}px`; // Offset by track name width
+        playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
 
-        // Auto-scroll logic
-        const scrollableContent = timelineContentArea; // The scrollable div
-        const containerWidth = scrollableContent.clientWidth - trackNameWidth; // Visible width for clips
+        const scrollableContent = timelineContentArea;
+        const containerWidth = scrollableContent.clientWidth - trackNameWidth;
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
 
-        // If playhead is near the right edge, scroll right
-        if (playheadVisualPositionInScrollable > containerWidth * 0.8) { // e.g., 80% of visible width
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; // Scroll to keep it within view + a bit of buffer
-        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) { // If near left edge and not at start
+        if (playheadVisualPositionInScrollable > containerWidth * 0.8) {
+            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20;
+        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) {
             scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
         }
-        if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0; // Prevent negative scroll
+        if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
 
     } else if (Tone.Transport.state === 'stopped') {
-         playhead.style.left = `${trackNameWidth}px`; // Reset to start of clip area
+         playhead.style.left = `${trackNameWidth}px`;
     }
 
-    // Sync ruler with horizontal scroll of the content area
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
@@ -1746,23 +1748,17 @@ export function openTimelineWindow(savedState = null) {
     const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
 
     if (timelineWindow?.element) {
-        // The scroll listener should be on the .window-content of the SnugWindow instance
-        // or specifically on #timeline-tracks-container if that's the designated scrollable element.
-        // SnugWindow's .window-content is typically the main scrollable area for window content.
         const contentArea = timelineWindow.element.querySelector('.window-content');
         if (contentArea) {
             contentArea.addEventListener('scroll', () => {
                 const ruler = timelineWindow.element.querySelector('#timeline-ruler');
                 if (ruler) {
-                    // The ruler itself doesn't scroll, its content (markings) does via background or child elements.
-                    // The transform should be on the ruler's *content* or the ruler itself if it's positioned absolutely
-                    // and its parent is the one scrolling.
                     ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
                 }
-                updatePlayheadPosition(); // Update playhead based on scroll
+                updatePlayheadPosition();
             });
         }
-        renderTimeline(); // Initial render
+        renderTimeline();
     }
     return timelineWindow;
 }
