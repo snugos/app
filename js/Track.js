@@ -1419,8 +1419,7 @@ export class Track {
         this.stopPlayback();
 
         if (this.appServices.closeAllTrackWindows) {
-            // Corrected line:
-            console.log(`[Track ${this.id} Dispose] Calling appServices.closeAllTrackWindows for track ID: ${this.id}`);
+            console.log(`[Track ${this.id} Dispose] Calling appServices.closeAllTrackWindows for track ID: ${this.id}`); // Corrected
             this.appServices.closeAllTrackWindows(this.id);
         } else {
             console.warn(`[Track ${this.id} Dispose] appServices.closeAllTrackWindows NOT FOUND.`);
