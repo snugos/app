@@ -15,7 +15,7 @@ import {
     handleOpenTrackInspector as eventHandleOpenTrackInspector,
     handleOpenEffectsRack as eventHandleOpenEffectsRack,
     handleOpenSequencer as eventHandleOpenSequencer,
-    handleTimelineLaneDrop // MODIFICATION: Import new handler
+    handleTimelineLaneDrop
 } from './eventHandlers.js';
 import {
     initializeStateModule,
@@ -32,8 +32,11 @@ import {
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
     setMidiAccessState, setActiveMIDIInputState,
-    setLoadedZipFilesState, setSoundLibraryFileTreesState, setCurrentLibraryNameState,
-    setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
+    // MODIFICATION: Ensure these are the exact names of the imported functions from state.js
+    setLoadedZipFilesState,
+    setSoundLibraryFileTreesState,
+    // END MODIFICATION
+    setCurrentLibraryNameState, setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
@@ -183,9 +186,13 @@ const appServices = {
     // --- State Module Setters & Core Actions ---
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
-    setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState, // Renamed for clarity from setMasterGainValueState
+    setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState,
     setMidiAccess: setMidiAccessState, setActiveMIDIInput: setActiveMIDIInputState,
-    setLoadedZipFiles: setLoadedZipFilesState, setSoundLibraryFileTrees: setSoundLibraryFileTreesState,
+    // MODIFICATION START: Ensure these keys match the function names being called in audio.js
+    // and imported from state.js
+    setLoadedZipFilesState: setLoadedZipFilesState,
+    setSoundLibraryFileTreesState: setSoundLibraryFileTreesState,
+    // MODIFICATION END
     setCurrentLibraryName: setCurrentLibraryNameState, setCurrentSoundFileTree: setCurrentSoundFileTreeState,
     setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState, setPreviewPlayer: setPreviewPlayerState,
     setClipboardData: setClipboardDataState, setArmedTrackId: setArmedTrackIdState,
@@ -210,39 +217,41 @@ const appServices = {
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
     handleOpenSequencer: eventHandleOpenSequencer,
 
-    // MODIFICATION START: Add timeline drop handlers to appServices
+    // Timeline drop handlers (implemented in eventHandlers.js, called by ui.js)
     handlePlaceSequenceOnTimeline: (dragData, targetTrackId, startTime) => {
-        // This is a wrapper, actual logic is in eventHandlers.js
-        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(dragData) } }, targetTrackId, startTime);
+        // Pass appServices to the handler if it needs to call back into other services
+        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(dragData), files: [] } }, targetTrackId, startTime, appServices);
     },
     handleAddAudioFileToTimeline: (file, targetTrackId, startTime) => {
-        // Wrapper for OS file drops
-        handleTimelineLaneDrop({ dataTransfer: { files: [file], getData: () => null } }, targetTrackId, startTime);
+        handleTimelineLaneDrop({ dataTransfer: { files: [file], getData: () => null } }, targetTrackId, startTime, appServices);
     },
     handleAddSoundBrowserItemToTimeline: async (soundData, targetTrackId, startTime) => {
-         // Wrapper for sound browser item drops, includes fetching blob
-        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(soundData) } }, targetTrackId, startTime);
+        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(soundData), files: [] } }, targetTrackId, startTime, appServices);
     },
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
-        // Helper to get blob from sound browser item
-        if (!soundData || !soundData.libraryName || !soundData.fullPath) return null;
-        const loadedZips = getLoadedZipFilesState();
+        if (!soundData || !soundData.libraryName || !soundData.fullPath) {
+            console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);
+            return null;
+        }
+        const loadedZips = getLoadedZipFilesState(); // Use direct state getter
         if (loadedZips?.[soundData.libraryName] && loadedZips[soundData.libraryName] !== "loading") {
             const zipEntry = loadedZips[soundData.libraryName].file(soundData.fullPath);
             if (zipEntry) {
                 try {
                     const blob = await zipEntry.async("blob");
-                    // Ensure the blob has a name and correct type for the Track class
                     return new File([blob], soundData.fileName, { type: getMimeTypeFromFilename(soundData.fileName) });
                 } catch (e) {
-                    console.error("Error getting blob from sound browser item:", e);
+                    console.error("[AppServices getAudioBlob] Error getting blob from zipEntry:", e);
                     return null;
                 }
+            } else {
+                console.warn(`[AppServices getAudioBlob] ZipEntry not found for ${soundData.fullPath} in ${soundData.libraryName}`);
             }
+        } else {
+            console.warn(`[AppServices getAudioBlob] Library ${soundData.libraryName} not loaded or is loading.`);
         }
         return null;
     },
-    // MODIFICATION END
 
 
     // --- UI Update Triggers / Callbacks defined in main.js ---
