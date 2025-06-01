@@ -22,7 +22,7 @@ export class Track {
         console.log(`[Track ${this.id} Constructor] Initializing track "${this.name}" of type "${this.type}". InitialData present: ${!!initialData}`);
 
         this.isMuted = initialData?.isMuted || false;
-        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio'); // Default true for Audio, false otherwise
+        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio'); 
 
         const currentSoloedId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
         this.isSoloed = currentSoloedId === this.id;
@@ -1086,7 +1086,6 @@ export class Track {
         console.log(`[Track ${this.id}] Set sequence "${activeSeq.name}" length to ${activeSeq.length} steps, ${numRows} rows.`);
     }
 
-
     recreateToneSequence(forceRestart = false, startTimeOffset = 0) {
         if (this.type === 'Audio') return;
         const currentPlaybackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
@@ -1099,7 +1098,7 @@ export class Track {
                 this.patternPlayerSequence.dispose();
             } catch(e) { console.warn(`[Track ${this.id}] Error disposing old Tone.Sequence:`, e.message); }
         }
-        this.patternPlayerSequence = null;
+        this.patternPlayerSequence = null; 
 
         if (currentPlaybackMode !== 'sequencer') {
             console.log(`[Track ${this.id} recreateToneSequence] Not in 'sequencer' mode. Sequence player not created.`);
@@ -1538,12 +1537,14 @@ export class Track {
                 }
             }
         } else { // Sequencer Mode
+            // MODIFICATION START: Ensure recreation if null or disposed
             if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) {
                 console.log(`[Track ${this.id} schedulePlayback] Sequencer mode: patternPlayerSequence is invalid, calling recreateToneSequence.`);
-                this.recreateToneSequence(true, transportStartTime);
+                this.recreateToneSequence(true, transportStartTime); // Pass transportStartTime as it might be used by recreate for offset
             }
+            // Ensure it was successfully recreated
             if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
-                if (this.patternPlayerSequence.state === 'started') {
+                if (this.patternPlayerSequence.state === 'started') { // Should not happen if just recreated, but as a safeguard
                     try {this.patternPlayerSequence.stop(Tone.Transport.now());} catch(e){console.warn("Err stopping seq player during schedule", e)}
                 }
                 console.log(`[Track ${this.id}] Sequencer mode: Starting patternPlayerSequence at transport offset: ${transportStartTime.toFixed(2)}s. Loop: ${this.patternPlayerSequence.loop}`);
@@ -1557,6 +1558,7 @@ export class Track {
             } else {
                  console.warn(`[Track ${this.id}] Sequencer mode: patternPlayerSequence still not valid after recreation for "${this.name}".`);
             }
+            // MODIFICATION END
         }
     }
 
@@ -1584,7 +1586,7 @@ export class Track {
             }
             catch (e) { console.warn(`[Track ${this.id}] Error stopping/disposing patternPlayerSequence:`, e.message); }
         }
-        this.patternPlayerSequence = null; 
+        this.patternPlayerSequence = null; // MODIFICATION: Explicitly nullify it here
     }
 
     async updateAudioClipPosition(clipId, newStartTime) {
