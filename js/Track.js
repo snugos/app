@@ -40,11 +40,11 @@ export class Track {
         // Sampler (Slicer) specific
         this.samplerAudioData = {
             fileName: initialData?.samplerAudioData?.fileName || null,
-            audioBufferDataURL: initialData?.samplerAudioData?.audioBufferDataURL || null, // Retained for potential rehydration if DB fails
+            audioBufferDataURL: initialData?.samplerAudioData?.audioBufferDataURL || null, 
             dbKey: initialData?.samplerAudioData?.dbKey || null,
             status: initialData?.samplerAudioData?.status || (initialData?.samplerAudioData?.dbKey || initialData?.samplerAudioData?.audioBufferDataURL ? 'missing' : 'empty')
         };
-        this.audioBuffer = null; // Will be a Tone.Buffer
+        this.audioBuffer = null; 
         this.slices = initialData?.slices && initialData.slices.length > 0 ?
             JSON.parse(JSON.stringify(initialData.slices)) :
             Array(Constants.numSlices).fill(null).map(() => ({
@@ -62,7 +62,7 @@ export class Track {
 
         // Instrument Sampler specific
         this.instrumentSamplerSettings = {
-            sampleUrl: initialData?.instrumentSamplerSettings?.sampleUrl || null, // Deprecated, use dbKey
+            sampleUrl: initialData?.instrumentSamplerSettings?.sampleUrl || null, 
             audioBuffer: null,
             audioBufferDataURL: initialData?.instrumentSamplerSettings?.audioBufferDataURL || null,
             originalFileName: initialData?.instrumentSamplerSettings?.originalFileName || null,
@@ -81,7 +81,7 @@ export class Track {
         this.drumSamplerPads = Array(Constants.numDrumSamplerPads).fill(null).map((_, padIdx) => {
             const initialPadData = initialData?.drumSamplerPads?.[padIdx];
             return {
-                sampleUrl: initialPadData?.sampleUrl || null, // Deprecated
+                sampleUrl: initialPadData?.sampleUrl || null, 
                 audioBuffer: null,
                 audioBufferDataURL: initialPadData?.audioBufferDataURL || null,
                 originalFileName: initialPadData?.originalFileName || null,
@@ -119,7 +119,7 @@ export class Track {
 
         // Audio Nodes
         this.gainNode = null; this.trackMeter = null; this.outputNode = null;
-        this.instrument = null; // For Synth type
+        this.instrument = null; 
 
         this.sequences = [];
         this.activeSequenceId = null;
@@ -131,22 +131,19 @@ export class Track {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
             } else {
-                // Create a default sequence if none provided
-                this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true); // true to skip undo for initial
+                this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true); 
             }
-             // Ensure old properties are not carried over if initialData had them
             delete this.sequenceData;
             delete this.sequenceLength;
-        } else { // Audio Track
+        } else { 
             delete this.sequenceData;
             delete this.sequenceLength;
             delete this.sequences;
             delete this.activeSequenceId;
 
-            // Migrate old audioClips structure if present from initialData (for project loading)
             if (initialData?.audioClips && Array.isArray(initialData.audioClips)) {
                  initialData.audioClips.forEach(ac => {
-                    if (!ac || !ac.dbKey) return; // Skip invalid old clips
+                    if (!ac || !ac.dbKey) return; 
                     const existingClip = this.timelineClips.find(tc => tc.sourceId === ac.dbKey && tc.type === 'audio');
                     if (!existingClip) {
                         this.timelineClips.push({
@@ -154,14 +151,14 @@ export class Track {
                             type: 'audio',
                             sourceId: ac.dbKey,
                             startTime: ac.startTime || 0,
-                            duration: ac.duration || 0, // Will be updated if blob duration is found
+                            duration: ac.duration || 0, 
                             name: ac.name || `Rec Clip ${this.timelineClips.filter(c => c.type === 'audio').length + 1}`
                         });
                     }
                 });
            }
         }
-        this.patternPlayerSequence = null; // For sequencer mode playback
+        this.patternPlayerSequence = null; 
 
         // UI related
         this.waveformCanvasCtx = null;
@@ -171,10 +168,9 @@ export class Track {
 
         // Audio Track specific
         this.inputChannel = null;
-        this.clipPlayers = new Map(); // Used for Tone.Player or Tone.Part instances for timeline clips
+        this.clipPlayers = new Map(); 
     }
 
-    // --- Sequence Management ---
     getActiveSequence() {
         if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences || this.sequences.length === 0) return null;
         return this.sequences.find(s => s.id === this.activeSequenceId);
@@ -190,19 +186,16 @@ export class Track {
         return activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
     }
 
-    // --- Synth Specific ---
     getDefaultSynthParams() {
-        // This should ideally fetch from effectsRegistry or a similar central place if synth engines become more dynamic
         return {
             portamento: 0.01,
             oscillator: { type: 'sawtooth' },
             envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 1 },
-            filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1000 }, // Added frequency default
+            filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1000 }, 
             filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }
         };
     }
 
-    // --- Audio Node Initialization and Chaining ---
     async initializeAudioNodes() {
         console.log(`[Track ${this.id} initializeAudioNodes] Initializing audio nodes for "${this.name}".`);
         try {
@@ -219,7 +212,7 @@ export class Track {
 
             this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
             this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
-            this.outputNode = this.gainNode; // Default output
+            this.outputNode = this.gainNode; 
 
             if (this.type === 'Audio') {
                 this.inputChannel = new Tone.Channel(); 
@@ -351,7 +344,6 @@ export class Track {
     }
 
 
-    // --- Effect Management ---
     addEffect(effectType) {
         if (!this.appServices.effectsRegistryAccess) {
             console.error(`[Track ${this.id}] effectsRegistryAccess not available via appServices.`);
@@ -366,7 +358,7 @@ export class Track {
             if (this.appServices.showNotification) this.appServices.showNotification(`Effect type "${effectType}" not found.`, 3000);
             return;
         }
-        const defaultParams = getEffectDefaultParamsLocal ? getEffectDefaultParamsLocal(effectType) : getEffectDefaultParamsFromRegistry(effectType); // Fallback
+        const defaultParams = getEffectDefaultParamsLocal ? getEffectDefaultParamsLocal(effectType) : getEffectDefaultParamsFromRegistry(effectType); 
         const toneNode = createEffectInstance(effectType, defaultParams);
 
         if (toneNode) {
@@ -487,7 +479,6 @@ export class Track {
         }
     }
 
-    // --- Audio Resource Initialization (Samples, Instruments) ---
     async fullyInitializeAudioResources() {
         console.log(`[Track ${this.id} fullyInitializeAudioResources] Initializing audio resources for "${this.name}" (type: ${this.type})`);
         if (!this.gainNode || this.gainNode.disposed) {
@@ -761,7 +752,6 @@ export class Track {
         }
     }
 
-    // --- Volume and Mute/Solo ---
     setVolume(volume, fromInteraction = false) { 
         this.previousVolumeBeforeMute = Math.max(0, Math.min(parseFloat(volume) || 0, 1.5)); 
         if (this.gainNode && !this.gainNode.disposed && !this.isMuted) {
@@ -789,7 +779,6 @@ export class Track {
         this.applyMuteState(); 
     }
 
-    // --- Parameter Setting for Different Track Types ---
     setSynthParam(paramPath, value) {
         if (this.type !== 'Synth') return;
         if (!this.instrument || this.instrument.disposed) {
@@ -1092,8 +1081,6 @@ export class Track {
         console.log(`[Track ${this.id}] Set sequence "${activeSeq.name}" length to ${activeSeq.length} steps, ${numRows} rows.`);
     }
 
-
-    // --- Tone.Sequence Playback (for Sequencer Mode) ---
     recreateToneSequence(forceRestart = false, startTimeOffset = 0) {
         if (this.type === 'Audio') return;
         const currentPlaybackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
@@ -1106,7 +1093,7 @@ export class Track {
                 this.patternPlayerSequence.dispose();
             } catch(e) { console.warn(`[Track ${this.id}] Error disposing old Tone.Sequence:`, e.message); }
         }
-        this.patternPlayerSequence = null; // Ensure it's nullified
+        this.patternPlayerSequence = null;
 
         if (currentPlaybackMode !== 'sequencer') {
             console.log(`[Track ${this.id} recreateToneSequence] Not in 'sequencer' mode. Sequence player not created.`);
@@ -1245,7 +1232,6 @@ export class Track {
         }
     }
 
-    // --- Timeline Playback ---
     async addAudioClip(blob, startTime) {
         if (this.type !== 'Audio') {
             console.warn(`[Track ${this.id}] addAudioClip called on non-Audio track type: ${this.type}`);
@@ -1385,9 +1371,10 @@ export class Track {
         this.stopPlayback(); 
 
         if (playbackMode === 'timeline') {
-            if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
-                try {this.patternPlayerSequence.stop();} catch(e){console.warn("Error stopping patternPlayerSequence", e)}
-            }
+            // This was already implicitly handled by stopPlayback nullifying patternPlayerSequence
+            // if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
+            //     try {this.patternPlayerSequence.stop();} catch(e){console.warn("Error stopping patternPlayerSequence", e)}
+            // }
             for (const clip of this.timelineClips) {
                 if (!clip || typeof clip.startTime !== 'number' || typeof clip.duration !== 'number') {
                     console.warn(`[Track ${this.id}] Skipping invalid clip:`, clip);
@@ -1549,29 +1536,25 @@ export class Track {
                 }
             }
         } else { // Sequencer Mode
-            // MODIFICATION START: Ensure recreation if null or disposed
-            if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) {
+            if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) { // MODIFIED Check
                 console.log(`[Track ${this.id} schedulePlayback] Sequencer mode: patternPlayerSequence is invalid, calling recreateToneSequence.`);
-                this.recreateToneSequence(true, transportStartTime); // Pass transportStartTime as it might be used by recreate for offset
+                this.recreateToneSequence(true, transportStartTime);
             }
-            // Ensure it was successfully recreated
             if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
                 if (this.patternPlayerSequence.state === 'started') {
-                    try {this.patternPlayerSequence.stop(Tone.Transport.now());} catch(e){console.warn("Err stopping seq player", e)}
+                    try {this.patternPlayerSequence.stop(Tone.Transport.now());} catch(e){console.warn("Err stopping seq player during schedule", e)}
                 }
                 console.log(`[Track ${this.id}] Sequencer mode: Starting patternPlayerSequence at transport offset: ${transportStartTime.toFixed(2)}s. Loop: ${this.patternPlayerSequence.loop}`);
                 try {
-                    this.patternPlayerSequence.start(transportStartTime); // Start at the given transport time
+                    this.patternPlayerSequence.start(transportStartTime);
                 } catch(e) {
-                    console.error(`[Track ${this.id}] Error starting patternPlayerSequence:`, e.message, e); // Log the full error object
-                    // If it fails, try to dispose and nullify to force full recreation next time.
+                    console.error(`[Track ${this.id}] Error starting patternPlayerSequence:`, e.message, e); 
                     try { if(!this.patternPlayerSequence.disposed) this.patternPlayerSequence.dispose(); } catch (disposeErr) {}
                     this.patternPlayerSequence = null;
                 }
             } else {
                  console.warn(`[Track ${this.id}] Sequencer mode: patternPlayerSequence still not valid after recreation for "${this.name}".`);
             }
-            // MODIFICATION END
         }
     }
 
@@ -1583,7 +1566,7 @@ export class Track {
             if (item && !item.disposed) {
                 try {
                     if (typeof item.unsync === 'function') item.unsync(); 
-                    item.stop(Tone.Transport.now());
+                    item.stop(Tone.Transport.now()); 
                     item.dispose();
                 }
                 catch (e) { console.warn(`[Track ${this.id}] Error stopping/disposing a timeline clip player/part:`, e.message); }
@@ -1593,9 +1576,9 @@ export class Track {
 
         if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
             try {
-                this.patternPlayerSequence.stop();
-                this.patternPlayerSequence.clear();
-                this.patternPlayerSequence.dispose();
+                this.patternPlayerSequence.stop(); 
+                this.patternPlayerSequence.clear(); 
+                this.patternPlayerSequence.dispose(); 
                 console.log(`[Track ${this.id}] Stopped, cleared, and disposed patternPlayerSequence.`);
             }
             catch (e) { console.warn(`[Track ${this.id}] Error stopping/disposing patternPlayerSequence:`, e.message); }
@@ -1604,7 +1587,6 @@ export class Track {
     }
 
 
-    // --- Timeline Clip Management (for Audio Tracks) ---
     async updateAudioClipPosition(clipId, newStartTime) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {
@@ -1634,7 +1616,6 @@ export class Track {
         }
     }
 
-    // --- Disposal ---
     dispose() {
         const trackNameForLog = this.name || `Track ${this.id}`; 
         console.log(`[Track Dispose START ${this.id}] Starting disposal for track: "${trackNameForLog}"`);
