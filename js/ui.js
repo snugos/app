@@ -1259,6 +1259,33 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
+
+        // MODIFICATION START: Make sequencer controls draggable to represent dragging the active sequence
+        if (controlsDiv) {
+            controlsDiv.draggable = true;
+            controlsDiv.addEventListener('dragstart', (e) => {
+                const currentActiveSeq = track.getActiveSequence();
+                if (currentActiveSeq) {
+                    const dragData = {
+                        type: 'sequence-timeline-drag', // Custom type for identification
+                        sourceSequenceId: currentActiveSeq.id,
+                        sourceTrackId: track.id,
+                        clipName: currentActiveSeq.name
+                    };
+                    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                    e.dataTransfer.effectAllowed = 'copy';
+                    // Optionally set a drag image
+                    // e.dataTransfer.setDragImage(someElement, xOffset, yOffset);
+                    console.log(`[UI Sequencer DragStart] Dragging sequence: ${currentActiveSeq.name}`);
+                } else {
+                    e.preventDefault(); // Prevent drag if no active sequence
+                    console.warn(`[UI Sequencer DragStart] No active sequence to drag for track ${track.name}`);
+                }
+            });
+        }
+        // MODIFICATION END
+
+
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
             const currentTrackForMenu = localAppServices.getTrackById ? localAppServices.getTrackById(track.id) : null; if (!currentTrackForMenu) return;
@@ -1544,19 +1571,16 @@ export function renderTimeline() {
     }
 
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
-    const tracks = getTracksState(); // Assuming getTracksState() gives current tracks from state.js
+    const tracks = getTracksState();
     if (!tracksArea || !tracks) {
         console.warn("Timeline area or tracks not found for rendering inside timeline window.");
         return;
     }
 
-    tracksArea.innerHTML = ''; // Clear previous content
+    tracksArea.innerHTML = '';
 
-    // MODIFICATION START: Read track name width from CSS custom property
-    // Ensure '--timeline-track-name-width' is defined in your style.css, e.g., in :root {}
     const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback if CSS var is not defined
-    // MODIFICATION END
+    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback
 
 
     tracks.forEach(track => {
@@ -1564,11 +1588,73 @@ export function renderTimeline() {
         lane.className = 'timeline-track-lane';
         lane.dataset.trackId = track.id;
 
-        // Placeholder: Add dragover and drop event listeners here for adding clips by dropping
-        // e.g., lane.addEventListener('dragover', handleTimelineLaneDragOver);
-        // e.g., lane.addEventListener('drop', (e) => handleTimelineLaneDrop(e, track.id));
-        // These handlers would need to be defined, likely in eventHandlers.js or main.js
-        // and would call appServices (e.g. track.addSequenceClipToTimeline or track.addExternalAudioFileAsClip)
+        // MODIFICATION START: Add dragover and drop listeners to timeline lanes
+        lane.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            lane.classList.add('dragover-timeline-lane'); // Optional: for visual feedback
+            event.dataTransfer.dropEffect = 'copy';
+        });
+
+        lane.addEventListener('dragleave', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            lane.classList.remove('dragover-timeline-lane');
+        });
+
+        lane.addEventListener('drop', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            lane.classList.remove('dragover-timeline-lane');
+
+            const targetTrackId = parseInt(lane.dataset.trackId, 10);
+            const timelineContentArea = timelineWindow.element.querySelector('.window-content');
+            const pixelsPerSecond = 30; // Should match playhead positioning
+
+            // Calculate drop time relative to the timeline content area (excluding track names)
+            const rect = timelineContentArea.getBoundingClientRect();
+            let dropX = event.clientX - rect.left - trackNameWidth + timelineContentArea.scrollLeft;
+            dropX = Math.max(0, dropX); // Ensure not negative due to track name area
+            const startTime = dropX / pixelsPerSecond;
+
+            console.log(`[UI Timeline Drop] TrackID: ${targetTrackId}, Time: ${startTime.toFixed(2)}s`);
+
+            // Handle different types of dragged data
+            const jsonDataString = event.dataTransfer.getData('application/json');
+            if (jsonDataString) {
+                try {
+                    const droppedData = JSON.parse(jsonDataString);
+                    if (droppedData.type === 'sequence-timeline-drag') {
+                        if (localAppServices.handlePlaceSequenceOnTimeline) {
+                            localAppServices.handlePlaceSequenceOnTimeline(droppedData, targetTrackId, startTime);
+                        } else {
+                            console.warn("handlePlaceSequenceOnTimeline service not available.");
+                        }
+                    } else if (droppedData.type === 'sound-browser-item') {
+                         if (localAppServices.handleAddSoundBrowserItemToTimeline) {
+                            localAppServices.handleAddSoundBrowserItemToTimeline(droppedData, targetTrackId, startTime);
+                        } else {
+                            console.warn("handleAddSoundBrowserItemToTimeline service not available.");
+                        }
+                    } else {
+                        console.warn("[UI Timeline Drop] Unrecognized JSON data type:", droppedData.type);
+                    }
+                } catch (e) {
+                    console.error("[UI Timeline Drop] Error parsing JSON data:", e);
+                }
+            } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                const file = event.dataTransfer.files[0];
+                if (localAppServices.handleAddAudioFileToTimeline) {
+                    localAppServices.handleAddAudioFileToTimeline(file, targetTrackId, startTime);
+                } else {
+                    console.warn("handleAddAudioFileToTimeline service not available.");
+                }
+            } else {
+                console.log("[UI Timeline Drop] No recognized data dropped.");
+            }
+        });
+        // MODIFICATION END
+
 
         const nameEl = document.createElement('div');
         nameEl.className = 'timeline-track-lane-name';
@@ -1577,7 +1663,7 @@ export function renderTimeline() {
 
         const clipsContainer = document.createElement('div');
         clipsContainer.style.position = 'relative';
-        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`; // Use dynamic width
+        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`;
         clipsContainer.style.height = '100%';
 
 
@@ -1677,11 +1763,8 @@ export function updatePlayheadPosition() {
     playhead.style.display = 'block';
 
     const pixelsPerSecond = 30;
-    // MODIFICATION START: Read track name width from CSS Custom Property
-    // Ensure '--timeline-track-name-width' is defined in your style.css, e.g., in :root {}
     const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback if CSS var is not defined or invalid
-    // MODIFICATION END
+    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Fallback
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
@@ -1714,7 +1797,7 @@ export function openTimelineWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
-        renderTimeline(); // Re-render on restore
+        renderTimeline();
         return win;
     }
 
@@ -1723,8 +1806,8 @@ export function openTimelineWindow(savedState = null) {
             <div id="timeline-header">
                 <div id="timeline-ruler"></div>
             </div>
-            <div id="timeline-tracks-container"> {/* This will be the scrollable area for tracks */}
-                <div id="timeline-tracks-area"></div> {/* This will be the wide area for all track content */}
+            <div id="timeline-tracks-container">
+                <div id="timeline-tracks-area"></div>
             </div>
             <div id="timeline-playhead"></div>
         </div>
@@ -1735,12 +1818,12 @@ export function openTimelineWindow(savedState = null) {
     const timelineOptions = {
         width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)),
         height: 250,
-        x: 30, // Default position
-        y: 50, // Default position
+        x: 30,
+        y: 50,
         minWidth: 400,
         minHeight: 150,
         initialContentKey: windowId,
-        onCloseCallback: () => {} // Define if needed
+        onCloseCallback: () => {}
     };
 
      if (savedState) {
