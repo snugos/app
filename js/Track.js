@@ -236,7 +236,6 @@ export class Track {
         if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) sourceNodes.push(this.instrument);
         else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed) sourceNodes.push(this.toneSampler);
         else if (this.type === 'DrumSampler') {
-            // Add all valid drum pad players as source nodes
             this.drumPadPlayers.forEach(player => {
                 if (player && !player.disposed) {
                     sourceNodes.push(player);
@@ -278,15 +277,10 @@ export class Track {
         if (this.type === 'Sampler' && this.slicerIsPolyphonic) {
             currentOutput = null;
         }
-         // For DrumSampler, sourceNodes is an array of players.
-        // Each player will be connected individually if there are effects.
-        // If no effects, they will connect directly to gainNode.
         if (this.type === 'DrumSampler' && this.activeEffects.length > 0) {
-             // If there are effects, currentOutput is an array of players.
-             // Effects will be chained from each player.
+            // Handled by iterating currentOutput array below
         } else if (this.type === 'DrumSampler' && this.activeEffects.length === 0) {
-            // No effects, players connect directly to gainNode.
-            // currentOutput is an array of players.
+            // Handled by direct connection to gainNode later
         }
 
 
@@ -298,7 +292,7 @@ export class Track {
         this.activeEffects.forEach(effectWrapper => {
             if (effectWrapper.toneNode && !effectWrapper.toneNode.disposed) {
                 if (currentOutput) {
-                    if (Array.isArray(currentOutput)) { // For multiple sources like DrumSampler
+                    if (Array.isArray(currentOutput)) {
                         currentOutput.forEach(outNode => {
                             if (outNode && !outNode.disposed) outNode.connect(effectWrapper.toneNode);
                         });
@@ -311,7 +305,7 @@ export class Track {
         });
 
         if (currentOutput) {
-            if (Array.isArray(currentOutput)) { // For multiple sources like DrumSampler
+            if (Array.isArray(currentOutput)) {
                 currentOutput.forEach(outNode => {
                     if (outNode && !outNode.disposed) outNode.connect(this.gainNode);
                 });
@@ -323,7 +317,6 @@ export class Track {
             this.inputChannel.connect(this.gainNode);
             console.log(`[Track ${this.id} rebuildEffectChain] Connected Audio inputChannel directly to gainNode.`);
         } else if (this.type === 'DrumSampler' && sourceNodes.length > 0 && this.activeEffects.length === 0) {
-            // Case: DrumSampler with no effects, connect all players to gainNode
             sourceNodes.forEach(playerNode => {
                 if (playerNode && !playerNode.disposed) playerNode.connect(this.gainNode);
             });
@@ -545,7 +538,7 @@ export class Track {
                                     if (this.drumPadPlayers[i] && !this.drumPadPlayers[i].disposed) this.drumPadPlayers[i].dispose();
                                     this.drumPadPlayers[i] = new Tone.Player(pad.audioBuffer);
                                     pad.status = 'loaded';
-                                    // DO NOT connect here; rebuildEffectChain will handle it.
+                                    // Connection is now handled in rebuildEffectChain
                                 } catch (toneLoadErr) {
                                     console.error(`[Track ${this.id}] Tone.Buffer load error for drum pad ${i} (${pad.originalFileName}):`, toneLoadErr);
                                     pad.status = 'error';
@@ -1068,7 +1061,7 @@ export class Track {
                             if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
                             Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
                         } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
-                            // No need for connectedTo check here, rebuildEffectChain handles connections
+                            // Connection handled by rebuildEffectChain
                             if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
                             this.slicerMonoEnvelope.triggerRelease(time);
 
@@ -1099,7 +1092,6 @@ export class Track {
                         console.log(`[Track ${this.id} DrumSampler] Playing pad ${padIndex} at col ${col}, time ${time.toFixed(3)}`);
                         const player = this.drumPadPlayers[padIndex];
                         // Connections are handled by rebuildEffectChain.
-                        // Ensure player is valid and connected through the chain.
                         player.volume.value = Tone.dbToGain(padData.volume * step.velocity);
                         player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
@@ -1408,18 +1400,3 @@ export class Track {
         console.log(`[Track ${this.id} Dispose] Finished disposal for track: ${this.name}`);
     }
 }
-```
-
-**After updating `track.js` to this version:**
-
-1.  **Crucial: Clear your browser's cache VERY thoroughly, or use a private/incognito window for testing.** This helps ensure the old version of `track.js` isn't being served from cache.
-2.  Retry the Drum Sampler test:
-    * Add a Drum Sampler track.
-    * Load samples onto its pads.
-    * Open the sequencer for it.
-    * Click some cells in the grid to activate notes.
-    * Press Play.
-
-The detailed logs in the `Tone.Sequence` callback should now execute without the `player.connectedTo` error. If audio still doesn't play for the Drum Sampler, the new logs should give us clues as to whether the `player.start(time)` is being called and if the `effectsChainStartPoint` is valid.
-
-The Synth track playback seems to be working based on your logs (`Track.js:1044 [Track 0 Synth] Playing E2 at col 4, time 31.812`), which is a good sign that the fundamental audio path and sequencer timing are okay. The Drum Sampler issue was likely isolated to that incorrect connection che
