@@ -882,16 +882,20 @@ export function openSoundBrowserWindow(savedState = null) {
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
+             // MODIFICATION START: Add debug log
+            console.log(`[UI SoundBrowser Open DEBUG] Initial Global State Check. currentLibNameFromState: ${currentLibNameFromState}. soundTrees keys: ${soundTrees ? Object.keys(soundTrees) : 'undefined'}. soundTrees[Drums] exists: ${soundTrees ? !!soundTrees["Drums"] : 'false'}`);
+            // MODIFICATION END
+
             console.log(`[UI SoundBrowser Open] Initial check. Current lib in state: ${currentLibNameFromState}, Dropdown value: ${libSelect?.value}`);
 
-            if (currentLibNameFromState && soundTrees[currentLibNameFromState] && libSelect) {
+            if (currentLibNameFromState && soundTrees && soundTrees[currentLibNameFromState] && libSelect) { // Added check for soundTrees itself
                 console.log(`[UI SoundBrowser Open] State has current library '${currentLibNameFromState}' with loaded data. Setting dropdown and updating UI.`);
                 libSelect.value = currentLibNameFromState;
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
                 }
             } else {
-                console.log(`[UI SoundBrowser Open] No specific library active and loaded in state. Defaulting to "Select Library..." view.`);
+                console.log(`[UI SoundBrowser Open] No specific library active and loaded in state (or soundTrees issue). Defaulting to "Select Library..." view.`);
                 if (libSelect) libSelect.value = "";
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(null);
@@ -979,12 +983,8 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
             libSelect.value = libraryName || "";
         }
     } else {
-        // This case should ideally be covered by the returns above.
-        // If libraryName is null (meaning "Select Library..." was chosen by user or is the default state)
-        // and performFullUIUpdate is false (meaning it wasn't an update for the current selection),
-        // we still might need to clear the list if it's a direct call with libraryName = null.
-        if (!libraryName) { // Explicitly handle the "Select Library..." case if no other condition matched
-             performFullUIUpdate = true; // Force UI update to show "Select a library"
+        if (!libraryName) {
+             performFullUIUpdate = true;
              console.log(`[UI updateSoundBrowserDisplayForLibrary] Condition: Explicitly setting to "Select a library" view.`);
              if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(null);
              if (libSelect) libSelect.value = "";
@@ -1008,13 +1008,29 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     } else if (hasError) {
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' failed." view.`);
-    } else if (localAppServices.getSoundLibraryFileTrees && localAppServices.getSoundLibraryFileTrees()[libraryName]) {
-        if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(localAppServices.getSoundLibraryFileTrees()[libraryName]);
-        if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering directory for library '${libraryName}'.`);
     } else {
-        listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view.`);
+        // MODIFICATION START: Add detailed logging before the critical check
+        console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] About to check trees. Library: ${libraryName}`);
+        const currentTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
+        console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Current trees from getSoundLibraryFileTrees. Keys:`, currentTrees ? Object.keys(currentTrees) : 'undefined');
+
+        if (currentTrees && currentTrees[libraryName]) {
+            const treeForLib = currentTrees[libraryName];
+            console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Found tree for "${libraryName}". Keys:`, treeForLib ? Object.keys(treeForLib) : 'Tree is null/undefined');
+            if (treeForLib && Object.keys(treeForLib).length > 0) {
+                 console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Tree for "${libraryName}" is NOT empty.`);
+                 if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeForLib);
+                 if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
+                 console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering directory for library '${libraryName}'.`);
+            } else {
+                console.warn(`[UI updateSoundBrowserDisplayForLibrary WARN] Tree for "${libraryName}" was found but considered empty or invalid. Tree:`, treeForLib);
+                listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data is empty or corrupt.</p>`;
+            }
+        } else {
+            listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`;
+            console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view. (Checked currentTrees['${libraryName}'])`);
+        }
+        // MODIFICATION END
     }
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
@@ -1269,13 +1285,11 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     const dragData = {
                         type: 'sequence-timeline-drag', // Custom type for identification
                         sourceSequenceId: currentActiveSeq.id,
-                        sourceTrackId: track.id,
+                        sourceTrackId: track.id, // Good to have if needed later
                         clipName: currentActiveSeq.name
                     };
                     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                     e.dataTransfer.effectAllowed = 'copy';
-                    // Optionally set a drag image
-                    // e.dataTransfer.setDragImage(someElement, xOffset, yOffset);
                     console.log(`[UI Sequencer DragStart] Dragging sequence: ${currentActiveSeq.name}`);
                 } else {
                     e.preventDefault(); // Prevent drag if no active sequence
@@ -1608,7 +1622,7 @@ export function renderTimeline() {
             lane.classList.remove('dragover-timeline-lane');
 
             const targetTrackId = parseInt(lane.dataset.trackId, 10);
-            const timelineContentArea = timelineWindow.element.querySelector('.window-content');
+            const timelineContentArea = timelineWindow.element.querySelector('.window-content'); // Scrollable area
             const pixelsPerSecond = 30; // Should match playhead positioning
 
             // Calculate drop time relative to the timeline content area (excluding track names)
@@ -1619,38 +1633,12 @@ export function renderTimeline() {
 
             console.log(`[UI Timeline Drop] TrackID: ${targetTrackId}, Time: ${startTime.toFixed(2)}s`);
 
-            // Handle different types of dragged data
-            const jsonDataString = event.dataTransfer.getData('application/json');
-            if (jsonDataString) {
-                try {
-                    const droppedData = JSON.parse(jsonDataString);
-                    if (droppedData.type === 'sequence-timeline-drag') {
-                        if (localAppServices.handlePlaceSequenceOnTimeline) {
-                            localAppServices.handlePlaceSequenceOnTimeline(droppedData, targetTrackId, startTime);
-                        } else {
-                            console.warn("handlePlaceSequenceOnTimeline service not available.");
-                        }
-                    } else if (droppedData.type === 'sound-browser-item') {
-                         if (localAppServices.handleAddSoundBrowserItemToTimeline) {
-                            localAppServices.handleAddSoundBrowserItemToTimeline(droppedData, targetTrackId, startTime);
-                        } else {
-                            console.warn("handleAddSoundBrowserItemToTimeline service not available.");
-                        }
-                    } else {
-                        console.warn("[UI Timeline Drop] Unrecognized JSON data type:", droppedData.type);
-                    }
-                } catch (e) {
-                    console.error("[UI Timeline Drop] Error parsing JSON data:", e);
-                }
-            } else if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-                const file = event.dataTransfer.files[0];
-                if (localAppServices.handleAddAudioFileToTimeline) {
-                    localAppServices.handleAddAudioFileToTimeline(file, targetTrackId, startTime);
-                } else {
-                    console.warn("handleAddAudioFileToTimeline service not available.");
-                }
+            // Pass the event to a centralized handler (likely in eventHandlers.js via appServices)
+            // This handler will parse dataTransfer and call appropriate track methods
+            if (localAppServices.handleTimelineLaneDrop) {
+                localAppServices.handleTimelineLaneDrop(event, targetTrackId, startTime);
             } else {
-                console.log("[UI Timeline Drop] No recognized data dropped.");
+                console.warn("handleTimelineLaneDrop service not available.");
             }
         });
         // MODIFICATION END
