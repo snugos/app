@@ -9,7 +9,7 @@ export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
-        this.appServices = appServices; 
+        this.appServices = appServices;
 
         this.name = initialData?.name || `${type} Track ${this.id}`;
         if (type === 'DrumSampler') {
@@ -277,10 +277,9 @@ export class Track {
 
 
         if (this.type === 'Sampler' && this.slicerIsPolyphonic) {
-            currentOutput = null; // Temporary players connect directly to effects/gain
+            currentOutput = null;
         }
         if (this.type === 'Audio' && !this.inputChannel) {
-             // Timeline audio players connect directly to effects/gain
             currentOutput = null;
         }
 
@@ -323,7 +322,7 @@ export class Track {
         } else if (this.type === 'DrumSampler' && sourceNodes.length > 0 && this.activeEffects.length === 0) {
             sourceNodes.forEach(playerNode => {
                 if (playerNode && !playerNode.disposed) {
-                    console.log(`[Track ${this.id} DrumSampler rebuildEffectChain] ... ${playerNode.toString()} -> gainNode (no effects)`);
+                     console.log(`[Track ${this.id} DrumSampler rebuildEffectChain] ... ${playerNode.toString()} (Player for pad) -> gainNode (no effects)`);
                     playerNode.connect(this.gainNode);
                 }
             });
@@ -607,7 +606,7 @@ export class Track {
         if (this.type !== 'Audio') {
             this.recreateToneSequence(true);
         }
-        this.rebuildEffectChain(); // Crucial: Rebuild chain AFTER all players/instruments are potentially (re)created
+        this.rebuildEffectChain();
         console.log(`[Track ${this.id} fullyInitializeAudioResources] Finished audio resource initialization.`);
     }
 
@@ -1000,7 +999,10 @@ export class Track {
 
 
         this.patternPlayerSequence = new Tone.Sequence((time, col) => {
-            console.log(`[Track ${this.id} Sequencer Event] Time: ${time.toFixed(3)}, Column: ${col}, Type: ${this.type}`);
+            // **** DETAILED LOGGING ADDED HERE ****
+            const currentTrackGain = this.gainNode && !this.gainNode.disposed ? this.gainNode.gain.value : 'N/A (GainNode issue)';
+            console.log(`[Track ${this.id} Sequencer Event] Time: ${time.toFixed(3)}, Col: ${col}, Type: ${this.type}, TrackGain: ${currentTrackGain}`);
+
 
             const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
             if (playbackModeCheck !== 'sequencer') {
@@ -1019,7 +1021,7 @@ export class Track {
             }
 
             if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) {
-                console.log(`[Track ${this.id} Sequencer Event] Muted or no gainNode. Skipping playback for col ${col}. Muted: ${this.isMuted}, Soloed: ${this.isSoloed}, EffectiveMute: ${isEffectivelyMuted}`);
+                console.log(`[Track ${this.id} Sequencer Event] Muted or no gainNode. Skipping playback for col ${col}. Muted: ${this.isMuted}, Soloed: ${this.isSoloed}, EffectiveMute: ${isEffectivelyMuted}, GainNode Valid: ${!!(this.gainNode && !this.gainNode.disposed)}`);
                 return;
             }
 
@@ -1028,9 +1030,10 @@ export class Track {
                 : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
 
             if (!effectsChainStartPoint) {
-                console.warn(`[Track ${this.id} Sequencer Event] No valid output for instrument/player at col ${col}. Destination:`, effectsChainStartPoint);
+                console.warn(`[Track ${this.id} Sequencer Event] No valid output (effectsChainStartPoint is null) for instrument/player at col ${col}. GainNode: ${this.gainNode ? this.gainNode.toString() : 'null'}`);
                 return;
             }
+            // **** END OF NEW LOGGING ****
 
             if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
                  let notePlayedThisStep = false;
@@ -1039,7 +1042,8 @@ export class Track {
                     const pitchName = Constants.synthPitches[rowIndex];
                     const step = sequenceDataForTone[rowIndex]?.[col];
                     if (step?.active && !notePlayedThisStep) {
-                        console.log(`[Track ${this.id} Synth] Playing ${pitchName} at col ${col}, time ${time.toFixed(3)} to ${effectsChainStartPoint.toString()}`);
+                        const synthVol = this.instrument.volume.value; // Assuming MonoSynth has a volume param
+                        console.log(`[Track ${this.id} Synth] Playing ${pitchName} at col ${col}, time ${time.toFixed(3)}. SynthVol: ${synthVol}, StepVel: ${step.velocity.toFixed(2)}, Target: ${effectsChainStartPoint.toString()}`);
                         this.instrument.triggerAttackRelease(pitchName, "8n", time, step.velocity * Constants.defaultVelocity);
                         notePlayedThisStep = true;
                     }
@@ -1049,7 +1053,7 @@ export class Track {
                     if (!sequenceDataForTone[sliceIndex]) return;
                     const step = sequenceDataForTone[sliceIndex]?.[col];
                     if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
-                        console.log(`[Track ${this.id} Sampler] Playing slice ${sliceIndex} at col ${col}, time ${time.toFixed(3)} to ${effectsChainStartPoint.toString()}`);
+                        console.log(`[Track ${this.id} Sampler] Playing slice ${sliceIndex} at col ${col}, time ${time.toFixed(3)}. SliceVol: ${sliceData.volume.toFixed(2)}, StepVel: ${step.velocity.toFixed(2)}, Target: ${effectsChainStartPoint.toString()}`);
                         const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                         let playDuration = sliceData.duration / playbackRate;
                         if (sliceData.loop) playDuration = Tone.Time("8n").toSeconds();
@@ -1057,7 +1061,9 @@ export class Track {
                         if (this.slicerIsPolyphonic) {
                             const tempPlayer = new Tone.Player(this.audioBuffer);
                             const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
-                            const tempGain = new Tone.Gain(step.velocity * sliceData.volume);
+                            const tempGainVal = step.velocity * sliceData.volume;
+                            const tempGain = new Tone.Gain(tempGainVal);
+                             console.log(`[Track ${this.id} Sampler Poly] TempGain linear: ${tempGainVal.toFixed(2)}`);
                             tempPlayer.chain(tempEnv, tempGain, effectsChainStartPoint);
                             tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse; tempPlayer.loop = sliceData.loop;
                             tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
@@ -1066,13 +1072,14 @@ export class Track {
                             if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
                             Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
                         } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
-                            // rebuildEffectChain ensures slicerMonoGain is connected to effectsChainStartPoint
                             if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
                             this.slicerMonoEnvelope.triggerRelease(time);
 
                             this.slicerMonoPlayer.buffer = this.audioBuffer;
                             this.slicerMonoEnvelope.set(sliceData.envelope);
-                            this.slicerMonoGain.gain.value = step.velocity * sliceData.volume;
+                            const monoGainVal = step.velocity * sliceData.volume;
+                            this.slicerMonoGain.gain.value = monoGainVal;
+                            console.log(`[Track ${this.id} Sampler Mono] MonoGain linear: ${monoGainVal.toFixed(2)}`);
                             this.slicerMonoPlayer.playbackRate = playbackRate;
                             this.slicerMonoPlayer.reverse = sliceData.reverse;
                             this.slicerMonoPlayer.loop = sliceData.loop;
@@ -1094,11 +1101,11 @@ export class Track {
                     const step = sequenceDataForTone[padIndex]?.[col];
                     const padData = this.drumSamplerPads[padIndex];
                     if (step?.active && padData && this.drumPadPlayers[padIndex]?.loaded) {
-                        console.log(`[Track ${this.id} DrumSampler] Playing pad ${padIndex} at col ${col}, time ${time.toFixed(3)} to ${effectsChainStartPoint.toString()}`);
                         const player = this.drumPadPlayers[padIndex];
-                        // Ensure player is connected (handled by rebuildEffectChain)
-                        // player.volume.value = Tone.dbToGain(padData.volume * step.velocity); // Original - if padData.volume is linear, this is problematic
-                        player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7); // Corrected: Assuming padData.volume is linear 0-1, 0.7 for audibility
+                        const targetVolumeLinear = padData.volume * step.velocity * 0.8; // Slightly reduce overall drum vol for mix
+                        const targetVolumeDb = Tone.gainToDb(targetVolumeLinear);
+                        console.log(`[Track ${this.id} DrumSampler] Playing pad ${padIndex} at col ${col}, time ${time.toFixed(3)}. PadVolLin: ${padData.volume.toFixed(2)}, StepVel: ${step.velocity.toFixed(2)}, TargetVolLin: ${targetVolumeLinear.toFixed(2)}, TargetVolDb: ${targetVolumeDb.toFixed(2)}, TargetNode: ${effectsChainStartPoint.toString()}`);
+                        player.volume.value = targetVolumeDb;
                         player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
                     }
@@ -1113,7 +1120,7 @@ export class Track {
                             this.toneSampler.releaseAll(time);
                             notePlayedThisStepInColumn = true;
                         }
-                        console.log(`[Track ${this.id} InstrumentSampler] Playing ${pitchName} at col ${col}, time ${time.toFixed(3)} to ${effectsChainStartPoint.toString()}`);
+                        console.log(`[Track ${this.id} InstrumentSampler] Playing ${pitchName} at col ${col}, time ${time.toFixed(3)}. StepVel: ${step.velocity.toFixed(2)}, Target: ${effectsChainStartPoint.toString()}`);
                         this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "8n", time, step.velocity * Constants.defaultVelocity);
                     }
                 });
@@ -1274,7 +1281,7 @@ export class Track {
                                             } else if (this.type === 'DrumSampler' && this.drumPadPlayers[rowIndex]?.loaded) {
                                                 const player = this.drumPadPlayers[rowIndex];
                                                 const padData = this.drumSamplerPads[rowIndex];
-                                                player.volume.value = Tone.gainToDb(padData.volume * stepData.velocity * 0.7); // Corrected volume
+                                                player.volume.value = Tone.gainToDb(padData.volume * stepData.velocity * 0.7);
                                                 player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                                                 player.start(time);
                                             } else if (this.type === 'InstrumentSampler' && this.toneSampler?.loaded) {
@@ -1393,7 +1400,7 @@ export class Track {
         this.stopPlayback();
 
         if (this.appServices.closeAllTrackWindows) {
-            // Corrected line:
+            // Corrected line from previous syntax error:
             console.log(`[Track ${this.id} Dispose] Calling appServices.closeAllTrackWindows for track ID: ${this.id}`);
             this.appServices.closeAllTrackWindows(this.id);
         } else {
