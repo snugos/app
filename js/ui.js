@@ -741,6 +741,7 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
             onReadyCallback({
                 playBtnGlobal: win.element.querySelector('#playBtnGlobal'),
                 recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'),
+                stopBtnGlobal: win.element.querySelector('#stopBtnGlobal'), // MODIFICATION: Include stop button
                 tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'),
                 midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'),
                 masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'),
@@ -752,15 +753,28 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         }
         return win;
     }
-    // Changed "Mode: Pattern" to "Mode: Sequencer"
-    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300"> <div class="grid grid-cols-2 gap-2 items-center"> <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button> <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button> </div> <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div> <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div> <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div> <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Sequencer</button> </div> </div>`;
-    const options = { width: 280, height: 330, minWidth: 250, minHeight: 310, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
+
+    // MODIFICATION: Added stopBtnGlobal to the HTML and adjusted grid layout
+    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300">
+        <div class="grid grid-cols-3 gap-2 items-center">
+            <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button>
+            <button id="stopBtnGlobal" title="Stop All Audio (Panic)" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-yellow-600 dark:hover:bg-yellow-700">Stop</button>
+            <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button>
+        </div>
+        <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div>
+        <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div>
+        <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div>
+        <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div>
+        <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Sequencer</button> </div>
+    </div>`;
+    const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId }; // Adjusted height slightly
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
     const newWindow = localAppServices.createWindow(windowId, 'Global Controls', contentHTML, options);
     if (newWindow?.element && typeof onReadyCallback === 'function') {
         onReadyCallback({
             playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'),
             recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'),
+            stopBtnGlobal: newWindow.element.querySelector('#stopBtnGlobal'), // MODIFICATION: Include stop button
             tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'),
             midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'),
             masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'),
@@ -882,13 +896,10 @@ export function openSoundBrowserWindow(savedState = null) {
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-             // MODIFICATION START: Add debug log
             console.log(`[UI SoundBrowser Open DEBUG] Initial Global State Check. currentLibNameFromState: ${currentLibNameFromState}. soundTrees keys: ${soundTrees ? Object.keys(soundTrees) : 'undefined'}. soundTrees[Drums] exists: ${soundTrees ? !!soundTrees["Drums"] : 'false'}`);
-            // MODIFICATION END
-
             console.log(`[UI SoundBrowser Open] Initial check. Current lib in state: ${currentLibNameFromState}, Dropdown value: ${libSelect?.value}`);
 
-            if (currentLibNameFromState && soundTrees && soundTrees[currentLibNameFromState] && libSelect) { // Added check for soundTrees itself
+            if (currentLibNameFromState && soundTrees && soundTrees[currentLibNameFromState] && libSelect) {
                 console.log(`[UI SoundBrowser Open] State has current library '${currentLibNameFromState}' with loaded data. Setting dropdown and updating UI.`);
                 libSelect.value = currentLibNameFromState;
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
@@ -1009,7 +1020,6 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' failed." view.`);
     } else {
-        // MODIFICATION START: Add detailed logging before the critical check
         console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] About to check trees. Library: ${libraryName}`);
         const currentTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
         console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Current trees from getSoundLibraryFileTrees. Keys:`, currentTrees ? Object.keys(currentTrees) : 'undefined');
@@ -1030,7 +1040,6 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
             listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`;
             console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view. (Checked currentTrees['${libraryName}'])`);
         }
-        // MODIFICATION END
     }
     pathDisplay.textContent = `/${libraryName || ''}/`;
 }
@@ -1276,28 +1285,26 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // MODIFICATION START: Make sequencer controls draggable to represent dragging the active sequence
         if (controlsDiv) {
             controlsDiv.draggable = true;
             controlsDiv.addEventListener('dragstart', (e) => {
                 const currentActiveSeq = track.getActiveSequence();
                 if (currentActiveSeq) {
                     const dragData = {
-                        type: 'sequence-timeline-drag', // Custom type for identification
+                        type: 'sequence-timeline-drag',
                         sourceSequenceId: currentActiveSeq.id,
-                        sourceTrackId: track.id, // Good to have if needed later
+                        sourceTrackId: track.id,
                         clipName: currentActiveSeq.name
                     };
                     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                     e.dataTransfer.effectAllowed = 'copy';
                     console.log(`[UI Sequencer DragStart] Dragging sequence: ${currentActiveSeq.name}`);
                 } else {
-                    e.preventDefault(); // Prevent drag if no active sequence
+                    e.preventDefault();
                     console.warn(`[UI Sequencer DragStart] No active sequence to drag for track ${track.name}`);
                 }
             });
         }
-        // MODIFICATION END
 
 
         const sequencerContextMenuHandler = (event) => {
@@ -1625,17 +1632,14 @@ export function renderTimeline() {
             const timelineContentArea = timelineWindow.element.querySelector('.window-content'); // Scrollable area
             const pixelsPerSecond = 30; // Should match playhead positioning
 
-            // Calculate drop time relative to the timeline content area (excluding track names)
             const rect = timelineContentArea.getBoundingClientRect();
             let dropX = event.clientX - rect.left - trackNameWidth + timelineContentArea.scrollLeft;
-            dropX = Math.max(0, dropX); // Ensure not negative due to track name area
+            dropX = Math.max(0, dropX);
             const startTime = dropX / pixelsPerSecond;
 
             console.log(`[UI Timeline Drop] TrackID: ${targetTrackId}, Time: ${startTime.toFixed(2)}s`);
 
-            // Pass the event to a centralized handler (likely in eventHandlers.js via appServices)
-            // This handler will parse dataTransfer and call appropriate track methods
-            if (localAppServices.handleTimelineLaneDrop) {
+            if (localAppServices.handleTimelineLaneDrop) { // This service is defined in main.js and calls the eventHandler
                 localAppServices.handleTimelineLaneDrop(event, targetTrackId, startTime);
             } else {
                 console.warn("handleTimelineLaneDrop service not available.");
