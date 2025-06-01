@@ -14,7 +14,8 @@ import {
     handleRemoveTrack as eventHandleRemoveTrack,
     handleOpenTrackInspector as eventHandleOpenTrackInspector,
     handleOpenEffectsRack as eventHandleOpenEffectsRack,
-    handleOpenSequencer as eventHandleOpenSequencer
+    handleOpenSequencer as eventHandleOpenSequencer,
+    handleTimelineLaneDrop // MODIFICATION: Import new handler
 } from './eventHandlers.js';
 import {
     initializeStateModule,
@@ -208,6 +209,41 @@ const appServices = {
     handleOpenTrackInspector: eventHandleOpenTrackInspector,
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
     handleOpenSequencer: eventHandleOpenSequencer,
+
+    // MODIFICATION START: Add timeline drop handlers to appServices
+    handlePlaceSequenceOnTimeline: (dragData, targetTrackId, startTime) => {
+        // This is a wrapper, actual logic is in eventHandlers.js
+        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(dragData) } }, targetTrackId, startTime);
+    },
+    handleAddAudioFileToTimeline: (file, targetTrackId, startTime) => {
+        // Wrapper for OS file drops
+        handleTimelineLaneDrop({ dataTransfer: { files: [file], getData: () => null } }, targetTrackId, startTime);
+    },
+    handleAddSoundBrowserItemToTimeline: async (soundData, targetTrackId, startTime) => {
+         // Wrapper for sound browser item drops, includes fetching blob
+        handleTimelineLaneDrop({ dataTransfer: { getData: () => JSON.stringify(soundData) } }, targetTrackId, startTime);
+    },
+    getAudioBlobFromSoundBrowserItem: async (soundData) => {
+        // Helper to get blob from sound browser item
+        if (!soundData || !soundData.libraryName || !soundData.fullPath) return null;
+        const loadedZips = getLoadedZipFilesState();
+        if (loadedZips?.[soundData.libraryName] && loadedZips[soundData.libraryName] !== "loading") {
+            const zipEntry = loadedZips[soundData.libraryName].file(soundData.fullPath);
+            if (zipEntry) {
+                try {
+                    const blob = await zipEntry.async("blob");
+                    // Ensure the blob has a name and correct type for the Track class
+                    return new File([blob], soundData.fileName, { type: getMimeTypeFromFilename(soundData.fileName) });
+                } catch (e) {
+                    console.error("Error getting blob from sound browser item:", e);
+                    return null;
+                }
+            }
+        }
+        return null;
+    },
+    // MODIFICATION END
+
 
     // --- UI Update Triggers / Callbacks defined in main.js ---
     updateTaskbarTempoDisplay: (tempo) => {
