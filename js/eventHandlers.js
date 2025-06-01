@@ -529,6 +529,8 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
     let armedTrack = null; 
     let midiNote = undefined;
+    let freq = ''; // Define freq here to be accessible in catch
+
     try {
         const key = event.key.toLowerCase();
         const kbdIndicator = localAppServices.uiElementsCache?.keyboardIndicatorGlobal;
@@ -548,22 +550,32 @@ document.addEventListener('keyup', (event) => {
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
             const finalNote = midiNote + (currentOctaveShift * 12);
              if (finalNote >=0 && finalNote <= 127) { 
-                const freq = Tone.Frequency(finalNote, "midi").toNote();
+                freq = Tone.Frequency(finalNote, "midi").toNote(); // Assign to outer scope freq
                 armedTrack.instrument.triggerRelease(freq, Tone.now()); 
             }
             delete currentlyPressedComputerKeys[midiNote];
         }
     } catch (error) {
-        console.error("[EventHandlers Keyup] Error:", error, 
+        console.error("[EventHandlers Keyup] Error during specific note release:", error, 
             "Key:", event.key, 
             "Armed Track ID:", armedTrack ? armedTrack.id : 'N/A',
-            "Instrument Exists:", !!(armedTrack && armedTrack.instrument),
-            "TriggerRelease Exists:", !!(armedTrack && armedTrack.instrument && typeof armedTrack.instrument.triggerRelease === 'function'),
-            "Instrument Disposed:", armedTrack && armedTrack.instrument ? armedTrack.instrument.disposed : 'N/A',
+            "Instrument Type:", armedTrack && armedTrack.instrument ? armedTrack.instrument.name : 'N/A',
+            "Target Frequency:", freq,
             "Calculated MIDI Note:", midiNote
         );
+        
+        // AGGRESSIVE FALLBACK: Try to release all notes on this instrument
+        if (armedTrack && armedTrack.instrument && typeof armedTrack.instrument.releaseAll === 'function' && !armedTrack.instrument.disposed) {
+            try {
+                console.warn(`[EventHandlers Keyup] Forcing releaseAll on ${armedTrack.name} (instrument: ${armedTrack.instrument.name}) due to error on keyup for note ${freq || 'unknown'}.`);
+                armedTrack.instrument.releaseAll(Tone.now());
+            } catch (releaseAllError) {
+                console.error("[EventHandlers Keyup] Error during emergency releaseAll:", releaseAllError);
+            }
+        }
+
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
-            delete currentlyPressedComputerKeys[midiNote];
+            delete currentlyPressedComputerKeys[midiNote]; 
         }
     }
 });
