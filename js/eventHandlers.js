@@ -659,3 +659,79 @@ function toggleFullScreen() {
         if (localAppServices.showNotification) localAppServices.showNotification("Fullscreen toggle error.", 3000);
     }
 }
+
+
+// MODIFICATION START: New handler for timeline drops
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
+    if (!localAppServices || !localAppServices.getTrackById) {
+        console.error("localAppServices or getTrackById not available in handleTimelineLaneDrop");
+        showNotification("Internal error handling timeline drop.", 3000);
+        return;
+    }
+
+    const targetTrack = localAppServices.getTrackById(targetTrackId);
+    if (!targetTrack) {
+        showNotification("Target track not found for drop.", 3000);
+        return;
+    }
+
+    const jsonDataString = event.dataTransfer.getData('application/json');
+    const files = event.dataTransfer.files;
+
+    if (jsonDataString) {
+        try {
+            const droppedData = JSON.parse(jsonDataString);
+            if (droppedData.type === 'sequence-timeline-drag') {
+                if (targetTrack.type === 'Audio') {
+                    showNotification("Cannot place sequence clips on Audio tracks.", 3000);
+                    return;
+                }
+                if (typeof targetTrack.addSequenceClipToTimeline === 'function') {
+                    targetTrack.addSequenceClipToTimeline(droppedData.sourceSequenceId, startTime, droppedData.clipName);
+                    // Undo is handled within addSequenceClipToTimeline
+                } else {
+                    showNotification("Error: Track cannot accept sequence clips.", 3000);
+                }
+            } else if (droppedData.type === 'sound-browser-item') {
+                if (targetTrack.type !== 'Audio') {
+                    showNotification("Sound browser audio files can only be dropped onto Audio Track timeline lanes.", 3000);
+                    return;
+                }
+                if (localAppServices.getAudioBlobFromSoundBrowserItem && typeof targetTrack.addExternalAudioFileAsClip === 'function') {
+                    const audioBlob = await localAppServices.getAudioBlobFromSoundBrowserItem(droppedData);
+                    if (audioBlob) {
+                        targetTrack.addExternalAudioFileAsClip(audioBlob, startTime, droppedData.fileName);
+                    } else {
+                        showNotification(`Could not load audio for "${droppedData.fileName}".`, 3000);
+                    }
+                } else {
+                     showNotification("Error: Cannot process sound browser item for timeline.", 3000);
+                }
+            } else {
+                showNotification("Unrecognized item dropped on timeline.", 2000);
+            }
+        } catch (e) {
+            console.error("Error processing dropped JSON data on timeline:", e);
+            showNotification("Error processing dropped item.", 3000);
+        }
+    } else if (files && files.length > 0) {
+        const file = files[0];
+        if (targetTrack.type !== 'Audio') {
+            showNotification("Audio files can only be dropped onto Audio Track timeline lanes.", 3000);
+            return;
+        }
+        if (file.type.startsWith('audio/')) {
+            if (typeof targetTrack.addExternalAudioFileAsClip === 'function') {
+                targetTrack.addExternalAudioFileAsClip(file, startTime, file.name);
+                 // Undo is handled within addExternalAudioFileAsClip
+            } else {
+                showNotification("Error: Track cannot accept audio file clips.", 3000);
+            }
+        } else {
+            showNotification("Invalid file type. Please drop an audio file.", 3000);
+        }
+    } else {
+        console.log("No recognized data in drop event for timeline.");
+    }
+}
+// MODIFICATION END
