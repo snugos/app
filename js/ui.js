@@ -1492,6 +1492,11 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
      if (!localAppServices.getWindowById || !localAppServices.getCurrentLibraryName) return;
     // ... rest of the implementation with safety checks ...
 }
+// ... other functions ...
+export {
 
+    drawInstrumentWaveform,
+
+};
 
 console.log("[UI] UI Module script part 3 evaluated.");
