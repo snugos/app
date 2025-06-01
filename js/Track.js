@@ -1068,10 +1068,7 @@ export class Track {
                             if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
                             Tone.Transport.scheduleOnce(() => { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); if(tempGain && !tempGain.disposed) tempGain.dispose(); }, time + playDuration + (sliceData.envelope.release || 0.1) + 0.2);
                         } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
-                            if (this.slicerMonoGain.numberOfOutputs === 0 || !this.slicerMonoGain.connectedTo(effectsChainStartPoint)) { // connectedTo is not a public API, but this check might have been intended to ensure connection
-                                try { this.slicerMonoGain.disconnect(); } catch(e) {/*ignore*/}
-                                this.slicerMonoGain.connect(effectsChainStartPoint);
-                            }
+                            // No need for connectedTo check here, rebuildEffectChain handles connections
                             if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
                             this.slicerMonoEnvelope.triggerRelease(time);
 
@@ -1101,12 +1098,8 @@ export class Track {
                     if (step?.active && padData && this.drumPadPlayers[padIndex]?.loaded) {
                         console.log(`[Track ${this.id} DrumSampler] Playing pad ${padIndex} at col ${col}, time ${time.toFixed(3)}`);
                         const player = this.drumPadPlayers[padIndex];
-                        // Connection should be handled by rebuildEffectChain.
-                        // Avoid re-connecting here unless absolutely necessary and ensure it's done correctly.
-                        // if (player.numberOfOutputs === 0) { // A simple check if it has any outputs; not a connection check
-                        //    console.warn(`[Track ${this.id} DrumSampler] Player for pad ${padIndex} has no outputs, might not be connected.`);
-                        //    player.connect(effectsChainStartPoint); // Attempt connection if it seems disconnected
-                        // }
+                        // Connections are handled by rebuildEffectChain.
+                        // Ensure player is valid and connected through the chain.
                         player.volume.value = Tone.dbToGain(padData.volume * step.velocity);
                         player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                         player.start(time);
@@ -1415,3 +1408,18 @@ export class Track {
         console.log(`[Track ${this.id} Dispose] Finished disposal for track: ${this.name}`);
     }
 }
+```
+
+**After updating `track.js` to this version:**
+
+1.  **Crucial: Clear your browser's cache VERY thoroughly, or use a private/incognito window for testing.** This helps ensure the old version of `track.js` isn't being served from cache.
+2.  Retry the Drum Sampler test:
+    * Add a Drum Sampler track.
+    * Load samples onto its pads.
+    * Open the sequencer for it.
+    * Click some cells in the grid to activate notes.
+    * Press Play.
+
+The detailed logs in the `Tone.Sequence` callback should now execute without the `player.connectedTo` error. If audio still doesn't play for the Drum Sampler, the new logs should give us clues as to whether the `player.start(time)` is being called and if the `effectsChainStartPoint` is valid.
+
+The Synth track playback seems to be working based on your logs (`Track.js:1044 [Track 0 Synth] Playing E2 at col 4, time 31.812`), which is a good sign that the fundamental audio path and sequencer timing are okay. The Drum Sampler issue was likely isolated to that incorrect connection che
