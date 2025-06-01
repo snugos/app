@@ -28,6 +28,10 @@ let activeMIDIInputGlobal = null;
 // Sound Browser State
 let loadedZipFilesGlobal = {};
 let soundLibraryFileTreesGlobal = {};
+// MODIFICATION START: Add console logs for initialization
+console.log('[State Init] Initializing. loadedZipFilesGlobal created:', loadedZipFilesGlobal);
+console.log('[State Init] Initializing. soundLibraryFileTreesGlobal created:', soundLibraryFileTreesGlobal);
+// MODIFICATION END
 let currentLibraryNameGlobal = null;
 let currentSoundFileTreeGlobal = null;
 let currentSoundBrowserPathGlobal = [];
@@ -82,8 +86,21 @@ export function getMasterGainValueState() { return masterGainValueState; }
 export function getMidiAccessState() { return midiAccessGlobal; }
 export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
 
-export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
-export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
+// MODIFICATION START: Add console logs to getters
+export function getLoadedZipFilesState() {
+    console.log('[State GET] getLoadedZipFilesState. Keys:', loadedZipFilesGlobal ? Object.keys(loadedZipFilesGlobal) : 'null/undefined');
+    return loadedZipFilesGlobal;
+}
+export function getSoundLibraryFileTreesState() {
+    console.log('[State GET] getSoundLibraryFileTreesState. Keys:', soundLibraryFileTreesGlobal ? Object.keys(soundLibraryFileTreesGlobal) : 'null/undefined');
+    if (soundLibraryFileTreesGlobal && soundLibraryFileTreesGlobal["Drums"] && Object.keys(soundLibraryFileTreesGlobal["Drums"]).length > 0) {
+        console.log('[State GET] "Drums" tree exists and is NOT empty.');
+    } else if (soundLibraryFileTreesGlobal && soundLibraryFileTreesGlobal["Drums"]) {
+        console.warn('[State GET] "Drums" tree exists but IS EMPTY!');
+    }
+    return soundLibraryFileTreesGlobal;
+}
+// MODIFICATION END
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
 export function getCurrentSoundFileTreeState() { return currentSoundFileTreeGlobal; }
 export function getCurrentSoundBrowserPathState() { return currentSoundBrowserPathGlobal; }
@@ -114,8 +131,39 @@ export function setMasterGainValueState(value) { masterGainValueState = Number.i
 export function setMidiAccessState(access) { midiAccessGlobal = access; }
 export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
 
-export function setLoadedZipFilesState(files) { loadedZipFilesGlobal = typeof files === 'object' && files !== null ? files : {}; }
-export function setSoundLibraryFileTreesState(trees) { soundLibraryFileTreesGlobal = typeof trees === 'object' && trees !== null ? trees : {}; }
+// MODIFICATION START: Add console logs to setters
+export function setLoadedZipFilesState(files) {
+    console.log('[State SET] setLoadedZipFilesState. Incoming keys:', files ? Object.keys(files) : 'null/undefined');
+    loadedZipFilesGlobal = typeof files === 'object' && files !== null ? files : {};
+    console.log('[State SET] setLoadedZipFilesState. loadedZipFilesGlobal NOW has keys:', Object.keys(loadedZipFilesGlobal));
+    if (loadedZipFilesGlobal && loadedZipFilesGlobal["Drums"]) {
+         console.log('[State SET] "Drums" JSZip instance IS in loadedZipFilesGlobal.');
+    } else {
+         console.log('[State SET] "Drums" JSZip instance IS NOT in loadedZipFilesGlobal after set.');
+    }
+}
+export function setSoundLibraryFileTreesState(trees) {
+    console.log('[State SET] setSoundLibraryFileTreesState. Incoming keys:', trees ? Object.keys(trees) : 'null/undefined');
+    if (trees && trees["Drums"]) {
+        console.log('[State SET] setSoundLibraryFileTreesState: Incoming "Drums" tree has keys count:', Object.keys(trees["Drums"]).length);
+    } else if (trees) {
+         console.log('[State SET] setSoundLibraryFileTreesState: Incoming trees object does not have "Drums" key.');
+    }
+
+    soundLibraryFileTreesGlobal = typeof trees === 'object' && trees !== null ? trees : {};
+    console.log('[State SET] setSoundLibraryFileTreesState. soundLibraryFileTreesGlobal NOW has keys:', Object.keys(soundLibraryFileTreesGlobal));
+
+    if (soundLibraryFileTreesGlobal && soundLibraryFileTreesGlobal["Drums"]) {
+        console.log('[State SET] "Drums" tree IS in soundLibraryFileTreesGlobal. Num children:', Object.keys(soundLibraryFileTreesGlobal["Drums"]).length);
+        if (Object.keys(soundLibraryFileTreesGlobal["Drums"]).length === 0) {
+            console.warn('[State SET] "Drums" tree in global state IS EMPTY!');
+        }
+    } else {
+         console.log('[State SET] "Drums" tree IS NOT in soundLibraryFileTreesGlobal after set.');
+    }
+}
+// MODIFICATION END
+
 export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
 export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
 export function setCurrentSoundBrowserPathState(path) { currentSoundBrowserPathGlobal = Array.isArray(path) ? path : []; }
