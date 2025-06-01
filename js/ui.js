@@ -1492,11 +1492,115 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
      if (!localAppServices.getWindowById || !localAppServices.getCurrentLibraryName) return;
     // ... rest of the implementation with safety checks ...
 }
-// ... other functions ...
-export {
+// In ui.js
 
-    drawInstrumentWaveform,
+// Ensure this function is present and exported:
+export function drawInstrumentWaveform(track) {
+    // Check if track and necessary properties are valid
+    if (!track || !track.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings?.audioBuffer?.loaded) {
+        if (track && track.instrumentWaveformCanvasCtx) {
+            const canvas = track.instrumentWaveformCanvasCtx.canvas;
+            const ctx = track.instrumentWaveformCanvasCtx;
+            if (canvas && ctx) {
+                try {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    // Determine fillStyle based on current theme if possible, or use a safe default
+                    const isDarkTheme = canvas.classList?.contains('dark') || document.body.classList.contains('dark-theme-active'); // Example check
+                    ctx.fillStyle = isDarkTheme ? '#334155' : '#e0e0e0'; // Example dark/light theme colors
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = isDarkTheme ? '#94a3b8' : '#a0a0a0';
+                    ctx.textAlign = 'center';
+                    ctx.font = '12px Inter, sans-serif';
+                    ctx.fillText('No audio loaded or buffer not processed', canvas.width / 2, canvas.height / 2);
+                } catch (e) {
+                    console.error("[UI drawInstrumentWaveform] Error drawing 'No audio' message:", e);
+                }
+            }
+        }
+        return;
+    }
 
-};
+    const canvas = track.instrumentWaveformCanvasCtx.canvas;
+    const ctx = track.instrumentWaveformCanvasCtx;
+
+    if (!canvas || !ctx) {
+        console.error("[UI drawInstrumentWaveform] Canvas or context is missing for track:", track.id);
+        return;
+    }
+
+    try {
+        const buffer = track.instrumentSamplerSettings.audioBuffer.get(); // Assuming .get() returns the AudioBuffer
+        if (!buffer) {
+             console.warn(`[UI drawInstrumentWaveform] AudioBuffer not available in instrumentSamplerSettings for track ${track.id}`);
+             // Optionally draw an empty/error state here as well
+             return;
+        }
+        const data = buffer.getChannelData(0); // Use first channel for waveform
+
+        const step = Math.ceil(data.length / canvas.width);
+        const amp = canvas.height / 2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous drawing
+        // Background color should match CSS for .waveform-canvas or its content area
+        const isDark = canvas.classList?.contains('dark') || document.body.classList.contains('dark-theme-active'); // Example check
+        ctx.fillStyle = isDark ? '#101010' : '#f0f0f0'; // Use theme-appropriate background
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.lineWidth = 1.5; // Slightly thicker for better visibility
+        ctx.strokeStyle = isDark ? '#34d399' : '#10b981'; // Theme-appropriate waveform color (emerald/greenish)
+
+        ctx.beginPath();
+        ctx.moveTo(0, amp);
+
+        for (let i = 0; i < canvas.width; i++) {
+            let min = 1.0;
+            let max = -1.0;
+            for (let j = 0; j < step; j++) {
+                const datum = data[(i * step) + j];
+                if (datum === undefined) continue; // Skip if data is undefined for some reason
+                if (datum < min) min = datum;
+                if (datum > max) max = datum;
+            }
+            // Draw a line from min to max for each vertical slice if step > 1, or just the point if step = 1
+            if (step > 1) {
+                 ctx.lineTo(i, (1 + min) * amp);
+                 ctx.lineTo(i, (1 + max) * amp); // Creates the filled waveform appearance
+            } else {
+                 ctx.lineTo(i, (1 + data[i * step]) * amp);
+            }
+        }
+        ctx.stroke();
+
+        // Draw loop points if applicable
+        if (track.instrumentSamplerSettings.loop && track.instrumentSamplerSettings.audioBuffer) {
+            const bufferDuration = track.instrumentSamplerSettings.audioBuffer.duration;
+            if (bufferDuration > 0) {
+                const loopStartX = (track.instrumentSamplerSettings.loopStart / bufferDuration) * canvas.width;
+                const loopEndX = (track.instrumentSamplerSettings.loopEnd / bufferDuration) * canvas.width;
+
+                ctx.fillStyle = isDark ? 'rgba(52, 211, 153, 0.2)' : 'rgba(16, 185, 129, 0.2)'; // Semi-transparent loop region
+                ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, canvas.height);
+
+                ctx.strokeStyle = isDark ? 'rgba(52, 211, 153, 0.6)' : 'rgba(16, 185, 129, 0.6)'; // Loop line color
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, canvas.height);
+                ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, canvas.height);
+                ctx.stroke();
+            }
+        }
+    } catch (error) {
+        console.error(`[UI drawInstrumentWaveform] Error drawing waveform for track ${track.id}:`, error);
+        try {
+            // Attempt to draw an error message on the canvas
+            ctx.fillStyle = isDark ? '#4B0000' : '#FFCCCC'; // Error background
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = isDark ? '#FF8888' : '#CC0000'; // Error text
+            ctx.textAlign = 'center';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.fillText('Error drawing waveform', canvas.width / 2, canvas.height / 2);
+        } catch (e) { /* ignore fallback drawing error */ }
+    }
+}
 
 console.log("[UI] UI Module script part 3 evaluated.");
