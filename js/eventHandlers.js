@@ -1,6 +1,6 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
-import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js'; // showNotification might be called directly if appServices not ready
+import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js';
 import {
     getTracksState as getTracks,
     getTrackByIdState as getTrackById,
@@ -27,7 +27,7 @@ let transportKeepAliveBufferSource = null;
 let silentKeepAliveBuffer = null;
 
 export function initializeEventHandlersModule(appServicesFromMain) {
-    localAppServices = appServicesFromMain || {}; // Ensure localAppServices is an object
+    localAppServices = appServicesFromMain || {}; 
     if (!localAppServices.setPlaybackMode && setPlaybackModeState) {
         localAppServices.setPlaybackMode = setPlaybackModeState;
     }
@@ -152,7 +152,6 @@ export function attachGlobalControlEvents(elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
-    // MODIFICATION: Added stopBtnGlobal
     const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
 
     if (playBtnGlobal) {
@@ -222,7 +221,6 @@ export function attachGlobalControlEvents(elements) {
         });
     } else { console.warn("[EventHandlers] playBtnGlobal not found in provided elements."); }
 
-    // MODIFICATION START: Add listener for Stop Button
     if (stopBtnGlobal) {
         stopBtnGlobal.addEventListener('click', () => {
             console.log("[EventHandlers StopAll] Stop All button clicked.");
@@ -230,7 +228,6 @@ export function attachGlobalControlEvents(elements) {
                 localAppServices.panicStopAllAudio();
             } else {
                 console.error("[EventHandlers StopAll] panicStopAllAudio service not available.");
-                // Fallback minimal stop if service is missing
                 if (typeof Tone !== 'undefined') {
                     Tone.Transport.stop();
                     Tone.Transport.cancel(0);
@@ -243,7 +240,6 @@ export function attachGlobalControlEvents(elements) {
     } else {
         console.warn("[EventHandlers] stopBtnGlobal not found in provided elements.");
     }
-    // MODIFICATION END
 
     if (recordBtnGlobal) {
         recordBtnGlobal.addEventListener('click', async () => {
@@ -532,27 +528,50 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
+    // MODIFICATION START: Added more robust checks for keyup error
+    let armedTrack = null; // Define here to be available in catch
+    let midiNote = undefined;
     try {
         const key = event.key.toLowerCase();
         const kbdIndicator = localAppServices.uiElementsCache?.keyboardIndicatorGlobal;
         if (kbdIndicator) kbdIndicator.classList.remove('active');
 
         const armedTrackId = getArmedTrackId();
-        const armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null;
-        if (!armedTrack || !armedTrack.instrument || armedTrack.instrument.disposed) return;
+        armedTrack = armedTrackId !== null ? getTrackById(armedTrackId) : null; // Assign to outer scope variable
 
-        let midiNote = keyToMIDIMap[event.key];
-        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key];
+        // No need to proceed if no track is armed or if it's not an instrument track
+        if (!armedTrack || !armedTrack.instrument || typeof armedTrack.instrument.triggerRelease !== 'function' || armedTrack.instrument.disposed) {
+            // Clear any potentially stuck keys if the armed track changed or became invalid
+            Object.keys(currentlyPressedComputerKeys).forEach(noteKey => delete currentlyPressedComputerKeys[noteKey]);
+            return;
+        }
+
+        midiNote = keyToMIDIMap[event.key]; // Check with original case first
+        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; // Fallback to lowercase
 
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
             const finalNote = midiNote + (currentOctaveShift * 12);
-             if (finalNote >=0 && finalNote <= 127 && typeof armedTrack.instrument.triggerRelease === 'function') {
+             if (finalNote >=0 && finalNote <= 127) { 
                 const freq = Tone.Frequency(finalNote, "midi").toNote();
                 armedTrack.instrument.triggerRelease(freq, Tone.now() + 0.05);
-                delete currentlyPressedComputerKeys[midiNote];
             }
+            delete currentlyPressedComputerKeys[midiNote];
         }
-    } catch (error) { console.error("[EventHandlers Keyup] Error:", error); }
+    } catch (error) {
+        console.error("[EventHandlers Keyup] Error:", error, 
+            "Key:", event.key, 
+            "Armed Track ID:", armedTrack ? armedTrack.id : 'N/A',
+            "Instrument Exists:", !!(armedTrack && armedTrack.instrument),
+            "TriggerRelease Exists:", !!(armedTrack && armedTrack.instrument && typeof armedTrack.instrument.triggerRelease === 'function'),
+            "Instrument Disposed:", armedTrack && armedTrack.instrument ? armedTrack.instrument.disposed : 'N/A',
+            "Calculated MIDI Note:", midiNote
+        );
+        // Clear the specific key if it was pressed, to prevent it from getting stuck "on"
+        if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
+            delete currentlyPressedComputerKeys[midiNote];
+        }
+    }
+    // MODIFICATION END
 });
 
 
@@ -676,12 +695,11 @@ function toggleFullScreen() {
 }
 
 export async function handleTimelineLaneDrop(event, targetTrackId, startTime, appServicesPassed) {
-    // Use appServicesPassed if available (from ui.js), otherwise fallback to module-scoped localAppServices
     const services = appServicesPassed || localAppServices;
 
     if (!services || !services.getTrackById || !services.showNotification || !services.captureStateForUndo || !services.renderTimeline) {
         console.error("Required appServices not available in handleTimelineLaneDrop");
-        utilShowNotification("Internal error handling timeline drop.", 3000); // Use direct util if services missing
+        utilShowNotification("Internal error handling timeline drop.", 3000); 
         return;
     }
 
@@ -704,7 +722,6 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime, ap
                 }
                 if (typeof targetTrack.addSequenceClipToTimeline === 'function') {
                     targetTrack.addSequenceClipToTimeline(droppedData.sourceSequenceId, startTime, droppedData.clipName);
-                    // Undo is handled within addSequenceClipToTimeline through its appServices
                 } else {
                     services.showNotification("Error: Track cannot accept sequence clips.", 3000);
                 }
