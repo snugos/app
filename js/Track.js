@@ -171,6 +171,7 @@ export class Track {
         this.clipPlayers = new Map(); 
     }
 
+    // --- Sequence Management ---
     getActiveSequence() {
         if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences || this.sequences.length === 0) return null;
         return this.sequences.find(s => s.id === this.activeSequenceId);
@@ -186,16 +187,20 @@ export class Track {
         return activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
     }
 
+    // --- Synth Specific ---
     getDefaultSynthParams() {
+        // MODIFICATION: Change default oscillator type to 'sine'
         return {
             portamento: 0.01,
-            oscillator: { type: 'sawtooth' },
+            oscillator: { type: 'sine' }, // Was 'sawtooth'
             envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 1 },
             filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1000 }, 
             filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }
         };
+        // END MODIFICATION
     }
 
+    // --- Audio Node Initialization and Chaining ---
     async initializeAudioNodes() {
         console.log(`[Track ${this.id} initializeAudioNodes] Initializing audio nodes for "${this.name}".`);
         try {
@@ -1081,6 +1086,7 @@ export class Track {
         console.log(`[Track ${this.id}] Set sequence "${activeSeq.name}" length to ${activeSeq.length} steps, ${numRows} rows.`);
     }
 
+
     recreateToneSequence(forceRestart = false, startTimeOffset = 0) {
         if (this.type === 'Audio') return;
         const currentPlaybackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
@@ -1371,10 +1377,6 @@ export class Track {
         this.stopPlayback(); 
 
         if (playbackMode === 'timeline') {
-            // This was already implicitly handled by stopPlayback nullifying patternPlayerSequence
-            // if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
-            //     try {this.patternPlayerSequence.stop();} catch(e){console.warn("Error stopping patternPlayerSequence", e)}
-            // }
             for (const clip of this.timelineClips) {
                 if (!clip || typeof clip.startTime !== 'number' || typeof clip.duration !== 'number') {
                     console.warn(`[Track ${this.id}] Skipping invalid clip:`, clip);
@@ -1536,7 +1538,7 @@ export class Track {
                 }
             }
         } else { // Sequencer Mode
-            if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) { // MODIFIED Check
+            if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) {
                 console.log(`[Track ${this.id} schedulePlayback] Sequencer mode: patternPlayerSequence is invalid, calling recreateToneSequence.`);
                 this.recreateToneSequence(true, transportStartTime);
             }
@@ -1546,7 +1548,7 @@ export class Track {
                 }
                 console.log(`[Track ${this.id}] Sequencer mode: Starting patternPlayerSequence at transport offset: ${transportStartTime.toFixed(2)}s. Loop: ${this.patternPlayerSequence.loop}`);
                 try {
-                    this.patternPlayerSequence.start(transportStartTime);
+                    this.patternPlayerSequence.start(transportStartTime); 
                 } catch(e) {
                     console.error(`[Track ${this.id}] Error starting patternPlayerSequence:`, e.message, e); 
                     try { if(!this.patternPlayerSequence.disposed) this.patternPlayerSequence.dispose(); } catch (disposeErr) {}
@@ -1557,7 +1559,6 @@ export class Track {
             }
         }
     }
-
 
     stopPlayback() {
         console.log(`[Track ${this.id} "${this.name}"] stopPlayback called. Timeline clip players/parts: ${this.clipPlayers.size}`);
@@ -1583,9 +1584,8 @@ export class Track {
             }
             catch (e) { console.warn(`[Track ${this.id}] Error stopping/disposing patternPlayerSequence:`, e.message); }
         }
-        this.patternPlayerSequence = null; // MODIFICATION: Explicitly nullify it here
+        this.patternPlayerSequence = null; 
     }
-
 
     async updateAudioClipPosition(clipId, newStartTime) {
         const clip = this.timelineClips.find(c => c.id === clipId);
