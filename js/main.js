@@ -207,7 +207,7 @@ const appServices = {
     handleOpenTrackInspector: eventHandleOpenTrackInspector,
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
     handleOpenSequencer: eventHandleOpenSequencer,
-    handleTimelineLaneDrop: handleTimelineLaneDrop, // Add this from eventHandlers
+    handleTimelineLaneDrop: handleTimelineLaneDrop,
 
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
@@ -238,18 +238,14 @@ const appServices = {
     panicStopAllAudio: () => {
         console.log("[AppServices] Panic Stop All Audio requested.");
         
-        // 1. Stop transport first to prevent new events from being scheduled by it
-        // and to stop any sequences/parts tied to it.
         if (typeof Tone !== 'undefined') {
             Tone.Transport.stop();
-            Tone.Transport.cancel(0); // Clear all scheduled transport events
+            Tone.Transport.cancel(0); 
         }
 
         const tracks = getTracksState();
         if (tracks) {
             tracks.forEach(track => {
-                // Call track's own stopPlayback method first
-                // This should handle its timeline players/parts and its patternPlayerSequence (which it disposes and nullifies)
                 if (track && typeof track.stopPlayback === 'function') {
                     try {
                         track.stopPlayback(); 
@@ -258,7 +254,6 @@ const appServices = {
                     }
                 }
 
-                // For synth-like instruments, explicitly tell them to release all voices
                 if (track && track.instrument && !track.instrument.disposed) {
                     if (typeof track.instrument.releaseAll === 'function') {
                         try {
@@ -267,7 +262,7 @@ const appServices = {
                             console.warn(`Error during instrument.releaseAll() for track ${track.id}:`, e);
                         }
                     }
-                    // More aggressive: quickly ramp down the track's main gain for synth types
+                    // Aggressive gain ramp-down for synth types
                     if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && 
                         track.gainNode && track.gainNode.gain && 
                         typeof track.gainNode.gain.cancelScheduledValues === 'function' &&
@@ -276,14 +271,13 @@ const appServices = {
                         console.log(`[AppServices Panic] Ramping down gain for synth track ${track.id}`);
                         try {
                             track.gainNode.gain.cancelScheduledValues(Tone.now());
-                            track.gainNode.gain.linearRampToValueAtTime(0, Tone.now() + 0.02); // Very quick ramp to 0
+                            track.gainNode.gain.linearRampToValueAtTime(0, Tone.now() + 0.02); 
                         } catch (e) {
                             console.warn(`Error ramping down gain for track ${track.id}:`, e);
                         }
                     }
                 }
                 
-                // Specific logic for other sampler types if needed beyond their stopPlayback
                 if (track && track.type === 'Sampler' && !track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
                     if (track.slicerMonoPlayer.state === 'started' && !track.slicerMonoPlayer.disposed) {
                         try { track.slicerMonoPlayer.stop(Tone.now()); } catch(e) { console.warn("Error stopping mono slicer player during panic", e); }
@@ -302,16 +296,14 @@ const appServices = {
             });
         }
 
-        // Update Global Play Button UI
         if (uiElementsCache.playBtnGlobal) {
             uiElementsCache.playBtnGlobal.textContent = 'Play';
         }
-        // If recording, stop the recording state
         if (isTrackRecordingState()) {
             const recTrackId = getRecordingTrackIdState();
             const recTrack = recTrackId !== null ? getTrackByIdState(recTrackId) : null;
             if (appServices.stopAudioRecording && recTrackId !== null && recTrack?.type === 'Audio') {
-                 appServices.stopAudioRecording(); // This is async, but for panic, we might not await
+                 appServices.stopAudioRecording();
             }
             setIsRecordingState(false);
             setRecordingTrackIdState(null);
@@ -321,9 +313,8 @@ const appServices = {
         console.log("All audio and transport stopped via panic.");
         showSafeNotification("All audio stopped.", 1500);
     },
-    // MODIFICATION END
+    // END MODIFICATION
 
-    // UI Update Triggers / Callbacks defined in main.js
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
             uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
@@ -374,7 +365,6 @@ const appServices = {
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     uiElementsCache: uiElementsCache, 
 
-    // Master Effects Chain
     addMasterEffect: async (effectType) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
@@ -494,7 +484,6 @@ const appServices = {
     }
 };
 
-// --- UI Update Router ---
 function handleTrackUIUpdate(trackId, reason, detail) {
     if (!getTrackByIdState) { console.warn("[Main UI Update] getTrackByIdState service not available."); return; }
     const track = getTrackByIdState(trackId);
