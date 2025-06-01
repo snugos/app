@@ -23,6 +23,13 @@ let recorder = null;
 
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
+    // MODIFICATION START: Debug to confirm function reference
+    if (typeof getLoadedZipFilesState !== 'undefined') { // Need to import it for this check to be valid
+        console.log('[Audio Init DEBUG] localAppServices.getLoadedZipFiles === getLoadedZipFilesState (from state.js import)?', localAppServices.getLoadedZipFiles === getLoadedZipFilesState);
+    } else {
+        // console.log('[Audio Init DEBUG] getLoadedZipFilesState not imported, cannot compare reference directly here.');
+    }
+    // MODIFICATION END
 }
 
 export function getMasterEffectsBusInputNode() {
@@ -812,32 +819,39 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 }
 
 export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
-    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
-    const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
-
-    // MODIFICATION START: Add detailed entry log
-    console.log(`[Audio fetchSoundLibrary ENTRY] Library: ${libraryName}, URL: ${zipUrl}, Autofetch: ${isAutofetch}.`);
-    if (loadedZips) {
-        console.log(`[Audio fetchSoundLibrary ENTRY] Existing loadedZips keys:`, Object.keys(loadedZips), `Status for ${libraryName}:`, loadedZips[libraryName]);
-    } else {
-        console.warn(`[Audio fetchSoundLibrary ENTRY] loadedZips is undefined or null.`);
-    }
-    if (soundTrees) {
-        console.log(`[Audio fetchSoundLibrary ENTRY] Existing soundTrees keys:`, Object.keys(soundTrees));
-    } else {
-        console.warn(`[Audio fetchSoundLibrary ENTRY] soundTrees is undefined or null.`);
-    }
+    // MODIFICATION START: Log the retrieved loadedZips object
+    const initialLoadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
+    console.log(`[Audio fetchSoundLibrary DEBUG] Initial loadedZips object for ${libraryName} (Autofetch: ${isAutofetch}):`,
+        Object.keys(initialLoadedZips),
+        `Value for ${libraryName}:`, initialLoadedZips[libraryName],
+        `Is JSZip: ${initialLoadedZips[libraryName] instanceof JSZip}`
+    );
+    const loadedZips = initialLoadedZips; // Use this for the check
     // MODIFICATION END
 
+    const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-    if (loadedZips[libraryName] && loadedZips[libraryName] !== "loading") {
+    console.log(`[Audio fetchSoundLibrary ENTRY] Library: ${libraryName}, URL: ${zipUrl}, Autofetch: ${isAutofetch}.`);
+    if (loadedZips && typeof loadedZips === 'object') { // Ensure loadedZips is an object before keying
+        console.log(`[Audio fetchSoundLibrary ENTRY] Existing loadedZips keys:`, Object.keys(loadedZips), `Status for ${libraryName}:`, loadedZips[libraryName]);
+    } else {
+        console.warn(`[Audio fetchSoundLibrary ENTRY] loadedZips is undefined, null, or not an object.`);
+    }
+    if (soundTrees && typeof soundTrees === 'object') {
+        console.log(`[Audio fetchSoundLibrary ENTRY] Existing soundTrees keys:`, Object.keys(soundTrees));
+    } else {
+        console.warn(`[Audio fetchSoundLibrary ENTRY] soundTrees is undefined, null, or not an object.`);
+    }
+
+
+    if (loadedZips && loadedZips[libraryName] && loadedZips[libraryName] !== "loading") {
         console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} already loaded or processed. Status:`, loadedZips[libraryName] instanceof JSZip ? 'JSZip Instance' : loadedZips[libraryName]);
         if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
         }
         return; // Already loaded
     }
-    if (loadedZips[libraryName] === "loading") {
+    if (loadedZips && loadedZips[libraryName] === "loading") {
         console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} is currently being loaded by another call. Skipping this call.`);
         return; // Already being loaded
     }
@@ -849,7 +863,8 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 
     try {
         console.log(`[Audio fetchSoundLibrary SET_LOADING_STATE] Setting ${libraryName} to "loading" state.`);
-        const newLoadedZips = { ...loadedZips, [libraryName]: "loading" };
+        const newLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {}; // Ensure we start with a fresh copy if getLoadedZipFiles is available
+        newLoadedZips[libraryName] = "loading";
         if (localAppServices.setLoadedZipFilesState) localAppServices.setLoadedZipFilesState(newLoadedZips);
 
 
@@ -871,12 +886,11 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         console.log(`[Audio fetchSoundLibrary JSZIP_LOAD_ASYNC_START] Starting jszip.loadAsync for ${libraryName}`);
         const loadedZipInstance = await jszip.loadAsync(zipData);
         console.log(`[Audio fetchSoundLibrary JSZIP_LOAD_ASYNC_SUCCESS] JSZip successfully loaded ${libraryName}. Num files in zip: ${Object.keys(loadedZipInstance.files).length}`);
-        
+
         // Get the latest state again before updating
         const latestLoadedZipsAfterLoad = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
         latestLoadedZipsAfterLoad[libraryName] = loadedZipInstance; // Store the JSZip instance
-        
-        // MODIFICATION START: Debug log before setting loadedZips state
+
         console.log(`[Audio Fetch DEBUG] About to set state for ${libraryName} (loadedZips).`);
         console.log(`[Audio Fetch DEBUG] localAppServices.setLoadedZipFilesState exists:`, !!localAppServices.setLoadedZipFilesState);
         if (localAppServices.setLoadedZipFilesState) {
@@ -885,7 +899,6 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         } else {
             console.error(`[Audio Fetch ERROR] localAppServices.setLoadedZipFilesState is UNDEFINED for ${libraryName} (loadedZips)`);
         }
-        // MODIFICATION END
 
 
         const fileTree = {};
@@ -915,11 +928,10 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
             }
         });
         console.log(`[Audio fetchSoundLibrary PARSE_ZIP_COMPLETE] Parsed ${audioFileCount} audio files for ${libraryName}. FileTree keys:`, Object.keys(fileTree));
-        
+
         const latestSoundTrees = localAppServices.getSoundLibraryFileTrees ? { ...(localAppServices.getSoundLibraryFileTrees()) } : {};
         latestSoundTrees[libraryName] = fileTree;
 
-        // MODIFICATION START: Debug log before setting soundTrees state
         console.log(`[Audio Fetch DEBUG] About to set state for ${libraryName} (soundTrees).`);
         console.log(`[Audio Fetch DEBUG] localAppServices.setSoundLibraryFileTreesState exists:`, !!localAppServices.setSoundLibraryFileTreesState);
         if (localAppServices.setSoundLibraryFileTreesState) {
@@ -931,9 +943,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         } else {
              console.error(`[Audio Fetch ERROR] localAppServices.setSoundLibraryFileTreesState is UNDEFINED for ${libraryName} (soundTrees)`);
         }
-        // MODIFICATION END
-        
-        // MODIFICATION START: Confirm state immediately after setting
+
         const checkZipsAfterSet = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
         console.log(`[Audio Fetch DEBUG] State for loadedZips after set for ${libraryName}. Keys:`, Object.keys(checkZipsAfterSet), `Has ${libraryName}:`, !!checkZipsAfterSet[libraryName]);
         const checkTreesAfterSet = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
@@ -941,7 +951,6 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         if (checkTreesAfterSet[libraryName]) {
              console.log(`[Audio Fetch DEBUG] Verified tree for ${libraryName} in state has children count:`, Object.keys(checkTreesAfterSet[libraryName]).length);
         }
-        // MODIFICATION END
 
 
         console.log(`[Audio fetchSoundLibrary SUCCESS] Successfully loaded and processed library: ${libraryName}.`);
@@ -951,11 +960,11 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 
     } catch (error) {
         console.error(`[Audio fetchSoundLibrary CATCH_ERROR] Error fetching/processing library ${libraryName} from ${zipUrl}:`, error);
-        
+
         const errorLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
         delete errorLoadedZips[libraryName];
         if (localAppServices.setLoadedZipFilesState) localAppServices.setLoadedZipFilesState(errorLoadedZips);
-        
+
         const errorSoundTrees = localAppServices.getSoundLibraryFileTrees ? { ...(localAppServices.getSoundLibraryFileTrees()) } : {};
         delete errorSoundTrees[libraryName];
         if (localAppServices.setSoundLibraryFileTreesState) localAppServices.setSoundLibraryFileTreesState(errorSoundTrees);
