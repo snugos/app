@@ -1,11 +1,11 @@
 // js/ui_modules/inspectorEffectsUI.js
-import { SnugWindow } from '../SnugWindow.js'; // Adjusted path if SnugWindow is outside ui_modules
+import { SnugWindow } from '../SnugWindow.js';
 import { showNotification, createDropZoneHTML, setupGenericDropZoneListeners, showCustomModal, createContextMenu, showConfirmationDialog } from '../utils.js';
 import * as Constants from '../constants.js';
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
-} from '../eventHandlers.js'; // May need to adjust path if eventHandlers is outside ui_modules
+} from '../eventHandlers.js';
 
 let localAppServices = {};
 
@@ -13,7 +13,7 @@ export function initializeInspectorEffectsUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
     if (!localAppServices.effectsRegistryAccess) {
         console.warn("[InspectorEffectsUI Module] effectsRegistryAccess not found in appServices. Effect-related UI might be limited.");
-        localAppServices.effectsRegistryAccess = { // Basic fallback
+        localAppServices.effectsRegistryAccess = { 
             AVAILABLE_EFFECTS: {},
             getEffectParamDefinitions: () => [],
             getEffectDefaultParams: () => ({}),
@@ -252,54 +252,64 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
     </div>`;
 }
 
-// --- Specific Inspector Control Initializers ---
-function buildSynthEngineControls(track, container, engineType) {
-    const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
-    definitions.forEach(def => {
-        const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
-        if (!placeholder) return;
-        let initialValue;
-        const pathParts = def.path.split('.');
-        let currentValObj = track.synthParams;
-        for (const key of pathParts) {
-            if (currentValObj && typeof currentValObj === 'object' && key in currentValObj) {
-                currentValObj = currentValObj[key];
-            } else { currentValObj = undefined; break; }
-        }
-        initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
-        if (def.path.endsWith('.value') && track.instrument?.get) {
-            const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
-            const signalValue = track.instrument.get(signalPath)?.value;
-            if (signalValue !== undefined) initialValue = signalValue;
-        }
+// --- Shared Dropzone Setup for Samplers using Interact.js ---
+function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padIndex = null) {
+    if (!window.interact || !dropZoneElement) return;
 
-        if (def.type === 'knob') {
-            const knob = createKnob({ label: def.label, min: def.min, max: def.max, step: def.step, initialValue, decimals: def.decimals, displaySuffix: def.displaySuffix, trackRef: track, onValueChange: (val) => track.setSynthParam(def.path, val) });
-            placeholder.innerHTML = ''; placeholder.appendChild(knob.element); track.inspectorControls[def.idPrefix] = knob;
-        } else if (def.type === 'select') {
-            const selectEl = document.createElement('select');
-            selectEl.id = `${def.idPrefix}-${track.id}`;
-            selectEl.className = 'synth-param-select w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600';
-            def.options.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = typeof opt === 'object' ? opt.value : opt; option.textContent = typeof opt === 'object' ? opt.text : opt;
-                selectEl.appendChild(option);
-            });
-            selectEl.value = initialValue;
-            selectEl.addEventListener('change', (e) => {
-                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Change ${def.label} for ${track.name} to ${e.target.value}`);
-                track.setSynthParam(def.path, e.target.value);
-            });
-            const labelEl = document.createElement('label');
-            labelEl.htmlFor = selectEl.id; labelEl.textContent = def.label + ':';
-            labelEl.className = 'text-xs block mb-0.5 dark:text-slate-300';
-            const wrapperDiv = document.createElement('div');
-            wrapperDiv.className = 'flex flex-col items-start'; wrapperDiv.appendChild(labelEl); wrapperDiv.appendChild(selectEl);
-            placeholder.innerHTML = ''; placeholder.appendChild(wrapperDiv); track.inspectorControls[def.idPrefix] = selectEl;
-        }
-    });
+    interact(dropZoneElement).unset(); // Clear previous instance
+    interact(dropZoneElement)
+        .dropzone({
+            accept: '.dragging-sound-item', // Only accept items dragged from sound browser
+            ondropactivate: function (event) {
+                event.target.classList.add('drop-active');
+            },
+            ondragenter: function (event) {
+                event.target.classList.add('drop-target'); // Visual feedback for drop target
+                if (event.relatedTarget) event.relatedTarget.classList.add('can-drop');
+            },
+            ondragleave: function (event) {
+                event.target.classList.remove('drop-target');
+                if (event.relatedTarget) event.relatedTarget.classList.remove('can-drop');
+            },
+            ondrop: function (event) {
+                const droppedElement = event.relatedTarget;
+                const dropzone = event.target;
+                console.log(`[SamplerDropzone] Item dropped on ${targetType} (TrackID: ${trackId}, Pad: ${padIndex})`);
+
+                const jsonDataString = droppedElement.dataset.jsonData;
+                if (jsonDataString) {
+                    try {
+                        const droppedItemData = JSON.parse(jsonDataString);
+                        if (droppedItemData.type === 'sound-browser-item') {
+                            if (localAppServices.loadSoundFromBrowserToTarget) {
+                                localAppServices.loadSoundFromBrowserToTarget(droppedItemData, trackId, targetType, padIndex);
+                            } else {
+                                console.error("loadSoundFromBrowserToTarget service not available for sampler drop.");
+                                showNotification("Error processing dropped sound.", 3000);
+                            }
+                        } else {
+                            console.warn("Dropped item is not a sound-browser-item type:", droppedItemData.type);
+                            showNotification("Can only drop sound files here.", 3000);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing jsonData from dropped sampler item:", e);
+                        showNotification("Error processing dropped item data.", 3000);
+                    }
+                } else {
+                    console.warn("No jsonData found on dropped sampler item.");
+                }
+                dropzone.classList.remove('drop-target');
+                if (droppedElement) droppedElement.classList.remove('can-drop');
+            },
+            ondropdeactivate: function (event) {
+                event.target.classList.remove('drop-active');
+                event.target.classList.remove('drop-target');
+            }
+        });
 }
 
+
+// --- Specific Inspector Control Initializers ---
 function initializeSynthSpecificControls(track, winEl) {
     const engineType = track.synthEngineType || 'MonoSynth';
     const container = winEl.querySelector(`#synthEngineControls-${track.id}`);
@@ -315,8 +325,15 @@ function initializeSamplerSpecificControls(track, winEl) {
         dzContainerEl.innerHTML = createDropZoneHTML(track.id, `fileInput-${track.id}`, 'Sampler', null, existingAudioData);
         const dzEl = dzContainerEl.querySelector('.drop-zone');
         const fileInputEl = dzContainerEl.querySelector(`#fileInput-${track.id}`);
-        if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'Sampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
-        if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'Sampler'); };
+        
+        // Native file input via "Browse" button
+        if (fileInputEl && localAppServices.loadSampleFile) {
+             fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'Sampler'); };
+        }
+        // Setup Interact.js dropzone for sound browser items
+        if(dzEl) {
+            setupSamplerInteractDropzone(dzEl, track.id, 'Sampler');
+        }
     }
     renderSamplePads(track);
     const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
@@ -383,8 +400,25 @@ function initializeSamplerSpecificControls(track, winEl) {
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
-    renderDrumSamplerPads(track);
-    updateDrumPadControlsUI(track);
+    const selectedPadIndex = track.selectedDrumPadForEdit;
+    const dzContainer = winEl.querySelector(`#drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`);
+
+    if (dzContainer) {
+        const padData = track.drumSamplerPads[selectedPadIndex];
+        const existingAudioData = {
+            originalFileName: padData.originalFileName,
+            status: padData.status || (padData.originalFileName ? 'missing' : 'empty')
+        };
+        // The createDropZoneHTML sets up the file input and browse button
+        // The file input's onchange is setup by updateDrumPadControlsUI -> which calls this init.
+        // We need to make dzEl (the '.drop-zone' div) an Interact.js dropzone here.
+        const dzEl = dzContainer.querySelector('.drop-zone'); // Get the actual .drop-zone element
+        if (dzEl) {
+            setupSamplerInteractDropzone(dzEl, track.id, 'DrumSampler', selectedPadIndex);
+        }
+    }
+    renderDrumSamplerPads(track); // Renders the grid of pads
+    updateDrumPadControlsUI(track); // Sets up controls for the selected pad, including file input listener
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
@@ -394,8 +428,13 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         dzContainerEl.innerHTML = createDropZoneHTML(track.id, `instrumentFileInput-${track.id}`, 'InstrumentSampler', null, existingAudioData);
         const dzEl = dzContainerEl.querySelector('.drop-zone');
         const fileInputEl = dzContainerEl.querySelector(`#instrumentFileInput-${track.id}`);
-        if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
-        if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler'); };
+
+        if (fileInputEl && localAppServices.loadSampleFile) {
+             fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler'); };
+        }
+        if (dzEl) {
+            setupSamplerInteractDropzone(dzEl, track.id, 'InstrumentSampler');
+        }
     }
 
     const canvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
@@ -472,6 +511,8 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     }
 }
 
+
+// --- Track Inspector Window (Entry Point) ---
 function buildTrackInspectorContentDOM(track) {
     if (!track) return '<div>Error: Track data not found.</div>';
     let specificControlsHTML = '';
@@ -885,11 +926,19 @@ export function updateDrumPadControlsUI(track) {
             originalFileName: padData.originalFileName,
             status: padData.status || (padData.originalFileName ? 'missing' : 'empty')
         };
+        // Re-create the HTML, including the file input
         dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
-        const dzEl = dzContainer.querySelector('.drop-zone');
         const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
-        if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
-        if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
+        const dzEl = dzContainer.querySelector('.drop-zone'); // Get the actual .drop-zone element
+
+        // Setup native file input via "Browse" button
+        if (fileInputEl && localAppServices.loadDrumSamplerPadFile) {
+             fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
+        }
+        // Setup Interact.js dropzone for sound browser items
+        if(dzEl) {
+            setupSamplerInteractDropzone(dzEl, track.id, 'DrumSampler', selectedPadIndex);
+        }
     }
 
     const createAndPlaceKnob = (placeholderId, options) => {
