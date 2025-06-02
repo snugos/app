@@ -545,7 +545,11 @@ export function gatherProjectDataInternal() {
                         originalFileName: p.originalFileName, dbKey: p.dbKey,
                         volume: p.volume, pitchShift: p.pitchShift,
                         envelope: p.envelope ? JSON.parse(JSON.stringify(p.envelope)) : {},
-                        status: p.dbKey ? 'persisted' : (p.originalFileName ? 'volatile' : 'empty')
+                        status: p.dbKey ? 'persisted' : (p.originalFileName ? 'volatile' : 'empty'),
+                        // Save new auto-stretch properties
+                        autoStretchEnabled: p.autoStretchEnabled,
+                        stretchOriginalBPM: p.stretchOriginalBPM,
+                        stretchBeats: p.stretchBeats,
                     }));
                     trackData.selectedDrumPadForEdit = track.selectedDrumPadForEdit;
                 } else if (track.type === 'InstrumentSampler') {
