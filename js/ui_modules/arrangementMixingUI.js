@@ -149,21 +149,20 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         if (controlsDiv) {
             controlsDiv.classList.remove('sequencer-controls'); 
             controlsDiv.style.cursor = 'default'; 
-            if (window.interact) { // Only try to unset if interact is loaded
+            if (window.interact) { 
                 const interactableInstance = interact(controlsDiv);
-                if (interactableInstance && typeof interactableInstance.unset === 'function') {
+                if (interactableInstance && typeof interactableInstance.unset === 'function') { // Check if it's an interactable before unsetting
                     try {
                         interactableInstance.unset();
-                         console.log('[UI openTrackSequencerWindow] Successfully unset Interactable for controlsDiv.');
+                        console.log('[UI openTrackSequencerWindow] Successfully unset Interactable for controlsDiv.');
                     } catch(e) {
-                        console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv (was it set?):", e.message);
+                        console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv:", e.message);
                     }
                 }
             }
             console.log('[UI openTrackSequencerWindow] Draggable functionality for sequencer header is now disabled.');
         }
         // --- END OF REMOVAL ---
-
 
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
@@ -385,41 +384,56 @@ export function renderTimeline() {
         lane.className = 'timeline-track-lane'; 
         lane.dataset.trackId = track.id;
 
+        // Container for track name and sequence buttons (sticky part)
         const nameArea = document.createElement('div');
         nameArea.className = 'timeline-track-lane-name-area'; 
         nameArea.style.minWidth = trackNameWidth + 'px';
         nameArea.style.maxWidth = trackNameWidth + 'px';
+        // Basic styling for the name area - you'll likely want to refine this in your CSS
         nameArea.style.position = 'sticky';
         nameArea.style.left = '0';
         nameArea.style.zIndex = '2'; 
-        nameArea.style.backgroundColor = 'var(--timeline-track-name-bg, #2f2f2f)'; 
-        nameArea.style.borderRight = '1px solid var(--timeline-track-name-border, #3a3a3a)';
-        nameArea.style.padding = '0 8px';
+        nameArea.style.backgroundColor = 'var(--timeline-track-name-bg, #282c34)'; // Example dark background
+        nameArea.style.borderRight = '1px solid var(--timeline-border-color, #444)';
+        nameArea.style.padding = '2px 4px'; // Reduced padding
         nameArea.style.display = 'flex';
         nameArea.style.flexDirection = 'column'; 
         nameArea.style.alignItems = 'flex-start'; 
-        nameArea.style.justifyContent = 'center'; 
+        nameArea.style.justifyContent = 'center';
+        nameArea.style.overflow = 'hidden'; // Prevent content from spilling if too long
+
 
         const nameEl = document.createElement('div');
         nameEl.className = 'timeline-track-name-text'; 
         nameEl.textContent = track.name;
+        nameEl.title = track.name; // Add title for full name on hover
+        // Basic styling for name text - refine in CSS
+        nameEl.style.whiteSpace = 'nowrap';
+        nameEl.style.overflow = 'hidden';
+        nameEl.style.textOverflow = 'ellipsis';
+        nameEl.style.fontSize = '0.75rem'; // Smaller font
+        nameEl.style.fontWeight = '500';
+        nameEl.style.width = '100%'; 
+        nameEl.style.marginBottom = '2px'; // Space before sequence buttons
         nameArea.appendChild(nameEl);
         
         if (track.type !== 'Audio' && track.sequences && track.sequences.length > 0) {
             const sequenceButtonsContainer = document.createElement('div');
-            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-0.5 mt-1 items-center'; 
+            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-0.5'; // Tailwind classes for layout
             
             track.sequences.forEach(sequence => {
                 const seqButton = document.createElement('div');
-                seqButton.className = 'sequence-timeline-button dragging-sequence-button text-xs px-1 py-0.5 border rounded bg-sky-700 hover:bg-sky-600 text-white cursor-grab';
-                seqButton.textContent = "Seq"; 
-                seqButton.title = `Drag Sequence: ${sequence.name}`;
-                seqButton.style.touchAction = 'none';
+                // Added 'dragging-sequence-button' class for the dropzone accept
+                seqButton.className = 'sequence-timeline-button dragging-sequence-button text-xs px-1 py-0.5 border rounded bg-sky-600 hover:bg-sky-500 text-white cursor-grab';
+                seqButton.textContent = "Seq"; // Changed text
+                seqButton.title = `Drag to add Sequence: ${sequence.name}`;
+                seqButton.style.touchAction = 'none'; // For Interact.js
 
                 if (window.interact) {
                     interact(seqButton).unset();
                     interact(seqButton).draggable({
                         inertia: true,
+                        autoScroll: true, // Good for dragging near edges of scrollable areas
                         listeners: {
                             start: (event) => {
                                 const dragData = {
@@ -432,6 +446,7 @@ export function renderTimeline() {
                                 if (targetElement) {
                                     targetElement.dataset.dragType = 'sequence-timeline-drag';
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
+                                    // 'dragging-sequence-button' class is already on the element
                                     targetElement.style.position = 'relative'; 
                                     targetElement.style.zIndex = '10001'; 
                                 }
@@ -458,6 +473,8 @@ export function renderTimeline() {
                                     targetElement.style.zIndex = '';
                                 }
                                 console.log(`[Timeline UI] DragEnd sequence button: ${sequence.name}`);
+                                // Re-render timeline to reset button positions if it wasn't dropped on a valid target
+                                // and to update if a clip was created.
                                 if (localAppServices.renderTimeline) {
                                    setTimeout(() => localAppServices.renderTimeline(), 0);
                                 }
@@ -480,22 +497,40 @@ export function renderTimeline() {
                 .dropzone({
                     accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', 
                     overlap: 0.01, 
-                    // REMOVED CHECKER FUNCTION, relying on accept string and ondragenter
+                    checker: function (
+                        dragEvent,        
+                        event,            
+                        dropped,          
+                        dropzone,         
+                        dropElement,      
+                        draggable,        // This is the interact.js Interactable for the draggable element
+                        draggableElement  // This is the DOM element that is being dragged
+                    ) {
+                        const isValidDraggable = draggableElement && typeof draggableElement.classList !== 'undefined';
+                        let isMatch = false;
+                        if (isValidDraggable && draggable && typeof draggable.matchesSelector === 'function') {
+                           isMatch = draggable.matchesSelector(dropzone.options.accept);
+                        } else if (isValidDraggable && typeof draggableElement.matches === 'function') { 
+                           // Fallback if `draggable` (Interactable) isn't what we need, try on DOM element directly
+                           isMatch = draggableElement.matches(dropzone.options.accept);
+                        }
+                        
+                        console.log('[TimelineLane ClipsContainer DropChecker] Draggable Element:', draggableElement);
+                        console.log('[TimelineLane ClipsContainer DropChecker] Draggable Classes:', isValidDraggable ? draggableElement.className : 'N/A');
+                        console.log('[TimelineLane ClipsContainer DropChecker] Dropzone "accept" option:', dropzone.options.accept);
+                        console.log('[TimelineLane ClipsContainer DropChecker] Accepted by selector check?', isMatch);
+                        
+                        return isMatch; 
+                    },
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
                     },
                     ondragenter: function (event) {
                         const draggableElement = event.relatedTarget;
-                        const dropzoneElement = event.target; // This is clipsContainer
+                        const dropzoneElement = event.target; 
                         console.log('[TimelineLane ClipsContainer] ondragenter - Draggable:', draggableElement, 'Classes:', draggableElement ? draggableElement.className : 'N/A');
-                         // Check if the draggable is accepted by the 'accept' option
-                        const isAccepted = draggableElement && interact.matchSelector(draggableElement, (interact(dropzoneElement).dropzone() as any).options.accept);
-                        console.log('[TimelineLane ClipsContainer] Accepted by selector?', isAccepted);
-
-                        if (isAccepted) {
-                            dropzoneElement.classList.add('drop-target-clips-area'); 
-                            if (draggableElement) draggableElement.classList.add('can-drop');  
-                        }
+                        dropzoneElement.classList.add('drop-target-clips-area'); 
+                        if (draggableElement) draggableElement.classList.add('can-drop');  
                     },
                     ondragleave: function (event) {
                         const draggableElement = event.relatedTarget;
@@ -506,7 +541,12 @@ export function renderTimeline() {
                     ondrop: function (event) {
                         console.log('[TimelineLane ClipsContainer] ONDROP triggered on clipsContainer!', event);
                         const droppedClipElement = event.relatedTarget;
-                        const targetTrackId = parseInt(lane.dataset.trackId, 10); // Get trackId from parent lane
+                        const targetLaneElement = droppedClipElement.closest('.timeline-track-lane'); // Find the parent lane of the dropped element
+                        if (!targetLaneElement) {
+                            console.error("Could not find parent lane for dropped item on clipsContainer.");
+                            return;
+                        }
+                        const targetTrackId = parseInt(targetLaneElement.dataset.trackId, 10);
                         
                         const timelineWindowLocal = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null; 
                         if (!timelineWindowLocal || !timelineWindowLocal.element) { console.error("Timeline window not found during drop"); return; }
@@ -514,7 +554,6 @@ export function renderTimeline() {
                         if (!timelineContentArea) { console.error("Timeline content area not found during drop"); return; }
                         
                         const pixelsPerSecond = 30; 
-                        // const trackNameWidthLocal = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim()) || 120; // Not needed for dropX in clipsContainer
                         const clipsContainerRect = event.target.getBoundingClientRect(); // event.target is clipsContainer
 
                         let dropXClient = 0;
@@ -531,7 +570,7 @@ export function renderTimeline() {
                             return; 
                         }
                         
-                        let dropX = dropXClient - clipsContainerRect.left + event.target.scrollLeft; // scrollLeft of clipsContainer if it's scrollable
+                        let dropX = dropXClient - clipsContainerRect.left + event.target.scrollLeft; 
                         dropX = Math.max(0, dropX); 
                         const startTime = dropX / pixelsPerSecond;
 
@@ -544,7 +583,7 @@ export function renderTimeline() {
 
                         if (clipId && !isNaN(originalTrackId) && dragType !== 'sound-browser-item' && dragType !== 'sequence-timeline-drag') { 
                             const originalTrack = localAppServices.getTrackById(originalTrackId);
-                            if (!originalTrack || !originalTrack.timelineClips) { /* ... error handling ... */ return; }
+                            if (!originalTrack || !originalTrack.timelineClips) { /* ... */ return; }
                             const clipData = originalTrack.timelineClips.find(c => c.id === clipId);
 
                             if (clipData) {
@@ -560,7 +599,7 @@ export function renderTimeline() {
                                  if (localAppServices.handleTimelineLaneDrop) { 
                                     localAppServices.handleTimelineLaneDrop(droppedItemData, targetTrackId, startTime);
                                 }
-                            } catch (e) { /* ... */ }
+                            } catch (e) { console.error("Error parsing jsonData from dropped element:", e); /* ... */ }
                         }
                         event.target.classList.remove('drop-target-clips-area');
                         if(droppedClipElement) droppedClipElement.classList.remove('can-drop');
@@ -571,39 +610,22 @@ export function renderTimeline() {
                 });
         }
 
-
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
             track.timelineClips.forEach(clip => {
                 // ... (clip rendering logic remains the same) ...
                 const clipEl = document.createElement('div');
                 clipEl.dataset.clipId = clip.id; 
                 clipEl.dataset.originalTrackId = track.id; 
-
                 let clipText = clip.name || `Clip ${clip.id.slice(-4)}`;
                 let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
-
-
-                if (clip.type === 'audio') {
-                    clipEl.className = 'audio-clip';
-                } else if (clip.type === 'sequence') {
-                    clipEl.className = 'audio-clip sequence-clip';
-                    const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
-                    if (sourceSeq) {
-                        clipText = sourceSeq.name;
-                        clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
-                    }
-                } else {
-                    clipEl.className = 'audio-clip unknown-clip';
-                }
-
-                clipEl.textContent = clipText;
-                clipEl.title = clipTitle;
-
+                if (clip.type === 'audio') { clipEl.className = 'audio-clip'; } 
+                else if (clip.type === 'sequence') { /* ... */ } 
+                else { clipEl.className = 'audio-clip unknown-clip'; }
+                clipEl.textContent = clipText; clipEl.title = clipTitle;
                 const pixelsPerSecond = 30;
                 clipEl.style.left = `${(clip.startTime || 0) * pixelsPerSecond}px`;
                 clipEl.style.width = `${Math.max(5, (clip.duration || 0) * pixelsPerSecond)}px`;
                 clipEl.style.touchAction = 'none'; 
-
                 if (window.interact) {
                     interact(clipEl).unset(); 
                     interact(clipEl)
@@ -619,58 +641,40 @@ export function renderTimeline() {
 
 export function updatePlayheadPosition() {
     const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
-
-    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
-        return;
-    }
-
+    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) { return; }
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
     const timelineContentArea = timelineWindow.element.querySelector('.window-content');
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler');
-
-
     if (!playhead || typeof Tone === 'undefined' || !timelineContentArea || !localAppServices.getPlaybackMode) return;
-
     const currentPlaybackMode = localAppServices.getPlaybackMode();
-
     if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') {
         playhead.style.display = 'none';
-        if (timelineRuler) {
-             timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
-        }
+        if (timelineRuler) { timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`; }
         return;
     }
-
     playhead.style.display = 'block';
-
     const pixelsPerSecond = 30;
     const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
     const trackNameWidth = parseFloat(trackNameWidthStyle) || 120;
-
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
         playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
-
         const scrollableContent = timelineContentArea;
         const containerWidth = scrollableContent.clientWidth - trackNameWidth;
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
-
         if (playheadVisualPositionInScrollable > containerWidth * 0.8) {
             scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20;
         } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) {
             scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
         }
         if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
-
     } else if (Tone.Transport.state === 'stopped') {
          playhead.style.left = `${trackNameWidth}px`;
     }
-
     if (timelineRuler && timelineContentArea) {
         timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
     }
 }
-
 
 export function openTimelineWindow(savedState = null) {
     const windowId = 'timeline';
@@ -681,7 +685,6 @@ export function openTimelineWindow(savedState = null) {
         renderTimeline();
         return win;
     }
-
     const contentHTML = `
         <div id="timeline-container">
             <div id="timeline-header">
@@ -693,7 +696,6 @@ export function openTimelineWindow(savedState = null) {
             <div id="timeline-playhead"></div>
         </div>
     `;
-
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
     const timelineOptions = {
@@ -706,7 +708,6 @@ export function openTimelineWindow(savedState = null) {
         initialContentKey: windowId,
         onCloseCallback: () => {}
     };
-
      if (savedState) {
         Object.assign(timelineOptions, {
             x: parseInt(savedState.left, 10),
@@ -717,9 +718,7 @@ export function openTimelineWindow(savedState = null) {
             isMinimized: savedState.isMinimized
         });
     }
-
     const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
-
     if (timelineWindow?.element) {
         const contentArea = timelineWindow.element.querySelector('.window-content');
         if (contentArea) {
