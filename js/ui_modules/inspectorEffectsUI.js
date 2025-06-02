@@ -253,14 +253,12 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
 }
 
 // --- Specific Inspector Control Initializers ---
-// This function was causing the ReferenceError. It is now defined.
+// THIS FUNCTION'S SELECTOR IS NOW CORRECTED
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     definitions.forEach(def => {
-        // --- CORRECTED SELECTOR ---
-        const selector = `#${def.idPrefix}-${track.id}-placeholder`;
+        const selector = `#${def.idPrefix}-${track.id}-placeholder`; // Corrected: Pure string for selector
         const placeholder = container.querySelector(selector);
-        // --- END CORRECTION ---
         if (!placeholder) {
             console.warn(`[InspectorEffectsUI buildSynthEngineControls] Placeholder not found for: ${selector} in container:`, container);
             return;
@@ -798,7 +796,6 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     if (rackWindow?.element) {
         renderEffectsList(track, 'track', rackWindow.element.querySelector(`#effectsList-${track.id}`), rackWindow.element.querySelector(`#effectControlsContainer-${track.id}`));
         rackWindow.element.querySelector(`#addEffectBtn-${track.id}`)?.addEventListener('click', () => {
-            // Ensure showAddEffectModal is called via appServices if it's in browserCoreUI.js
             if (localAppServices.showAddEffectModal) localAppServices.showAddEffectModal(track, 'track');
             else console.warn("showAddEffectModal service not available from inspectorEffectsUI (when trying to call for track effects).");
         });
@@ -818,7 +815,6 @@ export function openMasterEffectsRackWindow(savedState = null) {
     if (rackWindow?.element) {
         renderEffectsList(null, 'master', rackWindow.element.querySelector(`#effectsList-master`), rackWindow.element.querySelector(`#effectControlsContainer-master`));
         rackWindow.element.querySelector(`#addEffectBtn-master`)?.addEventListener('click', () => {
-            // Ensure showAddEffectModal is called via appServices if it's in browserCoreUI.js
             if (localAppServices.showAddEffectModal) localAppServices.showAddEffectModal(null, 'master');
             else console.warn("showAddEffectModal service not available from inspectorEffectsUI (when trying to call for master effects).");
         });
@@ -981,6 +977,7 @@ export function updateDrumPadControlsUI(track) {
         dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
         const dzEl = dzContainer.querySelector('.drop-zone');
         const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
+        
         if (fileInputEl && localAppServices.loadDrumSamplerPadFile) {
             fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
         }
