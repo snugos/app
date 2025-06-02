@@ -57,7 +57,7 @@ export class Track {
             status: initialData?.samplerAudioData?.status || (initialData?.samplerAudioData?.dbKey || initialData?.samplerAudioData?.audioBufferDataURL ? 'missing' : 'empty')
         };
         this.audioBuffer = null;
-        this.slices = initialData?.slices && initialData.slices.length === this.numSlices ?
+        this.slices = initialData?.slices && initialData.slices.length > 0 && initialData.slices.length === this.numSlices ? // Check length consistency
             JSON.parse(JSON.stringify(initialData.slices)) :
             Array(this.numSlices).fill(null).map(() => ({
                 offset: 0, duration: 0, userDefined: false, volume: 0.7, pitchShift: 0,
@@ -66,7 +66,7 @@ export class Track {
             }));
         this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
         if (this.selectedSliceForEdit >= this.numSlices && this.numSlices > 0) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
-        else if (this.numSlices === 0) this.selectedSliceForEdit = 0;
+        else if (this.numSlices === 0 && this.type === 'Sampler') this.selectedSliceForEdit = 0;
 
 
         this.waveformZoom = initialData?.waveformZoom || 1;
@@ -111,7 +111,7 @@ export class Track {
         });
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         if (this.selectedDrumPadForEdit >= this.numPads && this.numPads > 0) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
-        else if (this.numPads === 0) this.selectedDrumPadForEdit = 0;
+        else if (this.numPads === 0 && this.type === 'DrumSampler') this.selectedDrumPadForEdit = 0;
 
         this.drumPadPlayers = Array(this.numPads).fill(null);
 
@@ -149,11 +149,12 @@ export class Track {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
             } else {
+                // Initial sequence creation is now deferred to state.js after track registration
                 console.log(`[Track ${this.id} Constructor] Initial sequence creation deferred for new track (type: ${this.type}).`);
             }
-            delete this.sequenceData;
-            delete this.sequenceLength;
-        } else {
+            delete this.sequenceData; // Old property
+            delete this.sequenceLength; // Old property
+        } else { // Audio Track specific
             delete this.sequenceData;
             delete this.sequenceLength;
             delete this.sequences;
@@ -1049,7 +1050,7 @@ export class Track {
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
         else if (this.type === 'Sampler') numRowsForGrid = this.numSlices;
         else if (this.type === 'DrumSampler') {
-            numRowsForGrid = this.numPads; // Use the instance's numPads
+            numRowsForGrid = this.numPads;
             console.log(`[Track createNewSequence] DrumSampler: Using this.numPads = ${this.numPads} for rows.`);
         }
         else numRowsForGrid = 1;
