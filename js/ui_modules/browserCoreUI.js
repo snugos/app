@@ -328,7 +328,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                 renderSoundBrowserDirectory(newPath, nodeData.children);
             });
         } else { // File
-            listItem.style.touchAction = 'none'; // Good practice for interact.js draggable elements
+            listItem.style.touchAction = 'none'; 
             listItem.addEventListener('click', () => {
                 listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-blue-600').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
                 listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
@@ -340,12 +340,12 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                 if(previewBtn) previewBtn.disabled = false;
             });
 
-            // Replace native HTML5 drag-and-drop with Interact.js
+            // MODIFICATION: Replace native HTML5 drag-and-drop with Interact.js
             if (window.interact) {
-                interact(listItem).unset(); // Unset previous instance if any
+                interact(listItem).unset(); 
                 interact(listItem)
                     .draggable({
-                        inertia: true,
+                        inertia: true, 
                         listeners: {
                             start: (event) => {
                                 const dragData = {
@@ -354,35 +354,38 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                                     fullPath: nodeData.fullPath,
                                     libraryName: currentLibName
                                 };
-                                if (event.interaction.element) {
-                                    event.interaction.element.dataset.dragType = 'sound-browser-item';
-                                    event.interaction.element.dataset.jsonData = JSON.stringify(dragData);
-                                    event.interaction.element.classList.add('dragging-sound-item'); // Optional: for styling
+                                const targetElement = event.interaction.element || event.target; 
+                                if (targetElement) {
+                                    targetElement.dataset.dragType = 'sound-browser-item';
+                                    targetElement.dataset.jsonData = JSON.stringify(dragData);
+                                    targetElement.classList.add('dragging-sound-item'); 
                                 }
                                 console.log(`[UI SoundBrowser DragStart via Interact.js] Dragging: ${name}`);
                             },
                             move: (event) => {
-                                // For a simple drag from a list, usually no complex visual move logic is needed here
-                                // Interact.js handles the interaction, and the dropzone will use the data.
-                                // If a "ghost" element is desired, it would be managed here.
+                                // For a simple drag from a list, we might not move the original element.
+                                // Interact.js handles creating a representation for the drag if not customized.
+                                // If a visual "ghost" element is desired to follow the cursor,
+                                // it would be created and positioned here using event.dx and event.dy.
                             },
                             end: (event) => {
-                                if (event.interaction.element) {
-                                     event.interaction.element.classList.remove('dragging-sound-item'); // Optional: cleanup styling
+                                const targetElement = event.interaction.element || event.target;
+                                if (targetElement) {
+                                     targetElement.classList.remove('dragging-sound-item'); 
                                 }
-                                // dataset items remain for the dropzone to read if it hasn't already
                             }
                         }
                     })
-                    .styleCursor(false); // Let CSS handle cursor or use default
+                    .styleCursor(false); 
                 listItem.style.cursor = 'grab';
             } else {
-                // Fallback to original HTML5 drag if Interact.js isn't loaded (should not happen)
+                // Fallback to original HTML5 drag if Interact.js isn't loaded (should ideally not happen)
                 listItem.draggable = true;
                 listItem.addEventListener('dragstart', (e) => {
                     const dragData = {type: 'sound-browser-item', fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName};
                     e.dataTransfer.setData("application/json", JSON.stringify(dragData));
                     e.dataTransfer.effectAllowed = "copy";
+                    // Still set dataset for consistency, though native D&D uses dataTransfer primarily
                     listItem.dataset.dragType = 'sound-browser-item';
                     listItem.dataset.jsonData = JSON.stringify(dragData);
                 });
@@ -404,7 +407,7 @@ export function showAddEffectModal(owner, ownerType) {
         modal.contentDiv.querySelectorAll('li[data-effect-type]').forEach(item => {
             item.addEventListener('click', () => {
                 const effectType = item.dataset.effectType;
-                if (ownerType === 'track' && owner && typeof owner.addEffect === 'function') { // Added check
+                if (ownerType === 'track' && owner && typeof owner.addEffect === 'function') { 
                     owner.addEffect(effectType);
                 } else if (ownerType === 'master' && localAppServices.addMasterEffect) {
                     localAppServices.addMasterEffect(effectType);
