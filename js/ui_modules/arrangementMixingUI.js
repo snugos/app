@@ -147,12 +147,12 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // --- THIS IS THE IMPORTANT LINE ---
+        // --- ENSURE THIS CLASS IS ADDED ---
         if (controlsDiv) {
             controlsDiv.classList.add('sequencer-controls');
             console.log('[UI openTrackSequencerWindow] Added "sequencer-controls" class to:', controlsDiv, 'Current classes:', controlsDiv.className); 
         }
-        // --- END OF IMPORTANT LINE ---
+        // --- END OF MODIFICATION ---
 
         if (controlsDiv && window.interact) { 
             interact(controlsDiv).unset(); 
@@ -409,6 +409,25 @@ export function renderTimeline() {
                 .dropzone({
                     accept: '.audio-clip, .sequencer-controls, .dragging-sound-item', 
                     overlap: 0.25, 
+                    checker: function (
+                        dragEvent,        
+                        event,            
+                        dropped,          
+                        dropzone,         
+                        dropElement,      
+                        draggable,        
+                        draggableElement  
+                    ) {
+                        const acceptedBySelector = interact.matchSelector(draggableElement, dropzone.options.accept);
+                        console.log('[TimelineLane DropChecker] Draggable Element:', draggableElement);
+                        console.log('[TimelineLane DropChecker] Draggable Classes:', draggableElement ? draggableElement.className : 'N/A');
+                        console.log('[TimelineLane DropChecker] Draggable dragType data:', draggableElement ? draggableElement.dataset.dragType : 'N/A');
+                        console.log('[TimelineLane DropChecker] Does it have .sequencer-controls?', draggableElement ? draggableElement.classList.contains('sequencer-controls') : false);
+                        console.log('[TimelineLane DropChecker] Dropzone options.accept:', dropzone.options.accept);
+                        console.log('[TimelineLane DropChecker] Accepted by selector implicitly?', acceptedBySelector);
+                        
+                        return interact.dynamicDrop() || acceptedBySelector;
+                    },
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
                     },
