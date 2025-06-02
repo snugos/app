@@ -38,6 +38,7 @@ export class Track {
         }
 
         // Sampler (Slicer) specific
+        this.numSlices = initialData?.numSlices || Constants.DEFAULT_SLICES; // Use new constant
         this.samplerAudioData = {
             fileName: initialData?.samplerAudioData?.fileName || null,
             audioBufferDataURL: initialData?.samplerAudioData?.audioBufferDataURL || null,
@@ -45,9 +46,10 @@ export class Track {
             status: initialData?.samplerAudioData?.status || (initialData?.samplerAudioData?.dbKey || initialData?.samplerAudioData?.audioBufferDataURL ? 'missing' : 'empty')
         };
         this.audioBuffer = null;
-        this.slices = initialData?.slices && initialData.slices.length > 0 ?
+        // Initialize slices based on this.numSlices
+        this.slices = initialData?.slices && initialData.slices.length === this.numSlices ?
             JSON.parse(JSON.stringify(initialData.slices)) :
-            Array(Constants.numSlices).fill(null).map(() => ({
+            Array(this.numSlices).fill(null).map(() => ({ // Use this.numSlices
                 offset: 0, duration: 0, userDefined: false, volume: 0.7, pitchShift: 0,
                 loop: false, reverse: false,
                 envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
@@ -78,7 +80,8 @@ export class Track {
         this.toneSampler = null;
 
         // Drum Sampler specific
-        this.drumSamplerPads = Array(Constants.numDrumSamplerPads).fill(null).map((_, padIdx) => {
+        this.numPads = initialData?.numPads || Constants.DEFAULT_DRUM_PADS; // Use new constant
+        this.drumSamplerPads = Array(this.numPads).fill(null).map((_, padIdx) => { // Use this.numPads
             const initialPadData = initialData?.drumSamplerPads?.[padIdx];
             return {
                 sampleUrl: initialPadData?.sampleUrl || null,
@@ -90,14 +93,13 @@ export class Track {
                 pitchShift: initialPadData?.pitchShift ?? 0,
                 envelope: initialPadData?.envelope ? JSON.parse(JSON.stringify(initialPadData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
                 status: initialPadData?.status || (initialPadData?.dbKey || initialPadData?.audioBufferDataURL ? 'missing' : 'empty'),
-                // New properties for auto-stretch
                 autoStretchEnabled: initialPadData?.autoStretchEnabled || false,
                 stretchOriginalBPM: initialPadData?.stretchOriginalBPM || 120,
                 stretchBeats: initialPadData?.stretchBeats || 1,
             };
         });
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
-        this.drumPadPlayers = Array(Constants.numDrumSamplerPads).fill(null);
+        this.drumPadPlayers = Array(this.numPads).fill(null); // Use this.numPads
 
         // Effects
         this.activeEffects = [];
@@ -175,6 +177,97 @@ export class Track {
         this.clipPlayers = new Map();
     }
 
+    // --- Slice/Pad Count Management ---
+    setNumSlices(newCount) {
+        if (this.type !== 'Sampler') return;
+        const validatedCount = Math.max(Constants.MIN_SLICES, Math.min(Constants.MAX_SLICES, parseInt(newCount) || this.numSlices));
+        if (validatedCount === this.numSlices) return;
+
+        this._captureUndoState(`Set Slices to ${validatedCount} for ${this.name}`);
+        const oldNumSlices = this.numSlices;
+        this.numSlices = validatedCount;
+
+        // Adjust this.slices array
+        if (this.numSlices > oldNumSlices) {
+            for (let i = oldNumSlices; i < this.numSlices; i++) {
+                this.slices.push({
+                    offset: 0, duration: 0, userDefined: false, volume: 0.7, pitchShift: 0,
+                    loop: false, reverse: false,
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
+                });
+            }
+        } else {
+            this.slices.length = this.numSlices; // Truncate
+        }
+        if (this.selectedSliceForEdit >= this.numSlices) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
+
+        // Adjust sequence data rows
+        this.sequences.forEach(seq => {
+            if (seq.data) {
+                const currentRows = seq.data.length;
+                if (this.numSlices > currentRows) {
+                    for (let i = currentRows; i < this.numSlices; i++) {
+                        seq.data.push(Array(seq.length || Constants.defaultStepsPerBar).fill(null));
+                    }
+                } else if (this.numSlices < currentRows) {
+                    seq.data.length = this.numSlices; // This truncates rows and associated note data
+                }
+            }
+        });
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sliceOrPadCountChanged');
+    }
+
+    setNumPads(newCount) {
+        if (this.type !== 'DrumSampler') return;
+        const validatedCount = Math.max(Constants.MIN_DRUM_PADS, Math.min(Constants.MAX_DRUM_PADS, parseInt(newCount) || this.numPads));
+        if (validatedCount === this.numPads) return;
+
+        this._captureUndoState(`Set Pads to ${validatedCount} for ${this.name}`);
+        const oldNumPads = this.numPads;
+        this.numPads = validatedCount;
+
+        // Adjust this.drumSamplerPads and this.drumPadPlayers arrays
+        if (this.numPads > oldNumPads) {
+            for (let i = oldNumPads; i < this.numPads; i++) {
+                this.drumSamplerPads.push({
+                    sampleUrl: null, audioBuffer: null, audioBufferDataURL: null, originalFileName: null, dbKey: null,
+                    volume: 0.7, pitchShift: 0,
+                    envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
+                    status: 'empty', autoStretchEnabled: false, stretchOriginalBPM: 120, stretchBeats: 1,
+                });
+                this.drumPadPlayers.push(null);
+            }
+        } else {
+            this.drumSamplerPads.length = this.numPads;
+            this.drumPadPlayers.forEach((player, index) => {
+                if (index >= this.numPads && player && !player.disposed) player.dispose();
+            });
+            this.drumPadPlayers.length = this.numPads;
+        }
+        if (this.selectedDrumPadForEdit >= this.numPads) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
+
+        // Adjust sequence data rows
+        this.sequences.forEach(seq => {
+            if (seq.data) {
+                const currentRows = seq.data.length;
+                if (this.numPads > currentRows) {
+                    for (let i = currentRows; i < this.numPads; i++) {
+                        seq.data.push(Array(seq.length || Constants.defaultStepsPerBar).fill(null));
+                    }
+                } else if (this.numPads < currentRows) {
+                    seq.data.length = this.numPads;
+                }
+            }
+        });
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sliceOrPadCountChanged');
+    }
+
+
+    // --- Track Name Management ---
     setName(newName, skipUndo = false) {
         if (typeof newName === 'string' && newName.trim() !== "") {
             const oldName = this.name;
@@ -191,6 +284,7 @@ export class Track {
             }
         }
     }
+
 
     // --- Sequence Management ---
     getActiveSequence() {
@@ -560,7 +654,7 @@ export class Track {
                             console.log(`[Track ${this.id} Sampler] Sample "${this.samplerAudioData.fileName}" loaded into Tone.Buffer. Duration: ${this.audioBuffer.duration}`);
                             if (!this.slicerIsPolyphonic) this.setupSlicerMonoNodes();
                             if (this.appServices.autoSliceSample && this.audioBuffer.loaded && this.slices.every(s => s.duration === 0)) {
-                                this.appServices.autoSliceSample(this.id);
+                                this.appServices.autoSliceSample(this.id, this.numSlices); // Use current numSlices
                             }
                         } catch (toneLoadErr) {
                             console.error(`[Track ${this.id} Sampler] Tone.Buffer load error for ${this.samplerAudioData.fileName}:`, toneLoadErr);
@@ -575,7 +669,7 @@ export class Track {
                     }
                 }
             } else if (this.type === 'DrumSampler') {
-                for (let i = 0; i < this.drumSamplerPads.length; i++) {
+                for (let i = 0; i < this.numPads; i++) { // Use this.numPads
                     const pad = this.drumSamplerPads[i];
                     if (!pad) continue;
                     if (pad.dbKey || pad.audioBufferDataURL) {
@@ -886,7 +980,6 @@ export class Track {
             this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value);
         }
     }
-    // New setters for drum pad auto-stretch properties
     setDrumSamplerPadAutoStretch(padIndex, enabled) {
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex]) {
             this.drumSamplerPads[padIndex].autoStretchEnabled = !!enabled;
@@ -952,8 +1045,8 @@ export class Track {
         let numRowsForGrid;
 
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRowsForGrid = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
-        else if (this.type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
+        else if (this.type === 'Sampler') numRowsForGrid = this.numSlices; // Use current numSlices
+        else if (this.type === 'DrumSampler') numRowsForGrid = this.numPads; // Use current numPads
         else numRowsForGrid = 1;
 
         if (numRowsForGrid <= 0) {
@@ -1108,8 +1201,8 @@ export class Track {
 
         let numRows;
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRows = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
-        else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
+        else if (this.type === 'Sampler') numRows = this.numSlices; // Use current numSlices
+        else if (this.type === 'DrumSampler') numRows = this.numPads; // Use current numPads
         else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1;
 
         if (numRows <= 0) numRows = 1;
@@ -1152,15 +1245,17 @@ export class Track {
             console.warn(`[Track ${this.id} recreateToneSequence] No active sequence (ID: ${this.activeSequenceId}). Aborting.`);
             return;
         }
-        if (!activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length === 0) {
-            let numRowsForInit;
-            if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForInit = Constants.synthPitches.length;
-            else if (this.type === 'Sampler') numRowsForInit = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
-            else if (this.type === 'DrumSampler') numRowsForInit = Constants.numDrumSamplerPads;
-            else numRowsForInit = 1;
-            if (numRowsForInit <= 0) numRowsForInit = 1;
+
+        let numRowsForInit;
+        if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForInit = Constants.synthPitches.length;
+        else if (this.type === 'Sampler') numRowsForInit = this.numSlices;
+        else if (this.type === 'DrumSampler') numRowsForInit = this.numPads;
+        else numRowsForInit = 1;
+        if (numRowsForInit <= 0) numRowsForInit = 1;
+
+        if (!activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length !== numRowsForInit) {
             activeSeq.data = Array(numRowsForInit).fill(null).map(() => Array(activeSeq.length || Constants.defaultStepsPerBar).fill(null));
-            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" had invalid/empty data. Initialized with ${numRowsForInit} rows.`);
+            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" had invalid/empty or mismatched row data. Initialized with ${numRowsForInit} rows.`);
         }
         if (!activeSeq.length || !Number.isFinite(activeSeq.length) || activeSeq.length < Constants.STEPS_PER_BAR) {
             activeSeq.length = Constants.defaultStepsPerBar;
@@ -1243,7 +1338,7 @@ export class Track {
                         }
                     });
                 } else if (this.type === 'DrumSampler') {
-                    Array.from({ length: Constants.numDrumSamplerPads }).forEach((_, padIndex) => {
+                    Array.from({ length: this.numPads }).forEach((_, padIndex) => { // Use this.numPads
                         const step = sequenceDataForTone[padIndex]?.[col];
                         const padData = this.drumSamplerPads[padIndex];
                         if (step?.active && padData && this.drumPadPlayers[padIndex] && !this.drumPadPlayers[padIndex].disposed && this.drumPadPlayers[padIndex].loaded) {
@@ -1251,15 +1346,14 @@ export class Track {
                             try { player.disconnect(); player.connect(effectsChainStartPoint); } catch(e) { /* ignore */ }
                             player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7);
 
-                            // Auto-stretch logic for Drum Sampler
                             if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0) {
                                 const currentProjectTempo = Tone.Transport.bpm.value;
                                 const naturalDurationSeconds = (60 / padData.stretchOriginalBPM) * padData.stretchBeats;
                                 const targetDurationSeconds = (60 / currentProjectTempo) * padData.stretchBeats;
-                                if (targetDurationSeconds > 1e-6) { // Avoid division by zero or extremely small values
+                                if (targetDurationSeconds > 1e-6) {
                                     player.playbackRate = naturalDurationSeconds / targetDurationSeconds;
                                 } else {
-                                    player.playbackRate = 1; // Fallback if target duration is too small
+                                    player.playbackRate = 1;
                                 }
                             } else {
                                 player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
@@ -1578,7 +1672,6 @@ export class Track {
                                     if (player && !player.disposed && player.loaded) {
                                         try { player.disconnect(); player.connect(dest); } catch(e) { /* ignore */ }
                                         player.volume.value = Tone.gainToDb(padData.volume * value.velocity * 0.7);
-                                        // Auto-stretch logic for Drum Sampler in Timeline (via Part)
                                         if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0) {
                                             const currentProjectTempo = Tone.Transport.bpm.value;
                                             const naturalDurationSeconds = (60 / padData.stretchOriginalBPM) * padData.stretchBeats;
