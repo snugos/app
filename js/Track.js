@@ -76,6 +76,7 @@ export class Track {
         this.toneSampler = null;
 
         this.numPads = initialData?.numPads || Constants.DEFAULT_DRUM_PADS;
+        console.log(`[Track ${this.id} Constructor - DrumSampler Check] Initializing numPads to: ${this.numPads} (from Constants.DEFAULT_DRUM_PADS: ${Constants.DEFAULT_DRUM_PADS}, initialData.numPads: ${initialData?.numPads})`);
         this.drumSamplerPads = Array(this.numPads).fill(null).map((_, padIdx) => {
             const initialPadData = initialData?.drumSamplerPads?.[padIdx];
             return {
@@ -130,13 +131,11 @@ export class Track {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
             } else {
-                // If it's a new track (no initialData for sequences), sequences array will be empty.
-                // The default sequence will be created in state.js *after* this track is fully added.
                 console.log(`[Track ${this.id} Constructor] Initial sequence creation deferred for new track (type: ${this.type}).`);
             }
-            delete this.sequenceData; // Old property
-            delete this.sequenceLength; // Old property
-        } else { // Audio Track specific
+            delete this.sequenceData;
+            delete this.sequenceLength;
+        } else {
             delete this.sequenceData;
             delete this.sequenceLength;
             delete this.sequences;
@@ -774,7 +773,10 @@ export class Track {
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sampleLoadError');
         }
 
-        if (this.type !== 'Audio') {
+        // MODIFICATION: No longer call recreateToneSequence from here directly if it's a new track,
+        // as state.js will handle the initial sequence creation and subsequent UI update.
+        // For existing tracks being reconstructed, this is fine.
+        if (this.type !== 'Audio' && this.sequences.length > 0) { // Only if sequences already exist
             this.recreateToneSequence(true);
         }
         this.rebuildEffectChain();
@@ -1052,8 +1054,16 @@ export class Track {
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-        this.recreateToneSequence(true);
-        if (!skipUIUpdate && this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        
+        // MODIFICATION: Removed direct call to this.recreateToneSequence(true);
+        // It will be called from state.js after this function returns and track is fully set up.
+        
+        if (!skipUIUpdate && this.appServices.updateTrackUI) {
+            // This call might still be problematic if recreateToneSequence isn't called first by the caller
+            // For now, we rely on state.js to call recreateToneSequence then updateTrackUI
+            // this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+            console.log(`[Track createNewSequence] UI update skipped by flag, but will be triggered by caller if needed.`);
+        }
         if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
         console.log(`[Track ${this.id}] Created new sequence: "${name}" (ID: ${newSeqId}), Rows: ${numRowsForGrid}, Length: ${actualLength}`);
         return newSequence;
@@ -1371,9 +1381,11 @@ export class Track {
             this.patternPlayerSequence = null;
         }
 
-        if (this.appServices.updateTrackUI) {
-            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-        }
+        // MODIFICATION: Removed the direct UI update call from here.
+        // It will be called by the function that invoked recreateToneSequence if needed.
+        // if (this.appServices.updateTrackUI) {
+        //     this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        // }
     }
 
     async addAudioClip(blob, startTime) {
