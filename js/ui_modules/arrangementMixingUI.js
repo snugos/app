@@ -19,8 +19,7 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const stepsPerBar = Constants.STEPS_PER_BAR;
     const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar;
 
-    // Note: '.sequencer-controls' class is removed from the main controls div here,
-    // as dragging the header is being disabled.
+    // Removed 'sequencer-controls' from here as it's no longer needed for drag
     let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" class="w-12 p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[10px] text-gray-500 dark:text-slate-400">${(i % stepsPerBar === 0) ? (Math.floor(i / stepsPerBar) + 1) : ((i % 4 === 0) ? '&#x2022;' : '')}</div>`; }
@@ -147,21 +146,17 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // --- REMOVE DRAGGABLE FROM SEQUENCER HEADER ---
-        // The class 'sequencer-controls' is also removed from the HTML string in buildSequencerContentDOM
-        // If you had `controlsDiv.classList.add('sequencer-controls');` here, remove it.
-        // And remove the Interact.js draggable setup for controlsDiv:
-        /* if (controlsDiv && window.interact) { 
-            interact(controlsDiv).unset(); 
-            // The draggable setup for controlsDiv would have been here. It's now removed.
+        // --- DRAGGABLE SEQUENCER HEADER REMOVED ---
+        if (controlsDiv) {
+            // Remove the class if it was added before, or ensure it's not added if buildSequencerContentDOM still adds it
+            controlsDiv.classList.remove('sequencer-controls'); 
+            console.log('[UI openTrackSequencerWindow] Removed "sequencer-controls" class and Interact.js draggable from header.');
+            controlsDiv.style.cursor = 'default'; // Reset cursor
         }
-        */
         if (controlsDiv && window.interact && interact.isSet(controlsDiv)) {
-            interact(controlsDiv).unset(); // Ensure any previous draggable is removed
+            interact(controlsDiv).unset(); 
         }
-        if (controlsDiv) { // Just ensure cursor is default if it was 'grab'
-            controlsDiv.style.cursor = 'default';
-        }
+        // --- END OF REMOVAL ---
 
 
         const sequencerContextMenuHandler = (event) => {
@@ -383,7 +378,7 @@ export function renderTimeline() {
             
             interact(lane)
                 .dropzone({
-                    accept: '.audio-clip, .sequencer-controls, .dragging-sound-item, .dragging-sequence-button', // Added .dragging-sequence-button
+                    accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', // MODIFIED: Added .dragging-sequence-button, removed .sequencer-controls
                     overlap: 0.25, 
                     checker: function (
                         dragEvent,        
@@ -400,7 +395,7 @@ export function renderTimeline() {
                         console.log('[TimelineLane DropChecker] Draggable Element:', draggableElement);
                         console.log('[TimelineLane DropChecker] Draggable Classes:', isValidDraggable ? draggableElement.className : 'N/A');
                         console.log('[TimelineLane DropChecker] Draggable dragType data:', isValidDraggable ? draggableElement.dataset.dragType : 'N/A');
-                        console.log('[TimelineLane DropChecker] Does it have .sequencer-controls?', isValidDraggable ? draggableElement.classList.contains('sequencer-controls') : false);
+                        // console.log('[TimelineLane DropChecker] Does it have .sequencer-controls?', isValidDraggable ? draggableElement.classList.contains('sequencer-controls') : false); // No longer checking this
                         console.log('[TimelineLane DropChecker] Does it have .dragging-sequence-button?', isValidDraggable ? draggableElement.classList.contains('dragging-sequence-button') : false);
                         console.log('[TimelineLane DropChecker] Dropzone options.accept:', dropzone.options.accept);
                         console.log('[TimelineLane DropChecker] Accepted by selector implicitly?', acceptedBySelector);
@@ -533,27 +528,42 @@ export function renderTimeline() {
                 });
         }
 
+        const nameArea = document.createElement('div');
+        nameArea.className = 'timeline-track-lane-name-area'; // New container for name and sequence buttons
+        nameArea.style.minWidth = trackNameWidth + 'px';
+        nameArea.style.maxWidth = trackNameWidth + 'px';
+        nameArea.style.position = 'sticky';
+        nameArea.style.left = '0';
+        nameArea.style.zIndex = '2';
+        nameArea.style.backgroundColor = '#2f2f2f'; // Match original nameEl background
+        nameArea.style.borderRight = '1px solid #3a3a3a';
+        nameArea.style.padding = '0 8px';
+        nameArea.style.display = 'flex';
+        nameArea.style.flexDirection = 'column'; // Stack name and buttons vertically
+        nameArea.style.justifyContent = 'center'; // Center items vertically if lane is tall enough
+
 
         const nameEl = document.createElement('div');
-        nameEl.className = 'timeline-track-lane-name';
+        nameEl.className = 'timeline-track-name-text'; // New class for just the text
         nameEl.textContent = track.name;
-        lane.appendChild(nameEl);
+        nameEl.style.whiteSpace = 'nowrap';
+        nameEl.style.overflow = 'hidden';
+        nameEl.style.textOverflow = 'ellipsis';
+        nameEl.style.fontSize = '0.8rem';
+        nameEl.style.fontWeight = '500';
+        nameArea.appendChild(nameEl);
 
         // --- ADDED: Container for sequence buttons ---
         if (track.type !== 'Audio' && track.sequences && track.sequences.length > 0) {
             const sequenceButtonsContainer = document.createElement('div');
-            sequenceButtonsContainer.className = 'timeline-sequence-buttons pl-1 flex flex-wrap gap-1 items-center'; // Added some basic styling
-            sequenceButtonsContainer.style.paddingLeft = (trackNameWidth + 5) + 'px'; // Position it next to the track name
-            sequenceButtonsContainer.style.position = 'absolute'; // Position relative to lane
-            sequenceButtonsContainer.style.top = '2px'; // Adjust as needed
-            sequenceButtonsContainer.style.left = '0px';
-            sequenceButtonsContainer.style.zIndex = '3'; // Above clips container
-
+            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-1 mt-1'; 
+            
             track.sequences.forEach(sequence => {
                 const seqButton = document.createElement('div');
-                seqButton.className = 'sequence-timeline-button text-xs px-1.5 py-0.5 border rounded bg-sky-700 hover:bg-sky-600 text-white cursor-grab';
-                seqButton.textContent = sequence.name.substring(0,10) + (sequence.name.length > 10 ? '...' : '');
-                seqButton.title = `Drag to add Sequence: ${sequence.name}`;
+                // Added 'dragging-sequence-button' class potentially for accept, but also for styling the button itself
+                seqButton.className = 'sequence-timeline-button dragging-sequence-button text-xs px-1.5 py-0.5 border rounded bg-sky-700 hover:bg-sky-600 text-white cursor-grab';
+                seqButton.textContent = "Seq"; // Changed text to "Seq"
+                seqButton.title = `Drag Sequence: ${sequence.name}`;
                 seqButton.style.touchAction = 'none';
 
                 if (window.interact) {
@@ -572,9 +582,9 @@ export function renderTimeline() {
                                 if (targetElement) {
                                     targetElement.dataset.dragType = 'sequence-timeline-drag';
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
-                                    targetElement.classList.add('dragging-sequence-button'); // Important for dropzone accept
-                                    targetElement.style.position = 'relative'; // Ensure z-index works
-                                    targetElement.style.zIndex = '10001'; // Higher than window z-index during drag
+                                    // No need to add 'dragging-sequence-button' class here if it's already on the element
+                                    targetElement.style.position = 'relative'; 
+                                    targetElement.style.zIndex = '10001'; 
                                 }
                                 console.log(`[Timeline UI] DragStart sequence button: ${sequence.name}`);
                             },
@@ -583,7 +593,9 @@ export function renderTimeline() {
                                 if (target) {
                                     const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
                                     const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+    
                                     target.style.transform = `translate(${x}px, ${y}px)`;
+    
                                     target.setAttribute('data-x', x);
                                     target.setAttribute('data-y', y);
                                 }
@@ -591,7 +603,6 @@ export function renderTimeline() {
                             end: (event) => {
                                 const targetElement = event.interaction.element || event.target;
                                 if (targetElement) {
-                                    targetElement.classList.remove('dragging-sequence-button');
                                     targetElement.style.transform = 'none';
                                     targetElement.removeAttribute('data-x');
                                     targetElement.removeAttribute('data-y');
@@ -604,28 +615,20 @@ export function renderTimeline() {
                 }
                 sequenceButtonsContainer.appendChild(seqButton);
             });
-            // Insert sequence buttons container *before* the clips container but within the lane
-            // Or adjust styling so it overlays correctly. For simplicity, let's put it inside the nameEl or adjust layout.
-            // For now, let's try appending to lane directly. This might need CSS adjustments.
-            // A better way would be to have nameEl and sequenceButtonsContainer in a flex row.
-            // Let's try a simpler approach first: append to lane, use absolute positioning to place it.
-            const nameArea = lane.querySelector('.timeline-track-lane-name');
-            if(nameArea) { // Put it next to the name
-                nameArea.style.display = 'flex'; // Make name area flex
-                nameArea.appendChild(sequenceButtonsContainer);
-                // Adjust styling for sequenceButtonsContainer to fit within nameArea or flow correctly
-                sequenceButtonsContainer.style.position = 'static'; // remove absolute
-                sequenceButtonsContainer.style.paddingLeft = '5px'; // Add some space from name
-            } else {
-                lane.appendChild(sequenceButtonsContainer); // Fallback
-            }
+            nameArea.appendChild(sequenceButtonsContainer); // Append buttons container below the name
         }
+        lane.appendChild(nameArea); // Append the whole nameArea
         // --- END OF ADDED SECTION ---
 
         const clipsContainer = document.createElement('div');
-        clipsContainer.style.position = 'relative';
-        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`;
+        clipsContainer.style.position = 'relative'; // Important for absolute positioning of clips
+        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`; // Take remaining width
         clipsContainer.style.height = '100%';
+        clipsContainer.style.marginLeft = `${trackNameWidth}px`; // Offset by track name area width
+        clipsContainer.style.top = `-${nameArea.offsetHeight}px`; // Pull it up to align with the top of the lane, hacky if nameArea height varies.
+                                                              // A better solution would be a flex/grid layout for the whole lane.
+                                                              // For now, let's try this and see. Or simpler, append clipsContainer after nameArea
+                                                              // and let them flow. The absolute positioning of clips is relative to clipsContainer.
 
 
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
@@ -727,7 +730,9 @@ export function renderTimeline() {
                 clipsContainer.appendChild(clipEl);
             });
         }
-        lane.appendChild(clipsContainer);
+        // The clipsContainer needs to be appended to the lane in a way that it doesn't overlap the nameArea + sequenceButtons
+        // This layout needs careful CSS. For now, just appending.
+        lane.appendChild(clipsContainer); 
         tracksArea.appendChild(lane);
     });
 }
