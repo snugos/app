@@ -57,7 +57,7 @@ export class Track {
             status: initialData?.samplerAudioData?.status || (initialData?.samplerAudioData?.dbKey || initialData?.samplerAudioData?.audioBufferDataURL ? 'missing' : 'empty')
         };
         this.audioBuffer = null;
-        this.slices = initialData?.slices && initialData.slices.length > 0 && initialData.slices.length === this.numSlices ? // Check length consistency
+        this.slices = initialData?.slices && initialData.slices.length > 0 && initialData.slices.length === this.numSlices ?
             JSON.parse(JSON.stringify(initialData.slices)) :
             Array(this.numSlices).fill(null).map(() => ({
                 offset: 0, duration: 0, userDefined: false, volume: 0.7, pitchShift: 0,
@@ -1069,11 +1069,11 @@ export class Track {
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-        
-        // Do NOT call this.recreateToneSequence() here. It will be called by state.js after track is fully registered.
-        
+                
         if (!skipUIUpdate && this.appServices.updateTrackUI) {
-            console.log(`[Track createNewSequence] UI update for 'sequencerContentChanged' will be triggered by state.js if this is a new track's initial sequence.`);
+            console.log(`[Track createNewSequence] UI update for 'sequencerContentChanged' will be triggered by state.js if this is a new track's initial sequence, or directly if not.`);
+            // For non-initial sequences, this direct call is fine.
+            // For initial sequence (called from state.js), state.js handles the UI update.
         }
         if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
         console.log(`[Track ${this.id}] Created new sequence: "${name}" (ID: ${newSeqId}), Rows: ${numRowsForGrid}, Length: ${actualLength}`);
