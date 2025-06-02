@@ -74,6 +74,10 @@ export function createKnob(options) {
     const BASE_PIXELS_PER_FULL_RANGE_TOUCH = 450;
     let initialValueBeforeInteraction = currentValue;
 
+    // Store event listeners to remove them correctly when disabled
+    let mouseDownListener = null;
+    let touchStartListener = null;
+
     function updateKnobVisual(disabled = false) {
         const percentage = range === 0 ? 0 : (currentValue - min) / range;
         const rotation = (percentage * maxDegrees) - (maxDegrees / 2);
@@ -83,12 +87,19 @@ export function createKnob(options) {
         
         knobEl.style.cursor = disabled ? 'not-allowed' : 'ns-resize';
         knobEl.style.opacity = disabled ? '0.5' : '1';
-        if (disabled) {
-            knobEl.removeEventListener('mousedown', handleMouseDown);
-            knobEl.removeEventListener('touchstart', handleTouchStart);
+
+        // Remove old listeners before adding new ones or if disabled
+        if (mouseDownListener) knobEl.removeEventListener('mousedown', mouseDownListener);
+        if (touchStartListener) knobEl.removeEventListener('touchstart', touchStartListener);
+
+        if (!disabled) {
+            mouseDownListener = (e) => handleInteraction(e, false);
+            touchStartListener = (e) => handleInteraction(e, true);
+            knobEl.addEventListener('mousedown', mouseDownListener);
+            knobEl.addEventListener('touchstart', touchStartListener, { passive: false });
         } else {
-            knobEl.addEventListener('mousedown', handleMouseDown);
-            knobEl.addEventListener('touchstart', handleTouchStart, { passive: false });
+            mouseDownListener = null;
+            touchStartListener = null;
         }
     }
 
@@ -100,14 +111,15 @@ export function createKnob(options) {
         boundedValue = Math.min(max, Math.max(min, boundedValue));
         const oldValue = currentValue;
         currentValue = boundedValue;
-        updateKnobVisual(options.disabled); // Pass disabled state
+        updateKnobVisual(options.disabled); 
         if (triggerCallback && options.onValueChange && (oldValue !== currentValue || fromInteraction) ) {
             options.onValueChange(currentValue, oldValue, fromInteraction);
         }
     }
 
     function handleInteraction(e, isTouch = false) {
-        if (options.disabled) return; // Don't interact if disabled
+        // This check is now effectively handled by updateKnobVisual not adding listeners if disabled
+        // if (options.disabled) return; 
         e.preventDefault();
         initialValueBeforeInteraction = currentValue;
         const startY = isTouch ? e.touches[0].clientY : e.clientY;
@@ -138,21 +150,19 @@ export function createKnob(options) {
         document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: !isTouch });
         document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
     }
-
-    const handleMouseDown = (e) => handleInteraction(e, false);
-    const handleTouchStart = (e) => handleInteraction(e, true);
-
-    setValue(currentValue, false);
-    updateKnobVisual(options.disabled); // Initial visual update respecting disabled state
+    
+    // Initial setup
+    options.disabled = !!options.disabled; // Ensure it's a boolean
+    setValue(currentValue, false); // This will also call updateKnobVisual
 
     return {
         element: container,
         setValue,
         getValue: () => currentValue,
         type: 'knob',
-        refreshVisuals: (disabledState) => {
-            options.disabled = disabledState; // Update internal disabled option
-            updateKnobVisual(disabledState);
+        refreshVisuals: (disabledState) => { // Method to externally update disabled state and visuals
+            options.disabled = !!disabledState; // Update internal disabled option
+            updateKnobVisual(options.disabled);
         }
     };
 }
@@ -195,7 +205,6 @@ function buildSamplerSpecificInspectorDOM(track) {
 }
 
 function buildDrumSamplerSpecificInspectorDOM(track) {
-    // Added HTML for Auto-Stretch controls
     return `<div class="drum-sampler-controls p-1 space-y-2">
         <div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
             <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
@@ -397,7 +406,7 @@ function initializeSamplerSpecificControls(track, winEl) {
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
     renderDrumSamplerPads(track);
-    updateDrumPadControlsUI(track); // This will now also initialize auto-stretch controls
+    updateDrumPadControlsUI(track);
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
@@ -765,70 +774,8 @@ export function openMasterEffectsRackWindow(savedState = null) {
     return rackWindow;
 }
 
-export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
-    const windowId = 'globalControls';
-    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
-
-    if (openWindows.has(windowId) && !savedState) {
-        const win = openWindows.get(windowId);
-        if (win && !win.element) {
-            if (localAppServices.removeWindowFromStore) {
-                localAppServices.removeWindowFromStore(windowId);
-                console.log(`[UI openGlobalControlsWindow] Removed ghost entry for ${windowId}. Proceeding to recreate.`);
-            }
-        } else if (win && win.element) {
-            win.restore();
-            if (typeof onReadyCallback === 'function' && win.element) {
-                onReadyCallback({
-                    playBtnGlobal: win.element.querySelector('#playBtnGlobal'),
-                    recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'),
-                    stopBtnGlobal: win.element.querySelector('#stopBtnGlobal'),
-                    tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'),
-                    midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'),
-                    masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'),
-                    masterMeterBarGlobal: win.element.querySelector('#masterMeterBarGlobal'),
-                    midiIndicatorGlobal: win.element.querySelector('#midiIndicatorGlobal'),
-                    keyboardIndicatorGlobal: win.element.querySelector('#keyboardIndicatorGlobal'),
-                    playbackModeToggleBtnGlobal: win.element.querySelector('#playbackModeToggleBtnGlobal')
-                });
-            }
-            return win;
-        }
-    }
-
-    console.log(`[UI openGlobalControlsWindow] Creating new window instance for ${windowId}.`);
-    const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300">
-        <div class="grid grid-cols-3 gap-2 items-center">
-            <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-green-600 dark:hover:bg-green-700">Play</button>
-            <button id="stopBtnGlobal" title="Stop All Audio (Panic)" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-yellow-600 dark:hover:bg-yellow-700">Stop</button>
-            <button id="recordBtnGlobal" title="Record Arm/Disarm" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-red-600 dark:hover:bg-red-700">Record</button>
-        </div>
-        <div> <label for="tempoGlobalInput" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Tempo (BPM):</label> <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div>
-        <div> <label for="midiInputSelectGlobal" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">MIDI Input:</label> <select id="midiInputSelectGlobal" class="w-full p-1.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">No MIDI Input</option> </select> </div>
-        <div class="pt-1"> <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-0.5">Master Level:</label> <div id="masterMeterContainerGlobal" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden shadow-sm"> <div id="masterMeterBarGlobal" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div> </div>
-        <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div>
-        <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Sequencer</button> </div>
-    </div>`;
-    const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
-    if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-
-    const newWindow = localAppServices.createWindow(windowId, 'Global Controls', contentHTML, options);
-    if (newWindow?.element && typeof onReadyCallback === 'function') {
-        onReadyCallback({
-            playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'),
-            recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'),
-            stopBtnGlobal: newWindow.element.querySelector('#stopBtnGlobal'),
-            tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'),
-            midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'),
-            masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'),
-            masterMeterBarGlobal: newWindow.element.querySelector('#masterMeterBarGlobal'),
-            midiIndicatorGlobal: newWindow.element.querySelector('#midiIndicatorGlobal'),
-            keyboardIndicatorGlobal: newWindow.element.querySelector('#keyboardIndicatorGlobal'),
-            playbackModeToggleBtnGlobal: newWindow.element.querySelector('#playbackModeToggleBtnGlobal')
-        });
-    }
-    return newWindow;
-}
+// openGlobalControlsWindow is now in globalControlsUI.js
+// export function openGlobalControlsWindow(onReadyCallback, savedState = null) { ... }
 
 
 export function openSoundBrowserWindow(savedState = null) {
@@ -1189,7 +1136,7 @@ export function renderMixer(container) {
         const trackDiv = document.createElement('div');
         trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
         trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div> <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div> <div class="grid grid-cols-2 gap-0.5 my-1"> <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button> <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button> </div> <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5"> <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div>`;
-        
+
         trackDiv.addEventListener('click', (e) => {
             if (e.target.closest('button')) {
                 return;
@@ -1198,7 +1145,7 @@ export function renderMixer(container) {
                 localAppServices.handleOpenTrackInspector(track.id);
             }
         });
-        
+
         trackDiv.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const currentTrackForMenu = localAppServices.getTrackById(track.id);
@@ -1606,19 +1553,20 @@ export function updateDrumPadControlsUI(track) {
     const env = padData.envelope || { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 };
     track.inspectorControls.drumPadVolume = createAndPlaceKnob(`drumPadVolumeKnob-${track.id}-placeholder`, { label: 'Vol', min:0, max:1, step:0.01, initialValue: padData.volume || 0.7, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadVolume(selectedPadIndex, val)});
     
-    // Auto-Stretch related UI updates
+    const pitchKnobOptions = { label: 'Pitch', min:-24, max:24, step:1, initialValue: padData.pitchShift || 0, decimals:0, displaySuffix:'st', trackRef: track, onValueChange: (val) => track.setDrumSamplerPadPitch(selectedPadIndex, val), disabled: padData.autoStretchEnabled };
+    
+    if (!track.inspectorControls.drumPadPitch) {
+        track.inspectorControls.drumPadPitch = createAndPlaceKnob(`drumPadPitchKnob-${track.id}-placeholder`, pitchKnobOptions);
+    } else {
+        track.inspectorControls.drumPadPitch.setValue(padData.pitchShift || 0); // Update value
+        track.inspectorControls.drumPadPitch.refreshVisuals(padData.autoStretchEnabled); // Update disabled state
+    }
+
     const autoStretchToggle = inspector.querySelector(`#drumPadAutoStretchToggle-${track.id}`);
     const stretchBPMInput = inspector.querySelector(`#drumPadStretchBPM-${track.id}`);
     const stretchBeatsInput = inspector.querySelector(`#drumPadStretchBeats-${track.id}`);
-    const pitchKnobOptions = { label: 'Pitch', min:-24, max:24, step:1, initialValue: padData.pitchShift || 0, decimals:0, displaySuffix:'st', trackRef: track, onValueChange: (val) => track.setDrumSamplerPadPitch(selectedPadIndex, val) };
-    
-    if (!track.inspectorControls.drumPadPitch) { // Create pitch knob if it doesn't exist
-        track.inspectorControls.drumPadPitch = createAndPlaceKnob(`drumPadPitchKnob-${track.id}-placeholder`, pitchKnobOptions);
-    } else { // Just update its value and disabled state
-        track.inspectorControls.drumPadPitch.setValue(padData.pitchShift || 0);
-    }
 
-    if (autoStretchToggle && stretchBPMInput && stretchBeatsInput && track.inspectorControls.drumPadPitch) {
+    if (autoStretchToggle && stretchBPMInput && stretchBeatsInput) {
         autoStretchToggle.textContent = padData.autoStretchEnabled ? 'Stretch: ON' : 'Stretch: OFF';
         autoStretchToggle.classList.toggle('active', padData.autoStretchEnabled);
         stretchBPMInput.disabled = !padData.autoStretchEnabled;
@@ -1626,27 +1574,33 @@ export function updateDrumPadControlsUI(track) {
         stretchBPMInput.style.opacity = padData.autoStretchEnabled ? '1' : '0.5';
         stretchBeatsInput.style.opacity = padData.autoStretchEnabled ? '1' : '0.5';
         
-        // Refresh pitch knob's visual disabled state
-        track.inspectorControls.drumPadPitch.refreshVisuals(padData.autoStretchEnabled);
-
-
         stretchBPMInput.value = padData.stretchOriginalBPM || 120;
         stretchBeatsInput.value = padData.stretchBeats || 1;
 
-        autoStretchToggle.onclick = () => { // Use onclick to ensure only one listener
-            const newState = !padData.autoStretchEnabled;
-            if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Auto-Stretch for Pad ${selectedPadIndex + 1} on ${track.name}`);
-            track.setDrumSamplerPadAutoStretch(selectedPadIndex, newState);
-            updateDrumPadControlsUI(track); // Re-render to update disabled states
-        };
-        stretchBPMInput.onchange = (e) => { // Use onchange for committed changes
-            if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Stretch BPM for Pad ${selectedPadIndex + 1} on ${track.name}`);
-            track.setDrumSamplerPadStretchOriginalBPM(selectedPadIndex, parseFloat(e.target.value));
-        };
-        stretchBeatsInput.onchange = (e) => {
-            if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Stretch Beats for Pad ${selectedPadIndex + 1} on ${track.name}`);
-            track.setDrumSamplerPadStretchBeats(selectedPadIndex, parseFloat(e.target.value));
-        };
+        // Ensure only one listener is attached
+        if (!autoStretchToggle.hasAttribute('listener-attached')) {
+            autoStretchToggle.addEventListener('click', () => {
+                const newState = !track.drumSamplerPads[track.selectedDrumPadForEdit].autoStretchEnabled; // Get fresh state
+                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Auto-Stretch for Pad ${track.selectedDrumPadForEdit + 1} on ${track.name}`);
+                track.setDrumSamplerPadAutoStretch(track.selectedDrumPadForEdit, newState);
+                updateDrumPadControlsUI(track); // Re-render this section to update disabled states
+            });
+            autoStretchToggle.setAttribute('listener-attached', 'true');
+        }
+        if (!stretchBPMInput.hasAttribute('listener-attached')) {
+            stretchBPMInput.addEventListener('change', (e) => {
+                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Stretch BPM for Pad ${track.selectedDrumPadForEdit + 1} on ${track.name}`);
+                track.setDrumSamplerPadStretchOriginalBPM(track.selectedDrumPadForEdit, parseFloat(e.target.value));
+            });
+            stretchBPMInput.setAttribute('listener-attached', 'true');
+        }
+        if (!stretchBeatsInput.hasAttribute('listener-attached')) {
+             stretchBeatsInput.addEventListener('change', (e) => {
+                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Stretch Beats for Pad ${track.selectedDrumPadForEdit + 1} on ${track.name}`);
+                track.setDrumSamplerPadStretchBeats(track.selectedDrumPadForEdit, parseFloat(e.target.value));
+            });
+            stretchBeatsInput.setAttribute('listener-attached', 'true');
+        }
     }
 
 
