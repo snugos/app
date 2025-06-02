@@ -44,29 +44,108 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
-    // ... (initial part of the function remains the same) ...
+    // ... (Function content as per the last correct version, with sequencer header drag removed) ...
+    // console.log(`[UI openTrackSequencerWindow] Called for track ${trackId}. Force redraw: ${forceRedraw}, SavedState:`, savedState);
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') {
-        console.warn(`[UI openTrackSequencerWindow] Track ${trackId} not found or is Audio type. Aborting.`);
+        // console.warn(`[UI openTrackSequencerWindow] Track ${trackId} not found or is Audio type. Aborting.`);
         return null;
     }
-    // ... (window existence and restoration logic remains the same) ...
+    const windowId = `sequencerWin-${trackId}`;
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+
+    if (forceRedraw && openWindows.has(windowId)) {
+        const existingWindow = openWindows.get(windowId);
+        if (existingWindow && typeof existingWindow.close === 'function') {
+            try {
+                // console.log(`[UI openTrackSequencerWindow] Force redraw: Closing existing window ${windowId}`);
+                existingWindow.close(true);
+            } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
+        } else {
+            // console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not an instance, or map is missing.`);
+        }
+    }
+    if (openWindows.has(windowId) && !forceRedraw && !savedState) {
+        const win = openWindows.get(windowId);
+        if (win && typeof win.restore === 'function') {
+            // console.log(`[UI openTrackSequencerWindow] Restoring existing window ${windowId}`);
+            win.restore();
+            if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
+            return win;
+        } else {
+            // console.warn(`[UI openTrackSequencerWindow] Window ${windowId} in map but cannot be restored.`);
+        }
+    }
 
     const activeSequence = track.getActiveSequence();
     if (!activeSequence) {
         console.error(`[UI openTrackSequencerWindow] Track ${trackId} has no active sequence. Cannot open sequencer.`);
         return null;
     }
-    // ... (DOM building, options setup remains the same) ...
+
+    let rows, rowLabels;
+    const numBars = activeSequence.length > 0 ? Math.max(1, activeSequence.length / Constants.STEPS_PER_BAR) : 1;
+
+    if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; }
+    else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({ length: rows }, (_, i) => `Slice ${i + 1}`); }
+    else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({ length: rows }, (_, i) => `Pad ${i + 1}`); }
+    else { rows = 0; rowLabels = []; }
+
+    const contentDOM = buildSequencerContentDOM(track, rows, rowLabels, numBars);
+
+    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0)
+                           ? desktopEl.offsetWidth
+                           : 1024;
+    // console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
+
+
+    let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
+    let calculatedHeight = 400;
+
+    if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) {
+        // console.warn(`[UI openTrackSequencerWindow] Invalid calculatedWidth (${calculatedWidth}) for track ${trackId}, defaulting to 600.`);
+        calculatedWidth = 600;
+    }
+    if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) {
+        // console.warn(`[UI openTrackSequencerWindow] Invalid calculatedHeight (${calculatedHeight}) for track ${trackId}, defaulting to 400.`);
+        calculatedHeight = 400;
+    }
+
+    const seqOptions = {
+        width: calculatedWidth,
+        height: calculatedHeight,
+        minWidth: 400,
+        minHeight: 250,
+        initialContentKey: windowId,
+        onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); }
+    };
+    if (savedState) {
+        if (Number.isFinite(parseInt(savedState.left,10))) seqOptions.x = parseInt(savedState.left,10);
+        if (Number.isFinite(parseInt(savedState.top,10))) seqOptions.y = parseInt(savedState.top,10);
+        if (Number.isFinite(parseInt(savedState.width,10)) && parseInt(savedState.width,10) >= seqOptions.minWidth) seqOptions.width = parseInt(savedState.width,10);
+        if (Number.isFinite(parseInt(savedState.height,10)) && parseInt(savedState.height,10) >= seqOptions.minHeight) seqOptions.height = parseInt(savedState.height,10);
+        if (Number.isFinite(parseInt(savedState.zIndex))) seqOptions.zIndex = parseInt(savedState.zIndex);
+        seqOptions.isMinimized = savedState.isMinimized;
+    }
+
+    // console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Creating window with options:`, JSON.stringify(seqOptions));
     const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name} - ${activeSequence.name}`, contentDOM, seqOptions);
 
     if (sequencerWindow?.element) {
-        // ... (step cell grid setup remains the same) ...
+        const allCells = Array.from(sequencerWindow.element.querySelectorAll('.sequencer-step-cell'));
+        sequencerWindow.stepCellsGrid = [];
+        const currentSequenceLength = activeSequence.length || Constants.defaultStepsPerBar;
+        for (let i = 0; i < rows; i++) {
+            sequencerWindow.stepCellsGrid[i] = allCells.slice(i * currentSequenceLength, (i + 1) * currentSequenceLength);
+        }
+        sequencerWindow.lastPlayedCol = -1;
 
+
+        if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // --- DRAGGABLE SEQUENCER HEADER FUNCTIONALITY REMOVED ---
         if (controlsDiv) {
             controlsDiv.classList.remove('sequencer-controls'); 
             controlsDiv.style.cursor = 'default'; 
@@ -80,11 +159,8 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     }
                 }
             }
-            console.log('[UI openTrackSequencerWindow] Draggable functionality for sequencer header has been disabled.');
         }
-        // --- END OF REMOVAL ---
 
-        // ... (context menu, grid click, length input listeners remain the same) ...
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
             const currentTrackForMenu = localAppServices.getTrackById ? localAppServices.getTrackById(track.id) : null; if (!currentTrackForMenu) return;
@@ -135,9 +211,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     }
     return sequencerWindow;
 }
-
-// ... (updateSequencerCellUI, highlightPlayingStep, mixer functions remain the same as last version) ...
-
+// ... updateSequencerCellUI, highlightPlayingStep, mixer functions remain the same ...
 export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
@@ -280,7 +354,6 @@ export function renderMixer(container) {
     });
 }
 
-
 // --- Timeline UI Functions ---
 export function renderTimeline() {
     const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
@@ -421,9 +494,8 @@ export function renderTimeline() {
                         const dropzoneElement = event.target; 
                         console.log('[TimelineLane ClipsContainer] ondragenter - Draggable:', draggableElement, 'Classes:', draggableElement ? draggableElement.className : 'N/A');
                         
-                        // Check if the draggable is accepted by the 'accept' option
-                        // This check is implicitly done by Interact.js before ondragenter is called.
-                        // If ondragenter is called, it means the 'accept' criteria was met.
+                        // Interact.js automatically checks the 'accept' option before firing 'ondragenter'.
+                        // So if this event fires, the draggable was accepted.
                         dropzoneElement.classList.add('drop-target-clips-area'); 
                         if (draggableElement) draggableElement.classList.add('can-drop');  
                     },
@@ -436,8 +508,7 @@ export function renderTimeline() {
                     ondrop: function (event) {
                         console.log('[TimelineLane ClipsContainer] ONDROP triggered on clipsContainer!', event);
                         const droppedClipElement = event.relatedTarget;
-                        // const targetLaneElement = droppedClipElement.closest('.timeline-track-lane'); // This might be problematic if ghost element is used
-                        const targetLaneElement = event.target.closest('.timeline-track-lane'); // The dropzone is clipsContainer, its parent lane
+                        const targetLaneElement = event.target.closest('.timeline-track-lane'); 
                         if (!targetLaneElement) {
                             console.error("Could not find parent lane for dropped item on clipsContainer.");
                             return;
@@ -479,7 +550,7 @@ export function renderTimeline() {
 
                         if (clipId && !isNaN(originalTrackId) && dragType !== 'sound-browser-item' && dragType !== 'sequence-timeline-drag') { 
                             const originalTrack = localAppServices.getTrackById(originalTrackId);
-                            if (!originalTrack || !originalTrack.timelineClips) { /* ... */ return; }
+                            if (!originalTrack || !originalTrack.timelineClips) { return; }
                             const clipData = originalTrack.timelineClips.find(c => c.id === clipId);
 
                             if (clipData) {
@@ -503,7 +574,7 @@ export function renderTimeline() {
                                  if (localAppServices.handleTimelineLaneDrop) { 
                                     localAppServices.handleTimelineLaneDrop(droppedItemData, targetTrackId, startTime);
                                 }
-                            } catch (e) { console.error("Error parsing jsonData from dropped element:", e); /* ... */ }
+                            } catch (e) { console.error("Error parsing jsonData from dropped element:", e); }
                         }
                         event.target.classList.remove('drop-target-clips-area');
                         if(droppedClipElement) droppedClipElement.classList.remove('can-drop');
@@ -544,7 +615,7 @@ export function renderTimeline() {
                 if (window.interact) {
                     interact(clipEl).unset(); 
                     interact(clipEl)
-                        .draggable({ /* ... existing clip draggable listeners, ensure they are complete ... */ 
+                        .draggable({ /* ... existing clip draggable listeners ... */ 
                             inertia: false,
                             modifiers: [
                                 interact.modifiers.restrictRect({
@@ -568,7 +639,7 @@ export function renderTimeline() {
                                 },
                                 move: (event) => {
                                     const target = event.target;
-                                    const x = (parseFloat(target.dataset.startX) || 0) + event.dx;
+                                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
                                     target.style.left = `${Math.max(0, x)}px`;
                                 },
                                 end: (event) => {
