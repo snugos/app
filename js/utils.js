@@ -40,22 +40,29 @@ export function showCustomModal(title, contentHTML, buttonsConfig = [], modalId 
 
     const modalOverlay = document.createElement('div');
     modalOverlay.id = modalId;
-    modalOverlay.className = 'modal-container'; // Use this for overlay styling
+    // Use a consistent class for the overlay itself for styling
+    modalOverlay.className = 'modal-overlay fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[15000]'; // Tailwind for overlay
 
-    const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content';
+    const modalDialog = document.createElement('div');
+    // Use classes from style.css for the dialog box appearance
+    modalDialog.className = 'modal-dialog bg-gray-800 p-4 rounded-lg shadow-xl max-w-md w-full text-white dark:bg-slate-700'; // Tailwind for dialog
 
-    const modalHeader = document.createElement('h2');
-    modalHeader.textContent = title;
-    modalContent.appendChild(modalHeader);
+    const modalTitleBar = document.createElement('div');
+    modalTitleBar.className = 'modal-title-bar text-lg font-semibold mb-3 pb-2 border-b border-gray-700 dark:border-slate-600';
+    modalTitleBar.textContent = title;
+    modalDialog.appendChild(modalTitleBar);
 
     const modalBody = document.createElement('div');
-    modalBody.className = 'modal-body';
-    modalBody.innerHTML = contentHTML;
-    modalContent.appendChild(modalBody);
+    modalBody.className = 'modal-content-body mb-4 text-sm'; // Tailwind for body
+    if (typeof contentHTML === 'string') {
+        modalBody.innerHTML = contentHTML;
+    } else if (contentHTML instanceof HTMLElement) {
+        modalBody.appendChild(contentHTML);
+    }
+    modalDialog.appendChild(modalBody);
 
     const modalButtons = document.createElement('div');
-    modalButtons.className = 'modal-buttons';
+    modalButtons.className = 'modal-buttons text-right space-x-2'; // Tailwind for buttons area
 
     if (buttonsConfig.length === 0) { // Add a default close button if none provided
         buttonsConfig.push({ text: 'Close', type: 'cancel', action: () => modalOverlay.remove() });
@@ -64,23 +71,31 @@ export function showCustomModal(title, contentHTML, buttonsConfig = [], modalId 
     buttonsConfig.forEach(btnConfig => {
         const button = document.createElement('button');
         button.textContent = btnConfig.text;
-        button.classList.add(btnConfig.type || 'cancel'); // 'confirm' or 'cancel' for styling
+        // Apply base Tailwind button styles and then specific type styles
+        button.className = `px-4 py-2 rounded text-sm font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800`;
+        if (btnConfig.type === 'confirm') {
+            button.classList.add('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500', 'text-white');
+        } else { // Default to 'cancel' or other style
+            button.classList.add('bg-gray-600', 'hover:bg-gray-700', 'focus:ring-gray-500', 'text-gray-200', 'dark:bg-slate-600', 'dark:hover:bg-slate-500');
+        }
         button.addEventListener('click', () => {
-            if (btnConfig.action) btnConfig.action();
+            if (btnConfig.action && typeof btnConfig.action === 'function') {
+                btnConfig.action();
+            }
             modalOverlay.remove(); // Always remove modal after action
         });
         modalButtons.appendChild(button);
     });
 
-    modalContent.appendChild(modalButtons);
-    modalOverlay.appendChild(modalContent);
+    modalDialog.appendChild(modalButtons);
+    modalOverlay.appendChild(modalDialog);
     document.body.appendChild(modalOverlay);
 
     // Focus on the first button for accessibility
     const firstButton = modalButtons.querySelector('button');
     if (firstButton) firstButton.focus();
     
-    return { overlay: modalOverlay, contentDiv: modalBody };
+    return { overlay: modalOverlay, contentDiv: modalBody, dialog: modalDialog };
 }
 
 
@@ -89,48 +104,74 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel) {
         { text: 'Confirm', type: 'confirm', action: onConfirm },
         { text: 'Cancel', type: 'cancel', action: onCancel }
     ];
-    showCustomModal(title, `<p>${message}</p>`, buttons, 'confirmationDialog');
+    // Ensure the message is wrapped in a <p> for consistent styling if it's just a string
+    const content = `<p class="text-sm text-gray-300 dark:text-slate-300">${message}</p>`;
+    showCustomModal(title, content, buttons, 'confirmationDialog');
 }
 
 
 export function createDropZoneHTML(trackId, fileInputId, targetType, index = null, existingAudioData = null) {
-    let statusClass = 'status-empty';
+    let statusClass = 'text-gray-500 dark:text-slate-400'; // Default
     let statusText = 'Drop audio file here, or click to browse.';
+    let fileNameText = '';
+
     if (existingAudioData) {
-        if (existingAudioData.status === 'loaded') { statusClass = 'status-loaded'; statusText = `Loaded: ${existingAudioData.originalFileName}`; }
-        else if (existingAudioData.status === 'missing' || existingAudioData.status === 'missing_db') { statusClass = 'status-missing'; statusText = `Missing: ${existingAudioData.originalFileName || 'Unknown File'}`; }
-        else if (existingAudioData.status === 'error') { statusClass = 'status-error'; statusText = `Error loading: ${existingAudioData.originalFileName || 'Unknown File'}`; }
-        else if (existingAudioData.originalFileName) { statusClass = 'status-missing'; statusText = `File: ${existingAudioData.originalFileName} (Tap to load)`;}
+        if (existingAudioData.status === 'loaded' && existingAudioData.originalFileName) {
+            statusClass = 'text-green-500 dark:text-green-400';
+            statusText = `Loaded:`;
+            fileNameText = existingAudioData.originalFileName;
+        } else if ((existingAudioData.status === 'missing' || existingAudioData.status === 'missing_db') && existingAudioData.originalFileName) {
+            statusClass = 'text-yellow-500 dark:text-yellow-400';
+            statusText = `Missing:`;
+            fileNameText = existingAudioData.originalFileName;
+        } else if (existingAudioData.status === 'error' && existingAudioData.originalFileName) {
+            statusClass = 'text-red-500 dark:text-red-400';
+            statusText = `Error:`;
+            fileNameText = existingAudioData.originalFileName;
+        } else if (existingAudioData.originalFileName) { // Fallback if status is odd but filename exists
+            statusClass = 'text-blue-500 dark:text-blue-400';
+            statusText = `File:`;
+            fileNameText = existingAudioData.originalFileName;
+        }
     }
 
     const indexAttr = index !== null ? `data-index="${index}"` : '';
+    // Using Tailwind classes for styling
     return `
-        <div class="drop-zone" data-track-id="${trackId}" data-target-type="${targetType}" ${indexAttr}>
-            <p class="${statusClass}">${statusText}</p>
+        <div class="drop-zone border-2 border-dashed border-gray-400 dark:border-slate-600 rounded-md p-3 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-150" 
+             data-track-id="${trackId}" data-target-type="${targetType}" ${indexAttr}>
+            <p class="text-xs ${statusClass} mb-1">${statusText}</p>
+            ${fileNameText ? `<p class="text-xs text-gray-700 dark:text-slate-300 font-medium truncate" title="${fileNameText}">${fileNameText}</p>` : ''}
             <input type="file" id="${fileInputId}" class="hidden" accept="audio/*">
-            <button onclick="document.getElementById('${fileInputId}').click();">Browse</button>
+            <button onclick="document.getElementById('${fileInputId}').click(); event.stopPropagation();" 
+                    class="mt-1 text-xs px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors duration-150 dark:bg-blue-600 dark:hover:bg-blue-700">
+                Browse
+            </button>
         </div>
     `;
 }
 
+
 export function setupGenericDropZoneListeners(dropZoneElement, trackId, targetType, index, loadFromBrowserCallback, fileLoadCallback) {
+    if (!dropZoneElement) return;
+
     dropZoneElement.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZoneElement.classList.add('dragover');
-        e.dataTransfer.dropEffect = 'copy';
+        dropZoneElement.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-slate-700'); // Tailwind for dragover
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
     });
     dropZoneElement.addEventListener('dragleave', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZoneElement.classList.remove('dragover');
+        dropZoneElement.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-slate-700');
     });
     dropZoneElement.addEventListener('drop', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZoneElement.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        const jsonDataString = e.dataTransfer.getData("application/json");
+        dropZoneElement.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-slate-700');
+        const files = e.dataTransfer?.files;
+        const jsonDataString = e.dataTransfer?.getData("application/json");
 
         if (jsonDataString) {
             try {
@@ -143,7 +184,11 @@ export function setupGenericDropZoneListeners(dropZoneElement, trackId, targetTy
             if (typeof fileLoadCallback === 'function') {
                 // Create a mock event object for fileLoadCallback
                 const mockEvent = { target: { files: files } };
-                fileLoadCallback(mockEvent, trackId, index); // Assuming padIndex for drum samplers
+                if (targetType === 'DrumSampler' && index !== null) {
+                     fileLoadCallback(mockEvent, trackId, index); // For drum samplers, pass pad index
+                } else {
+                     fileLoadCallback(mockEvent, trackId, targetType); // For general samplers
+                }
             }
         }
     });
@@ -168,23 +213,27 @@ export function createContextMenu(event, menuItems, appServicesForZIndex) {
     event.stopPropagation();
 
     const menu = document.createElement('div');
-    menu.className = 'context-menu';
+    // Using Tailwind for basic context menu styling
+    menu.className = 'context-menu absolute bg-gray-800 border border-gray-700 rounded-md shadow-lg py-1 text-sm text-white dark:bg-slate-700 dark:border-slate-600';
     menu.id = 'snug-context-menu'; // Added an ID
 
     const ul = document.createElement('ul');
+    ul.className = 'list-none p-0 m-0';
     menuItems.forEach(item => {
         if (item.separator) {
             const hr = document.createElement('hr');
+            hr.className = 'border-t border-gray-700 dark:border-slate-600 my-1';
             ul.appendChild(hr);
         } else {
             const li = document.createElement('li');
+            li.className = 'px-3 py-1.5 hover:bg-blue-600 dark:hover:bg-blue-500 cursor-pointer whitespace-nowrap';
             li.textContent = item.label;
             if (item.disabled) {
-                li.classList.add('disabled');
+                li.classList.add('opacity-50', 'cursor-not-allowed', 'hover:bg-transparent', 'dark:hover:bg-transparent');
             } else {
                 li.addEventListener('click', (e) => {
                     e.stopPropagation(); // Prevent click from closing menu if action opens another menu/modal
-                    item.action();
+                    if (typeof item.action === 'function') item.action();
                     if (activeContextMenu) activeContextMenu.remove(); // Close after action
                     activeContextMenu = null;
                 });
@@ -197,7 +246,7 @@ export function createContextMenu(event, menuItems, appServicesForZIndex) {
     activeContextMenu = menu;
 
     const zIndex = appServicesForZIndex && appServicesForZIndex.incrementHighestZ ? appServicesForZIndex.incrementHighestZ() : 10003;
-    menu.style.zIndex = zIndex;
+    menu.style.zIndex = zIndex.toString();
 
     // Position the menu
     const { clientX: mouseX, clientY: mouseY } = event;
@@ -215,12 +264,12 @@ export function createContextMenu(event, menuItems, appServicesForZIndex) {
     if (mouseY + menuHeight > viewportHeight) {
         top = mouseY - menuHeight;
     }
-    menu.style.top = `${top}px`;
-    menu.style.left = `${left}px`;
+    menu.style.top = `${Math.max(0, top)}px`; // Ensure it doesn't go off-screen top
+    menu.style.left = `${Math.max(0, left)}px`; // Ensure it doesn't go off-screen left
 
     // Close listener
     const closeListener = (e) => {
-        if (activeContextMenu && (!menu.contains(e.target) || e.type === 'contextmenu' && e.target !== menu && !menu.contains(e.target))) {
+        if (activeContextMenu && (!menu.contains(e.target) || (e.type === 'contextmenu' && e.target !== menu && !menu.contains(e.target)))) {
             try {
                 activeContextMenu.remove();
             } catch (removeError) { /* ignore if already removed */ }
