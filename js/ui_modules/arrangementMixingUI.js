@@ -146,7 +146,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
         if (controlsDiv && window.interact) { 
-            interact(controlsDiv).unset(); // Always unset first
+            interact(controlsDiv).unset(); 
             interact(controlsDiv)
                 .draggable({
                     inertia: false,
@@ -160,8 +160,13 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                                     sourceTrackId: track.id,
                                     clipName: currentActiveSeq.name
                                 };
-                                event.interaction.interactable.element().dataset.dragType = 'sequence-timeline-drag';
-                                event.interaction.interactable.element().dataset.jsonData = JSON.stringify(dragData);
+                                // MODIFIED LINE: Use event.interaction.element
+                                if (event.interaction.element) {
+                                    event.interaction.element.dataset.dragType = 'sequence-timeline-drag';
+                                    event.interaction.element.dataset.jsonData = JSON.stringify(dragData);
+                                } else {
+                                     console.warn("[UI Sequencer DragStart] event.interaction.element not found for controlsDiv.");
+                                }
                                 console.log(`[UI Sequencer DragStart via Interact.js] Dragging sequence: ${currentActiveSeq.name}`);
                             } else {
                                 event.interaction.stop(); 
@@ -390,7 +395,7 @@ export function renderTimeline() {
         lane.dataset.trackId = track.id;
 
         if (window.interact) {
-            interact(lane).unset(); // Always unset before re-attaching
+            interact(lane).unset(); 
             
             interact(lane)
                 .dropzone({
@@ -432,10 +437,9 @@ export function renderTimeline() {
 
                         if (clipId && !isNaN(originalTrackId) && dragType !== 'sound-browser-item' && dragType !== 'sequence-timeline-drag') { 
                             const originalTrack = localAppServices.getTrackById(originalTrackId);
-                             // Ensure originalTrack and its timelineClips are valid
                             if (!originalTrack || !originalTrack.timelineClips) {
                                 console.error("Original track or its timelineClips not found for repositioning.");
-                                if (localAppServices.renderTimeline) localAppServices.renderTimeline(); // Attempt to refresh UI
+                                if (localAppServices.renderTimeline) localAppServices.renderTimeline(); 
                                 targetLaneElement.classList.remove('drop-target');
                                 if(droppedClipElement) droppedClipElement.classList.remove('can-drop');
                                 return;
@@ -507,9 +511,9 @@ export function renderTimeline() {
 
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
             track.timelineClips.forEach(clip => {
-                if (!clip || typeof clip.id === 'undefined') { // Add a check for valid clip object
+                if (!clip || typeof clip.id === 'undefined') { 
                     console.warn("Encountered invalid clip object while rendering timeline for track:", track.name, clip);
-                    return; // Skip this invalid clip
+                    return; 
                 }
                 const clipEl = document.createElement('div');
                 clipEl.dataset.clipId = clip.id; 
@@ -541,7 +545,7 @@ export function renderTimeline() {
                 clipEl.style.touchAction = 'none'; 
 
                 if (window.interact) {
-                    interact(clipEl).unset(); // Always unset first
+                    interact(clipEl).unset(); 
                     
                     interact(clipEl)
                         .draggable({
@@ -594,7 +598,6 @@ export function renderTimeline() {
                                             console.error("Track.updateAudioClipPosition method not found!");
                                         }
                                     } else if (!event.dropzone && originalClipData) {
-                                        // Snap back if no significant move and not dropped
                                         target.style.left = `${originalClipData.startTime * pixelsPerSecond}px`;
                                     }
                                     delete target.dataset.startX;
