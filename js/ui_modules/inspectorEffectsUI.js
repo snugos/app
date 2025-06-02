@@ -150,34 +150,34 @@ function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     let controlsHTML = `<div id="synthEngineControls-${track.id}" class="grid grid-cols-2 md:grid-cols-3 gap-2 p-1">`;
-    definitions.forEach(def => { controlsHTML += `<div id="<span class="math-inline">\{def\.idPrefix\}\-</span>{track.id}-placeholder"></div>`; });
+    definitions.forEach(def => { controlsHTML += `<div id="${def.idPrefix}-${track.id}-placeholder"></div>`; });
     controlsHTML += `</div>`;
     return controlsHTML;
 }
 
 function buildSamplerSpecificInspectorDOM(track) {
     return `<div class="sampler-controls p-1 space-y-2">
-        <div id="dropZoneContainer-<span class="math-inline">\{track\.id\}\-sampler" class\="mb\-2"\></div\>
-<div class\="waveform\-section border rounded p\-1 bg\-gray\-100 dark\:bg\-slate\-700 dark\:border\-slate\-600"\>
-<canvas id\="waveformCanvas\-</span>{track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
+        <div id="dropZoneContainer-${track.id}-sampler" class="mb-2"></div>
+        <div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
+            <canvas id="waveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
         </div>
         <div class="slice-editor-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
-            <h4 class="text-xs font-semibold dark:text-slate-200">Slice Editor (Selected: <span id="selectedSliceInfo-<span class="math-inline">\{track\.id\}"\>1</span\>\)</h4\>
-<div class\="grid grid\-cols\-2 sm\:grid\-cols\-3 gap\-x\-2 gap\-y\-1 items\-center text\-xs"\>
-<div id\="sliceVolumeSlider\-</span>{track.id}-placeholder"></div>
-                <div id="slicePitchKnob-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<button id\="sliceLoopToggle\-</span>{track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Loop: OFF</button>
-                <button id="sliceReverseToggle-<span class="math-inline">\{track\.id\}" class\="px\-1\.5 py\-0\.5 text\-xs border rounded dark\:border\-slate\-500 dark\:text\-slate\-300 dark\:hover\:bg\-slate\-600"\>Rev\: OFF</button\>
-</div\>
-<div class\="text\-xs font\-medium mt\-1 dark\:text\-slate\-300"\>Envelope\:</div\>
-<div class\="grid grid\-cols\-2 sm\:grid\-cols\-4 gap\-x\-2 gap\-y\-1 items\-center text\-xs"\>
-<div id\="sliceEnvAttackSlider\-</span>{track.id}-placeholder"></div>
-                <div id="sliceEnvDecaySlider-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="sliceEnvSustainSlider\-</span>{track.id}-placeholder"></div>
-                <div id="sliceEnvReleaseSlider-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-</div\>
-</div\>
-<div id\="samplePadsContainer\-</span>{track.id}" class="grid grid-cols-4 gap-1 mt-2"></div>
+            <h4 class="text-xs font-semibold dark:text-slate-200">Slice Editor (Selected: <span id="selectedSliceInfo-${track.id}">1</span>)</h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-2 gap-y-1 items-center text-xs">
+                <div id="sliceVolumeSlider-${track.id}-placeholder"></div>
+                <div id="slicePitchKnob-${track.id}-placeholder"></div>
+                <button id="sliceLoopToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Loop: OFF</button>
+                <button id="sliceReverseToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Rev: OFF</button>
+            </div>
+            <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1 items-center text-xs">
+                <div id="sliceEnvAttackSlider-${track.id}-placeholder"></div>
+                <div id="sliceEnvDecaySlider-${track.id}-placeholder"></div>
+                <div id="sliceEnvSustainSlider-${track.id}-placeholder"></div>
+                <div id="sliceEnvReleaseSlider-${track.id}-placeholder"></div>
+            </div>
+            </div>
+        <div id="samplePadsContainer-${track.id}" class="grid grid-cols-4 gap-1 mt-2"></div>
         <div><button id="slicerPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>
     </div>`;
 }
@@ -185,29 +185,29 @@ function buildSamplerSpecificInspectorDOM(track) {
 function buildDrumSamplerSpecificInspectorDOM(track) {
     return `<div class="drum-sampler-controls p-1 space-y-2">
         <div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
-            <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-<span class="math-inline">\{track\.id\}"\>1</span\></h4\>
-<div id\="drumPadDropZoneContainer\-</span>{track.id}-<span class="math-inline">\{track\.selectedDrumPadForEdit\}" class\="mb\-1 text\-xs"\></div\>
-<div class\="grid grid\-cols\-2 gap\-x\-2 gap\-y\-1 items\-center text\-xs"\>
-<div id\="drumPadVolumeKnob\-</span>{track.id}-placeholder"></div>
-                <div id="drumPadPitchKnob-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-</div\>
-<div class\="text\-xs font\-medium mt\-1 dark\:text\-slate\-300"\>Envelope\:</div\>
-<div class\="grid grid\-cols\-2 sm\:grid\-cols\-4 gap\-x\-2 gap\-y\-1 items\-center text\-xs"\>
-<div id\="drumPadEnvAttack\-</span>{track.id}-placeholder"></div>
-                <div id="drumPadEnvDecay-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="drumPadEnvSustain\-</span>{track.id}-placeholder"></div>
-                <div id="drumPadEnvRelease-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-</div\>
-<div class\="text\-xs font\-medium mt\-2 pt\-1 border\-t dark\:border\-slate\-600 dark\:text\-slate\-300"\>Auto\-Stretch\:</div\>
-<div class\="grid grid\-cols\-2 gap\-x\-2 gap\-y\-1 items\-center text\-xs"\>
-<button id\="drumPadAutoStretchToggle\-</span>{track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Stretch: OFF</button>
+            <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
+            <div id="drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}" class="mb-1 text-xs"></div>
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
+                <div id="drumPadVolumeKnob-${track.id}-placeholder"></div>
+                <div id="drumPadPitchKnob-${track.id}-placeholder"></div>
+            </div>
+            <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
+             <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1 items-center text-xs">
+                <div id="drumPadEnvAttack-${track.id}-placeholder"></div>
+                <div id="drumPadEnvDecay-${track.id}-placeholder"></div>
+                <div id="drumPadEnvSustain-${track.id}-placeholder"></div>
+                <div id="drumPadEnvRelease-${track.id}-placeholder"></div>
+            </div>
+            <div class="text-xs font-medium mt-2 pt-1 border-t dark:border-slate-600 dark:text-slate-300">Auto-Stretch:</div>
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center text-xs">
+                <button id="drumPadAutoStretchToggle-${track.id}" class="px-1.5 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Stretch: OFF</button>
                 <div>
-                    <label for="drumPadStretchBPM-<span class="math-inline">\{track\.id\}" class\="block text\-\[10px\] font\-medium dark\:text\-slate\-400"\>Orig\. BPM\:</label\>
-<input type\="number" id\="drumPadStretchBPM\-</span>{track.id}" step="0.1" class="w-full p-0.5 border rounded text-[10px] dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                    <label for="drumPadStretchBPM-${track.id}" class="block text-[10px] font-medium dark:text-slate-400">Orig. BPM:</label>
+                    <input type="number" id="drumPadStretchBPM-${track.id}" step="0.1" class="w-full p-0.5 border rounded text-[10px] dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                 </div>
                 <div>
-                    <label for="drumPadStretchBeats-<span class="math-inline">\{track\.id\}" class\="block text\-\[10px\] font\-medium dark\:text\-slate\-400"\>Beats\:</label\>
-<input type\="number" id\="drumPadStretchBeats\-</span>{track.id}" step="0.01" class="w-full p-0.5 border rounded text-[10px] dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                    <label for="drumPadStretchBeats-${track.id}" class="block text-[10px] font-medium dark:text-slate-400">Beats:</label>
+                    <input type="number" id="drumPadStretchBeats-${track.id}" step="0.01" class="w-full p-0.5 border rounded text-[10px] dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                 </div>
             </div>
          </div>
@@ -217,35 +217,35 @@ function buildDrumSamplerSpecificInspectorDOM(track) {
 
 function buildInstrumentSamplerSpecificInspectorDOM(track) {
     return `<div class="instrument-sampler-controls p-1 space-y-2">
-        <div id="dropZoneContainer-<span class="math-inline">\{track\.id\}\-instrumentsampler" class\="mb\-2"\></div\>
-<div class\="waveform\-section border rounded p\-1 bg\-gray\-100 dark\:bg\-slate\-700 dark\:border\-slate\-600"\>
-<canvas id\="instrumentWaveformCanvas\-</span>{track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
+        <div id="dropZoneContainer-${track.id}-instrumentsampler" class="mb-2"></div>
+        <div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
+           <canvas id="instrumentWaveformCanvas-${track.id}" class="w-full h-24 bg-white dark:bg-slate-800 rounded shadow-inner"></canvas>
         </div>
         <div class="instrument-params-controls mt-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1 text-xs">
             <div class="grid grid-cols-2 gap-2 items-center">
                 <div>
-                    <label for="instrumentRootNote-<span class="math-inline">\{track\.id\}" class\="block text\-xs font\-medium dark\:text\-slate\-300"\>Root Note\:</label\>
-<select id\="instrumentRootNote\-</span>{track.id}" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500"></select>
+                    <label for="instrumentRootNote-${track.id}" class="block text-xs font-medium dark:text-slate-300">Root Note:</label>
+                    <select id="instrumentRootNote-${track.id}" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500"></select>
                 </div>
                 <div>
-                    <label for="instrumentLoopToggle-<span class="math-inline">\{track\.id\}" class\="block text\-xs font\-medium dark\:text\-slate\-300"\>Loop\:</label\>
-<button id\="instrumentLoopToggle\-</span>{track.id}" class="px-2 py-1 text-xs border rounded w-full dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Loop: OFF</button>
+                    <label for="instrumentLoopToggle-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop:</label>
+                    <button id="instrumentLoopToggle-${track.id}" class="px-2 py-1 text-xs border rounded w-full dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Loop: OFF</button>
                 </div>
                 <div>
-                    <label for="instrumentLoopStart-<span class="math-inline">\{track\.id\}" class\="block text\-xs font\-medium dark\:text\-slate\-300"\>Loop Start \(s\)\:</label\>
-<input type\="number" id\="instrumentLoopStart\-</span>{track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                    <label for="instrumentLoopStart-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop Start (s):</label>
+                    <input type="number" id="instrumentLoopStart-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                 </div>
                 <div>
-                    <label for="instrumentLoopEnd-<span class="math-inline">\{track\.id\}" class\="block text\-xs font\-medium dark\:text\-slate\-300"\>Loop End \(s\)\:</label\>
-<input type\="number" id\="instrumentLoopEnd\-</span>{track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                    <label for="instrumentLoopEnd-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop End (s):</label>
+                    <input type="number" id="instrumentLoopEnd-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                 </div>
             </div>
              <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
              <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1 items-center text-xs">
-                <div id="instrumentEnvAttack-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="instrumentEnvDecay\-</span>{track.id}-placeholder"></div>
-                <div id="instrumentEnvSustain-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="instrumentEnvRelease\-</span>{track.id}-placeholder"></div>
+                <div id="instrumentEnvAttack-${track.id}-placeholder"></div>
+                <div id="instrumentEnvDecay-${track.id}-placeholder"></div>
+                <div id="instrumentEnvSustain-${track.id}-placeholder"></div>
+                <div id="instrumentEnvRelease-${track.id}-placeholder"></div>
             </div>
             <div><button id="instrumentPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>
         </div>
@@ -257,8 +257,12 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     definitions.forEach(def => {
-        const placeholder = container.querySelector(`#<span class="math-inline">\{def\.idPrefix\}\-</span>{track.id}-placeholder`);
-        if (!placeholder) return;
+        // CORRECTED SELECTOR: Using template literal correctly
+        const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
+        if (!placeholder) {
+            console.warn(`[InspectorEffectsUI buildSynthEngineControls] Placeholder not found for: #${def.idPrefix}-${track.id}-placeholder in container:`, container);
+            return;
+        }
         let initialValue;
         const pathParts = def.path.split('.');
         let currentValObj = track.synthParams;
@@ -268,18 +272,25 @@ function buildSynthEngineControls(track, container, engineType) {
             } else { currentValObj = undefined; break; }
         }
         initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
-        if (def.path.endsWith('.value') && track.instrument?.get) {
+        if (def.path.endsWith('.value') && track.instrument?.get) { // Check if track.instrument exists and has get method
             const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
-            const signalValue = track.instrument.get(signalPath)?.value;
-            if (signalValue !== undefined) initialValue = signalValue;
+            try {
+                const signal = track.instrument.get(signalPath);
+                if (signal && typeof signal.value !== 'undefined') {
+                    initialValue = signal.value;
+                }
+            } catch (e) {
+                console.warn(`Error getting signal value for path ${signalPath} on track ${track.id}: ${e.message}`);
+            }
         }
+
 
         if (def.type === 'knob') {
             const knob = createKnob({ label: def.label, min: def.min, max: def.max, step: def.step, initialValue, decimals: def.decimals, displaySuffix: def.displaySuffix, trackRef: track, onValueChange: (val) => track.setSynthParam(def.path, val) });
             placeholder.innerHTML = ''; placeholder.appendChild(knob.element); track.inspectorControls[def.idPrefix] = knob;
         } else if (def.type === 'select') {
             const selectEl = document.createElement('select');
-            selectEl.id = `<span class="math-inline">\{def\.idPrefix\}\-</span>{track.id}`;
+            selectEl.id = `${def.idPrefix}-${track.id}`;
             selectEl.className = 'synth-param-select w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600';
             def.options.forEach(opt => {
                 const option = document.createElement('option');
@@ -311,7 +322,10 @@ function initializeSynthSpecificControls(track, winEl) {
 
 // --- Shared Dropzone Setup for Samplers using Interact.js ---
 function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padIndex = null) {
-    if (!window.interact || !dropZoneElement) return;
+    if (!window.interact || !dropZoneElement) {
+        console.warn(`[InspectorEffectsUI setupSamplerInteractDropzone] Interact.js not loaded or dropZoneElement missing for track ${trackId}, type ${targetType}`);
+        return;
+    }
 
     interact(dropZoneElement).unset(); 
     interact(dropZoneElement)
@@ -319,16 +333,16 @@ function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padI
             accept: '.dragging-sound-item', 
             ondropactivate: function (event) {
                 event.target.classList.add('drop-active');
-                event.target.classList.add('border-blue-400'); // Example active style
+                event.target.style.borderColor = '#60a5fa'; // Example: Tailwind blue-400
             },
             ondragenter: function (event) {
                 event.target.classList.add('drop-target'); 
-                event.target.classList.add('bg-blue-700'); // Example hover style
+                event.target.style.backgroundColor = '#374151'; // Example: Tailwind gray-700
                 if (event.relatedTarget) event.relatedTarget.classList.add('can-drop');
             },
             ondragleave: function (event) {
                 event.target.classList.remove('drop-target');
-                event.target.classList.remove('bg-blue-700');
+                event.target.style.backgroundColor = ''; // Reset
                 if (event.relatedTarget) event.relatedTarget.classList.remove('can-drop');
             },
             ondrop: function (event) {
@@ -358,11 +372,14 @@ function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padI
                 } else {
                     console.warn("No jsonData found on dropped sampler item.");
                 }
-                dropzone.classList.remove('drop-target', 'bg-blue-700');
+                dropzone.classList.remove('drop-target');
+                dropzone.style.backgroundColor = '';
                 if (droppedElement) droppedElement.classList.remove('can-drop');
             },
             ondropdeactivate: function (event) {
-                event.target.classList.remove('drop-active', 'drop-target', 'border-blue-400', 'bg-blue-700');
+                event.target.classList.remove('drop-active', 'drop-target');
+                event.target.style.borderColor = '';
+                event.target.style.backgroundColor = '';
             }
         });
         console.log(`[InspectorEffectsUI] Interact.js dropzone setup for ${targetType}, track ${trackId}, pad ${padIndex}`);
@@ -449,9 +466,8 @@ function initializeSamplerSpecificControls(track, winEl) {
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
-    // Call updateDrumPadControlsUI initially to setup the dropzone for the currently selected pad
     updateDrumPadControlsUI(track); 
-    renderDrumSamplerPads(track); // Renders the grid of pads
+    renderDrumSamplerPads(track); 
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
@@ -567,21 +583,21 @@ function buildTrackInspectorContentDOM(track) {
 
     return `
         <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 dark:text-slate-300 overflow-y-auto h-full">
-            <div class="common-controls grid <span class="math-inline">\{track\.type \=\=\= 'Audio' ? 'grid\-cols\-4' \: 'grid\-cols\-3'\} gap\-1 mb\-1"\>
-<button id\="muteBtn\-</span>{track.id}" title="Mute Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 <span class="math-inline">\{track\.isMuted ? 'muted' \: ''\}"\></span>{track.isMuted ? 'Unmute' : 'Mute'}</button>
-                <button id="soloBtn-${track.id}" title="Solo Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 <span class="math-inline">\{track\.isSoloed ? 'soloed' \: ''\}"\></span>{track.isSoloed ? 'Unsolo' : 'Solo'}</button>
-                <span class="math-inline">\{monitorButtonHTML\}
-<button id\="armInputBtn\-</span>{track.id}" title="Arm for MIDI/Keyboard Input or Audio Recording" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 <span class="math-inline">\{armedTrackId \=\=\= track\.id ? 'armed' \: ''\}"\>Arm</button\>
-</div\>
-<div id\="volumeKnob\-</span>{track.id}-placeholder" class="mb-1"></div>
-            <div id="trackMeterContainer-<span class="math-inline">\{track\.id\}" class\="h\-3 w\-full bg\-gray\-200 dark\:bg\-slate\-600 rounded border border\-gray\-300 dark\:border\-slate\-500 overflow\-hidden my\-1"\>
-<div id\="trackMeterBar\-</span>{track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
+            <div class="common-controls grid ${track.type === 'Audio' ? 'grid-cols-4' : 'grid-cols-3'} gap-1 mb-1">
+                <button id="muteBtn-${track.id}" title="Mute Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'Unmute' : 'Mute'}</button>
+                <button id="soloBtn-${track.id}" title="Solo Track" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
+                ${monitorButtonHTML}
+                <button id="armInputBtn-${track.id}" title="Arm for MIDI/Keyboard Input or Audio Recording" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${armedTrackId === track.id ? 'armed' : ''}">Arm</button>
+            </div>
+            <div id="volumeKnob-${track.id}-placeholder" class="mb-1"></div>
+            <div id="trackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden my-1">
+                <div id="trackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
             <div class="type-specific-controls mt-1 border-t dark:border-slate-600 pt-1">${specificControlsHTML}</div>
-            <div class="inspector-nav grid <span class="math-inline">\{track\.type \=\=\= 'Audio' ? 'grid\-cols\-2' \: 'grid\-cols\-3'\} gap\-1 mt\-2"\>
-<button id\="openEffectsBtn\-</span>{track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Effects</button>
-                <span class="math-inline">\{sequencerButtonHTML\}
-<button id\="removeTrackBtn\-</span>{track.id}" class="px-1 py-0.5 border rounded bg-red-400 hover:bg-red-500 text-white dark:bg-red-600 dark:hover:bg-red-700 dark:border-red-500">Remove</button>
+            <div class="inspector-nav grid ${track.type === 'Audio' ? 'grid-cols-2' : 'grid-cols-3'} gap-1 mt-2">
+                <button id="openEffectsBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Effects</button>
+                ${sequencerButtonHTML}
+                <button id="removeTrackBtn-${track.id}" class="px-1 py-0.5 border rounded bg-red-400 hover:bg-red-500 text-white dark:bg-red-600 dark:hover:bg-red-700 dark:border-red-500">Remove</button>
             </div>
         </div>`;
 }
@@ -656,10 +672,10 @@ export function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
     return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full">
-        <h3 class="text-sm font-semibold dark:text-slate-200">Effects Rack: <span class="math-inline">\{ownerName\}</h3\>
-<div id\="effectsList\-</span>{ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600"></div>
-        <button id="addEffectBtn-<span class="math-inline">\{ownerId\}" class\="text\-xs px\-2 py\-1 bg\-blue\-500 text\-white rounded hover\:bg\-blue\-600 dark\:bg\-blue\-600 dark\:hover\:bg\-blue\-700"\>Add Effect</button\>
-<div id\="effectControlsContainer\-</span>{ownerId}" class="mt-2 space-y-2"></div>
+        <h3 class="text-sm font-semibold dark:text-slate-200">Effects Rack: ${ownerName}</h3>
+        <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600"></div>
+        <button id="addEffectBtn-${ownerId}" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Add Effect</button>
+        <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2"></div>
     </div>`;
 }
 
@@ -680,7 +696,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
         const displayName = effectDef ? effectDef.displayName : effect.type;
         const item = document.createElement('div');
         item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs';
-        item.innerHTML = `<span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit <span class="math-inline">\{displayName\}"\></span>{displayName}</span>
+        item.innerHTML = `<span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit ${displayName}">${displayName}</span>
             <div class="effect-actions">
                 <button class="up-btn text-xs px-0.5 ${index === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600 dark:hover:text-green-400'} dark:text-slate-400" ${index === 0 ? 'disabled' : ''} title="Move Up">▲</button>
                 <button class="down-btn text-xs px-0.5 ${index === effectsArray.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:text-green-600 dark:hover:text-green-400'} dark:text-slate-400" ${index === effectsArray.length - 1 ? 'disabled' : ''} title="Move Down">▼</button>
@@ -933,7 +949,7 @@ export function updateDrumPadControlsUI(track) {
     const selectedInfo = inspector.querySelector(`#selectedDrumPadInfo-${track.id}`);
     if (selectedInfo) selectedInfo.textContent = selectedPadIndex + 1;
 
-    const padSpecificDropZoneContainerId = `drumPadDropZoneContainer-<span class="math-inline">\{track\.id\}\-</span>{selectedPadIndex}`;
+    const padSpecificDropZoneContainerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
     const controlsArea = inspector.querySelector('.selected-pad-controls');
     let dzContainer = inspector.querySelector(`#${padSpecificDropZoneContainerId}`);
 
@@ -959,11 +975,13 @@ export function updateDrumPadControlsUI(track) {
             originalFileName: padData.originalFileName,
             status: padData.status || (padData.originalFileName ? 'missing' : 'empty')
         };
-        dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-<span class="math-inline">\{track\.id\}\-</span>{selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
+        dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
         const dzEl = dzContainer.querySelector('.drop-zone');
-        const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-<span class="math-inline">\{track\.id\}\-</span>{selectedPadIndex}`);
-        if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
-        if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
+        const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
+        if (dzEl) setupSamplerInteractDropzone(dzEl, track.id, 'DrumSampler', selectedPadIndex); // MODIFIED TO USE INTERACT DROPZONE
+        if (fileInputEl && localAppServices.loadDrumSamplerPadFile) {
+            fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
+        }
     }
 
     const createAndPlaceKnob = (placeholderId, options) => {
@@ -1033,266 +1051,4 @@ export function updateDrumPadControlsUI(track) {
     track.inspectorControls.drumPadEnvDecay = createAndPlaceKnob(`drumPadEnvDecay-${track.id}-placeholder`, { label: 'Decay', min:0.01, max:1, step:0.01, initialValue: env.decay, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'decay', val)});
     track.inspectorControls.drumPadEnvSustain = createAndPlaceKnob(`drumPadEnvSustain-${track.id}-placeholder`, { label: 'Sustain', min:0, max:1, step:0.01, initialValue: env.sustain, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'sustain', val)});
     track.inspectorControls.drumPadEnvRelease = createAndPlaceKnob(`drumPadEnvRelease-${track.id}-placeholder`, { label: 'Release', min:0.01, max:2, step:0.01, initialValue: env.release, decimals:2, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'release', val)});
-}
-
-
-// --- Timeline UI Functions ---
-export function renderTimeline() {
-    const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
-    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
-        return;
-    }
-
-    const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
-    const tracks = getTracksState();
-    if (!tracksArea || !tracks) {
-        console.warn("Timeline area or tracks not found for rendering inside timeline window.");
-        return;
-    }
-
-    tracksArea.innerHTML = '';
-
-    const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120;
-
-
-    tracks.forEach(track => {
-        const lane = document.createElement('div');
-        lane.className = 'timeline-track-lane';
-        lane.dataset.trackId = track.id;
-
-        lane.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            lane.classList.add('dragover-timeline-lane');
-            event.dataTransfer.dropEffect = 'copy';
-        });
-
-        lane.addEventListener('dragleave', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            lane.classList.remove('dragover-timeline-lane');
-        });
-
-        lane.addEventListener('drop', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            lane.classList.remove('dragover-timeline-lane');
-
-            const targetTrackId = parseInt(lane.dataset.trackId, 10);
-            const timelineContentArea = timelineWindow.element.querySelector('.window-content');
-            const pixelsPerSecond = 30;
-
-            const rect = timelineContentArea.getBoundingClientRect();
-            let dropX = event.clientX - rect.left - trackNameWidth + timelineContentArea.scrollLeft;
-            dropX = Math.max(0, dropX);
-            const startTime = dropX / pixelsPerSecond;
-
-            console.log(`[UI Timeline Drop] TrackID: ${targetTrackId}, Time: ${startTime.toFixed(2)}s`);
-
-            if (localAppServices.handleTimelineLaneDrop) {
-                localAppServices.handleTimelineLaneDrop(event, targetTrackId, startTime);
-            } else {
-                console.warn("handleTimelineLaneDrop service not available.");
-            }
-        });
-
-
-        const nameEl = document.createElement('div');
-        nameEl.className = 'timeline-track-lane-name';
-        nameEl.textContent = track.name;
-        lane.appendChild(nameEl);
-
-        const clipsContainer = document.createElement('div');
-        clipsContainer.style.position = 'relative';
-        clipsContainer.style.width = `calc(100% - ${trackNameWidth}px)`;
-        clipsContainer.style.height = '100%';
-
-
-        if (track.timelineClips && Array.isArray(track.timelineClips)) {
-            track.timelineClips.forEach(clip => {
-                const clipEl = document.createElement('div');
-                let clipText = clip.name || `Clip ${clip.id.slice(-4)}`;
-                let clipTitle = `<span class="math-inline">\{clip\.name \|\| \(clip\.type \=\=\= 'audio' ? 'Audio Clip' \: 'Sequence Clip'\)\} \(</span>{clip.duration.toFixed(2)}s)`;
-
-                if (clip.type === 'audio') {
-                    clipEl.className = 'audio-clip';
-                } else if (clip.type === 'sequence') {
-                    clipEl.className = 'audio-clip sequence-clip';
-                    const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
-                    if (sourceSeq) {
-                        clipText = sourceSeq.name;
-                        clipTitle = `Sequence: <span class="math-inline">\{sourceSeq\.name\} \(</span>{clip.duration.toFixed(2)}s)`;
-                    }
-                } else {
-                    clipEl.className = 'audio-clip unknown-clip';
-                }
-
-                clipEl.textContent = clipText;
-                clipEl.title = clipTitle;
-
-                const pixelsPerSecond = 30;
-                clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
-
-                clipEl.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const startX = e.clientX;
-                    const initialLeftPixels = parseFloat(clipEl.style.left) || 0;
-                    let originalStartTime = clip.startTime;
-
-                    function onMouseMove(moveEvent) {
-                        const dx = moveEvent.clientX - startX;
-                        const newLeftPixels = initialLeftPixels + dx;
-                        clipEl.style.left = `${Math.max(0, newLeftPixels)}px`;
-                    }
-
-                    function onMouseUp() {
-                        document.removeEventListener('mousemove', onMouseMove);
-                        document.removeEventListener('mouseup', onMouseUp);
-                        const finalLeftPixels = parseFloat(clipEl.style.left) || 0;
-                        const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond);
-
-                        if (Math.abs(newStartTime - originalStartTime) > (1 / pixelsPerSecond) * 0.5 ) {
-                            if (localAppServices.captureStateForUndo) {
-                                localAppServices.captureStateForUndo(`Move clip on track "${track.name}"`);
-                            }
-                            if (track.updateAudioClipPosition) {
-                                track.updateAudioClipPosition(clip.id, newStartTime);
-                            } else {
-                                console.error("Track.updateAudioClipPosition method not found!");
-                            }
-                        } else {
-                            clipEl.style.left = `${originalStartTime * pixelsPerSecond}px`;
-                        }
-                    }
-                    document.addEventListener('mousemove', onMouseMove);
-                    document.addEventListener('mouseup', onMouseUp);
-                });
-                clipsContainer.appendChild(clipEl);
-            });
-        }
-        lane.appendChild(clipsContainer);
-        tracksArea.appendChild(lane);
-    });
-}
-
-export function updatePlayheadPosition() {
-    const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
-
-    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
-        return;
-    }
-
-    const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    const timelineContentArea = timelineWindow.element.querySelector('.window-content');
-    const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler');
-
-
-    if (!playhead || typeof Tone === 'undefined' || !timelineContentArea || !localAppServices.getPlaybackMode) return;
-
-    const currentPlaybackMode = localAppServices.getPlaybackMode();
-
-    if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') {
-        playhead.style.display = 'none';
-        if (timelineRuler) {
-             timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
-        }
-        return;
-    }
-
-    playhead.style.display = 'block';
-
-    const pixelsPerSecond = 30;
-    const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120;
-
-    if (Tone.Transport.state === 'started') {
-        const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
-
-        const scrollableContent = timelineContentArea;
-        const containerWidth = scrollableContent.clientWidth - trackNameWidth;
-        const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft;
-
-        if (playheadVisualPositionInScrollable > containerWidth * 0.8) {
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20;
-        } else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) {
-            scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
-        }
-        if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
-
-    } else if (Tone.Transport.state === 'stopped') {
-         playhead.style.left = `${trackNameWidth}px`;
-    }
-
-    if (timelineRuler && timelineContentArea) {
-        timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
-    }
-}
-
-
-export function openTimelineWindow(savedState = null) {
-    const windowId = 'timeline';
-    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
-    if (openWindows.has(windowId) && !savedState) {
-        const win = openWindows.get(windowId);
-        win.restore();
-        renderTimeline();
-        return win;
-    }
-
-    const contentHTML = `
-        <div id="timeline-container">
-            <div id="timeline-header">
-                <div id="timeline-ruler"></div>
-            </div>
-            <div id="timeline-tracks-container">
-                <div id="timeline-tracks-area"></div>
-            </div>
-            <div id="timeline-playhead"></div>
-        </div>
-    `;
-
-    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
-    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
-    const timelineOptions = {
-        width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)),
-        height: 250,
-        x: 30,
-        y: 50,
-        minWidth: 400,
-        minHeight: 150,
-        initialContentKey: windowId,
-        onCloseCallback: () => {}
-    };
-
-     if (savedState) {
-        Object.assign(timelineOptions, {
-            x: parseInt(savedState.left, 10),
-            y: parseInt(savedState.top, 10),
-            width: parseInt(savedState.width, 10),
-            height: parseInt(savedState.height, 10),
-            zIndex: savedState.zIndex,
-            isMinimized: savedState.isMinimized
-        });
-    }
-
-    const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
-
-    if (timelineWindow?.element) {
-        const contentArea = timelineWindow.element.querySelector('.window-content');
-        if (contentArea) {
-            contentArea.addEventListener('scroll', () => {
-                const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-                if (ruler) {
-                    ruler.style.transform = `translateX(-${contentArea.scrollLeft}px)`;
-                }
-                updatePlayheadPosition();
-            });
-        }
-        renderTimeline();
-    }
-    return timelineWindow;
 }
