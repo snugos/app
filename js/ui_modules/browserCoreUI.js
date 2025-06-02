@@ -340,14 +340,14 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                 if(previewBtn) previewBtn.disabled = false;
             });
 
-            // MODIFICATION: Replace native HTML5 drag-and-drop with Interact.js
             if (window.interact) {
                 interact(listItem).unset(); 
                 interact(listItem)
                     .draggable({
-                        inertia: true, 
+                        inertia: true,
                         listeners: {
                             start: (event) => {
+                                console.log('[UI SoundBrowser DragStart via Interact.js] Attempting to drag:', name); // Added log
                                 const dragData = {
                                     type: 'sound-browser-item',
                                     fileName: name,
@@ -359,36 +359,41 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                                     targetElement.dataset.dragType = 'sound-browser-item';
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
                                     targetElement.classList.add('dragging-sound-item'); 
+                                    // Make the element itself follow the cursor
+                                    targetElement.style.position = 'relative'; // Or 'absolute' if moving within a specific container
+                                    targetElement.style.zIndex = '10000'; // Bring to front
                                 }
-                                console.log(`[UI SoundBrowser DragStart via Interact.js] Dragging: ${name}`);
+                                console.log(`[UI SoundBrowser DragStart via Interact.js] Dragging: ${name}, Data prepared.`);
                             },
                             move: (event) => {
-                                // For a simple drag from a list, we might not move the original element.
-                                // Interact.js handles creating a representation for the drag if not customized.
-                                // If a visual "ghost" element is desired to follow the cursor,
-                                // it would be created and positioned here using event.dx and event.dy.
+                                const target = event.interaction.element || event.target;
+                                if (target) {
+                                    const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+    
+                                    target.style.transform = `translate(${x}px, ${y}px)`;
+    
+                                    target.setAttribute('data-x', x);
+                                    target.setAttribute('data-y', y);
+                                }
                             },
                             end: (event) => {
                                 const targetElement = event.interaction.element || event.target;
                                 if (targetElement) {
                                      targetElement.classList.remove('dragging-sound-item'); 
+                                     // Reset transform and remove temporary attributes
+                                     targetElement.style.transform = 'none';
+                                     targetElement.removeAttribute('data-x');
+                                     targetElement.removeAttribute('data-y');
+                                     targetElement.style.zIndex = '';
+                                     // Note: dataset items (dragType, jsonData) remain for the dropzone.
                                 }
+                                console.log(`[UI SoundBrowser DragEnd via Interact.js] Drag ended for: ${name}`);
                             }
                         }
                     })
                     .styleCursor(false); 
                 listItem.style.cursor = 'grab';
-            } else {
-                // Fallback to original HTML5 drag if Interact.js isn't loaded (should ideally not happen)
-                listItem.draggable = true;
-                listItem.addEventListener('dragstart', (e) => {
-                    const dragData = {type: 'sound-browser-item', fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName};
-                    e.dataTransfer.setData("application/json", JSON.stringify(dragData));
-                    e.dataTransfer.effectAllowed = "copy";
-                    // Still set dataset for consistency, though native D&D uses dataTransfer primarily
-                    listItem.dataset.dragType = 'sound-browser-item';
-                    listItem.dataset.jsonData = JSON.stringify(dragData);
-                });
             }
         }
         listDiv.appendChild(listItem);
