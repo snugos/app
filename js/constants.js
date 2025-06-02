@@ -26,7 +26,7 @@ export const soundLibraries = {
     // Add more libraries here as they become available
 };
 
-export const numSlices = 16; // Default number of slices for Sampler track
+export const numSlices = 8; // Default number of slices for Sampler track
 export const numDrumSamplerPads = 16; // Number of pads for Drum Sampler
 
 export const defaultVelocity = 0.7; // Default velocity for MIDI notes / sequencer steps
