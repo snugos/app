@@ -4,10 +4,10 @@ export const APP_VERSION = "0.1.0"; // Added application version
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
-export const MAX_BARS = 32; // Maximum number of bars a sequence can have
+export const MAX_BARS = 256; // Maximum number of bars a sequence can have
 
-export const MIN_TEMPO = 30; // Minimum tempo in BPM
-export const MAX_TEMPO = 300; // Maximum tempo in BPM
+export const MIN_TEMPO = 1; // Minimum tempo in BPM
+export const MAX_TEMPO = 999; // Maximum tempo in BPM
 
 // Note: Reversed for typical top-to-bottom piano roll display in a UI
 export const synthPitches = [
