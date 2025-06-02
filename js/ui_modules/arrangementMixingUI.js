@@ -398,7 +398,7 @@ export function renderTimeline() {
             
             interact(lane)
                 .dropzone({
-                    accept: '.audio-clip, .sequencer-controls, .dragging-sound-item', // Added .dragging-sound-item
+                    accept: '.audio-clip, .sequencer-controls, .dragging-sound-item', 
                     overlap: 0.25, 
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
@@ -417,26 +417,52 @@ export function renderTimeline() {
                         if (draggableElement) draggableElement.classList.remove('can-drop');
                     },
                     ondrop: function (event) {
-                        console.log('[TimelineLane] ONDROP triggered! RelatedTarget:', event.relatedTarget);
+                        console.log('[TimelineLane] ONDROP triggered!', event);
                         const droppedClipElement = event.relatedTarget;
                         const targetLaneElement = event.target;
                         const targetTrackId = parseInt(targetLaneElement.dataset.trackId, 10);
                         
+                        const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null; // Re-fetch in case of closure
+                        if (!timelineWindow || !timelineWindow.element) {
+                            console.error("Timeline window not found during drop");
+                            return;
+                        }
                         const timelineContentArea = timelineWindow.element.querySelector('.window-content');
+                        if (!timelineContentArea) {
+                             console.error("Timeline content area not found during drop");
+                            return;
+                        }
                         const pixelsPerSecond = 30; 
+                        const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
+                        const trackNameWidth = parseFloat(trackNameWidthStyle) || 120;
                         const timelineRect = timelineContentArea.getBoundingClientRect();
 
-                        let dropX = event.client.x - timelineRect.left - trackNameWidth + timelineContentArea.scrollLeft;
+                        let dropXClient = 0;
+                        if (event.dragEvent && typeof event.dragEvent.clientX === 'number') { 
+                            dropXClient = event.dragEvent.clientX;
+                        } else if (event.client && typeof event.client.x === 'number') {
+                            console.warn("[TimelineLane ONDROP] event.dragEvent not available or clientX missing, using event.client.x.");
+                            dropXClient = event.client.x;
+                        } else if (typeof event.clientX === 'number') {
+                             console.warn("[TimelineLane ONDROP] event.dragEvent and event.client.x not available, using event.clientX.");
+                             dropXClient = event.clientX;
+                        } else {
+                            console.error("[TimelineLane ONDROP] Cannot determine drop clientX coordinate from event:", event);
+                            targetLaneElement.classList.remove('drop-target');
+                            if(droppedClipElement) droppedClipElement.classList.remove('can-drop');
+                            return; 
+                        }
+                        
+                        let dropX = dropXClient - timelineRect.left - trackNameWidth + timelineContentArea.scrollLeft;
                         dropX = Math.max(0, dropX); 
                         const startTime = dropX / pixelsPerSecond;
 
-                        console.log(`[UI Timeline Drop via Interact.js] TrackID: ${targetTrackId}, Time: ${startTime.toFixed(2)}s`);
+                        console.log(`[UI Timeline Drop via Interact.js] TargetTrackID: ${targetTrackId}, Calculated StartTime: ${startTime.toFixed(2)}s, DropXClient: ${dropXClient}`);
                         
                         const clipId = droppedClipElement.dataset.clipId; 
                         const originalTrackId = parseInt(droppedClipElement.dataset.originalTrackId, 10); 
                         const dragType = droppedClipElement.dataset.dragType; 
                         const jsonDataString = droppedClipElement.dataset.jsonData;
-
 
                         if (clipId && !isNaN(originalTrackId) && dragType !== 'sound-browser-item' && dragType !== 'sequence-timeline-drag') { 
                             const originalTrack = localAppServices.getTrackById(originalTrackId);
