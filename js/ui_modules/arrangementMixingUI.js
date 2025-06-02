@@ -8,7 +8,6 @@ import {
 } from '../eventHandlers.js';
 import { getTracksState } from '../state.js';
 
-
 let localAppServices = {};
 
 export function initializeArrangementMixingUI(appServicesFromMain) {
@@ -146,8 +145,8 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        if (controlsDiv && window.interact) { // Make controls draggable with Interact.js
-            if (interact.isSet(controlsDiv)) interact(controlsDiv).unset(); // Clear previous if any
+        if (controlsDiv && window.interact) { 
+            interact(controlsDiv).unset(); // Always unset first
             interact(controlsDiv)
                 .draggable({
                     inertia: false,
@@ -165,7 +164,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                                 event.interaction.interactable.element().dataset.jsonData = JSON.stringify(dragData);
                                 console.log(`[UI Sequencer DragStart via Interact.js] Dragging sequence: ${currentActiveSeq.name}`);
                             } else {
-                                event.interaction.stop(); // Stop interaction if no sequence
+                                event.interaction.stop(); 
                                 console.warn(`[UI Sequencer DragStart] No active sequence to drag for track ${track.name}`);
                             }
                         },
@@ -390,11 +389,8 @@ export function renderTimeline() {
         lane.className = 'timeline-track-lane';
         lane.dataset.trackId = track.id;
 
-        // Setup lane as a dropzone using Interact.js
         if (window.interact) {
-            // Check if an interactable is already set and unset it to avoid duplicates if renderTimeline is called multiple times
-            // MODIFICATION: Directly call unset, it's safe.
-            interact(lane).unset();
+            interact(lane).unset(); // Always unset before re-attaching
             
             interact(lane)
                 .dropzone({
@@ -407,11 +403,11 @@ export function renderTimeline() {
                         const draggableElement = event.relatedTarget;
                         const dropzoneElement = event.target;
                         dropzoneElement.classList.add('drop-target'); 
-                        draggableElement.classList.add('can-drop');  
+                        if (draggableElement) draggableElement.classList.add('can-drop');  
                     },
                     ondragleave: function (event) {
                         event.target.classList.remove('drop-target');
-                        event.relatedTarget.classList.remove('can-drop');
+                        if (event.relatedTarget) event.relatedTarget.classList.remove('can-drop');
                     },
                     ondrop: function (event) {
                         const droppedClipElement = event.relatedTarget;
@@ -436,6 +432,14 @@ export function renderTimeline() {
 
                         if (clipId && !isNaN(originalTrackId) && dragType !== 'sound-browser-item' && dragType !== 'sequence-timeline-drag') { 
                             const originalTrack = localAppServices.getTrackById(originalTrackId);
+                             // Ensure originalTrack and its timelineClips are valid
+                            if (!originalTrack || !originalTrack.timelineClips) {
+                                console.error("Original track or its timelineClips not found for repositioning.");
+                                if (localAppServices.renderTimeline) localAppServices.renderTimeline(); // Attempt to refresh UI
+                                targetLaneElement.classList.remove('drop-target');
+                                if(droppedClipElement) droppedClipElement.classList.remove('can-drop');
+                                return;
+                            }
                             const clipData = originalTrack.timelineClips.find(c => c.id === clipId);
 
                             if (clipData) {
@@ -445,9 +449,10 @@ export function renderTimeline() {
                                     
                                     if (originalTrackId !== targetTrackId) { 
                                         originalTrack.timelineClips = originalTrack.timelineClips.filter(c => c.id !== clipId);
-                                        if (targetTrackForDrop.addExistingClipFromOtherTrack) { 
+                                        if (typeof targetTrackForDrop.addExistingClipFromOtherTrack === 'function') { 
                                             targetTrackForDrop.addExistingClipFromOtherTrack(clipData, startTime);
                                         } else { 
+                                            console.warn(`Track type ${targetTrackForDrop.type} does not have addExistingClipFromOtherTrack. Manually adding.`);
                                             const newClipDataForNewTrack = {...JSON.parse(JSON.stringify(clipData)), startTime: startTime, id: `clip_${targetTrackId}_${Date.now()}`};
                                             targetTrackForDrop.timelineClips.push(newClipDataForNewTrack);
                                         }
@@ -458,7 +463,13 @@ export function renderTimeline() {
                                 } else if (targetTrackForDrop && targetTrackForDrop.type !== originalTrack.type) {
                                     if(localAppServices.showNotification) localAppServices.showNotification(`Cannot move ${originalTrack.type} clip to ${targetTrackForDrop.type} track.`, 3000);
                                     if(localAppServices.renderTimeline) localAppServices.renderTimeline(); 
+                                } else if (!targetTrackForDrop) {
+                                     console.error("Target track for drop not found.");
+                                     if(localAppServices.renderTimeline) localAppServices.renderTimeline();
                                 }
+                            } else {
+                                console.warn("Original clip data not found for ID:", clipId);
+                                if(localAppServices.renderTimeline) localAppServices.renderTimeline();
                             }
                         } else if ((dragType === 'sound-browser-item' || dragType === 'sequence-timeline-drag') && jsonDataString) {
                             try {
@@ -473,7 +484,7 @@ export function renderTimeline() {
                         }
 
                         targetLaneElement.classList.remove('drop-target');
-                        droppedClipElement.classList.remove('can-drop');
+                        if(droppedClipElement) droppedClipElement.classList.remove('can-drop');
                     },
                     ondropdeactivate: function (event) {
                         event.target.classList.remove('drop-active');
@@ -496,12 +507,17 @@ export function renderTimeline() {
 
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
             track.timelineClips.forEach(clip => {
+                if (!clip || typeof clip.id === 'undefined') { // Add a check for valid clip object
+                    console.warn("Encountered invalid clip object while rendering timeline for track:", track.name, clip);
+                    return; // Skip this invalid clip
+                }
                 const clipEl = document.createElement('div');
                 clipEl.dataset.clipId = clip.id; 
                 clipEl.dataset.originalTrackId = track.id; 
 
                 let clipText = clip.name || `Clip ${clip.id.slice(-4)}`;
-                let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration.toFixed(2)}s)`;
+                let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
+
 
                 if (clip.type === 'audio') {
                     clipEl.className = 'audio-clip';
@@ -510,7 +526,7 @@ export function renderTimeline() {
                     const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
                     if (sourceSeq) {
                         clipText = sourceSeq.name;
-                        clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration.toFixed(2)}s)`;
+                        clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
                     }
                 } else {
                     clipEl.className = 'audio-clip unknown-clip';
@@ -520,13 +536,12 @@ export function renderTimeline() {
                 clipEl.title = clipTitle;
 
                 const pixelsPerSecond = 30;
-                clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
+                clipEl.style.left = `${(clip.startTime || 0) * pixelsPerSecond}px`;
+                clipEl.style.width = `${Math.max(5, (clip.duration || 0) * pixelsPerSecond)}px`;
                 clipEl.style.touchAction = 'none'; 
 
                 if (window.interact) {
-                     // MODIFICATION: Directly call unset, it's safe.
-                    interact(clipEl).unset();
+                    interact(clipEl).unset(); // Always unset first
                     
                     interact(clipEl)
                         .draggable({
@@ -562,18 +577,24 @@ export function renderTimeline() {
                                     target.style.zIndex = ''; 
                                     const finalLeftPixels = parseFloat(target.style.left) || 0;
                                     const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond);
-                                    const originalClipData = track.timelineClips.find(c => c.id === target.dataset.clipId);
+                                    
+                                    const currentClipId = target.dataset.clipId;
+                                    const currentTrackId = parseInt(target.dataset.originalTrackId, 10);
+                                    const currentTrack = localAppServices.getTrackById(currentTrackId);
+                                    const originalClipData = currentTrack ? currentTrack.timelineClips.find(c => c.id === currentClipId) : null;
+
 
                                     if (!event.dropzone && originalClipData && Math.abs(newStartTime - originalClipData.startTime) > 0.01) {
                                          if (localAppServices.captureStateForUndo) {
-                                            localAppServices.captureStateForUndo(`Move clip "${originalClipData.name}" on track "${track.name}"`);
+                                            localAppServices.captureStateForUndo(`Move clip "${originalClipData.name}" on track "${currentTrack.name}"`);
                                         }
-                                        if (track.updateAudioClipPosition) {
-                                            track.updateAudioClipPosition(target.dataset.clipId, newStartTime);
+                                        if (currentTrack.updateAudioClipPosition) {
+                                            currentTrack.updateAudioClipPosition(currentClipId, newStartTime);
                                         } else {
                                             console.error("Track.updateAudioClipPosition method not found!");
                                         }
                                     } else if (!event.dropzone && originalClipData) {
+                                        // Snap back if no significant move and not dropped
                                         target.style.left = `${originalClipData.startTime * pixelsPerSecond}px`;
                                     }
                                     delete target.dataset.startX;
