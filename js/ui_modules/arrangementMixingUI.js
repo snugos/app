@@ -96,7 +96,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0)
                            ? desktopEl.offsetWidth
                            : 1024;
-    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
+    // console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
 
 
     let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
@@ -128,7 +128,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         seqOptions.isMinimized = savedState.isMinimized;
     }
 
-    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Creating window with options:`, JSON.stringify(seqOptions));
+    // console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Creating window with options:`, JSON.stringify(seqOptions));
     const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name} - ${activeSequence.name}`, contentDOM, seqOptions);
 
     if (sequencerWindow?.element) {
@@ -153,14 +153,13 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 if (interactableInstance && typeof interactableInstance.unset === 'function') {
                     try {
                         interactableInstance.unset();
-                         console.log('[UI openTrackSequencerWindow] Successfully unset Interactable for controlsDiv.');
                     } catch(e) {
                         console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv:", e.message);
                     }
                 }
             }
-            console.log('[UI openTrackSequencerWindow] Draggable functionality for sequencer header is now disabled.');
         }
+
 
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
@@ -213,6 +212,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     return sequencerWindow;
 }
 
+// ... (updateSequencerCellUI, highlightPlayingStep, mixer functions remain the same) ...
 export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
     if (!sequencerWindowElement) return;
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
@@ -487,7 +487,7 @@ export function renderTimeline() {
                 .dropzone({
                     accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', 
                     overlap: 0.01, 
-                    // REMOVED CHECKER FUNCTION - rely on 'accept' string and ondragenter
+                    // REMOVED CHECKER FUNCTION
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
                     },
@@ -498,10 +498,8 @@ export function renderTimeline() {
                         
                         // Check if the draggable is accepted by the 'accept' option
                         let isAccepted = false;
-                        if (draggableElement) {
-                             if (interact.matchesSelector(draggableElement, (interact(dropzoneElement).dropzone()).options.accept)) {
-                                isAccepted = true;
-                            }
+                        if (draggableElement && interact.matchesSelector(draggableElement, (interact(dropzoneElement).dropzone()).options.accept)) {
+                             isAccepted = true;
                         }
                         console.log('[TimelineLane ClipsContainer] Accepted by selector?', isAccepted);
 
@@ -567,17 +565,20 @@ export function renderTimeline() {
                             if (clipData) {
                                 const targetTrackForDrop = localAppServices.getTrackById(targetTrackId);
                                 if (targetTrackForDrop && targetTrackForDrop.type === originalTrack.type) {
-                                    // ... (Logic for moving existing clips - simplified for brevity) ...
-                                    if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Move Clip`);
+                                    if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Move Clip "${clipData.name}" to Track "${targetTrackForDrop.name}" at ${startTime.toFixed(2)}s`);
                                     if (originalTrackId !== targetTrackId) { 
                                         originalTrack.timelineClips = originalTrack.timelineClips.filter(c => c.id !== clipId);
-                                        targetTrackForDrop.timelineClips.push({...clipData, startTime});
+                                        targetTrackForDrop.timelineClips.push({...JSON.parse(JSON.stringify(clipData)), startTime: startTime, id: `clip_${targetTrackId}_${Date.now()}`});
                                     } else { 
-                                        clipData.startTime = startTime;
+                                        const existingClip = targetTrackForDrop.timelineClips.find(c => c.id === clipId);
+                                        if (existingClip) existingClip.startTime = startTime;
                                     }
                                     if(localAppServices.renderTimeline) localAppServices.renderTimeline(); 
-                                } else { /* ... type mismatch or no target track ... */ }
-                            } 
+                                } else if (targetTrackForDrop && targetTrackForDrop.type !== originalTrack.type) {
+                                    if(localAppServices.showNotification) localAppServices.showNotification(`Cannot move ${originalTrack.type} clip to ${targetTrackForDrop.type} track.`, 3000);
+                                    if(localAppServices.renderTimeline) localAppServices.renderTimeline(); 
+                                } else if (!targetTrackForDrop) { /* ... */ if(localAppServices.renderTimeline) localAppServices.renderTimeline();}
+                            } else { /* ... */ if(localAppServices.renderTimeline) localAppServices.renderTimeline(); }
                         } else if ((dragType === 'sound-browser-item' || dragType === 'sequence-timeline-drag') && jsonDataString) {
                             try {
                                 const droppedItemData = JSON.parse(jsonDataString); 
@@ -635,6 +636,7 @@ export function renderTimeline() {
     });
 }
 
+// ... (updatePlayheadPosition and openTimelineWindow remain the same)
 export function updatePlayheadPosition() {
     const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
     if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) { return; }
