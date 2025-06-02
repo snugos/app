@@ -28,6 +28,7 @@ import {
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState,
     getRecordingTrackIdState,
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState,
+    getSelectedTimelineClipInfoState, // Added for clip selection
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -38,6 +39,7 @@ import {
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
+    setSelectedTimelineClipInfoState, // Added for clip selection
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -104,19 +106,19 @@ function handleCustomBackgroundUpload(event) {
             try {
                 localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataURL);
                 applyDesktopBackground(dataURL);
-                showNotification("Custom background applied.", 2000);
+                showSafeNotification("Custom background applied.", 2000);
             } catch (error) {
                 console.error("Error saving background to localStorage:", error);
-                showNotification("Could not save background: Storage full or image too large.", 4000);
+                showSafeNotification("Could not save background: Storage full or image too large.", 4000);
             }
         };
         reader.onerror = (err) => {
             console.error("Error reading background file:", err);
-            showNotification("Error reading background file.", 3000);
+            showSafeNotification("Error reading background file.", 3000);
         };
         reader.readAsDataURL(file);
     } else {
-        showNotification("Invalid file type. Please select an image.", 3000);
+        showSafeNotification("Invalid file type. Please select an image.", 3000);
     }
     if (event.target) event.target.value = null; 
 }
@@ -125,10 +127,10 @@ function removeCustomDesktopBackground() {
     try {
         localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
         applyDesktopBackground(null);
-        showNotification("Custom background removed.", 2000);
+        showSafeNotification("Custom background removed.", 2000);
     } catch (error) {
         console.error("Error removing background from localStorage:", error);
-        showNotification("Could not remove background from storage.", 3000);
+        showSafeNotification("Could not remove background from storage.", 3000);
     }
 }
 
@@ -176,6 +178,7 @@ const appServices = {
     getActiveSequencerTrackId: getActiveSequencerTrackIdState,
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
     getPlaybackMode: getPlaybackModeState,
+    getSelectedTimelineClipInfo: getSelectedTimelineClipInfoState, // Added
 
     // State Module Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
@@ -191,6 +194,7 @@ const appServices = {
     setRecordingTrackId: setRecordingTrackIdState, setRecordingStartTime: setRecordingStartTimeState,
     setActiveSequencerTrackId: setActiveSequencerTrackIdState,
     setPlaybackMode: setPlaybackModeState,
+    setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState, // Added
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
     captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
     redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal,
@@ -234,7 +238,6 @@ const appServices = {
         return null;
     },
 
-    // MODIFICATION: Refined Panic Stop Service
     panicStopAllAudio: () => {
         console.log("[AppServices] Panic Stop All Audio requested.");
         
@@ -262,7 +265,6 @@ const appServices = {
                             console.warn(`Error during instrument.releaseAll() for track ${track.id}:`, e);
                         }
                     }
-                    // Aggressive gain ramp-down for synth types
                     if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && 
                         track.gainNode && track.gainNode.gain && 
                         typeof track.gainNode.gain.cancelScheduledValues === 'function' &&
@@ -313,7 +315,6 @@ const appServices = {
         console.log("All audio and transport stopped via panic.");
         showSafeNotification("All audio stopped.", 1500);
     },
-    // END MODIFICATION
 
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
