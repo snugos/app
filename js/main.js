@@ -63,12 +63,12 @@ import {
 } from './audio.js';
 import {
     // DB functions will be accessed via appServices
-    storeAudio as dbStoreAudio, // Renaming for clarity if we add more specific DB ops
+    storeAudio as dbStoreAudio,
     getAudio as dbGetAudio,
     deleteAudio as dbDeleteAudio
 } from './db.js';
 import {
-    initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
+    initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, /* openGlobalControlsWindow removed from here */
     openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openSoundBrowserWindow,
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep, drawWaveform,
     drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
@@ -79,6 +79,9 @@ import {
     updatePlayheadPosition,
     openTimelineWindow
 } from './ui.js';
+// Import from the new globalControlsUI.js file
+import { initializeGlobalControlsUIModule, openGlobalControlsWindow } from './globalControlsUI.js';
+
 
 console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
 
@@ -99,23 +102,21 @@ const uiElementsCache = {
     playbackModeToggleBtnGlobal: null,
 };
 
-const DESKTOP_BACKGROUND_LS_KEY = 'snugosDesktopBackground_LS'; // Old localStorage key (for potential migration/fallback)
-const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB'; // New IndexedDB key
+const DESKTOP_BACKGROUND_LS_KEY = 'snugosDesktopBackground_LS';
+const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB';
 
-let currentBackgroundImageObjectURL = null; // To keep track of object URLs for revocation
+let currentBackgroundImageObjectURL = null;
 
 async function handleCustomBackgroundUpload(event) {
     if (!event?.target?.files?.[0]) return;
     const file = event.target.files[0];
     if (file.type.startsWith('image/')) {
         try {
-            // Remove any old background from localStorage first if migrating
             localStorage.removeItem(DESKTOP_BACKGROUND_LS_KEY);
-
-            await appServices.dbStoreItem(DESKTOP_BACKGROUND_IDB_KEY, file); // Use appServices for DB access
+            await appServices.dbStoreItem(DESKTOP_BACKGROUND_IDB_KEY, file);
 
             if (currentBackgroundImageObjectURL) {
-                URL.revokeObjectURL(currentBackgroundImageObjectURL); // Revoke previous object URL
+                URL.revokeObjectURL(currentBackgroundImageObjectURL);
             }
             currentBackgroundImageObjectURL = URL.createObjectURL(file);
             applyDesktopBackground(currentBackgroundImageObjectURL);
@@ -132,15 +133,14 @@ async function handleCustomBackgroundUpload(event) {
 
 async function removeCustomDesktopBackground() {
     try {
-        // Clear from both localStorage (old) and IndexedDB (new)
         localStorage.removeItem(DESKTOP_BACKGROUND_LS_KEY);
-        await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY); // Use appServices for DB access
+        await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY);
 
         if (currentBackgroundImageObjectURL) {
             URL.revokeObjectURL(currentBackgroundImageObjectURL);
             currentBackgroundImageObjectURL = null;
         }
-        applyDesktopBackground(null); // Apply default
+        applyDesktopBackground(null);
         showSafeNotification("Custom background removed.", 2000);
     } catch (error) {
         console.error("Error removing background:", error);
@@ -159,12 +159,10 @@ function showSafeNotification(message, duration) {
 
 // --- AppServices Object (Centralized DI Container) ---
 const appServices = {
-    // DB services (can reuse generic store/get/delete from db.js)
-    dbStoreItem: dbStoreAudio, // Assuming storeAudio can handle generic blobs
-    dbGetItem: dbGetAudio,     // Assuming getAudio can handle generic blobs
-    dbDeleteItem: dbDeleteAudio, // Assuming deleteAudio is generic
+    dbStoreItem: dbStoreAudio,
+    dbGetItem: dbGetAudio,
+    dbDeleteItem: dbDeleteAudio,
 
-    // UI Module Functions
     openTrackInspectorWindow, openTrackEffectsRackWindow, openTrackSequencerWindow,
     openMixerWindow, updateMixerWindow, openSoundBrowserWindow, openMasterEffectsRackWindow,
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep,
@@ -175,7 +173,6 @@ const appServices = {
     showNotification: showSafeNotification,
     createContextMenu, showConfirmationDialog,
 
-    // Audio Module Functions
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
     playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile,
     autoSliceSample, getMimeTypeFromFilename,
@@ -184,7 +181,6 @@ const appServices = {
     clearAllMasterEffectNodes: clearAllMasterEffectNodesInAudio,
     startAudioRecording, stopAudioRecording,
 
-    // State Module Getters
     getTracks: getTracksState, getTrackById: getTrackByIdState,
     getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
     getHighestZ: getHighestZState,
@@ -201,7 +197,6 @@ const appServices = {
     getPlaybackMode: getPlaybackModeState,
     getSelectedTimelineClipInfo: getSelectedTimelineClipInfoState,
 
-    // State Module Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
     setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState,
@@ -223,7 +218,6 @@ const appServices = {
     loadProject: loadProjectInternal, handleProjectFileLoad: handleProjectFileLoadInternal,
     exportToWav: exportToWavInternal,
 
-    // Event Handler Passthroughs
     selectMIDIInput: eventSelectMIDIInput,
     handleTrackMute: eventHandleTrackMute,
     handleTrackSolo: eventHandleTrackSolo,
@@ -724,7 +718,6 @@ async function initializeSnugOS() {
         if (uiElementsCache.customBgInput) {
             uiElementsCache.customBgInput.addEventListener('change', handleCustomBackgroundUpload);
         }
-        // Load background from IndexedDB first, then fallback to localStorage
         try {
             const storedImageBlob = await appServices.dbGetItem(DESKTOP_BACKGROUND_IDB_KEY);
             if (storedImageBlob) {
@@ -737,19 +730,19 @@ async function initializeSnugOS() {
                 if (storedDataURL) {
                     console.log("[Main initializeSnugOS] Loaded background from localStorage (fallback).");
                     applyDesktopBackground(storedDataURL);
-                     // Optionally migrate to IndexedDB here if desired
                 } else {
-                    applyDesktopBackground(null); // Apply default if nothing stored
+                    applyDesktopBackground(null);
                 }
             }
         } catch (error) {
             console.error("Error loading desktop background on init:", error);
-            applyDesktopBackground(null); // Apply default on error
+            applyDesktopBackground(null);
         }
 
 
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function");
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule is not a function");
+        if (typeof initializeGlobalControlsUIModule === 'function') initializeGlobalControlsUIModule(appServices); else console.warn("initializeGlobalControlsUIModule not found, global controls might not have direct appServices access.");
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function");
         if (typeof initializeEventHandlersModule === 'function') initializeEventHandlersModule(appServices); else console.error("initializeEventHandlersModule is not a function");
 
@@ -821,7 +814,7 @@ function updateMetersLoop() {
     requestAnimationFrame(updateMetersLoop);
 }
 
-function applyDesktopBackground(imageUrlOrObjectUrl) { // Renamed parameter for clarity
+function applyDesktopBackground(imageUrlOrObjectUrl) {
     if (uiElementsCache.desktop) {
         try {
             if (imageUrlOrObjectUrl) {
@@ -854,7 +847,6 @@ window.addEventListener('beforeunload', (e) => {
         e.returnValue = '';
         return "You have unsaved changes. Are you sure you want to leave?";
     }
-    // Clean up object URL for background if one exists
     if (currentBackgroundImageObjectURL) {
         URL.revokeObjectURL(currentBackgroundImageObjectURL);
     }
