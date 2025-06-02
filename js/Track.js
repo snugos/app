@@ -36,7 +36,20 @@ export class Track {
             this.synthParams = {};
         }
 
-        this.numSlices = initialData?.numSlices || Constants.DEFAULT_SLICES;
+        // Initialize numSlices and numPads correctly
+        if (this.type === 'Sampler') {
+            this.numSlices = initialData?.numSlices || Constants.DEFAULT_SLICES;
+        } else {
+            this.numSlices = 0; // Not applicable
+        }
+        if (this.type === 'DrumSampler') {
+            this.numPads = initialData?.numPads || Constants.DEFAULT_DRUM_PADS;
+            console.log(`[Track ${this.id} Constructor - DrumSampler Init] numPads set to: ${this.numPads} (from Constants.DEFAULT_DRUM_PADS: ${Constants.DEFAULT_DRUM_PADS}, initialData.numPads: ${initialData?.numPads})`);
+        } else {
+            this.numPads = 0; // Not applicable
+        }
+
+
         this.samplerAudioData = {
             fileName: initialData?.samplerAudioData?.fileName || null,
             audioBufferDataURL: initialData?.samplerAudioData?.audioBufferDataURL || null,
@@ -52,7 +65,9 @@ export class Track {
                 envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
             }));
         this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
-        if (this.selectedSliceForEdit >= this.numSlices) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
+        if (this.selectedSliceForEdit >= this.numSlices && this.numSlices > 0) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
+        else if (this.numSlices === 0) this.selectedSliceForEdit = 0;
+
 
         this.waveformZoom = initialData?.waveformZoom || 1;
         this.waveformScrollOffset = initialData?.waveformScrollOffset || 0;
@@ -77,9 +92,6 @@ export class Track {
         this.instrumentSamplerIsPolyphonic = initialData?.instrumentSamplerIsPolyphonic !== undefined ? initialData.instrumentSamplerIsPolyphonic : true;
         this.toneSampler = null;
 
-        this.numPads = initialData?.numPads || Constants.DEFAULT_DRUM_PADS;
-        console.log(`[Track ${this.id} Constructor - DrumSampler Check] Initializing numPads to: ${this.numPads} (from Constants.DEFAULT_DRUM_PADS: ${Constants.DEFAULT_DRUM_PADS}, initialData.numPads: ${initialData?.numPads})`);
-
         this.drumSamplerPads = Array(this.numPads).fill(null).map((_, padIdx) => {
             const initialPadData = initialData?.drumSamplerPads?.[padIdx];
             return {
@@ -98,7 +110,9 @@ export class Track {
             };
         });
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
-        if (this.selectedDrumPadForEdit >= this.numPads) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
+        if (this.selectedDrumPadForEdit >= this.numPads && this.numPads > 0) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
+        else if (this.numPads === 0) this.selectedDrumPadForEdit = 0;
+
         this.drumPadPlayers = Array(this.numPads).fill(null);
 
         this.activeEffects = [];
@@ -135,7 +149,6 @@ export class Track {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
             } else {
-                // Initial sequence creation is now deferred to state.js after track registration
                 console.log(`[Track ${this.id} Constructor] Initial sequence creation deferred for new track (type: ${this.type}).`);
             }
             delete this.sequenceData;
@@ -1056,11 +1069,9 @@ export class Track {
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
         
-        // DO NOT call this.recreateToneSequence() here. It will be called by state.js after track is fully registered.
+        // Do NOT call this.recreateToneSequence() here. It will be called by state.js after track is fully registered.
         
         if (!skipUIUpdate && this.appServices.updateTrackUI) {
-            // This call might still be problematic if recreateToneSequence isn't called first by the caller
-            // For now, we rely on state.js to call recreateToneSequence then updateTrackUI
             console.log(`[Track createNewSequence] UI update for 'sequencerContentChanged' will be triggered by state.js if this is a new track's initial sequence.`);
         }
         if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
@@ -1252,7 +1263,6 @@ export class Track {
         if (numRowsForInit <= 0) numRowsForInit = 1;
 
         if (!activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length !== numRowsForInit) {
-            // If sequence data is missing or rows don't match current pad/slice count, initialize it properly.
             console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" (ID: ${activeSeq.id}) had invalid/empty or mismatched row data (expected ${numRowsForInit}, got ${activeSeq.data?.length}). Re-initializing data array.`);
             activeSeq.data = Array(numRowsForInit).fill(null).map(() => Array(activeSeq.length || Constants.defaultStepsPerBar).fill(null));
         }
