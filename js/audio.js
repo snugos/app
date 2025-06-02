@@ -4,7 +4,7 @@ import * as Constants from './constants.js';
 // import { showNotification } from './utils.js'; // Not directly imported, accessed via appServices
 import { createEffectInstance } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
-import { getRecordingStartTimeState } from './state.js';
+import { getRecordingStartTimeState, getLoadedZipFilesState } from './state.js'; // Added getLoadedZipFilesState for debug
 
 
 let masterEffectsBusInputNode = null;
@@ -109,31 +109,29 @@ function setupMasterBus() {
         return;
     }
 
-    if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
-        if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) {
-             try { masterEffectsBusInputNode.dispose(); } catch(e){ console.warn("[Audio setupMasterBus] Error disposing old master bus input:", e.message); }
-        }
-        masterEffectsBusInputNode = new Tone.Gain(); // Destination will be set by rebuildMasterEffectChain
-        console.log('[Audio setupMasterBus] Master effects bus input node created.');
+    // Dispose existing nodes if they exist and are not disposed
+    if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) {
+        try { masterEffectsBusInputNode.dispose(); } catch(e){ console.warn("[Audio setupMasterBus] Error disposing old master bus input:", e.message); }
     }
+    masterEffectsBusInputNode = new Tone.Gain(); // Destination will be set by rebuildMasterEffectChain
+    console.log('[Audio setupMasterBus] Master effects bus input node created.');
 
-    if (!masterGainNodeActual || masterGainNodeActual.disposed) {
-        if (masterGainNodeActual && !masterGainNodeActual.disposed) {
-            try { masterGainNodeActual.dispose(); } catch(e){ console.warn("[Audio setupMasterBus] Error disposing old master gain node actual:", e.message); }
-        }
-        const initialMasterVolumeValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
-        masterGainNodeActual = new Tone.Gain(initialMasterVolumeValue);
-        if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(masterGainNodeActual.gain.value); // Update state module
-        console.log('[Audio setupMasterBus] Master gain node actual created with gain:', masterGainNodeActual.gain.value);
-    }
 
-    if (!masterMeterNode || masterMeterNode.disposed) {
-        if (masterMeterNode && !masterMeterNode.disposed) {
-            try { masterMeterNode.dispose(); } catch(e) { console.warn("[Audio setupMasterBus] Error disposing old master meter:", e.message); }
-        }
-        masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
-        console.log('[Audio setupMasterBus] Master meter node created.');
+    if (masterGainNodeActual && !masterGainNodeActual.disposed) {
+        try { masterGainNodeActual.dispose(); } catch(e){ console.warn("[Audio setupMasterBus] Error disposing old master gain node actual:", e.message); }
     }
+    const initialMasterVolumeValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
+    masterGainNodeActual = new Tone.Gain(initialMasterVolumeValue);
+    if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(masterGainNodeActual.gain.value); // Update state module
+    console.log('[Audio setupMasterBus] Master gain node actual created with gain:', masterGainNodeActual.gain.value);
+
+
+    if (masterMeterNode && !masterMeterNode.disposed) {
+        try { masterMeterNode.dispose(); } catch(e) { console.warn("[Audio setupMasterBus] Error disposing old master meter:", e.message); }
+    }
+    masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
+    console.log('[Audio setupMasterBus] Master meter node created.');
+
     rebuildMasterEffectChain(); // This will handle connections
     console.log('[Audio setupMasterBus] Master bus setup process complete.');
 }
@@ -154,6 +152,7 @@ export function rebuildMasterEffectChain() {
         }
     }
 
+    // Disconnect everything before rebuilding
     try { masterEffectsBusInputNode.disconnect(); } catch(e) { console.warn("[Audio rebuildMasterEffectChain] Error disconnecting masterEffectsBusInputNode:", e.message); }
     activeMasterEffectNodes.forEach((node, id) => {
         if (node && !node.disposed) {
@@ -169,6 +168,7 @@ export function rebuildMasterEffectChain() {
 
     masterEffectsState.forEach(effectState => {
         let effectNode = activeMasterEffectNodes.get(effectState.id);
+        // Recreate effect node if it doesn't exist or is disposed
         if (!effectNode || effectNode.disposed) {
             console.warn(`[Audio rebuildMasterEffectChain] Master effect node for ${effectState.type} (ID: ${effectState.id}) not found or disposed. Attempting recreation.`);
             effectNode = createEffectInstance(effectState.type, effectState.params);
@@ -181,13 +181,17 @@ export function rebuildMasterEffectChain() {
             }
         }
 
+        // Connect current end of chain to this effect
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
             try {
                 console.log(`[Audio rebuildMasterEffectChain] Connecting ${currentAudioPathEnd.toString()} to ${effectNode.toString()} (${effectState.type})`);
                 currentAudioPathEnd.connect(effectNode);
-                currentAudioPathEnd = effectNode;
+                currentAudioPathEnd = effectNode; // This effect is now the end of the chain
             } catch (e) {
                 console.error(`[Audio rebuildMasterEffectChain] Error connecting master effect ${effectState.type}:`, e);
+                // If connection fails, this effect node might become an orphaned start of a new chain segment
+                // or the chain might be broken. For simplicity, we'll just update currentAudioPathEnd.
+                currentAudioPathEnd = effectNode; // Try to continue chain from this effect
             }
         } else {
             // This case means the chain started with this effect or a previous connection failed
@@ -206,7 +210,10 @@ export function rebuildMasterEffectChain() {
         }
     } else {
         console.warn('[Audio rebuildMasterEffectChain] Could not connect master chain output to masterGainNodeActual. Current end:', currentAudioPathEnd?.toString(), 'Master Gain:', masterGainNodeActual?.toString());
-         if (!masterEffectsBusInputNode.numberOfOutputs && masterGainNodeActual && !masterGainNodeActual.disposed) { // If no effects, connect input directly
+         // If there were no effects, currentAudioPathEnd would be masterEffectsBusInputNode.
+         // If masterEffectsBusInputNode has no outputs (meaning it wasn't connected to any effects),
+         // connect it directly to masterGainNodeActual.
+         if (masterEffectsBusInputNode && masterEffectsBusInputNode.numberOfOutputs === 0 && masterGainNodeActual && !masterGainNodeActual.disposed) {
             try {
                 masterEffectsBusInputNode.connect(masterGainNodeActual);
                 console.log("[Audio rebuildMasterEffectChain] Connected masterEffectsBusInputNode directly to masterGainNodeActual (no effects).");
@@ -312,7 +319,7 @@ export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) 
         const numericMasterLevel = Array.isArray(masterLevelValue) ? masterLevelValue[0] : masterLevelValue;
         if (typeof numericMasterLevel === 'number' && isFinite(numericMasterLevel)) {
             const level = Tone.dbToGain(numericMasterLevel);
-            const isClipping = numericMasterLevel > -0.1;
+            const isClipping = numericMasterLevel > -0.1; // Clipping threshold
 
             if (globalMasterMeterBar) {
                 globalMasterMeterBar.style.width = `${Math.min(100, Math.max(0, level * 100))}%`;
@@ -334,11 +341,12 @@ export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) 
     (tracks || []).forEach(track => {
         if (track && track.trackMeter && typeof track.trackMeter.getValue === 'function' && !track.trackMeter.disposed) {
             const meterValue = track.trackMeter.getValue();
+            // Handle potential stereo meter values
             const numericMeterValue = Array.isArray(meterValue) ? meterValue[0] : meterValue;
 
             if (typeof numericMeterValue === 'number' && isFinite(numericMeterValue)) {
                 const level = Tone.dbToGain(numericMeterValue);
-                const isClipping = numericMeterValue > -0.1;
+                const isClipping = numericMeterValue > -0.1; // Clipping threshold
 
                 if (localAppServices.updateTrackMeterUI) {
                     localAppServices.updateTrackMeterUI(track.id, level, isClipping);
@@ -386,6 +394,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     }
 
     if (!track.slicerIsPolyphonic) {
+        // Ensure mono slicer nodes are set up
         if (!track.slicerMonoPlayer || track.slicerMonoPlayer.disposed) {
             track.setupSlicerMonoNodes(); // This also assigns track.audioBuffer to player
             if (!track.slicerMonoPlayer) { // Check again after setup
@@ -404,7 +413,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         }
 
         if (player.state === 'started') player.stop(time);
-        if (env && env.getValueAtTime(time) > 0.001) env.triggerRelease(time);
+        if (env && env.getValueAtTime(time) > 0.001) env.triggerRelease(time); // Release previous envelope if active
 
         if (track.audioBuffer && track.audioBuffer.loaded) player.buffer = track.audioBuffer; else return; // No buffer
         if (env) env.set(sliceData.envelope);
@@ -424,7 +433,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     } else { // Polyphonic
         const tempPlayer = new Tone.Player(track.audioBuffer);
         const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
-        const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * velocity);
+        const tempGain = new Tone.Gain(Tone.dbToGain(-6) * sliceData.volume * velocity); // Apply attenuation
 
         try {
             tempPlayer.chain(tempEnv, tempGain, actualDestination);
@@ -436,7 +445,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
 
             tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
             tempEnv.triggerAttack(time);
-            if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
+            if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95); // Release slightly before player stops
 
             // Schedule disposal
             const disposeTime = time + playDuration + (sliceData.envelope.release || 0.1) + 0.5; // Generous buffer
@@ -497,10 +506,62 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     }
 
     player.volume.value = Tone.gainToDb(padData.volume * velocity * 0.7); // Apply some headroom
-    const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
-    player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
+
+    // Auto-Stretch Logic for Preview
+    if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) {
+        const currentProjectTempo = Tone.Transport.bpm.value;
+        const sampleBufferDuration = player.buffer.duration; // Actual duration of the loaded sample
+        
+        // Calculate the sample's "natural" duration if it were played at its original BPM for the specified number of beats
+        const naturalDurationAtOriginalBPM = (60 / padData.stretchOriginalBPM) * padData.stretchBeats;
+        
+        // Calculate the target duration this sample *should* have at the current project tempo
+        const targetDurationAtCurrentTempo = (60 / currentProjectTempo) * padData.stretchBeats;
+
+        if (targetDurationAtCurrentTempo > 1e-6 && naturalDurationAtOriginalBPM > 1e-6) {
+            // The playbackRate should be the ratio of the sample's actual duration (if it were played once without stretching)
+            // to the target duration it needs to fill.
+            // However, Tone.Player's playbackRate directly scales its perceived duration.
+            // playbackRate = originalDuration / newDesiredDuration
+            // Here, originalDuration is the sample's duration if it perfectly matched stretchOriginalBPM and stretchBeats.
+            // This duration is naturalDurationAtOriginalBPM.
+            // newDesiredDuration is targetDurationAtCurrentTempo.
+            // So, playbackRate = naturalDurationAtOriginalBPM / targetDurationAtCurrentTempo
+            // This seems correct. If sample is 1s at 120bpm, and project is 60bpm, target is 2s. Rate = 1/2 = 0.5.
+            
+            // Let's re-evaluate:
+            // If a 1-beat sample is recorded at 120 BPM, its duration is 0.5s.
+            // If project tempo is 60 BPM, a 1-beat sample should last 1s.
+            // We want the 0.5s sample to play for 1s. PlaybackRate = 0.5s (original) / 1s (target) = 0.5.
+            // This means the playbackRate is the ratio of the sample's *actual duration* to the *target duration based on tempo*.
+            // The `stretchOriginalBPM` and `stretchBeats` define the *intended* duration of the sample.
+            // Let `intendedOriginalDuration = (60 / padData.stretchOriginalBPM) * padData.stretchBeats;`
+            // Let `actualSampleDuration = player.buffer.duration;` (this is the raw duration of the audio file)
+            // Let `targetDurationAtCurrentTempo = (60 / currentProjectTempo) * padData.stretchBeats;`
+            // The playback rate should scale the `actualSampleDuration` to become `targetDurationAtCurrentTempo`.
+            // So, `playbackRate = actualSampleDuration / targetDurationAtCurrentTempo;`
+            // This makes more sense. The "original BPM" and "beats" are for defining the *target* length at that BPM,
+            // not necessarily the raw sample's length.
+
+            if (targetDurationAtCurrentTempo > 1e-6 && sampleBufferDuration > 1e-6) {
+                 player.playbackRate = sampleBufferDuration / targetDurationAtCurrentTempo;
+                 console.log(`[Audio Preview Stretch] Pad ${padIndex}: OrigBPM ${padData.stretchOriginalBPM}, Beats ${padData.stretchBeats}, ProjTempo ${currentProjectTempo}, SampleDur ${sampleBufferDuration.toFixed(3)}, TargetDur ${targetDurationAtCurrentTempo.toFixed(3)}, Rate ${player.playbackRate.value.toFixed(3)}`);
+            } else {
+                player.playbackRate = 1; // Fallback
+            }
+        } else {
+            // Fallback to pitch shift if auto-stretch params are invalid or buffer not ready
+            const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
+            player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
+        }
+    } else {
+        const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
+        player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
+    }
+
     player.start(Tone.now());
 }
+
 
 export function getMimeTypeFromFilename(filename) {
     if (!filename || typeof filename !== 'string') return "application/octet-stream"; // Default MIME type
@@ -526,19 +587,14 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
     }
 
     let objectURLForTone = null;
-    let base64DataURL = null; // Kept for potential future use, but direct blob->IndexedDB is better
 
     try {
         objectURLForTone = URL.createObjectURL(fileObject);
-        // base64DataURL might not be strictly necessary if storing blob directly in IDB and loading Tone.Buffer from ObjectURL/Blob
-        // However, it was in the original logic, so keeping it for now unless it proves problematic.
-        // For large files, converting to base64 is memory intensive.
-        // Consider removing if `samplerAudioData.audioBufferDataURL` is not critically used elsewhere for reconstruction.
 
         const dbKeySuffix = trackTypeHint === 'DrumSampler' && padIndex !== null ?
-            `drumPad-${padIndex}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}` : // Allow dots in filenames
+            `drumPad-${padIndex}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}` :
             `${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}`;
-        const dbKey = `track-${track.id}-${dbKeySuffix}-${fileObject.size}-${fileObject.lastModified}`; // More unique key
+        const dbKey = `track-${track.id}-${dbKeySuffix}-${fileObject.size}-${fileObject.lastModified}`;
         await storeAudio(dbKey, fileObject);
         console.log(`[Audio commonLoadSampleLogic] Stored in DB with key: ${dbKey}`);
 
@@ -546,9 +602,9 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
 
         if (trackTypeHint === 'Sampler') {
             if (track.audioBuffer && !track.audioBuffer.disposed) track.audioBuffer.dispose();
-            track.disposeSlicerMonoNodes(); // Important to call before setting new buffer related properties
+            track.disposeSlicerMonoNodes();
             track.audioBuffer = newAudioBuffer;
-            track.samplerAudioData = { fileName: sourceName, /* audioBufferDataURL: base64DataURL, */ dbKey: dbKey, status: 'loaded' };
+            track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
             if (!track.slicerIsPolyphonic && track.audioBuffer?.loaded) track.setupSlicerMonoNodes();
             if (localAppServices.autoSliceSample && track.audioBuffer.loaded && (!track.slices || track.slices.every(s => s.duration === 0))) {
                 localAppServices.autoSliceSample(track.id, Constants.numSlices);
@@ -562,17 +618,15 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             if (track.toneSampler && !track.toneSampler.disposed) track.toneSampler.dispose();
 
             track.instrumentSamplerSettings = {
-                ...track.instrumentSamplerSettings, // Preserve existing settings like rootNote, loop
+                ...track.instrumentSamplerSettings,
                 audioBuffer: newAudioBuffer,
-                /* audioBufferDataURL: base64DataURL, */ // Potentially remove if not needed
                 originalFileName: sourceName,
                 dbKey: dbKey,
                 status: 'loaded',
-                // Reset loop points if a new sample is loaded, unless specific logic dictates otherwise
                 loopStart: 0,
                 loopEnd: newAudioBuffer.duration
             };
-            track.setupToneSampler(); // Re-initialize Tone.Sampler
+            track.setupToneSampler();
             if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'instrumentSamplerLoaded');
 
         } else if (trackTypeHint === 'DrumSampler' && padIndex !== null) {
@@ -582,12 +636,10 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
                 if (track.drumPadPlayers[padIndex] && !track.drumPadPlayers[padIndex].disposed) track.drumPadPlayers[padIndex].dispose();
 
                 padData.audioBuffer = newAudioBuffer;
-                /* padData.audioBufferDataURL = base64DataURL; */ // Potentially remove
                 padData.originalFileName = sourceName;
                 padData.dbKey = dbKey;
                 padData.status = 'loaded';
-                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer); // Create new player
-                // Connection will be handled by rebuildEffectChain or play preview
+                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer);
             } else {
                 console.error(`[Audio commonLoadSampleLogic] Pad data not found for index ${padIndex} on track ${track.id}`);
                 throw new Error(`Pad data not found for index ${padIndex}.`);
@@ -595,7 +647,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'drumPadLoaded', padIndex);
         }
 
-        track.rebuildEffectChain(); // Rebuild chain as sources might have changed
+        track.rebuildEffectChain();
         if (localAppServices.showNotification) {
             localAppServices.showNotification(`Sample "${sourceName}" loaded for ${track.name}${trackTypeHint === 'DrumSampler' && padIndex !== null ? ` (Pad ${padIndex+1})` : ''}.`, 2000);
         }
@@ -605,7 +657,6 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
         if (localAppServices.showNotification) {
             localAppServices.showNotification(`Error loading sample "${sourceName.substring(0,30)}": ${error.message || 'Unknown error.'}`, 4000);
         }
-        // Update status in track data to 'error'
         if (trackTypeHint === 'Sampler') if(track.samplerAudioData) track.samplerAudioData.status = 'error';
         else if (trackTypeHint === 'InstrumentSampler') if(track.instrumentSamplerSettings) track.instrumentSamplerSettings.status = 'error';
         else if (trackTypeHint === 'DrumSampler' && padIndex !== null && track.drumSamplerPads[padIndex]) track.drumSamplerPads[padIndex].status = 'error';
@@ -634,8 +685,8 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
 
     let providedBlob, sourceName;
     const isUrlSource = typeof eventOrUrl === 'string';
-    const isDirectFile = eventOrUrl instanceof File; // For direct file objects
-    const isBlobEvent = eventOrUrl instanceof Blob && !(eventOrUrl instanceof File); // For Blobs that are not Files
+    const isDirectFile = eventOrUrl instanceof File;
+    const isBlobEvent = eventOrUrl instanceof Blob && !(eventOrUrl instanceof File);
 
     if (isUrlSource) {
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample_from_url";
@@ -648,15 +699,15 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
             if (localAppServices.showNotification) localAppServices.showNotification(`Error fetching sample "${sourceName.substring(0,30)}": ${e.message}`, 3000);
             return;
         }
-    } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) { // From file input event
+    } else if (eventOrUrl && eventOrUrl.target && eventOrUrl.target.files && eventOrUrl.target.files.length > 0) {
         providedBlob = eventOrUrl.target.files[0];
         sourceName = providedBlob.name;
-    } else if (isDirectFile) { // Directly passed File object
+    } else if (isDirectFile) {
         providedBlob = eventOrUrl;
         sourceName = providedBlob.name;
-    } else if (isBlobEvent) { // Directly passed Blob object
+    } else if (isBlobEvent) {
         providedBlob = eventOrUrl;
-        sourceName = fileNameForUrl || `loaded_blob_${Date.now()}.wav`; // Provide a default name
+        sourceName = fileNameForUrl || `loaded_blob_${Date.now()}.wav`;
     } else {
         if (localAppServices.showNotification) localAppServices.showNotification("No file selected or invalid source.", 3000);
         return;
@@ -668,7 +719,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
     }
 
     const inferredType = getMimeTypeFromFilename(sourceName);
-    const explicitType = providedBlob.type || inferredType || 'application/octet-stream'; // Use provided type, then inferred, then default
+    const explicitType = providedBlob.type || inferredType || 'application/octet-stream';
     const fileObject = new File([providedBlob], sourceName, { type: explicitType });
 
     if (!fileObject.type.startsWith('audio/') && fileObject.type !== "application/octet-stream") {
@@ -798,16 +849,15 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
-            // If targetPadOrSliceIndex is not valid, try to find an empty pad or use selected
             if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
-                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.originalFileName); // Find first truly empty
-                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; // Fallback to selected
-                if (typeof actualPadIndex !== 'number' || actualPadIndex < 0) actualPadIndex = 0; // Final fallback
+                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.originalFileName);
+                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;
+                if (typeof actualPadIndex !== 'number' || actualPadIndex < 0) actualPadIndex = 0;
                 console.log(`[Audio loadSoundFromBrowserToTarget] Adjusted pad index for DrumSampler to: ${actualPadIndex}`);
             }
             await commonLoadSampleLogic(blobToLoad, fileName, track, 'DrumSampler', actualPadIndex);
-        } else { // Sampler or InstrumentSampler
-            await commonLoadSampleLogic(blobToLoad, fileName, track, track.type, null); // padIndex is null for these
+        } else {
+            await commonLoadSampleLogic(blobToLoad, fileName, track, track.type, null);
         }
     } catch (error) {
         console.error(`[Audio loadSoundFromBrowserToTarget] Error loading sound "${fileName}" from browser:`, error);
@@ -819,20 +869,18 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 }
 
 export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
-    // MODIFICATION START: Log the retrieved loadedZips object
     const initialLoadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
     console.log(`[Audio fetchSoundLibrary DEBUG] Initial loadedZips object for ${libraryName} (Autofetch: ${isAutofetch}):`,
         Object.keys(initialLoadedZips),
         `Value for ${libraryName}:`, initialLoadedZips[libraryName],
         `Is JSZip: ${initialLoadedZips[libraryName] instanceof JSZip}`
     );
-    const loadedZips = initialLoadedZips; // Use this for the check
-    // MODIFICATION END
+    const loadedZips = initialLoadedZips;
 
     const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
     console.log(`[Audio fetchSoundLibrary ENTRY] Library: ${libraryName}, URL: ${zipUrl}, Autofetch: ${isAutofetch}.`);
-    if (loadedZips && typeof loadedZips === 'object') { // Ensure loadedZips is an object before keying
+    if (loadedZips && typeof loadedZips === 'object') {
         console.log(`[Audio fetchSoundLibrary ENTRY] Existing loadedZips keys:`, Object.keys(loadedZips), `Status for ${libraryName}:`, loadedZips[libraryName]);
     } else {
         console.warn(`[Audio fetchSoundLibrary ENTRY] loadedZips is undefined, null, or not an object.`);
@@ -849,21 +897,20 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
         }
-        return; // Already loaded
+        return;
     }
     if (loadedZips && loadedZips[libraryName] === "loading") {
         console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} is currently being loaded by another call. Skipping this call.`);
-        return; // Already being loaded
+        return;
     }
 
-    // Update UI to show loading state if not autofetching
     if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
-        localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false); // isLoading = true, hasError = false
+        localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false);
     }
 
     try {
         console.log(`[Audio fetchSoundLibrary SET_LOADING_STATE] Setting ${libraryName} to "loading" state.`);
-        const newLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {}; // Ensure we start with a fresh copy if getLoadedZipFiles is available
+        const newLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
         newLoadedZips[libraryName] = "loading";
         if (localAppServices.setLoadedZipFilesState) localAppServices.setLoadedZipFilesState(newLoadedZips);
 
@@ -887,9 +934,8 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         const loadedZipInstance = await jszip.loadAsync(zipData);
         console.log(`[Audio fetchSoundLibrary JSZIP_LOAD_ASYNC_SUCCESS] JSZip successfully loaded ${libraryName}. Num files in zip: ${Object.keys(loadedZipInstance.files).length}`);
 
-        // Get the latest state again before updating
         const latestLoadedZipsAfterLoad = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
-        latestLoadedZipsAfterLoad[libraryName] = loadedZipInstance; // Store the JSZip instance
+        latestLoadedZipsAfterLoad[libraryName] = loadedZipInstance;
 
         console.log(`[Audio Fetch DEBUG] About to set state for ${libraryName} (loadedZips).`);
         console.log(`[Audio Fetch DEBUG] localAppServices.setLoadedZipFilesState exists:`, !!localAppServices.setLoadedZipFilesState);
@@ -897,7 +943,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
             console.log(`[Audio Fetch DEBUG] Calling setLoadedZipFilesState for ${libraryName} (loadedZips) with keys:`, Object.keys(latestLoadedZipsAfterLoad));
             localAppServices.setLoadedZipFilesState(latestLoadedZipsAfterLoad);
         } else {
-            console.error(`[Audio Fetch ERROR] localAppServices.setLoadedZipFilesState is UNDEFINED for ${libraryName} (loadedZips)`);
+             console.error(`[Audio Fetch ERROR] localAppServices.setLoadedZipFilesState is UNDEFINED for ${libraryName} (loadedZips)`);
         }
 
 
@@ -906,20 +952,20 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         console.log(`[Audio fetchSoundLibrary PARSE_ZIP_START] Parsing files for ${libraryName}`);
         loadedZipInstance.forEach((relativePath, zipEntry) => {
             if (zipEntry.dir || relativePath.startsWith("__MACOSX") || relativePath.includes("/.") || relativePath.startsWith(".")) {
-                return; // Skip directories and hidden/system files
+                return;
             }
-            const pathParts = relativePath.split('/').filter(p => p); // Filter out empty parts
+            const pathParts = relativePath.split('/').filter(p => p);
             if (pathParts.length === 0) return;
 
             let currentLevel = fileTree;
             for (let i = 0; i < pathParts.length; i++) {
                 const part = pathParts[i];
-                if (i === pathParts.length - 1) { // File
-                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) { // Check for audio extensions
+                if (i === pathParts.length - 1) {
+                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) {
                         currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
                         audioFileCount++;
                     }
-                } else { // Directory
+                } else {
                     if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
                         currentLevel[part] = { type: 'folder', children: {} };
                     }
@@ -955,7 +1001,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 
         console.log(`[Audio fetchSoundLibrary SUCCESS] Successfully loaded and processed library: ${libraryName}.`);
         if (localAppServices.updateSoundBrowserDisplayForLibrary) {
-            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false); // isLoading = false, hasError = false
+            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
         }
 
     } catch (error) {
@@ -974,7 +1020,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
             localAppServices.showNotification(`Error loading library ${libraryName}: ${error.message}`, 4000);
         }
         if (localAppServices.updateSoundBrowserDisplayForLibrary) {
-             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, true); // isLoading = false, hasError = true
+             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, true);
         }
     }
 }
@@ -997,22 +1043,19 @@ export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices
         track.slices.push({
             offset: i * sliceDuration,
             duration: sliceDuration,
-            userDefined: false, // Mark as auto-generated
-            volume: 0.7, // Default volume
-            pitchShift: 0, // Default pitch
+            userDefined: false,
+            volume: 0.7,
+            pitchShift: 0,
             loop: false,
             reverse: false,
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } // Default envelope
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
         });
     }
-    track.selectedSliceForEdit = 0; // Select the first slice
-    // If the track has sequences, their row count might need to be updated if tied to slice count.
-    // This is complex as sequences are generic. The sequencer UI rendering should adapt.
-    // The track's recreateToneSequence method should handle using the new number of slices.
-    track.recreateToneSequence(true); // Recreate sequence to reflect new slice count
+    track.selectedSliceForEdit = 0;
+    track.recreateToneSequence(true);
 
     if (localAppServices.updateTrackUI) {
-        localAppServices.updateTrackUI(track.id, 'sampleSliced'); // Triggers UI update
+        localAppServices.updateTrackUI(track.id, 'sampleSliced');
     }
     if (localAppServices.showNotification) localAppServices.showNotification(`Sample auto-sliced into ${numSlicesToCreate} parts.`, 2000);
 }
@@ -1029,7 +1072,7 @@ export function clearAllMasterEffectNodes() {
     });
     activeMasterEffectNodes.clear();
     console.log("[Audio clearAllMasterEffectNodes] All active master effect nodes cleared and disposed.");
-    rebuildMasterEffectChain(); // Rebuild with an empty chain (input -> gain -> destination)
+    rebuildMasterEffectChain();
 }
 
 
@@ -1037,14 +1080,12 @@ export function clearAllMasterEffectNodes() {
 export async function startAudioRecording(track, isMonitoringEnabled) {
     console.log("[Audio startAudioRecording] Called for track:", track?.name, "Monitoring:", isMonitoringEnabled);
 
-    // Ensure previous instances are robustly closed and disposed
     if (mic) {
         console.log("[Audio startAudioRecording] Existing mic instance found. State:", mic.state);
         if (mic.state === "started") {
             try { mic.close(); console.log("[Audio startAudioRecording] Existing mic closed."); }
             catch (e) { console.warn("[Audio startAudioRecording] Error closing existing mic:", e.message); }
         }
-        // Tone.UserMedia objects don't have a standard dispose method in the same way other Tone nodes do
         mic = null;
         console.log("[Audio startAudioRecording] Previous mic instance nullified.");
     }
@@ -1063,10 +1104,9 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         console.log("[Audio startAudioRecording] Previous recorder instance nullified.");
     }
 
-    // Create new instances for a fresh start.
     mic = new Tone.UserMedia({
-        audio: { // Ideal constraints
-            echoCancellation: false, autoGainControl: false, noiseSuppression: false, latency: 0.01 // small latency hint
+        audio: {
+            echoCancellation: false, autoGainControl: false, noiseSuppression: false, latency: 0.01
         }
     });
     console.log("[Audio startAudioRecording] New Tone.UserMedia instance created.");
@@ -1099,16 +1139,13 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         await mic.open();
         console.log("[Audio startAudioRecording] Microphone opened successfully. State:", mic.state, "Selected device label (mic.label):", mic.label || "N/A");
 
-        // Disconnect mic from everything first to be safe
-        try { mic.disconnect(); } catch (e) { /* ignore if not connected */ }
+        try { mic.disconnect(); } catch (e) { /* ignore */ }
 
         if (isMonitoringEnabled) {
             console.log("[Audio startAudioRecording] Monitoring is ON. Connecting mic to track inputChannel.");
             mic.connect(track.inputChannel);
         } else {
             console.log("[Audio startAudioRecording] Monitoring is OFF.");
-            // Ensure mic is not connected to the inputChannel if monitoring is off.
-            // This might be redundant if disconnect above worked, but explicit check is safer.
         }
         mic.connect(recorder);
         console.log("[Audio startAudioRecording] Mic connected to recorder.");
@@ -1130,7 +1167,6 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         }
         if (localAppServices.showNotification) localAppServices.showNotification(userMessage, 6000);
 
-        // Cleanup on error
         if (mic) {
             if (mic.state === "started") try { mic.close(); } catch(e) { console.warn("Cleanup error closing mic:", e.message); }
             mic = null;
@@ -1154,30 +1190,28 @@ export async function stopAudioRecording() {
             try { mic.close(); } catch(e) { console.warn("[Audio stopAudioRecording] Error closing mic (recorder null):", e.message); }
         }
         mic = null;
-        return; // Nothing to process if recorder wasn't there
+        return;
     }
 
     if (recorder.state === "started") {
         try {
             console.log("[Audio stopAudioRecording] Stopping recorder...");
-            blob = await recorder.stop(); // This resolves with the Blob
+            blob = await recorder.stop();
             console.log("[Audio stopAudioRecording] Recorder stopped. Blob received, size:", blob?.size, "type:", blob?.type);
         } catch (e) {
             console.error("[Audio stopAudioRecording] Error stopping recorder:", e);
             if (localAppServices.showNotification) localAppServices.showNotification("Error stopping recorder. Recording may be lost.", 3000);
-            // Attempt to clean up even if stop fails
         }
     } else {
         console.warn("[Audio stopAudioRecording] Recorder was not in 'started' state. Current state:", recorder.state);
     }
 
-    // Cleanup mic
     if (mic) {
         if (mic.state === "started") {
             console.log("[Audio stopAudioRecording] Closing microphone.");
             try {
-                mic.disconnect(recorder); // Disconnect from recorder first
-                if (localAppServices.getRecordingTrackId) { // Disconnect from track input if monitoring was on
+                mic.disconnect(recorder);
+                if (localAppServices.getRecordingTrackId) {
                     const recTrack = localAppServices.getTrackById(localAppServices.getRecordingTrackId());
                     if (recTrack && recTrack.inputChannel && !recTrack.inputChannel.disposed) {
                        try { mic.disconnect(recTrack.inputChannel); } catch(e) { /* ignore */ }
@@ -1189,11 +1223,10 @@ export async function stopAudioRecording() {
                 console.warn("[Audio stopAudioRecording] Error closing/disconnecting mic:", e.message);
             }
         }
-        mic = null; // Nullify the global reference
+        mic = null;
         console.log("[Audio stopAudioRecording] Mic instance nullified.");
     }
 
-    // Cleanup recorder
     if (recorder && !recorder.disposed) {
         console.log("[Audio stopAudioRecording] Disposing recorder instance.");
         try {
@@ -1205,7 +1238,6 @@ export async function stopAudioRecording() {
     recorder = null;
     console.log("[Audio stopAudioRecording] Recorder instance nullified and disposed.");
 
-    // Process the recorded blob
     if (blob && blob.size > 0) {
         const recordingTrackId = localAppServices.getRecordingTrackId ? localAppServices.getRecordingTrackId() : null;
         const startTime = getRecordingStartTimeState();
@@ -1226,7 +1258,7 @@ export async function stopAudioRecording() {
     } else if (blob && blob.size === 0) {
         console.warn("[Audio stopAudioRecording] Recording was empty.");
         if (localAppServices.showNotification) localAppServices.showNotification("Recording was empty. No clip created.", 2000);
-    } else if (!blob && recorder?.state === "started") { // Should be caught by try/catch around recorder.stop()
+    } else if (!blob && recorder?.state === "started") {
         console.warn("[Audio stopAudioRecording] Recorder was in 'started' state but stop() did not yield a blob.");
     }
 }
