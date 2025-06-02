@@ -253,14 +253,16 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
 }
 
 // --- Specific Inspector Control Initializers ---
-// This function was causing the ReferenceError. It is now defined.
+// THIS FUNCTION IS NOW DEFINED BEFORE initializeSynthSpecificControls
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     definitions.forEach(def => {
-        // CORRECTED SELECTOR: Using template literal correctly
-        const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
+        // --- CORRECTED SELECTOR ---
+        const selector = `#${def.idPrefix}-${track.id}-placeholder`;
+        const placeholder = container.querySelector(selector);
+        // --- END CORRECTION ---
         if (!placeholder) {
-            console.warn(`[InspectorEffectsUI buildSynthEngineControls] Placeholder not found for: #${def.idPrefix}-${track.id}-placeholder in container:`, container);
+            console.warn(`[InspectorEffectsUI buildSynthEngineControls] Placeholder not found for: ${selector} in container:`, container);
             return;
         }
         let initialValue;
@@ -272,7 +274,7 @@ function buildSynthEngineControls(track, container, engineType) {
             } else { currentValObj = undefined; break; }
         }
         initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
-        if (def.path.endsWith('.value') && track.instrument?.get) { // Check if track.instrument exists and has get method
+        if (def.path.endsWith('.value') && track.instrument?.get) { 
             const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
             try {
                 const signal = track.instrument.get(signalPath);
@@ -283,7 +285,6 @@ function buildSynthEngineControls(track, container, engineType) {
                 console.warn(`Error getting signal value for path ${signalPath} on track ${track.id}: ${e.message}`);
             }
         }
-
 
         if (def.type === 'knob') {
             const knob = createKnob({ label: def.label, min: def.min, max: def.max, step: def.step, initialValue, decimals: def.decimals, displaySuffix: def.displaySuffix, trackRef: track, onValueChange: (val) => track.setSynthParam(def.path, val) });
@@ -333,16 +334,16 @@ function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padI
             accept: '.dragging-sound-item', 
             ondropactivate: function (event) {
                 event.target.classList.add('drop-active');
-                event.target.style.borderColor = '#60a5fa'; // Example: Tailwind blue-400
+                event.target.style.borderColor = '#60a5fa'; 
             },
             ondragenter: function (event) {
                 event.target.classList.add('drop-target'); 
-                event.target.style.backgroundColor = '#374151'; // Example: Tailwind gray-700
+                event.target.style.backgroundColor = '#374151'; 
                 if (event.relatedTarget) event.relatedTarget.classList.add('can-drop');
             },
             ondragleave: function (event) {
                 event.target.classList.remove('drop-target');
-                event.target.style.backgroundColor = ''; // Reset
+                event.target.style.backgroundColor = ''; 
                 if (event.relatedTarget) event.relatedTarget.classList.remove('can-drop');
             },
             ondrop: function (event) {
@@ -372,17 +373,17 @@ function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padI
                 } else {
                     console.warn("No jsonData found on dropped sampler item.");
                 }
-                dropzone.classList.remove('drop-target');
-                dropzone.style.backgroundColor = '';
+                dropzone.classList.remove('drop-target', 'bg-blue-700');
+                dropzone.style.backgroundColor = ''; // Reset
                 if (droppedElement) droppedElement.classList.remove('can-drop');
             },
             ondropdeactivate: function (event) {
-                event.target.classList.remove('drop-active', 'drop-target');
+                event.target.classList.remove('drop-active', 'drop-target', 'border-blue-400', 'bg-blue-700');
                 event.target.style.borderColor = '';
                 event.target.style.backgroundColor = '';
             }
         });
-        console.log(`[InspectorEffectsUI] Interact.js dropzone setup for ${targetType}, track ${trackId}, pad ${padIndex}`);
+    console.log(`[InspectorEffectsUI] Interact.js dropzone setup for ${targetType}, track ${trackId}, pad ${padIndex}`);
 }
 
 
@@ -797,8 +798,9 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     if (rackWindow?.element) {
         renderEffectsList(track, 'track', rackWindow.element.querySelector(`#effectsList-${track.id}`), rackWindow.element.querySelector(`#effectControlsContainer-${track.id}`));
         rackWindow.element.querySelector(`#addEffectBtn-${track.id}`)?.addEventListener('click', () => {
+            // Ensure showAddEffectModal is called via appServices if it's in browserCoreUI.js
             if (localAppServices.showAddEffectModal) localAppServices.showAddEffectModal(track, 'track');
-            else console.warn("showAddEffectModal service not available from inspectorEffectsUI");
+            else console.warn("showAddEffectModal service not available from inspectorEffectsUI (when trying to call for track effects).");
         });
     }
     return rackWindow;
@@ -816,8 +818,9 @@ export function openMasterEffectsRackWindow(savedState = null) {
     if (rackWindow?.element) {
         renderEffectsList(null, 'master', rackWindow.element.querySelector(`#effectsList-master`), rackWindow.element.querySelector(`#effectControlsContainer-master`));
         rackWindow.element.querySelector(`#addEffectBtn-master`)?.addEventListener('click', () => {
+            // Ensure showAddEffectModal is called via appServices if it's in browserCoreUI.js
             if (localAppServices.showAddEffectModal) localAppServices.showAddEffectModal(null, 'master');
-            else console.warn("showAddEffectModal service not available from inspectorEffectsUI");
+            else console.warn("showAddEffectModal service not available from inspectorEffectsUI (when trying to call for master effects).");
         });
     }
     return rackWindow;
@@ -978,9 +981,12 @@ export function updateDrumPadControlsUI(track) {
         dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
         const dzEl = dzContainer.querySelector('.drop-zone');
         const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
-        if (dzEl) setupSamplerInteractDropzone(dzEl, track.id, 'DrumSampler', selectedPadIndex); // MODIFIED TO USE INTERACT DROPZONE
+        // setupGenericDropZoneListeners was here, now replaced by setupSamplerInteractDropzone for this element
         if (fileInputEl && localAppServices.loadDrumSamplerPadFile) {
             fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
+        }
+        if(dzEl) { // Ensure dzEl is found before setting up dropzone
+            setupSamplerInteractDropzone(dzEl, track.id, 'DrumSampler', selectedPadIndex);
         }
     }
 
