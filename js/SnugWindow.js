@@ -202,7 +202,7 @@ export class SnugWindow {
         let initialX, initialY;
 
         const onMouseDown = (e) => {
-            if (e.target.tagName === 'BUTTON' || this.isMaximized) return;
+            if (e.target.tagName === 'BUTTON' || this.isMaximized) return; // Don't drag if clicking a button or maximized
             if (!this.element) return; // Element might have been removed
 
             this._isDragging = true;
@@ -212,7 +212,7 @@ export class SnugWindow {
             offsetX = e.clientX - initialX;
             offsetY = e.clientY - initialY;
             this.titleBar.style.cursor = 'grabbing';
-            document.body.style.userSelect = 'none';
+            document.body.style.userSelect = 'none'; // Prevent text selection during drag
 
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
@@ -250,7 +250,7 @@ export class SnugWindow {
             if (!this._isDragging) return;
             this._isDragging = false;
             if (this.titleBar) this.titleBar.style.cursor = 'grab';
-            document.body.style.userSelect = '';
+            document.body.style.userSelect = ''; // Re-enable text selection
 
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
@@ -273,10 +273,10 @@ export class SnugWindow {
 
 
         let initialWidth, initialHeight, initialMouseX, initialMouseY;
-        let originalStyleWidth, originalStyleHeight;
+        let originalStyleWidth, originalStyleHeight; // To compare for undo
 
         const onMouseDownResizer = (e) => {
-            e.preventDefault(); e.stopPropagation();
+            e.preventDefault(); e.stopPropagation(); // Prevent drag and other actions
             if (!this.element) return;
 
             this._isResizing = true;
@@ -285,7 +285,7 @@ export class SnugWindow {
             initialHeight = this.element.offsetHeight;
             initialMouseX = e.clientX;
             initialMouseY = e.clientY;
-            originalStyleWidth = this.element.style.width;
+            originalStyleWidth = this.element.style.width; // Store original style
             originalStyleHeight = this.element.style.height;
             document.body.style.cursor = 'nwse-resize';
             document.body.style.userSelect = 'none';
@@ -333,13 +333,15 @@ export class SnugWindow {
         const wasMaximized = this.isMaximized;
 
         if (this.isMaximized) {
+            // Restore
             this.element.style.left = this.restoreState.left || `${this.options.x}px`;
             this.element.style.top = this.restoreState.top || `${this.options.y}px`;
             this.element.style.width = this.restoreState.width || `${this.options.width}px`;
             this.element.style.height = this.restoreState.height || `${this.options.height}px`;
             this.isMaximized = false;
-            if (maximizeButton) maximizeButton.innerHTML = '□';
+            if (maximizeButton) maximizeButton.innerHTML = '□'; // Restore icon
         } else {
+            // Maximize
             this.restoreState = {
                 left: this.element.style.left, top: this.element.style.top,
                 width: this.element.style.width, height: this.element.style.height,
@@ -350,10 +352,10 @@ export class SnugWindow {
             this.element.style.width = `${desktopEl.clientWidth}px`;
             this.element.style.height = `${desktopEl.clientHeight - taskbarHeight}px`;
             this.isMaximized = true;
-            if (maximizeButton) maximizeButton.innerHTML = '❐';
+            if (maximizeButton) maximizeButton.innerHTML = '❐'; // Maximize icon (restore down)
         }
         this._captureUndo(`${wasMaximized ? "Restore" : "Maximize"} window "${this.title}"`);
-        this.focus();
+        this.focus(); // Bring to front
     }
 
     createTaskbarButton() {
@@ -370,10 +372,12 @@ export class SnugWindow {
         taskbarButtonsContainer.appendChild(this.taskbarButton);
 
         this.taskbarButton.addEventListener('click', () => {
-            if (!this.element) return;
+            if (!this.element) return; // Window might have been closed
             if (this.isMinimized) {
                 this.restore();
             } else {
+                // If it's already the active window (topmost z-index) and not maximized, minimize it.
+                // Otherwise, focus it (which also restores if it was minimized but not active).
                 const currentHighestZ = this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100;
                 if (parseInt(this.element.style.zIndex) === currentHighestZ && !this.isMaximized) { // If active and not maximized, minimize
                     this.minimize();
@@ -448,7 +452,7 @@ export class SnugWindow {
                     if (z > nextHighestZ) { nextHighestZ = z; windowToFocus = win; }
                 }
             });
-            if (windowToFocus) windowToFocus.focus(true);
+            if (windowToFocus) windowToFocus.focus(true); // true to skip undo for this focus action
             else if (this.appServices.getOpenWindows) { // If no other window, just update all taskbar buttons
                  this.appServices.getOpenWindows().forEach(win => win?.updateTaskbarButtonActiveState?.());
             }
@@ -487,16 +491,17 @@ export class SnugWindow {
         if (this.element) {
             try { this.element.remove(); }
             catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing window element:`, e.message); }
-            this.element = null;
+            this.element = null; // CRITICAL: Set element to null after removing from DOM
         }
 
-        const oldWindowTitle = this.title;
+        const oldWindowTitle = this.title; // Store title before clearing instance from map
         if (this.appServices.removeWindowFromStore) {
             this.appServices.removeWindowFromStore(this.id);
         } else {
             console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available.`);
         }
 
+        // Only capture undo if it's a user action, not part of reconstruction
         const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
         if (!isCurrentlyReconstructing && !isReconstruction) {
             this._captureUndo(`Close window "${oldWindowTitle}"`);
@@ -505,8 +510,8 @@ export class SnugWindow {
     }
 
     focus(skipUndoForFocusItself = false) { // skipUndo flag relates to undoing the focus action, not subsequent actions
-        if (!this.element) return;
-        if (this.isMinimized) { this.restore(skipUndoForFocusItself); return; }
+        if (!this.element) return; // Do nothing if element is gone
+        if (this.isMinimized) { this.restore(skipUndoForFocusItself); return; } // Restore if minimized
 
         const currentHighestZGlobal = this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100;
         const currentZ = parseInt(this.element.style.zIndex);
@@ -518,13 +523,14 @@ export class SnugWindow {
                 console.log(`[SnugWindow ${this.id}] Focused. New z-index: ${newZ}`);
             }
         } else if (currentZ > currentHighestZGlobal) { // This window was saved with a higher z-index
-            if (this.appServices.setHighestZ) {
+             if (this.appServices.setHighestZ) {
                 this.appServices.setHighestZ(currentZ);
                 console.log(`[SnugWindow ${this.id}] Focused. Current z-index ${currentZ} is now highest.`);
             }
         }
         // No undo capture for focus action itself as it's a transient UI state change.
 
+        // Update active state for all taskbar buttons
         if (this.appServices.getOpenWindows) {
             this.appServices.getOpenWindows().forEach(win => {
                 if (win && win.updateTaskbarButtonActiveState && typeof win.updateTaskbarButtonActiveState === 'function') {
@@ -556,7 +562,7 @@ export class SnugWindow {
             const titleSpan = this.titleBar.querySelector('span');
             if (titleSpan && state.title) titleSpan.textContent = state.title;
         }
-        if (state.title) this.title = state.title;
+        if (state.title) this.title = state.title; // Update internal title property
 
         if (this.taskbarButton && state.title) {
             this.taskbarButton.textContent = state.title.substring(0, 20) + (state.title.length > 20 ? '...' : '');
