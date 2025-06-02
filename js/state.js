@@ -935,7 +935,7 @@ export async function exportToWavInternal() {
         const a = document.createElement('a');
         a.href = url;
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        a.download = `snugos-export-${timestamp}.wav`;
+        a.download = `snugos-project-${timestamp}.wav`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
