@@ -130,13 +130,13 @@ export class Track {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
             } else {
-                // MODIFICATION: Do NOT call createNewSequence here. It will be called from state.js after the track is fully registered.
-                // this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true);
-                console.log(`[Track ${this.id} Constructor] Initial sequence creation deferred for new track.`);
+                // If it's a new track (no initialData for sequences), sequences array will be empty.
+                // The default sequence will be created in state.js *after* this track is fully added.
+                console.log(`[Track ${this.id} Constructor] Initial sequence creation deferred for new track (type: ${this.type}).`);
             }
-            delete this.sequenceData;
-            delete this.sequenceLength;
-        } else {
+            delete this.sequenceData; // Old property
+            delete this.sequenceLength; // Old property
+        } else { // Audio Track specific
             delete this.sequenceData;
             delete this.sequenceLength;
             delete this.sequences;
@@ -170,9 +170,6 @@ export class Track {
         this.clipPlayers = new Map();
     }
 
-    // ... (rest of Track.js methods: setNumSlices, setNumPads, setName, getActiveSequence, etc. remain the same as the version with ID track_js_custom_slices_pads)
-    // Ensure the full content of track.js (ID: track_js_custom_slices_pads) is used here, only with the constructor change above.
-
     // --- Slice/Pad Count Management ---
     setNumSlices(newCount) {
         if (this.type !== 'Sampler') return;
@@ -183,7 +180,6 @@ export class Track {
         const oldNumSlices = this.numSlices;
         this.numSlices = validatedCount;
 
-        // Adjust this.slices array
         if (this.numSlices > oldNumSlices) {
             for (let i = oldNumSlices; i < this.numSlices; i++) {
                 this.slices.push({
@@ -193,11 +189,10 @@ export class Track {
                 });
             }
         } else {
-            this.slices.length = this.numSlices; // Truncate
+            this.slices.length = this.numSlices;
         }
         if (this.selectedSliceForEdit >= this.numSlices) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
 
-        // Adjust sequence data rows
         this.sequences.forEach(seq => {
             if (seq.data) {
                 const currentRows = seq.data.length;
@@ -206,7 +201,7 @@ export class Track {
                         seq.data.push(Array(seq.length || Constants.defaultStepsPerBar).fill(null));
                     }
                 } else if (this.numSlices < currentRows) {
-                    seq.data.length = this.numSlices; // This truncates rows and associated note data
+                    seq.data.length = this.numSlices;
                 }
             }
         });
@@ -224,7 +219,6 @@ export class Track {
         const oldNumPads = this.numPads;
         this.numPads = validatedCount;
 
-        // Adjust this.drumSamplerPads and this.drumPadPlayers arrays
         if (this.numPads > oldNumPads) {
             for (let i = oldNumPads; i < this.numPads; i++) {
                 this.drumSamplerPads.push({
@@ -244,7 +238,6 @@ export class Track {
         }
         if (this.selectedDrumPadForEdit >= this.numPads) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
 
-        // Adjust sequence data rows
         this.sequences.forEach(seq => {
             if (seq.data) {
                 const currentRows = seq.data.length;
@@ -262,6 +255,8 @@ export class Track {
         if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sliceOrPadCountChanged');
     }
 
+
+    // --- Track Name Management ---
     setName(newName, skipUndo = false) {
         if (typeof newName === 'string' && newName.trim() !== "") {
             const oldName = this.name;
@@ -279,6 +274,8 @@ export class Track {
         }
     }
 
+
+    // --- Sequence Management ---
     getActiveSequence() {
         if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences || this.sequences.length === 0) return null;
         return this.sequences.find(s => s.id === this.activeSequenceId);
@@ -294,6 +291,7 @@ export class Track {
         return activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
     }
 
+    // --- Synth Specific ---
     getDefaultSynthParams() {
         return {
             portamento: 0.01,
@@ -309,6 +307,7 @@ export class Track {
         };
     }
 
+    // --- Audio Node Initialization and Chaining ---
     async initializeAudioNodes() {
         console.log(`[Track ${this.id} initializeAudioNodes] Initializing audio nodes for "${this.name}".`);
         try {
@@ -1053,7 +1052,7 @@ export class Track {
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-        this.recreateToneSequence(true); // Rebuild Tone.Sequence for playback
+        this.recreateToneSequence(true);
         if (!skipUIUpdate && this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
         console.log(`[Track ${this.id}] Created new sequence: "${name}" (ID: ${newSeqId}), Rows: ${numRowsForGrid}, Length: ${actualLength}`);
