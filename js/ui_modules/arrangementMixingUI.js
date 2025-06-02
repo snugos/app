@@ -160,7 +160,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                                     sourceTrackId: track.id,
                                     clipName: currentActiveSeq.name
                                 };
-                                // MODIFIED LINE: Use event.interaction.element
                                 if (event.interaction.element) {
                                     event.interaction.element.dataset.dragType = 'sequence-timeline-drag';
                                     event.interaction.element.dataset.jsonData = JSON.stringify(dragData);
@@ -399,7 +398,7 @@ export function renderTimeline() {
             
             interact(lane)
                 .dropzone({
-                    accept: '.audio-clip, .sequencer-controls', 
+                    accept: '.audio-clip, .sequencer-controls, .dragging-sound-item', // Added .dragging-sound-item
                     overlap: 0.25, 
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
@@ -407,14 +406,18 @@ export function renderTimeline() {
                     ondragenter: function (event) {
                         const draggableElement = event.relatedTarget;
                         const dropzoneElement = event.target;
+                        console.log('[TimelineLane] ondragenter - Draggable:', draggableElement, 'Classes:', draggableElement ? draggableElement.className : 'N/A', 'Has class dragging-sound-item:', draggableElement ? draggableElement.classList.contains('dragging-sound-item') : false);
                         dropzoneElement.classList.add('drop-target'); 
                         if (draggableElement) draggableElement.classList.add('can-drop');  
                     },
                     ondragleave: function (event) {
+                        const draggableElement = event.relatedTarget;
+                        console.log('[TimelineLane] ondragleave - Draggable:', draggableElement);
                         event.target.classList.remove('drop-target');
-                        if (event.relatedTarget) event.relatedTarget.classList.remove('can-drop');
+                        if (draggableElement) draggableElement.classList.remove('can-drop');
                     },
                     ondrop: function (event) {
+                        console.log('[TimelineLane] ONDROP triggered! RelatedTarget:', event.relatedTarget);
                         const droppedClipElement = event.relatedTarget;
                         const targetLaneElement = event.target;
                         const targetTrackId = parseInt(targetLaneElement.dataset.trackId, 10);
@@ -598,6 +601,7 @@ export function renderTimeline() {
                                             console.error("Track.updateAudioClipPosition method not found!");
                                         }
                                     } else if (!event.dropzone && originalClipData) {
+                                        // Snap back if no significant move and not dropped
                                         target.style.left = `${originalClipData.startTime * pixelsPerSecond}px`;
                                     }
                                     delete target.dataset.startX;
