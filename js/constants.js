@@ -19,9 +19,11 @@ export const synthPitches = [
 ].reverse();
 
 export const soundLibraries = {
-    "Drums": "https://storage.googleapis.com/snugos-public/sound-libraries/SnugOS_Drums_Vol1.zip",
-    "Synths": "https://storage.googleapis.com/snugos-public/sound-libraries/SnugOS_Synths_Vol1.zip",
-    "Loops": "https://storage.googleapis.com/snugos-public/sound-libraries/SnugOS_Loops_Vol1.zip"
+    "Drums": "/assets/drums.zip",
+    "Instruments 1": "/assets/instruments.zip",
+    "Instruments 2": "/assets/instruments2.zip",
+    "Instruments 3": "/assets/instruments3.zip",
+
 };
 
 // --- Customizable Slices and Pads ---
