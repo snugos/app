@@ -1,13 +1,15 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.1.0"; // Added application version
+export const APP_VERSION = "0.1.0";
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
-export const MAX_BARS = 32; // Maximum number of bars a sequence can have
+export const MAX_BARS = 256; // Maximum number of bars a sequence can have (16 bars * 16 steps/bar = 256 steps)
 
-export const MIN_TEMPO = 30; // Minimum tempo in BPM
-export const MAX_TEMPO = 300; // Maximum tempo in BPM
+export const MIN_TEMPO = 1; // Minimum tempo in BPM
+export const MAX_TEMPO = 999; // Maximum tempo in BPM
+
+export const REFERENCE_TEMPO_FOR_VARISPEED = 120.0; // Reference BPM for Varispeed calculations (if feature were enabled)
 
 // Note: Reversed for typical top-to-bottom piano roll display in a UI
 export const synthPitches = [
@@ -18,27 +20,26 @@ export const synthPitches = [
 ].reverse();
 
 export const soundLibraries = {
-    "Drums": "assets/drums.zip",
-    "Instruments": "assets/instruments.zip",
-    "Instruments 2": "assets/instruments2.zip",
-    "Instruments 3": "assets/instruments3.zip"
-    // Add more libraries here as needed
+    "Drums": "https://storage.googleapis.com/snugos-public/sound-libraries/SnugOS_Drums_Vol1.zip",
+    "Synths": "https://storage.googleapis.com/snugos-public/sound-libraries/SnugOS_Synths_Vol1.zip",
+    "Loops": "https://storage.googleapis.com/snugos-public/sound-libraries/SnugOS_Loops_Vol1.zip"
+    // Add more libraries here as they become available
 };
 
-export const numSlices = 8; // Default number of slices for a new Sampler track
-export const numDrumSamplerPads = 8; // Number of pads for the DrumSampler
-export const samplerMIDINoteStart = 36; // C2, used for mapping MIDI notes to sampler slices/pads
+export const numSlices = 16; // Default number of slices for Sampler track
+export const numDrumSamplerPads = 16; // Number of pads for Drum Sampler
 
-export const defaultVelocity = 0.7; // Default velocity for new notes
+export const defaultVelocity = 0.7; // Default velocity for MIDI notes / sequencer steps
 
-export const defaultDesktopBg = '#101010'; // Matches style.css body background
+export const MAX_HISTORY_STATES = 1; // Max undo/redo states
 
-export const MAX_HISTORY_STATES = 50; // Increased from 30 for more undo/redo capacity
+export const defaultDesktopBg = '#101010'; // Default desktop background color
 
-// Computer Keyboard to MIDI mapping for Synthesizer-like instruments
-// QWERTY layout, bottom row for C-major scale starting on C4 (MIDI 60) by default
+
+// Computer keyboard to MIDI note mapping
+// This provides a basic 1-octave chromatic scale starting on C4 (MIDI 60) by default
 // Top row for sharps/flats or extended notes.
-// 'a' maps to C4 (MIDI 60)
+// 'a' maps to C3 (MIDI 48) which means with octave shift 0, 'k' is C4.
 export const computerKeySynthMap = {
     // Bottom row (white keys on piano often)
     'a': 48, // C3 (octave shift will modify this)
@@ -58,33 +59,4 @@ export const computerKeySynthMap = {
     'y': 56, // G#3
     'u': 58, // A#3
     // 'i': // C (no black key)
-
-    // Alternative mapping for some DAWs (shifted QWERTY)
-    // 'q': 60, // C4
-    // '2': 61, // C#4
-    // 'w': 62, // D4
-    // '3': 63, // D#4
-    // 'e': 64, // E4
-    // 'r': 65, // F4
-    // '5': 66, // F#4
-    // 't': 67, // G4
-    // '6': 68, // G#4
-    // 'y': 69, // A4
-    // '7': 70, // A#4
-    // 'u': 71, // B4
-    // 'i': 72  // C5
-};
-
-// Computer Keyboard to MIDI mapping for Sampler (slices/pads)
-// Numbers 1-8 typically map to slices/pads
-export const computerKeySamplerMap = {
-    'Digit1': samplerMIDINoteStart + 0,
-    'Digit2': samplerMIDINoteStart + 1,
-    'Digit3': samplerMIDINoteStart + 2,
-    'Digit4': samplerMIDINoteStart + 3,
-    'Digit5': samplerMIDINoteStart + 4,
-    'Digit6': samplerMIDINoteStart + 5,
-    'Digit7': samplerMIDINoteStart + 6,
-    'Digit8': samplerMIDINoteStart + 7
-    // Can extend to 'Digit9', 'Digit0' or other keys if more pads/slices are common
 };
