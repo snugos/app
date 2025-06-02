@@ -145,6 +145,11 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
+        // MODIFICATION: Ensure the controlsDiv has the class 'sequencer-controls'
+        if (controlsDiv) {
+            controlsDiv.classList.add('sequencer-controls');
+        }
+
         if (controlsDiv && window.interact) { 
             interact(controlsDiv).unset(); 
             interact(controlsDiv)
@@ -422,7 +427,7 @@ export function renderTimeline() {
                         const targetLaneElement = event.target;
                         const targetTrackId = parseInt(targetLaneElement.dataset.trackId, 10);
                         
-                        const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null; // Re-fetch in case of closure
+                        const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null; 
                         if (!timelineWindow || !timelineWindow.element) {
                             console.error("Timeline window not found during drop");
                             return;
@@ -627,7 +632,6 @@ export function renderTimeline() {
                                             console.error("Track.updateAudioClipPosition method not found!");
                                         }
                                     } else if (!event.dropzone && originalClipData) {
-                                        // Snap back if no significant move and not dropped
                                         target.style.left = `${originalClipData.startTime * pixelsPerSecond}px`;
                                     }
                                     delete target.dataset.startX;
