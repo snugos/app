@@ -181,7 +181,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
     const isBrandNewUserTrack = isUserAction && (!initialData || initialData._isUserActionPlaceholder);
     console.log(`[State addTrackToStateInternal] Adding ${type} track. User Action: ${isUserAction}, Brand New: ${isBrandNewUserTrack}`);
 
-    if (isBrandNewUserTrack) {
+    if (isBrandNewUserTrack && !initialData?._skipUndo) { // Check for skipUndo flag
         captureStateForUndoInternal(`Add ${type} Track`);
         if (initialData && initialData._isUserActionPlaceholder) initialData = null;
     }
@@ -223,12 +223,15 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         await newTrack.fullyInitializeAudioResources();
 
         // MODIFICATION: Create initial sequence *after* track is fully initialized and added to state
-        if (newTrack.type !== 'Audio' && (!initialData || !initialData.sequences || initialData.sequences.length === 0)) {
+        // and only if it's a truly new track (not one being reconstructed from projectData)
+        if (isBrandNewUserTrack && newTrack.type !== 'Audio' && (!initialData || !initialData.sequences || initialData.sequences.length === 0)) {
             if (typeof newTrack.createNewSequence === 'function') {
                 // The last 'true' is skipUIUpdate, as we will call updateTrackUI below more globally
+                // The second to last true is skipUndo, as we already captured it for "Add Track"
                 newTrack.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true, true); 
             }
         }
+
 
         if (isBrandNewUserTrack && appServices.showNotification) {
             appServices.showNotification(`${newTrack.name} added successfully.`, 2000);
@@ -236,8 +239,10 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         
         // Explicitly update UI after track is fully set up, especially for sequencer
         if (appServices.updateTrackUI && newTrack.type !== 'Audio') {
+             // This ensures the sequencer window, if opened, reflects the new default sequence.
             appServices.updateTrackUI(newTrack.id, 'sequencerContentChanged');
         }
+
         if (isBrandNewUserTrack && appServices.openTrackInspectorWindow) {
             setTimeout(() => appServices.openTrackInspectorWindow(newTrack.id), 50);
         }
@@ -618,7 +623,8 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         if (projectData.tracks && Array.isArray(projectData.tracks)) {
             const trackPromises = projectData.tracks.map(trackData => {
                 if (trackData && trackData.type) {
-                    return addTrackToStateInternal(trackData.type, trackData, false);
+                    // Pass _skipUndo to prevent capturing "Add Track" for each track during project load/undo/redo
+                    return addTrackToStateInternal(trackData.type, {...trackData, _skipUndo: true}, false);
                 } else { console.warn("[State reconstructDAWInternal] Invalid track data found:", trackData); return Promise.resolve(null); }
             });
             await Promise.all(trackPromises);
