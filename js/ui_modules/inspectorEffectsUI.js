@@ -253,7 +253,7 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
 }
 
 // --- Specific Inspector Control Initializers ---
-// THIS FUNCTION IS NOW DEFINED BEFORE initializeSynthSpecificControls
+// This function was causing the ReferenceError. It is now defined.
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     definitions.forEach(def => {
@@ -317,7 +317,7 @@ function initializeSynthSpecificControls(track, winEl) {
     const engineType = track.synthEngineType || 'MonoSynth';
     const container = winEl.querySelector(`#synthEngineControls-${track.id}`);
     if (container) {
-        buildSynthEngineControls(track, container, engineType); // Call the function
+        buildSynthEngineControls(track, container, engineType); 
     }
 }
 
@@ -374,7 +374,7 @@ function setupSamplerInteractDropzone(dropZoneElement, trackId, targetType, padI
                     console.warn("No jsonData found on dropped sampler item.");
                 }
                 dropzone.classList.remove('drop-target', 'bg-blue-700');
-                dropzone.style.backgroundColor = ''; // Reset
+                dropzone.style.backgroundColor = ''; 
                 if (droppedElement) droppedElement.classList.remove('can-drop');
             },
             ondropdeactivate: function (event) {
@@ -981,11 +981,10 @@ export function updateDrumPadControlsUI(track) {
         dzContainer.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${selectedPadIndex}`, 'DrumSampler', selectedPadIndex, existingAudioData);
         const dzEl = dzContainer.querySelector('.drop-zone');
         const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${track.id}-${selectedPadIndex}`);
-        // setupGenericDropZoneListeners was here, now replaced by setupSamplerInteractDropzone for this element
         if (fileInputEl && localAppServices.loadDrumSamplerPadFile) {
             fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex); };
         }
-        if(dzEl) { // Ensure dzEl is found before setting up dropzone
+        if(dzEl) { 
             setupSamplerInteractDropzone(dzEl, track.id, 'DrumSampler', selectedPadIndex);
         }
     }
