@@ -222,12 +222,26 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         }
         await newTrack.fullyInitializeAudioResources();
 
+        // MODIFICATION: Create initial sequence *after* track is fully initialized and added to state
+        if (newTrack.type !== 'Audio' && (!initialData || !initialData.sequences || initialData.sequences.length === 0)) {
+            if (typeof newTrack.createNewSequence === 'function') {
+                // The last 'true' is skipUIUpdate, as we will call updateTrackUI below more globally
+                newTrack.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true, true); 
+            }
+        }
+
         if (isBrandNewUserTrack && appServices.showNotification) {
             appServices.showNotification(`${newTrack.name} added successfully.`, 2000);
+        }
+        
+        // Explicitly update UI after track is fully set up, especially for sequencer
+        if (appServices.updateTrackUI && newTrack.type !== 'Audio') {
+            appServices.updateTrackUI(newTrack.id, 'sequencerContentChanged');
         }
         if (isBrandNewUserTrack && appServices.openTrackInspectorWindow) {
             setTimeout(() => appServices.openTrackInspectorWindow(newTrack.id), 50);
         }
+
 
         if (appServices.updateMixerWindow) appServices.updateMixerWindow();
         if (appServices.renderTimeline) appServices.renderTimeline();
@@ -472,7 +486,7 @@ export function gatherProjectDataInternal() {
                     trackData.synthEngineType = track.synthEngineType || 'MonoSynth';
                     trackData.synthParams = track.synthParams ? JSON.parse(JSON.stringify(track.synthParams)) : {};
                 } else if (track.type === 'Sampler') {
-                    trackData.numSlices = track.numSlices; // Save numSlices
+                    trackData.numSlices = track.numSlices;
                     trackData.samplerAudioData = {
                         fileName: track.samplerAudioData?.fileName,
                         dbKey: track.samplerAudioData?.dbKey,
@@ -482,7 +496,7 @@ export function gatherProjectDataInternal() {
                     trackData.selectedSliceForEdit = track.selectedSliceForEdit;
                     trackData.slicerIsPolyphonic = track.slicerIsPolyphonic;
                 } else if (track.type === 'DrumSampler') {
-                    trackData.numPads = track.numPads; // Save numPads
+                    trackData.numPads = track.numPads;
                     trackData.drumSamplerPads = (track.drumSamplerPads || []).map(p => ({
                         originalFileName: p.originalFileName, dbKey: p.dbKey,
                         volume: p.volume, pitchShift: p.pitchShift,
