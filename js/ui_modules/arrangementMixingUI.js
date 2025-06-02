@@ -145,16 +145,15 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // --- DRAGGABLE SEQUENCER HEADER FUNCTIONALITY REMOVED ---
         if (controlsDiv) {
             controlsDiv.classList.remove('sequencer-controls'); 
             controlsDiv.style.cursor = 'default'; 
             if (window.interact) { 
                 const interactableInstance = interact(controlsDiv);
-                if (interactableInstance && typeof interactableInstance.unset === 'function') { // Check if it's an interactable before unsetting
+                if (interactableInstance && typeof interactableInstance.unset === 'function') {
                     try {
                         interactableInstance.unset();
-                        console.log('[UI openTrackSequencerWindow] Successfully unset Interactable for controlsDiv.');
+                         console.log('[UI openTrackSequencerWindow] Successfully unset Interactable for controlsDiv.');
                     } catch(e) {
                         console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv:", e.message);
                     }
@@ -162,7 +161,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             }
             console.log('[UI openTrackSequencerWindow] Draggable functionality for sequencer header is now disabled.');
         }
-        // --- END OF REMOVAL ---
 
         const sequencerContextMenuHandler = (event) => {
             event.preventDefault(); event.stopPropagation();
@@ -330,11 +328,10 @@ export function renderMixer(container) {
                 {label: "Rename Track", action: () => {
                     const newName = prompt(`Enter new name for "${currentTrackForMenu.name}":`, currentTrackForMenu.name);
                     if (newName !== null && newName.trim() !== "") {
-                        // Call a service to handle track renaming including state update and UI refresh
                         if (localAppServices.renameTrack) {
                             localAppServices.renameTrack(track.id, newName.trim());
                         } else {
-                             currentTrackForMenu.setName(newName.trim()); // Fallback to direct method if service not there
+                             currentTrackForMenu.setName(newName.trim()); 
                              console.warn("renameTrack service not available, track name updated directly.");
                         }
                     }
@@ -384,56 +381,52 @@ export function renderTimeline() {
         lane.className = 'timeline-track-lane'; 
         lane.dataset.trackId = track.id;
 
-        // Container for track name and sequence buttons (sticky part)
         const nameArea = document.createElement('div');
         nameArea.className = 'timeline-track-lane-name-area'; 
         nameArea.style.minWidth = trackNameWidth + 'px';
         nameArea.style.maxWidth = trackNameWidth + 'px';
-        // Basic styling for the name area - you'll likely want to refine this in your CSS
         nameArea.style.position = 'sticky';
         nameArea.style.left = '0';
         nameArea.style.zIndex = '2'; 
-        nameArea.style.backgroundColor = 'var(--timeline-track-name-bg, #282c34)'; // Example dark background
+        nameArea.style.backgroundColor = 'var(--timeline-track-name-bg, #282c34)'; 
         nameArea.style.borderRight = '1px solid var(--timeline-border-color, #444)';
-        nameArea.style.padding = '2px 4px'; // Reduced padding
+        nameArea.style.padding = '2px 4px'; 
         nameArea.style.display = 'flex';
         nameArea.style.flexDirection = 'column'; 
         nameArea.style.alignItems = 'flex-start'; 
         nameArea.style.justifyContent = 'center';
-        nameArea.style.overflow = 'hidden'; // Prevent content from spilling if too long
+        nameArea.style.overflow = 'hidden'; 
 
 
         const nameEl = document.createElement('div');
         nameEl.className = 'timeline-track-name-text'; 
         nameEl.textContent = track.name;
-        nameEl.title = track.name; // Add title for full name on hover
-        // Basic styling for name text - refine in CSS
+        nameEl.title = track.name; 
         nameEl.style.whiteSpace = 'nowrap';
         nameEl.style.overflow = 'hidden';
         nameEl.style.textOverflow = 'ellipsis';
-        nameEl.style.fontSize = '0.75rem'; // Smaller font
+        nameEl.style.fontSize = '0.75rem'; 
         nameEl.style.fontWeight = '500';
         nameEl.style.width = '100%'; 
-        nameEl.style.marginBottom = '2px'; // Space before sequence buttons
+        nameEl.style.marginBottom = '2px'; 
         nameArea.appendChild(nameEl);
         
         if (track.type !== 'Audio' && track.sequences && track.sequences.length > 0) {
             const sequenceButtonsContainer = document.createElement('div');
-            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-0.5'; // Tailwind classes for layout
+            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-0.5 mt-1 items-center'; 
             
             track.sequences.forEach(sequence => {
                 const seqButton = document.createElement('div');
-                // Added 'dragging-sequence-button' class for the dropzone accept
                 seqButton.className = 'sequence-timeline-button dragging-sequence-button text-xs px-1 py-0.5 border rounded bg-sky-600 hover:bg-sky-500 text-white cursor-grab';
-                seqButton.textContent = "Seq"; // Changed text
-                seqButton.title = `Drag to add Sequence: ${sequence.name}`;
-                seqButton.style.touchAction = 'none'; // For Interact.js
+                seqButton.textContent = "Seq"; 
+                seqButton.title = `Drag Sequence: ${sequence.name}`;
+                seqButton.style.touchAction = 'none';
 
                 if (window.interact) {
                     interact(seqButton).unset();
                     interact(seqButton).draggable({
                         inertia: true,
-                        autoScroll: true, // Good for dragging near edges of scrollable areas
+                        autoScroll: true, 
                         listeners: {
                             start: (event) => {
                                 const dragData = {
@@ -446,7 +439,6 @@ export function renderTimeline() {
                                 if (targetElement) {
                                     targetElement.dataset.dragType = 'sequence-timeline-drag';
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
-                                    // 'dragging-sequence-button' class is already on the element
                                     targetElement.style.position = 'relative'; 
                                     targetElement.style.zIndex = '10001'; 
                                 }
@@ -473,8 +465,6 @@ export function renderTimeline() {
                                     targetElement.style.zIndex = '';
                                 }
                                 console.log(`[Timeline UI] DragEnd sequence button: ${sequence.name}`);
-                                // Re-render timeline to reset button positions if it wasn't dropped on a valid target
-                                // and to update if a clip was created.
                                 if (localAppServices.renderTimeline) {
                                    setTimeout(() => localAppServices.renderTimeline(), 0);
                                 }
@@ -497,31 +487,7 @@ export function renderTimeline() {
                 .dropzone({
                     accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', 
                     overlap: 0.01, 
-                    checker: function (
-                        dragEvent,        
-                        event,            
-                        dropped,          
-                        dropzone,         
-                        dropElement,      
-                        draggable,        // This is the interact.js Interactable for the draggable element
-                        draggableElement  // This is the DOM element that is being dragged
-                    ) {
-                        const isValidDraggable = draggableElement && typeof draggableElement.classList !== 'undefined';
-                        let isMatch = false;
-                        if (isValidDraggable && draggable && typeof draggable.matchesSelector === 'function') {
-                           isMatch = draggable.matchesSelector(dropzone.options.accept);
-                        } else if (isValidDraggable && typeof draggableElement.matches === 'function') { 
-                           // Fallback if `draggable` (Interactable) isn't what we need, try on DOM element directly
-                           isMatch = draggableElement.matches(dropzone.options.accept);
-                        }
-                        
-                        console.log('[TimelineLane ClipsContainer DropChecker] Draggable Element:', draggableElement);
-                        console.log('[TimelineLane ClipsContainer DropChecker] Draggable Classes:', isValidDraggable ? draggableElement.className : 'N/A');
-                        console.log('[TimelineLane ClipsContainer DropChecker] Dropzone "accept" option:', dropzone.options.accept);
-                        console.log('[TimelineLane ClipsContainer DropChecker] Accepted by selector check?', isMatch);
-                        
-                        return isMatch; 
-                    },
+                    // REMOVED CHECKER FUNCTION - rely on 'accept' string and ondragenter
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
                     },
@@ -529,8 +495,20 @@ export function renderTimeline() {
                         const draggableElement = event.relatedTarget;
                         const dropzoneElement = event.target; 
                         console.log('[TimelineLane ClipsContainer] ondragenter - Draggable:', draggableElement, 'Classes:', draggableElement ? draggableElement.className : 'N/A');
-                        dropzoneElement.classList.add('drop-target-clips-area'); 
-                        if (draggableElement) draggableElement.classList.add('can-drop');  
+                        
+                        // Check if the draggable is accepted by the 'accept' option
+                        let isAccepted = false;
+                        if (draggableElement) {
+                             if (interact.matchesSelector(draggableElement, (interact(dropzoneElement).dropzone()).options.accept)) {
+                                isAccepted = true;
+                            }
+                        }
+                        console.log('[TimelineLane ClipsContainer] Accepted by selector?', isAccepted);
+
+                        if (isAccepted) {
+                            dropzoneElement.classList.add('drop-target-clips-area'); 
+                            if (draggableElement) draggableElement.classList.add('can-drop');  
+                        }
                     },
                     ondragleave: function (event) {
                         const draggableElement = event.relatedTarget;
@@ -541,7 +519,7 @@ export function renderTimeline() {
                     ondrop: function (event) {
                         console.log('[TimelineLane ClipsContainer] ONDROP triggered on clipsContainer!', event);
                         const droppedClipElement = event.relatedTarget;
-                        const targetLaneElement = droppedClipElement.closest('.timeline-track-lane'); // Find the parent lane of the dropped element
+                        const targetLaneElement = droppedClipElement.closest('.timeline-track-lane'); 
                         if (!targetLaneElement) {
                             console.error("Could not find parent lane for dropped item on clipsContainer.");
                             return;
@@ -554,7 +532,7 @@ export function renderTimeline() {
                         if (!timelineContentArea) { console.error("Timeline content area not found during drop"); return; }
                         
                         const pixelsPerSecond = 30; 
-                        const clipsContainerRect = event.target.getBoundingClientRect(); // event.target is clipsContainer
+                        const clipsContainerRect = event.target.getBoundingClientRect(); 
 
                         let dropXClient = 0;
                         if (event.dragEvent && typeof event.dragEvent.clientX === 'number') { 
@@ -589,10 +567,17 @@ export function renderTimeline() {
                             if (clipData) {
                                 const targetTrackForDrop = localAppServices.getTrackById(targetTrackId);
                                 if (targetTrackForDrop && targetTrackForDrop.type === originalTrack.type) {
-                                    // ... (Logic for moving existing clips) ...
-                                } else if (targetTrackForDrop && targetTrackForDrop.type !== originalTrack.type) { /* ... */ } 
-                                else if (!targetTrackForDrop) { /* ... */ }
-                            } else { /* ... */ }
+                                    // ... (Logic for moving existing clips - simplified for brevity) ...
+                                    if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Move Clip`);
+                                    if (originalTrackId !== targetTrackId) { 
+                                        originalTrack.timelineClips = originalTrack.timelineClips.filter(c => c.id !== clipId);
+                                        targetTrackForDrop.timelineClips.push({...clipData, startTime});
+                                    } else { 
+                                        clipData.startTime = startTime;
+                                    }
+                                    if(localAppServices.renderTimeline) localAppServices.renderTimeline(); 
+                                } else { /* ... type mismatch or no target track ... */ }
+                            } 
                         } else if ((dragType === 'sound-browser-item' || dragType === 'sequence-timeline-drag') && jsonDataString) {
                             try {
                                 const droppedItemData = JSON.parse(jsonDataString); 
@@ -610,16 +595,27 @@ export function renderTimeline() {
                 });
         }
 
+
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
             track.timelineClips.forEach(clip => {
-                // ... (clip rendering logic remains the same) ...
+                if (!clip || typeof clip.id === 'undefined') { 
+                    console.warn("Encountered invalid clip object while rendering timeline for track:", track.name, clip);
+                    return; 
+                }
                 const clipEl = document.createElement('div');
                 clipEl.dataset.clipId = clip.id; 
                 clipEl.dataset.originalTrackId = track.id; 
                 let clipText = clip.name || `Clip ${clip.id.slice(-4)}`;
                 let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
                 if (clip.type === 'audio') { clipEl.className = 'audio-clip'; } 
-                else if (clip.type === 'sequence') { /* ... */ } 
+                else if (clip.type === 'sequence') { 
+                    clipEl.className = 'audio-clip sequence-clip';
+                    const sourceSeq = track.sequences && track.sequences.find(s => s.id === clip.sourceSequenceId);
+                    if (sourceSeq) {
+                        clipText = sourceSeq.name;
+                        clipTitle = `Sequence: ${sourceSeq.name} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
+                    }
+                } 
                 else { clipEl.className = 'audio-clip unknown-clip'; }
                 clipEl.textContent = clipText; clipEl.title = clipTitle;
                 const pixelsPerSecond = 30;
