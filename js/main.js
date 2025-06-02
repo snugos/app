@@ -62,6 +62,12 @@ import {
     stopAudioRecording
 } from './audio.js';
 import {
+    // DB functions will be accessed via appServices
+    storeAudio as dbStoreAudio, // Renaming for clarity if we add more specific DB ops
+    getAudio as dbGetAudio,
+    deleteAudio as dbDeleteAudio
+} from './db.js';
+import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
     openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openSoundBrowserWindow,
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep, drawWaveform,
@@ -93,45 +99,55 @@ const uiElementsCache = {
     playbackModeToggleBtnGlobal: null,
 };
 
-const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
+const DESKTOP_BACKGROUND_LS_KEY = 'snugosDesktopBackground_LS'; // Old localStorage key (for potential migration/fallback)
+const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB'; // New IndexedDB key
 
-function handleCustomBackgroundUpload(event) {
+let currentBackgroundImageObjectURL = null; // To keep track of object URLs for revocation
+
+async function handleCustomBackgroundUpload(event) {
     if (!event?.target?.files?.[0]) return;
     const file = event.target.files[0];
     if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const dataURL = e.target.result;
-            try {
-                localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataURL);
-                applyDesktopBackground(dataURL);
-                showSafeNotification("Custom background applied.", 2000);
-            } catch (error) {
-                console.error("Error saving background to localStorage:", error);
-                showSafeNotification("Could not save background: Storage full or image too large.", 4000);
+        try {
+            // Remove any old background from localStorage first if migrating
+            localStorage.removeItem(DESKTOP_BACKGROUND_LS_KEY);
+
+            await appServices.dbStoreItem(DESKTOP_BACKGROUND_IDB_KEY, file); // Use appServices for DB access
+
+            if (currentBackgroundImageObjectURL) {
+                URL.revokeObjectURL(currentBackgroundImageObjectURL); // Revoke previous object URL
             }
-        };
-        reader.onerror = (err) => {
-            console.error("Error reading background file:", err);
-            showSafeNotification("Error reading background file.", 3000);
-        };
-        reader.readAsDataURL(file);
+            currentBackgroundImageObjectURL = URL.createObjectURL(file);
+            applyDesktopBackground(currentBackgroundImageObjectURL);
+            showSafeNotification("Custom background applied.", 2000);
+        } catch (error) {
+            console.error("Error saving background to IndexedDB:", error);
+            showSafeNotification("Could not save background. Storage error or image too large for DB.", 4000);
+        }
     } else {
         showSafeNotification("Invalid file type. Please select an image.", 3000);
     }
     if (event.target) event.target.value = null;
 }
 
-function removeCustomDesktopBackground() {
+async function removeCustomDesktopBackground() {
     try {
-        localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
-        applyDesktopBackground(null);
+        // Clear from both localStorage (old) and IndexedDB (new)
+        localStorage.removeItem(DESKTOP_BACKGROUND_LS_KEY);
+        await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY); // Use appServices for DB access
+
+        if (currentBackgroundImageObjectURL) {
+            URL.revokeObjectURL(currentBackgroundImageObjectURL);
+            currentBackgroundImageObjectURL = null;
+        }
+        applyDesktopBackground(null); // Apply default
         showSafeNotification("Custom background removed.", 2000);
     } catch (error) {
-        console.error("Error removing background from localStorage:", error);
+        console.error("Error removing background:", error);
         showSafeNotification("Could not remove background from storage.", 3000);
     }
 }
+
 
 function showSafeNotification(message, duration) {
     if (typeof utilShowNotification === 'function') {
@@ -143,6 +159,11 @@ function showSafeNotification(message, duration) {
 
 // --- AppServices Object (Centralized DI Container) ---
 const appServices = {
+    // DB services (can reuse generic store/get/delete from db.js)
+    dbStoreItem: dbStoreAudio, // Assuming storeAudio can handle generic blobs
+    dbGetItem: dbGetAudio,     // Assuming getAudio can handle generic blobs
+    dbDeleteItem: dbDeleteAudio, // Assuming deleteAudio is generic
+
     // UI Module Functions
     openTrackInspectorWindow, openTrackEffectsRackWindow, openTrackSequencerWindow,
     openMixerWindow, updateMixerWindow, openSoundBrowserWindow, openMasterEffectsRackWindow,
@@ -703,7 +724,29 @@ async function initializeSnugOS() {
         if (uiElementsCache.customBgInput) {
             uiElementsCache.customBgInput.addEventListener('change', handleCustomBackgroundUpload);
         }
-        applyDesktopBackground(localStorage.getItem(DESKTOP_BACKGROUND_KEY));
+        // Load background from IndexedDB first, then fallback to localStorage
+        try {
+            const storedImageBlob = await appServices.dbGetItem(DESKTOP_BACKGROUND_IDB_KEY);
+            if (storedImageBlob) {
+                if (currentBackgroundImageObjectURL) { URL.revokeObjectURL(currentBackgroundImageObjectURL); }
+                currentBackgroundImageObjectURL = URL.createObjectURL(storedImageBlob);
+                applyDesktopBackground(currentBackgroundImageObjectURL);
+                console.log("[Main initializeSnugOS] Loaded background from IndexedDB.");
+            } else {
+                const storedDataURL = localStorage.getItem(DESKTOP_BACKGROUND_LS_KEY);
+                if (storedDataURL) {
+                    console.log("[Main initializeSnugOS] Loaded background from localStorage (fallback).");
+                    applyDesktopBackground(storedDataURL);
+                     // Optionally migrate to IndexedDB here if desired
+                } else {
+                    applyDesktopBackground(null); // Apply default if nothing stored
+                }
+            }
+        } catch (error) {
+            console.error("Error loading desktop background on init:", error);
+            applyDesktopBackground(null); // Apply default on error
+        }
+
 
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function");
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule is not a function");
@@ -778,11 +821,11 @@ function updateMetersLoop() {
     requestAnimationFrame(updateMetersLoop);
 }
 
-function applyDesktopBackground(imageUrl) {
+function applyDesktopBackground(imageUrlOrObjectUrl) { // Renamed parameter for clarity
     if (uiElementsCache.desktop) {
         try {
-            if (imageUrl) {
-                uiElementsCache.desktop.style.backgroundImage = `url('${imageUrl}')`;
+            if (imageUrlOrObjectUrl) {
+                uiElementsCache.desktop.style.backgroundImage = `url('${imageUrlOrObjectUrl}')`;
                 uiElementsCache.desktop.style.backgroundSize = 'cover';
                 uiElementsCache.desktop.style.backgroundPosition = 'center center';
                 uiElementsCache.desktop.style.backgroundRepeat = 'no-repeat';
@@ -810,6 +853,10 @@ window.addEventListener('beforeunload', (e) => {
         e.preventDefault();
         e.returnValue = '';
         return "You have unsaved changes. Are you sure you want to leave?";
+    }
+    // Clean up object URL for background if one exists
+    if (currentBackgroundImageObjectURL) {
+        URL.revokeObjectURL(currentBackgroundImageObjectURL);
     }
 });
 
