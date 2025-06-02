@@ -19,7 +19,6 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const stepsPerBar = Constants.STEPS_PER_BAR;
     const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar;
 
-    // REMOVED 'sequencer-controls' class from here as header drag is removed
     let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" class="w-12 p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[10px] text-gray-500 dark:text-slate-400">${(i % stepsPerBar === 0) ? (Math.floor(i / stepsPerBar) + 1) : ((i % 4 === 0) ? '&#x2022;' : '')}</div>`; }
@@ -146,11 +145,12 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // --- DRAGGABLE SEQUENCER HEADER REMOVED ---
+        // Draggable functionality for sequencer header is now REMOVED as per user request
+        // to use timeline sequence buttons instead.
         if (controlsDiv) {
-            controlsDiv.classList.remove('sequencer-controls'); 
+            controlsDiv.classList.remove('sequencer-controls'); // Ensure class is not there
             controlsDiv.style.cursor = 'default'; 
-            if (window.interact && interact.isSet(controlsDiv)) { // Check if interactable is set before unsetting
+            if (window.interact && interact.isSet(controlsDiv)) { 
                 try {
                     interact(controlsDiv).unset();
                 } catch(e) {
@@ -159,7 +159,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             }
             console.log('[UI openTrackSequencerWindow] Draggable functionality removed from sequencer header.');
         }
-        // --- END OF REMOVAL ---
 
 
         const sequencerContextMenuHandler = (event) => {
@@ -381,7 +380,7 @@ export function renderTimeline() {
             
             interact(lane)
                 .dropzone({
-                    accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', // Updated accept
+                    accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', // Updated to accept new sequence button class
                     overlap: 0.25, 
                     checker: function (
                         dragEvent,        
@@ -393,17 +392,22 @@ export function renderTimeline() {
                         draggableElement  
                     ) {
                         const isValidDraggable = draggableElement && typeof draggableElement.classList !== 'undefined';
-                        const acceptedBySelector = isValidDraggable ? interact.matchSelector(draggableElement, dropzone.options.accept) : false;
+                        let acceptedBySelector = false;
+                        if (isValidDraggable && draggable && typeof draggable.matchesSelector === 'function') {
+                           acceptedBySelector = draggable.matchesSelector(dropzone.options.accept);
+                        } else if (isValidDraggable && typeof draggableElement.matches === 'function') { // Fallback for DOM element directly
+                           acceptedBySelector = draggableElement.matches(dropzone.options.accept);
+                        }
                         
                         console.log('[TimelineLane DropChecker] Draggable Element:', draggableElement);
                         console.log('[TimelineLane DropChecker] Draggable Classes:', isValidDraggable ? draggableElement.className : 'N/A');
                         console.log('[TimelineLane DropChecker] Draggable dragType data:', isValidDraggable ? draggableElement.dataset.dragType : 'N/A');
-                        // console.log('[TimelineLane DropChecker] Does it have .sequencer-controls?', isValidDraggable ? draggableElement.classList.contains('sequencer-controls') : false); // Removed this as sequencer header drag is disabled
-                        console.log('[TimelineLane DropChecker] Does it have .dragging-sequence-button?', isValidDraggable ? draggableElement.classList.contains('dragging-sequence-button') : false);
-                        console.log('[TimelineLane DropChecker] Dropzone options.accept:', dropzone.options.accept);
-                        console.log('[TimelineLane DropChecker] Accepted by selector implicitly?', acceptedBySelector);
+                        // console.log('[TimelineLane DropChecker] Does it have .sequencer-controls?', isValidDraggable ? draggableElement.classList.contains('sequencer-controls') : 'N/A'); // No longer dragging header
+                        console.log('[TimelineLane DropChecker] Does it have .dragging-sequence-button?', isValidDraggable ? draggableElement.classList.contains('dragging-sequence-button') : 'N/A');
+                        console.log('[TimelineLane DropChecker] Dropzone "accept" option:', dropzone.options.accept);
+                        console.log('[TimelineLane DropChecker] Accepted by selector check?', acceptedBySelector);
                         
-                        return interact.dynamicDrop() || acceptedBySelector;
+                        return acceptedBySelector; 
                     },
                     ondropactivate: function (event) {
                         event.target.classList.add('drop-active');
@@ -411,7 +415,8 @@ export function renderTimeline() {
                     ondragenter: function (event) {
                         const draggableElement = event.relatedTarget;
                         const dropzoneElement = event.target;
-                        console.log('[TimelineLane] ondragenter - Draggable:', draggableElement, 'Classes:', draggableElement ? draggableElement.className : 'N/A', 'Has class dragging-sound-item:', draggableElement ? draggableElement.classList.contains('dragging-sound-item') : false);
+                        console.log('[TimelineLane] ondragenter - Draggable:', draggableElement, 'Classes:', draggableElement ? draggableElement.className : 'N/A');
+                        console.log('[TimelineLane] ondragenter - dragType data:', draggableElement ? draggableElement.dataset.dragType : 'N/A');
                         dropzoneElement.classList.add('drop-target'); 
                         if (draggableElement) draggableElement.classList.add('can-drop');  
                     },
@@ -427,19 +432,19 @@ export function renderTimeline() {
                         const targetLaneElement = event.target;
                         const targetTrackId = parseInt(targetLaneElement.dataset.trackId, 10);
                         
-                        const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null; 
-                        if (!timelineWindow || !timelineWindow.element) {
+                        const timelineWindowLocal = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null; 
+                        if (!timelineWindowLocal || !timelineWindowLocal.element) {
                             console.error("Timeline window not found during drop");
                             return;
                         }
-                        const timelineContentArea = timelineWindow.element.querySelector('.window-content');
+                        const timelineContentArea = timelineWindowLocal.element.querySelector('.window-content');
                         if (!timelineContentArea) {
                              console.error("Timeline content area not found during drop");
                             return;
                         }
                         const pixelsPerSecond = 30; 
-                        const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-                        const trackNameWidth = parseFloat(trackNameWidthStyle) || 120;
+                        const trackNameWidthStyleLocal = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
+                        const trackNameWidthLocal = parseFloat(trackNameWidthStyleLocal) || 120;
                         const timelineRect = timelineContentArea.getBoundingClientRect();
 
                         let dropXClient = 0;
@@ -458,7 +463,7 @@ export function renderTimeline() {
                             return; 
                         }
                         
-                        let dropX = dropXClient - timelineRect.left - trackNameWidth + timelineContentArea.scrollLeft;
+                        let dropX = dropXClient - timelineRect.left - trackNameWidthLocal + timelineContentArea.scrollLeft;
                         dropX = Math.max(0, dropX); 
                         const startTime = dropX / pixelsPerSecond;
 
@@ -531,21 +536,20 @@ export function renderTimeline() {
                 });
         }
 
-        // Container for track name and sequence buttons
         const nameArea = document.createElement('div');
         nameArea.className = 'timeline-track-lane-name-area'; 
         nameArea.style.minWidth = trackNameWidth + 'px';
         nameArea.style.maxWidth = trackNameWidth + 'px';
         nameArea.style.position = 'sticky';
         nameArea.style.left = '0';
-        nameArea.style.zIndex = '2'; // Ensure it's above clips
+        nameArea.style.zIndex = '2'; 
         nameArea.style.backgroundColor = '#2f2f2f'; 
         nameArea.style.borderRight = '1px solid #3a3a3a';
         nameArea.style.padding = '0 8px';
         nameArea.style.display = 'flex';
-        nameArea.style.flexDirection = 'column'; // Stack name and buttons
-        nameArea.style.alignItems = 'flex-start'; // Align items to the start
-        nameArea.style.justifyContent = 'center'; // Center vertically in the allocated space
+        nameArea.style.flexDirection = 'column'; 
+        nameArea.style.alignItems = 'flex-start'; 
+        nameArea.style.justifyContent = 'center'; 
 
         const nameEl = document.createElement('div');
         nameEl.className = 'timeline-track-name-text'; 
@@ -555,18 +559,18 @@ export function renderTimeline() {
         nameEl.style.textOverflow = 'ellipsis';
         nameEl.style.fontSize = '0.8rem';
         nameEl.style.fontWeight = '500';
-        nameEl.style.width = '100%'; // Take full width of nameArea
+        nameEl.style.width = '100%'; 
         nameArea.appendChild(nameEl);
         
         if (track.type !== 'Audio' && track.sequences && track.sequences.length > 0) {
             const sequenceButtonsContainer = document.createElement('div');
-            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-1 mt-1'; // Added some basic styling
+            sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-1 mt-1 items-center'; 
             
             track.sequences.forEach(sequence => {
                 const seqButton = document.createElement('div');
                 seqButton.className = 'sequence-timeline-button dragging-sequence-button text-xs px-1 py-0.5 border rounded bg-sky-700 hover:bg-sky-600 text-white cursor-grab';
                 seqButton.textContent = "Seq"; 
-                seqButton.title = `Drag to add Sequence: ${sequence.name}`;
+                seqButton.title = `Drag Sequence: ${sequence.name}`;
                 seqButton.style.touchAction = 'none';
 
                 if (window.interact) {
@@ -585,7 +589,7 @@ export function renderTimeline() {
                                 if (targetElement) {
                                     targetElement.dataset.dragType = 'sequence-timeline-drag';
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
-                                    // The class 'dragging-sequence-button' is already on the element by default
+                                    // .dragging-sequence-button is already on the classList
                                     targetElement.style.position = 'relative'; 
                                     targetElement.style.zIndex = '10001'; 
                                 }
@@ -612,6 +616,11 @@ export function renderTimeline() {
                                     targetElement.style.zIndex = '';
                                 }
                                 console.log(`[Timeline UI] DragEnd sequence button: ${sequence.name}`);
+                                // Important: Re-render timeline to ensure button is back in its original place
+                                // if it wasn't dropped successfully or if the drop created a new clip.
+                                if (localAppServices.renderTimeline) {
+                                   setTimeout(() => localAppServices.renderTimeline(), 0);
+                                }
                             }
                         }
                     });
@@ -623,12 +632,13 @@ export function renderTimeline() {
         lane.appendChild(nameArea);
 
         const clipsContainer = document.createElement('div');
-        clipsContainer.style.position = 'absolute'; // Position relative to the lane, but after the nameArea
-        clipsContainer.style.left = trackNameWidth + 'px'; // Start after the name area
+        clipsContainer.style.position = 'absolute'; 
+        clipsContainer.style.left = trackNameWidth + 'px'; 
         clipsContainer.style.right = '0';
         clipsContainer.style.top = '0';
         clipsContainer.style.bottom = '0';
-        clipsContainer.style.height = '100%'; // This might need adjustment if buttons take up vertical space
+        clipsContainer.style.height = '100%';
+
 
         if (track.timelineClips && Array.isArray(track.timelineClips)) {
             track.timelineClips.forEach(clip => {
