@@ -28,6 +28,7 @@ export class Track {
         this.isSoloed = currentSoloedId === this.id;
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
 
+        // Synth specific
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -36,20 +37,7 @@ export class Track {
             this.synthParams = {};
         }
 
-        // Initialize numSlices and numPads correctly
-        if (this.type === 'Sampler') {
-            this.numSlices = initialData?.numSlices || Constants.DEFAULT_SLICES;
-        } else {
-            this.numSlices = 0; // Not applicable
-        }
-        if (this.type === 'DrumSampler') {
-            this.numPads = initialData?.numPads || Constants.DEFAULT_DRUM_PADS;
-            console.log(`[Track ${this.id} Constructor - DrumSampler Init] numPads set to: ${this.numPads} (from Constants.DEFAULT_DRUM_PADS: ${Constants.DEFAULT_DRUM_PADS}, initialData.numPads: ${initialData?.numPads})`);
-        } else {
-            this.numPads = 0; // Not applicable
-        }
-
-
+        // Sampler (Slicer) specific
         this.samplerAudioData = {
             fileName: initialData?.samplerAudioData?.fileName || null,
             audioBufferDataURL: initialData?.samplerAudioData?.audioBufferDataURL || null,
@@ -57,18 +45,14 @@ export class Track {
             status: initialData?.samplerAudioData?.status || (initialData?.samplerAudioData?.dbKey || initialData?.samplerAudioData?.audioBufferDataURL ? 'missing' : 'empty')
         };
         this.audioBuffer = null;
-        this.slices = initialData?.slices && initialData.slices.length > 0 && initialData.slices.length === this.numSlices ?
+        this.slices = initialData?.slices && initialData.slices.length > 0 ?
             JSON.parse(JSON.stringify(initialData.slices)) :
-            Array(this.numSlices).fill(null).map(() => ({
+            Array(Constants.numSlices).fill(null).map(() => ({
                 offset: 0, duration: 0, userDefined: false, volume: 0.7, pitchShift: 0,
                 loop: false, reverse: false,
                 envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
             }));
         this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
-        if (this.selectedSliceForEdit >= this.numSlices && this.numSlices > 0) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
-        else if (this.numSlices === 0 && this.type === 'Sampler') this.selectedSliceForEdit = 0;
-
-
         this.waveformZoom = initialData?.waveformZoom || 1;
         this.waveformScrollOffset = initialData?.waveformScrollOffset || 0;
         this.slicerIsPolyphonic = initialData?.slicerIsPolyphonic !== undefined ? initialData.slicerIsPolyphonic : true;
@@ -76,6 +60,7 @@ export class Track {
         this.slicerMonoEnvelope = null;
         this.slicerMonoGain = null;
 
+        // Instrument Sampler specific
         this.instrumentSamplerSettings = {
             sampleUrl: initialData?.instrumentSamplerSettings?.sampleUrl || null,
             audioBuffer: null,
@@ -92,7 +77,8 @@ export class Track {
         this.instrumentSamplerIsPolyphonic = initialData?.instrumentSamplerIsPolyphonic !== undefined ? initialData.instrumentSamplerIsPolyphonic : true;
         this.toneSampler = null;
 
-        this.drumSamplerPads = Array(this.numPads).fill(null).map((_, padIdx) => {
+        // Drum Sampler specific
+        this.drumSamplerPads = Array(Constants.numDrumSamplerPads).fill(null).map((_, padIdx) => {
             const initialPadData = initialData?.drumSamplerPads?.[padIdx];
             return {
                 sampleUrl: initialPadData?.sampleUrl || null,
@@ -104,17 +90,16 @@ export class Track {
                 pitchShift: initialPadData?.pitchShift ?? 0,
                 envelope: initialPadData?.envelope ? JSON.parse(JSON.stringify(initialPadData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
                 status: initialPadData?.status || (initialPadData?.dbKey || initialPadData?.audioBufferDataURL ? 'missing' : 'empty'),
+                // New properties for auto-stretch
                 autoStretchEnabled: initialPadData?.autoStretchEnabled || false,
                 stretchOriginalBPM: initialPadData?.stretchOriginalBPM || 120,
                 stretchBeats: initialPadData?.stretchBeats || 1,
             };
         });
         this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
-        if (this.selectedDrumPadForEdit >= this.numPads && this.numPads > 0) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
-        else if (this.numPads === 0 && this.type === 'DrumSampler') this.selectedDrumPadForEdit = 0;
+        this.drumPadPlayers = Array(Constants.numDrumSamplerPads).fill(null);
 
-        this.drumPadPlayers = Array(this.numPads).fill(null);
-
+        // Effects
         this.activeEffects = [];
         if (initialData && initialData.activeEffects && Array.isArray(initialData.activeEffects)) {
             initialData.activeEffects.forEach(effectData => {
@@ -136,6 +121,7 @@ export class Track {
             });
         }
 
+        // Audio Nodes
         this.gainNode = null; this.trackMeter = null; this.outputNode = null;
         this.instrument = null;
 
@@ -149,12 +135,11 @@ export class Track {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
             } else {
-                // Initial sequence creation is now deferred to state.js after track registration
-                console.log(`[Track ${this.id} Constructor] Initial sequence creation deferred for new track (type: ${this.type}).`);
+                this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true);
             }
-            delete this.sequenceData; // Old property
-            delete this.sequenceLength; // Old property
-        } else { // Audio Track specific
+            delete this.sequenceData;
+            delete this.sequenceLength;
+        } else {
             delete this.sequenceData;
             delete this.sequenceLength;
             delete this.sequences;
@@ -179,100 +164,15 @@ export class Track {
         }
         this.patternPlayerSequence = null;
 
+        // UI related
         this.waveformCanvasCtx = null;
         this.instrumentWaveformCanvasCtx = null;
         this.automation = initialData?.automation ? JSON.parse(JSON.stringify(initialData.automation)) : { volume: [] };
         this.inspectorControls = {};
 
+        // Audio Track specific
         this.inputChannel = null;
         this.clipPlayers = new Map();
-    }
-
-    // --- Slice/Pad Count Management ---
-    setNumSlices(newCount) {
-        if (this.type !== 'Sampler') return;
-        const validatedCount = Math.max(Constants.MIN_SLICES, Math.min(Constants.MAX_SLICES, parseInt(newCount) || this.numSlices));
-        if (validatedCount === this.numSlices) return;
-
-        this._captureUndoState(`Set Slices to ${validatedCount} for ${this.name}`);
-        const oldNumSlices = this.numSlices;
-        this.numSlices = validatedCount;
-
-        if (this.numSlices > oldNumSlices) {
-            for (let i = oldNumSlices; i < this.numSlices; i++) {
-                this.slices.push({
-                    offset: 0, duration: 0, userDefined: false, volume: 0.7, pitchShift: 0,
-                    loop: false, reverse: false,
-                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
-                });
-            }
-        } else {
-            this.slices.length = this.numSlices;
-        }
-        if (this.selectedSliceForEdit >= this.numSlices) this.selectedSliceForEdit = Math.max(0, this.numSlices - 1);
-
-        this.sequences.forEach(seq => {
-            if (seq.data) {
-                const currentRows = seq.data.length;
-                if (this.numSlices > currentRows) {
-                    for (let i = currentRows; i < this.numSlices; i++) {
-                        seq.data.push(Array(seq.length || Constants.defaultStepsPerBar).fill(null));
-                    }
-                } else if (this.numSlices < currentRows) {
-                    seq.data.length = this.numSlices;
-                }
-            }
-        });
-
-        this.recreateToneSequence(true);
-        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sliceOrPadCountChanged');
-    }
-
-    setNumPads(newCount) {
-        if (this.type !== 'DrumSampler') return;
-        const validatedCount = Math.max(Constants.MIN_DRUM_PADS, Math.min(Constants.MAX_DRUM_PADS, parseInt(newCount) || this.numPads));
-        if (validatedCount === this.numPads) return;
-
-        this._captureUndoState(`Set Pads to ${validatedCount} for ${this.name}`);
-        const oldNumPads = this.numPads;
-        this.numPads = validatedCount;
-        console.log(`[Track ${this.id} setNumPads] Set numPads to: ${this.numPads}`);
-
-
-        if (this.numPads > oldNumPads) {
-            for (let i = oldNumPads; i < this.numPads; i++) {
-                this.drumSamplerPads.push({
-                    sampleUrl: null, audioBuffer: null, audioBufferDataURL: null, originalFileName: null, dbKey: null,
-                    volume: 0.7, pitchShift: 0,
-                    envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
-                    status: 'empty', autoStretchEnabled: false, stretchOriginalBPM: 120, stretchBeats: 1,
-                });
-                this.drumPadPlayers.push(null);
-            }
-        } else {
-            this.drumSamplerPads.length = this.numPads;
-            this.drumPadPlayers.forEach((player, index) => {
-                if (index >= this.numPads && player && !player.disposed) player.dispose();
-            });
-            this.drumPadPlayers.length = this.numPads;
-        }
-        if (this.selectedDrumPadForEdit >= this.numPads) this.selectedDrumPadForEdit = Math.max(0, this.numPads - 1);
-
-        this.sequences.forEach(seq => {
-            if (seq.data) {
-                const currentRows = seq.data.length;
-                if (this.numPads > currentRows) {
-                    for (let i = currentRows; i < this.numPads; i++) {
-                        seq.data.push(Array(seq.length || Constants.defaultStepsPerBar).fill(null));
-                    }
-                } else if (this.numPads < currentRows) {
-                    seq.data.length = this.numPads;
-                }
-            }
-        });
-
-        this.recreateToneSequence(true);
-        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sliceOrPadCountChanged');
     }
 
     setName(newName, skipUndo = false) {
@@ -292,6 +192,7 @@ export class Track {
         }
     }
 
+    // --- Sequence Management ---
     getActiveSequence() {
         if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences || this.sequences.length === 0) return null;
         return this.sequences.find(s => s.id === this.activeSequenceId);
@@ -307,6 +208,7 @@ export class Track {
         return activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
     }
 
+    // --- Synth Specific ---
     getDefaultSynthParams() {
         return {
             portamento: 0.01,
@@ -322,6 +224,7 @@ export class Track {
         };
     }
 
+    // --- Audio Node Initialization and Chaining ---
     async initializeAudioNodes() {
         console.log(`[Track ${this.id} initializeAudioNodes] Initializing audio nodes for "${this.name}".`);
         try {
@@ -656,8 +559,8 @@ export class Track {
                             this.samplerAudioData.status = 'loaded';
                             console.log(`[Track ${this.id} Sampler] Sample "${this.samplerAudioData.fileName}" loaded into Tone.Buffer. Duration: ${this.audioBuffer.duration}`);
                             if (!this.slicerIsPolyphonic) this.setupSlicerMonoNodes();
-                            if (this.appServices.autoSliceSample && this.audioBuffer.loaded && (!this.slices || this.slices.length !== this.numSlices || this.slices.every(s => s.duration === 0))) {
-                                this.appServices.autoSliceSample(this.id, this.numSlices);
+                            if (this.appServices.autoSliceSample && this.audioBuffer.loaded && this.slices.every(s => s.duration === 0)) {
+                                this.appServices.autoSliceSample(this.id);
                             }
                         } catch (toneLoadErr) {
                             console.error(`[Track ${this.id} Sampler] Tone.Buffer load error for ${this.samplerAudioData.fileName}:`, toneLoadErr);
@@ -672,7 +575,7 @@ export class Track {
                     }
                 }
             } else if (this.type === 'DrumSampler') {
-                for (let i = 0; i < this.numPads; i++) {
+                for (let i = 0; i < this.drumSamplerPads.length; i++) {
                     const pad = this.drumSamplerPads[i];
                     if (!pad) continue;
                     if (pad.dbKey || pad.audioBufferDataURL) {
@@ -788,7 +691,7 @@ export class Track {
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sampleLoadError');
         }
 
-        if (this.type !== 'Audio' && this.sequences.length > 0) {
+        if (this.type !== 'Audio') {
             this.recreateToneSequence(true);
         }
         this.rebuildEffectChain();
@@ -983,6 +886,7 @@ export class Track {
             this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value);
         }
     }
+    // New setters for drum pad auto-stretch properties
     setDrumSamplerPadAutoStretch(padIndex, enabled) {
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex]) {
             this.drumSamplerPads[padIndex].autoStretchEnabled = !!enabled;
@@ -1042,17 +946,14 @@ export class Track {
         }
     }
 
-    createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.defaultStepsPerBar, skipUndo = false, skipUIUpdate = false) {
+    createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.defaultStepsPerBar, skipUndo = false) {
         if (this.type === 'Audio') return null;
         const newSeqId = `seq_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
         let numRowsForGrid;
 
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRowsForGrid = this.numSlices;
-        else if (this.type === 'DrumSampler') {
-            numRowsForGrid = this.numPads;
-            console.log(`[Track createNewSequence] DrumSampler: Using this.numPads = ${this.numPads} for rows.`);
-        }
+        else if (this.type === 'Sampler') numRowsForGrid = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
+        else if (this.type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
         else numRowsForGrid = 1;
 
         if (numRowsForGrid <= 0) {
@@ -1069,12 +970,8 @@ export class Track {
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-                
-        if (!skipUIUpdate && this.appServices.updateTrackUI) {
-            console.log(`[Track createNewSequence] UI update for 'sequencerContentChanged' will be triggered by state.js if this is a new track's initial sequence, or directly if not.`);
-            // For non-initial sequences, this direct call is fine.
-            // For initial sequence (called from state.js), state.js handles the UI update.
-        }
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         if (!skipUndo) this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
         console.log(`[Track ${this.id}] Created new sequence: "${name}" (ID: ${newSeqId}), Rows: ${numRowsForGrid}, Length: ${actualLength}`);
         return newSequence;
@@ -1211,8 +1108,8 @@ export class Track {
 
         let numRows;
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRows = this.numSlices;
-        else if (this.type === 'DrumSampler') numRows = this.numPads;
+        else if (this.type === 'Sampler') numRows = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
+        else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
         else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1;
 
         if (numRows <= 0) numRows = 1;
@@ -1255,17 +1152,15 @@ export class Track {
             console.warn(`[Track ${this.id} recreateToneSequence] No active sequence (ID: ${this.activeSequenceId}). Aborting.`);
             return;
         }
-
-        let numRowsForInit;
-        if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForInit = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRowsForInit = this.numSlices;
-        else if (this.type === 'DrumSampler') numRowsForInit = this.numPads;
-        else numRowsForInit = 1;
-        if (numRowsForInit <= 0) numRowsForInit = 1;
-
-        if (!activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length !== numRowsForInit) {
-            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" (ID: ${activeSeq.id}) had invalid/empty or mismatched row data (expected ${numRowsForInit}, got ${activeSeq.data?.length}). Re-initializing data array.`);
+        if (!activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length === 0) {
+            let numRowsForInit;
+            if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForInit = Constants.synthPitches.length;
+            else if (this.type === 'Sampler') numRowsForInit = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
+            else if (this.type === 'DrumSampler') numRowsForInit = Constants.numDrumSamplerPads;
+            else numRowsForInit = 1;
+            if (numRowsForInit <= 0) numRowsForInit = 1;
             activeSeq.data = Array(numRowsForInit).fill(null).map(() => Array(activeSeq.length || Constants.defaultStepsPerBar).fill(null));
+            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" had invalid/empty data. Initialized with ${numRowsForInit} rows.`);
         }
         if (!activeSeq.length || !Number.isFinite(activeSeq.length) || activeSeq.length < Constants.STEPS_PER_BAR) {
             activeSeq.length = Constants.defaultStepsPerBar;
@@ -1348,7 +1243,7 @@ export class Track {
                         }
                     });
                 } else if (this.type === 'DrumSampler') {
-                    Array.from({ length: this.numPads }).forEach((_, padIndex) => {
+                    Array.from({ length: Constants.numDrumSamplerPads }).forEach((_, padIndex) => {
                         const step = sequenceDataForTone[padIndex]?.[col];
                         const padData = this.drumSamplerPads[padIndex];
                         if (step?.active && padData && this.drumPadPlayers[padIndex] && !this.drumPadPlayers[padIndex].disposed && this.drumPadPlayers[padIndex].loaded) {
@@ -1356,14 +1251,15 @@ export class Track {
                             try { player.disconnect(); player.connect(effectsChainStartPoint); } catch(e) { /* ignore */ }
                             player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7);
 
+                            // Auto-stretch logic for Drum Sampler
                             if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0) {
                                 const currentProjectTempo = Tone.Transport.bpm.value;
                                 const naturalDurationSeconds = (60 / padData.stretchOriginalBPM) * padData.stretchBeats;
                                 const targetDurationSeconds = (60 / currentProjectTempo) * padData.stretchBeats;
-                                if (targetDurationSeconds > 1e-6) {
+                                if (targetDurationSeconds > 1e-6) { // Avoid division by zero or extremely small values
                                     player.playbackRate = naturalDurationSeconds / targetDurationSeconds;
                                 } else {
-                                    player.playbackRate = 1;
+                                    player.playbackRate = 1; // Fallback if target duration is too small
                                 }
                             } else {
                                 player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
@@ -1390,6 +1286,10 @@ export class Track {
         } catch (error) {
             console.error(`[Track ${this.id} recreateToneSequence] Error creating Tone.Sequence for "${activeSeq.name}":`, error);
             this.patternPlayerSequence = null;
+        }
+
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         }
     }
 
@@ -1678,6 +1578,7 @@ export class Track {
                                     if (player && !player.disposed && player.loaded) {
                                         try { player.disconnect(); player.connect(dest); } catch(e) { /* ignore */ }
                                         player.volume.value = Tone.gainToDb(padData.volume * value.velocity * 0.7);
+                                        // Auto-stretch logic for Drum Sampler in Timeline (via Part)
                                         if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0) {
                                             const currentProjectTempo = Tone.Transport.bpm.value;
                                             const naturalDurationSeconds = (60 / padData.stretchOriginalBPM) * padData.stretchBeats;
