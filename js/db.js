@@ -1,8 +1,8 @@
-// js/db.js - IndexedDB Helper Module
+// js/db.js - IndexedDB Helper Module (MODIFIED - based on new version, verified)
 
-const DB_NAME = 'SnugOSAudioDB';
+const DB_NAME = 'SnugOSAudioDB_v2'; // Consider versioning DB name if schema changes
 const STORE_NAME = 'audioFiles';
-const DB_VERSION = 1;
+const DB_VERSION = 1; // Keep version 1 unless object store structure changes
 
 let dbPromise = null;
 
@@ -12,7 +12,7 @@ let dbPromise = null;
  * @returns {Promise<IDBDatabase>} A promise that resolves with the database instance.
  */
 function getDB() {
-    if (!dbPromise) {
+    if (!dbPromise || (dbPromise.result && dbPromise.result.version !== DB_VERSION) ) { // Check if DB is closed or version mismatch
         dbPromise = new Promise((resolve, reject) => {
             if (!window.indexedDB) {
                 console.error('[DB] IndexedDB not supported by this browser.');
@@ -26,17 +26,28 @@ function getDB() {
             };
 
             request.onsuccess = (event) => {
+                const db = event.target.result;
                 // console.log('[DB] Database opened successfully.');
-                resolve(event.target.result);
+                 db.onversionchange = () => { // Handle external version changes if DB is open elsewhere
+                    db.close();
+                    console.warn("[DB] Database version changed elsewhere. DB closed. Please refresh page.");
+                    dbPromise = null; // Reset promise to allow re-opening
+                    // Optionally, notify user to refresh
+                };
+                resolve(db);
             };
 
             request.onupgradeneeded = (event) => {
                 console.log('[DB] Database upgrade needed.');
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME);
+                    db.createObjectStore(STORE_NAME); // Key will be fileId (string)
                     console.log(`[DB] Object store "${STORE_NAME}" created.`);
                 }
+            };
+             request.onblocked = (event) => {
+                console.warn('[DB open] Database open request blocked. Other connections might be open.', event);
+                reject(new Error('Database open blocked. Please close other tabs/windows with this app.'));
             };
         });
     }
@@ -44,192 +55,181 @@ function getDB() {
 }
 
 /**
- * Stores an audio blob in IndexedDB with a given key.
- * @param {string} key - The unique key to store the audio blob under.
- * @param {Blob} audioBlob - The audio blob (File object) to store.
- * @returns {Promise<IDBValidKey>} A promise that resolves with the key under which the blob was stored.
+ * Stores an audio file (Blob or File object) in IndexedDB.
+ * @param {string} fileId - A unique ID for the file.
+ * @param {Blob|File} audioBlob - The audio data to store.
+ * @returns {Promise<string>} A promise that resolves with the fileId on success.
  */
-export async function storeAudio(key, audioBlob) {
-    let db;
-    try {
-        db = await getDB();
-    } catch (dbError) {
-        console.error(`[DB storeAudio] Failed to get DB instance for key "${key}":`, dbError);
-        throw dbError; // Re-throw the error to be caught by the caller
+export async function storeAudio(fileId, audioBlob) {
+    if (!fileId || !audioBlob) {
+        return Promise.reject(new Error('File ID and audio blob are required for storing.'));
     }
+    // console.log(`[DB storeAudio] Attempting to store fileId: ${fileId}, Blob size: ${audioBlob.size}, type: ${audioBlob.type}`);
 
-    return new Promise((resolve, reject) => {
-        if (!db) { // Should not happen if getDB() succeeded, but as a safeguard
-            console.error(`[DB storeAudio] DB instance is null for key "${key}" after getDB() call.`);
-            return reject(new Error('Database instance not available for storing audio.'));
-        }
-        try {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.put(audioBlob, key);
+    try {
+        const db = await getDB();
+        return new Promise((resolve, reject) => {
+            try {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(audioBlob, fileId);
 
-            request.onsuccess = () => {
-                // console.log(`[DB] Audio stored successfully with key: ${key}`);
-                resolve(request.result);
-            };
-            request.onerror = (event) => {
-                console.error(`[DB storeAudio] Error storing audio with key "${key}":`, event.target.error);
-                reject(new Error('Error storing audio: ' + (event.target.error?.message || 'Unknown DB put error')));
-            };
-            transaction.onabort = (event) => { // More specific error for transaction abort
-                console.error(`[DB storeAudio] Transaction aborted for key "${key}":`, event.target.error);
-                reject(new Error('Transaction aborted while storing audio: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
-            };
-            transaction.onerror = (event) => { // Catch other transaction-level errors
-                console.error(`[DB storeAudio] Transaction error storing audio with key "${key}":`, event.target.error);
-                reject(new Error('Transaction error storing audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
-            };
-        } catch (e) {
-            console.error(`[DB storeAudio] Synchronous error during transaction creation for key "${key}":`, e);
-            reject(new Error('Failed to initiate audio storage transaction: ' + e.message));
-        }
-    });
+                request.onsuccess = () => {
+                    // console.log(`[DB storeAudio] Audio file "${fileId}" stored successfully.`);
+                    resolve(fileId);
+                };
+                request.onerror = (event) => {
+                    console.error(`[DB storeAudio] Error storing audio file "${fileId}":`, event.target.error);
+                    reject(new Error(`Error storing audio file: ${event.target.error?.message || 'Unknown DB put error'}`));
+                };
+                 transaction.onabort = (event) => {
+                    console.error(`[DB storeAudio] Transaction aborted for storing "${fileId}":`, event.target.error);
+                    reject(new Error('Transaction aborted while storing audio: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
+                };
+                transaction.onerror = (event) => { // Catching transaction-level errors
+                    console.error(`[DB storeAudio] Transaction error for storing "${fileId}":`, event.target.error);
+                     reject(new Error('Transaction error storing audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
+                };
+            } catch (e) {
+                 console.error('[DB storeAudio] Synchronous error during transaction creation:', e);
+                 reject(new Error('Failed to initiate store audio transaction: ' + e.message));
+            }
+        });
+    } catch (dbError) {
+        console.error('[DB storeAudio] Could not get database instance:', dbError);
+        return Promise.reject(new Error('Failed to get database for storing audio: ' + dbError.message));
+    }
+}
+
+
+/**
+ * Retrieves an audio file (as a Blob) from IndexedDB.
+ * @param {string} fileId - The ID of the file to retrieve.
+ * @returns {Promise<Blob|null>} A promise that resolves with the Blob, or null if not found.
+ */
+export async function getAudio(fileId) {
+    if (!fileId) return Promise.resolve(null);
+
+    try {
+        const db = await getDB();
+        return new Promise((resolve, reject) => {
+            try {
+                const transaction = db.transaction(STORE_NAME, 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(fileId);
+
+                request.onsuccess = (event) => {
+                    if (event.target.result) {
+                        // console.log(`[DB getAudio] Audio file "${fileId}" retrieved successfully.`);
+                        resolve(event.target.result);
+                    } else {
+                        // console.log(`[DB getAudio] Audio file "${fileId}" not found.`);
+                        resolve(null);
+                    }
+                };
+                request.onerror = (event) => {
+                    console.error(`[DB getAudio] Error retrieving audio file "${fileId}":`, event.target.error);
+                    reject(new Error(`Error retrieving audio file: ${event.target.error?.message || 'Unknown DB get error'}`));
+                };
+                transaction.onabort = (event) => {
+                    console.error(`[DB getAudio] Transaction aborted for retrieving "${fileId}":`, event.target.error);
+                    reject(new Error('Transaction aborted while retrieving audio: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
+                };
+                 transaction.onerror = (event) => {
+                    console.error(`[DB getAudio] Transaction error for retrieving "${fileId}":`, event.target.error);
+                    reject(new Error('Transaction error retrieving audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
+                };
+            } catch (e) {
+                console.error('[DB getAudio] Synchronous error during transaction creation:', e);
+                reject(new Error('Failed to initiate get audio transaction: ' + e.message));
+            }
+        });
+    } catch (dbError) {
+        console.error('[DB getAudio] Could not get database instance:', dbError);
+        return Promise.reject(new Error('Failed to get database for retrieving audio: ' + dbError.message));
+    }
+}
+
+
+/**
+ * Deletes an audio file from IndexedDB.
+ * @param {string} fileId - The ID of the file to delete.
+ * @returns {Promise<void>} A promise that resolves when the file is deleted.
+ */
+export async function deleteAudio(fileId) {
+    if (!fileId) return Promise.resolve();
+
+    try {
+        const db = await getDB();
+        return new Promise((resolve, reject) => {
+            try {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(fileId);
+
+                request.onsuccess = () => {
+                    // console.log(`[DB deleteAudio] Audio file "${fileId}" deleted successfully.`);
+                    resolve();
+                };
+                request.onerror = (event) => {
+                    console.error(`[DB deleteAudio] Error deleting audio file "${fileId}":`, event.target.error);
+                    reject(new Error(`Error deleting audio file: ${event.target.error?.message || 'Unknown DB delete error'}`));
+                };
+                 transaction.onabort = (event) => {
+                    console.error(`[DB deleteAudio] Transaction aborted for deleting "${fileId}":`, event.target.error);
+                     reject(new Error('Transaction aborted while deleting audio: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
+                };
+                 transaction.onerror = (event) => {
+                    console.error(`[DB deleteAudio] Transaction error for deleting "${fileId}":`, event.target.error);
+                    reject(new Error('Transaction error deleting audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
+                };
+            } catch (e) {
+                 console.error('[DB deleteAudio] Synchronous error during transaction creation:', e);
+                 reject(new Error('Failed to initiate delete audio transaction: ' + e.message));
+            }
+        });
+    } catch (dbError) {
+        console.error('[DB deleteAudio] Could not get database instance:', dbError);
+        return Promise.reject(new Error('Failed to get database for deleting audio: ' + dbError.message));
+    }
 }
 
 /**
- * Retrieves an audio blob from IndexedDB by its key.
- * @param {string} key - The key of the audio blob to retrieve.
- * @returns {Promise<Blob|null>} A promise that resolves with the audio blob, or null if not found.
- */
-export async function getAudio(key) {
-    let db;
-    try {
-        db = await getDB();
-    } catch (dbError) {
-        console.error(`[DB getAudio] Failed to get DB instance for key "${key}":`, dbError);
-        throw dbError;
-    }
-
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            console.error(`[DB getAudio] DB instance is null for key "${key}" after getDB() call.`);
-            return reject(new Error('Database instance not available for retrieving audio.'));
-        }
-        try {
-            const transaction = db.transaction(STORE_NAME, 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.get(key);
-
-            request.onsuccess = () => {
-                if (request.result) {
-                    // console.log(`[DB] Audio retrieved successfully for key: ${key}`);
-                    resolve(request.result);
-                } else {
-                    // console.warn(`[DB] No audio found for key: ${key}`);
-                    resolve(null); // Resolve with null if not found, not an error
-                }
-            };
-            request.onerror = (event) => {
-                console.error(`[DB getAudio] Error retrieving audio for key "${key}":`, event.target.error);
-                reject(new Error('Error retrieving audio: ' + (event.target.error?.message || 'Unknown DB get error')));
-            };
-            transaction.onabort = (event) => {
-                console.error(`[DB getAudio] Transaction aborted for key "${key}":`, event.target.error);
-                reject(new Error('Transaction aborted while retrieving audio: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
-            };
-            transaction.onerror = (event) => {
-                console.error(`[DB getAudio] Transaction error retrieving audio for key "${key}":`, event.target.error);
-                reject(new Error('Transaction error retrieving audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
-            };
-        } catch (e) {
-            console.error(`[DB getAudio] Synchronous error during transaction creation for key "${key}":`, e);
-            reject(new Error('Failed to initiate audio retrieval transaction: ' + e.message));
-        }
-    });
-}
-
-/**
- * Deletes an audio blob from IndexedDB by its key.
- * @param {string} key - The key of the audio blob to delete.
- * @returns {Promise<void>} A promise that resolves when the audio is deleted.
- */
-export async function deleteAudio(key) {
-    let db;
-    try {
-        db = await getDB();
-    } catch (dbError) {
-        console.error(`[DB deleteAudio] Failed to get DB instance for key "${key}":`, dbError);
-        throw dbError;
-    }
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            console.error(`[DB deleteAudio] DB instance is null for key "${key}" after getDB() call.`);
-            return reject(new Error('Database instance not available for deleting audio.'));
-        }
-        try {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.delete(key);
-
-            request.onsuccess = () => {
-                // console.log(`[DB] Audio deleted successfully for key: ${key}`);
-                resolve();
-            };
-            request.onerror = (event) => {
-                console.error(`[DB deleteAudio] Error deleting audio for key "${key}":`, event.target.error);
-                reject(new Error('Error deleting audio: ' + (event.target.error?.message || 'Unknown DB delete error')));
-            };
-            transaction.onabort = (event) => {
-                console.error(`[DB deleteAudio] Transaction aborted for key "${key}":`, event.target.error);
-                reject(new Error('Transaction aborted while deleting audio: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
-            };
-            transaction.onerror = (event) => {
-                console.error(`[DB deleteAudio] Transaction error deleting audio for key "${key}":`, event.target.error);
-                reject(new Error('Transaction error deleting audio: ' + (event.target.error?.message || 'Unknown DB transaction error')));
-            };
-        } catch (e) {
-            console.error(`[DB deleteAudio] Synchronous error during transaction creation for key "${key}":`, e);
-            reject(new Error('Failed to initiate audio deletion transaction: ' + e.message));
-        }
-    });
-}
-
-/**
- * Clears all audio blobs from the IndexedDB store.
+ * Clears all audio files from the IndexedDB store.
  * @returns {Promise<void>} A promise that resolves when the store is cleared.
  */
 export async function clearAllAudio() {
-    let db;
     try {
-        db = await getDB();
-    } catch (dbError) {
-        console.error("[DB clearAllAudio] Failed to get DB instance for clearing audio:", dbError);
-        throw dbError;
-    }
-    return new Promise((resolve, reject) => {
-        if (!db) {
-            console.error("[DB clearAllAudio] DB instance is null after getDB() call.");
-            return reject(new Error('Database instance not available for clearing audio store.'));
-        }
-        try {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.clear();
+        const db = await getDB();
+        return new Promise((resolve, reject) => {
+            try {
+                const transaction = db.transaction(STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
 
-            request.onsuccess = () => {
-                console.log('[DB] All audio cleared from database.');
-                resolve();
-            };
-            request.onerror = (event) => {
-                console.error('[DB clearAllAudio] Error clearing audio database:', event.target.error);
-                reject(new Error('Error clearing audio database: ' + (event.target.error?.message || 'Unknown DB clear error')));
-            };
-            transaction.onabort = (event) => {
-                console.error('[DB clearAllAudio] Transaction aborted for clearing database:', event.target.error);
-                reject(new Error('Transaction aborted while clearing audio database: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
-            };
-            transaction.onerror = (event) => {
-                console.error(`[DB clearAllAudio] Transaction error clearing audio database:`, event.target.error);
-                reject(new Error('Transaction error clearing audio database: ' + (event.target.error?.message || 'Unknown DB transaction error')));
-            };
-        } catch (e) {
-            console.error('[DB clearAllAudio] Synchronous error during transaction creation:', e);
-            reject(new Error('Failed to initiate clear audio store transaction: ' + e.message));
-        }
-    });
+                request.onsuccess = () => {
+                    console.log('[DB] All audio cleared from database.');
+                    resolve();
+                };
+                request.onerror = (event) => {
+                    console.error('[DB clearAllAudio] Error clearing audio database:', event.target.error);
+                    reject(new Error('Error clearing audio database: ' + (event.target.error?.message || 'Unknown DB clear error')));
+                };
+                 transaction.onabort = (event) => {
+                    console.error('[DB clearAllAudio] Transaction aborted for clearing database:', event.target.error);
+                    reject(new Error('Transaction aborted while clearing audio database: ' + (event.target.error?.message || 'Unknown DB transaction abort')));
+                };
+                transaction.onerror = (event) => {
+                    console.error(`[DB clearAllAudio] Transaction error clearing audio database:`, event.target.error);
+                    reject(new Error('Transaction error clearing audio database: ' + (event.target.error?.message || 'Unknown DB transaction error')));
+                };
+            } catch (e) {
+                console.error('[DB clearAllAudio] Synchronous error during transaction creation:', e);
+                reject(new Error('Failed to initiate clear audio store transaction: ' + e.message));
+            }
+        });
+    } catch (dbError) {
+        console.error('[DB clearAllAudio] Could not get database instance:', dbError);
+        return Promise.reject(new Error('Failed to get database for clearing audio: ' + dbError.message));
+    }
 }
