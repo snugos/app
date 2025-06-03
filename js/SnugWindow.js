@@ -14,8 +14,6 @@ export class SnugWindow {
         this.restoreState = {}; // To store position/size before maximizing
         this.appServices = appServices || {};
 
-        // console.log(`[SnugWindow ${this.id} Constructor] Initializing window "${title}".`); // MODIFICATION: Optional console log
-
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
             console.error(`[SnugWindow CRITICAL ${this.id}] Desktop element not found. Cannot create window "${title}".`);
@@ -32,8 +30,6 @@ export class SnugWindow {
         const safeDesktopWidth = (desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
         const safeDesktopHeight = (desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768;
         const usableDesktopHeight = safeDesktopHeight - topTaskbarHeight - bottomTaskbarHeight;
-
-        // console.log(`[SnugWindow ${this.id} Constructor] Desktop Dims: ${safeDesktopWidth}x${safeDesktopHeight}, TopTaskbar: ${topTaskbarHeight}, BottomTaskbar: ${bottomTaskbarHeight}, UsableHeight: ${usableDesktopHeight}`); // MODIFICATION: Optional console log
 
         const optMinWidth = parseFloat(options.minWidth);
         const optMinHeight = parseFloat(options.minHeight);
@@ -96,12 +92,15 @@ export class SnugWindow {
             resizable: options.resizable !== undefined ? options.resizable : true,
         };
 
-        // console.log(`[SnugWindow ${this.id} Constructor] Calculated final this.options:`, JSON.parse(JSON.stringify(this.options))); // MODIFICATION: Optional console log
-
         this.element = document.createElement('div');
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
+        // MODIFICATION: Setting touch-action specifically on titleBar for dragging,
+        // and on the element for general interaction, but not `none` for the whole element
+        // if resizing edges need default touch behaviors.
+        // However, Interact.js usually handles this. Let's keep it on the element for now.
         this.element.style.touchAction = 'none';
+
 
         this.element.style.left = `${this.options.x}px`;
         this.element.style.top = `${this.options.y}px`;
@@ -112,18 +111,33 @@ export class SnugWindow {
         const initialZIndex = Number.isFinite(parseFloat(options.zIndex)) ? parseFloat(options.zIndex) :
             (this.appServices.incrementHighestZ ? this.appServices.incrementHighestZ() : 101);
 
-        this.element.style.zIndex = initialZIndex.toString(); // MODIFICATION: Ensure zIndex is a string
+        this.element.style.zIndex = initialZIndex.toString();
         if (this.appServices.setHighestZ && this.appServices.getHighestZ && initialZIndex > this.appServices.getHighestZ()) {
             this.appServices.setHighestZ(initialZIndex);
         }
 
         this.titleBar = document.createElement('div');
         this.titleBar.className = 'window-title-bar';
+        // MODIFICATION: Ensure titleBar allows default touch actions for dragging if 'touch-action: none' on parent is an issue.
+        // However, `allowFrom` in interact.js should manage this.
+        // this.titleBar.style.touchAction = 'auto'; // Or remove if element's touch-action:none is fine.
+
         let buttonsHTML = '';
         if (this.options.minimizable) { buttonsHTML += `<button class="window-minimize-btn" title="Minimize">_</button>`; }
         if (this.options.resizable) { buttonsHTML += `<button class="window-maximize-btn" title="Maximize">□</button>`; }
         if (this.options.closable) { buttonsHTML += `<button class="window-close-btn" title="Close">X</button>`; }
-        this.titleBar.innerHTML = `<span>${this.title}</span><div class="window-title-buttons">${buttonsHTML}</div>`;
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = this.title;
+        // MODIFICATION: Prevent the span from capturing pointer events that should start a drag on the title bar.
+        titleSpan.style.pointerEvents = 'none';
+
+        this.titleBar.appendChild(titleSpan);
+        const titleButtonsDiv = document.createElement('div');
+        titleButtonsDiv.className = 'window-title-buttons';
+        titleButtonsDiv.innerHTML = buttonsHTML;
+        this.titleBar.appendChild(titleButtonsDiv);
+
 
         this.contentArea = document.createElement('div');
         this.contentArea.className = 'window-content';
@@ -158,6 +172,13 @@ export class SnugWindow {
         if (maximizeBtn && this.options.resizable) {
             maximizeBtn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleMaximize(); });
         }
+
+        // Prevent dragging attempt when clicking on title bar buttons themselves
+        titleButtonsDiv.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', e => e.stopPropagation());
+            button.addEventListener('touchstart', e => e.stopPropagation());
+        });
+
 
         this.element.addEventListener('mousedown', () => this.focus(), true);
         this.element.addEventListener('pointerdown', () => this.focus(), true);
@@ -276,7 +297,7 @@ export class SnugWindow {
                                     width: otherWin.element.offsetWidth,
                                     height: otherWin.element.offsetHeight
                                 };
-                                if (isNaN(otherRect.left) || isNaN(otherRect.top)) return; // Skip if other window has invalid position
+                                if (isNaN(otherRect.left) || isNaN(otherRect.top)) return;
 
                                 if (!snappedX) {
                                     if (Math.abs(currentWindowRect.right - otherRect.left) < snapThreshold) { x = otherRect.left - currentWindowRect.width; snappedX = true; }
@@ -323,10 +344,8 @@ export class SnugWindow {
             interact(this.element)
                 .resizable({
                     edges: { left: true, right: true, bottom: true, top: true },
-                    // MODIFICATION: Add ignoreFrom to prevent resizing when starting drag on title bar.
-                    // This should help ensure that drags on the title bar are handled by the .draggable()
-                    // interaction and not misinterpreted as a resize from the top edge.
-                    ignoreFrom: this.titleBar,
+                    // MODIFICATION: Reverted the `ignoreFrom: this.titleBar` as it made dragging harder.
+                    // The `pointer-events: none` on the title span and event stopping on buttons should now help.
                     listeners: {
                         start: (event) => {
                             if (this.isMaximized) {
@@ -372,7 +391,6 @@ export class SnugWindow {
         }
     }
 
-
     toggleMaximize() {
         if (!this.element) return;
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
@@ -399,8 +417,8 @@ export class SnugWindow {
             this.element.style.height = this.restoreState.height || `${this.options.height}px`;
             this.isMaximized = false;
             if (maximizeButton) maximizeButton.innerHTML = '□';
-            if (interactable.draggable()) interactable.draggable(true); // Enable draggable
-            if (this.options.resizable && interactable.resizable()) interactable.resizable(true); // Enable resizable
+            if (interactable.draggable()) interactable.draggable(true);
+            if (this.options.resizable && interactable.resizable()) interactable.resizable(true);
 
         } else {
             this.restoreState = {
@@ -412,9 +430,9 @@ export class SnugWindow {
             this.element.style.width = `${desktopEl.clientWidth}px`;
             this.element.style.height = `${desktopEl.clientHeight - topTaskbarHeight - bottomTaskbarHeight}px`;
             this.isMaximized = true;
-            if (maximizeButton) maximizeButton.innerHTML = '❐'; // Restore down icon
-            if (interactable.draggable()) interactable.draggable(false); // Disable draggable
-            if (this.options.resizable && interactable.resizable()) interactable.resizable(false); // Disable resizable
+            if (maximizeButton) maximizeButton.innerHTML = '❐';
+            if (interactable.draggable()) interactable.draggable(false);
+            if (this.options.resizable && interactable.resizable()) interactable.resizable(false);
         }
         this._captureUndo(`${wasMaximized ? "Restore" : "Maximize"} window "${this.title}"`);
         this.focus();
@@ -458,7 +476,6 @@ export class SnugWindow {
             }
             if (this.options.closable) menuItems.push({ label: "Close", action: () => this.close() });
 
-            // MODIFICATION: Added checks for appServices methods before calling them
             if (this.appServices.getTrackById && this.appServices.handleOpenTrackInspector && this.appServices.handleOpenEffectsRack && this.appServices.handleOpenSequencer) {
                 let trackId = null;
                 const parts = this.id.split('-');
@@ -506,12 +523,10 @@ export class SnugWindow {
             this.isMaximized = false;
             const maximizeButton = this.titleBar?.querySelector('.window-maximize-btn');
             if (maximizeButton) maximizeButton.innerHTML = '□';
-             // MODIFICATION: Ensure draggable/resizable state is restored logically if it was maximized
             const interactable = interact(this.element);
             if (interactable.draggable()) interactable.draggable(true);
             if (this.options.resizable && interactable.resizable()) interactable.resizable(true);
         }
-
 
         if (!skipUndo) this._captureUndo(`Minimize window "${this.title}"`);
 
@@ -524,7 +539,7 @@ export class SnugWindow {
                 }
             });
             if (windowToFocus) windowToFocus.focus(true);
-            else if (this.appServices.getOpenWindows) { // MODIFICATION: ensure it exists
+            else if (this.appServices.getOpenWindows) {
                  this.appServices.getOpenWindows().forEach(win => win?.updateTaskbarButtonActiveState?.());
             }
         }
@@ -544,12 +559,9 @@ export class SnugWindow {
     }
 
     close(isReconstruction = false) {
-        // console.log(`[SnugWindow ${this.id}] close() called for "${this.title}". IsReconstruction: ${isReconstruction}`); // MODIFICATION: Optional console log
-
         if (window.interact && this.element && interact.isSet(this.element)) {
             try {
                 interact(this.element).unset();
-                // console.log(`[SnugWindow ${this.id}] Interact.js instance unset for element.`); // MODIFICATION: Optional console log
             } catch (e) {
                 console.warn(`[SnugWindow ${this.id}] Error unsetting Interact.js instance:`, e.message);
             }
@@ -582,12 +594,10 @@ export class SnugWindow {
         if (!isCurrentlyReconstructing && !isReconstruction) {
             this._captureUndo(`Close window "${oldWindowTitle}"`);
         }
-        // console.log(`[SnugWindow ${this.id}] close() finished for "${oldWindowTitle}".`); // MODIFICATION: Optional console log
     }
 
     focus(skipUndoForFocusItself = false) {
         if (!this.element || !this.appServices.getHighestZ || !this.appServices.incrementHighestZ || !this.appServices.setHighestZ) {
-            // console.warn(`[SnugWindow ${this.id}] Cannot focus: element or z-index services missing.`); // MODIFICATION: Optional console log
             return;
         }
         if (this.isMinimized) { this.restore(skipUndoForFocusItself); return; }
@@ -597,7 +607,7 @@ export class SnugWindow {
 
         if (isNaN(currentZ) || currentZ < currentHighestZGlobal || (this.appServices.getOpenWindows && this.appServices.getOpenWindows().size === 1)) {
             const newZ = this.appServices.incrementHighestZ();
-            this.element.style.zIndex = newZ.toString(); // MODIFICATION: Ensure zIndex is a string
+            this.element.style.zIndex = newZ.toString();
         } else if (currentZ > currentHighestZGlobal) {
             this.appServices.setHighestZ(currentZ);
         }
@@ -621,13 +631,11 @@ export class SnugWindow {
             return;
         }
 
-        // console.log(`[SnugWindow ${this.id} applyState] Applying state:`, JSON.parse(JSON.stringify(state))); // MODIFICATION: Optional console log
-
         if (state.left) this.element.style.left = state.left;
         if (state.top) this.element.style.top = state.top;
         if (state.width) this.element.style.width = state.width;
         if (state.height) this.element.style.height = state.height;
-        if (Number.isFinite(state.zIndex)) this.element.style.zIndex = state.zIndex.toString(); // MODIFICATION: Ensure zIndex is a string
+        if (Number.isFinite(state.zIndex)) this.element.style.zIndex = state.zIndex.toString();
 
         if (this.titleBar) {
             const titleSpan = this.titleBar.querySelector('span');
@@ -640,11 +648,10 @@ export class SnugWindow {
             this.taskbarButton.title = state.title;
         }
 
-        // MODIFICATION: Ensure toggleMaximize correctly handles draggable/resizable states
         if (state.isMaximized && !this.isMaximized) {
-            this.toggleMaximize(); // This will set isMaximized and disable interactions
+            this.toggleMaximize();
         } else if (!state.isMaximized && this.isMaximized) {
-            this.toggleMaximize(); // This will restore and re-enable interactions
+            this.toggleMaximize();
         }
 
         if (state.isMinimized && !this.isMinimized) {
