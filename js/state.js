@@ -4,10 +4,6 @@ import { Track } from './Track.js';
 import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js';
 import {
     initAudioContextAndMasterMeter as audioInitAudioContextAndMasterMeter
-    // MODIFICATION: Removed unused import if not directly called, assuming appServices handles it.
-    // setupMasterBus as audioSetupMasterBus,
-    // rebuildMasterEffectChain as audioRebuildMasterEffectChain,
-    // clearAllMasterEffectNodes as audioClearAllMasterEffectNodes
 } from './audio.js';
 
 // --- Centralized State Variables ---
@@ -18,7 +14,7 @@ let openWindowsMap = new Map();
 let highestZ = 100;
 
 let masterEffectsChainState = [];
-let masterGainValueState = typeof Tone !== 'undefined' ? Tone.dbToGain(0) : 0.707; // Fallback if Tone undefined early
+let masterGainValueState = typeof Tone !== 'undefined' ? Tone.dbToGain(0) : 0.707; // MODIFICATION: Fallback if Tone undefined early
 
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
@@ -62,7 +58,7 @@ export function initializeStateModule(services) {
         appServices.setPlaybackMode = setPlaybackModeStateInternal;
     }
 
-    // Apply initial theme when state module is initialized
+    // MODIFICATION: Wrapped localStorage access in try...catch
     try {
         const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
         currentTheme = storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark';
@@ -71,32 +67,27 @@ export function initializeStateModule(services) {
         currentTheme = 'dark';
     }
     applyThemeToDocument(currentTheme);
-    // console.log("[State] State module initialized. AppServices keys:", Object.keys(appServices));
+    // console.log("[State] State module initialized.");
 }
 
 // --- Getters for Centralized State ---
 export function getTracksState() { return tracks; }
 export function getTrackByIdState(id) { return tracks.find(t => t.id === id); }
-
+// ... (other getters remain the same)
 export function getOpenWindowsState() { return openWindowsMap; }
 export function getWindowByIdState(id) { return openWindowsMap.get(id); }
 export function getHighestZState() { return highestZ; }
-
 export function getMasterEffectsState() { return masterEffectsChainState; }
 export function getMasterGainValueState() { return masterGainValueState; }
-
 export function getMidiAccessState() { return midiAccessGlobal; }
 export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
-
 export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
 export function getCurrentSoundFileTreeState() { return currentSoundFileTreeGlobal; }
 export function getCurrentSoundBrowserPathState() { return currentSoundBrowserPathGlobal; }
 export function getPreviewPlayerState() { return previewPlayerGlobal; }
-
 export function getClipboardDataState() { return clipboardDataGlobal; }
-
 export function getArmedTrackIdState() { return armedTrackId; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
@@ -113,24 +104,20 @@ export function getCurrentThemeState() { return currentTheme; }
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
 export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
+// ... (other setters remain the same)
 export function setHighestZState(value) { highestZ = Number.isFinite(value) ? value : 100; }
 export function incrementHighestZState() { return ++highestZ; }
-
 export function setMasterEffectsState(newChain) { masterEffectsChainState = Array.isArray(newChain) ? newChain : []; }
 export function setMasterGainValueState(value) { masterGainValueState = Number.isFinite(value) ? value : (typeof Tone !== 'undefined' ? Tone.dbToGain(0) : 0.707); }
-
 export function setMidiAccessState(access) { midiAccessGlobal = access; }
 export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
-
 export function setLoadedZipFilesState(files) { loadedZipFilesGlobal = typeof files === 'object' && files !== null ? files : {}; }
 export function setSoundLibraryFileTreesState(trees) { soundLibraryFileTreesGlobal = typeof trees === 'object' && trees !== null ? trees : {}; }
 export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
 export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
 export function setCurrentSoundBrowserPathState(path) { currentSoundBrowserPathGlobal = Array.isArray(path) ? path : []; }
 export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
-
 export function setClipboardDataState(data) { clipboardDataGlobal = typeof data === 'object' && data !== null ? data : { type: null, data: null }; }
-
 export function setArmedTrackIdState(id) { armedTrackId = id; }
 export function setSoloedTrackIdState(id) { soloedTrackId = id; }
 export function setIsRecordingState(status) { isRecordingGlobal = !!status; }
@@ -138,7 +125,6 @@ export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
 export function setRecordingStartTimeState(time) { recordingStartTime = Number.isFinite(time) ? time : 0; }
 export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
 export function setSelectedTimelineClipInfoState(trackId, clipId) {
-    // console.log(`[State setSelectedTimelineClipInfoState] Selected: TrackID=${trackId}, ClipID=${clipId}`);
     if (trackId === null && clipId === null) {
         selectedTimelineClipInfoGlobal = { trackId: null, clipId: null };
     } else {
@@ -147,17 +133,22 @@ export function setSelectedTimelineClipInfoState(trackId, clipId) {
 }
 
 function applyThemeToDocument(themeToApply) {
-    if (themeToApply === 'light') {
-        document.documentElement.classList.remove('dark');
-    } else { // Default to dark if not 'light'
-        document.documentElement.classList.add('dark');
+    if (document && document.documentElement) {
+        if (themeToApply === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else { // Default to dark if not 'light' or if invalid
+            document.documentElement.classList.add('dark');
+        }
+    } else {
+        console.warn("[State applyThemeToDocument] Document or documentElement not available.");
     }
 }
 
 export function setCurrentThemeState(theme) {
-    if (theme === 'light' || theme === 'dark') {
+    const newTheme = (theme === 'light' || theme === 'dark') ? theme : 'dark'; // Validate and default
+    if (currentTheme !== newTheme) {
         const oldTheme = currentTheme;
-        currentTheme = theme;
+        currentTheme = newTheme;
         try {
             localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
         } catch (e) {
@@ -170,49 +161,41 @@ export function setCurrentThemeState(theme) {
         }
         // console.log(`[State] Theme changed to: ${currentTheme}`);
     } else {
-        console.warn(`[State] Invalid theme attempted: ${theme}. Defaulting to dark.`);
-        setCurrentThemeState('dark'); // Fallback to dark if invalid
+        // Ensure document matches state if theme is already set (e.g., on initial load)
+        applyThemeToDocument(currentTheme);
     }
 }
 
+
 export function setPlaybackModeStateInternal(mode) {
-    // ... (setPlaybackModeStateInternal remains the same as your last provided version)
+    // ... (remains the same, with internal check for captureStateForUndo service)
     const displayMode = typeof mode === 'string' ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Unknown';
-    // console.log(`[State setPlaybackModeStateInternal] Attempting to set mode to: ${mode} (Display: ${displayMode}). Current mode: ${globalPlaybackMode}`);
 
     if (mode === 'sequencer' || mode === 'timeline') {
         if (globalPlaybackMode !== mode) {
-            // MODIFICATION: Ensure captureStateForUndo service exists before calling
             if (appServices.captureStateForUndo && typeof appServices.captureStateForUndo === 'function') {
                 appServices.captureStateForUndo(`Set Playback Mode to ${displayMode}`);
             } else {
-                // Fallback to internal if service is not yet wired (less ideal)
                 captureStateForUndoInternal(`Set Playback Mode to ${displayMode}`);
             }
             globalPlaybackMode = mode;
-            // console.log(`[State setPlaybackModeStateInternal] Playback mode changed to: ${globalPlaybackMode}`);
 
             if (typeof Tone !== 'undefined' && Tone.Transport && Tone.Transport.state === 'started') {
-                // console.log("[State setPlaybackModeStateInternal] Transport was started, stopping it.");
                 Tone.Transport.stop();
             }
             if (typeof Tone !== 'undefined' && Tone.Transport) {
                 Tone.Transport.cancel(0);
             }
-            // console.log("[State setPlaybackModeStateInternal] Tone.Transport events cancelled.");
 
             if (appServices.uiElementsCache?.playBtnGlobal) {
-                appServices.uiElementsCache.playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`; // Play icon
-                // console.log("[State setPlaybackModeStateInternal] Play button text reset.");
-            } else {
-                // console.warn("[State setPlaybackModeStateInternal] Play button UI element not found in cache.");
+                appServices.uiElementsCache.playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`;
             }
+
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
 
             const currentTracks = getTracksState();
-            // console.log(`[State setPlaybackModeStateInternal] Re-initializing sequences/playback for ${currentTracks.length} tracks for new mode: ${globalPlaybackMode}.`);
             try {
-                currentTracks.forEach(track => {
+                (currentTracks || []).forEach(track => {
                     if (track && track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
                         track.recreateToneSequence(true);
                     }
@@ -222,9 +205,8 @@ export function setPlaybackModeStateInternal(mode) {
                 });
             } catch (error) {
                 console.error("[State setPlaybackModeStateInternal] Error during track sequence/playback re-initialization:", error);
-                if(appServices.showNotification) appServices.showNotification("Error updating track playback for new mode.", 3000);
+                if(appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error updating track playback for new mode.", 3000);
             }
-
 
             if (appServices.onPlaybackModeChange && typeof appServices.onPlaybackModeChange === 'function') {
                 appServices.onPlaybackModeChange(globalPlaybackMode);
@@ -232,8 +214,6 @@ export function setPlaybackModeStateInternal(mode) {
              if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
                 appServices.renderTimeline();
             }
-        } else {
-            // console.log(`[State setPlaybackModeStateInternal] Mode is already ${mode}. No change.`);
         }
     } else {
         console.warn(`[State setPlaybackModeStateInternal] Invalid playback mode attempted: ${mode}. Expected 'sequencer' or 'timeline'.`);
@@ -242,9 +222,8 @@ export function setPlaybackModeStateInternal(mode) {
 export { setPlaybackModeStateInternal as setPlaybackModeState };
 
 export async function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
-    // ... (addTrackToStateInternal remains the same)
+    // ... (remains the same, ensure appServices check)
     const isBrandNewUserTrack = isUserAction && (!initialData || initialData._isUserActionPlaceholder);
-    // console.log(`[State addTrackToStateInternal] Adding ${type} track. User Action: ${isUserAction}, Brand New: ${isBrandNewUserTrack}`);
 
     if (isBrandNewUserTrack) {
         captureStateForUndoInternal(`Add ${type} Track`);
@@ -261,6 +240,7 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
             newTrackId = trackIdCounter++;
         }
 
+        // Ensure appServices are passed, even if some are just stubs or checked internally by Track
         const trackAppServices = {
             getSoloedTrackId: getSoloedTrackIdState,
             captureStateForUndo: captureStateForUndoInternal,
@@ -282,22 +262,30 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
 
         if (typeof newTrack.initializeAudioNodes === 'function') {
             await newTrack.initializeAudioNodes();
+        } else {
+            console.warn(`[State addTrackToStateInternal] Track type ${type} ID ${newTrackId} has no initializeAudioNodes method.`);
         }
-        await newTrack.fullyInitializeAudioResources();
 
-        if (isBrandNewUserTrack && appServices.showNotification) {
+        if (typeof newTrack.fullyInitializeAudioResources === 'function') {
+            await newTrack.fullyInitializeAudioResources();
+        } else {
+             console.warn(`[State addTrackToStateInternal] Track type ${type} ID ${newTrackId} has no fullyInitializeAudioResources method.`);
+        }
+
+
+        if (isBrandNewUserTrack && appServices.showNotification && typeof appServices.showNotification === 'function') {
             appServices.showNotification(`${newTrack.name} added successfully.`, 2000);
         }
-        if (isBrandNewUserTrack && appServices.openTrackInspectorWindow) {
+        if (isBrandNewUserTrack && appServices.openTrackInspectorWindow && typeof appServices.openTrackInspectorWindow === 'function') {
             setTimeout(() => appServices.openTrackInspectorWindow(newTrack.id), 50);
         }
 
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.renderTimeline) appServices.renderTimeline();
+        if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') appServices.updateMixerWindow();
+        if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
 
     } catch (error) {
         console.error(`[State addTrackToStateInternal] Error adding ${type} track:`, error);
-        if (appServices.showNotification) {
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') {
             appServices.showNotification(`Failed to add ${type} track: ${error.message}`, 4000);
         }
         if (newTrack && tracks.includes(newTrack)) {
@@ -308,47 +296,48 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
     return newTrack;
 }
 
+
 // MODIFICATION: Enhanced removeTrackFromStateInternal with more robust error handling and logging
 export function removeTrackFromStateInternal(trackId) {
-    console.log(`[State removeTrackFromStateInternal] Initiating removal for track ID: ${trackId}`);
-    const showUINotification = appServices.showNotification || utilShowNotification; // Fallback
+    console.log(`[State removeTrackFromStateInternal] Attempting to remove track ID: ${trackId}`);
+    const showUINotification = (appServices && typeof appServices.showNotification === 'function')
+        ? appServices.showNotification
+        : utilShowNotification; // Fallback
+
     try {
         const trackIndex = tracks.findIndex(t => t.id === trackId);
         if (trackIndex === -1) {
-            console.warn(`[State removeTrackFromStateInternal] Track ID ${trackId} not found for removal.`);
-            showUINotification(`Error: Track ${trackId} not found. Cannot remove.`, 3000);
+            console.warn(`[State removeTrackFromStateInternal] Track ID ${trackId} not found.`);
+            showUINotification(`Error: Track ${trackId} not found for removal.`, 3000);
             return;
         }
 
         const track = tracks[trackIndex];
-        console.log(`[State removeTrackFromStateInternal] Found track "${track.name}" at index ${trackIndex}.`);
+        console.log(`[State removeTrackFromStateInternal] Track "${track.name}" found. Capturing undo state.`);
+        captureStateForUndoInternal(`Remove Track "${track.name}"`); // Assumes captureStateForUndoInternal is robust
 
-        if (typeof captureStateForUndoInternal === 'function') {
-            captureStateForUndoInternal(`Remove Track "${track.name}"`);
-        } else {
-            console.warn("[State removeTrackFromStateInternal] captureStateForUndoInternal function not available.");
-        }
-
+        console.log(`[State removeTrackFromStateInternal] Disposing track "${track.name}"...`);
         try {
-            if (typeof track.dispose === 'function') {
-                console.log(`[State removeTrackFromStateInternal] Calling dispose() on track "${track.name}".`);
+            if (track && typeof track.dispose === 'function') {
                 track.dispose();
+                console.log(`[State removeTrackFromStateInternal] Track "${track.name}" disposed.`);
             } else {
-                console.warn(`[State removeTrackFromStateInternal] Track "${track.name}" does not have a dispose method.`);
+                console.warn(`[State removeTrackFromStateInternal] Track "${track.name}" (ID: ${trackId}) has no dispose method or track object is invalid.`);
             }
         } catch (disposeError) {
-            console.error(`[State removeTrackFromStateInternal] Error during track.dispose() for "${track.name}":`, disposeError);
-            showUINotification(`Error disposing track "${track.name}". Some resources may not be freed.`, 4000);
+            console.error(`[State removeTrackFromStateInternal] Error during track.dispose() for "${track.name}" (ID: ${trackId}):`, disposeError);
+            showUINotification(`Error disposing track "${track.name}". Some resources may not be freed. Check console.`, 4000);
             // Continue with removal from state despite disposal error
         }
 
         tracks.splice(trackIndex, 1);
-        console.log(`[State removeTrackFromStateInternal] Track "${track.name}" removed from tracks array.`);
+        console.log(`[State removeTrackFromStateInternal] Track "${track.name}" removed from tracks array. Current track count: ${tracks.length}`);
 
-        if (armedTrackId === trackId) setArmedTrackIdState(null);
+        if (armedTrackId === trackId) { setArmedTrackIdState(null); console.log(`[State removeTrackFromStateInternal] Disarmed track ${trackId}.`); }
         if (soloedTrackId === trackId) {
             setSoloedTrackIdState(null);
-            (getTracksState() || []).forEach(t => { // Ensure getTracksState() is valid
+            console.log(`[State removeTrackFromStateInternal] Unsoloed track ${trackId}. Updating other tracks.`);
+            (getTracksState() || []).forEach(t => {
                 if (t) {
                     t.isSoloed = false;
                     if (typeof t.applySoloState === 'function') t.applySoloState();
@@ -356,35 +345,37 @@ export function removeTrackFromStateInternal(trackId) {
                 }
             });
         }
-        if (activeSequencerTrackId === trackId) setActiveSequencerTrackIdState(null);
+        if (activeSequencerTrackId === trackId) { setActiveSequencerTrackIdState(null); console.log(`[State removeTrackFromStateInternal] Cleared active sequencer for track ${trackId}.`);}
         if (selectedTimelineClipInfoGlobal.trackId === trackId) {
             setSelectedTimelineClipInfoState(null, null);
+            console.log(`[State removeTrackFromStateInternal] Cleared timeline selection for track ${trackId}.`);
         }
 
-        if (appServices.showNotification && typeof appServices.showNotification === 'function') {
-            appServices.showNotification(`Track "${track.name}" removed.`, 2000);
-        }
+        showUINotification(`Track "${track.name}" removed.`, 2000);
+
         if (appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') {
             appServices.updateMixerWindow();
-        } else { console.warn("[State removeTrackFromStateInternal] appServices.updateMixerWindow not available."); }
+        } else { console.warn("[State removeTrackFromStateInternal] appServices.updateMixerWindow is not available."); }
 
         if (appServices.updateUndoRedoButtonsUI && typeof appServices.updateUndoRedoButtonsUI === 'function') {
-             // updateUndoRedoButtonsUI is called internally by captureStateForUndo, but an explicit call can be made if needed
-        }
+            updateInternalUndoRedoState(); // This is now called by captureStateForUndoInternal
+        } else { console.warn("[State removeTrackFromStateInternal] appServices.updateUndoRedoButtonsUI is not available for explicit call.");}
+
         if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
             appServices.renderTimeline();
-        } else { console.warn("[State removeTrackFromStateInternal] appServices.renderTimeline not available."); }
-        console.log(`[State removeTrackFromStateInternal] Successfully finished removal process for track "${track.name}".`);
+        } else { console.warn("[State removeTrackFromStateInternal] appServices.renderTimeline is not available."); }
+        console.log(`[State removeTrackFromStateInternal] Track removal process completed for "${track.name}".`);
 
     } catch (error) {
-        console.error(`[State removeTrackFromStateInternal] Critical error during track ${trackId} removal process:`, error);
-        showUINotification(`Critical error removing track: ${error.message || 'Unknown error.'}`, 4000);
+        console.error(`[State removeTrackFromStateInternal] General error during track ${trackId} removal:`, error);
+        showUINotification(`Error removing track: ${error.message || 'Unknown error.'}. Please check console.`, 4000);
     }
 }
 
 
+// --- Master Effects Chain Management ---
 export function addMasterEffectToState(effectType, initialParams) {
-    // ... (addMasterEffectToState remains the same)
+    // ... (remains the same) ...
     const effectId = `mastereffect_${effectType}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const getDefaults = appServices.effectsRegistryAccess?.getEffectDefaultParams || getEffectDefaultParamsFromRegistry;
     const defaultParams = getDefaults ? getDefaults(effectType) : {};
@@ -398,7 +389,7 @@ export function addMasterEffectToState(effectType, initialParams) {
 }
 
 export function removeMasterEffectFromState(effectId) {
-    // ... (removeMasterEffectFromState remains the same)
+    // ... (remains the same) ...
     const effectIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
     if (effectIndex > -1) {
         masterEffectsChainState.splice(effectIndex, 1);
@@ -406,7 +397,7 @@ export function removeMasterEffectFromState(effectId) {
 }
 
 export function updateMasterEffectParamInState(effectId, paramPath, value) {
-    // ... (updateMasterEffectParamInState remains the same)
+    // ... (remains the same) ...
     const effectWrapper = masterEffectsChainState.find(e => e.id === effectId);
     if (!effectWrapper || !effectWrapper.params) {
         console.warn(`[State updateMasterEffectParamInState] Effect wrapper or params not found for ID: ${effectId}`);
@@ -426,7 +417,7 @@ export function updateMasterEffectParamInState(effectId, paramPath, value) {
 }
 
 export function reorderMasterEffectInState(effectId, newIndex) {
-    // ... (reorderMasterEffectInState remains the same)
+    // ... (remains the same) ...
     const oldIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
     if (oldIndex === -1 || oldIndex === newIndex || newIndex < 0 || newIndex >= masterEffectsChainState.length) {
         if (oldIndex === -1) console.warn(`[State reorderMasterEffectInState] Effect ID ${effectId} not found.`);
@@ -436,9 +427,9 @@ export function reorderMasterEffectInState(effectId, newIndex) {
     masterEffectsChainState.splice(newIndex, 0, effectToMove);
 }
 
-
+// --- Undo/Redo Logic ---
 function updateInternalUndoRedoState() {
-    // ... (updateInternalUndoRedoState remains the same)
+    // ... (remains the same) ...
     if (appServices.updateUndoRedoButtonsUI && typeof appServices.updateUndoRedoButtonsUI === 'function') {
         try {
             appServices.updateUndoRedoButtonsUI(
@@ -452,7 +443,7 @@ function updateInternalUndoRedoState() {
 }
 
 export function captureStateForUndoInternal(description = "Unknown action") {
-    // ... (captureStateForUndoInternal remains the same)
+    // ... (remains the same) ...
     try {
         const currentState = gatherProjectDataInternal();
         if (!currentState) {
@@ -468,14 +459,14 @@ export function captureStateForUndoInternal(description = "Unknown action") {
         updateInternalUndoRedoState();
     } catch (error) {
         console.error("[State captureStateForUndoInternal] Error capturing state for undo:", error);
-        if (appServices.showNotification) appServices.showNotification("Error capturing undo state. See console.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error capturing undo state. See console.", 3000);
     }
 }
 
 export async function undoLastActionInternal() {
-    // ... (undoLastActionInternal remains the same)
+    // ... (remains the same) ...
     if (undoStack.length === 0) {
-        if (appServices.showNotification) appServices.showNotification("Nothing to undo.", 1500);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Nothing to undo.", 1500);
         return;
     }
     try {
@@ -489,12 +480,12 @@ export async function undoLastActionInternal() {
             if (redoStack.length > Constants.MAX_HISTORY_STATES) redoStack.shift();
         }
 
-        if (appServices.showNotification) appServices.showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Undoing: ${stateToRestore.description || 'last action'}...`, 2000);
         if (appServices) appServices._isReconstructingDAW_flag = true;
         await reconstructDAWInternal(stateToRestore, true);
     } catch (error) {
         console.error("[State undoLastActionInternal] Error during undo:", error);
-        if (appServices.showNotification) appServices.showNotification(`Error during undo operation: ${error.message}. Project may be unstable.`, 4000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Error during undo operation: ${error.message}. Project may be unstable.`, 4000);
     } finally {
         if (appServices) appServices._isReconstructingDAW_flag = false;
         updateInternalUndoRedoState();
@@ -502,9 +493,9 @@ export async function undoLastActionInternal() {
 }
 
 export async function redoLastActionInternal() {
-    // ... (redoLastActionInternal remains the same)
+    // ... (remains the same) ...
     if (redoStack.length === 0) {
-        if (appServices.showNotification) appServices.showNotification("Nothing to redo.", 1500);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Nothing to redo.", 1500);
         return;
     }
     try {
@@ -518,26 +509,32 @@ export async function redoLastActionInternal() {
             if (undoStack.length > Constants.MAX_HISTORY_STATES) undoStack.shift();
         }
 
-        if (appServices.showNotification) appServices.showNotification(`Redoing: ${stateToRestore.description || 'last action'}...`, 2000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Redoing: ${stateToRestore.description || 'last action'}...`, 2000);
         if (appServices) appServices._isReconstructingDAW_flag = true;
         await reconstructDAWInternal(stateToRestore, true);
     } catch (error) {
         console.error("[State redoLastActionInternal] Error during redo:", error);
-        if (appServices.showNotification) appServices.showNotification(`Error during redo operation: ${error.message}. Project may be unstable.`, 4000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Error during redo operation: ${error.message}. Project may be unstable.`, 4000);
     } finally {
         if (appServices) appServices._isReconstructingDAW_flag = false;
         updateInternalUndoRedoState();
     }
 }
 
+
+// --- Project Data Handling ---
 export function gatherProjectDataInternal() {
-    // ... (gatherProjectDataInternal remains the same)
-    // console.log("[State gatherProjectDataInternal] Starting to gather project data...");
+    // MODIFICATION: Safer access to Tone.Transport.bpm.value
     try {
+        const currentTempo = (typeof Tone !== 'undefined' && Tone.Transport && typeof Tone.Transport.bpm === 'object' && Tone.Transport.bpm !== null && typeof Tone.Transport.bpm.value === 'number')
+            ? Tone.Transport.bpm.value
+            : 120; // Fallback tempo
+
         const projectData = {
             version: Constants.APP_VERSION || "0.1.0",
             globalSettings: {
-                tempo: (typeof Tone !== 'undefined' && Tone.Transport?.bpm?.value) ? Tone.Transport.bpm.value : 120,
+                tempo: currentTempo,
+                // ... (rest of globalSettings remains the same) ...
                 masterVolume: getMasterGainValueState(),
                 activeMIDIInputId: getActiveMIDIInputState() ? getActiveMIDIInputState().id : null,
                 soloedTrackId: getSoloedTrackIdState(),
@@ -547,6 +544,7 @@ export function gatherProjectDataInternal() {
                 currentTheme: getCurrentThemeState(),
                 selectedTimelineClipInfo: getSelectedTimelineClipInfoState(),
             },
+            // ... (rest of data gathering remains the same) ...
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
                 type: effect.type,
@@ -627,37 +625,35 @@ export function gatherProjectDataInternal() {
                     };
                 }).filter(ws => ws !== null)
         };
-        // console.log("[State gatherProjectDataInternal] Project data gathered successfully.");
         return projectData;
     } catch (error) {
         console.error("[State gatherProjectDataInternal] Error gathering project data:", error);
-        if (appServices.showNotification) appServices.showNotification("Error preparing project data for saving/undo.", 4000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error preparing project data for saving/undo.", 4000);
         return null;
     }
 }
 
-
 // MODIFICATION: Added more detailed logging and checks in reconstructDAWInternal
 export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
+    // ... (remains the same as previous modification with enhanced logging and checks)
     if (!projectData) {
         console.error("[State reconstructDAWInternal] projectData is null or undefined. Aborting reconstruction.");
-        if (appServices.showNotification) appServices.showNotification("Error: Invalid project data for loading.", 4000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error: Invalid project data for loading.", 4000);
         return;
     }
     if (appServices) appServices._isReconstructingDAW_flag = true;
     console.log(`[State reconstructDAWInternal] Starting reconstruction. IsUndoRedo: ${isUndoRedo}. Project version: ${projectData.version}`);
 
-    // Phase 1: Stop transport and clear existing state
     try {
         if (typeof Tone !== 'undefined' && Tone.Transport && Tone.Transport.state === 'started') {
             Tone.Transport.stop();
         }
         if (typeof Tone !== 'undefined' && Tone.Transport) {
-            Tone.Transport.cancel(0); // Cancel all scheduled events
+            Tone.Transport.cancel(0);
         }
 
         if (typeof audioInitAudioContextAndMasterMeter === 'function') {
-            await audioInitAudioContextAndMasterMeter(true); // Ensure context is running
+            await audioInitAudioContextAndMasterMeter(true);
         } else {
             console.warn("[State reconstructDAWInternal] audioInitAudioContextAndMasterMeter function not available.");
         }
@@ -665,11 +661,8 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         console.log("[State reconstructDAWInternal] Disposing existing tracks...");
         (getTracksState() || []).forEach(track => {
             if (track && typeof track.dispose === 'function') {
-                try {
-                    track.dispose();
-                } catch (e) {
-                    console.error(`[State reconstructDAWInternal] Error disposing track ${track.id}:`, e);
-                }
+                try { track.dispose(); }
+                catch (e) { console.error(`[State reconstructDAWInternal] Error disposing track ${track.id}:`, e); }
             }
         });
         tracks = [];
@@ -678,21 +671,17 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
 
         if (appServices.clearAllMasterEffectNodes && typeof appServices.clearAllMasterEffectNodes === 'function') {
             appServices.clearAllMasterEffectNodes();
-        } else {
-            console.warn("[State reconstructDAWInternal] clearAllMasterEffectNodes service missing");
-        }
+        } else { console.warn("[State reconstructDAWInternal] clearAllMasterEffectNodes service missing"); }
         masterEffectsChainState = [];
 
         if (appServices.closeAllWindows && typeof appServices.closeAllWindows === 'function') {
-            appServices.closeAllWindows(true); // true for isReconstruction
-        } else {
-            console.warn("[State reconstructDAWInternal] closeAllWindows service missing");
-        }
+            appServices.closeAllWindows(true);
+        } else { console.warn("[State reconstructDAWInternal] closeAllWindows service missing"); }
+
         if (appServices.clearOpenWindowsMap && typeof appServices.clearOpenWindowsMap === 'function') {
             appServices.clearOpenWindowsMap();
-        } else {
-            console.warn("[State reconstructDAWInternal] clearOpenWindowsMap service missing");
-        }
+        } else { console.warn("[State reconstructDAWInternal] clearOpenWindowsMap service missing"); }
+
         highestZ = 100;
         setArmedTrackIdState(null); setSoloedTrackIdState(null); setActiveSequencerTrackIdState(null);
         setIsRecordingState(false); setRecordingTrackIdState(null);
@@ -703,12 +692,11 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         console.log("[State reconstructDAWInternal] Global state reset complete.");
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error during global reset phase:", error);
-        if (appServices.showNotification) appServices.showNotification("Critical error during project reset.", 5000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Critical error during project reset.", 5000);
         if (appServices) appServices._isReconstructingDAW_flag = false;
         return;
     }
 
-    // Phase 2: Apply global settings
     try {
         console.log("[State reconstructDAWInternal] Applying global settings...");
         const gs = projectData.globalSettings || {};
@@ -733,10 +721,9 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         console.log("[State reconstructDAWInternal] Global settings applied.");
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error applying global settings:", error);
-        if (appServices.showNotification) appServices.showNotification("Error loading global settings.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error loading global settings.", 3000);
     }
 
-    // Phase 3: Reconstruct Master Effects
     try {
         console.log("[State reconstructDAWInternal] Reconstructing master effects...");
         if (projectData.masterEffects && Array.isArray(projectData.masterEffects)) {
@@ -754,29 +741,27 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         console.log("[State reconstructDAWInternal] Master effects reconstructed.");
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error reconstructing master effects:", error);
-        if (appServices.showNotification) appServices.showNotification("Error loading master effects.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error loading master effects.", 3000);
     }
 
-    // Phase 4: Reconstruct Tracks
     try {
         console.log("[State reconstructDAWInternal] Reconstructing tracks...");
         if (projectData.tracks && Array.isArray(projectData.tracks)) {
-            // Determine the maximum track ID to correctly set trackIdCounter
             let maxId = -1;
             projectData.tracks.forEach(td => { if (td && td.id != null && td.id > maxId) maxId = td.id; });
             trackIdCounter = maxId + 1;
 
             const trackPromises = projectData.tracks.map(trackData => {
                 if (trackData && trackData.type) {
-                    console.log(`[State reconstructDAWInternal] Preparing to add track: ${trackData.name} (ID: ${trackData.id}, Type: ${trackData.type})`);
-                    return addTrackToStateInternal(trackData.type, trackData, false); // false for isUserAction
+                    // console.log(`[State reconstructDAWInternal] Preparing to add track: ${trackData.name} (ID: ${trackData.id}, Type: ${trackData.type})`);
+                    return addTrackToStateInternal(trackData.type, trackData, false);
                 } else {
                     console.warn("[State reconstructDAWInternal] Invalid track data found during track reconstruction:", trackData);
                     return Promise.resolve(null);
                 }
             });
             await Promise.all(trackPromises);
-            console.log(`[State reconstructDAWInternal] All track instances processed. Total tracks: ${getTracksState().length}. Next trackIdCounter: ${trackIdCounter}`);
+            // console.log(`[State reconstructDAWInternal] All track instances processed. Total tracks: ${getTracksState().length}. Next trackIdCounter: ${trackIdCounter}`);
 
             const globalSettings = projectData.globalSettings || {};
             if (globalSettings.armedTrackId !== null && typeof globalSettings.armedTrackId !== 'undefined') {
@@ -796,10 +781,9 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         console.log("[State reconstructDAWInternal] Tracks reconstructed.");
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error reconstructing tracks:", error);
-        if (appServices.showNotification) appServices.showNotification("Error loading tracks.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error loading tracks.", 3000);
     }
 
-    // Phase 5: Reconstruct Windows
     try {
         console.log("[State reconstructDAWInternal] Reconstructing windows...");
         if (projectData.windowStates && Array.isArray(projectData.windowStates)) {
@@ -807,7 +791,6 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             for (const winState of sortedWindowStates) {
                 if (!winState || !winState.id) { console.warn("[State reconstructDAWInternal] Invalid window state found:", winState); continue; }
                 const key = winState.initialContentKey || winState.id;
-                // console.log(`[State reconstructDAWInternal] Reconstructing window: ${key}, ID: ${winState.id}`);
 
                 let windowOpened = false;
                 if (key === 'mixer' && appServices.openMixerWindow) { appServices.openMixerWindow(winState); windowOpened = true; }
@@ -829,26 +812,24 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
                         appServices.openTrackSequencerWindow(trackIdNum, true, winState); windowOpened = true;
                     } else { console.warn(`[State reconstructDAWInternal] Track for sequencer ${key} not found, ID invalid, or is Audio type.`);}
                 } else if (key === 'globalControls') {
-                    // console.log("[State reconstructDAWInternal] Skipping deprecated globalControls window.")
+                    // Deprecated window, skip opening
                 }
                 else {
-                    console.warn(`[State reconstructDAWInternal] Unknown window key "${key}" during reconstruction or service to open it is missing.`);
+                    console.warn(`[State reconstructDAWInternal] Unknown window key "${key}" or missing service to open it.`);
                 }
-                // if (windowOpened) console.log(`[State reconstructDAWInternal] Window ${key} processed for opening.`);
             }
         }
         console.log("[State reconstructDAWInternal] Windows reconstructed.");
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error reconstructing windows:", error);
-        if (appServices.showNotification) appServices.showNotification("Error loading window layout.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error loading window layout.", 3000);
     }
 
-    // Phase 6: Final UI updates and MIDI setup
     try {
         console.log("[State reconstructDAWInternal] Performing final UI updates and MIDI setup...");
         const gs = projectData.globalSettings || {};
         if(gs && gs.activeMIDIInputId && appServices.selectMIDIInput && typeof appServices.selectMIDIInput === 'function') {
-            appServices.selectMIDIInput(gs.activeMIDIInputId, true); // true for silent
+            appServices.selectMIDIInput(gs.activeMIDIInputId, true);
         }
         if(appServices.updateMixerWindow && typeof appServices.updateMixerWindow === 'function') appServices.updateMixerWindow();
         else console.warn("[State reconstructDAWInternal] appServices.updateMixerWindow not available.");
@@ -866,13 +847,13 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     }
 
     if (appServices) appServices._isReconstructingDAW_flag = false;
-    if (!isUndoRedo && appServices.showNotification) appServices.showNotification(`Project loaded successfully.`, 3500);
-    console.log("[State reconstructDAWInternal] Reconstruction finished.");
+    if (!isUndoRedo && appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Project loaded successfully.`, 3500);
+    console.log("[State reconstructDAWInternal] Reconstruction process finished.");
 }
 
 
 export function saveProjectInternal() {
-    // ... (saveProjectInternal remains the same)
+    // ... (remains the same) ...
     try {
         const projectData = gatherProjectDataInternal();
         if (!projectData) throw new Error("Failed to gather project data for saving.");
@@ -888,26 +869,26 @@ export function saveProjectInternal() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        if (appServices.showNotification) appServices.showNotification(`Project saved as ${a.download}`, 2000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Project saved as ${a.download}`, 2000);
     } catch (error) {
         console.error("[State saveProjectInternal] Error saving project:", error);
-        if (appServices.showNotification) appServices.showNotification(`Error saving project: ${error.message}. See console.`, 4000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Error saving project: ${error.message}. See console.`, 4000);
     }
 }
 
 export function loadProjectInternal() {
-    // ... (loadProjectInternal remains the same)
+    // ... (remains the same) ...
     const loadProjectInputEl = appServices.uiElementsCache?.loadProjectInput;
     if (loadProjectInputEl) {
         loadProjectInputEl.click();
     } else {
         console.error("[State loadProjectInternal] Load project input element not found.");
-        if (appServices.showNotification) appServices.showNotification("Error: File input for loading project not found.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error: File input for loading project not found.", 3000);
     }
 }
 
 export async function handleProjectFileLoadInternal(event) {
-    // ... (handleProjectFileLoadInternal remains the same)
+    // ... (remains the same) ...
     if (!event || !event.target || !event.target.files || event.target.files.length === 0) {
         console.warn("[State handleProjectFileLoadInternal] No file selected or event invalid.");
         if (event && event.target) event.target.value = null;
@@ -926,29 +907,29 @@ export async function handleProjectFileLoadInternal(event) {
                 captureStateForUndoInternal("Load Project: " + file.name.substring(0, 20));
             } catch (error) {
                 console.error("[State handleProjectFileLoadInternal] Error loading project from file:", error);
-                if (appServices.showNotification) appServices.showNotification(`Error loading project: ${error.message}. File might be corrupt or invalid.`, 5000);
+                if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification(`Error loading project: ${error.message}. File might be corrupt or invalid.`, 5000);
             }
         };
         reader.onerror = (err) => {
             console.error("[State handleProjectFileLoadInternal] FileReader error:", err);
-            if (appServices.showNotification) appServices.showNotification("Error reading project file.", 3000);
+            if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Error reading project file.", 3000);
         };
         reader.readAsText(file);
     } else if (file) {
-        if (appServices.showNotification) appServices.showNotification("Invalid file type. Please select a .snug project file.", 3000);
+        if (appServices.showNotification && typeof appServices.showNotification === 'function') appServices.showNotification("Invalid file type. Please select a .snug project file.", 3000);
     }
     if (event.target) event.target.value = null;
 }
 
 export async function exportToWavInternal() {
-    // ... (exportToWavInternal remains the same)
+    // ... (remains the same) ...
     if (!appServices.showNotification || !appServices.getActualMasterGainNode || !audioInitAudioContextAndMasterMeter) {
         console.error("[State exportToWavInternal] Required appServices not available.");
-        const alertFn = appServices.showNotification || utilShowNotification || alert;
+        const alertFn = (appServices.showNotification && typeof appServices.showNotification === 'function') ? appServices.showNotification : (utilShowNotification || alert);
         alertFn("Export WAV feature is currently unavailable due to an internal error.");
         return;
     }
-    const showUINotification = appServices.showNotification; // Cache for consistent use
+    const showUINotification = appServices.showNotification;
 
     showUINotification("Preparing export...", 3000);
     try {
@@ -991,8 +972,7 @@ export async function exportToWavInternal() {
         }
 
         if (maxDuration === 0) maxDuration = 5;
-        maxDuration = Math.min(maxDuration + 2, 600); // Add buffer, max 10 mins
-        // console.log(`[State exportToWavInternal] Calculated export duration: ${maxDuration.toFixed(1)}s`);
+        maxDuration = Math.min(maxDuration + 2, 600);
 
         const recorder = new Tone.Recorder();
         const recordSource = appServices.getActualMasterGainNode();
@@ -1005,7 +985,7 @@ export async function exportToWavInternal() {
         }
         recordSource.connect(recorder);
 
-        showUINotification(`Recording for export (${maxDuration.toFixed(1)}s)... This may take a moment.`, Math.max(4000, maxDuration * 1000 + 1000));
+        showUINotification(`Recording for export (${maxDuration.toFixed(1)}s)...`, Math.max(4000, maxDuration * 1000 + 1000));
 
         for (const track of getTracksState()) {
             if (track && typeof track.schedulePlayback === 'function') {
@@ -1016,7 +996,7 @@ export async function exportToWavInternal() {
         recorder.start();
         Tone.Transport.start(Tone.now(), 0);
 
-        await new Promise(resolve => setTimeout(resolve, maxDuration * 1000 + 500)); // Wait for recording + buffer
+        await new Promise(resolve => setTimeout(resolve, maxDuration * 1000 + 500));
 
         const recording = await recorder.stop();
         Tone.Transport.stop();
