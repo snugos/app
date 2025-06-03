@@ -85,7 +85,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const existingWindow = openWindows.get(windowId);
         if (existingWindow && typeof existingWindow.close === 'function') {
             try {
-                existingWindow.close(true); // true for reconstruction context
+                existingWindow.close(true); 
             } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
         }
     }
@@ -119,9 +119,9 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                            ? desktopEl.offsetWidth
                            : 1024;
     
-    let calculatedWidth = Math.max(450, Math.min(900, safeDesktopWidth - 40)); // Adjusted min width
-    let calculatedHeight = Math.min(500, (rows * 23) + 80); // Dynamic height based on rows, capped
-    calculatedHeight = Math.max(300, calculatedHeight); // Min height
+    let calculatedWidth = Math.max(450, Math.min(900, safeDesktopWidth - 40)); 
+    let calculatedHeight = Math.min(500, (rows * 23) + 80); 
+    calculatedHeight = Math.max(300, calculatedHeight); 
 
     if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) calculatedWidth = 600;
     if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) calculatedHeight = 400;
@@ -159,11 +159,21 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
+        // *** FIX for Interact.js error ***
         if (controlsDiv) {
-            controlsDiv.style.cursor = 'default'; 
-            if (window.interact && interact.isSet(controlsDiv)) { 
-                try { interact(controlsDiv).unset(); } 
-                catch(e) { console.warn("Error unsetting interact from sequencer controls:", e.message); }
+            controlsDiv.style.cursor = 'default'; // Ensure it's not showing a drag cursor
+            if (window.interact) { 
+                const interactableInstance = interact(controlsDiv); // Get the interactable instance
+                if (interactableInstance && typeof interactableInstance.unset === 'function') { // Check if it's a valid interactable
+                    try {
+                        interactableInstance.unset(); // Unset it to remove draggable/resizable behaviors
+                        // console.log("[UI openTrackSequencerWindow] Successfully unset Interact.js from controlsDiv.");
+                    } catch(e) {
+                        // This catch might not be strictly necessary if .unset() is safe on non-interactables,
+                        // but it's good for robustness.
+                        console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv (or it wasn't actively set for drag/resize):", e.message);
+                    }
+                }
             }
         }
 
@@ -191,19 +201,14 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 const currentActiveSeq = track.getActiveSequence();
                 if (!currentActiveSeq || !currentActiveSeq.data) return;
 
-                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { // Simple click toggles
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) { 
                     if (!currentActiveSeq.data[row]) currentActiveSeq.data[row] = Array(currentActiveSeq.length).fill(null);
                     const currentStepData = currentActiveSeq.data[row][col];
                     const isActive = !(currentStepData?.active);
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name} (${currentActiveSeq.name})`);
                     currentActiveSeq.data[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
                     updateSequencerCellUI(sequencerWindow.element, track.type, row, col, isActive);
-                    // No need to call recreateToneSequence here, it's too heavy for single step change.
-                    // The Tone.Sequence should ideally pick up changes from the data array directly,
-                    // or have a more lightweight update mechanism if necessary.
-                    // For now, rely on the Tone.Sequence callback reading the updated data.
                 }
-                // Add shift+click for velocity, ctrl+click for note length later if needed
             }
         });
         const lengthInput = sequencerWindow.element.querySelector(`#seqLengthInput-${track.id}`);
@@ -213,9 +218,8 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 const newNumBars = parseInt(e.target.value, 10);
                 const activeSeqForLengthChange = track.getActiveSequence();
                 if (activeSeqForLengthChange && !isNaN(newNumBars) && newNumBars >= 1 && newNumBars <= (Constants.MAX_BARS || 16)) {
-                    track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); // This calls recreateToneSequence
+                    track.setSequenceLength(newNumBars * Constants.STEPS_PER_BAR); 
                 } else if (activeSeqForLengthChange) {
-                    // Reset to current if input is invalid
                     e.target.value = activeSeqForLengthChange.length / Constants.STEPS_PER_BAR;
                 }
             });
@@ -229,7 +233,6 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
 
-    // Remove all potential active classes first
     cell.classList.remove('bg-sky-500', 'dark:bg-sky-500', 
                           'bg-teal-500', 'dark:bg-teal-500',
                           'bg-emerald-500', 'dark:bg-emerald-500',
@@ -255,22 +258,20 @@ export function highlightPlayingStep(trackId, col) {
         const activeSeq = track.getActiveSequence();
         const currentSeqLength = activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
 
-        // Remove 'playing' from the previously played column
         if (seqWindowInstance.lastPlayedCol !== -1 && seqWindowInstance.lastPlayedCol < currentSeqLength) {
             for (let i = 0; i < seqWindowInstance.stepCellsGrid.length; i++) {
                 const cell = seqWindowInstance.stepCellsGrid[i]?.[seqWindowInstance.lastPlayedCol];
                 if (cell) {
-                    cell.classList.remove('ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-10'); // Tailwind for highlight
+                    cell.classList.remove('ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-10'); 
                 }
             }
         }
 
-        // Add 'playing' to the current column
         if (col < currentSeqLength) {
             for (let i = 0; i < seqWindowInstance.stepCellsGrid.length; i++) {
                 const cell = seqWindowInstance.stepCellsGrid[i]?.[col];
                 if (cell) {
-                    cell.classList.add('ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-10'); // Tailwind for highlight
+                    cell.classList.add('ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-10'); 
                 }
             }
         }
@@ -286,14 +287,13 @@ export function openMixerWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
 
     const contentContainer = document.createElement('div'); contentContainer.id = 'mixerContentContainer';
-    // Tailwind: padding, overflow, flex for horizontal layout, background
     contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-200 dark:bg-slate-800 flex space-x-2';
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const mixerOptions = { 
         width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40), 
-        height: 320, // Increased height for better knob visibility
-        minWidth: 300, minHeight: 250, // Adjusted minHeight
+        height: 320, 
+        minWidth: 300, minHeight: 250, 
         initialContentKey: windowId 
     };
     if (savedState) Object.assign(mixerOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
@@ -311,11 +311,9 @@ export function updateMixerWindow() {
 
 export function renderMixer(container) {
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
-    container.innerHTML = ''; // Clear previous content
+    container.innerHTML = ''; 
 
-    // Master Track Strip
     const masterTrackDiv = document.createElement('div');
-    // Tailwind: mixer track styling, specific for master
     masterTrackDiv.className = 'mixer-track master-track flex-shrink-0 p-2 border border-gray-400 dark:border-slate-600 rounded-lg bg-gray-300 dark:bg-slate-700 shadow-md w-28 text-xs flex flex-col items-center space-y-1';
     masterTrackDiv.innerHTML = `
         <div class="track-name font-bold text-sm text-gray-800 dark:text-slate-100 truncate w-full text-center" title="Master">Master</div>
@@ -327,25 +325,22 @@ export function renderMixer(container) {
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#masterVolumeKnob-mixer-placeholder');
     if (masterVolKnobPlaceholder && localAppServices.createKnob) { 
         const masterGainValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
-        // const masterVolume = masterGainNode; // This was incorrect, masterGainNode is not a Tone.Param
         const masterVolKnob = localAppServices.createKnob({ 
             label: 'Master Vol', 
             min: 0, max: 1.2, step: 0.01, 
-            initialValue: masterGainValue, // Use the gain value directly
+            initialValue: masterGainValue, 
             decimals: 2, 
             onValueChange: (val, oldVal, fromInteraction) => {
                 if (localAppServices.setActualMasterVolume) localAppServices.setActualMasterVolume(val);
-                if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(val); // Update state
+                if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(val); 
                 if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Master Volume to ${val.toFixed(2)}`);
              } 
         });
         masterVolKnobPlaceholder.innerHTML = ''; masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
-    // Individual Track Strips
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        // Tailwind: base mixer track styling
         trackDiv.className = 'mixer-track flex-shrink-0 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 shadow-md w-28 text-xs flex flex-col items-center space-y-1';
         trackDiv.innerHTML = `
             <div class="track-name font-semibold text-gray-800 dark:text-slate-200 truncate w-full text-center" title="${track.name}">${track.name}</div>
@@ -359,7 +354,6 @@ export function renderMixer(container) {
             </div>`;
 
         trackDiv.addEventListener('click', (e) => {
-            // Prevent button clicks from triggering inspector open
             if (e.target.closest('button')) {
                 return;
             }
@@ -378,11 +372,10 @@ export function renderMixer(container) {
                 {label: "Rename Track", action: () => {
                     const newName = prompt(`Enter new name for "${currentTrackForMenu.name}":`, currentTrackForMenu.name);
                     if (newName !== null && newName.trim() !== "") {
-                        // Use appService if available, otherwise direct call (less ideal but fallback)
-                        if (localAppServices.renameTrack) { // Assuming a renameTrack service might exist in main
+                        if (localAppServices.renameTrack) {
                             localAppServices.renameTrack(track.id, newName.trim());
                         } else {
-                             currentTrackForMenu.setName(newName.trim()); // Direct call to track method
+                             currentTrackForMenu.setName(newName.trim()); 
                              console.warn("renameTrack service not available, track name updated directly.");
                         }
                     }
@@ -402,7 +395,7 @@ export function renderMixer(container) {
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder && localAppServices.createKnob) { 
             const volKnob = localAppServices.createKnob({ 
-                label: `Vol ${track.id}`, // Simplified label
+                label: `Vol ${track.id}`, 
                 min: 0, max: 1.2, step: 0.01, 
                 initialValue: track.previousVolumeBeforeMute, 
                 decimals: 2, 
@@ -424,78 +417,70 @@ export function renderTimeline() {
     }
 
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
-    const tracks = getTracksState(); // Assuming getTracksState is available via localAppServices or imported
+    const tracks = getTracksState(); 
     if (!tracksArea || !tracks) {
         console.warn("Timeline area or tracks not found for rendering inside timeline window.");
         if (tracksArea) tracksArea.innerHTML = '<p class="p-4 text-sm text-gray-500 dark:text-slate-400">No tracks to display.</p>';
         return;
     }
 
-    tracksArea.innerHTML = ''; // Clear previous content
+    tracksArea.innerHTML = ''; 
 
-    // Get the track name width from CSS variable or default
     const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Default to 120px if var not found
+    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; 
 
 
     tracks.forEach(track => {
         const lane = document.createElement('div');
-        // Tailwind: track lane styling, flex for layout
         lane.className = 'timeline-track-lane h-14 flex items-center border-b border-gray-700 dark:border-slate-700 bg-gray-800 dark:bg-slate-800/70 odd:bg-gray-750 dark:odd:bg-slate-800/50 relative overflow-hidden'; 
         lane.dataset.trackId = track.id;
 
         const nameArea = document.createElement('div');
-        // Tailwind: sticky name area, background, border, padding, flex for content alignment
         nameArea.className = 'timeline-track-lane-name-area sticky left-0 z-20 bg-gray-700 dark:bg-slate-700/80 border-r border-gray-600 dark:border-slate-600 p-2 h-full flex flex-col items-start justify-center overflow-hidden'; 
         nameArea.style.minWidth = trackNameWidth + 'px';
         nameArea.style.maxWidth = trackNameWidth + 'px';
         
         const nameEl = document.createElement('div');
-        // Tailwind: track name text styling
         nameEl.className = 'timeline-track-name-text text-xs font-medium text-slate-100 dark:text-slate-100 whitespace-nowrap overflow-hidden text-ellipsis w-full mb-0.5'; 
         nameEl.textContent = track.name;
         nameEl.title = track.name; 
         nameArea.appendChild(nameEl);
         
-        // Add draggable sequence buttons if applicable
         if (track.type !== 'Audio' && track.sequences && track.sequences.length > 0) {
             const sequenceButtonsContainer = document.createElement('div');
-            // Tailwind: container for sequence buttons
             sequenceButtonsContainer.className = 'timeline-sequence-buttons flex flex-wrap gap-1 mt-1 items-center'; 
             
             track.sequences.forEach(sequence => {
                 const seqButton = document.createElement('div');
-                // Tailwind: sequence button styling
                 seqButton.className = 'sequence-timeline-button dragging-sequence-button text-[10px] px-1.5 py-0.5 border border-sky-700 dark:border-sky-600 rounded bg-sky-600 hover:bg-sky-500 text-white cursor-grab shadow';
-                seqButton.textContent = "Seq"; // Keep it short
+                seqButton.textContent = "Seq"; 
                 seqButton.title = `Drag Sequence: ${sequence.name}`;
-                seqButton.style.touchAction = 'none'; // Important for Interact.js
+                seqButton.style.touchAction = 'none'; 
 
                 if (window.interact) {
-                    interact(seqButton).unset(); // Clear previous interactable
+                    interact(seqButton).unset(); 
                     interact(seqButton).draggable({
                         inertia: true,
-                        autoScroll: { container: timelineWindow.element.querySelector('.window-content') }, // Enable autoscroll on timeline content
+                        autoScroll: { container: timelineWindow.element.querySelector('.window-content') }, 
                         listeners: {
                             start: (event) => {
                                 const dragData = {
                                     type: 'sequence-timeline-drag',
                                     sourceSequenceId: sequence.id,
                                     sourceTrackId: track.id,
-                                    clipName: sequence.name // Pass sequence name for the clip
+                                    clipName: sequence.name 
                                 };
                                 const targetElement = event.interaction.element || event.target;
                                 if (targetElement) {
-                                    targetElement.dataset.dragType = 'sequence-timeline-drag'; // For dropzone to identify
+                                    targetElement.dataset.dragType = 'sequence-timeline-drag'; 
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
-                                    // Optional: Add a class for visual feedback during drag
                                     targetElement.classList.add('opacity-75', 'ring-2', 'ring-sky-300'); 
                                     targetElement.style.position = 'relative'; 
                                     targetElement.style.zIndex = '10001'; 
                                 }
                                 console.log(`[Timeline UI] DragStart sequence button: ${sequence.name}`);
                             },
-                            move: (event) => { // Make the dragged element follow the cursor
+                            move: (event) => { 
                                 const target = event.interaction.element || event.target;
                                 if (target) {
                                     const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
@@ -510,7 +495,6 @@ export function renderTimeline() {
                             end: (event) => {
                                 const targetElement = event.interaction.element || event.target;
                                 if (targetElement) {
-                                    // Reset styles after drag
                                     targetElement.classList.remove('opacity-75', 'ring-2', 'ring-sky-300');
                                     targetElement.style.transform = 'none';
                                     targetElement.removeAttribute('data-x');
@@ -518,9 +502,8 @@ export function renderTimeline() {
                                     targetElement.style.zIndex = '';
                                 }
                                 console.log(`[Timeline UI] DragEnd sequence button: ${sequence.name}`);
-                                // Re-render timeline if drop was not successful or to clean up
                                 if (localAppServices.renderTimeline && !event.dropzone) {
-                                   setTimeout(() => localAppServices.renderTimeline(), 0); // Refresh to reset button position if not dropped
+                                   setTimeout(() => localAppServices.renderTimeline(), 0); 
                                 }
                             }
                         }
@@ -533,22 +516,21 @@ export function renderTimeline() {
         lane.appendChild(nameArea);
 
         const clipsContainer = document.createElement('div');
-        // Tailwind: container for clips within a lane, relative for absolute positioned clips
         clipsContainer.className = 'timeline-clips-container relative flex-grow h-full'; 
         
         if (window.interact) {
-            interact(clipsContainer).unset(); // Clear previous interactable
+            interact(clipsContainer).unset(); 
             interact(clipsContainer)
                 .dropzone({
-                    accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', // Accept these types of draggables
-                    overlap: 0.01, // How much overlap is needed for drop
+                    accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', 
+                    overlap: 0.01, 
                     ondropactivate: function (event) {
-                        event.target.classList.add('bg-slate-700/50'); // Tailwind: Highlight dropzone when active
+                        event.target.classList.add('bg-slate-700/50'); 
                     },
                     ondragenter: function (event) {
                         const draggableElement = event.relatedTarget;
                         const dropzoneElement = event.target; 
-                        dropzoneElement.classList.add('bg-blue-600/30', 'dark:bg-blue-500/30'); // Tailwind: Highlight on drag enter
+                        dropzoneElement.classList.add('bg-blue-600/30', 'dark:bg-blue-500/30'); 
                         if (draggableElement) draggableElement.classList.add('ring-2', 'ring-green-400');  
                     },
                     ondragleave: function (event) {
@@ -570,16 +552,15 @@ export function renderTimeline() {
                         const timelineContentArea = timelineWindowLocal.element.querySelector('.window-content');
                         if (!timelineContentArea) { console.error("Timeline content area not found during drop"); return; }
                         
-                        const pixelsPerSecond = 30; // Match this with ruler/clip rendering
-                        const clipsContainerRect = event.target.getBoundingClientRect(); // Rect of the clips area itself
+                        const pixelsPerSecond = 30; 
+                        const clipsContainerRect = event.target.getBoundingClientRect(); 
 
-                        // Calculate drop position relative to the clipsContainer
                         let dropXClient = 0;
                         if (event.dragEvent && typeof event.dragEvent.clientX === 'number') { 
                             dropXClient = event.dragEvent.clientX;
-                        } else if (event.client && typeof event.client.x === 'number') { // For some Interact.js versions/events
+                        } else if (event.client && typeof event.client.x === 'number') { 
                             dropXClient = event.client.x;
-                        } else if (typeof event.clientX === 'number') { // General fallback
+                        } else if (typeof event.clientX === 'number') { 
                              dropXClient = event.clientX;
                         } else {
                             console.error("[TimelineLane ClipsContainer ONDROP] Cannot determine drop clientX coordinate from event:", event);
@@ -588,57 +569,49 @@ export function renderTimeline() {
                             return; 
                         }
                         
-                        // dropX is the pixel offset from the left of the clipsContainer, including its own scroll
                         let dropX = dropXClient - clipsContainerRect.left + event.target.scrollLeft; 
-                        dropX = Math.max(0, dropX); // Ensure non-negative
+                        dropX = Math.max(0, dropX); 
                         const startTime = dropX / pixelsPerSecond;
 
                         console.log(`[UI Timeline ClipsContainer Drop] TargetTrackID: ${targetTrackId}, Calculated StartTime: ${startTime.toFixed(2)}s`);
                         
-                        const clipId = droppedClipElement.dataset.clipId; // For existing clips being moved
-                        const originalTrackId = parseInt(droppedClipElement.dataset.originalTrackId, 10); // For existing clips
-                        const dragType = droppedClipElement.dataset.dragType; // 'sound-browser-item', 'sequence-timeline-drag', or undefined for existing clips
-                        const jsonDataString = droppedClipElement.dataset.jsonData; // For new items from browser/sequence list
+                        const clipId = droppedClipElement.dataset.clipId; 
+                        const originalTrackId = parseInt(droppedClipElement.dataset.originalTrackId, 10); 
+                        const dragType = droppedClipElement.dataset.dragType; 
+                        const jsonDataString = droppedClipElement.dataset.jsonData;
 
                         if (clipId && !isNaN(originalTrackId) && dragType !== 'sound-browser-item' && dragType !== 'sequence-timeline-drag') { 
-                            // This is an existing timeline clip being moved
                             const originalTrack = localAppServices.getTrackById(originalTrackId);
                             if (!originalTrack || !originalTrack.timelineClips) { return; }
                             const clipData = originalTrack.timelineClips.find(c => c.id === clipId);
 
                             if (clipData) {
                                 const targetTrackForDrop = localAppServices.getTrackById(targetTrackId);
-                                if (targetTrackForDrop && targetTrackForDrop.type === originalTrack.type) { // Type check for compatibility
+                                if (targetTrackForDrop && targetTrackForDrop.type === originalTrack.type) { 
                                     if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Move Clip "${clipData.name}" to Track "${targetTrackForDrop.name}" at ${startTime.toFixed(2)}s`);
                                     if (originalTrackId !== targetTrackId) { 
-                                        // Move to a different track
                                         originalTrack.timelineClips = originalTrack.timelineClips.filter(c => c.id !== clipId);
-                                        // Create a new ID for the clip on the new track to avoid ID collisions if copied back
                                         targetTrackForDrop.timelineClips.push({...JSON.parse(JSON.stringify(clipData)), startTime: startTime, id: `clip_${targetTrackId}_${Date.now()}`});
                                     } else { 
-                                        // Move within the same track
                                         const existingClip = targetTrackForDrop.timelineClips.find(c => c.id === clipId);
                                         if (existingClip) existingClip.startTime = startTime;
                                     }
                                     if(localAppServices.renderTimeline) localAppServices.renderTimeline(); 
-                                } else if (targetTrackForDrop && targetTrackForDrop.type !== originalTrack.type) {
+                                } else if (targetTrackForDrop && targetTrackForDrop.type !== originalTrack.type) { 
                                      showNotification(`Cannot move ${originalTrack.type} clip to ${targetTrackForDrop.type} track.`, 3000);
-                                     if(localAppServices.renderTimeline) localAppServices.renderTimeline(); // Snap back by re-rendering
-                                } else if (!targetTrackForDrop) {
+                                     if(localAppServices.renderTimeline) localAppServices.renderTimeline(); 
+                                } else if (!targetTrackForDrop) { 
                                     console.error("Target track for drop not found.");
                                 }
                             } 
                         } else if ((dragType === 'sound-browser-item' || dragType === 'sequence-timeline-drag') && jsonDataString) {
-                            // This is a new item being dropped from sound browser or sequence list
                             try {
                                 const droppedItemData = JSON.parse(jsonDataString); 
                                  if (localAppServices.handleTimelineLaneDrop) { 
-                                    // handleTimelineLaneDrop expects the parsed data, target track ID, and start time
                                     localAppServices.handleTimelineLaneDrop(droppedItemData, targetTrackId, startTime);
                                 }
                             } catch (e) { console.error("Error parsing jsonData from dropped element:", e); }
                         }
-                        // Reset dropzone styles
                         event.target.classList.remove('bg-blue-600/30', 'dark:bg-blue-500/30');
                         if(droppedClipElement) droppedClipElement.classList.remove('ring-2', 'ring-green-400');
                     },
@@ -657,58 +630,56 @@ export function renderTimeline() {
                 }
                 const clipEl = document.createElement('div');
                 clipEl.dataset.clipId = clip.id; 
-                clipEl.dataset.originalTrackId = track.id; // Store original track ID for drag logic
+                clipEl.dataset.originalTrackId = track.id; 
                 
                 let clipText = clip.name || `Clip ${clip.id.slice(-4)}`;
                 let clipTitle = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence Clip')} (${clip.duration !== undefined ? clip.duration.toFixed(2) : 'N/A'}s)`;
-                // Tailwind: base clip styling, conditional for type
-                let typeSpecificClass = 'bg-teal-600 hover:bg-teal-500 border-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400 dark:border-teal-600'; // Default audio
+                let typeSpecificClass = 'bg-teal-600 hover:bg-teal-500 border-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400 dark:border-teal-600'; 
                 if (clip.type === 'sequence') { 
                     typeSpecificClass = 'bg-sky-600 hover:bg-sky-500 border-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400 dark:border-sky-600';
                 }
                 clipEl.className = `audio-clip absolute h-4/5 top-[10%] rounded border text-white text-[10px] px-1.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis cursor-grab shadow-md ${typeSpecificClass}`;
                 
                 clipEl.textContent = clipText; clipEl.title = clipTitle;
-                const pixelsPerSecond = 30; // Must match ruler and drop calculation
+                const pixelsPerSecond = 30; 
                 clipEl.style.left = `${(clip.startTime || 0) * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(15, (clip.duration || 0) * pixelsPerSecond)}px`; // Min width for visibility
-                clipEl.style.touchAction = 'none'; // Crucial for Interact.js on touch devices
+                clipEl.style.width = `${Math.max(15, (clip.duration || 0) * pixelsPerSecond)}px`; 
+                clipEl.style.touchAction = 'none'; 
                 
                 if (window.interact) {
-                    interact(clipEl).unset(); // Clear previous interactable
+                    interact(clipEl).unset(); 
                     interact(clipEl)
-                        .draggable({ 
-                            inertia: false, // Simpler drag without inertia for clips
+                        .draggable({  
+                            inertia: false, 
                             modifiers: [
                                 interact.modifiers.restrictRect({
-                                    restriction: 'parent', // Restrict to clipsContainer
+                                    restriction: 'parent', 
                                     endOnly: false
                                 }),
-                                interact.modifiers.snap({ // Snap to a grid (e.g., 1/16th note)
+                                interact.modifiers.snap({ 
                                     targets: [
-                                      interact.snappers.grid({ x: pixelsPerSecond / 4, y: 0 }) // Snap to quarter of a second (adjust as needed)
+                                      interact.snappers.grid({ x: pixelsPerSecond / 4, y: 0 }) 
                                     ],
                                     range: Infinity,
-                                    relativePoints: [ { x: 0, y: 0 } ] // Snap top-left corner
+                                    relativePoints: [ { x: 0, y: 0 } ] 
                                   })
                             ],
                             listeners: {
                                 start: (event) => {
                                     const target = event.target;
-                                    target.dataset.startX = parseFloat(target.style.left) || 0; // Store initial X for relative move
-                                    target.classList.add('opacity-75', 'ring-2', 'ring-yellow-300', 'z-10'); // Tailwind: visual feedback
-                                    target.style.zIndex = 10002; // Ensure dragged clip is on top
+                                    target.dataset.startX = parseFloat(target.style.left) || 0; 
+                                    target.classList.add('opacity-75', 'ring-2', 'ring-yellow-300', 'z-10'); 
+                                    target.style.zIndex = 10002; 
                                 },
                                 move: (event) => {
                                     const target = event.target;
-                                    // Update position based on drag delta, restricted by parent
                                     const currentX = (parseFloat(target.dataset.startX) || 0) + event.dx;
-                                    target.style.left = `${Math.max(0, currentX)}px`; // Prevent dragging before 0
+                                    target.style.left = `${Math.max(0, currentX)}px`; 
                                 },
                                 end: (event) => {
                                     const target = event.target;
                                     target.classList.remove('opacity-75', 'ring-2', 'ring-yellow-300', 'z-10');
-                                    target.style.zIndex = ''; // Reset z-index
+                                    target.style.zIndex = ''; 
                                     
                                     const finalLeftPixels = parseFloat(target.style.left) || 0;
                                     const newStartTime = Math.max(0, finalLeftPixels / pixelsPerSecond);
@@ -718,26 +689,20 @@ export function renderTimeline() {
                                     const currentTrack = localAppServices.getTrackById(currentTrackId);
                                     const originalClipData = currentTrack ? currentTrack.timelineClips.find(c => c.id === currentClipId) : null;
 
-                                    // If not dropped onto a valid dropzone (i.e., moved within its own lane without crossing to another)
-                                    // or if dropped but no actual change in position on the same track.
                                     if (!event.dropzone && originalClipData) {
-                                        if (Math.abs(newStartTime - originalClipData.startTime) > 0.001) { // Check for actual movement
+                                        if (Math.abs(newStartTime - originalClipData.startTime) > 0.001) { 
                                              if (localAppServices.captureStateForUndo) {
                                                 localAppServices.captureStateForUndo(`Move clip "${originalClipData.name}" on track "${currentTrack.name}"`);
                                             }
-                                            // Call the track's method to update its internal state
                                             if (currentTrack.updateAudioClipPosition) {
                                                 currentTrack.updateAudioClipPosition(currentClipId, newStartTime);
                                             } else {
                                                 console.error("Track.updateAudioClipPosition method not found!");
                                             }
                                         } else {
-                                            // Snap back to original position if no significant move
                                             target.style.left = `${originalClipData.startTime * pixelsPerSecond}px`;
                                         }
                                     }
-                                    // If dropped on a dropzone, the dropzone's ondrop handler will manage the state update.
-                                    // Here, we just clean up the original element's temporary drag data if needed.
                                     delete target.dataset.startX;
                                 }
                             }
@@ -756,55 +721,50 @@ export function updatePlayheadPosition() {
     if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) { return; }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); // The scrollable area
+    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); 
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler');
+    const tracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); // The horizontally scrollable part
 
-    if (!playhead || typeof Tone === 'undefined' || !timelineContentArea || !localAppServices.getPlaybackMode) return;
+    if (!playhead || typeof Tone === 'undefined' || !timelineContentArea || !localAppServices.getPlaybackMode || !tracksContainer) return;
 
     const currentPlaybackMode = localAppServices.getPlaybackMode();
-    if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') { // Or whatever your sequencer mode is called
+    if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') { 
         playhead.style.display = 'none';
-        // Ensure ruler scrolls with content even if playhead is hidden
         if (timelineRuler) {
-            timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
+            // Ruler should scroll with the tracksContainer, not necessarily the window-content if they are different
+            timelineRuler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
         }
         return;
     }
     playhead.style.display = 'block';
 
-    const pixelsPerSecond = 30; // Should match rendering logic
+    const pixelsPerSecond = 30; 
     const trackNameWidthStyle = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim();
-    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; // Default if CSS var not found
+    const trackNameWidth = parseFloat(trackNameWidthStyle) || 120; 
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        // Position playhead relative to the #timeline-container, which is the parent of #timeline-header and #timeline-tracks-container
-        // The playhead starts visually after the track name area.
-        playhead.style.left = `${trackNameWidth + rawNewPosition}px`;
+        playhead.style.left = `${trackNameWidth + rawNewPosition - tracksContainer.scrollLeft}px`; // Adjust for scroll
 
-        // Auto-scroll logic
-        const scrollableContent = timelineContentArea; // This is the element that actually scrolls
-        const containerWidth = scrollableContent.clientWidth - trackNameWidth; // Visible width of the clips area
-        const playheadVisualPositionInScrollable = rawNewPosition - scrollableContent.scrollLeft; // Playhead position relative to the visible part of scrollable area
+        const scrollableClipsArea = tracksContainer; 
+        const containerWidth = scrollableClipsArea.clientWidth; // Visible width of the clips area (excluding track names)
+        
+        // Playhead position relative to the visible part of the scrollable tracks area
+        const playheadVisualPositionInScrollable = rawNewPosition - scrollableClipsArea.scrollLeft;
 
-        // If playhead is near the right edge, scroll right
         if (playheadVisualPositionInScrollable > containerWidth * 0.8) {
-            scrollableContent.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; // Scroll to keep playhead in view
+            scrollableClipsArea.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; 
         } 
-        // If playhead is near the left edge (but not at the very beginning), scroll left
-        else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableContent.scrollLeft > 0) {
-            scrollableContent.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
+        else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableClipsArea.scrollLeft > 0) {
+            scrollableClipsArea.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
         }
-        // Ensure scrollLeft doesn't go negative (browsers usually handle this, but good practice)
-        if (scrollableContent.scrollLeft < 0) scrollableContent.scrollLeft = 0;
+        if (scrollableClipsArea.scrollLeft < 0) scrollableClipsArea.scrollLeft = 0;
 
     } else if (Tone.Transport.state === 'stopped') {
-         // When stopped, position playhead at the beginning of the clips area (after track names)
-         playhead.style.left = `${trackNameWidth}px`;
+         playhead.style.left = `${trackNameWidth - tracksContainer.scrollLeft}px`; // Adjust for scroll
     }
-    // Always sync ruler with scroll
-    if (timelineRuler && timelineContentArea) {
-        timelineRuler.style.transform = `translateX(-${timelineContentArea.scrollLeft}px)`;
+    if (timelineRuler && tracksContainer) {
+        timelineRuler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
     }
 }
 
@@ -814,11 +774,10 @@ export function openTimelineWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
-        renderTimeline(); // Ensure content is up-to-date on restore
+        renderTimeline(); 
         return win;
     }
 
-    // Tailwind: main container for timeline, flex layout
     const contentHTML = `
         <div id="timeline-container" class="flex flex-col h-full w-full bg-gray-800 dark:bg-slate-900 overflow-hidden">
             <div id="timeline-header" class="h-5 bg-gray-700 dark:bg-slate-800 border-b border-gray-600 dark:border-slate-700 flex-shrink-0 relative overflow-hidden w-full">
@@ -827,13 +786,13 @@ export function openTimelineWindow(savedState = null) {
                             repeating-linear-gradient(to right, #555555AA 0 1px, transparent 1px 100%), 
                             repeating-linear-gradient(to right, #44444488 0 1px, transparent 1px 100%); 
                             background-size: 120px 100%, 30px 100%; background-position: left top;">
-                    </div>
+                </div>
             </div>
             <div id="timeline-tracks-container" class="flex-grow overflow-auto relative w-full">
                 <div id="timeline-tracks-area" class="relative" style="width: 4000px;">
-                    </div>
+                </div>
             </div>
-            <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-cyan-400 dark:bg-cyan-300 z-10 pointer-events-none" style="display:none;"></div>
+            <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-cyan-400 dark:bg-cyan-300 z-30 pointer-events-none" style="display:none;"></div>
         </div>
     `;
     
@@ -841,13 +800,13 @@ export function openTimelineWindow(savedState = null) {
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
     const timelineOptions = {
         width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)),
-        height: 280, // Slightly increased default height
+        height: 280, 
         x: 30,
         y: 50,
         minWidth: 400,
-        minHeight: 200, // Increased min height
+        minHeight: 200, 
         initialContentKey: windowId,
-        onCloseCallback: () => {} // Placeholder
+        onCloseCallback: () => {} 
     };
      if (savedState) {
         Object.assign(timelineOptions, {
@@ -861,27 +820,31 @@ export function openTimelineWindow(savedState = null) {
     }
     const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
     if (timelineWindow?.element) {
-        const contentArea = timelineWindow.element.querySelector('.window-content'); // SnugWindow's content area
-        const tracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); // Our specific scrollable div
+        const tracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); 
 
-        // Attach scroll listener to the #timeline-tracks-container for horizontal scrolling of tracks
-        // and to the .window-content for vertical scrolling of the whole timeline content (if it overflows)
         const scrollSyncHandler = () => {
             const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-            if (ruler && tracksContainer) { // tracksContainer is the one scrolling horizontally for tracks
+            const playhead = timelineWindow.element.querySelector('#timeline-playhead');
+            const trackNameWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim()) || 120;
+
+            if (ruler && tracksContainer) { 
                 ruler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
             }
-            updatePlayheadPosition(); // Update playhead based on overall scroll
+            // Adjust playhead based on tracksContainer scroll, not window-content scroll
+            if (playhead && Tone.Transport.state !== 'stopped' && localAppServices.getPlaybackMode && localAppServices.getPlaybackMode() === 'timeline') {
+                 const pixelsPerSecond = 30;
+                 const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
+                 playhead.style.left = `${trackNameWidth + rawNewPosition - tracksContainer.scrollLeft}px`;
+            } else if (playhead && Tone.Transport.state === 'stopped') {
+                 playhead.style.left = `${trackNameWidth - tracksContainer.scrollLeft}px`;
+            }
+            // No need to call updatePlayheadPosition() here as this IS the update logic for scroll.
         };
 
         if (tracksContainer) {
             tracksContainer.addEventListener('scroll', scrollSyncHandler);
         }
-        if (contentArea && contentArea !== tracksContainer) { // If window-content is a different scroller (e.g. for vertical)
-            contentArea.addEventListener('scroll', scrollSyncHandler);
-        }
-
-        // Initial render
+        
         renderTimeline();
     }
     return timelineWindow;
