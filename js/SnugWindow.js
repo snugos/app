@@ -11,7 +11,7 @@ export class SnugWindow {
         this.taskbarButton = null;
         this.onCloseCallback = options.onCloseCallback || (() => {});
         this.isMaximized = false;
-        this.restoreState = {}; // To store position/size before maximizing
+        this.restoreState = {};
         this.appServices = appServices || {};
 
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
@@ -21,6 +21,7 @@ export class SnugWindow {
             return;
         }
 
+        // ... (rest of constructor remains the same as your last provided version) ...
         const bottomTaskbarEl = this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar');
         const bottomTaskbarHeight = bottomTaskbarEl?.offsetHeight > 0 ? bottomTaskbarEl.offsetHeight : 32;
 
@@ -122,7 +123,7 @@ export class SnugWindow {
 
         const titleSpan = document.createElement('span');
         titleSpan.textContent = this.title;
-        titleSpan.style.pointerEvents = 'none'; // Prevent span from interfering with titleBar drag
+        titleSpan.style.pointerEvents = 'none';
 
         this.titleBar.appendChild(titleSpan);
         const titleButtonsDiv = document.createElement('div');
@@ -190,6 +191,7 @@ export class SnugWindow {
     }
 
     initInteract() {
+        // ... (initInteract method remains the same as your last provided version with the bottom-right resize change)
         if (!window.interact) {
             console.error("Interact.js not loaded! Window interactions will not work.");
             return;
@@ -332,9 +334,7 @@ export class SnugWindow {
         if (this.options.resizable) {
             interact(this.element)
                 .resizable({
-                    // MODIFICATION: Changed edges to only allow resizing from bottom, right,
-                    // which effectively means the bottom-right corner is the active resize area.
-                    edges: { left: false, right: true, bottom: true, top: false },
+                    edges: { left: false, right: true, bottom: true, top: false }, // Restricted to bottom-right
                     listeners: {
                         start: (event) => {
                             if (this.isMaximized) {
@@ -351,9 +351,6 @@ export class SnugWindow {
                             this.element.style.width = `${event.rect.width}px`;
                             this.element.style.height = `${event.rect.height}px`;
 
-                            // Translate when resizing from top or left edges (though top/left are now disabled)
-                            // This part of the logic might be less relevant with only bottom/right active,
-                            // but keeping it doesn't harm if edges were re-enabled.
                             x += event.deltaRect.left;
                             y += event.deltaRect.top;
 
@@ -382,8 +379,8 @@ export class SnugWindow {
                 });
         }
     }
-
     toggleMaximize() {
+        // ... (toggleMaximize method remains the same)
         if (!this.element) return;
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         const bottomTaskbarEl = this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar');
@@ -400,6 +397,7 @@ export class SnugWindow {
         const interactable = interact(this.element);
         const bottomTaskbarHeight = bottomTaskbarEl.offsetHeight > 0 ? bottomTaskbarEl.offsetHeight : 32;
         const topTaskbarHeight = topTaskbarEl.offsetHeight > 0 ? topTaskbarEl.offsetHeight : 32;
+
 
         if (this.isMaximized) {
             this.element.style.left = this.restoreState.left || `${this.options.x}px`;
@@ -430,6 +428,7 @@ export class SnugWindow {
     }
 
     createTaskbarButton() {
+        // ... (createTaskbarButton method remains the same)
         const taskbarButtonsContainer = this.appServices.uiElementsCache?.taskbarButtonsContainer || document.getElementById('taskbarButtons');
         if (!taskbarButtonsContainer) {
             console.warn(`[SnugWindow ${this.id}] Taskbar buttons container not found.`);
@@ -498,6 +497,7 @@ export class SnugWindow {
     }
 
     updateTaskbarButtonActiveState() {
+        // ... (updateTaskbarButtonActiveState method remains the same)
         if (!this.taskbarButton || !this.element) return;
         const currentHighestZ = this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100;
         const isActive = !this.isMinimized && parseInt(this.element.style.zIndex) === currentHighestZ;
@@ -506,6 +506,7 @@ export class SnugWindow {
     }
 
     minimize(skipUndo = false) {
+        // ... (minimize method remains the same)
         if (!this.element || this.isMinimized) return;
         this.isMinimized = true;
         this.element.classList.add('minimized');
@@ -538,6 +539,7 @@ export class SnugWindow {
     }
 
     restore(skipUndo = false) {
+        // ... (restore method remains the same)
         if (!this.element) return;
         const wasMinimized = this.isMinimized;
         if (this.isMinimized) {
@@ -549,45 +551,64 @@ export class SnugWindow {
         this.updateTaskbarButtonActiveState();
     }
 
+    // MODIFICATION: Added more robust checks and logging to the close method
     close(isReconstruction = false) {
+        console.log(`[SnugWindow ${this.id}] close() called for "${this.title}". IsReconstruction: ${isReconstruction}`);
+
         if (window.interact && this.element && interact.isSet(this.element)) {
             try {
                 interact(this.element).unset();
+                // console.log(`[SnugWindow ${this.id}] Interact.js instance unset.`);
             } catch (e) {
                 console.warn(`[SnugWindow ${this.id}] Error unsetting Interact.js instance:`, e.message);
             }
         }
 
         if (this.onCloseCallback && typeof this.onCloseCallback === 'function') {
-            try { this.onCloseCallback(); }
-            catch (e) { console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e); }
+            try {
+                // console.log(`[SnugWindow ${this.id}] Calling onCloseCallback.`);
+                this.onCloseCallback();
+            } catch (e) {
+                console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e);
+            }
         }
 
         if (this.taskbarButton) {
-            try { this.taskbarButton.remove(); }
-            catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing taskbar button:`, e.message); }
+            try {
+                this.taskbarButton.remove();
+                // console.log(`[SnugWindow ${this.id}] Taskbar button removed.`);
+            } catch(e) {
+                console.warn(`[SnugWindow ${this.id}] Error removing taskbar button:`, e.message);
+            }
             this.taskbarButton = null;
         }
+
         if (this.element) {
-            try { this.element.remove(); }
-            catch(e) { console.warn(`[SnugWindow ${this.id}] Error removing window element:`, e.message); }
+            try {
+                this.element.remove();
+                // console.log(`[SnugWindow ${this.id}] Window element removed from DOM.`);
+            } catch(e) {
+                console.warn(`[SnugWindow ${this.id}] Error removing window element:`, e.message);
+            }
             this.element = null;
         }
 
         const oldWindowTitle = this.title;
         if (this.appServices.removeWindowFromStore) {
             this.appServices.removeWindowFromStore(this.id);
+            // console.log(`[SnugWindow ${this.id}] Removed from window store.`);
         } else {
             console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available.`);
         }
 
         const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
-        if (!isCurrentlyReconstructing && !isReconstruction) {
+        if (!isCurrentlyReconstructing && !isReconstruction && this.appServices.captureStateForUndo) {
             this._captureUndo(`Close window "${oldWindowTitle}"`);
         }
+        // console.log(`[SnugWindow ${this.id}] close() finished for "${oldWindowTitle}".`);
     }
-
     focus(skipUndoForFocusItself = false) {
+        // ... (focus method remains the same)
         if (!this.element || !this.appServices.getHighestZ || !this.appServices.incrementHighestZ || !this.appServices.setHighestZ) {
             return;
         }
@@ -613,6 +634,7 @@ export class SnugWindow {
     }
 
     applyState(state) {
+        // ... (applyState method remains the same)
         if (!this.element) {
             console.error(`[SnugWindow ${this.id} applyState] Window element does not exist. Cannot apply state for "${state?.title}".`);
             return;
