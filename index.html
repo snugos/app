@@ -32,43 +32,48 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-slate-200">
 
-    <div id="topTaskbar" class="fixed top-0 left-0 right-0 h-16 bg-gray-200 dark:bg-slate-800 border-b border-gray-300 dark:border-slate-700 shadow-md z-[10001] flex items-center justify-between px-3">
+    <div id="topTaskbar" class="fixed top-0 left-0 right-0 h-16 bg-gray-200 dark:bg-slate-800 border-b border-gray-300 dark:border-slate-700 shadow-md z-[10001] flex items-center justify-between px-4">
         <div id="globalControlsContainer" class="flex items-center space-x-2">
-            <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="px-3 py-1.5 rounded font-semibold shadow-md transition-colors duration-150 bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700">Play</button>
-            <button id="stopBtnGlobal" title="Stop All Audio (Panic)" class="px-3 py-1.5 rounded font-semibold shadow-md transition-colors duration-150 bg-yellow-500 hover:bg-yellow-600 text-white dark:bg-yellow-500 dark:hover:bg-yellow-600">Stop</button>
-            <button id="recordBtnGlobal" title="Record Arm/Disarm" class="px-3 py-1.5 rounded font-semibold shadow-md transition-colors duration-150 bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700">Record</button>
+            <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="p-2 rounded-md font-semibold shadow-md transition-colors duration-150 bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700 flex items-center justify-center w-10 h-10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M8 5v14l11-7z"></path></svg>
+            </button>
+            <button id="stopBtnGlobal" title="Stop All Audio (Panic)" class="p-2 rounded-md font-semibold shadow-md transition-colors duration-150 bg-yellow-500 hover:bg-yellow-600 text-white dark:bg-yellow-500 dark:hover:bg-yellow-600 flex items-center justify-center w-10 h-10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M6 6h12v12H6z"></path></svg>
+            </button>
+            <button id="recordBtnGlobal" title="Record Arm/Disarm" class="p-2 rounded-md font-semibold shadow-md transition-colors duration-150 bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700 flex items-center justify-center w-10 h-10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-white"><circle cx="12" cy="12" r="8"></circle></svg>
+            </button>
             
-            <div class="flex items-center space-x-1 ml-2">
+            <div class="flex items-center space-x-1 ml-3">
                 <label for="tempoGlobalInput" class="text-xs font-medium text-gray-600 dark:text-slate-400">Tempo:</label>
-                <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-20 p-1 border border-gray-400 dark:border-slate-600 rounded shadow-sm text-xs bg-white dark:bg-slate-700 text-gray-800 dark:text-slate-200 focus:ring-blue-500 focus:border-blue-500">
+                <input type="number" id="tempoGlobalInput" value="120" min="30" max="300" step="0.1" class="w-20 p-1.5 border border-gray-400 dark:border-slate-600 rounded shadow-sm text-xs bg-white dark:bg-slate-700 text-gray-800 dark:text-slate-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
-            <div class="flex items-center space-x-1 ml-2">
+            <div class="flex items-center space-x-1 ml-3">
                 <label for="midiInputSelectGlobal" class="text-xs font-medium text-gray-600 dark:text-slate-400">MIDI:</label>
-                <select id="midiInputSelectGlobal" class="max-w-xs p-1 border border-gray-400 dark:border-slate-600 rounded shadow-sm text-xs bg-white dark:bg-slate-700 text-gray-800 dark:text-slate-200 focus:ring-blue-500 focus:border-blue-500">
+                <select id="midiInputSelectGlobal" class="max-w-xs p-1.5 border border-gray-400 dark:border-slate-600 rounded shadow-sm text-xs bg-white dark:bg-slate-700 text-gray-800 dark:text-slate-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">No MIDI Input</option>
                 </select>
             </div>
-             <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="ml-2 px-3 py-1.5 rounded font-semibold shadow-md transition-colors duration-150 bg-sky-500 hover:bg-sky-600 text-white dark:bg-sky-600 dark:hover:bg-sky-700">Mode: Sequencer</button>
+             <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="ml-3 px-3 py-1.5 rounded font-semibold shadow-md transition-colors duration-150 bg-sky-500 hover:bg-sky-600 text-white dark:bg-sky-600 dark:hover:bg-sky-700 text-sm">Mode: Sequencer</button>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <div class="flex items-center space-x-1">
-                <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-0.5 text-xs rounded-full font-medium transition-colors duration-150 bg-gray-300 text-gray-700 dark:bg-slate-600 dark:text-slate-300">MIDI</span>
-                <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-0.5 text-xs rounded-full font-medium transition-colors duration-150 bg-gray-300 text-gray-700 dark:bg-slate-600 dark:text-slate-300">KBD</span>
+        <div class="flex items-center space-x-4 ml-auto">
+            <div class="flex items-center space-x-2">
+                <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2.5 py-1 text-xs rounded-full font-medium transition-colors duration-150 bg-gray-300 text-gray-700 dark:bg-slate-600 dark:text-slate-300">MIDI</span>
+                <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2.5 py-1 text-xs rounded-full font-medium transition-colors duration-150 bg-gray-300 text-gray-700 dark:bg-slate-600 dark:text-slate-300">KBD</span>
             </div>
-            <div id="masterMeterContainerGlobal" class="h-4 w-28 bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden shadow-inner">
+            <div id="masterMeterContainerGlobal" class="h-5 w-32 bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden shadow-inner">
                 <div id="masterMeterBarGlobal" class="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
-        </div>
-
-        <div class="flex items-center space-x-2">
-            <button id="themeToggleLight" title="Switch to Light Mode" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-yellow-500 dark:text-yellow-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            </button>
-            <button id="themeToggleDark" title="Switch to Dark Mode" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-indigo-500 dark:text-indigo-400">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            </button>
+            <div class="flex items-center space-x-1">
+                <button id="themeToggleLight" title="Switch to Light Mode" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-yellow-500 dark:text-yellow-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                </button>
+                <button id="themeToggleDark" title="Switch to Dark Mode" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-indigo-500 dark:text-indigo-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -92,7 +97,7 @@
             <li id="menuOpenSoundBrowser" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Sound Browser</li>
             <li><hr class="my-1 border-gray-300 dark:border-slate-600"></li>
             <li id="menuOpenTimeline" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Timeline</li>
-            <li id="menuOpenGlobalControls" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Global Controls (Window)</li> <li id="menuOpenMixer" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Mixer</li>
+            <li id="menuOpenMixer" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Mixer</li>
             <li id="menuOpenMasterEffects" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Master Effects Rack</li>
             <li><hr class="my-1 border-gray-300 dark:border-slate-600"></li>
             <li id="menuUndo" class="disabled px-3 py-1.5 cursor-default opacity-50" title="Undo">Undo</li>
@@ -108,7 +113,9 @@
 
     <input type="file" id="loadProjectInput" class="hidden" accept=".snug">
     <input type="file" id="customBgInput" class="hidden" accept="image/*">
-    <input type="file" id="sampleFileInput" class="hidden" accept="audio/*"> <div id="notification-area" class="fixed top-20 right-5 z-[20000] space-y-2"></div>
+    <input type="file" id="sampleFileInput" class="hidden" accept="audio/*"> 
+
+    <div id="notification-area" class="fixed top-20 right-5 z-[20000] space-y-2"></div>
     <div id="modalContainer"></div>
 
     <script type="module" src="js/main.js"></script>
