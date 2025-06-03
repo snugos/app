@@ -102,7 +102,7 @@
     --timeline-track-name-width: 130px; /* Slightly wider for light mode readability */
     --timeline-track-name-bg: #f8f9fa; 
     --timeline-border-color: #ced4da;
-    --timeline-ruler-bg: #e9ecef;
+    --timeline-ruler-bg: #e9edf0;
     --timeline-ruler-line-major: #adb5bd;
     --timeline-ruler-line-minor: #ced4da;
     --timeline-track-bg-odd: #f8f9fa;
@@ -240,7 +240,6 @@ body {
     overflow: hidden; 
     position: relative; 
     background-color: var(--bg-desktop); 
-    /* Padding is set in index.html (pt-8 pb-8) to account for taskbars */
     box-sizing: border-box;
 }
 
@@ -256,7 +255,7 @@ body {
     min-width: 150px; 
     min-height: 100px;
     color: var(--text-primary); 
-    border-radius: 6px; /* Slightly more rounded for a modern feel */
+    border-radius: 6px; 
 }
 
 .window.minimized {
@@ -273,8 +272,8 @@ body {
     align-items: center;
     height: 32px; 
     flex-shrink: 0; 
-    font-size: 0.875rem; /* 14px */
-    font-weight: 500; /* Medium */
+    font-size: 0.875rem; 
+    font-weight: 500; 
     user-select: none; 
     border-bottom: 1px solid var(--border-window-title-bar); 
     border-top-left-radius: 5px; 
@@ -294,7 +293,7 @@ body {
 }
 
 .window-title-buttons button {
-    background: transparent; /* Make buttons less obtrusive */
+    background: transparent; 
     border: 1px solid transparent; 
     color: var(--text-muted); 
     width: 24px; 
@@ -329,17 +328,40 @@ body {
     border-bottom-right-radius: 5px;
 }
 
+/* MODIFIED: Added style for the new resizer handle */
+.window-resizer-handle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+    z-index: 1; /* Ensure it's above content but below other windows */
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" fill=\"none\" stroke=\"%23888888\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M11 1L1 11M11 5L5 11M11 9L9 11\"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+.window-resizer-handle:hover {
+    opacity: 1;
+}
+html.dark .window-resizer-handle {
+     background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" fill=\"none\" stroke=\"%23cccccc\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M11 1L1 11M11 5L5 11M11 9L9 11\"/></svg>');
+}
+
+
 /* --- Taskbar Styling (Top and Bottom) --- */
 #taskbar, #topTaskbar {
     position: fixed;
     left: 0;
     width: 100%;
-    height: var(--bottom-taskbar-height); /* Use CSS var */
+    height: var(--bottom-taskbar-height); 
     background-color: var(--bg-taskbar); 
     z-index: 10000; 
     display: flex;
     align-items: center;
-    padding: 0 8px; /* Increased padding slightly */
+    padding: 0 8px; 
     box-sizing: border-box;
     color: var(--text-secondary); 
     transition: background-color 0.2s ease-out, border-color 0.2s ease-out;
@@ -350,51 +372,17 @@ body {
 }
 #topTaskbar { 
     top: 0;
-    height: var(--top-taskbar-height); /* Use CSS var */
+    height: var(--top-taskbar-height); 
     border-bottom: 1px solid var(--border-primary);
     justify-content: space-between; 
 }
-
-/* Theme Toggle Buttons in Top Taskbar */
-#topTaskbar .theme-toggle-button { /* Common class for theme buttons */
-    background: transparent;
-    border: none;
-    padding: 4px;
-    border-radius: 50%;
-    cursor: pointer;
-    color: var(--text-muted); /* Default icon color */
-    transition: background-color 0.2s ease, color 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#topTaskbar .theme-toggle-button:hover {
-    background-color: var(--bg-button-hover);
-    color: var(--text-button-hover); /* Icon color on hover */
-}
-#topTaskbar .theme-toggle-button svg {
-    width: 18px; /* Adjust icon size as needed */
-    height: 18px;
-    stroke-width: 2;
-}
-/* Highlight active theme button */
-html.dark #themeToggleDark,
-html:not(.dark) #themeToggleLight {
-    background-color: var(--accent-primary) !important; 
-    color: white !important; /* Icon color when active */
-}
-html.dark #themeToggleDark svg,
-html:not(.dark) #themeToggleLight svg {
-    stroke: white; /* Ensure SVG stroke is white when button is active */
-}
-
 
 #startButton {
     background-color: var(--bg-button); 
     border: 1px solid var(--border-button);
     box-shadow: var(--shadow-button-inset);
     padding: 4px 12px; 
-    font-weight: 500; /* Medium weight */
+    font-weight: 500;
     margin-right: 6px;
     color: var(--text-button); 
     border-radius: 4px;
@@ -465,7 +453,7 @@ html:not(.dark) #themeToggleLight svg {
     border: 1px solid var(--border-primary); 
     box-shadow: var(--shadow-start-menu);
     z-index: 10001; 
-    padding: 6px; /* Increased padding */
+    padding: 6px; 
     min-width: 230px; 
     color: var(--text-primary); 
     border-radius: 5px; 
@@ -481,7 +469,7 @@ html:not(.dark) #themeToggleLight svg {
 
 /* --- Pad Button Styling --- */
 .pad-button {
-    padding: 10px; /* Increased padding */
+    padding: 10px; 
     border: 1px solid var(--border-pad-button); 
     background-color: var(--bg-pad-button); 
     color: var(--text-secondary); 
@@ -497,11 +485,11 @@ html:not(.dark) #themeToggleLight svg {
     transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
     overflow: hidden; 
     position: relative; 
-    border-radius: 5px; /* More rounded */
+    border-radius: 5px; 
 }
 .pad-button:hover {
     background-color: var(--bg-pad-button-hover); 
-    border-color: var(--border-pad-button-selected); /* Accent on hover */
+    border-color: var(--border-pad-button-selected); 
 }
 .pad-button:active, .pad-button.selected-for-edit {
     background-color: var(--bg-pad-button-active); 
@@ -511,10 +499,10 @@ html:not(.dark) #themeToggleLight svg {
 .pad-button.selected-for-edit {
     border-color: var(--border-pad-button-selected); 
     border-width: 2px;
-    padding: 9px; /* Adjust padding for border */
+    padding: 9px; 
 }
 .pad-label {
-    font-size: 0.7rem; /* Slightly larger */
+    font-size: 0.7rem; 
     color: var(--text-muted); 
     display: block;
     margin-top: 5px;
@@ -571,7 +559,7 @@ html:not(.dark) #themeToggleLight svg {
     border-radius: 50%;
     position: relative;
     border: 1px solid var(--border-button); 
-    box-shadow: var(--shadow-button-inset), 0 1px 2px rgba(0,0,0,0.1); /* Added subtle outer shadow */
+    box-shadow: var(--shadow-button-inset), 0 1px 2px rgba(0,0,0,0.1); 
     cursor: ns-resize; 
 }
 .knob-handle {
@@ -607,7 +595,7 @@ button.active { background-color: var(--accent-primary) !important; color: white
     background-color: var(--bg-window-title-bar); 
     z-index: 30; 
     border-bottom: 1px solid var(--border-window-title-bar);
-    padding: 0.35rem 0.5rem; /* Adjusted padding */
+    padding: 0.35rem 0.5rem; 
     color: var(--text-title-bar); 
 }
 .sequencer-container .controls input,
@@ -631,9 +619,9 @@ button.active { background-color: var(--accent-primary) !important; color: white
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.7rem; /* Slightly larger step text */
+    font-size: 0.7rem; 
     border: 1px solid var(--border-sequencer); 
-    border-radius: 2px; /* Subtle rounding for cells */
+    border-radius: 2px; 
 }
 
 .sequencer-grid-layout .sequencer-header-cell {
@@ -671,7 +659,7 @@ button.active { background-color: var(--accent-primary) !important; color: white
 
 .sequencer-step-cell:hover {
     background-color: var(--bg-sequencer-step-hover) !important; 
-    transform: scale(1.05); /* Slight scale on hover */
+    transform: scale(1.05); 
 }
 
 .sequencer-step-cell.active-synth,
@@ -679,7 +667,7 @@ button.active { background-color: var(--accent-primary) !important; color: white
 .sequencer-step-cell.active-drum-sampler,
 .sequencer-step-cell.active-instrument-sampler { 
     color: white !important; 
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2); /* Inner shadow for depth */
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.2); 
 } 
 .sequencer-step-cell.active-synth { background-color: var(--sequencer-active-synth) !important; }
 .sequencer-step-cell.active-sampler { background-color: var(--sequencer-active-sampler) !important; }
@@ -689,15 +677,15 @@ button.active { background-color: var(--accent-primary) !important; color: white
 
 .sequencer-step-cell.playing {
     outline: 2px solid var(--sequencer-playing-outline); 
-    outline-offset: -1px; /* Adjust offset for new cell size */
+    outline-offset: -1px; 
     z-index: 5; 
-    transform: scale(1.1); /* Slightly larger when playing */
+    transform: scale(1.1); 
 }
 
 /* --- Notification Area --- */
 #notification-area { 
     position: fixed;
-    top: calc(var(--top-taskbar-height) + 10px); /* Position below top taskbar */
+    top: calc(var(--top-taskbar-height) + 10px); 
     right: 10px;
     z-index: 20000; 
     display: flex;
@@ -705,13 +693,13 @@ button.active { background-color: var(--accent-primary) !important; color: white
     gap: 8px;
 }
 .notification-message { 
-    background-color: var(--bg-modal-overlay); /* Use modal overlay for consistency */
-    color: white; /* Ensure text is readable on dark overlay */
+    background-color: var(--bg-modal-overlay); 
+    color: white; 
     padding: 12px 18px;
     border-radius: 5px;
     box-shadow: var(--shadow-modal);
     opacity: 0;
-    transform: translateX(20px); /* Slide in from right */
+    transform: translateX(20px); 
     transition: opacity 0.3s ease, transform 0.3s ease;
     font-size: 0.9rem;
     max-width: 320px;
@@ -745,7 +733,7 @@ button.active { background-color: var(--accent-primary) !important; color: white
     height: 100%;
     width: 0%;
     transition: width 0.05s linear;
-    border-radius: 2px; /* Slight rounding on the bar itself */
+    border-radius: 2px; 
 }
 .meter-bar.clipping {
     background-color: var(--meter-bar-clipping-color); 
@@ -765,10 +753,10 @@ button.active { background-color: var(--accent-primary) !important; color: white
     background-color: var(--bg-modal-dialog); 
     border: 1px solid var(--border-modal); 
     box-shadow: var(--shadow-modal);
-    min-width: 320px; max-width: 90%; max-height: 90vh; /* Adjusted min-width */
+    min-width: 320px; max-width: 90%; max-height: 90vh; 
     display: flex; flex-direction: column;
     color: var(--text-primary); 
-    border-radius: 6px; /* Match window rounding */
+    border-radius: 6px; 
 }
 .modal-title-bar {
     background-color: var(--bg-modal-title-bar); 
@@ -790,7 +778,7 @@ button.active { background-color: var(--accent-primary) !important; color: white
 .modal-buttons {
     padding: 12px 15px; text-align: right;
     border-top: 1px solid var(--border-primary); 
-    background-color: var(--bg-modal-title-bar); /* Match title bar for consistency */
+    background-color: var(--bg-modal-title-bar); 
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 }
@@ -829,18 +817,18 @@ select, input[type="text"], input[type="number"],
 .window-content select, .modal-content-body select,
 .window-content input[type="text"], .window-content input[type="number"],
 .modal-content-body input[type="text"], .modal-content-body input[type="number"],
-#topTaskbar input[type="number"], #topTaskbar select /* Styles for top taskbar inputs/selects */
+#topTaskbar input[type="number"], #topTaskbar select 
 {
     background-color: var(--bg-input); 
     color: var(--text-input); 
     border: 1px solid var(--border-input); 
     padding: 6px 10px; 
-    border-radius: 4px; /* Consistent rounding */
+    border-radius: 4px; 
     font-size: 0.875rem; 
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    line-height: 1.5; /* Ensure text is vertically centered */
+    line-height: 1.5; 
 }
-#topTaskbar input[type="number"], #topTaskbar select { /* Specific padding for taskbar elements */
+#topTaskbar input[type="number"], #topTaskbar select { 
     padding: 4px 8px;
     font-size: 0.8rem;
 }
@@ -852,7 +840,6 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus,
 #topTaskbar input[type="number"]:focus, #topTaskbar select:focus {
     border-color: var(--border-input-focus);
     outline: 0;
-    /* Slightly softer focus shadow */
     box-shadow: 0 0 0 0.15rem rgba(0,123,255,.2); 
 }
 
@@ -875,7 +862,7 @@ input::placeholder,
 ::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb); 
     border-radius: 3px; 
-    border: 2px solid var(--scrollbar-track); /* Creates padding around thumb */
+    border: 2px solid var(--scrollbar-track); 
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-thumb-hover); 
@@ -883,7 +870,7 @@ input::placeholder,
 ::-webkit-scrollbar-corner {
     background: var(--scrollbar-track); 
 }
-* { /* Firefox scrollbar styling */
+* { 
   scrollbar-width: thin; 
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); 
 }
@@ -893,7 +880,7 @@ input::placeholder,
     background-color: var(--bg-context-menu); 
     border: 1px solid var(--border-context-menu);   
     box-shadow: var(--shadow-context-menu);
-    padding: 5px 0; /* Increased padding */
+    padding: 5px 0; 
     min-width: 190px;
     border-radius: 5px; 
     color: var(--text-context-menu); 
@@ -907,7 +894,7 @@ input::placeholder,
 }
 
 .context-menu-item {
-    padding: 8px 18px 8px 15px; /* Adjusted padding */
+    padding: 8px 18px 8px 15px; 
     cursor: pointer;
     font-size: 0.875rem;
     white-space: nowrap;
@@ -961,7 +948,6 @@ input::placeholder,
     background-position: left top; 
     position: absolute;
     top: 0;
-    /* left is adjusted by JS to account for track name width */
 }
 
 #timeline-tracks-container {
@@ -997,9 +983,9 @@ input::placeholder,
 .timeline-track-lane-name-area { 
     position: sticky;
     left: 0;
-    z-index: 20; /* Higher than clips */
+    z-index: 20; 
     background-color: var(--timeline-track-name-bg);
-    padding: 0 10px; /* Increased padding */
+    padding: 0 10px; 
     height: 100%;
     display: flex;
     flex-direction: column; 
@@ -1009,13 +995,13 @@ input::placeholder,
     min-width: var(--timeline-track-name-width);
     max-width: var(--timeline-track-name-width);
     box-sizing: border-box;
-    box-shadow: 2px 0 3px -1px rgba(0,0,0,0.05); /* Subtle shadow */
+    box-shadow: 2px 0 3px -1px rgba(0,0,0,0.05); 
     html.dark & {
         box-shadow: 2px 0 3px -1px rgba(0,0,0,0.2);
     }
 }
 .timeline-track-name-text { 
-    font-size: 0.875rem; /* Larger font */
+    font-size: 0.875rem; 
     font-weight: 500;
     color: var(--text-primary);
     white-space: nowrap;
@@ -1024,7 +1010,7 @@ input::placeholder,
     width: 100%;
 }
 .timeline-sequence-buttons { 
-    margin-top: 5px; /* More space */
+    margin-top: 5px; 
 }
 
 
@@ -1036,19 +1022,19 @@ input::placeholder,
     background-color: var(--timeline-playhead-color);
     z-index: 40; 
     pointer-events: none;
-    box-shadow: 0 0 5px var(--timeline-playhead-color); /* Add a glow */
+    box-shadow: 0 0 5px var(--timeline-playhead-color); 
 }
 
 .audio-clip, .sequence-clip { 
     position: absolute;
-    height: calc(80% - 2px); /* Account for border */
+    height: calc(80% - 2px); 
     top: 10%;
-    border-radius: 4px; /* Slightly more rounded */
+    border-radius: 4px; 
     box-sizing: border-box;
     overflow: hidden;
     color: white;
     font-size: 11px;
-    padding: 3px 6px; /* Increased padding */
+    padding: 3px 6px; 
     white-space: nowrap;
     text-overflow: ellipsis;
     cursor: grab;
@@ -1075,34 +1061,30 @@ input::placeholder,
 }
 
 
-/* Ensure .window-content for timeline has no padding if timeline-container handles it */
 #window-timeline .window-content {
     padding: 0;
 }
 
-/* Global control indicators in top taskbar */
 #topTaskbar #midiIndicatorGlobal.active, 
 #topTaskbar #keyboardIndicatorGlobal.active {
     background-color: var(--accent-info) !important;
     color: white !important;
-    box-shadow: 0 0 8px var(--accent-info); /* Add a glow */
+    box-shadow: 0 0 8px var(--accent-info); 
 }
 
 /* Unused classes from original file, can be removed if not needed elsewhere */
-.panel { /* ... unchanged ... */ }
-.control-group { /* ... unchanged ... */ }
-.single-control-container { /* ... unchanged ... */ }
-.window-resizer { /* ... unchanged ... */ }
-.modular-effects-rack { /* ... unchanged ... */ }
-.effects-list-container { /* ... unchanged ... */ }
-.effect-controls-panel { /* ... unchanged ... */ }
-.effect-item.dragging { /* ... unchanged ... */ }
-.effect-item.dragover-target { /* ... unchanged ... */ }
-.drop-zone-relink-container { /* ... unchanged ... */ }
-.drop-zone-relink-button { /* ... unchanged ... */ }
-.drop-zone-missing { /* ... unchanged ... */ }
-.drop-zone-error { /* ... unchanged ... */ }
-.drop-zone-loading { /* ... unchanged ... */ }
-.global-controls-window .flex { /* ... unchanged ... */ }
-.global-controls-window label { /* ... unchanged ... */ }
-
+.panel { }
+.control-group { }
+.single-control-container { }
+.modular-effects-rack { }
+.effects-list-container { }
+.effect-controls-panel { }
+.effect-item.dragging { }
+.effect-item.dragover-target { }
+.drop-zone-relink-container { }
+.drop-zone-relink-button { }
+.drop-zone-missing { }
+.drop-zone-error { }
+.drop-zone-loading { }
+.global-controls-window .flex { }
+.global-controls-window label { }
