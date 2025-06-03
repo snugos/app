@@ -20,23 +20,28 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar;
 
     // Tailwind: main container, controls styling
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full bg-gray-800 dark:bg-slate-900 text-slate-300 dark:text-slate-300">
-        <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-700 dark:bg-slate-800 p-1.5 z-30 border-b border-gray-600 dark:border-slate-700 rounded-t-md">
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full bg-gray-800 dark:bg-slate-900 text-slate-300 dark:text-slate-300 rounded-b-md">
+        <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-700 dark:bg-slate-800 p-1.5 z-30 border-b border-gray-600 dark:border-slate-700 rounded-t-md shadow">
             <span class="font-semibold text-sm text-slate-100 dark:text-slate-100">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span>
             <div class="flex items-center space-x-2">
                 <label for="seqLengthInput-${track.id}" class="text-xs text-slate-300 dark:text-slate-400">Bars:</label>
                 <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" 
-                       class="w-16 p-1 border border-gray-500 dark:border-slate-600 rounded text-xs bg-gray-600 dark:bg-slate-700 text-slate-100 dark:text-slate-200 focus:ring-blue-500 focus:border-blue-500">
+                       class="w-16 p-1 border border-gray-500 dark:border-slate-600 rounded text-xs bg-gray-600 dark:bg-slate-700 text-slate-100 dark:text-slate-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
             </div>
         </div>`;
     
     // Tailwind: grid layout, sticky headers/labels, borders, backgrounds
-    html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 60px repeat(${totalSteps}, 22px); grid-auto-rows: 22px; gap: 1px; width: fit-content; position: relative; background-color: #2d3748; /* bg-slate-800 */">
+    // Increased cell size slightly for better touch targets and visual separation
+    const cellSize = '24px'; // Was 22px
+    const labelWidth = '65px'; // Was 60px
+    html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: ${labelWidth} repeat(${totalSteps}, ${cellSize}); grid-auto-rows: ${cellSize}; gap: 1px; width: fit-content; position: relative; background-color: #1f2937; /* bg-gray-800 dark:bg-gray-900 */">
         <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-700 dark:bg-slate-800 border-r border-b border-gray-600 dark:border-slate-700"></div>`; // Top-left empty cell
     
     for (let i = 0; i < totalSteps; i++) {
         // Header cells for step numbers/bar markers
-        html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-700 dark:bg-slate-800 border-r border-b border-gray-600 dark:border-slate-700 flex items-center justify-center text-[10px] text-gray-400 dark:text-slate-400">
+        // Enhanced visibility for bar numbers
+        let barMarkerClass = (i % stepsPerBar === 0) ? 'font-semibold text-slate-200 dark:text-slate-200' : 'text-gray-500 dark:text-slate-400';
+        html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-700 dark:bg-slate-800 border-r border-b border-gray-600 dark:border-slate-700 flex items-center justify-center text-[10px] ${barMarkerClass}">
                     ${(i % stepsPerBar === 0) ? (Math.floor(i / stepsPerBar) + 1) : ((i % (stepsPerBar / 4) === 0) ? '&#x2022;' : '')}
                  </div>`;
     }
@@ -46,27 +51,38 @@ export function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 
     for (let i = 0; i < rows; i++) {
         let labelText = rowLabels[i] || `R${i + 1}`;
-        if (labelText.length > 7) labelText = labelText.substring(0, 6) + ".."; // Truncate long labels
-        // Row label cells
-        html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-700 dark:bg-slate-800 border-r border-b border-gray-600 dark:border-slate-700 flex items-center justify-end pr-1.5 text-[10px] text-slate-300 dark:text-slate-300" title="${rowLabels[i] || ''}">${labelText}</div>`;
+        if (labelText.length > 8) labelText = labelText.substring(0, 7) + "..."; // Truncate long labels slightly less aggressively
+        // Row label cells - increased padding and font size slightly
+        html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-700 dark:bg-slate-800 border-r border-b border-gray-600 dark:border-slate-700 flex items-center justify-end px-1.5 text-[11px] font-medium text-slate-300 dark:text-slate-300" title="${rowLabels[i] || ''}">${labelText}</div>`;
         
         for (let j = 0; j < totalSteps; j++) {
             const stepData = sequenceData[i]?.[j];
             let activeClass = '';
+            let activeStepSpecificStyles = ''; // For more distinct active steps
+
             if (stepData?.active) {
-                if (track.type === 'Synth') activeClass = 'bg-sky-500 dark:bg-sky-500';
-                else if (track.type === 'Sampler') activeClass = 'bg-teal-500 dark:bg-teal-500';
-                else if (track.type === 'DrumSampler') activeClass = 'bg-emerald-500 dark:bg-emerald-500';
-                else if (track.type === 'InstrumentSampler') activeClass = 'bg-cyan-500 dark:bg-cyan-500';
+                let baseColor = 'bg-gray-400 dark:bg-gray-500'; // Default active color
+                if (track.type === 'Synth') baseColor = 'bg-sky-500 dark:bg-sky-500';
+                else if (track.type === 'Sampler') baseColor = 'bg-teal-500 dark:bg-teal-500';
+                else if (track.type === 'DrumSampler') baseColor = 'bg-emerald-500 dark:bg-emerald-500';
+                else if (track.type === 'InstrumentSampler') baseColor = 'bg-cyan-500 dark:bg-cyan-500';
+                activeClass = `${baseColor} ring-1 ring-inset ring-black/20 dark:ring-white/20 shadow-inner`;
             }
-            // Alternating backgrounds for 4-step blocks, bar lines
-            let beatBlockClass = (Math.floor(j / 4) % 2 === 0) ? 'bg-gray-600 dark:bg-slate-700/80' : 'bg-gray-500 dark:bg-slate-700/60';
-            if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-500 dark:border-l-slate-500'; // Bar line
-            else if (j > 0 && j % (stepsPerBar / 2) === 0) beatBlockClass += ' border-l-gray-500 dark:border-l-slate-600'; // Half-bar line
-            else if (j > 0 && j % (stepsPerBar / 4) === 0) beatBlockClass += ' border-l-gray-600 dark:border-l-slate-650'; // Beat line
             
-            html += `<div class="sequencer-step-cell ${activeClass} ${beatBlockClass} border-r border-b border-gray-600 dark:border-slate-700 hover:bg-blue-400 dark:hover:bg-blue-600 cursor-pointer transition-colors duration-75" 
-                         data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}"></div>`;
+            // Alternating backgrounds for 4-step blocks, bar lines
+            // Made backgrounds slightly more distinct
+            let beatBlockClass = (Math.floor(j / 4) % 2 === 0) ? 'bg-gray-600/30 dark:bg-slate-700/60' : 'bg-gray-500/30 dark:bg-slate-700/40';
+            
+            if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-500 dark:border-l-slate-500'; // Bar line (thicker)
+            else if (j > 0 && j % (stepsPerBar / 2) === 0) beatBlockClass += ' border-l border-l-gray-500/70 dark:border-l-slate-600'; // Half-bar line
+            else if (j > 0 && j % (stepsPerBar / 4) === 0) beatBlockClass += ' border-l border-l-gray-600/50 dark:border-l-slate-650'; // Beat line
+            
+            html += `<div class="sequencer-step-cell ${beatBlockClass} border-r border-b border-gray-700/50 dark:border-slate-700/50 
+                                hover:bg-blue-500/60 dark:hover:bg-blue-500/60 cursor-pointer transition-colors duration-75 
+                                flex items-center justify-center rounded-sm ${activeClass}" 
+                         data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}">
+                         ${stepData?.active ? '<div class="w-3/5 h-3/5 rounded-full opacity-80 ' + activeClass.split(' ')[0] + ' shadow-md"></div>' : ''}
+                     </div>`;
         }
     }
     html += `</div></div>`; // Close grid-layout and sequencer-container
@@ -119,9 +135,9 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                            ? desktopEl.offsetWidth
                            : 1024;
     
-    let calculatedWidth = Math.max(450, Math.min(900, safeDesktopWidth - 40)); 
-    let calculatedHeight = Math.min(500, (rows * 23) + 80); 
-    calculatedHeight = Math.max(300, calculatedHeight); 
+    let calculatedWidth = Math.max(450, Math.min(1000, safeDesktopWidth - 40)); // Increased max width
+    let calculatedHeight = Math.min(600, (rows * 25) + 90); // Adjusted cell size (24px + 1px gap) + header/controls
+    calculatedHeight = Math.max(350, calculatedHeight); 
 
     if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) calculatedWidth = 600;
     if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) calculatedHeight = 400;
@@ -130,7 +146,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         width: calculatedWidth,
         height: calculatedHeight,
         minWidth: 400,
-        minHeight: 250,
+        minHeight: 300, // Increased min height
         initialContentKey: windowId,
         onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); }
     };
@@ -159,19 +175,15 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
         const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
 
-        // *** FIX for Interact.js error ***
         if (controlsDiv) {
-            controlsDiv.style.cursor = 'default'; // Ensure it's not showing a drag cursor
+            controlsDiv.style.cursor = 'default'; 
             if (window.interact) { 
-                const interactableInstance = interact(controlsDiv); // Get the interactable instance
-                if (interactableInstance && typeof interactableInstance.unset === 'function') { // Check if it's a valid interactable
+                const interactableInstance = interact(controlsDiv); 
+                if (interactableInstance && typeof interactableInstance.unset === 'function') { 
                     try {
-                        interactableInstance.unset(); // Unset it to remove draggable/resizable behaviors
-                        // console.log("[UI openTrackSequencerWindow] Successfully unset Interact.js from controlsDiv.");
+                        interactableInstance.unset(); 
                     } catch(e) {
-                        // This catch might not be strictly necessary if .unset() is safe on non-interactables,
-                        // but it's good for robustness.
-                        console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv (or it wasn't actively set for drag/resize):", e.message);
+                        console.warn("[UI openTrackSequencerWindow] Error trying to unset interactable from controlsDiv:", e.message);
                     }
                 }
             }
@@ -233,17 +245,26 @@ export function updateSequencerCellUI(sequencerWindowElement, trackType, row, co
     const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
 
-    cell.classList.remove('bg-sky-500', 'dark:bg-sky-500', 
-                          'bg-teal-500', 'dark:bg-teal-500',
-                          'bg-emerald-500', 'dark:bg-emerald-500',
-                          'bg-cyan-500', 'dark:bg-cyan-500');
+    // Remove all potential base active color classes first
+    const activeColorClasses = [
+        'bg-sky-500', 'dark:bg-sky-500', 
+        'bg-teal-500', 'dark:bg-teal-500',
+        'bg-emerald-500', 'dark:bg-emerald-500',
+        'bg-cyan-500', 'dark:bg-cyan-500'
+    ];
+    cell.classList.remove(...activeColorClasses, 'ring-1', 'ring-inset', 'ring-black/20', 'dark:ring-white/20', 'shadow-inner');
+    cell.innerHTML = ''; // Clear inner div for active state
+
     if (isActive) {
-        let activeClass = '';
-        if (trackType === 'Synth') activeClass = 'bg-sky-500 dark:bg-sky-500';
-        else if (trackType === 'Sampler') activeClass = 'bg-teal-500 dark:bg-teal-500';
-        else if (trackType === 'DrumSampler') activeClass = 'bg-emerald-500 dark:bg-emerald-500';
-        else if (trackType === 'InstrumentSampler') activeClass = 'bg-cyan-500 dark:bg-cyan-500';
-        if (activeClass) cell.classList.add(...activeClass.split(' '));
+        let baseColor = 'bg-gray-400 dark:bg-gray-500'; // Default if type unknown
+        if (trackType === 'Synth') baseColor = 'bg-sky-500 dark:bg-sky-500';
+        else if (trackType === 'Sampler') baseColor = 'bg-teal-500 dark:bg-teal-500';
+        else if (trackType === 'DrumSampler') baseColor = 'bg-emerald-500 dark:bg-emerald-500';
+        else if (trackType === 'InstrumentSampler') baseColor = 'bg-cyan-500 dark:bg-cyan-500';
+        
+        cell.classList.add(...baseColor.split(' '), 'ring-1', 'ring-inset', 'ring-black/20', 'dark:ring-white/20', 'shadow-inner');
+        // Add inner div for a more pronounced active state
+        cell.innerHTML = `<div class="w-3/5 h-3/5 rounded-full opacity-80 ${baseColor.split(' ')[0]} shadow-md"></div>`;
     }
 }
 
@@ -257,21 +278,24 @@ export function highlightPlayingStep(trackId, col) {
     if (seqWindowInstance && seqWindowInstance.element && !seqWindowInstance.isMinimized && seqWindowInstance.stepCellsGrid) {
         const activeSeq = track.getActiveSequence();
         const currentSeqLength = activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
+        const highlightClasses = ['ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-20', 'scale-105', 'shadow-lg']; // Enhanced highlight
 
+        // Remove 'playing' from the previously played column
         if (seqWindowInstance.lastPlayedCol !== -1 && seqWindowInstance.lastPlayedCol < currentSeqLength) {
             for (let i = 0; i < seqWindowInstance.stepCellsGrid.length; i++) {
                 const cell = seqWindowInstance.stepCellsGrid[i]?.[seqWindowInstance.lastPlayedCol];
                 if (cell) {
-                    cell.classList.remove('ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-10'); 
+                    cell.classList.remove(...highlightClasses);
                 }
             }
         }
 
+        // Add 'playing' to the current column
         if (col < currentSeqLength) {
             for (let i = 0; i < seqWindowInstance.stepCellsGrid.length; i++) {
                 const cell = seqWindowInstance.stepCellsGrid[i]?.[col];
                 if (cell) {
-                    cell.classList.add('ring-2', 'ring-offset-2', 'ring-yellow-400', 'dark:ring-yellow-300', 'dark:ring-offset-slate-900', 'z-10'); 
+                    cell.classList.add(...highlightClasses);
                 }
             }
         }
@@ -287,13 +311,13 @@ export function openMixerWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) { openWindows.get(windowId).restore(); return openWindows.get(windowId); }
 
     const contentContainer = document.createElement('div'); contentContainer.id = 'mixerContentContainer';
-    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-200 dark:bg-slate-800 flex space-x-2';
+    contentContainer.className = 'p-3 overflow-x-auto whitespace-nowrap h-full bg-gray-200 dark:bg-slate-800 flex space-x-3 rounded-b-md';
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const mixerOptions = { 
         width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40), 
-        height: 320, 
-        minWidth: 300, minHeight: 250, 
+        height: 350, // Increased height
+        minWidth: 300, minHeight: 280, // Adjusted minHeight
         initialContentKey: windowId 
     };
     if (savedState) Object.assign(mixerOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
@@ -313,12 +337,13 @@ export function renderMixer(container) {
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     container.innerHTML = ''; 
 
+    // Master Track Strip
     const masterTrackDiv = document.createElement('div');
-    masterTrackDiv.className = 'mixer-track master-track flex-shrink-0 p-2 border border-gray-400 dark:border-slate-600 rounded-lg bg-gray-300 dark:bg-slate-700 shadow-md w-28 text-xs flex flex-col items-center space-y-1';
+    masterTrackDiv.className = 'mixer-track master-track flex-shrink-0 p-3 border border-gray-400 dark:border-slate-600 rounded-lg bg-gray-300 dark:bg-slate-700 shadow-lg w-32 text-xs flex flex-col items-center space-y-2'; // Increased width and padding
     masterTrackDiv.innerHTML = `
-        <div class="track-name font-bold text-sm text-gray-800 dark:text-slate-100 truncate w-full text-center" title="Master">Master</div>
-        <div id="masterVolumeKnob-mixer-placeholder" class="h-20 w-full flex justify-center items-center my-1"></div>
-        <div id="mixerMasterMeterContainer" class="h-4 w-full bg-gray-400 dark:bg-slate-600 rounded border border-gray-500 dark:border-slate-500 overflow-hidden mt-1 shadow-inner">
+        <div class="track-name font-bold text-sm text-gray-800 dark:text-slate-100 truncate w-full text-center mb-1" title="Master">Master</div>
+        <div id="masterVolumeKnob-mixer-placeholder" class="h-24 w-full flex justify-center items-center my-1"></div>
+        <div id="mixerMasterMeterContainer" class="h-5 w-full bg-gray-400 dark:bg-slate-600 rounded border border-gray-500 dark:border-slate-500 overflow-hidden mt-1 shadow-inner">
             <div id="mixerMasterMeterBar" class="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-50 ease-linear" style="width: 0%;"></div>
         </div>`;
     container.appendChild(masterTrackDiv);
@@ -339,17 +364,18 @@ export function renderMixer(container) {
         masterVolKnobPlaceholder.innerHTML = ''; masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
+    // Individual Track Strips
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'mixer-track flex-shrink-0 p-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 shadow-md w-28 text-xs flex flex-col items-center space-y-1';
+        trackDiv.className = 'mixer-track flex-shrink-0 p-3 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 shadow-lg w-32 text-xs flex flex-col items-center space-y-2';
         trackDiv.innerHTML = `
-            <div class="track-name font-semibold text-gray-800 dark:text-slate-200 truncate w-full text-center" title="${track.name}">${track.name}</div>
-            <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-20 w-full flex justify-center items-center my-1"></div>
-            <div class="grid grid-cols-2 gap-1 w-full my-1">
-                <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border border-gray-300 dark:border-slate-500 rounded text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600 ${track.isMuted ? 'bg-yellow-400 dark:bg-yellow-500 text-black dark:text-white' : 'bg-gray-200 dark:bg-slate-500'}">${track.isMuted ? 'U' : 'M'}</button>
-                <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border border-gray-300 dark:border-slate-500 rounded text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600 ${track.isSoloed ? 'bg-orange-400 dark:bg-orange-500 text-black dark:text-white' : 'bg-gray-200 dark:bg-slate-500'}">${track.isSoloed ? 'U' : 'S'}</button>
+            <div class="track-name font-semibold text-gray-800 dark:text-slate-200 truncate w-full text-center mb-1" title="${track.name}">${track.name}</div>
+            <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-24 w-full flex justify-center items-center my-1"></div>
+            <div class="grid grid-cols-2 gap-1.5 w-full my-1">
+                <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1.5 py-1 text-xs border border-gray-400 dark:border-slate-500 rounded font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600 ${track.isMuted ? 'bg-yellow-400 dark:bg-yellow-500 text-black dark:text-white' : 'bg-gray-200 dark:bg-slate-500'}">${track.isMuted ? 'Unmute' : 'Mute'}</button>
+                <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1.5 py-1 text-xs border border-gray-400 dark:border-slate-500 rounded font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600 ${track.isSoloed ? 'bg-orange-400 dark:bg-orange-500 text-black dark:text-white' : 'bg-gray-200 dark:bg-slate-500'}">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
             </div>
-            <div id="mixerTrackMeterContainer-${track.id}" class="h-4 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5 shadow-inner">
+            <div id="mixerTrackMeterContainer-${track.id}" class="h-5 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5 shadow-inner">
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 dark:bg-green-400 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>`;
 
@@ -395,7 +421,7 @@ export function renderMixer(container) {
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder && localAppServices.createKnob) { 
             const volKnob = localAppServices.createKnob({ 
-                label: `Vol ${track.id}`, 
+                label: ``, // Label can be omitted for a cleaner mixer strip if name is above
                 min: 0, max: 1.2, step: 0.01, 
                 initialValue: track.previousVolumeBeforeMute, 
                 decimals: 2, 
@@ -432,16 +458,16 @@ export function renderTimeline() {
 
     tracks.forEach(track => {
         const lane = document.createElement('div');
-        lane.className = 'timeline-track-lane h-14 flex items-center border-b border-gray-700 dark:border-slate-700 bg-gray-800 dark:bg-slate-800/70 odd:bg-gray-750 dark:odd:bg-slate-800/50 relative overflow-hidden'; 
+        lane.className = 'timeline-track-lane h-16 flex items-center border-b border-gray-700 dark:border-slate-700 bg-gray-800 dark:bg-slate-800/70 odd:bg-gray-750 dark:odd:bg-slate-800/50 relative overflow-hidden'; // Increased height
         lane.dataset.trackId = track.id;
 
         const nameArea = document.createElement('div');
-        nameArea.className = 'timeline-track-lane-name-area sticky left-0 z-20 bg-gray-700 dark:bg-slate-700/80 border-r border-gray-600 dark:border-slate-600 p-2 h-full flex flex-col items-start justify-center overflow-hidden'; 
+        nameArea.className = 'timeline-track-lane-name-area sticky left-0 z-20 bg-gray-700 dark:bg-slate-700/80 border-r border-gray-600 dark:border-slate-600 p-2 h-full flex flex-col items-start justify-center overflow-hidden shadow-sm'; 
         nameArea.style.minWidth = trackNameWidth + 'px';
         nameArea.style.maxWidth = trackNameWidth + 'px';
         
         const nameEl = document.createElement('div');
-        nameEl.className = 'timeline-track-name-text text-xs font-medium text-slate-100 dark:text-slate-100 whitespace-nowrap overflow-hidden text-ellipsis w-full mb-0.5'; 
+        nameEl.className = 'timeline-track-name-text text-sm font-medium text-slate-100 dark:text-slate-100 whitespace-nowrap overflow-hidden text-ellipsis w-full mb-1'; // Increased font size
         nameEl.textContent = track.name;
         nameEl.title = track.name; 
         nameArea.appendChild(nameEl);
@@ -452,7 +478,7 @@ export function renderTimeline() {
             
             track.sequences.forEach(sequence => {
                 const seqButton = document.createElement('div');
-                seqButton.className = 'sequence-timeline-button dragging-sequence-button text-[10px] px-1.5 py-0.5 border border-sky-700 dark:border-sky-600 rounded bg-sky-600 hover:bg-sky-500 text-white cursor-grab shadow';
+                seqButton.className = 'sequence-timeline-button dragging-sequence-button text-xs px-2 py-1 border border-sky-700 dark:border-sky-600 rounded bg-sky-600 hover:bg-sky-500 text-white cursor-grab shadow-md'; // Enhanced styling
                 seqButton.textContent = "Seq"; 
                 seqButton.title = `Drag Sequence: ${sequence.name}`;
                 seqButton.style.touchAction = 'none'; 
@@ -474,7 +500,7 @@ export function renderTimeline() {
                                 if (targetElement) {
                                     targetElement.dataset.dragType = 'sequence-timeline-drag'; 
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
-                                    targetElement.classList.add('opacity-75', 'ring-2', 'ring-sky-300'); 
+                                    targetElement.classList.add('opacity-75', 'ring-2', 'ring-sky-300', 'shadow-xl'); 
                                     targetElement.style.position = 'relative'; 
                                     targetElement.style.zIndex = '10001'; 
                                 }
@@ -495,7 +521,7 @@ export function renderTimeline() {
                             end: (event) => {
                                 const targetElement = event.interaction.element || event.target;
                                 if (targetElement) {
-                                    targetElement.classList.remove('opacity-75', 'ring-2', 'ring-sky-300');
+                                    targetElement.classList.remove('opacity-75', 'ring-2', 'ring-sky-300', 'shadow-xl');
                                     targetElement.style.transform = 'none';
                                     targetElement.removeAttribute('data-x');
                                     targetElement.removeAttribute('data-y');
@@ -525,18 +551,18 @@ export function renderTimeline() {
                     accept: '.audio-clip, .dragging-sound-item, .dragging-sequence-button', 
                     overlap: 0.01, 
                     ondropactivate: function (event) {
-                        event.target.classList.add('bg-slate-700/50'); 
+                        event.target.classList.add('bg-slate-700/70', 'dark:bg-slate-600/70'); 
                     },
                     ondragenter: function (event) {
                         const draggableElement = event.relatedTarget;
                         const dropzoneElement = event.target; 
-                        dropzoneElement.classList.add('bg-blue-600/30', 'dark:bg-blue-500/30'); 
-                        if (draggableElement) draggableElement.classList.add('ring-2', 'ring-green-400');  
+                        dropzoneElement.classList.add('bg-blue-700/40', 'dark:bg-blue-600/40'); 
+                        if (draggableElement) draggableElement.classList.add('ring-2', 'ring-green-300', 'dark:ring-green-400');  
                     },
                     ondragleave: function (event) {
                         const draggableElement = event.relatedTarget;
-                        event.target.classList.remove('bg-blue-600/30', 'dark:bg-blue-500/30');
-                        if (draggableElement) draggableElement.classList.remove('ring-2', 'ring-green-400');
+                        event.target.classList.remove('bg-blue-700/40', 'dark:bg-blue-600/40');
+                        if (draggableElement) draggableElement.classList.remove('ring-2', 'ring-green-300', 'dark:ring-green-400');
                     },
                     ondrop: function (event) {
                         const droppedClipElement = event.relatedTarget;
@@ -564,8 +590,8 @@ export function renderTimeline() {
                              dropXClient = event.clientX;
                         } else {
                             console.error("[TimelineLane ClipsContainer ONDROP] Cannot determine drop clientX coordinate from event:", event);
-                            event.target.classList.remove('bg-blue-600/30', 'dark:bg-blue-500/30');
-                            if(droppedClipElement) droppedClipElement.classList.remove('ring-2', 'ring-green-400');
+                            event.target.classList.remove('bg-blue-700/40', 'dark:bg-blue-600/40');
+                            if(droppedClipElement) droppedClipElement.classList.remove('ring-2', 'ring-green-300', 'dark:ring-green-400');
                             return; 
                         }
                         
@@ -612,11 +638,11 @@ export function renderTimeline() {
                                 }
                             } catch (e) { console.error("Error parsing jsonData from dropped element:", e); }
                         }
-                        event.target.classList.remove('bg-blue-600/30', 'dark:bg-blue-500/30');
-                        if(droppedClipElement) droppedClipElement.classList.remove('ring-2', 'ring-green-400');
+                        event.target.classList.remove('bg-blue-700/40', 'dark:bg-blue-600/40');
+                        if(droppedClipElement) droppedClipElement.classList.remove('ring-2', 'ring-green-300', 'dark:ring-green-400');
                     },
                     ondropdeactivate: function (event) {
-                        event.target.classList.remove('bg-slate-700/50','bg-blue-600/30', 'dark:bg-blue-500/30');
+                        event.target.classList.remove('bg-slate-700/70','bg-blue-700/40', 'dark:bg-blue-600/40');
                     }
                 });
         }
@@ -638,12 +664,12 @@ export function renderTimeline() {
                 if (clip.type === 'sequence') { 
                     typeSpecificClass = 'bg-sky-600 hover:bg-sky-500 border-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400 dark:border-sky-600';
                 }
-                clipEl.className = `audio-clip absolute h-4/5 top-[10%] rounded border text-white text-[10px] px-1.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis cursor-grab shadow-md ${typeSpecificClass}`;
+                clipEl.className = `audio-clip absolute h-4/5 top-[10%] rounded-md border text-white text-xs px-2 py-1 whitespace-nowrap overflow-hidden text-ellipsis cursor-grab shadow-lg transition-all duration-100 ${typeSpecificClass}`; // Enhanced styling
                 
                 clipEl.textContent = clipText; clipEl.title = clipTitle;
                 const pixelsPerSecond = 30; 
                 clipEl.style.left = `${(clip.startTime || 0) * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(15, (clip.duration || 0) * pixelsPerSecond)}px`; 
+                clipEl.style.width = `${Math.max(20, (clip.duration || 0) * pixelsPerSecond)}px`; // Min width for better interaction
                 clipEl.style.touchAction = 'none'; 
                 
                 if (window.interact) {
@@ -668,7 +694,7 @@ export function renderTimeline() {
                                 start: (event) => {
                                     const target = event.target;
                                     target.dataset.startX = parseFloat(target.style.left) || 0; 
-                                    target.classList.add('opacity-75', 'ring-2', 'ring-yellow-300', 'z-10'); 
+                                    target.classList.add('opacity-75', 'ring-2', 'ring-yellow-300', 'dark:ring-yellow-400', 'z-30', 'shadow-xl'); 
                                     target.style.zIndex = 10002; 
                                 },
                                 move: (event) => {
@@ -678,7 +704,7 @@ export function renderTimeline() {
                                 },
                                 end: (event) => {
                                     const target = event.target;
-                                    target.classList.remove('opacity-75', 'ring-2', 'ring-yellow-300', 'z-10');
+                                    target.classList.remove('opacity-75', 'ring-2', 'ring-yellow-300', 'dark:ring-yellow-400', 'z-30', 'shadow-xl');
                                     target.style.zIndex = ''; 
                                     
                                     const finalLeftPixels = parseFloat(target.style.left) || 0;
@@ -721,17 +747,15 @@ export function updatePlayheadPosition() {
     if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) { return; }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    const timelineContentArea = timelineWindow.element.querySelector('.window-content'); 
     const timelineRuler = timelineWindow.element.querySelector('#timeline-ruler');
-    const tracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); // The horizontally scrollable part
+    const tracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container'); 
 
-    if (!playhead || typeof Tone === 'undefined' || !timelineContentArea || !localAppServices.getPlaybackMode || !tracksContainer) return;
+    if (!playhead || typeof Tone === 'undefined' || !tracksContainer || !localAppServices.getPlaybackMode) return;
 
     const currentPlaybackMode = localAppServices.getPlaybackMode();
     if (currentPlaybackMode === 'sequencer' || currentPlaybackMode === 'pattern') { 
         playhead.style.display = 'none';
         if (timelineRuler) {
-            // Ruler should scroll with the tracksContainer, not necessarily the window-content if they are different
             timelineRuler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
         }
         return;
@@ -744,24 +768,25 @@ export function updatePlayheadPosition() {
 
     if (Tone.Transport.state === 'started') {
         const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
-        playhead.style.left = `${trackNameWidth + rawNewPosition - tracksContainer.scrollLeft}px`; // Adjust for scroll
+        // Playhead's left is relative to its offsetParent, which is #timeline-container.
+        // It needs to be positioned after the track name area, adjusted by the scroll of the tracksContainer.
+        playhead.style.left = `${trackNameWidth + rawNewPosition - tracksContainer.scrollLeft}px`; 
 
         const scrollableClipsArea = tracksContainer; 
-        const containerWidth = scrollableClipsArea.clientWidth; // Visible width of the clips area (excluding track names)
+        const containerWidth = scrollableClipsArea.clientWidth; 
         
-        // Playhead position relative to the visible part of the scrollable tracks area
         const playheadVisualPositionInScrollable = rawNewPosition - scrollableClipsArea.scrollLeft;
 
-        if (playheadVisualPositionInScrollable > containerWidth * 0.8) {
-            scrollableClipsArea.scrollLeft = rawNewPosition - (containerWidth * 0.8) + 20; 
+        if (playheadVisualPositionInScrollable > containerWidth * 0.7) { // Scroll if playhead passes 70%
+            scrollableClipsArea.scrollLeft += (playheadVisualPositionInScrollable - (containerWidth * 0.7)) + 30; // Scroll a bit ahead
         } 
-        else if (playheadVisualPositionInScrollable < containerWidth * 0.2 && scrollableClipsArea.scrollLeft > 0) {
-            scrollableClipsArea.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.2) - 20);
+        else if (playheadVisualPositionInScrollable < containerWidth * 0.1 && scrollableClipsArea.scrollLeft > 0) { // Scroll if near left edge
+            scrollableClipsArea.scrollLeft = Math.max(0, rawNewPosition - (containerWidth * 0.1) - 30);
         }
         if (scrollableClipsArea.scrollLeft < 0) scrollableClipsArea.scrollLeft = 0;
 
     } else if (Tone.Transport.state === 'stopped') {
-         playhead.style.left = `${trackNameWidth - tracksContainer.scrollLeft}px`; // Adjust for scroll
+         playhead.style.left = `${trackNameWidth - tracksContainer.scrollLeft}px`; 
     }
     if (timelineRuler && tracksContainer) {
         timelineRuler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
@@ -779,20 +804,20 @@ export function openTimelineWindow(savedState = null) {
     }
 
     const contentHTML = `
-        <div id="timeline-container" class="flex flex-col h-full w-full bg-gray-800 dark:bg-slate-900 overflow-hidden">
-            <div id="timeline-header" class="h-5 bg-gray-700 dark:bg-slate-800 border-b border-gray-600 dark:border-slate-700 flex-shrink-0 relative overflow-hidden w-full">
-                <div id="timeline-ruler" class="absolute top-0 left-0 h-full bg-gray-600 dark:bg-slate-700/50 text-xs text-gray-300 dark:text-slate-400" 
+        <div id="timeline-container" class="flex flex-col h-full w-full bg-gray-800 dark:bg-slate-900 overflow-hidden rounded-b-md">
+            <div id="timeline-header" class="h-6 bg-gray-700 dark:bg-slate-800 border-b border-gray-600 dark:border-slate-700 flex-shrink-0 relative overflow-hidden w-full shadow">
+                <div id="timeline-ruler" class="absolute top-0 left-0 h-full bg-gray-600/50 dark:bg-slate-700/50 text-xs text-gray-300 dark:text-slate-400" 
                      style="width: 4000px; background-image: 
-                            repeating-linear-gradient(to right, #555555AA 0 1px, transparent 1px 100%), 
-                            repeating-linear-gradient(to right, #44444488 0 1px, transparent 1px 100%); 
-                            background-size: 120px 100%, 30px 100%; background-position: left top;">
-                </div>
+                            repeating-linear-gradient(to right, rgba(128,128,128,0.5) 0 1px, transparent 1px 100%), 
+                            repeating-linear-gradient(to right, rgba(100,100,100,0.3) 0 1px, transparent 1px 100%); 
+                            background-size: 120px 100%, 30px 100%; background-position: left top; padding-left: var(--timeline-track-name-width, 120px);">
+                    </div>
             </div>
             <div id="timeline-tracks-container" class="flex-grow overflow-auto relative w-full">
                 <div id="timeline-tracks-area" class="relative" style="width: 4000px;">
-                </div>
+                    </div>
             </div>
-            <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-cyan-400 dark:bg-cyan-300 z-30 pointer-events-none" style="display:none;"></div>
+            <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-cyan-400 dark:bg-cyan-300 z-30 pointer-events-none shadow-lg" style="display:none;"></div>
         </div>
     `;
     
@@ -800,7 +825,7 @@ export function openTimelineWindow(savedState = null) {
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
     const timelineOptions = {
         width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)),
-        height: 280, 
+        height: 300, // Increased default height
         x: 30,
         y: 50,
         minWidth: 400,
@@ -828,17 +853,19 @@ export function openTimelineWindow(savedState = null) {
             const trackNameWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim()) || 120;
 
             if (ruler && tracksContainer) { 
-                ruler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
+                // Adjust ruler's left padding to align with track names, then translate based on scroll
+                ruler.style.paddingLeft = `${trackNameWidth}px`;
+                ruler.style.transform = `translateX(-${tracksContainer.scrollLeft + trackNameWidth}px)`;
             }
-            // Adjust playhead based on tracksContainer scroll, not window-content scroll
+            
             if (playhead && Tone.Transport.state !== 'stopped' && localAppServices.getPlaybackMode && localAppServices.getPlaybackMode() === 'timeline') {
                  const pixelsPerSecond = 30;
                  const rawNewPosition = Tone.Transport.seconds * pixelsPerSecond;
+                 // Playhead is positioned relative to timeline-container. Its left needs to account for trackNameWidth and scroll of tracksContainer.
                  playhead.style.left = `${trackNameWidth + rawNewPosition - tracksContainer.scrollLeft}px`;
             } else if (playhead && Tone.Transport.state === 'stopped') {
                  playhead.style.left = `${trackNameWidth - tracksContainer.scrollLeft}px`;
             }
-            // No need to call updatePlayheadPosition() here as this IS the update logic for scroll.
         };
 
         if (tracksContainer) {
@@ -846,6 +873,8 @@ export function openTimelineWindow(savedState = null) {
         }
         
         renderTimeline();
+        // Initial sync after render
+        setTimeout(scrollSyncHandler, 0);
     }
     return timelineWindow;
 }
