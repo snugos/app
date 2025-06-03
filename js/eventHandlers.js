@@ -17,50 +17,45 @@ import {
     setRecordingStartTimeState as setRecordingStartTime,
     removeTrackFromStateInternal as coreRemoveTrackFromState,
     getPlaybackModeState,
-    setPlaybackModeState, // Directly using the imported setter
+    setPlaybackModeState,
     getMidiAccessState,
     getActiveMIDIInputState
 } from './state.js';
 
 let localAppServices = {};
-let transportKeepAliveBufferSource = null; // To keep Tone.Transport "warm"
-let silentKeepAliveBuffer = null; // A silent buffer for the keep-alive source
+let transportKeepAliveBufferSource = null;
+let silentKeepAliveBuffer = null;
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
-    // Ensure playback mode functions are available, falling back to direct state fns if not on appServices
     if (!localAppServices.setPlaybackMode && setPlaybackModeState) {
         localAppServices.setPlaybackMode = setPlaybackModeState;
     }
     if (!localAppServices.getPlaybackMode && getPlaybackModeState) {
         localAppServices.getPlaybackMode = getPlaybackModeState;
     }
-    // Add a check for showNotification in appServices, fallback to imported util if necessary
     if (!localAppServices.showNotification) {
         console.warn("[EventHandlers Init] showNotification service not found in appServices. Using direct import as fallback.");
         localAppServices.showNotification = showNotification;
     }
 }
 
-export let currentlyPressedComputerKeys = {}; // Tracks active computer keyboard keys for synth input
-let currentOctaveShift = 0; // For computer keyboard synth octave
+export let currentlyPressedComputerKeys = {};
+let currentOctaveShift = 0;
 const MIN_OCTAVE_SHIFT = -2;
 const MAX_OCTAVE_SHIFT = 2;
 
-/**
- * Initializes primary event listeners for static UI elements like start menu, desktop context menu.
- * @param {object} appContext - The main application services object.
- */
 export function initializePrimaryEventListeners(appContext) {
+    // ... (This function remains the same as your last provided version,
+    // with menuOpenGlobalControls removed from menuActions)
     const services = appContext || localAppServices;
     const uiCache = services.uiElementsCache || {};
-    console.log('[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:', Object.keys(uiCache));
+    // console.log('[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:', Object.keys(uiCache));
 
     try {
-        // Start Button and Menu
         if (uiCache.startButton) {
             uiCache.startButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent desktop click from immediately closing
+                e.stopPropagation();
                 if (uiCache.startMenu) {
                     uiCache.startMenu.classList.toggle('hidden');
                 } else {
@@ -68,10 +63,9 @@ export function initializePrimaryEventListeners(appContext) {
                 }
             });
         } else {
-            console.warn('[EventHandlers initializePrimaryEventListeners] Start Button (uiCache.startButton) NOT found in uiCache!');
+            // console.warn('[EventHandlers initializePrimaryEventListeners] Start Button (uiCache.startButton) NOT found in uiCache!');
         }
 
-        // Desktop interactions (closing menus)
         if (uiCache.desktop) {
             uiCache.desktop.addEventListener('click', () => {
                 if (uiCache.startMenu && !uiCache.startMenu.classList.contains('hidden')) {
@@ -83,7 +77,6 @@ export function initializePrimaryEventListeners(appContext) {
                 }
             });
 
-            // Desktop Context Menu
             uiCache.desktop.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 const menuItems = [
@@ -95,7 +88,6 @@ export function initializePrimaryEventListeners(appContext) {
                     { separator: true },
                     { label: "Open Sound Browser", action: () => { if(services.openSoundBrowserWindow) services.openSoundBrowserWindow(); } },
                     { label: "Open Timeline", action: () => { if(services.openTimelineWindow) services.openTimelineWindow(); } },
-                    // { label: "Open Global Controls", action: () => { if(services.openGlobalControlsWindow) services.openGlobalControlsWindow(); } }, // Deprecated
                     { label: "Open Mixer", action: () => { if(services.openMixerWindow) services.openMixerWindow(); } },
                     { label: "Open Master Effects", action: () => { if(services.openMasterEffectsRackWindow) services.openMasterEffectsRackWindow(); } },
                     { separator: true },
@@ -111,10 +103,9 @@ export function initializePrimaryEventListeners(appContext) {
                 }
             });
         } else {
-             console.warn('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!');
+            //  console.warn('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!');
         }
 
-        // Start Menu Item Actions
         const menuActions = {
             menuAddSynthTrack: () => services.addTrack?.('Synth', {_isUserActionPlaceholder: true}),
             menuAddSamplerTrack: () => services.addTrack?.('Sampler', {_isUserActionPlaceholder: true}),
@@ -123,8 +114,6 @@ export function initializePrimaryEventListeners(appContext) {
             menuAddAudioTrack: () => services.addTrack?.('Audio', {_isUserActionPlaceholder: true}),
             menuOpenSoundBrowser: () => services.openSoundBrowserWindow?.(),
             menuOpenTimeline: () => services.openTimelineWindow?.(),
-            // MODIFICATION: Removed menuOpenGlobalControls as it's deprecated.
-            // menuOpenGlobalControls: () => services.openGlobalControlsWindow?.(),
             menuOpenMixer: () => services.openMixerWindow?.(),
             menuOpenMasterEffects: () => services.openMasterEffectsRackWindow?.(),
             menuUndo: () => services.undoLastAction?.(),
@@ -138,20 +127,18 @@ export function initializePrimaryEventListeners(appContext) {
         for (const menuItemId in menuActions) {
             if (uiCache[menuItemId]) {
                 uiCache[menuItemId].addEventListener('click', () => {
-                    // Check if the service function exists before calling
                     if (typeof menuActions[menuItemId] === 'function') {
                         menuActions[menuItemId]();
                     } else {
                         console.warn(`[EventHandlers] Action for menu item "${menuItemId}" is not a function or service is unavailable.`);
                     }
-                    if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden'); // Close menu after action
+                    if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
                 });
-            } else if (menuItemId !== 'menuOpenGlobalControls') { // Don't warn for the intentionally removed menu item
-                console.warn(`[EventHandlers initializePrimaryEventListeners] Menu item element for "${menuItemId}" NOT found in uiCache!`);
+            } else if (menuItemId !== 'menuOpenGlobalControls') {
+                // console.warn(`[EventHandlers initializePrimaryEventListeners] Menu item element for "${menuItemId}" NOT found in uiCache!`);
             }
         }
 
-        // Project Load Input
         if (uiCache.loadProjectInput) {
             uiCache.loadProjectInput.addEventListener('change', (e) => {
                 if (services.handleProjectFileLoad) {
@@ -161,29 +148,24 @@ export function initializePrimaryEventListeners(appContext) {
                 }
             });
         } else {
-            console.warn("[EventHandlers] Load project input (uiCache.loadProjectInput) not found.");
+            // console.warn("[EventHandlers] Load project input (uiCache.loadProjectInput) not found.");
         }
 
     } catch (error) {
         console.error("[EventHandlers initializePrimaryEventListeners] Error during initialization:", error);
-        // Use localAppServices.showNotification as a fallback if services isn't fully populated yet or uiCache is problematic
         (services.showNotification || localAppServices.showNotification || showNotification)("Error setting up primary interactions. Some UI might not work.", 5000);
     }
 }
 
-/**
- * Attaches event listeners to global transport control elements.
- * @param {object} elements - Object containing references to the DOM elements.
- */
 export function attachGlobalControlEvents(elements) {
+    // ... (This function remains the same as your last provided version)
     if (!elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
     const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
-    const showUINotification = localAppServices.showNotification || showNotification; // Fallback
+    const showUINotification = localAppServices.showNotification || showNotification;
 
-    // Play/Pause Button
     if (playBtnGlobal) {
         playBtnGlobal.addEventListener('click', async () => {
             try {
@@ -198,7 +180,7 @@ export function attachGlobalControlEvents(elements) {
                 }
 
                 const transport = Tone.Transport;
-                console.log(`[EventHandlers Play/Resume] Clicked. Transport state: ${transport.state}, time: ${transport.seconds.toFixed(2)}`);
+                // console.log(`[EventHandlers Play/Resume] Clicked. Transport state: ${transport.state}, time: ${transport.seconds.toFixed(2)}`);
 
                 const tracks = getTracks();
                 if (tracks) {
@@ -216,11 +198,10 @@ export function attachGlobalControlEvents(elements) {
                     const startTime = wasPaused ? transport.seconds : 0;
                     if (!wasPaused) transport.position = 0;
 
-                    console.log(`[EventHandlers Play/Resume] Starting/Resuming from ${startTime.toFixed(2)}s.`);
+                    // console.log(`[EventHandlers Play/Resume] Starting/Resuming from ${startTime.toFixed(2)}s.`);
                     transport.loop = true;
                     transport.loopStart = 0;
-                    // MODIFICATION: Use a more reasonable default loop end, or make it configurable via project settings later
-                    const projectLoopEnd = localAppServices.getProjectLoopEnd ? localAppServices.getProjectLoopEnd() : 3600; // Example default
+                    const projectLoopEnd = localAppServices.getProjectLoopEnd ? localAppServices.getProjectLoopEnd() : 3600;
                     transport.loopEnd = projectLoopEnd;
 
 
@@ -246,23 +227,22 @@ export function attachGlobalControlEvents(elements) {
                     }
                     transport.start(Tone.now() + 0.05, startTime);
                     playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>`; // Pause Icon
-                } else { // Transport is 'started', so pause it
-                    console.log(`[EventHandlers Play/Resume] Pausing transport.`);
+                } else {
+                    // console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                     transport.pause();
                     playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`; // Play Icon
                 }
             } catch (error) {
                 console.error("[EventHandlers Play/Pause] Error:", error);
                 showUINotification(`Error during playback: ${error.message}`, 4000);
-                if (playBtnGlobal) playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`; // Play Icon
+                if (playBtnGlobal) playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`;
             }
         });
     } else { console.warn("[EventHandlers] playBtnGlobal not found in provided elements."); }
 
-    // Stop Button (Panic)
     if (stopBtnGlobal) {
         stopBtnGlobal.addEventListener('click', () => {
-            console.log("[EventHandlers StopAll] Stop All button clicked.");
+            // console.log("[EventHandlers StopAll] Stop All button clicked.");
             if (localAppServices.panicStopAllAudio) {
                 localAppServices.panicStopAllAudio();
             } else {
@@ -272,7 +252,7 @@ export function attachGlobalControlEvents(elements) {
                     Tone.Transport.cancel(0);
                 }
                 const playButton = elements.playBtnGlobal || localAppServices.uiElementsCache?.playBtnGlobal;
-                if(playButton) playButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`; // Play Icon
+                if(playButton) playButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`;
                 showUINotification("Emergency stop executed (minimal).", 2000);
             }
         });
@@ -280,7 +260,6 @@ export function attachGlobalControlEvents(elements) {
         console.warn("[EventHandlers] stopBtnGlobal not found in provided elements.");
     }
 
-    // Record Button
     if (recordBtnGlobal) {
         recordBtnGlobal.addEventListener('click', async () => {
             try {
@@ -295,7 +274,7 @@ export function attachGlobalControlEvents(elements) {
                 const trackToRecordId = getArmedTrackId();
                 const trackToRecord = trackToRecordId !== null ? getTrackById(trackToRecordId) : null;
 
-                if (!isCurrentlyRec) { // Start recording
+                if (!isCurrentlyRec) {
                     if (!trackToRecord) { showUINotification("No track armed for recording.", 2000); return; }
 
                     let recordingInitialized = false;
@@ -305,7 +284,7 @@ export function attachGlobalControlEvents(elements) {
                         } else { console.error("[EventHandlers] startAudioRecording service not available."); showUINotification("Recording service unavailable.", 3000); }
                     } else {
                         recordingInitialized = true;
-                        showUINotification(`MIDI/Synth recording for "${trackToRecord.name}" armed. (Actual event capture depends on implementation)`, 2500);
+                        showUINotification(`MIDI/Synth recording for "${trackToRecord.name}" armed.`, 2500);
                     }
 
                     if (recordingInitialized) {
@@ -320,7 +299,7 @@ export function attachGlobalControlEvents(elements) {
                     } else {
                         showUINotification(`Failed to initialize recording for ${trackToRecord.name}.`, 3000);
                     }
-                } else { // Stop recording
+                } else {
                     if (localAppServices.stopAudioRecording && getRecordingTrackId() !== null && getTrackById(getRecordingTrackId())?.type === 'Audio') {
                         await localAppServices.stopAudioRecording();
                     }
@@ -341,7 +320,6 @@ export function attachGlobalControlEvents(elements) {
         });
     } else { console.warn("[EventHandlers] recordBtnGlobal not found."); }
 
-    // Tempo Input
     if (tempoGlobalInput) {
         tempoGlobalInput.addEventListener('input', (e) => {
             try {
@@ -363,7 +341,6 @@ export function attachGlobalControlEvents(elements) {
         });
     } else { console.warn("[EventHandlers] tempoGlobalInput not found."); }
 
-    // MIDI Input Select
     if (midiInputSelectGlobal) {
         midiInputSelectGlobal.addEventListener('change', (e) => {
             if (localAppServices.selectMIDIInput) localAppServices.selectMIDIInput(e.target.value);
@@ -371,7 +348,6 @@ export function attachGlobalControlEvents(elements) {
         });
     } else { console.warn("[EventHandlers] midiInputSelectGlobal not found."); }
 
-    // Playback Mode Toggle
     if (playbackModeToggleBtnGlobal) {
         playbackModeToggleBtnGlobal.addEventListener('click', () => {
             try {
@@ -393,14 +369,12 @@ export function attachGlobalControlEvents(elements) {
     } else { console.warn("[EventHandlers] playbackModeToggleBtnGlobal not found."); }
 }
 
-/**
- * Initializes MIDI access and populates the MIDI input select dropdown.
- */
 export function setupMIDI() {
+    // ... (setupMIDI remains the same)
     const showUINotification = localAppServices.showNotification || showNotification;
     if (navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess()
-            .then(onMIDISuccess, (err) => onMIDIFailure(err, showUINotification)) // Pass notification function
+            .then(onMIDISuccess, (err) => onMIDIFailure(err, showUINotification))
             .catch((err) => onMIDIFailure(err, showUINotification));
     } else {
         console.warn("WebMIDI is not supported in this browser.");
@@ -409,6 +383,7 @@ export function setupMIDI() {
 }
 
 function onMIDISuccess(midiAccess) {
+    // ... (onMIDISuccess remains the same)
     const showUINotification = localAppServices.showNotification || showNotification;
     if (localAppServices.setMidiAccess) {
         localAppServices.setMidiAccess(midiAccess);
@@ -424,7 +399,7 @@ function onMIDISuccess(midiAccess) {
         return;
     }
 
-    const currentSelectedValue = selectElement.value; // Preserve current selection if possible
+    const currentSelectedValue = selectElement.value;
     selectElement.innerHTML = '<option value="">No MIDI Input</option>';
     for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
         if (input.value) {
@@ -439,29 +414,26 @@ function onMIDISuccess(midiAccess) {
     if (activeMIDIId && Array.from(selectElement.options).some(opt => opt.value === activeMIDIId)) {
         selectElement.value = activeMIDIId;
     } else if (currentSelectedValue && Array.from(selectElement.options).some(opt => opt.value === currentSelectedValue)) {
-        selectElement.value = currentSelectedValue; // Restore previous if still valid and no active one was better
+        selectElement.value = currentSelectedValue;
     }
 
 
     midiAccess.onstatechange = (event) => {
         console.log(`[MIDI] State change: ${event.port.name}, State: ${event.port.state}, Type: ${event.port.type}`);
-        setupMIDI(); // Re-populate the list
+        setupMIDI();
         showUINotification(`MIDI device ${event.port.name} ${event.port.state}.`, 2500);
     };
 }
 
-function onMIDIFailure(msg, notifyFn) { // Added notifyFn parameter
+function onMIDIFailure(msg, notifyFn) {
+    // ... (onMIDIFailure remains the same)
     console.error(`[MIDI] Failed to get MIDI access - ${msg}`);
     const errorMessage = (typeof msg === 'string') ? msg : (msg.message || 'Unknown error');
     notifyFn(`Failed to access MIDI devices: ${errorMessage}`, 4000);
 }
 
-/**
- * Selects a MIDI input device and sets up message handling.
- * @param {string} deviceId - The ID of the MIDI device to select.
- * @param {boolean} [silent=false] - If true, suppresses notifications.
- */
 export function selectMIDIInput(deviceId, silent = false) {
+    // ... (selectMIDIInput remains the same)
     const showUINotification = localAppServices.showNotification || showNotification;
     try {
         const midi = getMidiAccessState();
@@ -470,7 +442,8 @@ export function selectMIDIInput(deviceId, silent = false) {
         if (currentActiveInput && typeof currentActiveInput.close === 'function') {
             currentActiveInput.onmidimessage = null;
             try {
-                // No specific close() method is defined on MIDIPort, but removing listener is key
+                // MIDIPort does not have a close() method in the Web MIDI API spec.
+                // currentActiveInput.close();
             } catch (e) {
                 console.warn(`[MIDI] Error "closing" previously active input "${currentActiveInput.name}":`, e.message);
             }
@@ -479,9 +452,7 @@ export function selectMIDIInput(deviceId, silent = false) {
         if (deviceId && midi && midi.inputs) {
             const input = midi.inputs.get(deviceId);
             if (input) {
-                // MIDIPort.open() is not needed; access is granted when requestMIDIAccess succeeds.
-                // Simply assign the onmidimessage handler.
-                input.onmidimessage = handleMIDIMessage;
+                input.onmidimessage = handleMIDIMessage; // Assign listener
                 if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(input);
                 if (!silent) showUINotification(`MIDI Input: ${input.name} selected.`, 2000);
                 console.log(`[MIDI] Input selected: ${input.name}`);
@@ -500,11 +471,8 @@ export function selectMIDIInput(deviceId, silent = false) {
     }
 }
 
-/**
- * Handles incoming MIDI messages from the selected input.
- * @param {MIDIMessageEvent} message - The MIDI message event.
- */
 function handleMIDIMessage(message) {
+    // ... (handleMIDIMessage remains the same)
     try {
         if (!message || !message.data || message.data.length < 3) {
             console.warn("[EventHandlers handleMIDIMessage] Invalid MIDI message received:", message);
@@ -522,33 +490,29 @@ function handleMIDIMessage(message) {
 
         if (!armedTrack) return;
 
-        // Ensure instrument exists and is not disposed before trying to use it
-        const instrument = armedTrack.instrument || armedTrack.toneSampler; // Generalize for Synth and InstrumentSampler
+        const instrument = armedTrack.instrument || armedTrack.toneSampler;
         if (!instrument || (typeof instrument.disposed === 'boolean' && instrument.disposed)) {
-            // console.warn(`[MIDI] Instrument for armed track ${armedTrack.name} not available or disposed.`);
             return;
         }
 
         const freqOrNote = Tone.Frequency(note, "midi").toNote();
 
         if (armedTrack.type === 'Synth' || armedTrack.type === 'InstrumentSampler') {
-            if (command === 144 && velocity > 0) { // Note On
+            if (command === 144 && velocity > 0) {
                 if (typeof instrument.triggerAttack === 'function') {
                     instrument.triggerAttack(freqOrNote, Tone.now(), velocity / 127);
                 }
-            } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
+            } else if (command === 128 || (command === 144 && velocity === 0)) {
                 if (typeof instrument.triggerRelease === 'function') {
-                    // Add a slight delay to release to prevent abrupt cut-offs, common practice.
                     instrument.triggerRelease(freqOrNote, Tone.now() + 0.01);
                 }
             }
         } else if (armedTrack.type === 'DrumSampler' || armedTrack.type === 'Sampler') {
-            // MIDI note to pad/slice mapping (example: C1 onwards)
-            const padOrSliceIndex = note - (Constants.samplerMIDINoteStart || 36); // Default to C1=36 if not in constants
+            const padOrSliceIndex = note - (Constants.samplerMIDINoteStart || 36);
             if (padOrSliceIndex >= 0) {
-                if (command === 144 && velocity > 0) { // Note On
+                if (command === 144 && velocity > 0) {
                     if (armedTrack.type === 'DrumSampler' && padOrSliceIndex < (Constants.numDrumSamplerPads || 8)) {
-                        if (localAppServices.playDrumSamplerPadPreview) { // Using preview for direct play from MIDI for now
+                        if (localAppServices.playDrumSamplerPadPreview) {
                             localAppServices.playDrumSamplerPadPreview(armedTrack.id, padOrSliceIndex, velocity / 127);
                         }
                     } else if (armedTrack.type === 'Sampler' && padOrSliceIndex < (armedTrack.slices?.length || Constants.numSlices || 8)) {
@@ -556,7 +520,7 @@ function handleMIDIMessage(message) {
                             localAppServices.playSlicePreview(armedTrack.id, padOrSliceIndex, velocity / 127);
                         }
                     }
-                } // Note Off for drum/sampler often doesn't need explicit handling unless sample has long release not managed by an envelope.
+                }
             }
         }
     } catch (error) {
@@ -566,8 +530,8 @@ function handleMIDIMessage(message) {
 
 const keyToMIDIMap = Constants.computerKeySynthMap || {};
 
-
 document.addEventListener('keydown', (event) => {
+    // ... (keydown listener remains the same)
     try {
         if (event.repeat) return;
         const key = event.key.toLowerCase();
@@ -580,11 +544,11 @@ document.addEventListener('keydown', (event) => {
         }
 
         if (event.metaKey || event.ctrlKey) {
-            if (key === 'z') {
+            if (key === 'z' && !event.shiftKey) { // MODIFIED: ensure shift-Z is not undo
                 if (localAppServices.undoLastAction) localAppServices.undoLastAction();
                 event.preventDefault(); return;
             }
-            if (key === 'y' || (key === 'z' && event.shiftKey)) { // Common Redo with Shift+Z
+            if (key === 'y' || (key === 'z' && event.shiftKey)) {
                  if (localAppServices.redoLastAction) localAppServices.redoLastAction();
                  event.preventDefault(); return;
             }
@@ -642,6 +606,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
+    // ... (keyup listener remains the same)
     let armedTrack = null;
     let midiNote = undefined;
     let freq = '';
@@ -679,7 +644,7 @@ document.addEventListener('keyup', (event) => {
             const finalNote = midiNote + (currentOctaveShift * 12);
              if (finalNote >=0 && finalNote <= 127) {
                 freq = Tone.Frequency(finalNote, "midi").toNote();
-                targetInstrumentKeyUp.triggerRelease(freq, Tone.now() + 0.01); // Slight delay for release
+                targetInstrumentKeyUp.triggerRelease(freq, Tone.now() + 0.01);
             }
             delete currentlyPressedComputerKeys[midiNote];
         }
@@ -703,9 +668,8 @@ document.addEventListener('keyup', (event) => {
     }
 });
 
-
-// --- Track Control Handlers (called via appServices from UI or other modules) ---
 export function handleTrackMute(trackId) {
+    // ... (handleTrackMute remains the same)
     try {
         const track = getTrackById(trackId);
         if (!track) { console.warn(`[EventHandlers] Mute: Track ${trackId} not found.`); return; }
@@ -717,11 +681,12 @@ export function handleTrackMute(trackId) {
             console.warn(`[EventHandlers Mute] Track ${track.id} does not have applyMuteState method.`);
         }
         if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(trackId, 'muteChanged');
-        if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow(); // Also update mixer
+        if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
     } catch (error) { console.error(`[EventHandlers handleTrackMute] Error for track ${trackId}:`, error); }
 }
 
 export function handleTrackSolo(trackId) {
+    // ... (handleTrackSolo remains the same)
     try {
         const track = getTrackById(trackId);
         if (!track) { console.warn(`[EventHandlers] Solo: Track ${trackId} not found.`); return; }
@@ -743,11 +708,12 @@ export function handleTrackSolo(trackId) {
                 }
             });
         }
-        if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow(); // Also update mixer
+        if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
     } catch (error) { console.error(`[EventHandlers handleTrackSolo] Error for track ${trackId}:`, error); }
 }
 
 export function handleTrackArm(trackId) {
+    // ... (handleTrackArm remains the same)
     try {
         const track = getTrackById(trackId);
         if (!track) { console.warn(`[EventHandlers] Arm: Track ${trackId} not found.`); return; }
@@ -766,51 +732,85 @@ export function handleTrackArm(trackId) {
                 if (t && localAppServices.updateTrackUI) localAppServices.updateTrackUI(t.id, 'armChanged');
             });
         }
-        if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow(); // Also update mixer
+        if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
     } catch (error) { console.error(`[EventHandlers handleTrackArm] Error for track ${trackId}:`, error); }
 }
 
+// MODIFICATION: Added more robust checks and logging for track removal process
 export function handleRemoveTrack(trackId) {
+    console.log(`[EventHandlers handleRemoveTrack] Attempting to remove track ID: ${trackId}`);
+    const showUINotification = localAppServices.showNotification || showNotification;
     try {
         const track = getTrackById(trackId);
-        if (!track) { console.warn(`[EventHandlers] Remove: Track ${trackId} not found.`); return; }
+        if (!track) {
+            console.warn(`[EventHandlers handleRemoveTrack] Track ${trackId} not found.`);
+            showUINotification(`Error: Track ${trackId} not found for removal.`, 3000);
+            return;
+        }
 
         const confirmDialogFn = localAppServices.showConfirmationDialog || showConfirmationDialog;
+        if (typeof confirmDialogFn !== 'function') {
+            console.error("[EventHandlers handleRemoveTrack] showConfirmationDialog service not available. Using native confirm.");
+            if (confirm(`Are you sure you want to remove track "${track.name}"? This can be undone.`)) {
+                if (localAppServices.removeTrack) {
+                    localAppServices.removeTrack(trackId);
+                } else {
+                    console.error("[EventHandlers handleRemoveTrack] removeTrack service not available. Attempting core removal.");
+                    coreRemoveTrackFromState(trackId);
+                }
+            }
+            return;
+        }
 
         confirmDialogFn(
             'Confirm Delete Track',
             `Are you sure you want to remove track "${track.name}"? This can be undone.`,
             () => { // onConfirm
-                if (localAppServices.removeTrack) {
+                console.log(`[EventHandlers handleRemoveTrack] Confirmation received for track ${trackId}.`);
+                if (localAppServices.removeTrack && typeof localAppServices.removeTrack === 'function') {
                     localAppServices.removeTrack(trackId);
                 } else {
-                    console.warn("[EventHandlers] removeTrack service not available, calling coreRemoveTrackFromState.");
-                    coreRemoveTrackFromState(trackId);
+                    console.error("[EventHandlers handleRemoveTrack] localAppServices.removeTrack service is not available or not a function. Attempting core removal function.");
+                    if (typeof coreRemoveTrackFromState === 'function') {
+                        coreRemoveTrackFromState(trackId);
+                    } else {
+                        console.error("[EventHandlers handleRemoveTrack] CRITICAL: coreRemoveTrackFromState is also not available. Track removal failed.");
+                        showUINotification(`Critical error: Cannot remove track ${track.name}.`, 4000);
+                    }
                 }
+            },
+            () => { // onCancel
+                console.log(`[EventHandlers handleRemoveTrack] Track removal cancelled for ID: ${trackId}`);
             }
         );
-    } catch (error) { console.error(`[EventHandlers handleRemoveTrack] Error for track ${trackId}:`, error); }
+    } catch (error) {
+        console.error(`[EventHandlers handleRemoveTrack] Error initiating removal for track ${trackId}:`, error);
+        showUINotification(`Error removing track: ${error.message || 'Unknown error.'}`, 4000);
+    }
 }
 
-// --- Window Opening Handlers (called via appServices from UI) ---
+
 export function handleOpenTrackInspector(trackId) {
+    // ... (handleOpenTrackInspector remains the same)
     if (localAppServices.openTrackInspectorWindow) {
         localAppServices.openTrackInspectorWindow(trackId);
     } else { console.error("[EventHandlers] openTrackInspectorWindow service not available."); }
 }
 export function handleOpenEffectsRack(trackId) {
+    // ... (handleOpenEffectsRack remains the same)
     if (localAppServices.openTrackEffectsRackWindow) {
         localAppServices.openTrackEffectsRackWindow(trackId);
     } else { console.error("[EventHandlers] openTrackEffectsRackWindow service not available."); }
 }
 export function handleOpenSequencer(trackId) {
+    // ... (handleOpenSequencer remains the same)
     if (localAppServices.openTrackSequencerWindow) {
         localAppServices.openTrackSequencerWindow(trackId);
     } else { console.error("[EventHandlers] openTrackSequencerWindow service not available."); }
 }
 
-// --- Fullscreen ---
 function toggleFullScreen() {
+    // ... (toggleFullScreen remains the same)
     const showUINotification = localAppServices.showNotification || showNotification;
     try {
         if (!document.fullscreenElement) {
@@ -830,8 +830,8 @@ function toggleFullScreen() {
     }
 }
 
-// --- Timeline Drop Handler ---
 export async function processTimelineDrop(droppedItemData, targetTrackId, startTime, appServicesPassed) {
+    // ... (processTimelineDrop remains the same)
     const services = appServicesPassed || localAppServices;
     const showUINotification = services.showNotification || showNotification;
 
@@ -890,14 +890,14 @@ export async function processTimelineDrop(droppedItemData, targetTrackId, startT
                                 if(services.captureStateForUndo) services.captureStateForUndo(`Move Clip "${clipToMove.name}" to Track "${targetTrack.name}"`);
 
                                 if (typeof originalTrack.removeTimelineClip === 'function') {
-                                    originalTrack.removeTimelineClip(clipToMove.id, true); // true to skip its own undo
+                                    originalTrack.removeTimelineClip(clipToMove.id, true);
                                 } else {
                                     originalTrack.timelineClips = originalTrack.timelineClips.filter(c => c.id !== clipToMove.id);
                                     console.warn(`[TimelineDrop] removeTimelineClip method missing on track ${originalTrack.id}, fallback used.`);
                                 }
 
                                 if (typeof targetTrack.addExistingClipFromOtherTrack === 'function') {
-                                    targetTrack.addExistingClipFromOtherTrack(clipToMove, startTime, true); // true to skip its own undo
+                                    targetTrack.addExistingClipFromOtherTrack(clipToMove, startTime, true);
                                 } else {
                                     const newClipInstance = {...JSON.parse(JSON.stringify(clipToMove)), startTime: startTime, id: `clip_${targetTrack.id}_${Date.now()}`};
                                     targetTrack.timelineClips.push(newClipInstance);
