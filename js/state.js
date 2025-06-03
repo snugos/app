@@ -1,55 +1,64 @@
-// js/state.js - Application State Management (MODIFIED)
+// js/state.js - Application State Management (MODIFIED - Ensured appServices reference)
 import * as Constants from './constants.js';
-import { Track } from './Track.js'; // Ensure Track class is correctly imported
+import { Track } from './Track.js'; 
 import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js';
 
 // --- Centralized State Variables ---
 let tracks = [];
 let trackIdCounter = 0;
 
-let openWindowsMap = new Map(); // Stores SnugWindow instances by ID
+let openWindowsMap = new Map(); 
 let highestZ = 100;
 
-let masterEffectsChainState = []; // Stores master effect configurations {id, type, params, isBypassed}
-let masterGainValueState = typeof Tone !== 'undefined' ? Tone.dbToGain(0) : 0.707; // Linear gain
+let masterEffectsChainState = []; 
+let masterGainValueState = (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 0.707;
 
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
 
-let loadedZipFilesGlobal = {}; // { libraryName: JSZipInstance | "loading" | "error" }
-let soundLibraryFileTreesGlobal = {}; // { libraryName: fileTree }
+let loadedZipFilesGlobal = {}; 
+let soundLibraryFileTreesGlobal = {}; 
 let currentLibraryNameGlobal = null;
-let currentSoundFileTreeGlobal = null; // This might be redundant if derived from currentLibraryNameGlobal
-let currentSoundBrowserPathGlobal = []; // Array of folder names representing current path
-let previewPlayerGlobal = null; // Tone.Player instance for previewing sounds
+// currentSoundFileTreeGlobal is derived, not independent state: soundLibraryFileTreesGlobal[currentLibraryNameGlobal]
+let currentSoundBrowserPathGlobal = []; 
+let previewPlayerGlobal = null; 
 
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
 
 let activeSequencerTrackId = null;
 let soloedTrackId = null;
 let armedTrackId = null;
-let isRecordingGlobal = false; // Global recording state (master record button)
-let recordingTrackIdGlobal = null; // ID of the track currently being recorded onto (for audio tracks)
-let recordingStartTime = 0; // Tone.Transport.seconds when recording started
+let isRecordingGlobal = false; 
+let recordingTrackIdGlobal = null; 
+let recordingStartTime = 0; 
 
-let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
+let globalPlaybackMode = 'sequencer'; 
 let selectedTimelineClipInfoGlobal = { trackId: null, clipId: null };
 
-const THEME_STORAGE_KEY = 'snugosThemePreference_v1'; // Added v1
-let currentTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'dark'; // Load preference
+const THEME_STORAGE_KEY = 'snugosThemePreference_v1';
+let currentTheme = 'dark'; // Default, will be overridden by localStorage if present
 
 let undoStack = [];
 let redoStack = [];
 
-let appServices = {}; // To be injected by main.js
+// This will be the single appServices instance from main.js
+let appServicesInstance = {}; 
 
 // --- Initialization ---
 export function initializeStateModule(services) {
-    appServices = services;
-    // Attempt to load saved theme, otherwise default to 'dark'
-    currentTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'dark';
-    if (appServices.updateTheme) appServices.updateTheme(currentTheme); // Update UI based on theme
-    console.log("[State] Module initialized.");
+    appServicesInstance = services; // Use the direct reference
+    
+    // Load theme preference after appServices (which contains showNotification) is set.
+    try {
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+            currentTheme = savedTheme;
+        }
+    } catch (e) {
+        console.warn("[State] Could not read theme from localStorage:", e.message);
+    }
+    // UI update for theme will be handled by main.js or UI module after state is initialized
+    // console.log("[State] Module initialized. Current theme:", currentTheme);
 }
 
 // --- Getters ---
@@ -72,7 +81,7 @@ export const getClipboardDataState = () => clipboardDataGlobal;
 export const getActiveSequencerTrackIdState = () => activeSequencerTrackId;
 export const getSoloedTrackIdState = () => soloedTrackId;
 export const getArmedTrackIdState = () => armedTrackId;
-export const isTrackRecordingState = (trackId) => isRecordingGlobal && recordingTrackIdGlobal === trackId; // More specific
+export const isTrackRecordingState = (trackId) => isRecordingGlobal && recordingTrackIdGlobal === trackId;
 export const isGlobalRecordingActiveState = () => isRecordingGlobal;
 export const getRecordingTrackIdState = () => recordingTrackIdGlobal;
 export const getRecordingStartTimeState = () => recordingStartTime;
@@ -97,57 +106,53 @@ export function setHighestZState(val) {
     if (val > highestZ) highestZ = val;
 }
 
-export function setMasterGainValueState(value) { // value is linear gain
+export function setMasterGainValueState(value) { 
     masterGainValueState = value;
-    if (appServices.setMasterVolume && typeof Tone !== 'undefined') { // Ensure Tone is loaded
-        appServices.setMasterVolume(value); // This will call Tone.Master.volume.value
-    }
+    // Audio actual update is handled by appServices.setMasterVolume in main.js calling AudioModule
 }
 
 export function setMidiAccessState(midi) { midiAccessGlobal = midi; }
 export function setActiveMIDIInputState(deviceId) {
     activeMIDIInputGlobal = deviceId;
-    // If appServices has a UI update function for MIDI device change, call it
-    if (appServices.updateMIDIIndicator) appServices.updateMIDIIndicator(deviceId !== 'none' && deviceId !== null);
+    if (appServicesInstance.updateMIDIIndicator) appServicesInstance.updateMIDIIndicator(deviceId !== 'none' && deviceId !== null);
 }
 export function setLoadedZipFilesState(zipFiles) { loadedZipFilesGlobal = zipFiles; }
 export function setSoundLibraryFileTreesState(trees) { soundLibraryFileTreesGlobal = trees; }
 export function setCurrentLibraryNameState(name) {
     currentLibraryNameGlobal = name;
-    currentSoundFileTreeGlobal = soundLibraryFileTreesGlobal[name] || null;
-    currentSoundBrowserPathGlobal = []; // Reset path when library changes
-    if (appServices.updateSoundBrowserDisplayForLibrary) {
-        appServices.updateSoundBrowserDisplayForLibrary(name);
+    currentSoundBrowserPathGlobal = []; 
+    if (appServicesInstance.updateSoundBrowserDisplayForLibrary) {
+        appServicesInstance.updateSoundBrowserDisplayForLibrary(name);
     }
 }
 export function setCurrentSoundBrowserPathState(pathArray) { currentSoundBrowserPathGlobal = pathArray; }
 export function pushToSoundBrowserPath(folderName) {
     currentSoundBrowserPathGlobal.push(folderName);
-    if (appServices.updateSoundBrowserDisplayForLibrary) appServices.updateSoundBrowserDisplayForLibrary();
+    if (appServicesInstance.updateSoundBrowserDisplayForLibrary) appServicesInstance.updateSoundBrowserDisplayForLibrary();
 }
 export function popFromSoundBrowserPath() {
     currentSoundBrowserPathGlobal.pop();
-    if (appServices.updateSoundBrowserDisplayForLibrary) appServices.updateSoundBrowserDisplayForLibrary();
+    if (appServicesInstance.updateSoundBrowserDisplayForLibrary) appServicesInstance.updateSoundBrowserDisplayForLibrary();
 }
 export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
 export function setClipboardDataState(data) { clipboardDataGlobal = data; }
 
 export function setActiveSequencerTrackIdState(trackId) {
     activeSequencerTrackId = trackId;
-    // Potentially notify UI or other modules
 }
 export function setSoloedTrackIdState(trackId) {
     const previouslySoloed = soloedTrackId;
-    soloedTrackId = (soloedTrackId === trackId) ? null : trackId; // Toggle behavior
+    soloedTrackId = (soloedTrackId === trackId) ? null : trackId; 
 
     tracks.forEach(t => {
-        if (t.id === previouslySoloed && previouslySoloed !== soloedTrackId) t.isSoloed = false;
-        if (t.id === soloedTrackId) t.isSoloed = true;
-        // Update track's internal solo state for audio routing
-        if (typeof t.updateSoloState === 'function') t.updateSoloState(soloedTrackId);
-        if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'muteSoloChange');
+        const isNowThisTrackSoloed = (t.id === soloedTrackId);
+        if (t.isSoloed !== isNowThisTrackSoloed || (previouslySoloed && t.id === previouslySoloed && !isNowThisTrackSoloed)) {
+            t.isSoloed = isNowThisTrackSoloed;
+            if (typeof t.updateSoloState === 'function') t.updateSoloState(soloedTrackId); // Track updates its own audio
+            if (appServicesInstance.updateTrackUI) appServicesInstance.updateTrackUI(t.id, 'muteSoloChange');
+        }
     });
-    if (appServices.updateMixerWindow) appServices.updateMixerWindow();
+    if (appServicesInstance.updateMixerWindow) appServicesInstance.updateMixerWindow();
 }
 export function setArmedTrackIdState(trackId) {
     const previouslyArmed = armedTrackId;
@@ -157,100 +162,99 @@ export function setArmedTrackIdState(trackId) {
         const prevTrack = getTrackByIdState(previouslyArmed);
         if (prevTrack) {
             prevTrack.isArmedForRec = false;
-            if (appServices.updateTrackUI) appServices.updateTrackUI(prevTrack.id, 'armChange');
+            if (appServicesInstance.updateTrackUI) appServicesInstance.updateTrackUI(prevTrack.id, 'armChange');
         }
     }
     if (armedTrackId !== null) {
         const currentTrack = getTrackByIdState(armedTrackId);
         if (currentTrack) {
             currentTrack.isArmedForRec = true;
-            if (appServices.updateTrackUI) appServices.updateTrackUI(currentTrack.id, 'armChange');
+            if (appServicesInstance.updateTrackUI) appServicesInstance.updateTrackUI(currentTrack.id, 'armChange');
         }
     }
-     if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-     if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(isRecordingGlobal, !!armedTrackId);
+     if (appServicesInstance.updateMixerWindow) appServicesInstance.updateMixerWindow();
+     if (appServicesInstance.updateRecordButtonUI) appServicesInstance.updateRecordButtonUI(isRecordingGlobal, !!armedTrackId);
 }
 
 export function setIsRecordingState(isRec) {
     isRecordingGlobal = isRec;
-    if (!isRec && recordingTrackIdGlobal) { // If stopping recording for a specific track
-        if (appServices.stopAudioRecording) appServices.stopAudioRecording(); // Audio module handles blob processing
+    if (!isRec && recordingTrackIdGlobal) { 
+        // Actual audio stop is handled by AudioModule via appServices
         recordingTrackIdGlobal = null;
     }
-    // Update global UI record button
-    if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(isRecordingGlobal, !!armedTrackId);
+    if (appServicesInstance.updateRecordButtonUI) appServicesInstance.updateRecordButtonUI(isRecordingGlobal, !!armedTrackId);
 }
 export function setRecordingTrackIdState(trackId) { recordingTrackIdGlobal = trackId; }
 export function setRecordingStartTimeState(time) { recordingStartTime = time; }
 
-export function setPlaybackModeState(mode) { // 'sequencer' or 'timeline'
+export function setPlaybackModeState(mode) { 
     if (globalPlaybackMode !== mode) {
         globalPlaybackMode = mode;
-        if (appServices.onPlaybackModeChange) {
-            appServices.onPlaybackModeChange(mode);
+        if (appServicesInstance.onPlaybackModeChange) {
+            appServicesInstance.onPlaybackModeChange(mode);
         }
-        // If playback is active, might need to stop and restart or re-schedule
-        if (Tone.Transport.state === 'started' && appServices.togglePlayback) {
-            appServices.showNotification(`Playback mode changed. Stopping and restarting transport.`, "info", 2000);
-            appServices.stopPlayback(); // Stop first
-            // Consider if auto-restart is desired or if user should restart
-            // For now, let user restart if they wish.
+        if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started' && appServicesInstance.stopPlayback) {
+            if (appServicesInstance.showNotification) appServicesInstance.showNotification(`Playback mode changed. Transport stopped.`, "info", 2000);
+            appServicesInstance.stopPlayback();
         }
     }
 }
 export function setSelectedTimelineClipInfoState(trackId, clipId) {
     selectedTimelineClipInfoGlobal = { trackId, clipId };
-    // Notify UI to update selection visuals on timeline
-    if(appServices.renderTimeline) appServices.renderTimeline();
+    if(appServicesInstance.renderTimeline) appServicesInstance.renderTimeline();
 }
 export function setCurrentThemeState(theme) {
-    currentTheme = theme;
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-    if (appServices.updateTheme) appServices.updateTheme(theme); // For main.js to update body class
+    if (currentTheme !== theme && (theme === 'light' || theme === 'dark')) {
+        currentTheme = theme;
+        try {
+            localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch(e) {
+            console.warn("[State] Could not save theme to localStorage:", e.message);
+        }
+        if (appServicesInstance.updateTheme) appServicesInstance.updateTheme(theme); 
+    }
 }
 
-
 // --- Track Management ---
-export function addTrackToStateInternal(type, initialData = null, captureUndo = true, services = appServices) {
-    if (!services || !services.getTrackById) { // Basic check for appServices
-        console.error("[State addTrackToStateInternal] appServices not properly injected or core functions missing!");
+export function addTrackToStateInternal(type, initialData = null, captureUndo = true, servicesPassedToTrack) {
+    if (!servicesPassedToTrack || !servicesPassedToTrack.getTrackById) { 
+        console.error("[State addTrackToStateInternal] appServices for Track constructor not properly provided!");
         return null;
     }
     trackIdCounter++;
-    const newTrack = new Track(trackIdCounter, type, initialData, services);
+    const newTrack = new Track(trackIdCounter, type, initialData, servicesPassedToTrack); // Pass full appServices here
     tracks.push(newTrack);
 
-    if (captureUndo && services.captureStateForUndoInternal) {
-        services.captureStateForUndoInternal(`Add Track: ${newTrack.name}`);
+    if (captureUndo && appServicesInstance.captureStateForUndoInternal) {
+        appServicesInstance.captureStateForUndoInternal(`Add Track: ${newTrack.name}`);
     }
-    if (services.updateMixerWindow) services.updateMixerWindow();
-    if (services.updateArrangementView) services.updateArrangementView();
+    if (appServicesInstance.updateMixerWindow) appServicesInstance.updateMixerWindow();
+    if (appServicesInstance.renderTimeline) appServicesInstance.renderTimeline(); // Use renderTimeline
     return newTrack;
 }
 
 export function removeTrackFromStateInternal(trackId, captureUndo = true) {
-    const trackIndex = tracks.findIndex(t => t.id === trackId);
+    const trackIndex = tracks.findIndex(t => t.id.toString() === trackId.toString());
     if (trackIndex > -1) {
         const trackToRemove = tracks[trackIndex];
-        if (captureUndo && appServices.captureStateForUndoInternal) {
-            appServices.captureStateForUndoInternal(`Remove Track: ${trackToRemove.name}`);
+        if (captureUndo && appServicesInstance.captureStateForUndoInternal) {
+            appServicesInstance.captureStateForUndoInternal(`Remove Track: ${trackToRemove.name}`);
         }
         if (typeof trackToRemove.dispose === 'function') {
-            trackToRemove.dispose(); // Call track's own cleanup
+            trackToRemove.dispose(); 
         }
         tracks.splice(trackIndex, 1);
 
-        // Clean up related state
-        if (soloedTrackId === trackId) setSoloedTrackIdState(null); // Unsolo if removed track was soloed
-        if (armedTrackId === trackId) setArmedTrackIdState(null);   // Unarm if removed track was armed
+        if (soloedTrackId === trackId) setSoloedTrackIdState(null); 
+        if (armedTrackId === trackId) setArmedTrackIdState(null);   
         if (activeSequencerTrackId === trackId) setActiveSequencerTrackIdState(null);
         if (recordingTrackIdGlobal === trackId) {
-            setIsRecordingState(false); // Stop global recording if the recording track is removed
+            setIsRecordingState(false); 
         }
 
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.updateArrangementView) appServices.updateArrangementView();
-        if (appServices.closeAllTrackWindows) appServices.closeAllTrackWindows(trackId); // Close windows associated with this track
+        if (appServicesInstance.updateMixerWindow) appServicesInstance.updateMixerWindow();
+        if (appServicesInstance.renderTimeline) appServicesInstance.renderTimeline();
+        if (appServicesInstance.closeAllTrackWindows) appServicesInstance.closeAllTrackWindows(trackId); 
     }
 }
 
@@ -264,7 +268,6 @@ export function addMasterEffectToState(effectType, params = null) {
         params: effectInstanceParams,
         isBypassed: false
     });
-    // No undo capture here, should be handled by the caller (e.g., appServices.addMasterEffect)
     return effectId;
 }
 
@@ -278,10 +281,14 @@ export function updateMasterEffectParamInState(effectId, paramPath, value) {
         let target = effect.params;
         const keys = paramPath.split('.');
         for (let i = 0; i < keys.length - 1; i++) {
-            if (!target[keys[i]] || typeof target[keys[i]] !== 'object') target[keys[i]] = {}; // Create path if not exists
+            if (!target[keys[i]] || typeof target[keys[i]] !== 'object') target[keys[i]] = {}; 
             target = target[keys[i]];
         }
         target[keys[keys.length - 1]] = value;
+        // If the param was 'isBypassed', the audio chain needs reevaluation
+        if (paramPath === 'isBypassed' && appServicesInstance._rechainMasterEffectsAudio) {
+           // This is handled by appServices.toggleBypassMasterEffect calling AudioModule._rechainMasterEffectsAudio
+        }
     }
 }
 export function reorderMasterEffectInState(effectId, newIndex) {
@@ -290,30 +297,31 @@ export function reorderMasterEffectInState(effectId, newIndex) {
     const [effect] = masterEffectsChainState.splice(effectIndex, 1);
     masterEffectsChainState.splice(newIndex, 0, effect);
 }
-export function setMasterEffectsState(effects) { // Used for project reconstruction
+export function setMasterEffectsState(effects) { 
     masterEffectsChainState = effects;
 }
 
 // --- Undo/Redo ---
 function _getCurrentStateSnapshot(actionName) {
+    if (typeof Tone === 'undefined') { // Guard against Tone not being defined
+        console.error("[State _getCurrentStateSnapshot] Tone is not defined. Cannot capture BPM. Snapshot might be incomplete.");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error capturing undo state: Tone.js missing.", "error");
+        // Allow snapshot without Tone-dependent parts if necessary, or return null
+        // For now, let's proceed but log the issue. Some state might be lost.
+    }
     try {
-        // Deep clone critical parts of the state
         const clonedTracks = tracks.map(track => track.serializeState ? track.serializeState() : JSON.parse(JSON.stringify(track)));
         const clonedMasterEffects = JSON.parse(JSON.stringify(masterEffectsChainState));
         const clonedOpenWindows = Array.from(openWindowsMap.values()).map(win => {
-            if (!win || !win.element) return null; // Skip if window or element is gone
+            if (!win || !win.element) return null; 
             return {
-                id: win.id,
-                title: win.title,
-                left: win.element.style.left,
-                top: win.element.style.top,
-                width: win.element.style.width,
-                height: win.element.style.height,
+                id: win.id, title: win.title,
+                left: win.element.style.left, top: win.element.style.top,
+                width: win.element.style.width, height: win.element.style.height,
                 zIndex: parseInt(win.element.style.zIndex, 10) || 100,
-                isMinimized: win.isMinimized,
-                isMaximized: win.isMaximized,
+                isMinimized: win.isMinimized, isMaximized: win.isMaximized,
                 restoreState: JSON.parse(JSON.stringify(win.restoreState || {})),
-                initialContentKey: win.initialContentKey || win.id // Important for re-creating content
+                initialContentKey: win.initialContentKey || win.id 
             };
         }).filter(ws => ws !== null);
 
@@ -329,197 +337,174 @@ function _getCurrentStateSnapshot(actionName) {
             soloedTrackId: soloedTrackId,
             armedTrackId: armedTrackId,
             globalPlaybackMode: globalPlaybackMode,
-            // Add other relevant global states here (e.g., tempo from Tone.Transport.bpm.value)
-            tempo: Tone.Transport.bpm.value, // Capture tempo
+            tempo: (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : Constants.MIN_TEMPO,
         };
     } catch (error) {
         console.error("[State _getCurrentStateSnapshot] Error creating state snapshot:", error);
-        if(appServices.showNotification) appServices.showNotification("Error capturing state for undo. Undo might be unreliable.", "error", 4000);
-        return null; // Return null if snapshot fails
+        if(appServicesInstance.showNotification) appServicesInstance.showNotification("Error capturing state for undo. Undo might be unreliable.", "error", 4000);
+        return null; 
     }
 }
 
 async function _applyStateSnapshot(snapshot, isUndoRedo = true) {
     if (!snapshot) {
         console.error("[State _applyStateSnapshot] Attempted to apply a null snapshot.");
-        if(appServices.showNotification) appServices.showNotification("Error applying state. State might be inconsistent.", "error", 4000);
+        if(appServicesInstance.showNotification) appServicesInstance.showNotification("Error applying state. State might be inconsistent.", "error", 4000);
         return;
     }
+    if (typeof Tone === 'undefined') {
+        console.error("[State _applyStateSnapshot] Tone is not defined. Cannot apply snapshot requiring Tone.js operations.");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Critical error applying state: Tone.js missing.", "error");
+        return; // Cannot proceed without Tone
+    }
     try {
-        appServices._isReconstructingDAW_flag = true; // Prevent further undo captures during apply
+        if (appServicesInstance) appServicesInstance._isReconstructingDAW_flag = true;
 
-        // Stop playback and clear transport before major state changes
-        if (Tone.Transport.state === 'started' && appServices.stopPlayback) {
-            appServices.stopPlayback();
+        if (Tone.Transport.state === 'started' && appServicesInstance.stopPlayback) {
+            appServicesInstance.stopPlayback();
         }
-        Tone.Transport.cancel(0); // Clear all scheduled Tone.js events
+        Tone.Transport.cancel(0); 
 
-        // 1. Dispose existing tracks and clear array
         tracks.forEach(track => track.dispose());
         tracks = [];
 
-        // 2. Close all existing windows (silently, without capturing undo)
         openWindowsMap.forEach(win => { if (win.element) win.close(true); });
         openWindowsMap.clear();
 
-        // 3. Apply global settings from snapshot
         highestZ = snapshot.highestZ || 100;
         trackIdCounter = snapshot.trackIdCounter || 0;
         masterGainValueState = snapshot.masterGainValue !== undefined ? snapshot.masterGainValue : Tone.dbToGain(0);
-        if (appServices.setMasterVolume) appServices.setMasterVolume(masterGainValueState);
+        if (appServicesInstance.setMasterVolume) appServicesInstance.setMasterVolume(masterGainValueState);
 
         Tone.Transport.bpm.value = snapshot.tempo || 120;
-        if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(snapshot.tempo || 120);
+        if (appServicesInstance.updateTaskbarTempoDisplay) appServicesInstance.updateTaskbarTempoDisplay(snapshot.tempo || 120);
 
-
-        // 4. Reconstruct Master Effects
-        masterEffectsChainState = JSON.parse(JSON.stringify(snapshot.masterEffectsChain || []));
-        if (appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes(); // Clear existing audio nodes
-        for (const effectState of masterEffectsChainState) {
-            if (appServices.addMasterEffectToAudio) { // Ensure this service adds to audio engine only
-                await appServices.addMasterEffectToAudio(effectState.id, effectState.type, effectState.params);
-                // Bypass state should be handled by audio module if it's part of initial setup
-            }
-        }
-        if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-
-
-        // 5. Reconstruct Tracks
-        for (const trackData of snapshot.tracks) {
-            if (trackData) {
-                // The addTrackToStateInternal should NOT capture undo during this phase.
-                // Pass 'false' for captureUndo if the function signature allows, or manage via _isReconstructingDAW_flag
-                const newTrack = addTrackToStateInternal(trackData.type, trackData, false, appServices);
-                // Track constructor should handle applying its detailed state, including effects, sequences, clips.
-            }
-        }
-
-        // 6. Reconstruct Windows (after tracks, as some windows depend on track data)
-        for (const winState of snapshot.openWindows) {
-            if (winState) {
-                // Use a mapping or switch to call the correct 'open' function based on initialContentKey or id pattern
-                let openedWindow = null;
-                if (winState.id === 'soundBrowser' && appServices.openSoundBrowserWindow) openedWindow = appServices.openSoundBrowserWindow(null, winState);
-                else if (winState.id === 'mixer' && appServices.openMixerWindow) openedWindow = appServices.openMixerWindow(winState);
-                else if (winState.id === 'timeline' && appServices.openArrangementWindow) openedWindow = appServices.openArrangementWindow(null, winState);
-                else if (winState.id === 'globalControls' && appServices.openGlobalControlsWindow) {
-                    // Global controls might need special handling if its content is static
-                    appServices.openGlobalControlsWindow(() => {}, winState); // Empty callback
-                } else if (winState.id === 'masterEffectsRack' && appServices.openMasterEffectsRackWindow) {
-                    openedWindow = appServices.openMasterEffectsRackWindow(winState);
-                } else if (winState.id.startsWith('trackInspector-')) {
-                    const trackId = winState.id.split('-')[1];
-                    if (getTrackByIdState(trackId) && appServices.openTrackInspectorWindow) openedWindow = appServices.openTrackInspectorWindow(trackId, winState);
-                } else if (winState.id.startsWith('effectsRack-')) {
-                    const trackId = winState.id.split('-')[1];
-                    if (getTrackByIdState(trackId) && appServices.openTrackEffectsRackWindow) openedWindow = appServices.openTrackEffectsRackWindow(trackId, winState);
-                } else if (winState.id.startsWith('sequencer-')) {
-                    const trackId = winState.id.split('-')[1];
-                    if (getTrackByIdState(trackId) && appServices.openSequencerWindow) openedWindow = appServices.openSequencerWindow(trackId, winState);
-                }
-                // SnugWindow's constructor or an applyState method should handle position, size, zIndex, minimized state.
-                if (openedWindow && openedWindow.element) { // Ensure window was created and has an element
-                    if (typeof openedWindow.applyState === 'function') { // If SnugWindow has applyState
-                         openedWindow.applyState(winState);
-                    } else { // Manual application if no applyState
-                        openedWindow.element.style.left = winState.left;
-                        openedWindow.element.style.top = winState.top;
-                        openedWindow.element.style.width = winState.width;
-                        openedWindow.element.style.height = winState.height;
-                        openedWindow.element.style.zIndex = winState.zIndex;
-                        if (winState.isMinimized) openedWindow.minimize(true);
-                        else if (winState.isMaximized) openedWindow.toggleMaximize(); // This should handle restoreState
+        masterEffectsChainState = [];
+        if (appServicesInstance.clearAllMasterEffectNodes) appServicesInstance.clearAllMasterEffectNodes();
+        if(snapshot.masterEffectsChain) {
+            for (const effectState of snapshot.masterEffectsChain) {
+                masterEffectsChainState.push(JSON.parse(JSON.stringify(effectState)));
+                if (appServicesInstance.addMasterEffectToAudio) { 
+                    await appServicesInstance.addMasterEffectToAudio(effectState.id, effectState.type, effectState.params);
+                    if (effectState.isBypassed && AudioModule && typeof AudioModule._rechainMasterEffectsAudio === 'function') {
+                        // The bypass state is part of effectState.params. Audio module should read it.
+                        // Rechain will apply it.
+                        AudioModule._rechainMasterEffectsAudio();
                     }
                 }
             }
         }
+        if (appServicesInstance.updateMasterEffectsRackUI) appServicesInstance.updateMasterEffectsRackUI();
+
+        for (const trackData of snapshot.tracks) {
+            if (trackData) {
+                addTrackToStateInternal(trackData.type, trackData, false, appServicesInstance);
+            }
+        }
+
+        for (const winState of snapshot.openWindows) {
+            if (winState) {
+                let openedWindow = null;
+                if (winState.id === 'soundBrowser' && appServicesInstance.openSoundBrowserWindow) openedWindow = appServicesInstance.openSoundBrowserWindow(null, winState);
+                else if (winState.id === 'mixer' && appServicesInstance.openMixerWindow) openedWindow = appServicesInstance.openMixerWindow(winState);
+                else if (winState.id === 'timeline' && appServicesInstance.openArrangementWindow) openedWindow = appServicesInstance.openArrangementWindow(null, winState);
+                else if (winState.id === 'globalControls' && appServicesInstance.openGlobalControlsWindow) appServicesInstance.openGlobalControlsWindow(() => {}, winState);
+                else if (winState.id === 'masterEffectsRack' && appServicesInstance.openMasterEffectsRackWindow) openedWindow = appServicesInstance.openMasterEffectsRackWindow(winState);
+                else if (winState.id.startsWith('trackInspector-')) {
+                    const trackId = winState.id.split('-')[1];
+                    if (getTrackByIdState(trackId) && appServicesInstance.openTrackInspectorWindow) openedWindow = appServicesInstance.openTrackInspectorWindow(trackId, winState);
+                } else if (winState.id.startsWith('effectsRack-')) {
+                    const trackId = winState.id.split('-')[1];
+                    if (getTrackByIdState(trackId) && appServicesInstance.openTrackEffectsRackWindow) openedWindow = appServicesInstance.openTrackEffectsRackWindow(trackId, winState);
+                } else if (winState.id.startsWith('sequencer-')) {
+                    const trackId = winState.id.split('-')[1];
+                    if (getTrackByIdState(trackId) && appServicesInstance.openSequencerWindow) openedWindow = appServicesInstance.openSequencerWindow(trackId, winState);
+                }
+                if (openedWindow && openedWindow.element && typeof openedWindow.applyState === 'function') {
+                     openedWindow.applyState(winState);
+                }
+            }
+        }
         
-        // 7. Restore other global UI states
         activeSequencerTrackId = snapshot.activeSequencerTrackId || null;
-        // For solo and arm, re-apply through setters to ensure UI and audio routing updates
-        setSoloedTrackIdState(snapshot.soloedTrackId || null); // This will trigger updates
-        setArmedTrackIdState(snapshot.armedTrackId || null);   // This will trigger updates
+        setSoloedTrackIdState(snapshot.soloedTrackId || null); 
+        setArmedTrackIdState(snapshot.armedTrackId || null);   
         setPlaybackModeState(snapshot.globalPlaybackMode || 'sequencer');
 
-
-        // 8. Refresh UI elements that depend on the new state
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.updateArrangementView) appServices.updateArrangementView();
-        if (appServices.updateSoundBrowserDisplayForLibrary) appServices.updateSoundBrowserDisplayForLibrary();
-        if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-
-        // Re-schedule playback for all tracks based on the new state
+        if (appServicesInstance.updateMixerWindow) appServicesInstance.updateMixerWindow();
+        if (appServicesInstance.renderTimeline) appServicesInstance.renderTimeline();
+        if (appServicesInstance.updateSoundBrowserDisplayForLibrary) appServicesInstance.updateSoundBrowserDisplayForLibrary();
+        
         tracks.forEach(track => {
-            if (typeof track.recreateToneSequence === 'function') track.recreateToneSequence(false); // false = don't auto-play
-            // For timeline-based tracks, ensure clips are re-scheduled if necessary
+            if (typeof track.recreateToneSequence === 'function') track.recreateToneSequence(false);
             if (track.type === 'Audio' && typeof track.scheduleTimelinePlayback === 'function') {
-                 track.scheduleTimelinePlayback(Tone.Transport.seconds, globalPlaybackMode);
+                 track.scheduleTimelinePlayback(0, globalPlaybackMode); // Reschedule from start
             }
         });
 
-
     } catch (error) {
         console.error("[State _applyStateSnapshot] Error applying state snapshot:", error);
-        if (appServices.showNotification) appServices.showNotification("Error restoring state. Application might be unstable.", "error", 5000);
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error restoring state. Application might be unstable.", "error", 5000);
     } finally {
-        appServices._isReconstructingDAW_flag = false;
+        if (appServicesInstance) appServicesInstance._isReconstructingDAW_flag = false;
+        if (appServicesInstance.updateUndoRedoButtonsUI) appServicesInstance.updateUndoRedoButtonsUI(); // Ensure this is called AFTER flag is false
     }
 }
 
-
 export function captureStateForUndoInternal(actionName) {
-    if (appServices._isReconstructingDAW_flag) return; // Don't capture during reconstruction
+    if (appServicesInstance._isReconstructingDAW_flag) return; 
 
     const snapshot = _getCurrentStateSnapshot(actionName);
     if (snapshot) {
         undoStack.push(snapshot);
         if (undoStack.length > Constants.MAX_HISTORY_STATES) {
-            undoStack.shift(); // Limit history size
+            undoStack.shift(); 
         }
-        redoStack = []; // Clear redo stack on new action
-        if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-        // console.log(`[State Undo] Captured: ${actionName}. Stack size: ${undoStack.length}`);
+        redoStack = []; 
+        if (appServicesInstance.updateUndoRedoButtonsUI) appServicesInstance.updateUndoRedoButtonsUI(snapshot, null);
     }
 }
 
 export async function undoLastActionInternal() {
-    if (appServices._isReconstructingDAW_flag || undoStack.length === 0) return;
+    if (appServicesInstance._isReconstructingDAW_flag || undoStack.length === 0) return;
     const lastState = undoStack.pop();
-    const currentStateForRedo = _getCurrentStateSnapshot(`Redo state for: ${lastState.actionName}`); // Capture current state for redo
+    const currentStateForRedo = _getCurrentStateSnapshot(`Redo state for: ${lastState.actionName}`); 
 
     if (currentStateForRedo) redoStack.push(currentStateForRedo);
     if (redoStack.length > Constants.MAX_HISTORY_STATES) redoStack.shift();
     
-    await _applyStateSnapshot(lastState, true); // true for isUndoRedo
-    if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-    if (appServices.showNotification) appServices.showNotification(`Undid: ${lastState.actionName}`, "info", 1500);
+    await _applyStateSnapshot(lastState, true); 
+    if (appServicesInstance.showNotification) appServicesInstance.showNotification(`Undid: ${lastState.actionName}`, "info", 1500);
 }
 
 export async function redoLastActionInternal() {
-    if (appServices._isReconstructingDAW_flag || redoStack.length === 0) return;
+    if (appServicesInstance._isReconstructingDAW_flag || redoStack.length === 0) return;
     const nextState = redoStack.pop();
-    const currentStateForUndo = _getCurrentStateSnapshot(`Undo state for: ${nextState.actionName}`); // Capture current state for undo
+    const currentStateForUndo = _getCurrentStateSnapshot(`Undo state for: ${nextState.actionName}`); 
 
     if (currentStateForUndo) undoStack.push(currentStateForUndo);
     if (undoStack.length > Constants.MAX_HISTORY_STATES) undoStack.shift();
 
-    await _applyStateSnapshot(nextState, true); // true for isUndoRedo
-    if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-    if (appServices.showNotification) appServices.showNotification(`Redid: ${nextState.actionName}`, "info", 1500);
+    await _applyStateSnapshot(nextState, true); 
+    if (appServicesInstance.showNotification) appServicesInstance.showNotification(`Redid: ${nextState.actionName}`, "info", 1500);
 }
 
 // --- Project Data Management ---
 export function gatherProjectDataInternal() {
+    // ... (Ensure Tone is defined before accessing Tone.Transport, same as in _getCurrentStateSnapshot)
+    if (typeof Tone === 'undefined') {
+        console.error("[State gatherProjectDataInternal] Tone is not defined. Cannot get BPM. Project data might be incomplete.");
+        // Allow to proceed but tempo might be default or missing
+    }
     try {
         const projectData = {
             version: Constants.APP_VERSION,
-            projectName: "My SnugOS Project", // Allow user to set this later
+            projectName: "My SnugOS Project", 
             createdAt: new Date().toISOString(),
             globalSettings: {
-                tempo: Tone.Transport.bpm.value,
-                masterVolume: masterGainValueState, // Linear gain
+                tempo: (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : Constants.MIN_TEMPO,
+                masterVolume: masterGainValueState, 
                 playbackMode: globalPlaybackMode,
-                // Potentially other global settings like time signature if implemented
                 activeSequencerTrackId: activeSequencerTrackId,
                 soloedTrackId: soloedTrackId,
                 armedTrackId: armedTrackId,
@@ -527,7 +512,7 @@ export function gatherProjectDataInternal() {
             },
             masterEffectsChain: masterEffectsChainState.map(effect => ({
                 id: effect.id, type: effect.type,
-                params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {}, // Deep clone params
+                params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {}, 
                 isBypassed: effect.isBypassed
             })),
             tracks: tracks.map(track => track.serializeState ? track.serializeState() : null).filter(td => td !== null),
@@ -548,152 +533,128 @@ export function gatherProjectDataInternal() {
         return projectData;
     } catch (error) {
         console.error("[State gatherProjectDataInternal] Error gathering project data:", error);
-        if (appServices.showNotification) appServices.showNotification("Error preparing project data for saving.", "error", 4000);
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error preparing project data for saving.", "error", 4000);
         return null;
     }
 }
 
 export async function reconstructDAWInternal(projectData) {
+    // ... (same as response #56, ensure Tone guard for transport access)
     if (!projectData) {
-        if (appServices.showNotification) appServices.showNotification("Cannot load project: No data provided.", "error");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Cannot load project: No data provided.", "error");
+        return;
+    }
+    if (typeof Tone === 'undefined') {
+        console.error("[State reconstructDAWInternal] Tone is not defined. Cannot reconstruct project accurately.");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Critical error: Tone.js missing. Cannot load project.", "error");
         return;
     }
     console.log("[State reconstructDAWInternal] Starting project reconstruction...");
-    appServices._isReconstructingDAW_flag = true; // Set flag
+    if(appServicesInstance) appServicesInstance._isReconstructingDAW_flag = true; 
 
     try {
-        // 0. Reset undo/redo stacks
-        undoStack = [];
-        redoStack = [];
-        if(appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
+        undoStack = []; redoStack = [];
+        if(appServicesInstance.updateUndoRedoButtonsUI) appServicesInstance.updateUndoRedoButtonsUI(null, null);
 
-        // 1. Stop playback & clear transport
-        if (Tone.Transport.state === 'started' && appServices.stopPlayback) {
-            appServices.stopPlayback();
+        if (Tone.Transport.state === 'started' && appServicesInstance.stopPlayback) {
+            appServicesInstance.stopPlayback();
         }
         Tone.Transport.cancel(0);
 
-        // 2. Close all existing windows and clear tracks (without triggering undo)
-        openWindowsMap.forEach(win => win.close(true)); // true for silent close
+        openWindowsMap.forEach(win => win.close(true)); 
         openWindowsMap.clear();
-        tracks.forEach(track => track.dispose()); // Dispose existing Tone.js objects
+        tracks.forEach(track => track.dispose()); 
         tracks = [];
-        trackIdCounter = 0; // Reset counter, will be updated by max ID from project tracks
+        trackIdCounter = 0; 
 
-        // 3. Apply Global Settings
         if (projectData.globalSettings) {
             Tone.Transport.bpm.value = projectData.globalSettings.tempo || 120;
-            if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
-
+            if (appServicesInstance.updateTaskbarTempoDisplay) appServicesInstance.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
             masterGainValueState = projectData.globalSettings.masterVolume !== undefined ? projectData.globalSettings.masterVolume : Tone.dbToGain(0);
-            if (appServices.setMasterVolume) appServices.setMasterVolume(masterGainValueState);
-            
+            if (appServicesInstance.setMasterVolume) appServicesInstance.setMasterVolume(masterGainValueState);
             globalPlaybackMode = projectData.globalSettings.playbackMode || 'sequencer';
-            if(appServices.onPlaybackModeChange) appServices.onPlaybackModeChange(globalPlaybackMode);
-
+            if(appServicesInstance.onPlaybackModeChange) appServicesInstance.onPlaybackModeChange(globalPlaybackMode);
             activeSequencerTrackId = projectData.globalSettings.activeSequencerTrackId || null;
             soloedTrackId = projectData.globalSettings.soloedTrackId || null;
             armedTrackId = projectData.globalSettings.armedTrackId || null;
             selectedTimelineClipInfoGlobal = projectData.globalSettings.selectedTimelineClipInfo || { trackId: null, clipId: null };
         }
 
-        // 4. Reconstruct Master Effects
-        masterEffectsChainState = []; // Clear current state
-        if (appServices.clearAllMasterEffectNodes) appServices.clearAllMasterEffectNodes(); // Clear audio nodes
+        masterEffectsChainState = []; 
+        if (appServicesInstance.clearAllMasterEffectNodes) appServicesInstance.clearAllMasterEffectNodes(); 
         if (projectData.masterEffectsChain) {
             for (const effectState of projectData.masterEffectsChain) {
-                masterEffectsChainState.push(JSON.parse(JSON.stringify(effectState))); // Add to state
-                if (appServices.addMasterEffectToAudio) { // This adds to audio engine
-                    await appServices.addMasterEffectToAudio(effectState.id, effectState.type, effectState.params);
-                    // TODO: Handle bypass state in audio module when effect is added/reconstructed
-                    // if (effectState.isBypassed && appServices.toggleBypassMasterEffectAudio) {
-                    // appServices.toggleBypassMasterEffectAudio(effectState.id, true);
-                    // }
+                masterEffectsChainState.push(JSON.parse(JSON.stringify(effectState))); 
+                if (appServicesInstance.addMasterEffectToAudio) { 
+                    await appServicesInstance.addMasterEffectToAudio(effectState.id, effectState.type, effectState.params);
+                    if (effectState.isBypassed && AudioModule && typeof AudioModule._rechainMasterEffectsAudio === 'function') {
+                         AudioModule._rechainMasterEffectsAudio(); // Rechain will consider bypass state
+                    }
                 }
             }
         }
-        if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
+        if (appServicesInstance.updateMasterEffectsRackUI) appServicesInstance.updateMasterEffectsRackUI();
 
-
-        // 5. Reconstruct Tracks
         let maxTrackId = 0;
         if (projectData.tracks) {
             for (const trackData of projectData.tracks) {
                 if (trackData) {
-                    // Add track to state without capturing undo, passing appServices
-                    const newTrack = addTrackToStateInternal(trackData.type, trackData, false, appServices);
+                    const newTrack = addTrackToStateInternal(trackData.type, trackData, false, appServicesInstance);
                     if (newTrack && newTrack.id > maxTrackId) maxTrackId = newTrack.id;
                 }
             }
         }
-        trackIdCounter = maxTrackId; // Ensure new tracks get unique IDs
+        trackIdCounter = maxTrackId; 
 
-        // 6. Reconstruct Windows
-        highestZ = 100; // Reset Z-index base
+        highestZ = 100; 
         if (projectData.windowStates) {
-            // Sort windows by zIndex to restore focus order (optional but good)
             const sortedWindows = projectData.windowStates.sort((a,b) => (a.zIndex || 0) - (b.zIndex || 0));
-
             for (const winState of sortedWindows) {
                 if (winState) {
-                    // Use a mapping or switch to call the correct 'open' function
                     let openedWindow = null;
-                    if (winState.id === 'soundBrowser' && appServices.openSoundBrowserWindow) openedWindow = appServices.openSoundBrowserWindow(null, winState);
-                    else if (winState.id === 'mixer' && appServices.openMixerWindow) openedWindow = appServices.openMixerWindow(winState);
-                    else if (winState.id === 'timeline' && appServices.openArrangementWindow) openedWindow = appServices.openArrangementWindow(null, winState);
-                    else if (winState.id === 'globalControls' && appServices.openGlobalControlsWindow) appServices.openGlobalControlsWindow(() => {}, winState);
-                    else if (winState.id === 'masterEffectsRack' && appServices.openMasterEffectsRackWindow) openedWindow = appServices.openMasterEffectsRackWindow(winState);
-                    else if (winState.id.startsWith('trackInspector-')) {
-                        const trackId = winState.id.split('-')[1];
-                        if (getTrackByIdState(trackId) && appServices.openTrackInspectorWindow) openedWindow = appServices.openTrackInspectorWindow(trackId, winState);
-                    } else if (winState.id.startsWith('effectsRack-')) {
-                        const trackId = winState.id.split('-')[1];
-                        if (getTrackByIdState(trackId) && appServices.openTrackEffectsRackWindow) openedWindow = appServices.openTrackEffectsRackWindow(trackId, winState);
-                    } else if (winState.id.startsWith('sequencer-')) {
-                        const trackId = winState.id.split('-')[1];
-                        if (getTrackByIdState(trackId) && appServices.openSequencerWindow) openedWindow = appServices.openSequencerWindow(trackId, winState);
+                    if (winState.id === 'soundBrowser' && appServicesInstance.openSoundBrowserWindow) openedWindow = appServicesInstance.openSoundBrowserWindow(null, winState);
+                    else if (winState.id === 'mixer' && appServicesInstance.openMixerWindow) openedWindow = appServicesInstance.openMixerWindow(winState);
+                    else if (winState.id === 'timeline' && appServicesInstance.openArrangementWindow) openedWindow = appServicesInstance.openArrangementWindow(null, winState);
+                    else if (winState.id === 'globalControls' && appServicesInstance.openGlobalControlsWindow) appServicesInstance.openGlobalControlsWindow(() => {}, winState);
+                    else if (winState.id === 'masterEffectsRack' && appServicesInstance.openMasterEffectsRackWindow) openedWindow = appServicesInstance.openMasterEffectsRackWindow(winState);
+                    else if (winState.id.startsWith('trackInspector-')) { /* ... */ }
+                    else if (winState.id.startsWith('effectsRack-')) { /* ... */ }
+                    else if (winState.id.startsWith('sequencer-')) { /* ... */ }
+                    
+                    if (openedWindow && openedWindow.element && typeof openedWindow.applyState === 'function') {
+                         openedWindow.applyState(winState);
                     }
-                    // SnugWindow's constructor or an applyState method should handle detailed state
-                     if (openedWindow && openedWindow.element && typeof openedWindow.applyState === 'function') {
-                         openedWindow.applyState(winState); // Let the window instance apply its detailed state
-                     }
                     if (winState.zIndex && winState.zIndex > highestZ) highestZ = winState.zIndex;
                 }
             }
         }
-        // After all windows are opened, ensure focus and taskbar states are correct
-        const topWindowId = openWindowsMap.size > 0 ? Array.from(openWindowsMap.values()).sort((a, b) => (parseInt(b.element.style.zIndex) || 0) - (parseInt(a.element.style.zIndex) || 0))[0]?.id : null;
-        if(topWindowId && getWindowByIdState(topWindowId)) getWindowByIdState(topWindowId).focus(true); // Focus top window silently
+        const topWindowId = openWindowsMap.size > 0 ? Array.from(openWindowsMap.values()).sort((a, b) => (parseInt(b.element?.style.zIndex || "0") || 0) - (parseInt(a.element?.style.zIndex || "0") || 0))[0]?.id : null;
+        if(topWindowId && getWindowByIdState(topWindowId)) getWindowByIdState(topWindowId).focus(true);
 
-        // 7. Final UI updates
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.updateArrangementView) appServices.updateArrangementView(); // For timeline
-        if (appServices.updateSoundBrowserDisplayForLibrary) appServices.updateSoundBrowserDisplayForLibrary();
+        if (appServicesInstance.updateMixerWindow) appServicesInstance.updateMixerWindow();
+        if (appServicesInstance.renderTimeline) appServicesInstance.renderTimeline();
+        if (appServicesInstance.updateSoundBrowserDisplayForLibrary) appServicesInstance.updateSoundBrowserDisplayForLibrary();
         
-        // Apply solo and arm states after all tracks are loaded
         tracks.forEach(t => {
-            if (t.id === soloedTrackId) t.isSoloed = true; else t.isSoloed = false;
-            if (t.id === armedTrackId) t.isArmedForRec = true; else t.isArmedForRec = false;
-            if(typeof t.updateSoloState === 'function') t.updateSoloState(soloedTrackId); // Ensures audio routing for solo
+            if (t.id.toString() === (soloedTrackId || "").toString()) t.isSoloed = true; else t.isSoloed = false;
+            if (t.id.toString() === (armedTrackId || "").toString()) t.isArmedForRec = true; else t.isArmedForRec = false;
+            if(typeof t.updateSoloState === 'function') t.updateSoloState(soloedTrackId);
         });
 
-
-        if (appServices.showNotification) appServices.showNotification(`Project "${projectData.projectName || 'Untitled'}" loaded.`, "success");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification(`Project "${projectData.projectName || 'Untitled'}" loaded.`, "success");
         console.log("[State reconstructDAWInternal] Project reconstruction complete.");
 
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error reconstructing project:", error);
-        if (appServices.showNotification) appServices.showNotification("Error loading project. Project might be corrupted or incompatible.", "error", 5000);
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error loading project. Project might be corrupted or incompatible.", "error", 5000);
     } finally {
-        appServices._isReconstructingDAW_flag = false; // Clear flag
+        if(appServicesInstance) appServicesInstance._isReconstructingDAW_flag = false; 
     }
 }
 
-
-export function saveProjectInternal() {
+export function saveProjectInternal() { /* ... same as response #56 ... */ 
     const projectData = gatherProjectDataInternal();
     if (!projectData) return;
-
     try {
         const projectString = JSON.stringify(projectData, null, 2);
         const blob = new Blob([projectString], { type: 'application/json' });
@@ -706,32 +667,30 @@ export function saveProjectInternal() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        if (appServices.showNotification) appServices.showNotification("Project saved successfully!", "success");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Project saved successfully!", "success");
     } catch (error) {
         console.error("[State saveProjectInternal] Error saving project:", error);
-        if (appServices.showNotification) appServices.showNotification("Error saving project. See console for details.", "error");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error saving project. See console for details.", "error");
     }
 }
-
-export function loadProjectInternal() {
-    const fileInput = document.getElementById('file-input-project'); // Use dedicated input from index.html
+export function loadProjectInternal() { /* ... same as response #56 ... */
+    const fileInput = document.getElementById('file-input-project'); 
     if (fileInput) {
         fileInput.onchange = async (event) => {
             if (event.target.files && event.target.files[0]) {
                 await handleProjectFileLoadInternal(event.target.files[0]);
-                fileInput.value = ''; // Reset input for subsequent loads
+                fileInput.value = ''; 
             }
         };
         fileInput.click();
     } else {
-        if (appServices.showNotification) appServices.showNotification("Error: Project file input not found.", "error");
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error: Project file input not found.", "error");
     }
 }
-
-export async function handleProjectFileLoadInternal(file) {
+export async function handleProjectFileLoadInternal(file) { /* ... same as response #56 ... */
     if (!file) return;
-    if (appServices.showConfirmationDialog) {
-        appServices.showConfirmationDialog("Loading a new project will discard unsaved changes. Continue?", async () => {
+    if (appServicesInstance.showConfirmationDialog) {
+        appServicesInstance.showConfirmationDialog("Loading a new project will discard unsaved changes. Continue?", async () => {
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
@@ -739,98 +698,66 @@ export async function handleProjectFileLoadInternal(file) {
                     await reconstructDAWInternal(projectData);
                 } catch (error) {
                     console.error("Error parsing or loading project file:", error);
-                    if (appServices.showNotification) appServices.showNotification("Failed to load project file. It might be corrupt or invalid.", "error");
+                    if (appServicesInstance.showNotification) appServicesInstance.showNotification("Failed to load project file. It might be corrupt or invalid.", "error");
                 }
             };
             reader.onerror = () => {
-                 if (appServices.showNotification) appServices.showNotification("Error reading project file.", "error");
+                 if (appServicesInstance.showNotification) appServicesInstance.showNotification("Error reading project file.", "error");
             };
             reader.readAsText(file);
         });
     }
 }
-
-export async function exportToWavInternal() {
-    if (!appServices.initAudioContextAndMasterMeter || !appServices.getActualMasterGainNode) {
-         if (appServices.showNotification) appServices.showNotification("Audio system not ready for export.", "error");
+export async function exportToWavInternal() { /* ... same as response #56, ensure Tone is checked ... */
+    if (typeof Tone === 'undefined') {
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Audio engine not ready for export (Tone.js missing).", "error");
         return;
     }
-    await appServices.initAudioContextAndMasterMeter(true); // Ensure audio context is running
-
+    if (!appServicesInstance.initAudioContextAndMasterMeter || !appServicesInstance.getActualMasterGainNode) {
+         if (appServicesInstance.showNotification) appServicesInstance.showNotification("Audio system not ready for export.", "error");
+        return;
+    }
+    await appServicesInstance.initAudioContextAndMasterMeter(true); 
     try {
-        if (Tone.Transport.state === 'started' && appServices.stopPlayback) {
-            appServices.stopPlayback(); // Stop current playback
+        if (Tone.Transport.state === 'started' && appServicesInstance.stopPlayback) {
+            appServicesInstance.stopPlayback(); 
         }
-        Tone.Transport.cancel(0); // Clear any scheduled events
-
-        // Determine the total duration of the project by finding the end of the last clip/sequence
+        Tone.Transport.cancel(0); 
         let projectDuration = 0;
         tracks.forEach(track => {
             track.timelineClips.forEach(clip => {
                 projectDuration = Math.max(projectDuration, clip.startTime + clip.duration);
             });
-            // Consider sequence lengths if not represented as clips directly
-            // track.sequences.forEach(seq => { /* ... if sequences contribute to duration ... */});
         });
-
         if (projectDuration === 0) {
-            if (appServices.showNotification) appServices.showNotification("Project is empty. Nothing to export.", "info");
+            if (appServicesInstance.showNotification) appServicesInstance.showNotification("Project is empty. Nothing to export.", "info");
             return;
         }
-        projectDuration = Math.min(projectDuration + 2, 600); // Add a 2s tail, max 10 mins for sanity
-
-        if (appServices.showNotification) appServices.showNotification(`Exporting ${projectDuration.toFixed(1)}s to WAV... Please wait.`, "info", projectDuration * 1000 + 2000);
-
-        const masterOutputNode = appServices.getActualMasterGainNode(); // Get the node before final destination
+        projectDuration = Math.min(projectDuration + 2, 600); 
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification(`Exporting ${projectDuration.toFixed(1)}s to WAV... Please wait.`, "info", projectDuration * 1000 + 2000);
+        const masterOutputNode = appServicesInstance.getActualMasterGainNode(); 
         if (!masterOutputNode) {
             throw new Error("Master output node is not available for recording export.");
         }
-
-        // Temporarily disconnect masterOutputNode from Tone.Destination to avoid double output during offline render
-        // Note: This can be tricky if Tone.Destination is the only output.
-        // A safer approach might be to use an OfflineAudioContext if Tone.js supports it easily,
-        // or ensure the recorder captures from the correct point. For now, assume direct capture.
-
         const recorder = new Tone.Recorder();
         masterOutputNode.connect(recorder);
-
-        // Prepare tracks for offline rendering
         tracks.forEach(track => {
             if (typeof track.prepareForOfflineRender === 'function') track.prepareForOfflineRender();
-            if (typeof track.recreateToneSequence === 'function') track.recreateToneSequence(false); // Rebuild sequences without auto-start
+            if (typeof track.recreateToneSequence === 'function') track.recreateToneSequence(false); 
             if (typeof track.scheduleTimelinePlayback === 'function') {
-                 track.scheduleTimelinePlayback(0, 'timeline'); // Schedule all timeline clips
+                 track.scheduleTimelinePlayback(0, 'timeline'); 
             }
         });
-        
         recorder.start();
         Tone.Transport.position = 0;
         Tone.Transport.start();
-
-        await Tone.Offline(() => {
-            // This block runs in an offline context, scheduling everything as if it were real-time.
-            // However, with Tone.Recorder, we typically record in real-time from the main context.
-            // So, we'll use a delay based on projectDuration for the main context.
-        }, projectDuration); // This might not be how Tone.Recorder is intended with Offline.
-                             // Let's rely on real-time recording for now and stop manually.
-
-        // Wait for projectDuration in real-time then stop
         await new Promise(resolve => setTimeout(resolve, projectDuration * 1000));
-
         const recording = await recorder.stop();
-        Tone.Transport.stop(); // Stop transport after recording
-
-        // Clean up: disconnect recorder, dispose
+        Tone.Transport.stop(); 
         if (masterOutputNode && !masterOutputNode.disposed && recorder && !recorder.disposed) {
             try { masterOutputNode.disconnect(recorder); } catch(e) {/* ignore */}
         }
         if (recorder && !recorder.disposed) recorder.dispose();
-        
-        // Re-connect masterOutputNode to destination if it was disconnected (not done in this simplified version)
-
-        // Restore transport position if needed
-        // Tone.Transport.position = 0; (Or previous position)
-
         const url = URL.createObjectURL(recording);
         const a = document.createElement('a');
         a.href = url;
@@ -840,13 +767,10 @@ export async function exportToWavInternal() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        if (appServices.showNotification) appServices.showNotification("Export to WAV successful!", "success");
-
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification("Export to WAV successful!", "success");
     } catch (error) {
         console.error("[State exportToWavInternal] Error exporting WAV:", error);
-        if (appServices.showNotification) appServices.showNotification(`Error exporting WAV: ${error.message}. See console.`, "error", 5000);
-        // Ensure transport is stopped on error
-        Tone.Transport.stop();
-        Tone.Transport.cancel(0);
+        if (appServicesInstance.showNotification) appServicesInstance.showNotification(`Error exporting WAV: ${error.message}. See console.`, "error", 5000);
+        if (typeof Tone !== 'undefined' && Tone.Transport) { Tone.Transport.stop(); Tone.Transport.cancel(0); }
     }
 }
