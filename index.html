@@ -34,14 +34,23 @@
 
     <div id="topTaskbar" class="fixed top-0 left-0 right-0 h-8 bg-gray-200 dark:bg-slate-800 border-b border-gray-300 dark:border-slate-700 shadow-md z-[10001] flex items-center justify-between px-2">
         <div id="globalControlsContainer" class="flex items-center space-x-1.5">
-            <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="p-1.5 rounded-md font-semibold shadow-sm transition-colors duration-150 bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700 flex items-center justify-center w-8 h-8">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M8 5v14l11-7z"></path></svg>
+            <button id="playBtnGlobal" title="Play/Pause (Spacebar)" 
+                    class="p-1.5 rounded-md font-semibold shadow-sm transition-colors duration-150 
+                           flex items-center justify-center w-8 h-8 
+                           bg-[var(--bg-button-play)] hover:bg-[var(--bg-button-play-hover)] text-[var(--text-button-icon)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
             </button>
-            <button id="stopBtnGlobal" title="Stop All Audio (Panic)" class="p-1.5 rounded-md font-semibold shadow-sm transition-colors duration-150 bg-yellow-500 hover:bg-yellow-600 text-white dark:bg-yellow-500 dark:hover:bg-yellow-600 flex items-center justify-center w-8 h-8">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M6 6h12v12H6z"></path></svg>
+            <button id="stopBtnGlobal" title="Stop All Audio (Panic)" 
+                    class="p-1.5 rounded-md font-semibold shadow-sm transition-colors duration-150 
+                           flex items-center justify-center w-8 h-8
+                           bg-[var(--bg-button-stop)] hover:bg-[var(--bg-button-stop-hover)] text-[var(--text-button-icon)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h12v12H6z"></path></svg>
             </button>
-            <button id="recordBtnGlobal" title="Record Arm/Disarm" class="p-1.5 rounded-md font-semibold shadow-sm transition-colors duration-150 bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700 flex items-center justify-center w-8 h-8">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" class="text-white"><circle cx="12" cy="12" r="8"></circle></svg>
+            <button id="recordBtnGlobal" title="Record Arm/Disarm" 
+                    class="p-1.5 rounded-md font-semibold shadow-sm transition-colors duration-150 
+                           flex items-center justify-center w-8 h-8
+                           bg-[var(--bg-button-record)] hover:bg-[var(--bg-button-record-hover)] text-[var(--text-button-icon)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg>
             </button>
             
             <div class="flex items-center space-x-1 ml-1">
@@ -67,10 +76,10 @@
                 <div id="masterMeterBarGlobal" class="h-full bg-blue-500 dark:bg-blue-400 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
             <div class="flex items-center space-x-1">
-                <button id="themeToggleLight" title="Switch to Light Mode" class="p-1.5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-yellow-500 dark:text-yellow-400">
+                <button id="themeToggleLight" title="Switch to Light Mode" class="theme-toggle-button p-1.5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-yellow-500 dark:text-yellow-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 </button>
-                <button id="themeToggleDark" title="Switch to Dark Mode" class="p-1.5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-indigo-500 dark:text-indigo-400">
+                <button id="themeToggleDark" title="Switch to Dark Mode" class="theme-toggle-button p-1.5 rounded-full hover:bg-gray-300 dark:hover:bg-slate-700 text-indigo-500 dark:text-indigo-400">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
             </div>
@@ -115,7 +124,8 @@
     <input type="file" id="customBgInput" class="hidden" accept="image/*">
     <input type="file" id="sampleFileInput" class="hidden" accept="audio/*"> 
 
-    <div id="notification-area" class="fixed top-10 right-5 z-[20000] space-y-2"></div> <div id="modalContainer"></div>
+    <div id="notification-area" class="fixed top-10 right-5 z-[20000] space-y-2"></div>
+    <div id="modalContainer"></div>
 
     <script type="module" src="js/main.js"></script>
 </body>
