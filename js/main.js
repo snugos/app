@@ -1,4 +1,4 @@
-// js/main.js - Main Application Logic Orchestrator (MODIFIED - Removed setCurrentSoundFileTreeState)
+// js/main.js - Main Application Logic Orchestrator (MODIFIED for loadAndPreviewSample debug)
 
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
@@ -39,7 +39,7 @@ import {
     setMidiAccessState, setActiveMIDIInputState,
     setLoadedZipFilesState,
     setSoundLibraryFileTreesState,
-    setCurrentLibraryNameState, /* setCurrentSoundFileTreeState, -- REMOVED */ setCurrentSoundBrowserPathState, setPreviewPlayerState,
+    setCurrentLibraryNameState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState, setSelectedTimelineClipInfoState, setCurrentThemeState,
@@ -50,7 +50,11 @@ import {
     gatherProjectDataInternal, reconstructDAWInternal, saveProjectInternal,
     loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal
 } from './state.js';
-import {
+
+// Import all exports from audio.js to inspect them
+import * as AudioModule from './audio.js';
+// Then specifically destructure what we expect, including the problematic one
+const {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
     loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
@@ -59,14 +63,22 @@ import {
     updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio,
     getMimeTypeFromFilename, getMasterEffectsBusInputNode,
-    getActualMasterGainNode as getActualMasterGainNodeFromAudio,
-    clearAllMasterEffectNodes as clearAllMasterEffectNodesInAudio,
+    getActualMasterGainNode: getActualMasterGainNodeFromAudio,
+    clearAllMasterEffectNodes: clearAllMasterEffectNodesInAudio,
     startAudioRecording, stopAudioRecording,
-    togglePlayback as audioTogglePlayback,
-    stopPlayback as audioStopPlayback,
-    setMasterVolume as audioSetMasterVolume,
-    toggleRecording as audioToggleRecording
-} from './audio.js';
+    togglePlayback: audioTogglePlayback,
+    stopPlayback: audioStopPlayback,
+    setMasterVolume: audioSetMasterVolume,
+    toggleRecording: audioToggleRecording,
+    loadAndPreviewSample // This is the one causing issues
+} = AudioModule;
+
+// DEBUG: Log what's imported from AudioModule
+console.log("[Main Pre-appServices] AudioModule content:", AudioModule);
+console.log("[Main Pre-appServices] typeof loadAndPreviewSample from AudioModule:", typeof AudioModule.loadAndPreviewSample, AudioModule.loadAndPreviewSample);
+console.log("[Main Pre-appServices] typeof destructured loadAndPreviewSample:", typeof loadAndPreviewSample, loadAndPreviewSample);
+
+
 import {
     storeAudio as dbStoreAudio,
     getAudio as dbGetAudio,
@@ -152,7 +164,18 @@ const appServices = {
     setMasterVolume: audioSetMasterVolume,
     getMasterGainValue: getMasterGainValueState,
     setMasterGainValueState, 
-    loadAndPreviewSample, getPreviewPlayer: getPreviewPlayerState, setPreviewPlayer: setPreviewPlayerState,
+    // MODIFIED: Defer direct reference slightly
+    loadAndPreviewSample: (...args) => {
+        if (typeof AudioModule.loadAndPreviewSample === 'function') {
+            return AudioModule.loadAndPreviewSample(...args);
+        }
+        console.error("appServices: AudioModule.loadAndPreviewSample is not a function!");
+        // Optionally, show a user notification
+        utilShowNotification("Error: Preview sample function is not available.", "error");
+        return Promise.reject("loadAndPreviewSample not available");
+    },
+    getPreviewPlayer: getPreviewPlayerState, 
+    setPreviewPlayer: setPreviewPlayerState,
     fetchSoundLibrary, loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
     loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
     getMimeTypeFromFilename, getMasterEffectsBusInputNode,
@@ -205,9 +228,7 @@ const appServices = {
         if (effect) {
             if (!appServices.getIsReconstructingDAW()) captureStateForUndoInternal(`Toggle Bypass Master Effect: ${effect.type}`);
             const newBypassState = !effect.isBypassed;
-            updateMasterEffectParamInState(effectId, 'isBypassed', newBypassState); // Assuming 'isBypassed' is a direct param in state
-            // Audio module needs to implement bypass on the Tone.js node
-            // updateMasterEffectBypassInAudio(effectId, newBypassState);
+            updateMasterEffectParamInState(effectId, 'isBypassed', newBypassState);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         }
     },
@@ -244,7 +265,6 @@ const appServices = {
     getSoundLibraryFileTrees: getSoundLibraryFileTreesState, setSoundLibraryFileTrees: setSoundLibraryFileTreesState,
     getCurrentLibraryName: getCurrentLibraryNameState, setCurrentLibraryName: setCurrentLibraryNameState,
     getCurrentSoundFileTree: getCurrentSoundFileTreeState, 
-    // setCurrentSoundFileTreeState, // REMOVED - managed by setCurrentLibraryNameState
     setCurrentSoundBrowserPath: setCurrentSoundBrowserPathState,
     getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState,
     pushToSoundBrowserPath, popFromSoundBrowserPath,
@@ -281,18 +301,21 @@ const appServices = {
     },
     updateUndoRedoButtonsUI: (undoState, redoState) => {
         const undoBtn = uiElementsCache.menuUndo; const redoBtn = uiElementsCache.menuRedo;
+        const undoStackCurrent = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
+        const redoStackCurrent = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
+
         if (undoBtn) { 
-            const canUndo = undoState && undoStack.length > 0; // Check stack directly too
+            const canUndo = undoStackCurrent.length > 0;
             undoBtn.classList.toggle('disabled', !canUndo); 
-            undoBtn.title = canUndo ? `Undo: ${undoState.actionName || 'action'}` : "Undo"; 
+            undoBtn.title = canUndo && undoState ? `Undo: ${undoState.actionName || 'action'}` : "Undo"; 
         }
         if (redoBtn) { 
-            const canRedo = redoState && redoStack.length > 0; // Check stack directly too
+            const canRedo = redoStackCurrent.length > 0;
             redoBtn.classList.toggle('disabled', !canRedo); 
-            redoBtn.title = canRedo ? `Redo: ${redoState.actionName || 'action'}` : "Redo"; 
+            redoBtn.title = canRedo && redoState ? `Redo: ${redoState.actionName || 'action'}` : "Redo"; 
         }
     },
-    updateRecordButtonUI: (isRec, isArmed) => { // Added isArmed parameter
+    updateRecordButtonUI: (isRec, isArmed) => { 
         const recActive = isRec && isArmed;
         if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-700', recActive);
         if (uiElementsCache.recordBtnGlobal) uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', recActive); 
@@ -326,6 +349,7 @@ const appServices = {
 };
 
 function cacheUIElements() {
+    // ... (same as response #59)
     uiElementsCache.desktop = document.getElementById('desktop');
     uiElementsCache.taskbar = document.getElementById('taskbar');
     uiElementsCache.topTaskbar = document.getElementById('topTaskbar');
@@ -347,7 +371,6 @@ function cacheUIElements() {
     uiElementsCache.menuToggleFullScreen = document.getElementById('menuToggleFullScreen');
     uiElementsCache.projectFileInput = document.getElementById('file-input-project');
     uiElementsCache.audioFileInput = document.getElementById('file-input-audio');
-    // Global controls elements will be cached by its own UI module callback
 }
 
 async function initializeSnugOS() {
@@ -355,14 +378,13 @@ async function initializeSnugOS() {
     cacheUIElements();
 
     initializeStateModule(appServices);
-    initializeAudioModule(appServices);
+    initializeAudioModule(appServices); // Call this before UI that might need audio services
     initializeUIModule(appServices); 
     initializeGlobalControlsUIModule(appServices); 
     initializeEventHandlersModule(appServices);
 
     initializePrimaryEventListeners(); 
 
-    // Global controls elements are cached and events attached via its window's onReadyCallback
     openGlobalControlsWindow((elements) => {
         if (elements) {
             uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
@@ -376,6 +398,8 @@ async function initializeSnugOS() {
             uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
             uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal;
             attachGlobalControlEvents(elements); 
+        } else {
+            console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements.");
         }
     });
 
@@ -383,10 +407,9 @@ async function initializeSnugOS() {
 
     updateClock();
     setInterval(updateClock, 10000);
-    if (appServices.updateUndoRedoButtonsUI) { // Ensure service is available
-        appServices.updateUndoRedoButtonsUI(null, null); // Initial update with no actions
+    if (appServices.updateUndoRedoButtonsUI) { 
+        appServices.updateUndoRedoButtonsUI(null, null); 
     }
-
 
     setupGenericDropZoneListeners(uiElementsCache.desktop, handleDesktopDrop);
     
@@ -399,6 +422,10 @@ async function initializeSnugOS() {
         } else { applyDesktopBackground(null); }
     } catch (error) { console.error("Error loading initial desktop background:", error); applyDesktopBackground(null); }
 
+    // Ensure dependent services are ready before opening windows that might use them
+    // For example, if openArrangementWindow immediately tries to use audio services for playhead
+    await initAudioContextAndMasterMeter(); // Make sure this is called before windows that might use Tone.Transport
+
     if (appServices.openArrangementWindow) appServices.openArrangementWindow();
     if (appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow();
 
@@ -407,6 +434,7 @@ async function initializeSnugOS() {
 }
 
 function handleDesktopDrop(file) {
+    // ... (same as response #59) ...
     if (!file) return;
     if (file.name.endsWith('.snug')) {
         appServices.handleProjectFileLoad({ target: { files: [file] } }); 
@@ -439,12 +467,14 @@ function handleDesktopDrop(file) {
 }
 
 function updateClock() {
+    // ... (same as response #59) ...
     if (uiElementsCache.clock) {
         uiElementsCache.clock.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 }
 
 function startPerformanceMonitor() {
+    // ... (same as response #59, ensure checks for appServices.getTracksState etc. before calling) ...
     let lastMeterUpdateTime = performance.now();
     const updateLoop = () => {
         if (appServices.updateMeters) {
@@ -461,9 +491,9 @@ function startPerformanceMonitor() {
                 const cpu = Tone.context.draw.getValue() * 100;
                 uiElementsCache.cpuUsage.textContent = `CPU: ${cpu.toFixed(0)}%`;
             }
-            if (appServices.updateUndoRedoButtonsUI) {
-                const undoStack = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
-                const redoStack = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
+            if (appServices.updateUndoRedoButtonsUI && appServices.getUndoStackState && appServices.getRedoStackState) {
+                const undoStack = appServices.getUndoStackState();
+                const redoStack = appServices.getRedoStackState();
                 appServices.updateUndoRedoButtonsUI(undoStack.length > 0 ? undoStack[undoStack.length-1] : null,
                                                     redoStack.length > 0 ? redoStack[redoStack.length-1] : null);
             }
@@ -475,6 +505,7 @@ function startPerformanceMonitor() {
 }
 
 function applyDesktopBackground(imageUrlOrObjectUrl) {
+    // ... (same as response #59) ...
     if (uiElementsCache.desktop) {
         uiElementsCache.desktop.style.backgroundImage = imageUrlOrObjectUrl ? `url('${imageUrlOrObjectUrl}')` : '';
         uiElementsCache.desktop.style.backgroundSize = imageUrlOrObjectUrl ? 'cover' : '';
@@ -486,6 +517,7 @@ function applyDesktopBackground(imageUrlOrObjectUrl) {
 
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
+    // ... (same as response #59, ensure checks for appServices.getTracksState etc. before calling) ...
     const tracksExist = appServices.getTracksState && appServices.getTracksState().length > 0;
     const undoStackExists = appServices.getUndoStackState && appServices.getUndoStackState().length > 0;
     if (tracksExist || undoStackExists) {
