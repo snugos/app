@@ -25,13 +25,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // 'media' or 'class'
+            darkMode: 'class', 
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-800 text-white font-sans overflow-hidden">
@@ -41,12 +43,12 @@
     <div id="topTaskbar" class="fixed top-0 left-0 right-0 h-8 bg-slate-900/80 backdrop-blur-sm shadow-md flex items-center px-2 z-[1000]">
         <div class="flex-grow"></div> <div id="global-controls" class="flex items-center space-x-2 text-sm">
             <span id="tempoDisplay" class="px-2">120 BPM</span>
-            <button id="playBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md"><i class="fas fa-play"></i></button>
-            <button id="stopBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md"><i class="fas fa-stop"></i></button>
-            <button id="recordBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md text-red-500"><i class="fas fa-circle"></i></button>
+            <button id="playBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md" title="Play/Pause"><i class="fas fa-play"></i></button>
+            <button id="stopBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md" title="Stop"><i class="fas fa-stop"></i></button>
+            <button id="recordBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md text-red-500" title="Record"><i class="fas fa-circle"></i></button>
             <div class="w-px h-5 bg-slate-600 mx-2"></div>
-            <div id="master-meter-container" class="w-24 h-5 bg-slate-800 rounded-md overflow-hidden relative">
-                <div id="master-meter" class="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-red-500 transition-all duration-50" style="width: 0%;"></div>
+            <div id="master-meter-container" class="w-24 h-5 bg-slate-800 rounded-md overflow-hidden relative border border-slate-900">
+                <div id="master-meter" class="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-50" style="width: 0%;"></div>
             </div>
             <span id="cpu-usage" class="px-2 text-xs text-slate-400">CPU: 0%</span>
         </div>
@@ -59,25 +61,25 @@
         </div>
         </div>
 
-    <div id="notification-area" class="fixed bottom-10 right-4 z-[2000] flex flex-col items-end space-y-2"></div>
+    <div id="notification-area" class="fixed bottom-10 right-4 z-[2000] flex flex-col items-end space-y-2">
+        </div>
 
-    <div id="startMenu" class="hidden absolute bottom-8 left-2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl w-64 p-2 z-[1500]">
-        <ul id="fileMenu" class="text-sm">
-            <li id="menuNewProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">New Project</li>
-            <li><hr class="my-1 border-gray-300 dark:border-slate-600"></li>
-            <li id="menuUndo" class="disabled px-3 py-1.5 cursor-default opacity-50" title="Undo">Undo</li>
-            <li id="menuRedo" class="disabled px-3 py-1.5 cursor-default opacity-50" title="Redo">Redo</li>
-            <li><hr class="my-1 border-gray-300 dark:border-slate-600"></li>
-            <li id="menuSaveProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Save Project (.snug)</li>
-            <li id="menuLoadProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Load Project (.snug)</li>
-            <li id="menuExportWav" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Export to WAV</li>
-            <li><hr class="my-1 border-gray-300 dark:border-slate-600"></li>
-            <li id="menuToggleFullScreen" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer">Toggle Full Screen</li>
+    <div id="startMenu" class="hidden absolute bottom-8 left-2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl w-64 p-2 z-[10001]"> <ul id="fileMenu" class="text-sm">
+            <li id="menuNewProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">New Project</li>
+            <li><hr class="my-1 border-slate-600"></li>
+            <li id="menuUndo" class="disabled px-3 py-1.5 cursor-default opacity-50 rounded-md" title="Undo">Undo</li>
+            <li id="menuRedo" class="disabled px-3 py-1.5 cursor-default opacity-50 rounded-md" title="Redo">Redo</li>
+            <li><hr class="my-1 border-slate-600"></li>
+            <li id="menuSaveProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Save Project (.snug)</li>
+            <li id="menuLoadProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Load Project (.snug)</li>
+            <li id="menuExportWav" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Export to WAV</li>
+            <li><hr class="my-1 border-slate-600"></li>
+            <li id="menuToggleFullScreen" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Toggle Full Screen</li>
         </ul>
     </div>
 
     <input type="file" id="file-input-project" class="hidden" accept=".snug">
     <input type="file" id="file-input-audio" class="hidden" accept="audio/*" multiple>
-    <script type="module" src="main.js"></script>
+    <input type="file" id="file-input-background" class="hidden" accept="image/*"> <script type="module" src="js/main.js"></script>
 </body>
 </html>
