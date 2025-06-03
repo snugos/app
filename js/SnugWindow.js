@@ -95,10 +95,6 @@ export class SnugWindow {
         this.element = document.createElement('div');
         this.element.id = `window-${this.id}`;
         this.element.className = 'window';
-        // MODIFICATION: Setting touch-action specifically on titleBar for dragging,
-        // and on the element for general interaction, but not `none` for the whole element
-        // if resizing edges need default touch behaviors.
-        // However, Interact.js usually handles this. Let's keep it on the element for now.
         this.element.style.touchAction = 'none';
 
 
@@ -118,9 +114,6 @@ export class SnugWindow {
 
         this.titleBar = document.createElement('div');
         this.titleBar.className = 'window-title-bar';
-        // MODIFICATION: Ensure titleBar allows default touch actions for dragging if 'touch-action: none' on parent is an issue.
-        // However, `allowFrom` in interact.js should manage this.
-        // this.titleBar.style.touchAction = 'auto'; // Or remove if element's touch-action:none is fine.
 
         let buttonsHTML = '';
         if (this.options.minimizable) { buttonsHTML += `<button class="window-minimize-btn" title="Minimize">_</button>`; }
@@ -129,8 +122,7 @@ export class SnugWindow {
 
         const titleSpan = document.createElement('span');
         titleSpan.textContent = this.title;
-        // MODIFICATION: Prevent the span from capturing pointer events that should start a drag on the title bar.
-        titleSpan.style.pointerEvents = 'none';
+        titleSpan.style.pointerEvents = 'none'; // Prevent span from interfering with titleBar drag
 
         this.titleBar.appendChild(titleSpan);
         const titleButtonsDiv = document.createElement('div');
@@ -173,16 +165,13 @@ export class SnugWindow {
             maximizeBtn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleMaximize(); });
         }
 
-        // Prevent dragging attempt when clicking on title bar buttons themselves
         titleButtonsDiv.querySelectorAll('button').forEach(button => {
             button.addEventListener('mousedown', e => e.stopPropagation());
             button.addEventListener('touchstart', e => e.stopPropagation());
         });
 
-
         this.element.addEventListener('mousedown', () => this.focus(), true);
         this.element.addEventListener('pointerdown', () => this.focus(), true);
-
 
         this.createTaskbarButton();
 
@@ -343,9 +332,9 @@ export class SnugWindow {
         if (this.options.resizable) {
             interact(this.element)
                 .resizable({
-                    edges: { left: true, right: true, bottom: true, top: true },
-                    // MODIFICATION: Reverted the `ignoreFrom: this.titleBar` as it made dragging harder.
-                    // The `pointer-events: none` on the title span and event stopping on buttons should now help.
+                    // MODIFICATION: Changed edges to only allow resizing from bottom, right,
+                    // which effectively means the bottom-right corner is the active resize area.
+                    edges: { left: false, right: true, bottom: true, top: false },
                     listeners: {
                         start: (event) => {
                             if (this.isMaximized) {
@@ -362,6 +351,9 @@ export class SnugWindow {
                             this.element.style.width = `${event.rect.width}px`;
                             this.element.style.height = `${event.rect.height}px`;
 
+                            // Translate when resizing from top or left edges (though top/left are now disabled)
+                            // This part of the logic might be less relevant with only bottom/right active,
+                            // but keeping it doesn't harm if edges were re-enabled.
                             x += event.deltaRect.left;
                             y += event.deltaRect.top;
 
@@ -408,7 +400,6 @@ export class SnugWindow {
         const interactable = interact(this.element);
         const bottomTaskbarHeight = bottomTaskbarEl.offsetHeight > 0 ? bottomTaskbarEl.offsetHeight : 32;
         const topTaskbarHeight = topTaskbarEl.offsetHeight > 0 ? topTaskbarEl.offsetHeight : 32;
-
 
         if (this.isMaximized) {
             this.element.style.left = this.restoreState.left || `${this.options.x}px`;
