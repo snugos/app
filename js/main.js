@@ -1,4 +1,4 @@
-// js/main.js - Main Application Logic Orchestrator (MODIFIED - Robust appServices)
+// js/main.js - Main Application Logic Orchestrator (Revised appServices and Init Order)
 
 // --- Module Imports ---
 import { SnugWindow } from './SnugWindow.js';
@@ -12,284 +12,287 @@ import * as GlobalControlsUI from './globalControlsUI.js';
 import * as EffectsRegistry from './effectsRegistry.js';
 import * as DB from './db.js';
 
-// DEBUG: Log what's imported from AudioModule
-console.log("[Main Pre-appServices] AudioModule content:", AudioModule);
-console.log("[Main Pre-appServices] typeof AudioModule.loadAndPreviewSample from AudioModule:", typeof AudioModule.loadAndPreviewSample, AudioModule.loadAndPreviewSample);
-
 console.log(`[Main] SnugOS v${Constants.APP_VERSION} - Script Execution Started (after imports)`);
 
 const uiElementsCache = {};
 let currentBackgroundImageObjectURL = null;
 const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB_v2';
 
-// Helper for creating service wrappers to catch errors if functions are not defined
-const createService = (module, functionName, moduleNameForError) => {
-    return (...args) => {
-        if (module && typeof module[functionName] === 'function') {
-            return module[functionName](...args);
-        }
-        const errorMsg = `appService Error: ${moduleNameForError}.${functionName} is not available or not a function.`;
-        console.error(errorMsg, "Module content:", module);
-        if (Utils && typeof Utils.showNotification === 'function') {
-            Utils.showNotification(errorMsg, "error", 5000);
-        }
-        if (functionName.startsWith("get") || functionName.startsWith("is")) return null;
-        return Promise.reject(new Error(errorMsg)); 
-    };
-};
-
+// --- appServices Definition ---
+// Define appServices. Some services will be assigned after module initializations if they depend on them.
 const appServices = {
-    // --- Core App & Utilities ---
-    uiElementsCache, 
-    showNotification: (...args) => Utils.showNotification(...args), 
-    showConfirmationDialog: (...args) => Utils.showConfirmationDialog(...args),
-    createContextMenu: (...args) => Utils.createContextMenu(...args),
-    snapTimeToGrid: (...args) => Utils.snapTimeToGrid(...args),
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
+    uiElementsCache,
     _isReconstructingDAW_flag: false,
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
+    effectsRegistryAccess: EffectsRegistry, // Direct object is fine
+    // Functions from Utils (generally safe to assign directly as they are pure or have few deps)
+    showNotification: Utils.showNotification,
+    showConfirmationDialog: Utils.showConfirmationDialog,
+    createContextMenu: Utils.createContextMenu,
+    snapTimeToGrid: Utils.snapTimeToGrid,
+    // Local functions
     newProject: () => { 
         Utils.showConfirmationDialog("Create a new project? All unsaved changes will be lost.", () => {
             window.location.reload();
         });
     },
-    createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices), 
-
-    // --- State Management ---
-    getTracksState: () => State.getTracksState(),
-    getTrackById: (id) => State.getTrackByIdState(id),
-    getOpenWindowsState: () => State.getOpenWindowsState(),
-    getWindowById: (id) => State.getWindowByIdState(id), // Directly from State module
-    addWindowToStoreState: (id, instance) => State.addWindowToStoreState(id, instance),
-    removeWindowFromStoreState: (id) => State.removeWindowFromStoreState(id),
-    getHighestZState: () => State.getHighestZState(),
-    incrementHighestZState: () => State.incrementHighestZState(),
-    setHighestZState: (val) => State.setHighestZState(val),
-    captureStateForUndoInternal: (name) => State.captureStateForUndoInternal(name),
-    undo: () => State.undoLastActionInternal(),
-    redo: () => State.redoLastActionInternal(),
-    getUndoStackState: () => State.getUndoStackState(),
-    getRedoStackState: () => State.getRedoStackState(),
-    gatherProjectDataInternal: () => State.gatherProjectDataInternal(),
-    reconstructDAWInternal: (data) => State.reconstructDAWInternal(data),
-    saveProject: () => State.saveProjectInternal(),
-    loadProject: () => State.loadProjectInternal(),
-    handleProjectFileLoad: (file) => State.handleProjectFileLoadInternal(file),
-    exportToWav: () => State.exportToWavInternal(),
-    getCurrentThemeState: () => State.getCurrentThemeState(),
-    setCurrentThemeState: (theme) => State.setCurrentThemeState(theme),
-
-    // --- Track Management ---
-    addTrack: (type, initialData) => State.addTrackToStateInternal(type, initialData, true, appServices), 
-    removeTrack: (trackId) => State.removeTrackFromStateInternal(trackId),
-
-    // --- Audio Engine ---
-    initAudioContextAndMasterMeter: (force) => AudioModule.initAudioContextAndMasterMeter(force),
-    updateMeters: (...args) => AudioModule.updateMeters(...args),
-    togglePlayback: () => AudioModule.togglePlayback(),
-    stopPlayback: () => AudioModule.stopPlayback(),
-    toggleRecording: () => AudioModule.toggleRecording(),
-    setMasterVolume: (gain) => AudioModule.setMasterVolume(gain),
-    getMasterGainValue: () => State.getMasterGainValueState(), 
-    setMasterGainValueState: (gain) => State.setMasterGainValueState(gain), 
-    loadAndPreviewSample: createService(AudioModule, 'loadAndPreviewSample', 'AudioModule'),
-    getPreviewPlayer: () => State.getPreviewPlayerState(),
-    setPreviewPlayer: (player) => State.setPreviewPlayerState(player),
-    fetchSoundLibrary: createService(AudioModule, 'fetchSoundLibrary', 'AudioModule'),
-    loadSoundFromBrowserToTarget: createService(AudioModule, 'loadSoundFromBrowserToTarget', 'AudioModule'),
-    playSlicePreview: createService(AudioModule, 'playSlicePreview', 'AudioModule'),
-    playDrumSamplerPadPreview: createService(AudioModule, 'playDrumSamplerPadPreview', 'AudioModule'),
-    loadSampleFile: createService(AudioModule, 'loadSampleFile', 'AudioModule'),
-    loadDrumSamplerPadFile: createService(AudioModule, 'loadDrumSamplerPadFile', 'AudioModule'),
-    autoSliceSample: createService(AudioModule, 'autoSliceSample', 'AudioModule'),
-    getMimeTypeFromFilename: (filename) => AudioModule.getMimeTypeFromFilename(filename),
-    getMasterEffectsBusInputNode: () => AudioModule.getMasterEffectsBusInputNode(),
-    getActualMasterGainNode: () => AudioModule.getActualMasterGainNode(),
-    clearAllMasterEffectNodes: () => AudioModule.clearAllMasterEffectNodes(),
-    startAudioRecording: (trackId) => AudioModule.startAudioRecording(trackId),
-    stopAudioRecording: () => AudioModule.stopAudioRecording(),
-
-    // --- UI Modules & Functions ---
-    initializeUIModule: (services) => UI.initializeUIModule(services),
-    openSoundBrowserWindow: createService(UI, 'openSoundBrowserWindow', 'UI'),
-    updateSoundBrowserDisplayForLibrary: createService(UI, 'updateSoundBrowserDisplayForLibrary', 'UI'),
-    showAddTrackModal: createService(UI, 'showAddTrackModal', 'UI'),
-    showAddEffectModal: createService(UI, 'showAddEffectModal', 'UI'),
-    openTrackInspectorWindow: createService(UI, 'openTrackInspectorWindow', 'UI'),
-    openTrackEffectsRackWindow: createService(UI, 'openTrackEffectsRackWindow', 'UI'),
-    openMasterEffectsRackWindow: createService(UI, 'openMasterEffectsRackWindow', 'UI'),
-    openArrangementWindow: createService(UI, 'openArrangementWindow', 'UI'),
-    openSequencerWindow: createService(UI, 'openSequencerWindow', 'UI'),
-    openMixerWindow: createService(UI, 'openMixerWindow', 'UI'),
-    updateMixerWindow: createService(UI, 'updateMixerWindow', 'UI'),
-    updateTheme: (theme) => UI.updateTheme(theme), // Assumes UI.updateTheme is robust
-    getTheme: () => UI.getTheme(), // Assumes UI.getTheme is robust
-    closeAllTrackWindows: (excludeId) => UI.closeAllTrackWindows(excludeId),
-    updateTrackUI: createService(UI, 'updateTrackUI', 'UI'),
-    highlightPlayingStep: createService(UI, 'highlightPlayingStep', 'UI'),
-    drawWaveform: createService(UI, 'drawWaveform', 'UI'),
-    drawInstrumentWaveform: createService(UI, 'drawInstrumentWaveform', 'UI'),
-    renderSamplePads: createService(UI, 'renderSamplePads', 'UI'),
-    updateSliceEditorUI: createService(UI, 'updateSliceEditorUI', 'UI'),
-    updateDrumPadControlsUI: createService(UI, 'updateDrumPadControlsUI', 'UI'),
-    renderDrumSamplerPads: createService(UI, 'renderDrumSamplerPads', 'UI'),
-    renderEffectsList: createService(UI, 'renderEffectsList', 'UI'),
-    renderEffectControls: createService(UI, 'renderEffectControls', 'UI'),
-    createKnob: createService(UI, 'createKnob', 'UI'),
-    updateSequencerCellUI: createService(UI, 'updateSequencerCellUI', 'UI'),
-    renderTimeline: createService(UI, 'renderTimeline', 'UI'),
-    updatePlayheadPosition: createService(UI, 'updatePlayheadPosition', 'UI'),
-    openGlobalControlsWindow: (callback, state) => GlobalControlsUI.openGlobalControlsWindow(callback, state),
-
-    // --- Effects Management ---
-    effectsRegistryAccess: EffectsRegistry, 
-    getMasterEffects: () => State.getMasterEffectsState(),
-    addMasterEffect: async (effectType) => { /* ... same as response #63 ... */
-        if (!appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Add Master Effect: ${effectType}`);
-        const defaultParams = EffectsRegistry.getEffectDefaultParams(effectType);
-        const id = State.addMasterEffectToState(effectType, defaultParams); 
-        await AudioModule.addMasterEffectToAudio(id, effectType, defaultParams);    
-        if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-    },
-    removeMasterEffect: async (effectId) => { /* ... same as response #63 ... */
-        const effect = State.getMasterEffectsState().find(e => e.id === effectId);
-        if (effect && !appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Remove Master Effect: ${effect.type}`);
-        State.removeMasterEffectFromState(effectId);
-        await AudioModule.removeMasterEffectFromAudio(effectId);
-        if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-    },
-    updateMasterEffectParam: (effectId, paramPath, value) => { /* ... same as response #63 ... */
-        State.updateMasterEffectParamInState(effectId, paramPath, value); 
-        AudioModule.updateMasterEffectParamInAudio(effectId, paramPath, value);  
-    },
-    reorderMasterEffect: (effectId, newIndex) => { /* ... same as response #63 ... */
-        if (!appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Reorder Master Effects`);
-        State.reorderMasterEffectInState(effectId, newIndex);
-        AudioModule.reorderMasterEffectInAudio(effectId, newIndex); 
-        if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-    },
-    toggleBypassMasterEffect: (effectId) => { /* ... same as response #63, ensure AudioModule has way to apply bypass ... */
-        const effect = State.getMasterEffectsState().find(e => e.id === effectId);
-        if (effect) {
-            if (!appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Toggle Bypass Master Effect: ${effect.type}`);
-            const newBypassState = !effect.isBypassed; // Assuming isBypassed is a property in state
-            State.updateMasterEffectParamInState(effectId, 'isBypassed', newBypassState); 
-            AudioModule._rechainMasterEffectsAudio(); // Rechaining will apply bypass based on state
-            if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
-        }
-    },
-    getMasterEffectParamValue: (effectId, paramPath) => State.getMasterEffectParamValue(effectId, paramPath), // Delegate
-    updateMasterEffectsRackUI: () => { // This is UI related, should call UI module
-        const rackWindow = State.getWindowByIdState('masterEffectsRack');
-        if (rackWindow?.element && !rackWindow.isMinimized && typeof UI.renderEffectsList === 'function') {
-            const listDiv = rackWindow.element.querySelector('#effectsList-master'); 
-            const controlsContainer = rackWindow.element.querySelector('#effectControlsContainer-master');
-            if (listDiv && controlsContainer) UI.renderEffectsList(null, 'master', listDiv, controlsContainer);
-        }
-    },
-
-    // --- MIDI ---
-    getMidiAccess: () => State.getMidiAccessState(),
-    setActiveMIDIInput: (deviceId) => State.setActiveMIDIInputState(deviceId),
-    getActiveMIDIInput: () => State.getActiveMIDIInputState(),
-    selectMIDIInput: (deviceId) => EventHandlers.selectMIDIInput(deviceId),
-
-    // --- Sound Library ---
-    getLoadedZipFiles: () => State.getLoadedZipFilesState(),
-    setLoadedZipFiles: (zips) => State.setLoadedZipFilesState(zips),
-    getSoundLibraryFileTrees: () => State.getSoundLibraryFileTreesState(),
-    setSoundLibraryFileTrees: (trees) => State.setSoundLibraryFileTreesState(trees),
-    getCurrentLibraryName: () => State.getCurrentLibraryNameState(),
-    setCurrentLibraryName: (name) => State.setCurrentLibraryNameState(name),
-    getCurrentSoundFileTree: () => State.getCurrentSoundFileTreeState(),
-    setCurrentSoundBrowserPath: (path) => State.setCurrentSoundBrowserPathState(path),
-    getCurrentSoundBrowserPath: () => State.getCurrentSoundBrowserPathState(),
-    pushToSoundBrowserPath: (name) => State.pushToSoundBrowserPath(name),
-    popFromSoundBrowserPath: () => State.popFromSoundBrowserPath(),
-
-    // --- Timeline/Sequencer State & Control ---
-    getPlaybackMode: () => State.getPlaybackModeState(),
-    setPlaybackMode: (mode) => State.setPlaybackModeState(mode),
-    getArmedTrackId: () => State.getArmedTrackIdState(),
-    setArmedTrackId: (id) => State.setArmedTrackIdState(id),
-    getSoloedTrackId: () => State.getSoloedTrackIdState(),
-    setSoloedTrackId: (id) => State.setSoloedTrackIdState(id),
-    getSelectedTimelineClipInfo: () => State.getSelectedTimelineClipInfoState(),
-    setSelectedTimelineClip: (trackId, clipId) => State.setSelectedTimelineClipInfoState(trackId, clipId),
-    getRecordingTrackId: () => State.getRecordingTrackIdState(),
-    setRecordingTrackId: (id) => State.setRecordingTrackIdState(id),
-    getRecordingStartTime: () => State.getRecordingStartTimeState(),
-    setRecordingStartTime: (time) => State.setRecordingStartTimeState(time),
-    isTrackRecording: (id) => State.isTrackRecordingState(id),
-    setIsRecording: (isRec) => State.setIsRecordingState(isRec),
-    getActiveSequencerTrackId: () => State.getActiveSequencerTrackIdState(),
-    setActiveSequencerTrackId: (id) => State.setActiveSequencerTrackIdState(id),
-    handleTimelineLaneDrop: (data, trackId, startTime) => EventHandlers.handleTimelineLaneDrop(data, trackId, startTime, appServices),
-
-    // --- Event Handlers (for direct calls if needed) ---
-    handleTrackMute: (id) => EventHandlers.handleTrackMute(id),
-    handleTrackSolo: (id) => EventHandlers.handleTrackSolo(id),
-    handleTrackArm: (id) => EventHandlers.handleTrackArm(id),
-    handleRemoveTrack: (id) => EventHandlers.handleRemoveTrack(id),
-    handleOpenTrackInspector: (id) => EventHandlers.handleOpenTrackInspector(id),
-    handleOpenEffectsRack: (id) => EventHandlers.handleOpenEffectsRack(id),
-    handleOpenSequencer: (id) => EventHandlers.handleOpenSequencer(id),
-
-    // --- DB Access ---
-    dbStoreItem: (id, data) => DB.storeAudio(id, data),
-    dbGetItem: (id) => DB.getAudio(id),
-    dbDeleteItem: (id) => DB.deleteAudio(id),
-
-    // --- Misc UI helpers defined locally or simple passthroughs ---
-    panicStopAllAudio: () => { /* ... same as response #63 ... */
-        Tone.Transport.stop(); Tone.Transport.cancel(0);
-        State.getTracksState().forEach(track => track.stopPlayback && track.stopPlayback());
-        if (uiElementsCache.playBtn) uiElementsCache.playBtn.innerHTML = '<i class="fas fa-play"></i>';
-        if (uiElementsCache.playBtnGlobal) uiElementsCache.playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
-        Utils.showNotification("All audio stopped.", "info", 1500);
-    },
-    updateTaskbarTempoDisplay: (tempo) => { /* ... same as response #63 ... */
-        if (uiElementsCache.tempoDisplay) uiElementsCache.tempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
-    },
-    updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => { // Renamed params to avoid conflict
-        const undoBtn = uiElementsCache.menuUndo; const redoBtn = uiElementsCache.menuRedo;
-        const undoStackCurrent = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
-        const redoStackCurrent = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
-        if (undoBtn) { const canUndo = undoStackCurrent.length > 0; undoBtn.classList.toggle('disabled', !canUndo); undoBtn.title = canUndo && undoStateParam ? `Undo: ${undoStateParam.actionName || 'action'}` : "Undo"; }
-        if (redoBtn) { const canRedo = redoStackCurrent.length > 0; redoBtn.classList.toggle('disabled', !canRedo); redoBtn.title = canRedo && redoStateParam ? `Redo: ${redoStateParam.actionName || 'action'}` : "Redo"; }
-    },
-    updateRecordButtonUI: (isRec, isArmed) => { /* ... same as response #63 ... */
-        const recActive = isRec && isArmed;
-        if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-700', recActive);
-        if (uiElementsCache.recordBtnGlobal) uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', recActive);
-    },
-    closeAllWindows: (isReconstruction = false) => { /* ... same as response #63 ... */
-        State.getOpenWindowsState().forEach(win => win.close(isReconstruction));
-        State.getOpenWindowsState().clear();
-    },
-    clearOpenWindowsMap: () => State.getOpenWindowsState().clear(),
-    triggerCustomBackgroundUpload: () => { /* ... same as response #63 ... */
-        const input = document.getElementById('file-input-background');
-        if (input) input.click();
-    },
-    removeCustomDesktopBackground: async () => { /* ... same as response #63 ... */
-        await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY);
-        if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
-        currentBackgroundImageObjectURL = null;
-        applyDesktopBackground(null);
-        Utils.showNotification("Background removed.", "info", 2000);
-    },
-    onPlaybackModeChange: (newMode) => { /* ... same as response #63 ... */
-        const playbackBtn = document.getElementById('playbackModeToggleBtnGlobal');
-        if (playbackBtn) playbackBtn.textContent = newMode === 'timeline' ? 'Timeline Mode' : 'Sequencer Mode';
-        if(appServices.renderTimeline) appServices.renderTimeline();
-    },
-    _transportEventsInitialized_flag: false,
-    getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
-    setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
+    createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
 };
 
+// --- Module Initialization Functions ---
+// These will be called in initializeSnugOS, and they can ADD to appServices or use it.
+function initializeCoreServices() {
+    // State services
+    Object.assign(appServices, {
+        getTracksState: State.getTracksState,
+        getTrackById: State.getTrackByIdState,
+        getOpenWindowsState: State.getOpenWindowsState,
+        getWindowById: State.getWindowByIdState,
+        addWindowToStoreState: State.addWindowToStoreState,
+        removeWindowFromStoreState: State.removeWindowFromStoreState,
+        getHighestZState: State.getHighestZState,
+        incrementHighestZState: State.incrementHighestZState,
+        setHighestZState: State.setHighestZState,
+        captureStateForUndoInternal: State.captureStateForUndoInternal,
+        undo: State.undoLastActionInternal,
+        redo: State.redoLastActionInternal,
+        getUndoStackState: State.getUndoStackState,
+        getRedoStackState: State.getRedoStackState,
+        gatherProjectDataInternal: State.gatherProjectDataInternal,
+        reconstructDAWInternal: State.reconstructDAWInternal,
+        saveProject: State.saveProjectInternal,
+        loadProject: State.loadProjectInternal,
+        handleProjectFileLoad: State.handleProjectFileLoadInternal,
+        exportToWav: State.exportToWavInternal,
+        getCurrentThemeState: State.getCurrentThemeState,
+        setCurrentThemeState: State.setCurrentThemeState,
+        addTrack: (type, initialData) => State.addTrackToStateInternal(type, initialData, true, appServices),
+        removeTrack: State.removeTrackFromStateInternal,
+        getMasterEffects: State.getMasterEffectsState,
+        addMasterEffectToState: State.addMasterEffectToState, // Renamed for clarity from previous
+        removeMasterEffectFromState: State.removeMasterEffectFromState,
+        updateMasterEffectParamInState: State.updateMasterEffectParamInState,
+        reorderMasterEffectInState: State.reorderMasterEffectInState,
+        getMidiAccess: State.getMidiAccessState,
+        setActiveMIDIInput: State.setActiveMIDIInputState,
+        getActiveMIDIInput: State.getActiveMIDIInputState,
+        getLoadedZipFiles: State.getLoadedZipFilesState,
+        setLoadedZipFiles: State.setLoadedZipFilesState,
+        getSoundLibraryFileTrees: State.getSoundLibraryFileTreesState,
+        setSoundLibraryFileTrees: State.setSoundLibraryFileTreesState,
+        getCurrentLibraryName: State.getCurrentLibraryNameState,
+        setCurrentLibraryName: State.setCurrentLibraryNameState,
+        getCurrentSoundFileTree: State.getCurrentSoundFileTreeState,
+        setCurrentSoundBrowserPath: State.setCurrentSoundBrowserPathState,
+        getCurrentSoundBrowserPath: State.getCurrentSoundBrowserPathState,
+        pushToSoundBrowserPath: State.pushToSoundBrowserPath,
+        popFromSoundBrowserPath: State.popFromSoundBrowserPath,
+        getPreviewPlayer: State.getPreviewPlayerState,
+        setPreviewPlayer: State.setPreviewPlayerState,
+        getPlaybackMode: State.getPlaybackModeState,
+        setPlaybackMode: State.setPlaybackModeState,
+        getArmedTrackId: State.getArmedTrackIdState,
+        setArmedTrackId: State.setArmedTrackIdState,
+        getSoloedTrackId: State.getSoloedTrackIdState,
+        setSoloedTrackId: State.setSoloedTrackIdState,
+        getSelectedTimelineClipInfo: State.getSelectedTimelineClipInfoState,
+        setSelectedTimelineClip: State.setSelectedTimelineClipInfoState,
+        getRecordingTrackId: State.getRecordingTrackIdState,
+        setRecordingTrackId: State.setRecordingTrackIdState,
+        getRecordingStartTime: State.getRecordingStartTimeState,
+        setRecordingStartTime: State.setRecordingStartTimeState,
+        isTrackRecording: State.isTrackRecordingState,
+        setIsRecording: State.setIsRecordingState,
+        getActiveSequencerTrackId: State.getActiveSequencerTrackIdState,
+        setActiveSequencerTrackId: State.setActiveSequencerTrackIdState,
+        getMasterGainValue: State.getMasterGainValueState,
+        setMasterGainValueState: State.setMasterGainValueState,
+    });
+
+    // Audio services
+    Object.assign(appServices, {
+        initAudioContextAndMasterMeter: AudioModule.initAudioContextAndMasterMeter,
+        updateMeters: AudioModule.updateMeters,
+        togglePlayback: AudioModule.togglePlayback,
+        stopPlayback: AudioModule.stopPlayback,
+        toggleRecording: AudioModule.toggleRecording,
+        setMasterVolume: AudioModule.setMasterVolume,
+        loadAndPreviewSample: AudioModule.loadAndPreviewSample,
+        fetchSoundLibrary: AudioModule.fetchSoundLibrary,
+        loadSoundFromBrowserToTarget: AudioModule.loadSoundFromBrowserToTarget,
+        playSlicePreview: AudioModule.playSlicePreview,
+        playDrumSamplerPadPreview: AudioModule.playDrumSamplerPadPreview,
+        loadSampleFile: AudioModule.loadSampleFile,
+        loadDrumSamplerPadFile: AudioModule.loadDrumSamplerPadFile,
+        autoSliceSample: AudioModule.autoSliceSample,
+        getMimeTypeFromFilename: AudioModule.getMimeTypeFromFilename,
+        getMasterEffectsBusInputNode: AudioModule.getMasterEffectsBusInputNode,
+        getActualMasterGainNode: AudioModule.getActualMasterGainNode,
+        clearAllMasterEffectNodes: AudioModule.clearAllMasterEffectNodes,
+        startAudioRecording: AudioModule.startAudioRecording,
+        stopAudioRecording: AudioModule.stopAudioRecording,
+        addMasterEffectToAudio: AudioModule.addMasterEffectToAudio, // Renamed for clarity
+        removeMasterEffectFromAudio: AudioModule.removeMasterEffectFromAudio,
+        updateMasterEffectParamInAudio: AudioModule.updateMasterEffectParamInAudio,
+        reorderMasterEffectInAudio: AudioModule.reorderMasterEffectInAudio,
+    });
+
+    // DB services
+    Object.assign(appServices, {
+        dbStoreItem: DB.storeAudio,
+        dbGetItem: DB.getAudio,
+        dbDeleteItem: DB.deleteAudio,
+    });
+
+    // Effects Management (Combined logic)
+    Object.assign(appServices, {
+        addMasterEffect: async (effectType) => {
+            if (!appServices.getIsReconstructingDAW()) appServices.captureStateForUndoInternal(`Add Master Effect: ${effectType}`);
+            const defaultParams = EffectsRegistry.getEffectDefaultParams(effectType);
+            const id = appServices.addMasterEffectToState(effectType, defaultParams);
+            await appServices.addMasterEffectToAudio(id, effectType, defaultParams);
+            if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
+        },
+        removeMasterEffect: async (effectId) => {
+            const effect = appServices.getMasterEffects().find(e => e.id === effectId);
+            if (effect && !appServices.getIsReconstructingDAW()) appServices.captureStateForUndoInternal(`Remove Master Effect: ${effect.type}`);
+            appServices.removeMasterEffectFromState(effectId);
+            await appServices.removeMasterEffectFromAudio(effectId);
+            if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
+        },
+        updateMasterEffectParam: (effectId, paramPath, value) => {
+            appServices.updateMasterEffectParamInState(effectId, paramPath, value);
+            appServices.updateMasterEffectParamInAudio(effectId, paramPath, value);
+        },
+        reorderMasterEffect: (effectId, newIndex) => {
+            if (!appServices.getIsReconstructingDAW()) appServices.captureStateForUndoInternal(`Reorder Master Effects`);
+            appServices.reorderMasterEffectInState(effectId, newIndex);
+            appServices.reorderMasterEffectInAudio(effectId, newIndex); // Audio needs to rechain
+            if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
+        },
+        toggleBypassMasterEffect: (effectId) => {
+            const effect = appServices.getMasterEffects().find(e => e.id === effectId);
+            if (effect) {
+                if (!appServices.getIsReconstructingDAW()) appServices.captureStateForUndoInternal(`Toggle Bypass Master Effect: ${effect.type}`);
+                const newBypassState = !effect.isBypassed;
+                appServices.updateMasterEffectParamInState(effectId, 'isBypassed', newBypassState);
+                AudioModule._rechainMasterEffectsAudio(); // Tell audio module to re-evaluate bypass
+                if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
+            }
+        },
+        getMasterEffectParamValue: (effectId, paramPath) => State.getMasterEffectParamValue(effectId, paramPath),
+    });
+    
+    // Event Handler connections that appServices needs to provide
+     Object.assign(appServices, {
+        selectMIDIInput: EventHandlers.selectMIDIInput,
+        handleTimelineLaneDrop: (data, trackId, startTime) => EventHandlers.handleTimelineLaneDrop(data, trackId, startTime, appServices),
+        handleTrackMute: EventHandlers.handleTrackMute,
+        handleTrackSolo: EventHandlers.handleTrackSolo,
+        handleTrackArm: EventHandlers.handleTrackArm,
+        handleRemoveTrack: EventHandlers.handleRemoveTrack,
+        handleOpenTrackInspector: EventHandlers.handleOpenTrackInspector,
+        handleOpenEffectsRack: EventHandlers.handleOpenEffectsRack,
+        handleOpenSequencer: EventHandlers.handleOpenSequencer,
+    });
+
+    // UI services (functions from UI modules)
+    Object.assign(appServices, {
+        initializeUIModule: UI.initializeUIModule,
+        openSoundBrowserWindow: UI.openSoundBrowserWindow,
+        updateSoundBrowserDisplayForLibrary: UI.updateSoundBrowserDisplayForLibrary,
+        showAddTrackModal: UI.showAddTrackModal,
+        showAddEffectModal: UI.showAddEffectModal,
+        openTrackInspectorWindow: UI.openTrackInspectorWindow,
+        openTrackEffectsRackWindow: UI.openTrackEffectsRackWindow,
+        openMasterEffectsRackWindow: UI.openMasterEffectsRackWindow,
+        openArrangementWindow: UI.openArrangementWindow,
+        openSequencerWindow: UI.openSequencerWindow,
+        openMixerWindow: UI.openMixerWindow,
+        updateMixerWindow: UI.updateMixerWindow,
+        updateTheme: UI.updateTheme,
+        getTheme: UI.getTheme,
+        closeAllTrackWindows: UI.closeAllTrackWindows,
+        updateTrackUI: UI.updateTrackUI,
+        highlightPlayingStep: UI.highlightPlayingStep,
+        drawWaveform: UI.drawWaveform,
+        drawInstrumentWaveform: UI.drawInstrumentWaveform,
+        renderSamplePads: UI.renderSamplePads,
+        updateSliceEditorUI: UI.updateSliceEditorUI,
+        updateDrumPadControlsUI: UI.updateDrumPadControlsUI,
+        renderDrumSamplerPads: UI.renderDrumSamplerPads,
+        renderEffectsList: UI.renderEffectsList,
+        renderEffectControls: UI.renderEffectControls,
+        createKnob: UI.createKnob,
+        updateSequencerCellUI: UI.updateSequencerCellUI,
+        renderTimeline: UI.renderTimeline,
+        updatePlayheadPosition: UI.updatePlayheadPosition,
+        openGlobalControlsWindow: GlobalControlsUI.openGlobalControlsWindow, // from its own module
+        updateMasterEffectsRackUI: () => { // Combined UI update logic
+            const rackWindow = appServices.getWindowById('masterEffectsRack'); // Use appService getter
+            if (rackWindow?.element && !rackWindow.isMinimized && typeof UI.renderEffectsList === 'function') {
+                const listDiv = rackWindow.element.querySelector('#effectsList-master');
+                const controlsContainer = rackWindow.element.querySelector('#effectControlsContainer-master');
+                if (listDiv && controlsContainer) UI.renderEffectsList(null, 'master', listDiv, controlsContainer);
+            }
+        },
+    });
+    
+    // Misc local appServices functions (defined in main.js, can use other appServices)
+    Object.assign(appServices, {
+        panicStopAllAudio: () => {
+            if (typeof Tone !== 'undefined') {
+                Tone.Transport.stop(); Tone.Transport.cancel(0);
+            }
+            appServices.getTracksState().forEach(track => track.stopPlayback && track.stopPlayback());
+            if (uiElementsCache.playBtn) uiElementsCache.playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            if (uiElementsCache.playBtnGlobal) uiElementsCache.playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
+            appServices.showNotification("All audio stopped.", "info", 1500);
+        },
+        updateTaskbarTempoDisplay: (tempo) => {
+            if (uiElementsCache.tempoDisplay) uiElementsCache.tempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
+        },
+        updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => {
+            const undoBtn = uiElementsCache.menuUndo; const redoBtn = uiElementsCache.menuRedo;
+            const undoStackCurrent = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
+            const redoStackCurrent = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
+            if (undoBtn) { const canUndo = undoStackCurrent.length > 0; undoBtn.classList.toggle('disabled', !canUndo); undoBtn.title = canUndo && undoStateParam ? `Undo: ${undoStateParam.actionName || 'action'}` : "Undo"; }
+            if (redoBtn) { const canRedo = redoStackCurrent.length > 0; redoBtn.classList.toggle('disabled', !canRedo); redoBtn.title = canRedo && redoStateParam ? `Redo: ${redoStateParam.actionName || 'action'}` : "Redo"; }
+        },
+        updateRecordButtonUI: (isRec, isArmed) => {
+            const recActive = isRec && isArmed;
+            if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-700', recActive);
+            if (uiElementsCache.recordBtnGlobal) uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', recActive);
+        },
+        closeAllWindows: (isReconstruction = false) => {
+            appServices.getOpenWindowsState().forEach(win => win.close(isReconstruction));
+            if(appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap(); else State.getOpenWindowsState().clear();
+        },
+        clearOpenWindowsMap: () => State.getOpenWindowsState().clear(), // Directly to state
+        triggerCustomBackgroundUpload: () => {
+            const input = document.getElementById('file-input-background');
+            if (input) input.click();
+        },
+        removeCustomDesktopBackground: async () => {
+            await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY);
+            if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
+            currentBackgroundImageObjectURL = null;
+            applyDesktopBackground(null);
+            appServices.showNotification("Background removed.", "info", 2000);
+        },
+        onPlaybackModeChange: (newMode) => {
+            const playbackBtn = document.getElementById('playbackModeToggleBtnGlobal');
+            if (playbackBtn) playbackBtn.textContent = newMode === 'timeline' ? 'Timeline Mode' : 'Sequencer Mode';
+            if(appServices.renderTimeline) appServices.renderTimeline();
+        },
+        _transportEventsInitialized_flag: false,
+        getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
+        setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
+    });
+}
+
+
 function cacheUIElements() {
-    // ... (same as response #63) ...
     uiElementsCache.desktop = document.getElementById('desktop');
     uiElementsCache.taskbar = document.getElementById('taskbar');
     uiElementsCache.topTaskbar = document.getElementById('topTaskbar');
@@ -315,24 +318,23 @@ function cacheUIElements() {
 
 async function initializeSnugOS() {
     console.log(`[Main initializeSnugOS] Initializing SnugOS v${Constants.APP_VERSION}...`);
-    cacheUIElements(); // Cache static elements first
+    cacheUIElements(); // Cache static DOM elements first
+    
+    initializeCoreServices(); // Initialize and populate appServices with functions from other modules
 
-    // Initialize modules, passing the fully defined appServices object
-    // These initialize functions will typically store the appServices reference
-    // for their own internal use.
+    // Now initialize modules, passing the fully populated appServices object
     State.initializeStateModule(appServices);
     AudioModule.initializeAudioModule(appServices);
-    UI.initializeUIModule(appServices); // This will call initialize on its sub-modules too
+    UI.initializeUIModule(appServices); 
     GlobalControlsUI.initializeGlobalControlsUIModule(appServices);
     EventHandlers.initializeEventHandlersModule(appServices);
 
-    // Now that modules have appServices, setup event listeners that might use them
+    // Setup event listeners that might use appServices
     EventHandlers.initializePrimaryEventListeners(); 
 
-    // Global controls window elements are created dynamically, so events are attached in its callback
-    GlobalControlsUI.openGlobalControlsWindow((elements) => {
+    // Open Global Controls Window and attach its specific events
+    appServices.openGlobalControlsWindow((elements) => {
         if (elements) {
-            // Cache these dynamically created elements
             uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
             uiElementsCache.recordBtnGlobal = elements.recordBtnGlobal;
             uiElementsCache.stopBtnGlobal = elements.stopBtnGlobal;
@@ -343,10 +345,9 @@ async function initializeSnugOS() {
             uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal;
             uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
             uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal;
-            // Attach events specifically to these elements from the Global Controls window
             EventHandlers.attachGlobalControlEvents(elements); 
         } else {
-            console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements. Cannot attach events.");
+            console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements.");
         }
     });
 
@@ -369,10 +370,10 @@ async function initializeSnugOS() {
         } else { applyDesktopBackground(null); }
     } catch (error) { console.error("Error loading initial desktop background:", error); applyDesktopBackground(null); }
     
-    // Ensure Audio Context is definitely started (important for iOS/Safari)
-    // and master chain is ready BEFORE opening windows that might use Tone.Transport or play audio.
-    await AudioModule.initAudioContextAndMasterMeter();
+    // Ensure Audio Context is started and master chain is ready
+    await appServices.initAudioContextAndMasterMeter(true); // Force start to be sure
 
+    // Open initial windows
     if (appServices.openArrangementWindow) appServices.openArrangementWindow();
     if (appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow();
 
@@ -381,7 +382,6 @@ async function initializeSnugOS() {
 }
 
 function handleDesktopDrop(file) {
-    // ... (same as response #63) ...
     if (!file) return;
     if (file.name.endsWith('.snug')) {
         appServices.handleProjectFileLoad({ target: { files: [file] } }); 
@@ -414,17 +414,15 @@ function handleDesktopDrop(file) {
 }
 
 function updateClock() {
-    // ... (same as response #63) ...
     if (uiElementsCache.clock) {
         uiElementsCache.clock.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 }
 
 function startPerformanceMonitor() {
-    // ... (same as response #63, ensure checks for appServices functions before calling) ...
     let lastMeterUpdateTime = performance.now();
     const updateLoop = () => {
-        if (appServices.updateMeters) { // Check if function exists
+        if (appServices.updateMeters) { 
             appServices.updateMeters(
                 uiElementsCache.masterMeter, 
                 uiElementsCache.masterMeterBarGlobal, 
@@ -452,7 +450,6 @@ function startPerformanceMonitor() {
 }
 
 function applyDesktopBackground(imageUrlOrObjectUrl) {
-    // ... (same as response #63) ...
     if (uiElementsCache.desktop) {
         uiElementsCache.desktop.style.backgroundImage = imageUrlOrObjectUrl ? `url('${imageUrlOrObjectUrl}')` : '';
         uiElementsCache.desktop.style.backgroundSize = imageUrlOrObjectUrl ? 'cover' : '';
@@ -464,7 +461,6 @@ function applyDesktopBackground(imageUrlOrObjectUrl) {
 
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
-    // ... (same as response #63, ensure checks for appServices functions before calling) ...
     const tracksExist = appServices.getTracksState && appServices.getTracksState().length > 0;
     const undoStackExists = appServices.getUndoStackState && appServices.getUndoStackState().length > 0;
     if (tracksExist || undoStackExists) {
