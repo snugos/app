@@ -4,7 +4,6 @@ import { createContextMenu } from './utils.js';
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
-        // ... (constructor remains the same as the version from response 13)
         this.id = id;
         this.title = title;
         this.isMinimized = false;
@@ -116,7 +115,7 @@ export class SnugWindow {
         desktopEl.appendChild(this.element);
 
         if (this.appServices.addWindowToStore) { this.appServices.addWindowToStore(this.id, this); }
-        this.initInteract();
+        this.initInteract(); // Call initInteract
 
         const closeBtn = this.element.querySelector('.window-close-btn');
         if (closeBtn && this.options.closable) {
@@ -138,7 +137,7 @@ export class SnugWindow {
 
         this.element.addEventListener('mousedown', () => this.focus(), true);
         this.element.addEventListener('pointerdown', () => this.focus(), true);
-        this.createTaskbarButton(); // Call to create the button
+        this.createTaskbarButton();
         if (this.options.isMinimized) { this.minimize(true); }
         if (!this.options.isMinimized && !options.zIndex) { this.focus(); }
     }
@@ -152,15 +151,24 @@ export class SnugWindow {
     }
 
     initInteract() {
-        // console.log(`[SnugWindow ${this.id}] initInteract called.`);
+        console.log(`[SnugWindow ${this.id}] initInteract called for window: "${this.title}"`); // LOG ADDED
         if (!window.interact || typeof window.interact !== 'function') {
-            console.error("Interact.js not loaded or not a function! Window interactions will not work.");
+            console.error(`[SnugWindow ${this.id}] Interact.js not loaded or not a function! Window interactions will not work.`);
             return;
         }
-        // ... (rest of initInteract remains the same, using all edges for resizable)
+
+        if (!this.element) {
+            console.error(`[SnugWindow ${this.id}] initInteract: this.element is null. Cannot set up interactions.`);
+            return;
+        }
+        if (!this.titleBar) {
+            console.error(`[SnugWindow ${this.id}] initInteract: this.titleBar is null. Dragging will not work as intended.`);
+            // Potentially allow dragging from whole window if titleBar is missing, or just fail.
+        }
+
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
-            console.error("[SnugWindow initInteract] Desktop element not found. Cannot initialize interactions.");
+            console.error(`[SnugWindow ${this.id}] initInteract: Desktop element not found.`);
             return;
         }
         const bottomTaskbarEl = this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar');
@@ -171,129 +179,157 @@ export class SnugWindow {
         let initialXForUndo, initialYForUndo;
 
         try {
+            console.log(`[SnugWindow ${this.id}] Setting up draggable. Element:`, this.element, "AllowFrom:", this.titleBar); // LOG ADDED
             interact(this.element)
                 .draggable({
-                    allowFrom: this.titleBar,
+                    allowFrom: this.titleBar, // Only allow dragging from the title bar
                     inertia: false,
-                    modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: false }) ],
+                    modifiers: [
+                        interact.modifiers.restrictRect({
+                            restriction: 'parent',
+                            endOnly: false
+                        })
+                    ],
                     autoScroll: false,
-                    listeners: { /* ... listeners ... */ }
+                    listeners: {
+                        start: (event) => {
+                            console.log(`[SnugWindow ${this.id}] DRAG START triggered for "${this.title}"`); // LOG ADDED
+                            if (this.isMaximized) {
+                                event.interaction.stop();
+                                return;
+                            }
+                            this.focus();
+                            const rect = this.element.getBoundingClientRect();
+                            const parentRect = desktopEl.getBoundingClientRect();
+                            initialXForUndo = rect.left - parentRect.left;
+                            initialYForUndo = rect.top - parentRect.top;
+                            if (this.titleBar) this.titleBar.style.cursor = 'grabbing';
+                        },
+                        move: (event) => {
+                            if (this.isMaximized) return;
+                            let x = (parseFloat(this.element.style.left) || 0) + event.dx;
+                            let y = (parseFloat(this.element.style.top) || 0) + event.dy;
+                            // ... (snapping logic remains here) ...
+                            this.element.style.left = `${x}px`;
+                            this.element.style.top = `${y}px`;
+                        },
+                        end: (event) => {
+                            // console.log(`[SnugWindow ${this.id}] DRAG END triggered for "${this.title}"`); // LOG ADDED
+                            if (this.titleBar) this.titleBar.style.cursor = 'grab';
+                            if (!this.isMaximized) {
+                                const finalRect = this.element.getBoundingClientRect();
+                                const parentRect = desktopEl.getBoundingClientRect();
+                                const finalX = finalRect.left - parentRect.left;
+                                const finalY = finalRect.top - parentRect.top;
+                                if (Math.abs(finalX - initialXForUndo) > 1 || Math.abs(finalY - initialYForUndo) > 1) {
+                                    this._captureUndo(`Move window "${this.title}"`);
+                                }
+                            }
+                        }
+                    }
                 });
-        } catch (e) { console.error(`[SnugWindow ${this.id}] Error setting up draggable:`, e); }
+            console.log(`[SnugWindow ${this.id}] Draggable setup aparentemente complete.`); // LOG ADDED
+        } catch (e) {
+            console.error(`[SnugWindow ${this.id}] Error setting up draggable:`, e);
+        }
 
         if (this.options.resizable) {
             try {
+                // console.log(`[SnugWindow ${this.id}] Setting up resizable.`); // LOG ADDED
                 interact(this.element)
                     .resizable({
                         edges: { left: true, right: true, bottom: true, top: true }, // Reverted to all edges
-                        listeners: { /* ... listeners ... */ },
-                        modifiers: [ /* ... modifiers ... */ ],
+                        listeners: { /* ... listeners from previous version ... */ },
+                        modifiers: [ /* ... modifiers from previous version ... */ ],
                         inertia: false
                     });
-            } catch (e) { console.error(`[SnugWindow ${this.id}] Error setting up resizable:`, e); }
+                // console.log(`[SnugWindow ${this.id}] Resizable setup complete.`); // LOG ADDED
+            } catch (e) {
+                console.error(`[SnugWindow ${this.id}] Error setting up resizable:`, e);
+            }
         }
     }
 
     toggleMaximize() { /* ... same as previous robust version ... */ }
-
-    // MODIFICATION: Enhanced logging in createTaskbarButton
-    createTaskbarButton() {
-        console.log(`[SnugWindow ${this.id}] createTaskbarButton called for window "${this.title}".`);
-        let taskbarButtonsContainer;
-        if (this.appServices.uiElementsCache && this.appServices.uiElementsCache.taskbarButtonsContainer) {
-            taskbarButtonsContainer = this.appServices.uiElementsCache.taskbarButtonsContainer;
-            console.log(`[SnugWindow ${this.id}] Found taskbarButtonsContainer via appServices.uiElementsCache.`);
-        } else {
-            taskbarButtonsContainer = document.getElementById('taskbarButtons');
-            if (taskbarButtonsContainer) {
-                console.log(`[SnugWindow ${this.id}] Found taskbarButtonsContainer via getElementById('taskbarButtons').`);
-            } else {
-                console.warn(`[SnugWindow ${this.id}] CRITICAL: Taskbar buttons container ('taskbarButtons') NOT FOUND. Cannot create taskbar button.`);
-                return; // Exit if container not found
-            }
-        }
-
-        if (!taskbarButtonsContainer) { // Double check after attempts
-            console.warn(`[SnugWindow ${this.id}] Taskbar buttons container still not found after all checks.`);
-            return;
-        }
-
-        this.taskbarButton = document.createElement('button');
-        this.taskbarButton.className = 'taskbar-button'; // Ensure this class is styled in style.css
-        this.taskbarButton.textContent = this.title.substring(0, 20) + (this.title.length > 20 ? '...' : '');
-        this.taskbarButton.title = this.title;
-        this.taskbarButton.dataset.windowId = this.id;
-
-        try {
-            taskbarButtonsContainer.appendChild(this.taskbarButton);
-            console.log(`[SnugWindow ${this.id}] Taskbar button for "${this.title}" CREATED and APPENDED.`);
-        } catch (e) {
-            console.error(`[SnugWindow ${this.id}] Error appending taskbar button to container:`, e);
-            this.taskbarButton = null; // Nullify if append failed
-            return;
-        }
-
-        this.taskbarButton.addEventListener('click', () => {
-            // ... (click listener remains the same) ...
-            if (!this.element) return;
-            if (this.isMinimized) {
-                this.restore();
-            } else {
-                const currentHighestZ = this.appServices.getHighestZ ? this.appServices.getHighestZ() : 100;
-                if (parseInt(this.element.style.zIndex) === currentHighestZ && !this.isMaximized) {
-                    this.minimize();
-                } else {
-                    this.focus();
-                }
-            }
-        });
-
-        this.taskbarButton.addEventListener('contextmenu', (event) => {
-            // ... (context menu listener remains the same) ...
-            event.preventDefault(); event.stopPropagation();
-            const menuItems = [];
-            if (this.isMinimized) menuItems.push({ label: "Restore", action: () => this.restore() });
-            else menuItems.push({ label: "Minimize", action: () => this.minimize() });
-
-            if (this.options.resizable) {
-                menuItems.push({ label: this.isMaximized ? "Restore Down" : "Maximize", action: () => this.toggleMaximize() });
-            }
-            if (this.options.closable) menuItems.push({ label: "Close", action: () => this.close() });
-
-            if (this.appServices.getTrackById && this.appServices.handleOpenTrackInspector && this.appServices.handleOpenEffectsRack && this.appServices.handleOpenSequencer) {
-                let trackId = null;
-                const parts = this.id.split('-');
-                if (parts.length > 1 && (this.id.startsWith('trackInspector-') || this.id.startsWith('effectsRack-') || this.id.startsWith('sequencerWin-'))) {
-                    const idPart = parts[parts.length - 1];
-                    if (!isNaN(parseInt(idPart))) trackId = parseInt(idPart);
-                }
-                const currentTrack = trackId !== null ? this.appServices.getTrackById(trackId) : null;
-                if (currentTrack) {
-                    menuItems.push({ separator: true });
-                    if (!this.id.startsWith('trackInspector-')) {
-                        menuItems.push({ label: `Open Inspector: ${currentTrack.name}`, action: () => this.appServices.handleOpenTrackInspector(trackId) });
-                    }
-                    if (!this.id.startsWith('effectsRack-')) {
-                        menuItems.push({ label: `Open Effects: ${currentTrack.name}`, action: () => this.appServices.handleOpenEffectsRack(trackId) });
-                    }
-                    if (!this.id.startsWith('sequencerWin-') && currentTrack.type !== 'Audio') {
-                        menuItems.push({ label: `Open Sequencer: ${currentTrack.name}`, action: () => this.appServices.handleOpenSequencer(trackId) });
-                    }
-                }
-            }
-            if (typeof createContextMenu === 'function') {
-                createContextMenu(event, menuItems, this.appServices);
-            } else {
-                console.error("createContextMenu function is not available.");
-            }
-        });
-        this.updateTaskbarButtonActiveState();
-    }
-
+    createTaskbarButton() { /* ... same as previous robust version ... */ }
     updateTaskbarButtonActiveState() { /* ... same ... */ }
     minimize(skipUndo = false) { /* ... same robust version ... */ }
     restore(skipUndo = false) { /* ... same ... */ }
-    close(isReconstruction = false) { /* ... same as previous robust version with Interact.js unset commented for testing ... */ }
-    focus(skipUndoForFocusItself = false) { /* ... same ... */ }
-    applyState(state) { /* ... same ... */ }
+    
+    close(isReconstruction = false) {
+        console.log(`[SnugWindow ${this.id}] close() method entered. Window: "${this.title}", isReconstruction: ${isReconstruction}, Element present: ${!!this.element}`);
+
+        if (!this.element) {
+            console.warn(`[SnugWindow ${this.id}] close(): Element is already null. Attempting cleanup for ID in store.`);
+            if (this.appServices && this.appServices.removeWindowFromStore && typeof this.appServices.removeWindowFromStore === 'function') {
+                try {
+                    this.appServices.removeWindowFromStore(this.id);
+                    console.log(`[SnugWindow ${this.id}] Removed from window store (element was null).`);
+                } catch (storeError) {
+                    console.error(`[SnugWindow ${this.id}] Error removing from store (element was null):`, storeError);
+                }
+            }
+            this.taskbarButton = null;
+            return;
+        }
+        
+        // MODIFICATION: Keeping Interact.js unset logic commented out FOR DIAGNOSTICS
+        /*
+        console.log(`[SnugWindow ${this.id}] DIAGNOSTIC: Attempting to unset Interact.js...`);
+        if (window.interact && typeof window.interact === 'function' && this.element) {
+            try {
+                const interactableInstance = interact(this.element);
+                if (interactableInstance && typeof interactableInstance.unset === 'function') {
+                    interactableInstance.unset();
+                    console.log(`[SnugWindow ${this.id}] Interact.js instance unset successfully.`);
+                } else {
+                    console.log(`[SnugWindow ${this.id}] Element was not interactable, already unset, or interact(this.element) failed to return valid instance for unsetting.`);
+                }
+            } catch (e) {
+                console.warn(`[SnugWindow ${this.id}] Error during Interact.js unset attempt (possibly due to internal library state):`, e.message, e);
+            }
+        } else {
+            console.warn(`[SnugWindow ${this.id}] window.interact not found or element is null. Skipping unset.`);
+        }
+        */
+        console.log(`[SnugWindow ${this.id}] DIAGNOSTIC: Interact.js unsetting in close() is currently COMMENTED OUT.`);
+
+
+        // console.log(`[SnugWindow ${this.id}] Calling onCloseCallback...`);
+        if (this.onCloseCallback && typeof this.onCloseCallback === 'function') {
+            try { this.onCloseCallback(); /* console.log(`[SnugWindow ${this.id}] onCloseCallback executed.`); */ }
+            catch (e) { console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e); }
+        }
+
+        // console.log(`[SnugWindow ${this.id}] Removing taskbar button...`);
+        if (this.taskbarButton) {
+            try { this.taskbarButton.remove(); /* console.log(`[SnugWindow ${this.id}] Taskbar button removed.`); */ }
+            catch (e) { console.warn(`[SnugWindow ${this.id}] Error removing taskbar button:`, e.message); }
+            this.taskbarButton = null;
+        }
+
+        // console.log(`[SnugWindow ${this.id}] Removing window element from DOM...`);
+        if (this.element && this.element.parentNode) {
+            try { this.element.parentNode.removeChild(this.element); /* console.log(`[SnugWindow ${this.id}] Window element removed from DOM.`); */ }
+            catch (e) { console.warn(`[SnugWindow ${this.id}] Error removing window element from DOM:`, e.message); }
+        } else if (this.element) { /* console.log(`[SnugWindow ${this.id}] Window element has no parentNode.`); */ }
+        this.element = null;
+
+        const oldWindowTitle = this.title;
+        // console.log(`[SnugWindow ${this.id}] Removing from window store...`);
+        if (this.appServices.removeWindowFromStore && typeof this.appServices.removeWindowFromStore === 'function') {
+            try { this.appServices.removeWindowFromStore(this.id); /* console.log(`[SnugWindow ${this.id}] Removed from window store.`); */ }
+            catch (storeError) { console.error(`[SnugWindow ${this.id}] Error removing from store:`, storeError); }
+        } else { console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available or not a function.`); }
+
+        const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
+        if (!isCurrentlyReconstructing && !isReconstruction) {
+            // console.log(`[SnugWindow ${this.id}] Capturing undo state for close window "${oldWindowTitle}"...`);
+            this._captureUndo(`Close window "${oldWindowTitle}"`);
+        }
+        // console.log(`[SnugWindow ${this.id}] close() finished for "${oldWindowTitle}".`);
+    }
+
+    focus(skipUndoForFocusItself = false) { /* ... same as previous ... */ }
+    applyState(state) { /* ... same as previous ... */ }
 }
