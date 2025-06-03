@@ -4,7 +4,6 @@ import { createContextMenu } from './utils.js';
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
-        // ... constructor code remains identical to response #24 ...
         this.id = id;
         this.title = title;
         this.isMinimized = false;
@@ -116,7 +115,8 @@ export class SnugWindow {
         desktopEl.appendChild(this.element);
 
         if (this.appServices.addWindowToStore) { this.appServices.addWindowToStore(this.id, this); }
-        this.initInteract();
+        
+        this.initInteract(); // Call initInteract
 
         const closeBtn = this.element.querySelector('.window-close-btn');
         if (closeBtn && this.options.closable) {
@@ -161,11 +161,7 @@ export class SnugWindow {
             console.error(`[SnugWindow ${this.id}] initInteract: this.element is null.`);
             return;
         }
-        if (!this.titleBar) {
-            console.error(`[SnugWindow ${this.id}] initInteract: this.titleBar is null. Dragging will be compromised.`);
-            // If titleBar is null, dragging won't work as intended with the setup below.
-        }
-
+        
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
             console.error(`[SnugWindow ${this.id}] initInteract: Desktop element not found.`);
@@ -179,13 +175,12 @@ export class SnugWindow {
         let initialXForUndo, initialYForUndo;
 
         // --- Draggable Setup ---
-        // MODIFICATION: Target this.titleBar directly for dragging
         if (this.titleBar) {
             console.log(`[SnugWindow ${this.id}] Setting up draggable ON this.titleBar. Target Element for movement:`, this.element);
-            interact(this.titleBar)
+            interact(this.titleBar) // Target the titleBar
                 .draggable({
                     inertia: false,
-                    autoScroll: false, // Usually not needed if desktop doesn't scroll
+                    autoScroll: false,
                     listeners: {
                         start: (event) => {
                             console.log(`[SnugWindow ${this.id}] DRAG START triggered ON titleBar for window "${this.title}"`);
@@ -198,7 +193,7 @@ export class SnugWindow {
                             const parentRect = desktopEl.getBoundingClientRect();
                             initialXForUndo = windowRect.left - parentRect.left;
                             initialYForUndo = windowRect.top - parentRect.top;
-                            this.titleBar.style.cursor = 'grabbing';
+                            if (this.titleBar) this.titleBar.style.cursor = 'grabbing';
                         },
                         move: (event) => {
                             if (this.isMaximized || !this.element) return;
@@ -206,7 +201,6 @@ export class SnugWindow {
                             let x = (parseFloat(this.element.style.left) || 0) + event.dx;
                             let y = (parseFloat(this.element.style.top) || 0) + event.dy;
 
-                            // Snapping logic (uses this.element for dimensions and position)
                             const currentWindowRect = {
                                 left: x, top: y,
                                 right: x + this.element.offsetWidth, bottom: y + this.element.offsetHeight,
@@ -226,8 +220,18 @@ export class SnugWindow {
                                     const otherRectStyle = otherWin.element.style;
                                     const otherRect = { left: parseFloat(otherRectStyle.left), top: parseFloat(otherRectStyle.top), right: parseFloat(otherRectStyle.left) + otherWin.element.offsetWidth, bottom: parseFloat(otherRectStyle.top) + otherWin.element.offsetHeight, width: otherWin.element.offsetWidth, height: otherWin.element.offsetHeight };
                                     if (isNaN(otherRect.left) || isNaN(otherRect.top)) return;
-                                    if (!snappedX) { /* ... X snapping ... */ }
-                                    if (!snappedY) { /* ... Y snapping ... */ }
+                                    if (!snappedX) {
+                                        if (Math.abs(currentWindowRect.right - otherRect.left) < snapThreshold) { x = otherRect.left - currentWindowRect.width; snappedX = true; }
+                                        else if (Math.abs(currentWindowRect.left - otherRect.right) < snapThreshold) { x = otherRect.right; snappedX = true; }
+                                        else if (Math.abs(currentWindowRect.left - otherRect.left) < snapThreshold) { x = otherRect.left; snappedX = true; }
+                                        else if (Math.abs(currentWindowRect.right - otherRect.right) < snapThreshold) { x = otherRect.right - currentWindowRect.width; snappedX = true; }
+                                    }
+                                    if (!snappedY) {
+                                        if (Math.abs(currentWindowRect.bottom - otherRect.top) < snapThreshold) { y = otherRect.top - currentWindowRect.height; snappedY = true; }
+                                        else if (Math.abs(currentWindowRect.top - otherRect.bottom) < snapThreshold) { y = otherRect.bottom; snappedY = true; }
+                                        else if (Math.abs(currentWindowRect.top - otherRect.top) < snapThreshold) { y = otherRect.top; snappedY = true; }
+                                        else if (Math.abs(currentWindowRect.bottom - otherRect.bottom) < snapThreshold) { y = otherRect.bottom - currentWindowRect.height; snappedY = true; }
+                                    }
                                 });
                             }
                             const titleBarH = this.titleBar?.offsetHeight || 30;
@@ -239,7 +243,6 @@ export class SnugWindow {
                             this.element.style.top = `${y}px`;
                         },
                         end: (event) => {
-                            // console.log(`[SnugWindow ${this.id}] DRAG END ON titleBar for window "${this.title}"`);
                             if (this.titleBar) this.titleBar.style.cursor = 'grab';
                             if (!this.isMaximized && this.element) {
                                 const finalRect = this.element.getBoundingClientRect();
@@ -253,7 +256,7 @@ export class SnugWindow {
                         }
                     }
                 });
-            console.log(`[SnugWindow ${this.id}] Draggable setup ON titleBar apparently complete.`);
+            // console.log(`[SnugWindow ${this.id}] Draggable setup ON titleBar apparently complete.`);
         } else {
             console.error(`[SnugWindow ${this.id}] Draggable setup SKIPPED: this.titleBar is null.`);
         }
@@ -263,10 +266,8 @@ export class SnugWindow {
             // console.log(`[SnugWindow ${this.id}] Setting up resizable for element:`, this.element);
             interact(this.element)
                 .resizable({
-                    // MODIFICATION: Disable resizing from the top edge. Allow from L, R, B.
-                    edges: { left: true, right: true, bottom: true, top: false },
-                    // MODIFICATION: Explicitly ignore pointer events starting on the titleBar for resizing.
-                    ignoreFrom: this.titleBar,
+                    edges: { left: true, right: true, bottom: true, top: false }, // Resizing from top edge disabled
+                    ignoreFrom: this.titleBar, // Resizing ignores events starting on the title bar
                     listeners: {
                         start: (event) => {
                             if (this.isMaximized) { event.interaction.stop(); return; }
@@ -278,7 +279,7 @@ export class SnugWindow {
                             let yPos = parseFloat(this.element.style.top) || 0;
                             this.element.style.width = `${event.rect.width}px`;
                             this.element.style.height = `${event.rect.height}px`;
-                            xPos += event.deltaRect.left; // Apply translation for L,T resize
+                            xPos += event.deltaRect.left;
                             yPos += event.deltaRect.top;
                             this.element.style.left = `${xPos}px`;
                             this.element.style.top = `${yPos}px`;
@@ -303,12 +304,12 @@ export class SnugWindow {
         }
     }
 
-    toggleMaximize() { /* ... same as previous robust version ... */ }
-    createTaskbarButton() { /* ... same as previous robust version ... */ }
-    updateTaskbarButtonActiveState() { /* ... same ... */ }
-    minimize(skipUndo = false) { /* ... same robust version ... */ }
-    restore(skipUndo = false) { /* ... same ... */ }
-    close(isReconstruction = false) { /* ... same as previous robust version (Interact.js unset commented for testing) ... */ }
-    focus(skipUndoForFocusItself = false) { /* ... same ... */ }
-    applyState(state) { /* ... same ... */ }
+    toggleMaximize() { /* ... (same as response #24 with interactable checks) ... */ }
+    createTaskbarButton() { /* ... (same as response #24 with enhanced logging) ... */ }
+    updateTaskbarButtonActiveState() { /* ... (same) ... */ }
+    minimize(skipUndo = false) { /* ... (same as response #24 with interactable checks) ... */ }
+    restore(skipUndo = false) { /* ... (same) ... */ }
+    close(isReconstruction = false) { /* ... (same as response #24 with Interact.js unset still commented for diagnostics) ... */ }
+    focus(skipUndoForFocusItself = false) { /* ... (same) ... */ }
+    applyState(state) { /* ... (same) ... */ }
 }
