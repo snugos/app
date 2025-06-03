@@ -12,9 +12,11 @@ let selectedSoundForPreviewData = null;
 export function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 
+    // Initialize sub-UI modules that browserCoreUI might interact with or provide services to
     initializeInspectorEffectsUI(appServicesFromMain);
     initializeArrangementMixingUI(appServicesFromMain);
 
+    // Wire up local fallbacks if services are not provided (though they should be by main.js)
     if (!localAppServices.getSelectedSoundForPreview) {
         console.log('[BrowserCoreUI Init] getSelectedSoundForPreview service not found in appServices, wiring locally.');
         localAppServices.getSelectedSoundForPreview = () => selectedSoundForPreviewData;
@@ -27,6 +29,7 @@ export function initializeUIModule(appServicesFromMain) {
     }
      if (!localAppServices.effectsRegistryAccess) { 
         console.warn("[BrowserCoreUI Module] effectsRegistryAccess not found in appServices. Add effect modal might be limited.");
+        // Provide a default empty structure to prevent errors if accessed before main fully initializes it
         localAppServices.effectsRegistryAccess = {
             AVAILABLE_EFFECTS: {},
         };
@@ -42,18 +45,39 @@ export function openSoundBrowserWindow(savedState = null) {
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
+        // Refresh content if already open
         const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
         if (currentLibNameFromState && localAppServices.updateSoundBrowserDisplayForLibrary) {
             console.log(`[UI SoundBrowser Re-Open/Restore] Updating display for already selected library: ${currentLibNameFromState}`);
             localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
         } else if (localAppServices.updateSoundBrowserDisplayForLibrary) {
-             localAppServices.updateSoundBrowserDisplayForLibrary(null);
+             localAppServices.updateSoundBrowserDisplayForLibrary(null); // Show default "select library"
         }
         return win;
     }
 
-    const contentHTML = `<div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full dark:text-slate-300"> <div class="flex space-x-1 mb-1"> <select id="librarySelect" class="flex-grow p-1 border rounded text-xs bg-gray-50 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> <option value="">Select Library...</option> </select> <button id="upDirectoryBtn" class="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500" title="Up Directory">↑</button> </div> <div id="currentPathDisplay" class="text-xs text-gray-600 dark:text-slate-400 truncate mb-1">/</div> <div id="soundBrowserList" class="min-h-[100px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600 overflow-y-auto"> <p class="text-gray-500 dark:text-slate-400 italic">Select a library to browse sounds.</p> </div> <div id="soundPreviewControls" class="mt-1 text-center"> <button id="previewSoundBtn" class="px-2 py-1 text-xs border rounded bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-700 dark:disabled:bg-slate-500" disabled>Preview</button> </div> </div>`;
-    const browserOptions = { width: 380, height: 450, minWidth: 300, minHeight: 300, initialContentKey: windowId };
+    // Tailwind classes for layout, select, buttons, text, borders, backgrounds
+    const contentHTML = `
+        <div id="soundBrowserContent" class="p-2 space-y-2 text-xs overflow-y-auto h-full bg-gray-800 dark:bg-slate-800 text-slate-300 dark:text-slate-200">
+            <div class="flex space-x-2 mb-1 items-center">
+                <select id="librarySelect" class="flex-grow p-1.5 border border-gray-600 dark:border-slate-600 rounded text-xs bg-gray-700 dark:bg-slate-700 text-slate-100 dark:text-slate-200 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Select Library...</option>
+                </select>
+                <button id="upDirectoryBtn" class="px-2.5 py-1.5 border border-gray-600 dark:border-slate-500 rounded bg-gray-600 hover:bg-gray-500 dark:bg-slate-600 dark:hover:bg-slate-500 text-slate-200 dark:text-slate-200" title="Up Directory">↑</button>
+            </div>
+            <div id="currentPathDisplay" class="text-xs text-gray-400 dark:text-slate-400 truncate mb-1.5 px-1 py-0.5 bg-gray-700 dark:bg-slate-700/50 rounded">/</div>
+            <div id="soundBrowserList" class="min-h-[150px] border border-gray-600 dark:border-slate-600 rounded p-1 bg-gray-700/50 dark:bg-slate-700/50 overflow-y-auto">
+                <p class="text-gray-500 dark:text-slate-400 italic p-2">Select a library to browse sounds.</p>
+            </div>
+            <div id="soundPreviewControls" class="mt-2 text-center">
+                <button id="previewSoundBtn" class="px-3 py-1.5 text-xs border border-blue-700 dark:border-blue-600 rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed dark:disabled:bg-slate-500 dark:disabled:border-slate-500" disabled>Preview</button>
+            </div>
+        </div>`;
+    const browserOptions = { 
+        width: 380, height: 480, // Slightly taller
+        minWidth: 300, minHeight: 350, // Adjusted minHeight
+        initialContentKey: windowId 
+    };
     if (savedState) Object.assign(browserOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
 
     const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions);
@@ -73,9 +97,9 @@ export function openSoundBrowserWindow(savedState = null) {
             const lib = e.target.value;
             console.log(`[UI SoundBrowser] Library selected via dropdown: ${lib}`);
             if (lib && localAppServices.fetchSoundLibrary) {
-                localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]);
+                localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]); // This will trigger updateSoundBrowserDisplayForLibrary
             } else if (!lib && localAppServices.updateSoundBrowserDisplayForLibrary) {
-                localAppServices.updateSoundBrowserDisplayForLibrary(null);
+                localAppServices.updateSoundBrowserDisplayForLibrary(null); // Show "Select library"
             }
         });
 
@@ -113,13 +137,13 @@ export function openSoundBrowserWindow(savedState = null) {
                             previewPlayer = new Tone.Player(url, () => {
                                 console.log(`[UI PreviewButton] Tone.Player loaded for ${url}. Starting playback.`);
                                 previewPlayer.start();
-                                URL.revokeObjectURL(url);
+                                URL.revokeObjectURL(url); // Clean up after load or playback
                                 console.log(`[UI PreviewButton] Object URL revoked for ${url}.`);
                             }).toDestination();
                             previewPlayer.onerror = (err) => {
                                 console.error(`[UI PreviewButton] Tone.Player error for ${url}:`, err);
                                 showNotification("Error playing preview: " + err.message, 3000);
-                                URL.revokeObjectURL(url);
+                                URL.revokeObjectURL(url); // Clean up on error too
                             };
                             if (localAppServices.setPreviewPlayer) localAppServices.setPreviewPlayer(previewPlayer);
                         }).catch(err => {
@@ -141,7 +165,8 @@ export function openSoundBrowserWindow(savedState = null) {
             }
         });
 
-        if (!savedState) {
+        // Initial population based on current state
+        if (!savedState) { // Only on fresh open, not on restore from saved state (which might have its own lib selected)
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
@@ -162,12 +187,13 @@ export function openSoundBrowserWindow(savedState = null) {
                 }
             }
         } else if (savedState && localAppServices.getCurrentLibraryName && localAppServices.updateSoundBrowserDisplayForLibrary) {
+            // If restoring from a saved state, ensure the UI reflects the globally selected library
             const currentLibNameFromState = localAppServices.getCurrentLibraryName();
             console.log(`[UI SoundBrowser Open] Restoring from savedState. Current lib in state: ${currentLibNameFromState}`);
              if (currentLibNameFromState && libSelect) {
                 libSelect.value = currentLibNameFromState;
                 localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
-            } else if (libSelect) {
+            } else if (libSelect) { // If no global lib, reset dropdown
                 libSelect.value = "";
                 localAppServices.updateSoundBrowserDisplayForLibrary(null);
             }
@@ -182,28 +208,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
 
     if (!browserWindowEl) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Sound Browser window element NOT FOUND. Aborting DOM updates.`);
-        if (libraryName && !isLoading && !hasError) {
-            const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
-            if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
-                localAppServices.setCurrentLibraryName(libraryName);
-                 console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. Library '${libraryName}' loaded. Set as current in global state.`);
-            }
-        }
-        return;
-    }
-
-    const listDiv = browserWindowEl.querySelector('#soundBrowserList');
-    const libSelect = browserWindowEl.querySelector('#librarySelect');
-    const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
-    const isWindowVisible = !browserWindowEl.closest('.window.minimized');
-    const currentDropdownSelection = libSelect ? libSelect.value : null;
-
-    console.log(`[UI updateSoundBrowserDisplayForLibrary] Window visible: ${isWindowVisible}, Current dropdown: '${currentDropdownSelection}', Target library: '${libraryName}'`);
-
-    let performFullUIUpdate = false;
-
-    if (!isWindowVisible) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. No DOM update.`);
+        // If the window isn't visible but a library load completes, update the global state if no other library is active.
         if (libraryName && !isLoading && !hasError) {
             const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
@@ -214,48 +219,84 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
         return;
     }
 
+    const listDiv = browserWindowEl.querySelector('#soundBrowserList');
+    const libSelect = browserWindowEl.querySelector('#librarySelect');
+    const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
+    const isWindowVisible = !browserWindowEl.closest('.window.minimized'); // Check if window is not minimized
+    const currentDropdownSelection = libSelect ? libSelect.value : null;
+
+    console.log(`[UI updateSoundBrowserDisplayForLibrary] Window visible: ${isWindowVisible}, Current dropdown: '${currentDropdownSelection}', Target library: '${libraryName}'`);
+
+    let performFullUIUpdate = false;
+
+    // Logic to decide if a full UI update for the browser content is needed:
+    // 1. If the window is not visible, don't update DOM, but potentially update global state.
+    if (!isWindowVisible) {
+        console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. No DOM update.`);
+        if (libraryName && !isLoading && !hasError) {
+            const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
+            if (!currentGlobalLib && localAppServices.setCurrentLibraryName) { // Only set if no other lib is "active"
+                localAppServices.setCurrentLibraryName(libraryName);
+                 console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. Library '${libraryName}' loaded. Set as current in global state (as no global lib was active).`);
+            }
+        }
+        return;
+    }
+
+    // 2. If the update is for the currently selected library in the dropdown, then update the view.
     if (libraryName === currentDropdownSelection) {
         performFullUIUpdate = true;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Update current view for '${libraryName}'.`);
-    } else if (currentDropdownSelection === "" && libraryName && !isLoading && !hasError) {
+    } 
+    // 3. If dropdown is "Select Library..." and a library just finished loading successfully, switch to it.
+    else if (currentDropdownSelection === "" && libraryName && !isLoading && !hasError) {
         performFullUIUpdate = true;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Set initial view to '${libraryName}' from 'Select Library...'.`);
-    } else if (libraryName && !isLoading && !hasError) {
+    }
+    // 4. If the update is for a library NOT selected in the dropdown (e.g. background load), don't change the visible UI.
+    else if (libraryName && libraryName !== currentDropdownSelection && !isLoading && !hasError) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Update for '${libraryName}' (isLoading: ${isLoading}, hasError: ${hasError}), but current view is '${currentDropdownSelection}'.`);
+        // Potentially set this as the global "current" library if no other is active, even if not visible in dropdown
         const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
         if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
             localAppServices.setCurrentLibraryName(libraryName);
              console.log(`[UI updateSoundBrowserDisplayForLibrary] Background load of '${libraryName}' successful. Set as current in global state (as no global lib was active).`);
         }
-        return;
-    } else if ((isLoading || hasError) && libraryName !== currentDropdownSelection) {
+        return; // Don't update the DOM for a non-selected library
+    }
+    // 5. If it's a loading/error update for a non-selected library, also don't change visible UI.
+    else if ((isLoading || hasError) && libraryName !== currentDropdownSelection) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Loading/Error for non-selected library '${libraryName}'. Current view: '${currentDropdownSelection}'.`);
         return;
     }
 
 
+    // If we decided to perform a full UI update (or if libraryName is null to clear view)
     if (performFullUIUpdate) {
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Proceeding with UI update for '${libraryName}'.`);
         if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(libraryName);
-        if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]);
-        if (libSelect && libSelect.value !== (libraryName || "")) {
+        if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]); // Reset path
+        if (libSelect && libSelect.value !== (libraryName || "")) { // Ensure dropdown matches
             console.log(`[UI updateSoundBrowserDisplayForLibrary] Setting libSelect.value to: '${libraryName || ""}' (was '${currentDropdownSelection}')`);
             libSelect.value = libraryName || "";
         }
     } else {
+        // This case handles explicitly clearing the view (libraryName is null)
         if (!libraryName) {
-             performFullUIUpdate = true;
+             performFullUIUpdate = true; // We need to clear the UI
              console.log(`[UI updateSoundBrowserDisplayForLibrary] Condition: Explicitly setting to "Select a library" view.`);
              if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(null);
              if (libSelect) libSelect.value = "";
         } else {
+            // This path should ideally not be reached if logic above is correct.
             console.error(`[UI updateSoundBrowserDisplayForLibrary] LOGIC ERROR: Reached unexpected state for '${libraryName}'. No UI update performed when one might have been expected.`);
             return;
         }
     }
 
-    if (!libraryName) {
-        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>';
+    // Update the DOM content based on the state (loading, error, or actual tree)
+    if (!libraryName) { // No library selected or explicitly cleared
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic p-2">Select a library.</p>';
         pathDisplay.textContent = '/';
         if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null);
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Select a library" view.`);
@@ -263,12 +304,13 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     }
 
     if (isLoading || (localAppServices.getLoadedZipFiles && localAppServices.getLoadedZipFiles()[libraryName] === "loading")) {
-        listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`;
+        listDiv.innerHTML = `<p class="text-gray-400 dark:text-slate-400 italic p-2">Loading ${libraryName}...</p>`;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Loading ${libraryName}..." view.`);
     } else if (hasError) {
-        listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`;
+        listDiv.innerHTML = `<p class="text-red-500 dark:text-red-400 p-2">Error: Library "${libraryName}" failed to load.</p>`;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' failed." view.`);
     } else {
+        // Library should be loaded (not loading, no error)
         console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] About to check trees. Library: ${libraryName}`);
         const currentTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
         console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Current trees from getSoundLibraryFileTrees. Keys:`, currentTrees ? Object.keys(currentTrees) : 'undefined');
@@ -279,77 +321,114 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
             if (treeForLib && Object.keys(treeForLib).length > 0) {
                  console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Tree for "${libraryName}" is NOT empty.`);
                  if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeForLib);
-                 if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
+                 if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree()); // Render root
                  console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering directory for library '${libraryName}'.`);
             } else {
+                // Tree exists but is empty
                 console.warn(`[UI updateSoundBrowserDisplayForLibrary WARN] Tree for "${libraryName}" was found but considered empty or invalid. Tree:`, treeForLib);
-                listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data is empty or corrupt.</p>`;
+                listDiv.innerHTML = `<p class="text-yellow-500 dark:text-yellow-400 p-2">Library "${libraryName}" is empty or contains no supported audio files.</p>`;
             }
         } else {
-            listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`;
+            // This case means the library was expected to be loaded but its tree isn't in the state.
+            // This could happen if fetchSoundLibrary failed to update state correctly or if there's a race condition.
+            listDiv.innerHTML = `<p class="text-red-500 dark:text-red-400 p-2">Error: Library "${libraryName}" data not found after attempting load. Please try reselecting.</p>`;
             console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view. (Checked currentTrees['${libraryName}'])`);
         }
     }
-    pathDisplay.textContent = `/${libraryName || ''}/`;
+    pathDisplay.textContent = `/${libraryName || ''}/`; // Update path display
 }
 
 
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
-    if (!browserWindowEl || !treeNode) return;
+    if (!browserWindowEl || !treeNode) {
+        console.warn("[UI renderSoundBrowserDirectory] Browser window or treeNode not available.");
+        if (browserWindowEl) { // If window exists but no tree, show empty
+            const listDiv = browserWindowEl.querySelector('#soundBrowserList');
+            if (listDiv) listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic p-2">Error: Cannot display directory content.</p>';
+        }
+        return;
+    }
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
     const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
     const previewBtn = browserWindowEl.querySelector('#previewSoundBtn');
-    listDiv.innerHTML = '';
+    listDiv.innerHTML = ''; // Clear previous items
     const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : '';
     pathDisplay.textContent = `/${currentLibName}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
 
+    // Reset selected sound for preview
     if (localAppServices.setSelectedSoundForPreview) {
         localAppServices.setSelectedSoundForPreview(null);
     }
     if(previewBtn) previewBtn.disabled = true;
 
     const items = [];
-    for (const name in treeNode) { if (treeNode[name]?.type) items.push({ name, type: treeNode[name].type, nodeData: treeNode[name] }); }
-    items.sort((a, b) => { if (a.type === 'folder' && b.type !== 'folder') return -1; if (a.type !== 'folder' && b.type === 'folder') return 1; return a.name.localeCompare(b.name); });
-    if (items.length === 0) { listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Empty folder.</p>'; return; }
+    for (const name in treeNode) { // Iterate over keys of the current treeNode (which represents a directory)
+        if (treeNode[name]?.type) { // Ensure it's a valid entry with a type
+            items.push({ name, type: treeNode[name].type, nodeData: treeNode[name] });
+        }
+    }
+    // Sort: folders first, then files, then alphabetically
+    items.sort((a, b) => {
+        if (a.type === 'folder' && b.type !== 'folder') return -1;
+        if (a.type !== 'folder' && b.type === 'folder') return 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    if (items.length === 0) {
+        listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic p-2">Empty folder.</p>';
+        return;
+    }
 
     items.forEach(itemObj => {
-        const {name, nodeData} = itemObj; const listItem = document.createElement('div');
-        listItem.className = 'p-1 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-xs flex items-center';
+        const {name, nodeData} = itemObj;
+        const listItem = document.createElement('div');
+        // Tailwind: list item styling, hover effects, border
+        listItem.className = 'p-1.5 hover:bg-blue-700 dark:hover:bg-blue-600 cursor-pointer border-b border-gray-700 dark:border-slate-600 text-xs flex items-center text-slate-200 dark:text-slate-200 last:border-b-0';
         
-        const icon = document.createElement('span'); icon.className = 'mr-1.5'; icon.textContent = nodeData.type === 'folder' ? '📁' : '🎵'; listItem.appendChild(icon);
-        const text = document.createElement('span'); text.textContent = name; listItem.appendChild(text);
+        const icon = document.createElement('span');
+        icon.className = 'mr-2 text-base'; // Tailwind: margin, icon size
+        icon.textContent = nodeData.type === 'folder' ? '📁' : '🎵';
+        listItem.appendChild(icon);
+        
+        const text = document.createElement('span');
+        text.className = 'truncate'; // Tailwind: handle long names
+        text.textContent = name;
+        listItem.appendChild(text);
         
         if (nodeData.type === 'folder') {
             listItem.addEventListener('click', () => {
                 const newPath = [...pathArray, name];
                 if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath(newPath);
-                renderSoundBrowserDirectory(newPath, nodeData.children);
+                renderSoundBrowserDirectory(newPath, nodeData.children); // Recurse into folder
             });
         } else { // File
-            listItem.style.touchAction = 'none'; 
+            listItem.style.touchAction = 'none'; // For Interact.js compatibility
             listItem.addEventListener('click', () => {
-                listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-blue-600').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-600'));
-                listItem.classList.add('bg-blue-200', 'dark:bg-blue-600');
+                // Highlight selected item
+                listDiv.querySelectorAll('.bg-blue-600,.dark\\:bg-blue-500').forEach(el => el.classList.remove('bg-blue-600', 'dark:bg-blue-500'));
+                listItem.classList.add('bg-blue-600', 'dark:bg-blue-500');
+                
                 const soundToSelect = { fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName };
                 console.log('[UI SoundFile Click] Sound selected:', JSON.stringify(soundToSelect));
                 if (localAppServices.setSelectedSoundForPreview) {
                     localAppServices.setSelectedSoundForPreview(soundToSelect);
                 }
-                if(previewBtn) previewBtn.disabled = false;
+                if(previewBtn) previewBtn.disabled = false; // Enable preview button
             });
 
+            // Make file items draggable using Interact.js
             if (window.interact) {
-                interact(listItem).unset(); 
+                interact(listItem).unset(); // Clear any previous interactable settings
                 interact(listItem)
                     .draggable({
-                        inertia: true,
+                        inertia: true, // Optional: adds a bit of "physics" to the drag
+                        autoScroll: true, // Enable auto-scroll when dragging near edges of scrollable containers
                         listeners: {
                             start: (event) => {
-                                console.log('[UI SoundBrowser DragStart via Interact.js] Attempting to drag:', name); // Added log
+                                console.log('[UI SoundBrowser DragStart via Interact.js] Attempting to drag:', name);
                                 const dragData = {
-                                    type: 'sound-browser-item',
+                                    type: 'sound-browser-item', // Important for dropzone to identify
                                     fileName: name,
                                     fullPath: nodeData.fullPath,
                                     libraryName: currentLibName
@@ -358,9 +437,9 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                                 if (targetElement) {
                                     targetElement.dataset.dragType = 'sound-browser-item';
                                     targetElement.dataset.jsonData = JSON.stringify(dragData);
-                                    targetElement.classList.add('dragging-sound-item'); 
-                                    // Make the element itself follow the cursor
-                                    targetElement.style.position = 'relative'; // Or 'absolute' if moving within a specific container
+                                    targetElement.classList.add('opacity-75', 'ring-2', 'ring-blue-300', 'dark:ring-blue-400', 'dragging-sound-item'); // Visual feedback
+                                    // Make the element itself follow the cursor (simple implementation)
+                                    targetElement.style.position = 'relative'; 
                                     targetElement.style.zIndex = '10000'; // Bring to front
                                 }
                                 console.log(`[UI SoundBrowser DragStart via Interact.js] Dragging: ${name}, Data prepared.`);
@@ -380,7 +459,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                             end: (event) => {
                                 const targetElement = event.interaction.element || event.target;
                                 if (targetElement) {
-                                     targetElement.classList.remove('dragging-sound-item'); 
+                                     targetElement.classList.remove('opacity-75', 'ring-2', 'ring-blue-300', 'dark:ring-blue-400', 'dragging-sound-item'); 
                                      // Reset transform and remove temporary attributes
                                      targetElement.style.transform = 'none';
                                      targetElement.removeAttribute('data-x');
@@ -392,8 +471,8 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                             }
                         }
                     })
-                    .styleCursor(false); 
-                listItem.style.cursor = 'grab';
+                    .styleCursor(false); // Use default cursor or set via CSS
+                listItem.style.cursor = 'grab'; // Indicate draggable
             }
         }
         listDiv.appendChild(listItem);
@@ -403,12 +482,27 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
 // --- Add Effect Modal ---
 export function showAddEffectModal(owner, ownerType) {
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
-    let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
+    // Tailwind: modal content styling
+    let modalContentHTML = `<div class="max-h-72 overflow-y-auto rounded-md bg-gray-700 dark:bg-slate-700/80 shadow-inner"><ul class="list-none p-0 m-0">`;
     const AVAILABLE_EFFECTS_LOCAL = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
-    for (const effectKey in AVAILABLE_EFFECTS_LOCAL) { modalContentHTML += `<li class="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-700 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`; }
+    
+    const sortedEffectKeys = Object.keys(AVAILABLE_EFFECTS_LOCAL).sort((a, b) => {
+        const nameA = AVAILABLE_EFFECTS_LOCAL[a].displayName.toLowerCase();
+        const nameB = AVAILABLE_EFFECTS_LOCAL[b].displayName.toLowerCase();
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+    });
+
+    for (const effectKey of sortedEffectKeys) {
+        // Tailwind: list item styling, hover effect
+        modalContentHTML += `<li class="p-2 hover:bg-blue-600 dark:hover:bg-blue-500 cursor-pointer border-b border-gray-600 dark:border-slate-600 text-sm text-slate-100 dark:text-slate-200 last:border-b-0" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`;
+    }
     modalContentHTML += `</ul></div>`;
+    
     const modal = showCustomModal(`Add Effect to ${ownerName}`, modalContentHTML, [], 'add-effect-modal');
-    if (modal?.contentDiv) {
+    
+    if (modal?.contentDiv) { // contentDiv is the modalBody from showCustomModal
         modal.contentDiv.querySelectorAll('li[data-effect-type]').forEach(item => {
             item.addEventListener('click', () => {
                 const effectType = item.dataset.effectType;
@@ -418,8 +512,9 @@ export function showAddEffectModal(owner, ownerType) {
                     localAppServices.addMasterEffect(effectType);
                 } else {
                     console.warn("Could not add effect. Owner or required addEffect method missing.");
+                    showNotification("Error: Could not add effect.", 3000);
                 }
-                modal.overlay.remove();
+                if (modal.overlay) modal.overlay.remove(); // Ensure modal closes
             });
         });
     }
