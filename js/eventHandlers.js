@@ -1,21 +1,21 @@
-// js/eventHandlers.js - Global Event Listeners and Input Handling Module (MODIFIED for Start Menu Debug)
+// js/eventHandlers.js - Global Event Listeners and Input Handling Module (MODIFIED for control attachment)
 import * as Constants from './constants.js';
 import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js';
 
 let localAppServices = {};
-let transportKeepAliveBufferSource = null;
+let transportKeepAliveBufferSource = null; 
 let silentKeepAliveBuffer = null;
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
-    if (!localAppServices.setPlaybackMode && localAppServices.setPlaybackModeState) { // Example of ensuring service exists
+    if (!localAppServices.setPlaybackMode && localAppServices.setPlaybackModeState) { 
         localAppServices.setPlaybackMode = localAppServices.setPlaybackModeState;
     }
     console.log("[EventHandlers Init] Module initialized. localAppServices ready:", !!localAppServices.uiElementsCache);
 }
 
 export function initializePrimaryEventListeners() {
-    console.log("[EventHandlers initializePrimaryEventListeners] Attempting to set up primary event listeners.");
+    console.log("[EventHandlers initializePrimaryEventListeners] Setting up primary event listeners.");
     
     // Keyboard Shortcuts
     document.addEventListener('keydown', handleGlobalKeyDown);
@@ -37,7 +37,6 @@ export function initializePrimaryEventListeners() {
             }
         });
 
-        // Click outside to close start menu
         document.addEventListener('click', (event) => {
             if (!startMenuEl.classList.contains('hidden') && !startMenuEl.contains(event.target) && event.target !== startButton) {
                 console.log("[EventHandlers] Click outside start menu detected. Closing.");
@@ -46,53 +45,60 @@ export function initializePrimaryEventListeners() {
         });
         setupStartMenuItems(startMenuEl);
     } else {
-        // Fallback and detailed logging if elements are not in cache (should not happen given main.js order)
         console.error("[EventHandlers initializePrimaryEventListeners] StartMenuButton or StartMenuEl NOT FOUND in localAppServices.uiElementsCache.");
         console.log("localAppServices.uiElementsCache content:", localAppServices.uiElementsCache);
-        
-        const directStartButton = document.getElementById('startMenuButton');
-        const directStartMenuEl = document.getElementById('startMenu');
-        if (directStartButton && directStartMenuEl) {
-            console.warn("[EventHandlers initializePrimaryEventListeners] Fallback: Attaching to directly fetched start menu elements.");
-            directStartButton.addEventListener('click', (event) => {
-                event.stopPropagation();
-                directStartMenuEl.classList.toggle('hidden');
-                 console.log(`[EventHandlers Fallback] Start menu class 'hidden' toggled. Now hidden: ${directStartMenuEl.classList.contains('hidden')}`);
-            });
-        } else {
-            console.error("[EventHandlers initializePrimaryEventListeners] CRITICAL: Cannot find start menu elements even by direct ID fetch. Button found:", !!directStartButton, "Menu found:", !!directStartMenuEl);
-        }
     }
+
+    // --- Attach to TOP TASKBAR global controls ---
+    const topTaskbarPlayBtn = localAppServices.uiElementsCache?.playBtn; // ID from index.html top taskbar
+    const topTaskbarStopBtn = localAppServices.uiElementsCache?.stopBtn;   // ID from index.html top taskbar
+    const topTaskbarRecordBtn = localAppServices.uiElementsCache?.recordBtn; // ID from index.html top taskbar
+
+    if (topTaskbarPlayBtn && localAppServices.togglePlayback) {
+        topTaskbarPlayBtn.addEventListener('click', () => localAppServices.togglePlayback());
+    } else {
+        console.warn("[EventHandlers] Top taskbar playBtn not found in cache or togglePlayback service missing.");
+    }
+    if (topTaskbarStopBtn && localAppServices.stopPlayback) {
+        topTaskbarStopBtn.addEventListener('click', () => localAppServices.stopPlayback());
+    } else {
+        console.warn("[EventHandlers] Top taskbar stopBtn not found in cache or stopPlayback service missing.");
+    }
+    if (topTaskbarRecordBtn && localAppServices.toggleRecording) {
+        topTaskbarRecordBtn.addEventListener('click', () => localAppServices.toggleRecording());
+    } else {
+        console.warn("[EventHandlers] Top taskbar recordBtn not found in cache or toggleRecording service missing.");
+    }
+    // Note: Tempo display on top taskbar is updated by state changes, not direct event here.
 
     // iOS Audio Context Keep-Alive
     const playSilentBufferOnTouch = async () => {
-        // ... (rest of the keep-alive logic remains the same as response #36)
+        if (typeof Tone === 'undefined') {
+            console.warn("[EventHandlers playSilentBufferOnTouch] Tone is not defined. Cannot start audio context.");
+            return;
+        }
         if (Tone.context.state !== 'running') {
-            await Tone.start();
+            try { await Tone.start(); } catch (e) { console.error("Error Tone.start():", e); return; }
         }
         if (!silentKeepAliveBuffer && Tone.context.createBuffer) {
             silentKeepAliveBuffer = Tone.context.createBuffer(1, 1, Tone.context.sampleRate);
         }
         if (silentKeepAliveBuffer && (!transportKeepAliveBufferSource || transportKeepAliveBufferSource.context.state === 'closed')) {
-            if(transportKeepAliveBufferSource) transportKeepAliveBufferSource.disconnect(); // Clean up old one if context closed
+            if(transportKeepAliveBufferSource) transportKeepAliveBufferSource.disconnect();
             transportKeepAliveBufferSource = Tone.context.createBufferSource();
             transportKeepAliveBufferSource.buffer = silentKeepAliveBuffer;
             transportKeepAliveBufferSource.loop = true;
             transportKeepAliveBufferSource.connect(Tone.Destination);
-            transportKeepAliveBufferSource.start();
-            console.log("[EventHandlers] iOS keep-alive silent buffer started/restarted.");
+            try { transportKeepAliveBufferSource.start(); } catch (e) { console.error("Error starting keep-alive buffer:", e); }
+            // console.log("[EventHandlers] iOS keep-alive silent buffer started/restarted.");
         }
-        // No longer removing listener to allow re-trigger if context suspends
-        // document.removeEventListener('touchstart', playSilentBufferOnTouch);
-        // document.removeEventListener('mousedown', playSilentBufferOnTouch);
     };
-    // Add these listeners with 'once: false' or re-add them if context suspends. For simplicity, keep them active.
     document.addEventListener('touchstart', playSilentBufferOnTouch, { passive: true });
     document.addEventListener('mousedown', playSilentBufferOnTouch, { passive: true });
 }
 
 function setupStartMenuItems(startMenuEl) {
-    // --- File Menu ---
+    // ... (same as response #53)
     startMenuEl.querySelector('#menuNewProject')?.addEventListener('click', () => {
         if (localAppServices.newProject) localAppServices.newProject();
         startMenuEl.classList.add('hidden');
@@ -109,8 +115,6 @@ function setupStartMenuItems(startMenuEl) {
         if (localAppServices.exportToWav) localAppServices.exportToWav();
         startMenuEl.classList.add('hidden');
     });
-
-    // --- Edit Menu ---
     startMenuEl.querySelector('#menuUndo')?.addEventListener('click', () => {
         if (localAppServices.undo && localAppServices.getUndoStackState && localAppServices.getUndoStackState().length > 0) localAppServices.undo();
         startMenuEl.classList.add('hidden');
@@ -119,60 +123,63 @@ function setupStartMenuItems(startMenuEl) {
         if (localAppServices.redo && localAppServices.getRedoStackState && localAppServices.getRedoStackState().length > 0) localAppServices.redo();
         startMenuEl.classList.add('hidden');
     });
-    
-    // --- View Menu ---
     startMenuEl.querySelector('#menuToggleFullScreen')?.addEventListener('click', () => {
-        toggleFullScreen(); // toggleFullScreen is defined below
+        toggleFullScreen(); 
         startMenuEl.classList.add('hidden');
     });
 }
 
+// This function is NOW specifically for elements WITHIN the Global Controls WINDOW
 export function attachGlobalControlEvents(elementsToAttachTo) {
-    // ... (rest of the function remains the same as response #36)
-    const { playBtn, stopBtn, recordBtn, tempoGlobalInput, playbackModeToggleBtnGlobal, midiInputSelectGlobal } = elementsToAttachTo;
+    console.log("[EventHandlers attachGlobalControlEvents] Attaching to Global Controls WINDOW elements:", elementsToAttachTo);
+    const { playBtnGlobal, stopBtnGlobal, recordBtnGlobal, tempoGlobalInput, playbackModeToggleBtnGlobal, midiInputSelectGlobal } = elementsToAttachTo;
 
-    if (playBtn) playBtn.addEventListener('click', () => localAppServices.togglePlayback && localAppServices.togglePlayback());
-    else console.warn("[EventHandlers] Global play button not found for attachment.");
+    if (playBtnGlobal && localAppServices.togglePlayback) playBtnGlobal.addEventListener('click', () => localAppServices.togglePlayback());
+    else if (playBtnGlobal) console.warn("[EventHandlers GCW] playBtnGlobal found but togglePlayback service missing.");
+    // else console.log("[EventHandlers GCW] playBtnGlobal not in elementsToAttachTo"); // Less noisy
 
-    if (stopBtn) stopBtn.addEventListener('click', () => localAppServices.stopPlayback && localAppServices.stopPlayback());
-    else console.warn("[EventHandlers] Global stop button not found for attachment.");
-    
-    if (recordBtn) recordBtn.addEventListener('click', () => localAppServices.toggleRecording && localAppServices.toggleRecording());
-    else console.warn("[EventHandlers] Global record button not found for attachment.");
+    if (stopBtnGlobal && localAppServices.stopPlayback) stopBtnGlobal.addEventListener('click', () => localAppServices.stopPlayback());
+    else if (stopBtnGlobal) console.warn("[EventHandlers GCW] stopBtnGlobal found but stopPlayback service missing.");
+
+    if (recordBtnGlobal && localAppServices.toggleRecording) recordBtnGlobal.addEventListener('click', () => localAppServices.toggleRecording());
+    else if (recordBtnGlobal) console.warn("[EventHandlers GCW] recordBtnGlobal found but toggleRecording service missing.");
 
     if (tempoGlobalInput) {
+        // Update input with current tempo from transport if available
+        if (typeof Tone !== 'undefined' && Tone.Transport) {
+             tempoGlobalInput.value = Tone.Transport.bpm.value.toFixed(1);
+        }
         tempoGlobalInput.addEventListener('change', (e) => {
             const newTempo = parseFloat(e.target.value);
             if (newTempo >= Constants.MIN_TEMPO && newTempo <= Constants.MAX_TEMPO) {
-                Tone.Transport.bpm.value = newTempo;
+                if (typeof Tone !== 'undefined' && Tone.Transport) Tone.Transport.bpm.value = newTempo;
                 if (localAppServices.updateTaskbarTempoDisplay) localAppServices.updateTaskbarTempoDisplay(newTempo);
                 if (localAppServices.captureStateForUndoInternal) localAppServices.captureStateForUndoInternal(`Set Tempo to ${newTempo}`);
             } else {
-                e.target.value = Tone.Transport.bpm.value; 
+                if (typeof Tone !== 'undefined' && Tone.Transport) e.target.value = Tone.Transport.bpm.value.toFixed(1);
                 showNotification(`Tempo must be between ${Constants.MIN_TEMPO} and ${Constants.MAX_TEMPO}.`, "warning");
             }
         });
-    } else console.warn("[EventHandlers] Global tempo input not found for attachment.");
+    } else console.warn("[EventHandlers GCW] tempoGlobalInput not found for attachment.");
 
-    if (playbackModeToggleBtnGlobal) {
-        const currentMode = localAppServices.getPlaybackModeState ? localAppServices.getPlaybackModeState() : 'sequencer';
+    if (playbackModeToggleBtnGlobal && localAppServices.getPlaybackModeState && localAppServices.setPlaybackMode) {
+        const currentMode = localAppServices.getPlaybackModeState();
         playbackModeToggleBtnGlobal.textContent = currentMode === 'timeline' ? 'Timeline Mode' : 'Sequencer Mode';
         playbackModeToggleBtnGlobal.addEventListener('click', () => {
-            const oldMode = localAppServices.getPlaybackModeState ? localAppServices.getPlaybackModeState() : 'sequencer';
+            const oldMode = localAppServices.getPlaybackModeState();
             const newMode = oldMode === 'sequencer' ? 'timeline' : 'sequencer';
-            if (localAppServices.setPlaybackMode) localAppServices.setPlaybackMode(newMode);
+            localAppServices.setPlaybackMode(newMode);
+            // Text update should be handled by onPlaybackModeChange callback in main.js via appServices
         });
-    } else console.warn("[EventHandlers] Global playback mode toggle not found for attachment.");
+    } else console.warn("[EventHandlers GCW] playbackModeToggleBtnGlobal or required services not found for attachment.");
     
-    if (midiInputSelectGlobal) {
-        midiInputSelectGlobal.addEventListener('change', (e) => {
-            if (localAppServices.selectMIDIInput) localAppServices.selectMIDIInput(e.target.value);
-        });
-    } else console.warn("[EventHandlers] Global MIDI input select not found for attachment.");
+    if (midiInputSelectGlobal && localAppServices.selectMIDIInput) {
+        midiInputSelectGlobal.addEventListener('change', (e) => localAppServices.selectMIDIInput(e.target.value));
+    } else console.warn("[EventHandlers GCW] midiInputSelectGlobal or selectMIDIInput service not found for attachment.");
 }
 
 function handleGlobalKeyDown(event) {
-    // ... (rest of the function remains the same as response #36)
+    // ... (same as response #53)
     if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT' || event.target.isContentEditable) {
         if (event.key === "Escape") event.target.blur();
         return; 
@@ -181,7 +188,7 @@ function handleGlobalKeyDown(event) {
     const ctrlOrMeta = event.ctrlKey || event.metaKey;
     switch (key) {
         case ' ': event.preventDefault(); if (localAppServices.togglePlayback) localAppServices.togglePlayback(); break;
-        case 'enter': if (Tone.Transport.state === 'started' && localAppServices.stopPlayback) { event.preventDefault(); localAppServices.stopPlayback(); } break;
+        case 'enter': if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started' && localAppServices.stopPlayback) { event.preventDefault(); localAppServices.stopPlayback(); } break;
         case 'r': if (!ctrlOrMeta && localAppServices.toggleRecording) { event.preventDefault(); localAppServices.toggleRecording(); } break;
         case 's': if (ctrlOrMeta) { event.preventDefault(); if (localAppServices.saveProject) localAppServices.saveProject(); } break;
         case 'o': if (ctrlOrMeta) { event.preventDefault(); if (localAppServices.loadProject) localAppServices.loadProject(); } break;
@@ -194,7 +201,7 @@ function handleGlobalKeyDown(event) {
         const track = localAppServices.getTrackById(armedTrackId);
         if (track && typeof track.playNote === 'function') {
             const midiNote = Constants.computerKeySynthMap[key];
-            if (midiNote !== undefined) {
+            if (midiNote !== undefined && typeof Tone !== 'undefined') {
                 event.preventDefault();
                 track.playNote(midiNote, 1.0, Tone.now(), '8n');
                 if (localAppServices.uiElementsCache?.keyboardIndicatorGlobal) {
@@ -206,7 +213,8 @@ function handleGlobalKeyDown(event) {
     }
 }
 
-export async function setupMIDI() { /* ... (same as response #36) ... */ 
+export async function setupMIDI() { 
+    // ... (same as response #53, ensure Tone is checked before use) ...
     if (!localAppServices.getMidiAccessState || !localAppServices.setMidiAccessState || !localAppServices.setActiveMIDIInput) {
         console.warn("[EventHandlers setupMIDI] Core MIDI state services not available.");
         return;
@@ -240,7 +248,8 @@ export async function setupMIDI() { /* ... (same as response #36) ... */
         populateMIDIInputSelector(null); 
     }
 }
-function populateMIDIInputSelector(midiAccess) { /* ... (same as response #36) ... */
+function populateMIDIInputSelector(midiAccess) { 
+    // ... (same as response #53) ...
     const selector = localAppServices.uiElementsCache?.midiInputSelectGlobal;
     if (!selector) {
         console.warn("[EventHandlers populateMIDIInputSelector] MIDI input selector UI element not found.");
@@ -268,7 +277,8 @@ function populateMIDIInputSelector(midiAccess) { /* ... (same as response #36) .
          if (localAppServices.selectMIDIInput) localAppServices.selectMIDIInput(selector.value);
     }
 }
-export function selectMIDIInput(deviceId) { /* ... (same as response #36) ... */
+export function selectMIDIInput(deviceId) { 
+    // ... (same as response #53) ...
     if (!localAppServices.getActiveMIDIInputState || !localAppServices.setActiveMIDIInput || !localAppServices.getMidiAccessState) {
         console.warn("[EventHandlers selectMIDIInput] Core MIDI state services not available for input selection.");
         return;
@@ -295,7 +305,8 @@ export function selectMIDIInput(deviceId) { /* ... (same as response #36) ... */
         showNotification("MIDI Input: None", "info");
     }
 }
-function handleMIDIMessage(message) { /* ... (same as response #36) ... */
+function handleMIDIMessage(message) { 
+    // ... (same as response #53, ensure Tone is checked before use) ...
     if (!localAppServices.getArmedTrackIdState || !localAppServices.getTrackById) {
         console.warn("[EventHandlers handleMIDIMessage] Armed track services not available.");
         return;
@@ -310,14 +321,14 @@ function handleMIDIMessage(message) { /* ... (same as response #36) ... */
     const armedTrackId = localAppServices.getArmedTrackIdState();
     if (armedTrackId) {
         const track = localAppServices.getTrackById(armedTrackId);
-        if (track && typeof track.playNote === 'function' && typeof track.stopNote === 'function') {
+        if (track && typeof track.playNote === 'function' && typeof track.stopNote === 'function' && typeof Tone !== 'undefined') {
             if (command === 9 && velocity > 0) track.playNote(note, velocity / 127, Tone.now());
             else if (command === 8 || (command === 9 && velocity === 0)) track.stopNote(note, Tone.now() + 0.05);
         }
     }
 }
 
-export function handleTrackMute(trackId) { /* ... (same as response #36) ... */
+export function handleTrackMute(trackId) { /* ... (same as response #53) ... */
     const track = localAppServices.getTrackById(trackId);
     if (track) {
         if (localAppServices.captureStateForUndoInternal) localAppServices.captureStateForUndoInternal(`Toggle Mute for ${track.name}`);
@@ -325,20 +336,20 @@ export function handleTrackMute(trackId) { /* ... (same as response #36) ... */
         if(localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
     }
 }
-export function handleTrackSolo(trackId) { /* ... (same as response #36) ... */
+export function handleTrackSolo(trackId) { /* ... (same as response #53) ... */
     const track = localAppServices.getTrackById(trackId);
     if (track && localAppServices.setSoloedTrackId) {
         if (localAppServices.captureStateForUndoInternal) localAppServices.captureStateForUndoInternal(`Toggle Solo for ${track.name}`);
         localAppServices.setSoloedTrackId(trackId); 
     }
 }
-export function handleTrackArm(trackId) { /* ... (same as response #36) ... */
+export function handleTrackArm(trackId) { /* ... (same as response #53) ... */
     const track = localAppServices.getTrackById(trackId);
     if (track && localAppServices.setArmedTrackId) {
         localAppServices.setArmedTrackId(trackId);
     }
 }
-export function handleRemoveTrack(trackId) { /* ... (same as response #36) ... */
+export function handleRemoveTrack(trackId) { /* ... (same as response #53) ... */
     const track = localAppServices.getTrackById(trackId);
     if (track) {
         showConfirmationDialog(`Are you sure you want to delete track "${track.name}"?`, () => {
@@ -347,23 +358,23 @@ export function handleRemoveTrack(trackId) { /* ... (same as response #36) ... *
     }
 }
 
-export function handleOpenTrackInspector(trackId) { /* ... (same as response #36) ... */
+export function handleOpenTrackInspector(trackId) { /* ... (same as response #53) ... */
     if (localAppServices.openTrackInspectorWindow && typeof localAppServices.openTrackInspectorWindow === 'function') {
         localAppServices.openTrackInspectorWindow(trackId);
     } else { console.error("[EventHandlers] openTrackInspectorWindow service not available or not a function."); }
 }
-export function handleOpenEffectsRack(trackId) { /* ... (same as response #36) ... */
+export function handleOpenEffectsRack(trackId) { /* ... (same as response #53) ... */
     if (localAppServices.openTrackEffectsRackWindow && typeof localAppServices.openTrackEffectsRackWindow === 'function') {
         localAppServices.openTrackEffectsRackWindow(trackId);
     } else { console.error("[EventHandlers] openTrackEffectsRackWindow service not available or not a function."); }
 }
-export function handleOpenSequencer(trackId) { /* ... (same as response #36) ... */
+export function handleOpenSequencer(trackId) { /* ... (same as response #53) ... */
     if (localAppServices.openSequencerWindow && typeof localAppServices.openSequencerWindow === 'function') {
         localAppServices.openSequencerWindow(trackId);
     } else { console.error("[EventHandlers] openSequencerWindow service not available or not a function."); }
 }
 
-function toggleFullScreen() { /* ... (same as response #36) ... */
+function toggleFullScreen() { /* ... (same as response #53) ... */
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
             showNotification(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`, "warning");
@@ -374,7 +385,8 @@ function toggleFullScreen() { /* ... (same as response #36) ... */
         }
     }
 }
-export async function handleTimelineLaneDrop(droppedItemData, targetTrackId, startTime, services = localAppServices) { /* ... (same as response #36) ... */
+export async function handleTimelineLaneDrop(droppedItemData, targetTrackId, startTime, services = localAppServices) { 
+    // ... (same as response #53, ensure Tone is checked if used for duration calcs etc.) ...
     if (!services.getTrackById || !services.showNotification) {
         console.error("[EventHandlers handleTimelineLaneDrop] Core services missing for drop handling.");
         return;
@@ -406,6 +418,22 @@ export async function handleTimelineLaneDrop(droppedItemData, targetTrackId, sta
                 }
             } else {
                 services.showNotification("Error: Cannot process sound browser item drop (internal).", "error");
+            }
+        }
+        else if (droppedItemData instanceof FileList || (Array.isArray(droppedItemData) && droppedItemData[0] instanceof File)) { // Check if it's a FileList or array of Files
+            const file = (droppedItemData instanceof FileList) ? droppedItemData[0] : droppedItemData[0];
+            if (targetTrack.type !== 'Audio') {
+                services.showNotification("Audio files can only be dropped onto Audio Track timeline lanes.", "warning");
+                return;
+            }
+            if (file && file.type.startsWith('audio/')) {
+                if (typeof targetTrack.addExternalAudioFileAsClip === 'function') {
+                    await targetTrack.addExternalAudioFileAsClip(file, startTime, file.name);
+                } else {
+                    services.showNotification("Error: Track cannot accept audio file clips.", "error");
+                }
+            } else if (file) {
+                services.showNotification("Invalid file type. Please drop an audio file.", "warning");
             }
         }
         else {
