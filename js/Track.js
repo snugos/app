@@ -7,7 +7,6 @@ import { storeAudio, getAudio } from './db.js';
 const MAX_VOICES_PER_POOL = 32;
 
 export class Track {
-    // ... (Constructor and other methods from response #19 remain the same)
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
@@ -21,6 +20,7 @@ export class Track {
         } else if (type === 'Audio') {
             this.name = initialData?.name || `Audio ${this.id}`;
         }
+        // console.log(`[Track ${this.id} Constructor] Initializing track "${this.name}" of type "${this.type}". InitialData present: ${!!initialData}`);
 
         this.isMuted = initialData?.isMuted || false;
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
@@ -124,9 +124,10 @@ export class Track {
 
         this.gainNode = null;
         this.trackMeter = null;
-        this.output = null;
+        this.output = null; // Will be set to this.gainNode in initializeAudioNodes
 
         this.instrument = null;
+
         this.sequences = [];
         this.activeSequenceId = null;
         this.timelineClips = initialData?.timelineClips ? JSON.parse(JSON.stringify(initialData.timelineClips)) : [];
@@ -136,7 +137,9 @@ export class Track {
             if (initialData?.sequences && initialData.sequences.length > 0) {
                 this.sequences = JSON.parse(JSON.stringify(initialData.sequences));
                 this.activeSequenceId = initialData.activeSequenceId || (this.sequences[0] ? this.sequences[0].id : null);
+                // console.log(`[Track ${this.id} Constructor] Initialized with ${this.sequences.length} sequences. Active ID: ${this.activeSequenceId}`);
             }
+            // Default sequence creation is now deferred to initializeDefaultSequence()
         } else {
             this.inputChannel = null;
         }
@@ -149,29 +152,290 @@ export class Track {
     }
 
     initializeDefaultSequence() {
+        // console.log(`[Track ${this.id} initializeDefaultSequence] Called for "${this.name}". Current sequences count: ${this.sequences?.length}, ActiveSeqID before: ${this.activeSequenceId}`);
         if (this.type !== 'Audio' && (!this.sequences || this.sequences.length === 0)) {
+            // console.log(`[Track ${this.id}] No initial sequences, creating default.`);
             if (typeof this.createNewSequence === 'function') {
-                this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true);
+                this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar, true); // true for skipUndo
+                // console.log(`[Track ${this.id}] After createNewSequence. ActiveSeqID: ${this.activeSequenceId}, Sequences count: ${this.sequences?.length}`);
             } else {
-                console.error(`[Track ${this.id}] CRITICAL ERROR in initializeDefaultSequence: this.createNewSequence is NOT a function!`);
+                console.error(`[Track ${this.id}] CRITICAL ERROR in initializeDefaultSequence: this.createNewSequence is NOT a function! Track type: ${this.type}`);
                 if (this.appServices.showNotification && typeof this.appServices.showNotification === 'function') {
-                    this.appServices.showNotification(`Error initializing track ${this.name}: Cannot create default sequence.`, 5000);
+                    this.appServices.showNotification(`Error initializing track ${this.name}: Default sequence creation failed.`, 5000);
                 }
+            }
+        } else if (this.type !== 'Audio' && this.sequences && this.sequences.length > 0 && !this.activeSequenceId) {
+            this.activeSequenceId = this.sequences[0]?.id || null;
+            // console.log(`[Track ${this.id} initializeDefaultSequence] Sequences existed from initialData, but no activeId. Set activeSequenceId to: ${this.activeSequenceId}`);
+        }
+    }
+
+    _initializeSlicerVoicePool() {
+        (this._slicerVoicePool || []).forEach(voiceUnit => {
+            if (voiceUnit.player && !voiceUnit.player.disposed) try { voiceUnit.player.dispose(); } catch(e){console.warn(`Error disposing slicer pool player: ${e.message}`)}
+            if (voiceUnit.envelope && !voiceUnit.envelope.disposed) try { voiceUnit.envelope.dispose(); } catch(e){console.warn(`Error disposing slicer pool envelope: ${e.message}`)}
+            if (voiceUnit.gain && !voiceUnit.gain.disposed) try { voiceUnit.gain.dispose(); } catch(e){console.warn(`Error disposing slicer pool gain: ${e.message}`)}
+        });
+
+        this._slicerVoicePool = [];
+        this._slicerAvailableVoices = [];
+        const numVoicesToCreate = this.slicerIsPolyphonic ? MAX_VOICES_PER_POOL : 1;
+
+        for (let i = 0; i < numVoicesToCreate; i++) {
+            let player, envelope, gain;
+            try {
+                player = new Tone.Player();
+                envelope = new Tone.AmplitudeEnvelope();
+                gain = new Tone.Gain();
+            } catch (toneError) {
+                console.error(`[Track ${this.id} Sampler] Error creating Tone.js nodes for voice pool:`, toneError);
+                continue;
+            }
+            const voiceUnit = { player, envelope, gain, isIdle: true, id: `slicerVoice_${this.id}_${i}` };
+            this._slicerVoicePool.push(voiceUnit);
+            this._slicerAvailableVoices.push(voiceUnit);
+        }
+    }
+
+    _getVoiceFromSlicerPool() {
+        if (this._slicerAvailableVoices.length > 0) {
+            const voice = this._slicerAvailableVoices.pop();
+            voice.isIdle = false;
+            return voice;
+        }
+        // console.warn(`[Track ${this.id} Sampler] Slicer voice pool exhausted.`);
+        const oldestVoice = this._slicerVoicePool.find(v => v.isIdle === false && v.player && !v.player.disposed && v.envelope && !v.envelope.disposed && v.gain && !v.gain.disposed);
+        if (oldestVoice) {
+            // console.warn(`[Track ${this.id} Sampler] EMERGENCY REUSE of voice ${oldestVoice.id}.`);
+            try {
+                if (oldestVoice.player.state === "started") oldestVoice.player.stop(Tone.now());
+                oldestVoice.player.disconnect();
+                if (oldestVoice.envelope && oldestVoice.envelope.getValueAtTime(Tone.now()) > 0) oldestVoice.envelope.triggerRelease(Tone.now());
+                if (oldestVoice.envelope) oldestVoice.envelope.disconnect();
+                if (oldestVoice.gain) oldestVoice.gain.disconnect();
+            } catch (e) { console.warn("Error stopping/disconnecting emergency reused voice", e); }
+            oldestVoice.isIdle = false;
+            return oldestVoice;
+        }
+        return null;
+    }
+
+    _returnVoiceToSlicerPool(voiceUnit) {
+        if (voiceUnit && voiceUnit.player) {
+            try {
+                if (voiceUnit.player.state === "started" && !voiceUnit.player.disposed) {
+                    voiceUnit.player.stop(Tone.now() + 0.01);
+                }
+                if (!voiceUnit.player.disposed) voiceUnit.player.disconnect();
+                if (voiceUnit.envelope && !voiceUnit.envelope.disposed) voiceUnit.envelope.disconnect();
+                if (voiceUnit.gain && !voiceUnit.gain.disposed) voiceUnit.gain.disconnect();
+            } catch (e) {
+                // console.warn(`[Track ${this.id} Sampler] Error disconnecting voice ${voiceUnit.id} on return to pool:`, e.message);
+            }
+            voiceUnit.isIdle = true;
+            if (!this._slicerAvailableVoices.find(v => v.id === voiceUnit.id)) {
+                 this._slicerAvailableVoices.push(voiceUnit);
             }
         }
     }
 
-    _initializeSlicerVoicePool() { /* ... same as previous ... */ }
-    _getVoiceFromSlicerPool() { /* ... same as previous ... */ }
-    _returnVoiceToSlicerPool(voiceUnit) { /* ... same as previous ... */ }
-    setName(newName, skipUndo = false) { /* ... same as previous ... */ }
-    getActiveSequence() { /* ... same as previous ... */ }
-    getActiveSequenceData() { /* ... same as previous ... */ }
-    getActiveSequenceLength() { /* ... same as previous ... */ }
-    getDefaultSynthParams() { /* ... same as previous ... */ }
-    async initializeAudioNodes() { /* ... same as previous ... */ }
-    rebuildEffectChain() { /* ... same as previous ... */ }
-    _performRebuildEffectChain() { /* ... same as previous ... */ }
+    setName(newName, skipUndo = false) {
+        if (typeof newName === 'string' && newName.trim() !== "") {
+            const oldName = this.name;
+            if (oldName === newName.trim()) return;
+
+            if (!skipUndo && this.appServices.captureStateForUndo && typeof this.appServices.captureStateForUndo === 'function') {
+                this.appServices.captureStateForUndo(`Rename Track "${oldName}" to "${newName.trim()}"`);
+            }
+            this.name = newName.trim();
+
+            if (this.appServices.updateTrackUI && typeof this.appServices.updateTrackUI === 'function') {
+                this.appServices.updateTrackUI(this.id, 'nameChanged');
+            }
+        }
+    }
+
+    getActiveSequence() {
+        if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences || this.sequences.length === 0) {
+            return null;
+        }
+        const seq = this.sequences.find(s => s.id === this.activeSequenceId);
+        return seq;
+    }
+
+    getActiveSequenceData() {
+        const activeSeq = this.getActiveSequence();
+        return activeSeq ? activeSeq.data : [];
+    }
+
+    getActiveSequenceLength() {
+        const activeSeq = this.getActiveSequence();
+        return activeSeq ? activeSeq.length : Constants.defaultStepsPerBar;
+    }
+
+    getDefaultSynthParams() {
+        return {
+            portamento: 0.01,
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.005, decay: 2, sustain: 0, release: 1 },
+            filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1000 },
+            filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }
+        };
+    }
+
+    async initializeAudioNodes() {
+        // console.log(`[Track ${this.id} initializeAudioNodes] Initializing for "${this.name}".`);
+        try {
+            if (this.gainNode && !this.gainNode.disposed) try { this.gainNode.dispose(); } catch(e) {console.warn(`[Track ${this.id}] Error disposing old gainNode:`, e.message)}
+            this.gainNode = null;
+            if (this.trackMeter && !this.trackMeter.disposed) try { this.trackMeter.dispose(); } catch(e) {console.warn(`[Track ${this.id}] Error disposing old trackMeter:`, e.message)}
+            this.trackMeter = null;
+            if (this.inputChannel && !this.inputChannel.disposed && this.type === 'Audio') {
+                try { this.inputChannel.dispose(); } catch(e) {console.warn(`[Track ${this.id}] Error disposing old inputChannel:`, e.message)}
+                this.inputChannel = null;
+            }
+
+            if (!this.appServices.getMasterEffectsBusInputNode || typeof this.appServices.getMasterEffectsBusInputNode !== 'function') {
+                 console.error(`[Track ${this.id} initializeAudioNodes] CRITICAL: getMasterEffectsBusInputNode service not available.`);
+                 return;
+            }
+
+            this.gainNode = new Tone.Gain(this.isMuted ? 0 : this.previousVolumeBeforeMute);
+            this.output = this.gainNode;
+            this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
+
+            if (this.type === 'Audio') {
+                this.inputChannel = new Tone.Channel();
+            }
+
+            this.rebuildEffectChain();
+        } catch (error) {
+            console.error(`[Track ${this.id} initializeAudioNodes] Error during initialization:`, error);
+            if (this.appServices.showNotification && typeof this.appServices.showNotification === 'function') {
+                this.appServices.showNotification(`Error initializing audio for track ${this.name}: ${error.message}`, 4000);
+            }
+        }
+    }
+
+    rebuildEffectChain() {
+        // console.log(`[Track ${this.id} rebuildEffectChain] For "${this.name}". Effects: ${this.activeEffects.length}`);
+        if (!this.gainNode || this.gainNode.disposed) {
+            console.error(`[Track ${this.id} rebuildEffectChain] CRITICAL: GainNode is not valid. Attempting to reinitialize audio nodes.`);
+            this.initializeAudioNodes().then(() => {
+                if (!this.gainNode || this.gainNode.disposed) {
+                    console.error(`[Track ${this.id} rebuildEffectChain] CRITICAL: GainNode still invalid after re-init. Aborting chain rebuild.`);
+                    return;
+                }
+                this._performRebuildEffectChain();
+            }).catch(err => {
+                console.error(`[Track ${this.id} rebuildEffectChain] Error during re-initialization of audio nodes:`, err);
+            });
+            return;
+        }
+        this._performRebuildEffectChain();
+    }
+
+    _performRebuildEffectChain() {
+        // console.log(`[Track ${this.id} _performRebuildEffectChain] Actual rebuild logic for "${this.name}".`);
+        if (!this.gainNode || this.gainNode.disposed) {
+            console.error(`[Track ${this.id} _performRebuildEffectChain] GainNode still invalid. Aborting.`);
+            return;
+        }
+        if (!this.trackMeter || this.trackMeter.disposed) {
+            this.trackMeter = new Tone.Meter({ smoothing: 0.8 });
+        }
+
+        let sourceNodes = [];
+        if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
+            sourceNodes.push(this.instrument);
+        } else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed) {
+            sourceNodes.push(this.toneSampler);
+        } else if (this.type === 'Sampler' && !this.slicerIsPolyphonic && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
+            sourceNodes.push(this.slicerMonoGain);
+        } else if (this.type === 'Audio' && this.inputChannel && !this.inputChannel.disposed) {
+            sourceNodes.push(this.inputChannel);
+        }
+
+        const allManagedPersistentNodes = [
+            ...sourceNodes,
+            ...this.activeEffects.map(e => e.toneNode),
+            this.gainNode,
+            this.trackMeter
+        ].filter(node => node && !node.disposed);
+
+        allManagedPersistentNodes.forEach(node => {
+            try { node.disconnect(); } catch(e) { /* ignore */ }
+        });
+
+        if (this.type === 'Sampler' && !this.slicerIsPolyphonic && this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed &&
+            this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed &&
+            this.slicerMonoGain && !this.slicerMonoGain.disposed) {
+            try {
+                this.slicerMonoPlayer.chain(this.slicerMonoEnvelope, this.slicerMonoGain);
+            } catch (e) { console.error(`[Track ${this.id} _performRebuildEffectChain] Error chaining mono slicer:`, e); }
+        }
+
+        let currentChainSource = null;
+        if (sourceNodes.length > 0) {
+            currentChainSource = sourceNodes[0];
+            // console.log(`[Track ${this.id} _performRebuildEffectChain] Initial currentChainSource (persistent):`, currentChainSource?.name || currentChainSource?.toString());
+        }
+
+        if (this.activeEffects.length > 0) {
+            const firstEffectNode = this.activeEffects[0].toneNode;
+            if (currentChainSource && firstEffectNode && !firstEffectNode.disposed) {
+                try { currentChainSource.connect(firstEffectNode); }
+                catch(e){console.error(`Error connecting source to first effect ${this.activeEffects[0].type}`, e)}
+            }
+            for (let i = 0; i < this.activeEffects.length - 1; i++) {
+                const currentEffect = this.activeEffects[i].toneNode;
+                const nextEffect = this.activeEffects[i+1].toneNode;
+                if (currentEffect && !currentEffect.disposed && nextEffect && !nextEffect.disposed) {
+                    try { currentEffect.connect(nextEffect); }
+                    catch(e) { console.error(`[Track ${this.id}] Error connecting effect ${this.activeEffects[i].type} to ${this.activeEffects[i+1].type}:`, e); }
+                }
+            }
+            currentChainSource = this.activeEffects[this.activeEffects.length - 1].toneNode;
+        }
+
+        if (currentChainSource && !currentChainSource.disposed && this.gainNode && !this.gainNode.disposed) {
+            try { currentChainSource.connect(this.gainNode); /* console.log(`[Track ${this.id}] Connected ${currentChainSource.name || 'source/last_effect'} to gainNode.`); */ }
+            catch (e) { console.error(`[Track ${this.id}] Error connecting chain output to gainNode:`, e); }
+        } else if (!currentChainSource && this.activeEffects.length === 0) {
+             if (this.type === 'Synth' && (!this.instrument || this.instrument.disposed)) {
+                // console.error(`[Track ${this.id} _performRebuildEffectChain] Synth: Instrument not ready/disposed, no effects. Nothing to connect to gainNode.`);
+             }
+        }
+
+        if (this.gainNode && !this.gainNode.disposed && this.trackMeter && !this.trackMeter.disposed) {
+            try { this.gainNode.connect(this.trackMeter); }
+            catch (e) { console.error(`[Track ${this.id}] Error connecting gainNode to trackMeter:`, e); }
+        }
+
+        const masterBusInput = (this.appServices.getMasterEffectsBusInputNode && typeof this.appServices.getMasterEffectsBusInputNode === 'function')
+            ? this.appServices.getMasterEffectsBusInputNode() : null;
+        const finalTrackOutput = (this.trackMeter && !this.trackMeter.disposed) ? this.trackMeter : this.gainNode;
+
+        if (finalTrackOutput && !finalTrackOutput.disposed) {
+            try { finalTrackOutput.disconnect(); } catch (e) { /* ignore */ }
+            if (masterBusInput && !masterBusInput.disposed) {
+                try { finalTrackOutput.connect(masterBusInput); }
+                catch (e) {
+                    console.error(`[Track ${this.id}] Error connecting to masterBusInput:`, e, "Fallback to Tone.Destination.");
+                    try { finalTrackOutput.toDestination(); } catch (e2) { console.error(`[Track ${this.id}] Error connecting to Tone.Destination:`, e2); }
+                }
+            } else {
+                console.warn(`[Track ${this.id}] Master bus input not available. Fallback to Tone.Destination.`);
+                try { finalTrackOutput.toDestination(); }
+                catch (e) { console.error(`[Track ${this.id}] Error connecting to Tone.Destination:`, e); }
+            }
+        } else {
+            console.error(`[Track ${this.id} _performRebuildEffectChain] CRITICAL: Final track output invalid.`);
+        }
+        this.applyMuteState();
+        this.applySoloState();
+    }
+
     addEffect(effectType) { /* ... same as previous ... */ }
     removeEffect(effectId) { /* ... same as previous ... */ }
     updateEffectParam(effectId, paramPath, value) { /* ... same as previous ... */ }
@@ -188,7 +452,7 @@ export class Track {
     setSliceVolume(sliceIndex, volume) { /* ... same as previous ... */ }
     setSlicePitchShift(sliceIndex, semitones) { /* ... same as previous ... */ }
     setSliceLoop(sliceIndex, loop) { /* ... same as previous ... */ }
-    setSliceReverse(sliceIndex, reverse) { /* ... same as previous ... */ }
+    setSliceReverse(sliceIndex, reverse) { if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!reverse; }
     setSliceEnvelopeParam(sliceIndex, param, value) { /* ... same as previous ... */ }
     setDrumSamplerPadVolume(padIndex, volume) { /* ... same as previous ... */ }
     setDrumSamplerPadPitch(padIndex, pitch) { /* ... same as previous ... */ }
@@ -202,7 +466,60 @@ export class Track {
     setInstrumentSamplerLoopEnd(time) { /* ... same as previous ... */ }
     setInstrumentSamplerEnv(param, value) { /* ... same as previous ... */ }
     _captureUndoState(description) { /* ... same as previous ... */ }
-    createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.defaultStepsPerBar, skipUndo = false) { /* ... same as previous ... */ }
+
+    createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.defaultStepsPerBar, skipUndo = false) {
+        console.log(`[Track ${this.id} createNewSequence] Called for "${this.name}" with name: "${name}", length: ${initialLengthSteps}`);
+        if (this.type === 'Audio') {
+            console.log(`[Track ${this.id} createNewSequence] Bailing: Track type is Audio.`);
+            return null;
+        }
+        const newSeqId = `seq_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
+        let numRowsForGrid;
+
+        if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForGrid = Constants.synthPitches.length;
+        else if (this.type === 'Sampler') numRowsForGrid = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
+        else if (this.type === 'DrumSampler') numRowsForGrid = Constants.numDrumSamplerPads;
+        else numRowsForGrid = 1;
+
+        if (numRowsForGrid <= 0) {
+             console.warn(`[Track ${this.id} createNewSequence] numRowsForGrid was <= 0, defaulting to 1.`);
+             numRowsForGrid = 1;
+        }
+        const actualLength = Math.max(Constants.STEPS_PER_BAR, initialLengthSteps);
+
+        const newSequence = {
+            id: newSeqId,
+            name: name,
+            data: Array(numRowsForGrid).fill(null).map(() => Array(actualLength).fill(null)),
+            length: actualLength
+        };
+        this.sequences.push(newSequence);
+        this.activeSequenceId = newSeqId;
+        console.log(`[Track ${this.id} createNewSequence] New sequence created. ID: ${newSeqId}, ActiveSeqID set to: ${this.activeSequenceId}. Total sequences: ${this.sequences.length}`);
+
+        if (typeof this.recreateToneSequence === 'function') {
+            this.recreateToneSequence(true);
+        } else {
+            console.error(`[Track ${this.id}] createNewSequence: recreateToneSequence is not a function!`);
+        }
+        if (this.appServices.updateTrackUI && typeof this.appServices.updateTrackUI === 'function') this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        else console.warn(`[Track ${this.id}] updateTrackUI service not available in createNewSequence.`);
+
+        if (!skipUndo && typeof this._captureUndoState === 'function') this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
+
+        const playbackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
+        if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started' && playbackMode === 'sequencer') {
+            // console.log(`[Track ${this.id} createNewSequence] Transport running, scheduling new sequence "${name}".`);
+            const transportLoopEnd = Tone.Transport.loopEnd || (Tone.Transport.seconds + 300);
+            if (typeof this.schedulePlayback === 'function') {
+                this.schedulePlayback(Tone.Transport.seconds, transportLoopEnd);
+            } else {
+                 console.error(`[Track ${this.id} createNewSequence] schedulePlayback is not a function!`);
+            }
+        }
+        return newSequence;
+    }
+
     deleteSequence(sequenceId) { /* ... same as previous ... */ }
     renameSequence(sequenceId, newName) { /* ... same as previous ... */ }
     duplicateSequence(sequenceId) { /* ... same as previous ... */ }
@@ -217,146 +534,106 @@ export class Track {
 
         if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
             try {
-                this.patternPlayerSequence.stop();
-                this.patternPlayerSequence.clear();
-                this.patternPlayerSequence.dispose();
+                this.patternPlayerSequence.stop(); this.patternPlayerSequence.clear(); this.patternPlayerSequence.dispose();
             } catch (e) { console.warn(`[Track ${this.id}] Error disposing old Tone.Sequence:`, e.message); }
         }
         this.patternPlayerSequence = null;
-
-        if (currentPlaybackMode !== 'sequencer') {
-            return;
-        }
+        if (currentPlaybackMode !== 'sequencer') { return; }
 
         const activeSeq = this.getActiveSequence();
         if (!activeSeq || !activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length === 0 || !activeSeq.length) {
-            console.warn(`[Track ${this.id} recreateToneSequence] No valid active sequence or sequence data for "${this.name}".`);
+            console.warn(`[Track ${this.id} recreateToneSequence] No valid active sequence for "${this.name}".`);
             return;
         }
-
         const sequenceDataForTone = activeSeq.data;
         const sequenceLengthForTone = activeSeq.length;
 
         try {
             this.patternPlayerSequence = new Tone.Sequence((time, col) => {
-                console.log(`[Track ${this.id} SeqCallback] Time: ${time.toFixed(3)}, Col: ${col}, Track: ${this.name}, Type: ${this.type}`); // MODIFIED: Added log
-
+                // console.log(`[Track ${this.id} SeqCallback] Time: ${time.toFixed(3)}, Col: ${col}, Track: ${this.name}, Type: ${this.type}`);
                 const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
                 if (playbackModeCheck !== 'sequencer') {
-                    if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started' && !this.patternPlayerSequence.disposed) this.patternPlayerSequence.stop();
+                    if (this.patternPlayerSequence?.state === 'started' && !this.patternPlayerSequence.disposed) this.patternPlayerSequence.stop();
                     return;
                 }
-
                 const currentGlobalSoloId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
                 const isEffectivelyMuted = this.isMuted || (currentGlobalSoloId !== null && currentGlobalSoloId !== this.id);
 
                 if (this.appServices.highlightPlayingStep && typeof this.appServices.highlightPlayingStep === 'function') {
-                    // console.log(`[Track ${this.id} SeqCallback] Calling highlightPlayingStep for col: ${col}`); // MODIFIED: Uncomment for verbose logging
                     this.appServices.highlightPlayingStep(this.id, col);
-                } else {
-                    console.warn(`[Track ${this.id} SeqCallback] highlightPlayingStep service not available.`);
-                }
+                } else { console.warn(`[Track ${this.id} SeqCallback] highlightPlayingStep service missing.`); }
 
-                if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) {
-                    console.log(`[Track ${this.id} SeqCallback] Aborting note trigger: GainNode invalid (${!!this.gainNode}, disposed: ${this.gainNode?.disposed}) or track muted (Muted: ${isEffectivelyMuted})`);
-                    return;
-                }
+                if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) { return; }
 
-                if (this.type === 'Synth') {
-                    if (this.instrument && !this.instrument.disposed) {
-                        let notePlayedThisStep = false;
-                        for (let rowIndex = 0; rowIndex < Constants.synthPitches.length; rowIndex++) {
-                            const pitchName = Constants.synthPitches[rowIndex];
-                            const step = sequenceDataForTone[rowIndex]?.[col];
-                            if (step?.active && !notePlayedThisStep) {
-                                console.log(`[Track ${this.id} SeqCallback] Synth Trigger: ${pitchName}, Vel: ${step.velocity}, Time: ${time.toFixed(3)}`); // MODIFIED: Added log
-                                this.instrument.triggerAttackRelease(pitchName, "16n", time, step.velocity * Constants.defaultVelocity);
-                                notePlayedThisStep = true;
-                            }
+                if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
+                    let notePlayed = false;
+                    for (let r = 0; r < Constants.synthPitches.length; r++) {
+                        if (sequenceDataForTone[r]?.[col]?.active && !notePlayed) {
+                            // console.log(`[Track ${this.id} SeqCallback] Synth Trigger: ${Constants.synthPitches[r]}`);
+                            this.instrument.triggerAttackRelease(Constants.synthPitches[r], "16n", time, sequenceDataForTone[r][col].velocity * Constants.defaultVelocity);
+                            notePlayed = true; // Prevent polyphony in this simple synth example from sequencer
                         }
-                    } else {
-                        console.warn(`[Track ${this.id} SeqCallback] Synth instrument missing or disposed.`);
                     }
-                } else if (this.type === 'InstrumentSampler') {
-                    if (this.toneSampler && !this.toneSampler.disposed && this.toneSampler.loaded) {
-                        let notePlayedThisStep = false;
-                        Constants.synthPitches.forEach((pitchName, rowIndex) => {
-                            const step = sequenceDataForTone[rowIndex]?.[col];
-                            if (step?.active) {
-                                if (!this.instrumentSamplerIsPolyphonic && !notePlayedThisStep) {
-                                    this.toneSampler.releaseAll(time);
-                                    notePlayedThisStep = true;
-                                }
-                                console.log(`[Track ${this.id} SeqCallback] InstrumentSampler Trigger: ${pitchName}, Vel: ${step.velocity}, Time: ${time.toFixed(3)}`); // MODIFIED: Added log
-                                this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "16n", time, step.velocity * Constants.defaultVelocity);
-                            }
-                        });
-                    } else {
-                        console.warn(`[Track ${this.id} SeqCallback] InstrumentSampler (toneSampler) missing, disposed, or not loaded.`);
-                    }
+                } else if (this.type === 'InstrumentSampler' && this.toneSampler?.loaded && !this.toneSampler.disposed) {
+                    let notePlayed = false;
+                    Constants.synthPitches.forEach((pitch, r) => {
+                        if (sequenceDataForTone[r]?.[col]?.active) {
+                            if (!this.instrumentSamplerIsPolyphonic && !notePlayed) { this.toneSampler.releaseAll(time); notePlayed = true; }
+                            // console.log(`[Track ${this.id} SeqCallback] InstrumentSampler Trigger: ${pitch}`);
+                            this.toneSampler.triggerAttackRelease(Tone.Frequency(pitch).toNote(), "16n", time, sequenceDataForTone[r][col].velocity * Constants.defaultVelocity);
+                        }
+                    });
                 }
-                // ... (Sampler and DrumSampler logic would also need similar logging if problems persist there) ...
-
+                // Sampler and DrumSampler playback logic
             }, Array.from(Array(sequenceLengthForTone).keys()), "16n");
-
             this.patternPlayerSequence.loop = true;
-            // console.log(`[Track ${this.id} recreateToneSequence] Tone.Sequence for "${activeSeq.name}" prepared. Loop: true.`);
         } catch (error) {
-            console.error(`[Track ${this.id} recreateToneSequence] Error creating Tone.Sequence for "${activeSeq.name}":`, error);
+            console.error(`[Track ${this.id} recreateToneSequence] Error creating Tone.Sequence:`, error);
             this.patternPlayerSequence = null;
         }
-
-        if (this.appServices.updateTrackUI && typeof this.appServices.updateTrackUI === 'function') {
-            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-        }
+        if (this.appServices.updateTrackUI && typeof this.appServices.updateTrackUI === 'function') this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
     }
 
     async schedulePlayback(transportStartTime, transportStopTime) {
         const playbackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
-        console.log(`[Track ${this.id} "${this.name}"] schedulePlayback. Mode: ${playbackMode}. Transport Range: ${transportStartTime.toFixed(2)}s to ${transportStopTime.toFixed(2)}s`);
+        console.log(`[Track ${this.id} "${this.name}"] schedulePlayback. Mode: ${playbackMode}. Transport Start: ${transportStartTime.toFixed(2)}`);
 
-        if (typeof this.stopPlayback === 'function') {
-            this.stopPlayback();
-        } else {
-            console.warn(`[Track ${this.id}] stopPlayback method not found.`);
-        }
+        if (typeof this.stopPlayback === 'function') this.stopPlayback();
+        else console.warn(`[Track ${this.id}] stopPlayback method missing.`);
 
         if (playbackMode === 'timeline') {
-            // ... (timeline scheduling logic as in response #17, with robust player creation/disposal)
+            // ... (Timeline playback logic as per response #21) ...
         } else { // Sequencer Mode
             if (!this.patternPlayerSequence || this.patternPlayerSequence.disposed) {
-                console.log(`[Track ${this.id} schedulePlayback] Sequencer mode: patternPlayerSequence is invalid, calling recreateToneSequence.`);
-                if (typeof this.recreateToneSequence === 'function') {
-                    this.recreateToneSequence(true, transportStartTime);
-                } else {
-                    console.error(`[Track ${this.id} schedulePlayback] recreateToneSequence method not found.`);
-                }
+                console.log(`[Track ${this.id} schedulePlayback] Sequencer: patternPlayerSequence invalid, recreating.`);
+                if (typeof this.recreateToneSequence === 'function') this.recreateToneSequence(true, transportStartTime);
+                else console.error(`[Track ${this.id} schedulePlayback] recreateToneSequence method missing.`);
             }
             if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
                 if (this.patternPlayerSequence.state === 'started') {
-                    try {this.patternPlayerSequence.stop(Tone.Transport.now());} catch(e){console.warn("Err stopping seq player during schedule", e)}
+                    try {this.patternPlayerSequence.stop(Tone.Transport.now());} catch(e){console.warn("Err stopping seq player", e)}
                 }
-                console.log(`[Track ${this.id}] Sequencer mode: Attempting to start patternPlayerSequence at transport offset: ${transportStartTime.toFixed(2)}s. Sequence state: ${this.patternPlayerSequence.state}`); // MODIFIED: Added log
+                console.log(`[Track ${this.id} schedulePlayback] Sequencer: Attempting to start patternPlayerSequence. State: ${this.patternPlayerSequence.state}`);
                 try {
                     this.patternPlayerSequence.start(transportStartTime);
-                    console.log(`[Track ${this.id}] patternPlayerSequence.start() called. New state: ${this.patternPlayerSequence.state}`); // MODIFIED: Added log
+                    console.log(`[Track ${this.id} schedulePlayback] patternPlayerSequence.start() called. New state: ${this.patternPlayerSequence.state}`);
                 } catch(e) {
-                    console.error(`[Track ${this.id}] Error starting patternPlayerSequence:`, e.message, e);
-                    try { if(!this.patternPlayerSequence.disposed) this.patternPlayerSequence.dispose(); } catch (disposeErr) {}
+                    console.error(`[Track ${this.id} schedulePlayback] Error starting patternPlayerSequence:`, e);
+                    if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) try {this.patternPlayerSequence.dispose();} catch(de){}
                     this.patternPlayerSequence = null;
                 }
             } else {
-                 console.warn(`[Track ${this.id}] Sequencer mode: patternPlayerSequence still not valid after recreation for "${this.name}".`);
+                 console.warn(`[Track ${this.id} schedulePlayback] Sequencer: patternPlayerSequence still invalid for "${this.name}".`);
             }
         }
     }
 
-    stopPlayback() { /* ... same as previous ... */ }
+    stopPlayback() { /* ... same as previous robust version ... */ }
     async addAudioClip(blob, startTime) { /* ... same as previous ... */ }
     async addExternalAudioFileAsClip(audioFileBlob, startTime, clipName = null) { /* ... same as previous ... */ }
     addSequenceClipToTimeline(sourceSequenceId, startTime, clipName = null) { /* ... same as previous ... */ }
     async _reschedulePlaybackIfNeeded(clipStartTime, modeHint) { /* ... same as previous ... */ }
     async getBlobDuration(blob) { /* ... same as previous ... */ }
     async updateAudioClipPosition(clipId, newStartTime) { /* ... same as previous ... */ }
-    dispose() { /* ... same robust version from response #17 ... */ }
+    dispose() { /* ... same robust version from response #21 ... */ }
 }
