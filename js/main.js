@@ -27,7 +27,7 @@ import {
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState, 
     getRecordingTrackIdState, getRecordingStartTimeState, 
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState, 
-    getSelectedTimelineClipInfoState, 
+    getSelectedTimelineClipInfoState, getCurrentThemeState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState, 
     setMasterEffectsState, setMasterGainValueState, 
@@ -38,7 +38,7 @@ import {
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState, 
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState, 
     setPlaybackModeState, 
-    setSelectedTimelineClipInfoState, 
+    setSelectedTimelineClipInfoState, setCurrentThemeState,
     addMasterEffectToState, removeMasterEffectFromState, 
     updateMasterEffectParamInState, reorderMasterEffectInState, 
     // Core State Actions
@@ -89,24 +89,31 @@ import {
     showAddEffectModal 
 } from './ui_modules/browserCoreUI.js';
 
-// Import from the globalControlsUI.js file
-import { initializeGlobalControlsUIModule, openGlobalControlsWindow } from './globalControlsUI.js'; 
+// Global Controls UI module is no longer opening a window, its elements are in index.html
+// import { initializeGlobalControlsUIModule, openGlobalControlsWindow } from './globalControlsUI.js'; 
 
 
-console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`); //
+console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`); 
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = { 
     desktop: null, taskbar: null, startButton: null, startMenu: null, 
     taskbarButtonsContainer: null, taskbarTempoDisplay: null, loadProjectInput: null, 
     customBgInput: null, sampleFileInput: null, notificationArea: null, modalContainer: null, 
+    topTaskbar: null, // Added for the new top taskbar
+    themeToggleLight: null, themeToggleDark: null, // Added for theme toggles
+    globalControlsContainer: null, // Container for global controls in top taskbar
+    // Menu items
     menuAddSynthTrack: null, menuAddSamplerTrack: null, menuAddDrumSamplerTrack: null, 
     menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null, 
     menuOpenSoundBrowser: null, menuOpenTimeline: null, 
     menuUndo: null, menuRedo: null, 
-    menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null, 
+    menuSaveProject: null, menuLoadProject: null, menuExportWav: null, 
+    /* menuOpenGlobalControls: null, // This menu item is removed */
     menuOpenMixer: null, menuOpenMasterEffects: null, 
-    menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null, 
+    menuToggleFullScreen: null, 
+    // Global control elements (now directly in top taskbar)
+    playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null, 
     tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null, 
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null, 
     playbackModeToggleBtnGlobal: null, 
@@ -173,7 +180,6 @@ const appServices = {
     dbGetItem: dbGetAudio, 
     dbDeleteItem: dbDeleteAudio, 
 
-    // UI functions from their new modules
     openTrackInspectorWindow, openTrackEffectsRackWindow, openMasterEffectsRackWindow, 
     renderEffectsList, renderEffectControls, createKnob, 
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, 
@@ -187,7 +193,6 @@ const appServices = {
     showNotification: showSafeNotification, 
     createContextMenu, showConfirmationDialog, 
 
-    // Audio functions
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget, 
     playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile, 
     autoSliceSample, getMimeTypeFromFilename, 
@@ -196,7 +201,6 @@ const appServices = {
     clearAllMasterEffectNodes: clearAllMasterEffectNodesInAudio, 
     startAudioRecording, stopAudioRecording, 
 
-    // State getters
     getTracks: getTracksState, getTrackById: getTrackByIdState, 
     getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState, 
     getHighestZ: getHighestZState, 
@@ -212,8 +216,8 @@ const appServices = {
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState, 
     getPlaybackMode: getPlaybackModeState, 
     getSelectedTimelineClipInfo: getSelectedTimelineClipInfoState, 
+    getCurrentTheme: getCurrentThemeState,
 
-    // State setters/actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState, 
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState, 
     setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState, 
@@ -228,6 +232,8 @@ const appServices = {
     setActiveSequencerTrackId: setActiveSequencerTrackIdState, 
     setPlaybackMode: setPlaybackModeState, 
     setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState, 
+    setCurrentTheme: setCurrentThemeState, // For changing the theme
+
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal, 
     captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal, 
     redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal, 
@@ -235,7 +241,6 @@ const appServices = {
     loadProject: loadProjectInternal, handleProjectFileLoad: handleProjectFileLoadInternal, 
     exportToWav: exportToWavInternal, 
 
-    // Event handler exports (already being imported and assigned)
     selectMIDIInput: eventSelectMIDIInput, 
     handleTrackMute: eventHandleTrackMute, 
     handleTrackSolo: eventHandleTrackSolo, 
@@ -244,7 +249,6 @@ const appServices = {
     handleOpenTrackInspector: eventHandleOpenTrackInspector, 
     handleOpenEffectsRack: eventHandleOpenEffectsRack, 
     handleOpenSequencer: eventHandleOpenSequencer, 
-    // Pass appServices to handleTimelineLaneDrop so it can access other services if needed
     handleTimelineLaneDrop: (droppedItemData, targetTrackId, startTime) => handleTimelineLaneDrop(droppedItemData, targetTrackId, startTime, appServices), 
 
 
@@ -334,7 +338,7 @@ const appServices = {
         }
 
         if (uiElementsCache.playBtnGlobal) { 
-            uiElementsCache.playBtnGlobal.textContent = 'Play'; 
+            uiElementsCache.playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-white"><path d="M8 5v14l11-7z"></path></svg>`;
         }
         if (isTrackRecordingState()) { 
             const recTrackId = getRecordingTrackIdState(); 
@@ -368,8 +372,10 @@ const appServices = {
     },
     updateRecordButtonUI: (isRec) => { 
         if (uiElementsCache.recordBtnGlobal) { 
-            uiElementsCache.recordBtnGlobal.textContent = isRec ? 'Stop Rec' : 'Record'; 
-            uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec); // For potential styling
+            // Keep icon, but change color or add an indicator
+            uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', isRec); // Darker red when recording
+            uiElementsCache.recordBtnGlobal.classList.toggle('dark:bg-red-700', isRec);
+            uiElementsCache.recordBtnGlobal.classList.toggle('animate-pulse', isRec); // Optional pulse animation
         } else { console.warn("Global record button not found in cache."); } 
     },
     closeAllWindows: (isReconstruction = false) => { 
@@ -393,7 +399,7 @@ const appServices = {
         windowIdsToClose.forEach(winId => { 
             const win = getWindowByIdState(winId); 
             if (win && typeof win.close === 'function') { 
-                win.close(true); // true for reconstruction context, avoids adding to undo stack
+                win.close(true); 
             }
         });
     },
@@ -506,15 +512,42 @@ const appServices = {
         else console.warn("Custom background input element not found in cache."); 
     },
     removeCustomDesktopBackground: removeCustomDesktopBackground, 
+    onThemeChanged: (newTheme, oldTheme) => { // New service
+        console.log(`[AppServices onThemeChanged] Theme changed from ${oldTheme} to ${newTheme}`);
+        // Currently, theme changes are handled by CSS variables and Tailwind's dark: prefix.
+        // If specific JS-driven UI updates are needed on theme change, they can be added here.
+        // For example, re-rendering canvases if their colors are not CSS-variable driven.
+        // For now, we can just log or update a body class if needed beyond html.dark
+        document.body.classList.remove(`theme-${oldTheme}`);
+        document.body.classList.add(`theme-${newTheme}`);
+
+        // Example: Re-render all track waveforms if their colors depend on theme and are drawn on canvas
+        const tracks = getTracksState();
+        tracks.forEach(track => {
+            if (track.type === 'Sampler' && track.waveformCanvasCtx && typeof drawWaveform === 'function') {
+                drawWaveform(track);
+            } else if (track.type === 'InstrumentSampler' && track.instrumentWaveformCanvasCtx && typeof drawInstrumentWaveform === 'function') {
+                drawInstrumentWaveform(track);
+            }
+        });
+        // Re-render timeline if its playhead or ruler needs explicit redraw on theme change
+        if(typeof renderTimeline === 'function') renderTimeline();
+    },
+    toggleTheme: () => { // New service to easily toggle
+        const current = getCurrentThemeState();
+        appServices.setCurrentTheme(current === 'dark' ? 'light' : 'dark');
+    },
     onPlaybackModeChange: (newMode) => { 
         console.log(`[Main appServices.onPlaybackModeChange] Called with newMode: ${newMode}`); 
         if (uiElementsCache.playbackModeToggleBtnGlobal) { 
             uiElementsCache.playbackModeToggleBtnGlobal.textContent = newMode === 'timeline' ? 'Mode: Timeline' : 'Mode: Sequencer'; 
-            uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('active', newMode === 'timeline'); // For styling
+            uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('bg-sky-500', newMode === 'sequencer'); 
+            uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('dark:bg-sky-600', newMode === 'sequencer');
+            uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('bg-indigo-500', newMode === 'timeline'); // Example different color for timeline
+            uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('dark:bg-indigo-600', newMode === 'timeline');
         } else {
             console.warn("[Main appServices.onPlaybackModeChange] Playback mode toggle button not found in UI cache."); 
         }
-        // When mode changes, ensure timeline re-renders to show/hide playhead correctly
         if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') { 
             appServices.renderTimeline(); 
         }
@@ -522,6 +555,7 @@ const appServices = {
 };
 
 // --- Centralized UI Update Handler ---
+// ... (handleTrackUIUpdate remains largely the same, ensure it uses new Tailwind classes if it directly manipulates styles not covered by theme variables)
 function handleTrackUIUpdate(trackId, reason, detail) { 
     if (!getTrackByIdState) { console.warn("[Main UI Update] getTrackByIdState service not available."); return; } 
     const track = getTrackByIdState(trackId); 
@@ -625,7 +659,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                     } else if (track.type === 'InstrumentSampler' && typeof drawInstrumentWaveform === 'function') { 
                         drawInstrumentWaveform(track); 
                     }
-                    // Update dropzone appearance
                     const dzContainerId = track.type === 'Sampler' ? `#dropZoneContainer-${track.id}-sampler` : `#dropZoneContainer-${track.id}-instrumentsampler`; 
                     const dzContainer = inspectorElement.querySelector(dzContainerId); 
                     if(dzContainer) { 
@@ -650,7 +683,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             case 'sequencerContentChanged': 
                 const seqWinInstance = getWindowByIdState(`sequencerWin-${trackId}`); 
                 if (seqWinInstance && seqWinInstance.element && typeof openTrackSequencerWindow === 'function') { 
-                    // Preserve window state when redrawing sequencer
                     const currentStateForRedraw = { 
                         id: seqWinInstance.id, 
                         title: seqWinInstance.title, 
@@ -664,13 +696,11 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                         restoreState: seqWinInstance.isMaximized ? JSON.parse(JSON.stringify(seqWinInstance.restoreState)) : {}, 
                         initialContentKey: seqWinInstance.initialContentKey || seqWinInstance.id 
                     };
-                    openTrackSequencerWindow(trackId, true, currentStateForRedraw); // forceRedraw = true
+                    openTrackSequencerWindow(trackId, true, currentStateForRedraw); 
                 } else if (seqWinInstance && !seqWinInstance.element && typeof openTrackSequencerWindow === 'function') { 
-                    // Window instance exists but element is gone, reopen fresh
                     console.warn(`[Main UI Update] Sequencer window instance for ${trackId} found but element missing. Reopening fresh.`); 
                     openTrackSequencerWindow(trackId, true, null); 
                 }
-                // Update timeline if sequence clips are present
                 if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') { 
                     appServices.renderTimeline(); 
                 }
@@ -679,7 +709,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 if (inspectorElement) { 
                     console.warn(`[Main UI Update] sampleLoadError for track ${trackId}, detail: ${detail}. Inspector UI update for dropzone needed.`); 
                     if (track.type === 'DrumSampler' && typeof detail === 'number' && typeof updateDrumPadControlsUI === 'function') { 
-                        updateDrumPadControlsUI(track); // Update specific pad's dropzone
+                        updateDrumPadControlsUI(track); 
                     } else if ((track.type === 'Sampler' || track.type === 'InstrumentSampler')) { 
                         const dzKey = track.type === 'Sampler' ? 'sampler' : 'instrumentsampler'; 
                         const dzContainer = inspectorElement.querySelector(`#dropZoneContainer-${track.id}-${dzKey}`); 
@@ -712,20 +742,17 @@ async function initializeSnugOS() {
     console.log("[Main initializeSnugOS] Initializing SnugOS..."); 
 
     try { 
-        // Cache common DOM elements
         Object.keys(uiElementsCache).forEach(key => { 
             const element = document.getElementById(key); 
             if (element) { 
                  uiElementsCache[key] = element; 
             } else {
-                // Log warning for critical missing elements only
-                if (['desktop', 'taskbar', 'notification-area', 'modalContainer'].includes(key)) { 
+                if (['desktop', 'taskbar', 'notification-area', 'modalContainer', 'topTaskbar'].includes(key)) { 
                     console.warn(`[Main initializeSnugOS] Critical UI Element ID "${key}" not found in DOM.`); 
                 }
             }
         });
 
-        // Dynamically import and assign effects registry to appServices
         try { 
             const effectsRegistry = await import('./effectsRegistry.js'); 
             if (appServices.effectsRegistryAccess) { 
@@ -742,7 +769,6 @@ async function initializeSnugOS() {
             showSafeNotification("Critical error: Failed to load audio effects definitions.", 5000); 
         }
 
-        // Setup custom background upload and load existing
         if (uiElementsCache.customBgInput) { 
             uiElementsCache.customBgInput.addEventListener('change', handleCustomBackgroundUpload); 
         }
@@ -759,72 +785,78 @@ async function initializeSnugOS() {
                     console.log("[Main initializeSnugOS] Loaded background from localStorage (fallback)."); 
                     applyDesktopBackground(storedDataURL); 
                 } else {
-                    applyDesktopBackground(null); // Apply default
+                    applyDesktopBackground(null); 
                 }
             }
         } catch (error) {
             console.error("Error loading desktop background on init:", error); 
-            applyDesktopBackground(null); // Fallback to default
+            applyDesktopBackground(null); 
         }
 
 
-        // Initialize core modules, passing appServices for DI
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function"); 
-        // Call the main UI initializer from browserCoreUI.js which then initializes its sub-modules
+        
+        // Initialize theme from state (which loads from localStorage)
+        const initialTheme = appServices.getCurrentTheme ? appServices.getCurrentTheme() : 'dark';
+        if (appServices.setCurrentTheme) appServices.setCurrentTheme(initialTheme); // This will apply class to <html>
+
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule (from browserCoreUI) is not a function"); 
         
-        if (typeof initializeGlobalControlsUIModule === 'function') initializeGlobalControlsUIModule(appServices); else console.warn("initializeGlobalControlsUIModule not found, global controls might not have direct appServices access."); 
+        // GlobalControlsUI module is no longer used to open a window
+        // if (typeof initializeGlobalControlsUIModule === 'function') initializeGlobalControlsUIModule(appServices); else console.warn("initializeGlobalControlsUIModule not found"); 
+        
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function"); 
         if (typeof initializeEventHandlersModule === 'function') initializeEventHandlersModule(appServices); else console.error("initializeEventHandlersModule is not a function"); 
 
-        // Setup primary event listeners (start menu, desktop context, etc.)
         if (typeof initializePrimaryEventListeners === 'function') { 
              initializePrimaryEventListeners(appServices); 
         } else { console.error("initializePrimaryEventListeners is not a function");} 
 
-        // Open Global Controls window and attach its event handlers
-        if (typeof openGlobalControlsWindow === 'function') { 
-            openGlobalControlsWindow((elements) => { 
-                if (elements) { 
-                    // Cache elements from global controls for direct access if needed elsewhere
-                    uiElementsCache.playBtnGlobal = elements.playBtnGlobal; 
-                    uiElementsCache.recordBtnGlobal = elements.recordBtnGlobal; 
-                    uiElementsCache.stopBtnGlobal = elements.stopBtnGlobal; 
-                    uiElementsCache.tempoGlobalInput = elements.tempoGlobalInput; 
-                    uiElementsCache.midiInputSelectGlobal = elements.midiInputSelectGlobal; 
-                    uiElementsCache.masterMeterContainerGlobal = elements.masterMeterContainerGlobal; 
-                    uiElementsCache.masterMeterBarGlobal = elements.masterMeterBarGlobal; 
-                    uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal; 
-                    uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal; 
-                    uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal; 
+        // Attach event listeners for global controls now in the top taskbar
+        const globalControlElements = {
+            playBtnGlobal: uiElementsCache.playBtnGlobal,
+            recordBtnGlobal: uiElementsCache.recordBtnGlobal,
+            stopBtnGlobal: uiElementsCache.stopBtnGlobal,
+            tempoGlobalInput: uiElementsCache.tempoGlobalInput,
+            midiInputSelectGlobal: uiElementsCache.midiInputSelectGlobal,
+            masterMeterContainerGlobal: uiElementsCache.masterMeterContainerGlobal, // Though meter itself is updated in loop
+            masterMeterBarGlobal: uiElementsCache.masterMeterBarGlobal,
+            midiIndicatorGlobal: uiElementsCache.midiIndicatorGlobal,
+            keyboardIndicatorGlobal: uiElementsCache.keyboardIndicatorGlobal,
+            playbackModeToggleBtnGlobal: uiElementsCache.playbackModeToggleBtnGlobal
+        };
+        if (typeof attachGlobalControlEvents === 'function') {
+            attachGlobalControlEvents(globalControlElements);
+        } else {
+            console.error("attachGlobalControlEvents is not a function");
+        }
+        if (typeof setupMIDI === 'function') setupMIDI(); else console.error("setupMIDI is not a function"); 
 
-                    if (typeof attachGlobalControlEvents === 'function') attachGlobalControlEvents(elements); else console.error("attachGlobalControlEvents is not a function"); 
-                    if (typeof setupMIDI === 'function') setupMIDI(); else console.error("setupMIDI is not a function"); 
-                } else { console.warn("Global controls elements not received in onReadyCallback.");} 
-            }, null); // null for savedState on initial open
-        } else { console.error("openGlobalControlsWindow is not a function");} 
+        // Theme toggle button listeners
+        if (uiElementsCache.themeToggleLight) {
+            uiElementsCache.themeToggleLight.addEventListener('click', () => appServices.setCurrentTheme('light'));
+        }
+        if (uiElementsCache.themeToggleDark) {
+            uiElementsCache.themeToggleDark.addEventListener('click', () => appServices.setCurrentTheme('dark'));
+        }
 
-        // Auto-fetch sound libraries
+
         if (Constants.soundLibraries && typeof fetchSoundLibrary === 'function') { 
             Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true)); 
         }
 
-        // Open timeline window by default
         if (appServices.openTimelineWindow && typeof appServices.openTimelineWindow === 'function') { 
             appServices.openTimelineWindow(); 
         } else { console.warn("appServices.openTimelineWindow not available to open by default."); } 
 
-        // Start UI update loop (meters, playhead)
         requestAnimationFrame(updateMetersLoop); 
-        // Initialize Undo/Redo button states
         if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI(null, null); 
-        // Initialize playback mode UI
         if (appServices.onPlaybackModeChange && typeof getPlaybackModeState === 'function') { 
             appServices.onPlaybackModeChange(getPlaybackModeState()); 
         }
 
-        showSafeNotification(`Welcome to SnugOS ${Constants.APP_VERSION}!`, 2500); 
-        console.log(`[Main initializeSnugOS] SnugOS Version ${Constants.APP_VERSION} Initialized.`); 
+        showSafeNotification(`Welcome to SnugOS ${Constants.APP_VERSION}! Theme: ${initialTheme}`, 2500); 
+        console.log(`[Main initializeSnugOS] SnugOS Version ${Constants.APP_VERSION} Initialized. Theme: ${initialTheme}`); 
 
     } catch (initError) {
         console.error("CRITICAL ERROR during SnugOS Initialization:", initError); 
@@ -842,6 +874,7 @@ function updateMetersLoop() {
             const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null; 
             const mixerMasterMeterBar = mixerWindow?.element && !mixerWindow.isMinimized ? mixerWindow.element.querySelector('#mixerMasterMeterBar') : null; 
             const tracks = getTracksState ? getTracksState() : []; 
+            // Pass the top taskbar's master meter bar
             updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks); 
         }
         if (typeof updatePlayheadPosition === 'function') { 
@@ -861,10 +894,11 @@ function applyDesktopBackground(imageUrlOrObjectUrl) {
                 uiElementsCache.desktop.style.backgroundSize = 'cover'; 
                 uiElementsCache.desktop.style.backgroundPosition = 'center center'; 
                 uiElementsCache.desktop.style.backgroundRepeat = 'no-repeat'; 
-                uiElementsCache.desktop.style.backgroundColor = ''; 
+                uiElementsCache.desktop.style.backgroundColor = ''; // Clear solid color if image is set
             } else {
                 uiElementsCache.desktop.style.backgroundImage = ''; 
-                uiElementsCache.desktop.style.backgroundColor = Constants.defaultDesktopBg || '#101010'; 
+                // Background color is now handled by body + #desktop var(--bg-desktop) from style.css
+                // uiElementsCache.desktop.style.backgroundColor = Constants.defaultDesktopBg || '#101010'; 
             }
         } catch (e) {
             console.error("Error applying desktop background style:", e); 
@@ -886,7 +920,6 @@ window.addEventListener('beforeunload', (e) => {
         e.returnValue = ''; 
         return "You have unsaved changes. Are you sure you want to leave?"; 
     }
-    // Clean up object URL for background if it exists
     if (currentBackgroundImageObjectURL) { 
         URL.revokeObjectURL(currentBackgroundImageObjectURL); 
     }
