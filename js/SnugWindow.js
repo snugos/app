@@ -115,7 +115,7 @@ export class SnugWindow {
         desktopEl.appendChild(this.element);
 
         if (this.appServices.addWindowToStore) { this.appServices.addWindowToStore(this.id, this); }
-        
+
         this.initInteract(); // Call initInteract
 
         const closeBtn = this.element.querySelector('.window-close-btn');
@@ -161,7 +161,7 @@ export class SnugWindow {
             console.error(`[SnugWindow ${this.id}] initInteract: this.element is null.`);
             return;
         }
-        
+
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
             console.error(`[SnugWindow ${this.id}] initInteract: Desktop element not found.`);
@@ -197,10 +197,10 @@ export class SnugWindow {
                         },
                         move: (event) => {
                             if (this.isMaximized || !this.element) return;
-
                             let x = (parseFloat(this.element.style.left) || 0) + event.dx;
                             let y = (parseFloat(this.element.style.top) || 0) + event.dy;
 
+                            // Snapping logic
                             const currentWindowRect = {
                                 left: x, top: y,
                                 right: x + this.element.offsetWidth, bottom: y + this.element.offsetHeight,
@@ -266,8 +266,8 @@ export class SnugWindow {
             // console.log(`[SnugWindow ${this.id}] Setting up resizable for element:`, this.element);
             interact(this.element)
                 .resizable({
-                    edges: { left: true, right: true, bottom: true, top: false }, // Resizing from top edge disabled
-                    ignoreFrom: this.titleBar, // Resizing ignores events starting on the title bar
+                    edges: { left: true, right: true, bottom: true, top: false }, // Top edge resize disabled
+                    ignoreFrom: this.titleBar, // Resizing ignores events starting on title bar
                     listeners: {
                         start: (event) => {
                             if (this.isMaximized) { event.interaction.stop(); return; }
@@ -309,7 +309,77 @@ export class SnugWindow {
     updateTaskbarButtonActiveState() { /* ... (same) ... */ }
     minimize(skipUndo = false) { /* ... (same as response #24 with interactable checks) ... */ }
     restore(skipUndo = false) { /* ... (same) ... */ }
-    close(isReconstruction = false) { /* ... (same as response #24 with Interact.js unset still commented for diagnostics) ... */ }
-    focus(skipUndoForFocusItself = false) { /* ... (same) ... */ }
-    applyState(state) { /* ... (same) ... */ }
+
+    close(isReconstruction = false) {
+        console.log(`[SnugWindow ${this.id}] close() method entered. Window: "${this.title}", isReconstruction: ${isReconstruction}, Element present: ${!!this.element}`);
+
+        if (!this.element) {
+            console.warn(`[SnugWindow ${this.id}] close(): Element is already null. Attempting cleanup for ID in store.`);
+            if (this.appServices && this.appServices.removeWindowFromStore && typeof this.appServices.removeWindowFromStore === 'function') {
+                try {
+                    this.appServices.removeWindowFromStore(this.id);
+                    console.log(`[SnugWindow ${this.id}] Removed from window store (element was null).`);
+                } catch (storeError) {
+                    console.error(`[SnugWindow ${this.id}] Error removing from store (element was null):`, storeError);
+                }
+            }
+            this.taskbarButton = null;
+            return;
+        }
+
+        // MODIFICATION: Interact.js unsetting is still COMMENTED OUT for diagnostics.
+        // If window closing works with this commented out, the Interact.js call is the issue.
+        /*
+        console.log(`[SnugWindow ${this.id}] DIAGNOSTIC: Attempting to unset Interact.js...`);
+        if (window.interact && typeof window.interact === 'function' && this.element) {
+            try {
+                const interactableInstance = interact(this.element);
+                if (interactableInstance && typeof interactableInstance.unset === 'function') {
+                    interactableInstance.unset();
+                    console.log(`[SnugWindow ${this.id}] Interact.js instance unset successfully.`);
+                } else {
+                    console.log(`[SnugWindow ${this.id}] Element was not interactable, already unset, or interact(this.element) failed to return valid instance for unsetting.`);
+                }
+            } catch (e) {
+                console.warn(`[SnugWindow ${this.id}] Error during Interact.js unset attempt (possibly due to internal library state):`, e.message, e);
+            }
+        } else {
+            console.warn(`[SnugWindow ${this.id}] window.interact not found or element is null. Skipping unset.`);
+        }
+        */
+        console.log(`[SnugWindow ${this.id}] DIAGNOSTIC: Interact.js unsetting in close() is currently COMMENTED OUT.`);
+
+
+        if (this.onCloseCallback && typeof this.onCloseCallback === 'function') {
+            try { this.onCloseCallback(); }
+            catch (e) { console.error(`[SnugWindow ${this.id}] Error in onCloseCallback:`, e); }
+        }
+
+        if (this.taskbarButton) {
+            try { this.taskbarButton.remove(); }
+            catch (e) { console.warn(`[SnugWindow ${this.id}] Error removing taskbar button:`, e.message); }
+            this.taskbarButton = null;
+        }
+
+        if (this.element && this.element.parentNode) {
+            try { this.element.parentNode.removeChild(this.element); }
+            catch (e) { console.warn(`[SnugWindow ${this.id}] Error removing window element from DOM:`, e.message); }
+        } else if (this.element) { /* console.log(`[SnugWindow ${this.id}] Window element has no parentNode.`); */ }
+        this.element = null;
+
+        const oldWindowTitle = this.title;
+        if (this.appServices.removeWindowFromStore && typeof this.appServices.removeWindowFromStore === 'function') {
+            try { this.appServices.removeWindowFromStore(this.id); }
+            catch (storeError) { console.error(`[SnugWindow ${this.id}] Error removing from store:`, storeError); }
+        } else { console.warn(`[SnugWindow ${this.id}] appServices.removeWindowFromStore service NOT available.`); }
+
+        const isCurrentlyReconstructing = this.appServices.getIsReconstructingDAW ? this.appServices.getIsReconstructingDAW() : false;
+        if (!isCurrentlyReconstructing && !isReconstruction) {
+            this._captureUndo(`Close window "${oldWindowTitle}"`);
+        }
+        // console.log(`[SnugWindow ${this.id}] close() finished for "${oldWindowTitle}".`);
+    }
+
+    focus(skipUndoForFocusItself = false) { /* ... same as previous ... */ }
+    applyState(state) { /* ... same as previous ... */ }
 }
