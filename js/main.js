@@ -6,7 +6,7 @@ import * as Constants from './constants.js';
 import * as Utils from './utils.js';
 import * as EventHandlers from './eventHandlers.js';
 import * as State from './state.js';
-import * as AudioModule from './audio.js'; // Import all as AudioModule
+import * as AudioModule from './audio.js'; 
 import * as UI from './ui_modules/browserCoreUI.js';
 import * as GlobalControlsUI from './globalControlsUI.js';
 import * as EffectsRegistry from './effectsRegistry.js';
@@ -14,7 +14,7 @@ import * as DB from './db.js';
 
 // DEBUG: Log what's imported from AudioModule
 console.log("[Main Pre-appServices] AudioModule content:", AudioModule);
-console.log("[Main Pre-appServices] typeof AudioModule.loadAndPreviewSample:", typeof AudioModule.loadAndPreviewSample, AudioModule.loadAndPreviewSample);
+console.log("[Main Pre-appServices] typeof AudioModule.loadAndPreviewSample from AudioModule:", typeof AudioModule.loadAndPreviewSample, AudioModule.loadAndPreviewSample);
 
 console.log(`[Main] SnugOS v${Constants.APP_VERSION} - Script Execution Started (after imports)`);
 
@@ -23,41 +23,42 @@ let currentBackgroundImageObjectURL = null;
 const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB_v2';
 
 // Helper for creating service wrappers to catch errors if functions are not defined
-const createService = (module, functionName, moduleName) => {
+const createService = (module, functionName, moduleNameForError) => {
     return (...args) => {
         if (module && typeof module[functionName] === 'function') {
             return module[functionName](...args);
         }
-        const errorMsg = `appService Error: ${moduleName}.${functionName} is not available or not a function.`;
+        const errorMsg = `appService Error: ${moduleNameForError}.${functionName} is not available or not a function.`;
         console.error(errorMsg, "Module content:", module);
-        Utils.showNotification(errorMsg, "error", 5000);
-        // Depending on the service, you might return a default value or throw
-        if (functionName.startsWith("get") || functionName.startsWith("is")) return null; // Or appropriate default
-        return Promise.reject(new Error(errorMsg)); // For async functions or functions expected to return something
+        if (Utils && typeof Utils.showNotification === 'function') {
+            Utils.showNotification(errorMsg, "error", 5000);
+        }
+        if (functionName.startsWith("get") || functionName.startsWith("is")) return null;
+        return Promise.reject(new Error(errorMsg)); 
     };
 };
 
 const appServices = {
     // --- Core App & Utilities ---
-    uiElementsCache, // Direct object reference is fine
-    showNotification: (...args) => Utils.showNotification(...args), // utilShowNotification was an alias
+    uiElementsCache, 
+    showNotification: (...args) => Utils.showNotification(...args), 
     showConfirmationDialog: (...args) => Utils.showConfirmationDialog(...args),
     createContextMenu: (...args) => Utils.createContextMenu(...args),
     snapTimeToGrid: (...args) => Utils.snapTimeToGrid(...args),
     getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
     _isReconstructingDAW_flag: false,
-    newProject: () => { // Defined locally
+    newProject: () => { 
         Utils.showConfirmationDialog("Create a new project? All unsaved changes will be lost.", () => {
             window.location.reload();
         });
     },
-    createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices), // Direct instantiation
+    createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices), 
 
     // --- State Management ---
     getTracksState: () => State.getTracksState(),
     getTrackById: (id) => State.getTrackByIdState(id),
     getOpenWindowsState: () => State.getOpenWindowsState(),
-    getWindowById: (id) => State.getWindowByIdState(id),
+    getWindowById: (id) => State.getWindowByIdState(id), // Directly from State module
     addWindowToStoreState: (id, instance) => State.addWindowToStoreState(id, instance),
     removeWindowFromStoreState: (id) => State.removeWindowFromStoreState(id),
     getHighestZState: () => State.getHighestZState(),
@@ -78,7 +79,7 @@ const appServices = {
     setCurrentThemeState: (theme) => State.setCurrentThemeState(theme),
 
     // --- Track Management ---
-    addTrack: (type, initialData) => State.addTrackToStateInternal(type, initialData, true, appServices), // appServices passed correctly
+    addTrack: (type, initialData) => State.addTrackToStateInternal(type, initialData, true, appServices), 
     removeTrack: (trackId) => State.removeTrackFromStateInternal(trackId),
 
     // --- Audio Engine ---
@@ -88,18 +89,18 @@ const appServices = {
     stopPlayback: () => AudioModule.stopPlayback(),
     toggleRecording: () => AudioModule.toggleRecording(),
     setMasterVolume: (gain) => AudioModule.setMasterVolume(gain),
-    getMasterGainValue: () => State.getMasterGainValueState(), // From state
-    setMasterGainValueState: (gain) => State.setMasterGainValueState(gain), // To state
+    getMasterGainValue: () => State.getMasterGainValueState(), 
+    setMasterGainValueState: (gain) => State.setMasterGainValueState(gain), 
     loadAndPreviewSample: createService(AudioModule, 'loadAndPreviewSample', 'AudioModule'),
     getPreviewPlayer: () => State.getPreviewPlayerState(),
     setPreviewPlayer: (player) => State.setPreviewPlayerState(player),
-    fetchSoundLibrary: (...args) => AudioModule.fetchSoundLibrary(...args),
-    loadSoundFromBrowserToTarget: (...args) => AudioModule.loadSoundFromBrowserToTarget(...args),
-    playSlicePreview: (...args) => AudioModule.playSlicePreview(...args),
-    playDrumSamplerPadPreview: (...args) => AudioModule.playDrumSamplerPadPreview(...args),
-    loadSampleFile: (...args) => AudioModule.loadSampleFile(...args),
-    loadDrumSamplerPadFile: (...args) => AudioModule.loadDrumSamplerPadFile(...args),
-    autoSliceSample: (...args) => AudioModule.autoSliceSample(...args),
+    fetchSoundLibrary: createService(AudioModule, 'fetchSoundLibrary', 'AudioModule'),
+    loadSoundFromBrowserToTarget: createService(AudioModule, 'loadSoundFromBrowserToTarget', 'AudioModule'),
+    playSlicePreview: createService(AudioModule, 'playSlicePreview', 'AudioModule'),
+    playDrumSamplerPadPreview: createService(AudioModule, 'playDrumSamplerPadPreview', 'AudioModule'),
+    loadSampleFile: createService(AudioModule, 'loadSampleFile', 'AudioModule'),
+    loadDrumSamplerPadFile: createService(AudioModule, 'loadDrumSamplerPadFile', 'AudioModule'),
+    autoSliceSample: createService(AudioModule, 'autoSliceSample', 'AudioModule'),
     getMimeTypeFromFilename: (filename) => AudioModule.getMimeTypeFromFilename(filename),
     getMasterEffectsBusInputNode: () => AudioModule.getMasterEffectsBusInputNode(),
     getActualMasterGainNode: () => AudioModule.getActualMasterGainNode(),
@@ -109,89 +110,78 @@ const appServices = {
 
     // --- UI Modules & Functions ---
     initializeUIModule: (services) => UI.initializeUIModule(services),
-    openSoundBrowserWindow: (...args) => UI.openSoundBrowserWindow(...args),
-    updateSoundBrowserDisplayForLibrary: (...args) => UI.updateSoundBrowserDisplayForLibrary(...args),
-    showAddTrackModal: () => UI.showAddTrackModal(),
-    showAddEffectModal: (...args) => UI.showAddEffectModal(...args),
-    openTrackInspectorWindow: (trackId, state) => UI.openTrackInspectorWindow(trackId, state),
-    openTrackEffectsRackWindow: (trackId, state) => UI.openTrackEffectsRackWindow(trackId, state),
-    openMasterEffectsRackWindow: (state) => UI.openMasterEffectsRackWindow(state),
-    openArrangementWindow: (...args) => UI.openArrangementWindow(...args),
-    openSequencerWindow: (...args) => UI.openSequencerWindow(...args),
-    openMixerWindow: (state) => UI.openMixerWindow(state),
-    updateMixerWindow: () => UI.updateMixerWindow(),
-    updateTheme: (theme) => UI.updateTheme(theme),
-    getTheme: () => UI.getTheme(),
+    openSoundBrowserWindow: createService(UI, 'openSoundBrowserWindow', 'UI'),
+    updateSoundBrowserDisplayForLibrary: createService(UI, 'updateSoundBrowserDisplayForLibrary', 'UI'),
+    showAddTrackModal: createService(UI, 'showAddTrackModal', 'UI'),
+    showAddEffectModal: createService(UI, 'showAddEffectModal', 'UI'),
+    openTrackInspectorWindow: createService(UI, 'openTrackInspectorWindow', 'UI'),
+    openTrackEffectsRackWindow: createService(UI, 'openTrackEffectsRackWindow', 'UI'),
+    openMasterEffectsRackWindow: createService(UI, 'openMasterEffectsRackWindow', 'UI'),
+    openArrangementWindow: createService(UI, 'openArrangementWindow', 'UI'),
+    openSequencerWindow: createService(UI, 'openSequencerWindow', 'UI'),
+    openMixerWindow: createService(UI, 'openMixerWindow', 'UI'),
+    updateMixerWindow: createService(UI, 'updateMixerWindow', 'UI'),
+    updateTheme: (theme) => UI.updateTheme(theme), // Assumes UI.updateTheme is robust
+    getTheme: () => UI.getTheme(), // Assumes UI.getTheme is robust
     closeAllTrackWindows: (excludeId) => UI.closeAllTrackWindows(excludeId),
-    updateTrackUI: (...args) => UI.updateTrackUI(...args),
-    highlightPlayingStep: (...args) => UI.highlightPlayingStep(...args),
-    drawWaveform: (...args) => UI.drawWaveform(...args),
-    drawInstrumentWaveform: (...args) => UI.drawInstrumentWaveform(...args),
-    renderSamplePads: (...args) => UI.renderSamplePads(...args),
-    updateSliceEditorUI: (...args) => UI.updateSliceEditorUI(...args),
-    updateDrumPadControlsUI: (...args) => UI.updateDrumPadControlsUI(...args),
-    renderDrumSamplerPads: (...args) => UI.renderDrumSamplerPads(...args),
-    renderEffectsList: (...args) => UI.renderEffectsList(...args),
-    renderEffectControls: (...args) => UI.renderEffectControls(...args),
-    createKnob: (...args) => UI.createKnob(...args),
-    updateSequencerCellUI: (...args) => UI.updateSequencerCellUI(...args),
-    renderTimeline: () => UI.renderTimeline(),
-    updatePlayheadPosition: () => UI.updatePlayheadPosition(),
+    updateTrackUI: createService(UI, 'updateTrackUI', 'UI'),
+    highlightPlayingStep: createService(UI, 'highlightPlayingStep', 'UI'),
+    drawWaveform: createService(UI, 'drawWaveform', 'UI'),
+    drawInstrumentWaveform: createService(UI, 'drawInstrumentWaveform', 'UI'),
+    renderSamplePads: createService(UI, 'renderSamplePads', 'UI'),
+    updateSliceEditorUI: createService(UI, 'updateSliceEditorUI', 'UI'),
+    updateDrumPadControlsUI: createService(UI, 'updateDrumPadControlsUI', 'UI'),
+    renderDrumSamplerPads: createService(UI, 'renderDrumSamplerPads', 'UI'),
+    renderEffectsList: createService(UI, 'renderEffectsList', 'UI'),
+    renderEffectControls: createService(UI, 'renderEffectControls', 'UI'),
+    createKnob: createService(UI, 'createKnob', 'UI'),
+    updateSequencerCellUI: createService(UI, 'updateSequencerCellUI', 'UI'),
+    renderTimeline: createService(UI, 'renderTimeline', 'UI'),
+    updatePlayheadPosition: createService(UI, 'updatePlayheadPosition', 'UI'),
     openGlobalControlsWindow: (callback, state) => GlobalControlsUI.openGlobalControlsWindow(callback, state),
 
     // --- Effects Management ---
-    effectsRegistryAccess: EffectsRegistry, // Direct object reference is fine
+    effectsRegistryAccess: EffectsRegistry, 
     getMasterEffects: () => State.getMasterEffectsState(),
-    addMasterEffect: async (effectType) => {
+    addMasterEffect: async (effectType) => { /* ... same as response #63 ... */
         if (!appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Add Master Effect: ${effectType}`);
         const defaultParams = EffectsRegistry.getEffectDefaultParams(effectType);
-        const id = State.addMasterEffectToState(effectType, defaultParams);
-        await AudioModule.addMasterEffectToAudio(id, effectType, defaultParams);
+        const id = State.addMasterEffectToState(effectType, defaultParams); 
+        await AudioModule.addMasterEffectToAudio(id, effectType, defaultParams);    
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
-    removeMasterEffect: async (effectId) => {
+    removeMasterEffect: async (effectId) => { /* ... same as response #63 ... */
         const effect = State.getMasterEffectsState().find(e => e.id === effectId);
         if (effect && !appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Remove Master Effect: ${effect.type}`);
         State.removeMasterEffectFromState(effectId);
         await AudioModule.removeMasterEffectFromAudio(effectId);
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
-    updateMasterEffectParam: (effectId, paramPath, value) => {
-        State.updateMasterEffectParamInState(effectId, paramPath, value);
-        AudioModule.updateMasterEffectParamInAudio(effectId, paramPath, value);
+    updateMasterEffectParam: (effectId, paramPath, value) => { /* ... same as response #63 ... */
+        State.updateMasterEffectParamInState(effectId, paramPath, value); 
+        AudioModule.updateMasterEffectParamInAudio(effectId, paramPath, value);  
     },
-    reorderMasterEffect: (effectId, newIndex) => {
+    reorderMasterEffect: (effectId, newIndex) => { /* ... same as response #63 ... */
         if (!appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Reorder Master Effects`);
         State.reorderMasterEffectInState(effectId, newIndex);
-        AudioModule.reorderMasterEffectInAudio(effectId, newIndex);
+        AudioModule.reorderMasterEffectInAudio(effectId, newIndex); 
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
-    toggleBypassMasterEffect: (effectId) => {
+    toggleBypassMasterEffect: (effectId) => { /* ... same as response #63, ensure AudioModule has way to apply bypass ... */
         const effect = State.getMasterEffectsState().find(e => e.id === effectId);
         if (effect) {
             if (!appServices.getIsReconstructingDAW()) State.captureStateForUndoInternal(`Toggle Bypass Master Effect: ${effect.type}`);
-            const newBypassState = !effect.isBypassed;
-            State.updateMasterEffectParamInState(effectId, 'isBypassed', newBypassState); // Assuming 'isBypassed' path
-            // AudioModule would need an updateMasterEffectBypassInAudio(effectId, newBypassState)
-            AudioModule._rechainMasterEffectsAudio(); // Rechain to apply bypass
+            const newBypassState = !effect.isBypassed; // Assuming isBypassed is a property in state
+            State.updateMasterEffectParamInState(effectId, 'isBypassed', newBypassState); 
+            AudioModule._rechainMasterEffectsAudio(); // Rechaining will apply bypass based on state
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         }
     },
-    getMasterEffectParamValue: (effectId, paramPath) => { /* ... same as before, directly calls State ... */
-        const effect = State.getMasterEffectsState().find(e => e.id === effectId);
-        if (effect && effect.params) {
-            const keys = paramPath.split('.');
-            let val = effect.params;
-            for (const key of keys) {
-                if (val && typeof val === 'object' && key in val) val = val[key]; else return undefined;
-            }
-            return val;
-        } return undefined;
-    },
-    updateMasterEffectsRackUI: () => { // This is UI related
+    getMasterEffectParamValue: (effectId, paramPath) => State.getMasterEffectParamValue(effectId, paramPath), // Delegate
+    updateMasterEffectsRackUI: () => { // This is UI related, should call UI module
         const rackWindow = State.getWindowByIdState('masterEffectsRack');
         if (rackWindow?.element && !rackWindow.isMinimized && typeof UI.renderEffectsList === 'function') {
-            const listDiv = rackWindow.element.querySelector('#effectsList-master');
+            const listDiv = rackWindow.element.querySelector('#effectsList-master'); 
             const controlsContainer = rackWindow.element.querySelector('#effectControlsContainer-master');
             if (listDiv && controlsContainer) UI.renderEffectsList(null, 'master', listDiv, controlsContainer);
         }
@@ -250,45 +240,45 @@ const appServices = {
     dbDeleteItem: (id) => DB.deleteAudio(id),
 
     // --- Misc UI helpers defined locally or simple passthroughs ---
-    panicStopAllAudio: () => { /* ... same as before ... */
+    panicStopAllAudio: () => { /* ... same as response #63 ... */
         Tone.Transport.stop(); Tone.Transport.cancel(0);
         State.getTracksState().forEach(track => track.stopPlayback && track.stopPlayback());
         if (uiElementsCache.playBtn) uiElementsCache.playBtn.innerHTML = '<i class="fas fa-play"></i>';
         if (uiElementsCache.playBtnGlobal) uiElementsCache.playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
         Utils.showNotification("All audio stopped.", "info", 1500);
     },
-    updateTaskbarTempoDisplay: (tempo) => {
+    updateTaskbarTempoDisplay: (tempo) => { /* ... same as response #63 ... */
         if (uiElementsCache.tempoDisplay) uiElementsCache.tempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
     },
-    updateUndoRedoButtonsUI: (undoState, redoState) => { /* ... same as before ... */
+    updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => { // Renamed params to avoid conflict
         const undoBtn = uiElementsCache.menuUndo; const redoBtn = uiElementsCache.menuRedo;
         const undoStackCurrent = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
         const redoStackCurrent = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
-        if (undoBtn) { const canUndo = undoStackCurrent.length > 0; undoBtn.classList.toggle('disabled', !canUndo); undoBtn.title = canUndo && undoState ? `Undo: ${undoState.actionName || 'action'}` : "Undo"; }
-        if (redoBtn) { const canRedo = redoStackCurrent.length > 0; redoBtn.classList.toggle('disabled', !canRedo); redoBtn.title = canRedo && redoState ? `Redo: ${redoState.actionName || 'action'}` : "Redo"; }
+        if (undoBtn) { const canUndo = undoStackCurrent.length > 0; undoBtn.classList.toggle('disabled', !canUndo); undoBtn.title = canUndo && undoStateParam ? `Undo: ${undoStateParam.actionName || 'action'}` : "Undo"; }
+        if (redoBtn) { const canRedo = redoStackCurrent.length > 0; redoBtn.classList.toggle('disabled', !canRedo); redoBtn.title = canRedo && redoStateParam ? `Redo: ${redoStateParam.actionName || 'action'}` : "Redo"; }
     },
-    updateRecordButtonUI: (isRec, isArmed) => { /* ... same as before ... */
+    updateRecordButtonUI: (isRec, isArmed) => { /* ... same as response #63 ... */
         const recActive = isRec && isArmed;
         if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-700', recActive);
         if (uiElementsCache.recordBtnGlobal) uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', recActive);
     },
-    closeAllWindows: (isReconstruction = false) => {
+    closeAllWindows: (isReconstruction = false) => { /* ... same as response #63 ... */
         State.getOpenWindowsState().forEach(win => win.close(isReconstruction));
         State.getOpenWindowsState().clear();
     },
     clearOpenWindowsMap: () => State.getOpenWindowsState().clear(),
-    triggerCustomBackgroundUpload: () => {
+    triggerCustomBackgroundUpload: () => { /* ... same as response #63 ... */
         const input = document.getElementById('file-input-background');
         if (input) input.click();
     },
-    removeCustomDesktopBackground: async () => {
+    removeCustomDesktopBackground: async () => { /* ... same as response #63 ... */
         await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY);
         if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
         currentBackgroundImageObjectURL = null;
         applyDesktopBackground(null);
         Utils.showNotification("Background removed.", "info", 2000);
     },
-    onPlaybackModeChange: (newMode) => { /* ... same as before ... */
+    onPlaybackModeChange: (newMode) => { /* ... same as response #63 ... */
         const playbackBtn = document.getElementById('playbackModeToggleBtnGlobal');
         if (playbackBtn) playbackBtn.textContent = newMode === 'timeline' ? 'Timeline Mode' : 'Sequencer Mode';
         if(appServices.renderTimeline) appServices.renderTimeline();
@@ -299,7 +289,7 @@ const appServices = {
 };
 
 function cacheUIElements() {
-    // ... (same as response #59) ...
+    // ... (same as response #63) ...
     uiElementsCache.desktop = document.getElementById('desktop');
     uiElementsCache.taskbar = document.getElementById('taskbar');
     uiElementsCache.topTaskbar = document.getElementById('topTaskbar');
@@ -325,20 +315,24 @@ function cacheUIElements() {
 
 async function initializeSnugOS() {
     console.log(`[Main initializeSnugOS] Initializing SnugOS v${Constants.APP_VERSION}...`);
-    cacheUIElements();
+    cacheUIElements(); // Cache static elements first
 
     // Initialize modules, passing the fully defined appServices object
+    // These initialize functions will typically store the appServices reference
+    // for their own internal use.
     State.initializeStateModule(appServices);
     AudioModule.initializeAudioModule(appServices);
-    UI.initializeUIModule(appServices);
+    UI.initializeUIModule(appServices); // This will call initialize on its sub-modules too
     GlobalControlsUI.initializeGlobalControlsUIModule(appServices);
     EventHandlers.initializeEventHandlersModule(appServices);
 
-    EventHandlers.initializePrimaryEventListeners(); // Uses localAppServices set within its module
+    // Now that modules have appServices, setup event listeners that might use them
+    EventHandlers.initializePrimaryEventListeners(); 
 
-    GlobalControlsUI.openGlobalControlsWindow((elements) => { // This creates UI and then attaches events
+    // Global controls window elements are created dynamically, so events are attached in its callback
+    GlobalControlsUI.openGlobalControlsWindow((elements) => {
         if (elements) {
-            // Cache elements from global controls window
+            // Cache these dynamically created elements
             uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
             uiElementsCache.recordBtnGlobal = elements.recordBtnGlobal;
             uiElementsCache.stopBtnGlobal = elements.stopBtnGlobal;
@@ -349,10 +343,10 @@ async function initializeSnugOS() {
             uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal;
             uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
             uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal;
-            // Attach events to these newly created elements
-            EventHandlers.attachGlobalControlEvents(elements);
+            // Attach events specifically to these elements from the Global Controls window
+            EventHandlers.attachGlobalControlEvents(elements); 
         } else {
-            console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements.");
+            console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements. Cannot attach events.");
         }
     });
 
@@ -365,7 +359,7 @@ async function initializeSnugOS() {
     }
 
     Utils.setupGenericDropZoneListeners(uiElementsCache.desktop, handleDesktopDrop);
-
+    
     try {
         const storedImageBlob = await appServices.dbGetItem(DESKTOP_BACKGROUND_IDB_KEY);
         if (storedImageBlob) {
@@ -375,7 +369,8 @@ async function initializeSnugOS() {
         } else { applyDesktopBackground(null); }
     } catch (error) { console.error("Error loading initial desktop background:", error); applyDesktopBackground(null); }
     
-    // Ensure Audio Context is started before opening windows that might use Tone.Transport
+    // Ensure Audio Context is definitely started (important for iOS/Safari)
+    // and master chain is ready BEFORE opening windows that might use Tone.Transport or play audio.
     await AudioModule.initAudioContextAndMasterMeter();
 
     if (appServices.openArrangementWindow) appServices.openArrangementWindow();
@@ -386,7 +381,7 @@ async function initializeSnugOS() {
 }
 
 function handleDesktopDrop(file) {
-    // ... (same as response #59) ...
+    // ... (same as response #63) ...
     if (!file) return;
     if (file.name.endsWith('.snug')) {
         appServices.handleProjectFileLoad({ target: { files: [file] } }); 
@@ -419,17 +414,17 @@ function handleDesktopDrop(file) {
 }
 
 function updateClock() {
-    // ... (same as response #59) ...
+    // ... (same as response #63) ...
     if (uiElementsCache.clock) {
         uiElementsCache.clock.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 }
 
 function startPerformanceMonitor() {
-    // ... (same as response #59, ensure checks for appServices functions before calling) ...
+    // ... (same as response #63, ensure checks for appServices functions before calling) ...
     let lastMeterUpdateTime = performance.now();
     const updateLoop = () => {
-        if (appServices.updateMeters) {
+        if (appServices.updateMeters) { // Check if function exists
             appServices.updateMeters(
                 uiElementsCache.masterMeter, 
                 uiElementsCache.masterMeterBarGlobal, 
@@ -457,7 +452,7 @@ function startPerformanceMonitor() {
 }
 
 function applyDesktopBackground(imageUrlOrObjectUrl) {
-    // ... (same as response #59) ...
+    // ... (same as response #63) ...
     if (uiElementsCache.desktop) {
         uiElementsCache.desktop.style.backgroundImage = imageUrlOrObjectUrl ? `url('${imageUrlOrObjectUrl}')` : '';
         uiElementsCache.desktop.style.backgroundSize = imageUrlOrObjectUrl ? 'cover' : '';
@@ -469,7 +464,7 @@ function applyDesktopBackground(imageUrlOrObjectUrl) {
 
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
-    // ... (same as response #59, ensure checks for appServices functions before calling) ...
+    // ... (same as response #63, ensure checks for appServices functions before calling) ...
     const tracksExist = appServices.getTracksState && appServices.getTracksState().length > 0;
     const undoStackExists = appServices.getUndoStackState && appServices.getUndoStackState().length > 0;
     if (tracksExist || undoStackExists) {
