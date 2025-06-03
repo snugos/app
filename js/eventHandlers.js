@@ -19,7 +19,8 @@ import {
     getPlaybackModeState,
     setPlaybackModeState,
     getMidiAccessState,
-    getActiveMIDIInputState
+    getActiveMIDIInputState,
+    getSelectedTimelineClipInfoState, // Import getter for selected clip
 } from './state.js';
 
 let localAppServices = {};
@@ -34,205 +35,116 @@ export function initializeEventHandlersModule(appServicesFromMain) {
     if (!localAppServices.getPlaybackMode && getPlaybackModeState) {
         localAppServices.getPlaybackMode = getPlaybackModeState;
     }
-    if (!localAppServices.showNotification) {
-        localAppServices.showNotification = showNotification;
+}
+export function initializePrimaryEventListeners() {
+    console.log('[EventHandlers] Initializing primary event listeners...');
+    document.getElementById('startMenuButton').addEventListener('click', toggleStartMenu);
+    document.getElementById('playBtn').addEventListener('click', () => localAppServices.togglePlayback ? localAppServices.togglePlayback() : console.warn("togglePlayback not available"));
+    document.getElementById('stopBtn').addEventListener('click', () => localAppServices.stopPlayback ? localAppServices.stopPlayback() : console.warn("stopPlayback not available"));
+    document.getElementById('recordBtn').addEventListener('click', () => localAppServices.toggleRecording ? localAppServices.toggleRecording() : console.warn("toggleRecording not available"));
+    document.getElementById('menuUndo').addEventListener('click', () => localAppServices.undo ? localAppServices.undo() : console.warn("undo not available"));
+    document.getElementById('menuRedo').addEventListener('click', () => localAppServices.redo ? localAppServices.redo() : console.warn("redo not available"));
+    document.getElementById('menuSaveProject').addEventListener('click', () => localAppServices.saveProject ? localAppServices.saveProject() : console.warn("saveProject not available"));
+    document.getElementById('menuLoadProject').addEventListener('click', () => localAppServices.loadProject ? localAppServices.loadProject() : console.warn("loadProject not available"));
+    document.getElementById('menuExportWav').addEventListener('click', () => localAppServices.exportToWav ? localAppServices.exportToWav() : console.warn("exportToWav not available"));
+    document.getElementById('menuToggleFullScreen').addEventListener('click', toggleFullScreen);
+    document.getElementById('menuNewProject').addEventListener('click', () => localAppServices.newProject ? localAppServices.newProject() : console.warn("newProject not available"));
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    console.log('[EventHandlers] Primary event listeners initialized.');
+}
+function toggleStartMenu() {
+    const startMenu = document.getElementById('startMenu');
+    if (startMenu) {
+        const isHidden = startMenu.classList.contains('hidden');
+        if (isHidden) {
+            startMenu.classList.remove('hidden');
+            setTimeout(() => { // Add listener after menu is shown to prevent immediate self-closing
+                document.addEventListener('click', closeStartMenuOnClickOutside, { once: true });
+            }, 0);
+        } else {
+            startMenu.classList.add('hidden');
+            document.removeEventListener('click', closeStartMenuOnClickOutside);
+        }
+    }
+}
+function closeStartMenuOnClickOutside(event) {
+    const startMenu = document.getElementById('startMenu');
+    const startButton = document.getElementById('startMenuButton');
+    if (startMenu && !startMenu.contains(event.target) && !startButton.contains(event.target)) {
+        startMenu.classList.add('hidden');
+    } else {
+        // If the menu is still open, re-attach the listener
+        document.addEventListener('click', closeStartMenuOnClickOutside, { once: true });
     }
 }
 
-export let currentlyPressedComputerKeys = {};
-let currentOctaveShift = 0;
-const MIN_OCTAVE_SHIFT = -2;
-const MAX_OCTAVE_SHIFT = 2;
-
-export function initializePrimaryEventListeners(appContext) {
-    const services = appContext || localAppServices;
-    const uiCache = services.uiElementsCache || {};
-    // console.log('[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:', Object.keys(uiCache));
-
-    try {
-        if (uiCache.startButton) {
-            uiCache.startButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (uiCache.startMenu) {
-                    uiCache.startMenu.classList.toggle('hidden');
-                } else {
-                    console.error('[EventHandlers] Start Menu (uiCache.startMenu) not found!');
-                }
-            });
+function handleGlobalKeyDown(e) {
+    // Basic Undo/Redo
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+            if (localAppServices.redo) localAppServices.redo();
+        } else {
+            if (localAppServices.undo) localAppServices.undo();
         }
+        return;
+    }
+     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        if (localAppServices.newProject) localAppServices.newProject();
+        return;
+    }
 
-        if (uiCache.desktop) {
-            uiCache.desktop.addEventListener('click', () => {
-                if (uiCache.startMenu && !uiCache.startMenu.classList.contains('hidden')) {
-                    uiCache.startMenu.classList.add('hidden');
-                }
-                const activeContextMenu = document.querySelector('.context-menu#snug-context-menu');
-                if (activeContextMenu) {
-                    activeContextMenu.remove();
-                }
-            });
+    // Play/Stop with spacebar, but not if a text input is focused
+    if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        e.preventDefault();
+        if (localAppServices.togglePlayback) localAppServices.togglePlayback();
+        return;
+    }
+    
+    // Delete selected clip
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+         if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return; // Don't delete clips while typing
+        e.preventDefault();
+        
+        const selectedClipInfo = getSelectedTimelineClipInfoState();
+        if (selectedClipInfo && selectedClipInfo.clipId) {
+             const track = getTrackById(selectedClipInfo.trackId);
+             if (track) {
+                 showConfirmationDialog('Are you sure you want to delete this clip?', () => {
+                     track.removeClip(selectedClipInfo.clipId);
+                     if (localAppServices.updateArrangementView) localAppServices.updateArrangementView();
+                     if (localAppServices.setSelectedTimelineClip) localAppServices.setSelectedTimelineClip(null, null); // Deselect
+                 });
+             }
+        }
+    }
 
-            uiCache.desktop.addEventListener('contextmenu', (e) => {
+
+    // Synth note playing with computer keyboard
+    if (localAppServices.getArmedTrackId && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        const armedTrackId = getArmedTrackId();
+        if (armedTrackId) {
+            const track = getTrackById(armedTrackId);
+            if (track && track.type === 'Synth' && track.playNote && Constants.computerKeySynthMap[e.key]) {
                 e.preventDefault();
-                const menuItems = [
-                    { label: "Add Synth Track", action: () => { if(services.addTrack && typeof services.addTrack === 'function') services.addTrack('Synth', {_isUserActionPlaceholder: true}); else console.warn("services.addTrack is not a function") } },
-                    { label: "Add Slicer Sampler Track", action: () => { if(services.addTrack && typeof services.addTrack === 'function') services.addTrack('Sampler', {_isUserActionPlaceholder: true}); } },
-                    { label: "Add Sampler (Pads)", action: () => { if(services.addTrack && typeof services.addTrack === 'function') services.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); } },
-                    { label: "Add Instrument Sampler Track", action: () => { if(services.addTrack && typeof services.addTrack === 'function') services.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); } },
-                    { label: "Add Audio Track", action: () => { if(services.addTrack && typeof services.addTrack === 'function') services.addTrack('Audio', {_isUserActionPlaceholder: true}); } },
-                    { separator: true },
-                    { label: "Open Sound Browser", action: () => { if(services.openSoundBrowserWindow && typeof services.openSoundBrowserWindow === 'function') services.openSoundBrowserWindow(); } },
-                    { label: "Open Timeline", action: () => { if(services.openTimelineWindow && typeof services.openTimelineWindow === 'function') services.openTimelineWindow(); } },
-                    { label: "Open Mixer", action: () => { if(services.openMixerWindow && typeof services.openMixerWindow === 'function') services.openMixerWindow(); } },
-                    { label: "Open Master Effects", action: () => { if(services.openMasterEffectsRackWindow && typeof services.openMasterEffectsRackWindow === 'function') services.openMasterEffectsRackWindow(); } },
-                    { separator: true },
-                    { label: "Upload Custom Background", action: () => { if(services.triggerCustomBackgroundUpload && typeof services.triggerCustomBackgroundUpload === 'function') services.triggerCustomBackgroundUpload(); } },
-                    { label: "Remove Custom Background", action: () => { if(services.removeCustomDesktopBackground && typeof services.removeCustomDesktopBackground === 'function') services.removeCustomDesktopBackground(); } },
-                    { separator: true },
-                    { label: "Toggle Full Screen", action: toggleFullScreen }
-                ];
-                if (typeof createContextMenu === 'function') {
-                    createContextMenu(e, menuItems, services);
-                } else {
-                    console.error("[EventHandlers] createContextMenu function not available.");
+                // To prevent re-triggering on key hold, we can check e.repeat
+                if (!e.repeat) {
+                    track.playNote(Constants.computerKeySynthMap[e.key], '8n');
                 }
-            });
-        }
-
-        const menuActions = {
-            menuAddSynthTrack: () => { if (services.addTrack && typeof services.addTrack === 'function') services.addTrack('Synth', {_isUserActionPlaceholder: true}); },
-            menuAddSamplerTrack: () => { if (services.addTrack && typeof services.addTrack === 'function') services.addTrack('Sampler', {_isUserActionPlaceholder: true}); },
-            menuAddDrumSamplerTrack: () => { if (services.addTrack && typeof services.addTrack === 'function') services.addTrack('DrumSampler', {_isUserActionPlaceholder: true}); },
-            menuAddInstrumentSamplerTrack: () => { if (services.addTrack && typeof services.addTrack === 'function') services.addTrack('InstrumentSampler', {_isUserActionPlaceholder: true}); },
-            menuAddAudioTrack: () => { if (services.addTrack && typeof services.addTrack === 'function') services.addTrack('Audio', {_isUserActionPlaceholder: true}); },
-            menuOpenSoundBrowser: () => { if (services.openSoundBrowserWindow && typeof services.openSoundBrowserWindow === 'function') services.openSoundBrowserWindow(); },
-            menuOpenTimeline: () => { if (services.openTimelineWindow && typeof services.openTimelineWindow === 'function') services.openTimelineWindow(); },
-            menuOpenMixer: () => { if (services.openMixerWindow && typeof services.openMixerWindow === 'function') services.openMixerWindow(); },
-            menuOpenMasterEffects: () => { if (services.openMasterEffectsRackWindow && typeof services.openMasterEffectsRackWindow === 'function') services.openMasterEffectsRackWindow(); },
-            menuUndo: () => { if (services.undoLastAction && typeof services.undoLastAction === 'function') services.undoLastAction(); },
-            menuRedo: () => { if (services.redoLastAction && typeof services.redoLastAction === 'function') services.redoLastAction(); },
-            menuSaveProject: () => { if (services.saveProject && typeof services.saveProject === 'function') services.saveProject(); },
-            menuLoadProject: () => { if (services.loadProject && typeof services.loadProject === 'function') services.loadProject(); },
-            menuExportWav: () => { if (services.exportToWav && typeof services.exportToWav === 'function') services.exportToWav(); },
-            menuToggleFullScreen: toggleFullScreen,
-        };
-
-        for (const menuItemId in menuActions) {
-            if (uiCache[menuItemId]) {
-                uiCache[menuItemId].addEventListener('click', () => {
-                    if (typeof menuActions[menuItemId] === 'function') {
-                        menuActions[menuItemId]();
-                    } else {
-                        console.warn(`[EventHandlers] Action for menu item "${menuItemId}" is not a function or service is unavailable.`);
-                    }
-                    if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
-                });
             }
         }
-
-        if (uiCache.loadProjectInput) {
-            uiCache.loadProjectInput.addEventListener('change', (e) => {
-                if (services.handleProjectFileLoad && typeof services.handleProjectFileLoad === 'function') {
-                    services.handleProjectFileLoad(e);
-                } else {
-                    console.error("[EventHandlers] handleProjectFileLoad service not available.");
-                }
-            });
-        }
-
-    } catch (error) {
-        console.error("[EventHandlers initializePrimaryEventListeners] Error:", error);
-        const notify = services.showNotification || localAppServices.showNotification || showNotification;
-        if (typeof notify === 'function') notify("Error setting up primary interactions.", 5000);
     }
 }
-
-export function attachGlobalControlEvents(elements) {
-    // ... (stop, record, tempo, MIDI, playback mode toggle listeners remain the same as response #30)
-    if (!elements) { console.error("[EventHandlers attachGlobalControlEvents] Elements object is null."); return; }
-    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
-    const showUINotification = localAppServices.showNotification || showNotification;
-
-    if (playBtnGlobal) {
-        playBtnGlobal.addEventListener('click', async () => {
-            console.log("[EventHandlers PlayBtn] Global Play button CLICKED."); // Enhanced LOG
-            try {
-                if (!localAppServices.initAudioContextAndMasterMeter || typeof localAppServices.initAudioContextAndMasterMeter !== 'function') {
-                    console.error("initAudioContextAndMasterMeter service not available.");
-                    showUINotification("Audio system critical error.", 3000); return;
-                }
-                const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
-                if (!audioReady) {
-                    showUINotification("Audio context not ready. Click again.", 3000);
-                    console.warn("[EventHandlers PlayBtn] Audio context not ready.");
-                    return;
-                }
-                if (typeof Tone === 'undefined' || !Tone.Transport) {
-                    console.error("[EventHandlers PlayBtn] Tone or Tone.Transport unavailable!");
-                    showUINotification("Audio engine (Tone.Transport) error.", 3000);
-                    return;
-                }
-
-                const transport = Tone.Transport;
-                console.log(`[EventHandlers PlayBtn] Current Transport state: ${transport.state}, time: ${transport.seconds.toFixed(2)}s`);
-                const tracks = (localAppServices.getTracks && typeof localAppServices.getTracks === 'function') ? localAppServices.getTracks() : [];
-                console.log(`[EventHandlers PlayBtn] Found ${tracks.length} tracks. Playback Mode: ${localAppServices.getPlaybackMode ? localAppServices.getPlaybackMode() : 'unknown'}`);
-
-                tracks.forEach(track => { if (track && typeof track.stopPlayback === 'function') track.stopPlayback(); });
-                transport.cancel(0);
-
-                if (transportKeepAliveBufferSource && !transportKeepAliveBufferSource.disposed) {
-                    try { transportKeepAliveBufferSource.stop(0); transportKeepAliveBufferSource.dispose(); } catch (e) {}
-                    transportKeepAliveBufferSource = null;
-                }
-
-                if (transport.state === 'stopped' || transport.state === 'paused') {
-                    const wasPaused = transport.state === 'paused';
-                    const startTime = wasPaused ? transport.seconds : 0;
-                    if (!wasPaused) transport.position = 0;
-                    console.log(`[EventHandlers PlayBtn] Action: STARTING/RESUMING transport from ${startTime.toFixed(2)}s.`);
-                    transport.loop = true; transport.loopStart = 0;
-                    const projectLoopEnd = (localAppServices.getProjectLoopEnd && typeof localAppServices.getProjectLoopEnd === 'function') ? localAppServices.getProjectLoopEnd() : 3600;
-                    transport.loopEnd = projectLoopEnd;
-
-                    if (!silentKeepAliveBuffer && Tone.context) { /* ... */ }
-                    if (silentKeepAliveBuffer) { /* ... */ }
-
-                    console.log(`[EventHandlers PlayBtn] Scheduling playback for ${tracks.length} tracks...`);
-                    for (const track of tracks) {
-                        if (track && typeof track.schedulePlayback === 'function') {
-                            // console.log(`[EventHandlers PlayBtn] Calling schedulePlayback for track ${track.id} ("${track.name}")`);
-                            await track.schedulePlayback(startTime, transport.loopEnd);
-                        } else if (track) { console.warn(`[EventHandlers PlayBtn] Track ${track.id} missing schedulePlayback.`); }
-                    }
-                    console.log(`[EventHandlers PlayBtn] Playback scheduling complete. Starting transport.`);
-                    transport.start(Tone.now() + 0.05, startTime);
-                    if (playBtnGlobal) playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>`;
-                } else {
-                    console.log(`[EventHandlers PlayBtn] Action: PAUSING transport.`);
-                    transport.pause();
-                    if (playBtnGlobal) playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>`;
-                }
-                console.log(`[EventHandlers PlayBtn] New Transport state: ${transport.state}`);
-            } catch (error) { /* ... error handling ... */ }
-        });
-    } else { console.warn("[EventHandlers] playBtnGlobal not found."); }
-    // ... (stop, record, tempo, MIDI, playback mode toggle listeners remain the same as response #30)
-}
-
-export function setupMIDI() { /* ... same as response #30 ... */ }
-function onMIDISuccess(midiAccess) { /* ... same as response #30 ... */ }
-function onMIDIFailure(msg, notifyFn) { /* ... same as response #30 ... */ }
-export function selectMIDIInput(deviceId, silent = false) { /* ... same as response #30 ... */ }
-function handleMIDIMessage(message) { /* ... same as response #30 ... */ }
-// document.addEventListener('keydown', ...); // same as response #30
-// document.addEventListener('keyup', ...); // same as response #30
-export function handleTrackMute(trackId) { /* ... same as response #30 ... */ }
-export function handleTrackSolo(trackId) { /* ... same as response #30 ... */ }
-export function handleTrackArm(trackId) { /* ... same as response #30 ... */ }
-export function handleRemoveTrack(trackId) { /* ... same as response #30 (robust version) ... */ }
-
-// --- Window Opening Handlers (called via appServices from UI) ---
+export function setupMIDI(onMIDISuccess, onMIDIFailure) { /* ... same as previous ... */ }
+export function selectMIDIInput(deviceId) { /* ... same as previous ... */ }
+function onMIDIMessage(event) { /* ... same as previous ... */ }
+export function attachGlobalControlEvents(uiElements) { /* ... same as previous ... */ }
+export function handleTrackMute(trackId) { /* ... same as previous ... */ }
+export function handleTrackSolo(trackId) { /* ... same as previous ... */ }
+export function handleTrackArm(trackId) { /* ... same as previous ... */ }
+export function handleRemoveTrack(trackId) { /* ... same as previous ... */ }
 export function handleOpenTrackInspector(trackId) {
     console.log(`[EventHandlers handleOpenTrackInspector] Called for trackId: ${trackId}`); // LOG ADDED
     if (localAppServices.openTrackInspectorWindow && typeof localAppServices.openTrackInspectorWindow === 'function') {
@@ -247,9 +159,9 @@ export function handleOpenEffectsRack(trackId) {
 }
 export function handleOpenSequencer(trackId) {
     console.log(`[EventHandlers handleOpenSequencer] Called for trackId: ${trackId}`); // LOG ADDED
-    if (localAppServices.openTrackSequencerWindow && typeof localAppServices.openTrackSequencerWindow === 'function') {
-        localAppServices.openTrackSequencerWindow(trackId);
-    } else { console.error("[EventHandlers] openTrackSequencerWindow service not available or not a function."); }
+    if (localAppServices.openSequencerWindow && typeof localAppServices.openSequencerWindow === 'function') {
+        localAppServices.openSequencerWindow(trackId);
+    } else { console.error("[EventHandlers] openSequencerWindow service not available or not a function."); }
 }
 
 function toggleFullScreen() { /* ... same as response #30 ... */ }
