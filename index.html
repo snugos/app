@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
@@ -41,7 +42,8 @@
         </div>
 
     <div id="topTaskbar" class="fixed top-0 left-0 right-0 h-8 bg-slate-900/80 backdrop-blur-sm shadow-md flex items-center px-2 z-[1000]">
-        <div class="flex-grow"></div> <div id="global-controls" class="flex items-center space-x-2 text-sm">
+        <div class="flex-grow"></div>
+        <div id="global-controls" class="flex items-center space-x-2 text-sm">
             <span id="tempoDisplay" class="px-2">120 BPM</span>
             <button id="playBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md" title="Play/Pause"><i class="fas fa-play"></i></button>
             <button id="stopBtn" class="px-2 py-1 hover:bg-slate-700 rounded-md" title="Stop"><i class="fas fa-stop"></i></button>
@@ -52,19 +54,21 @@
             </div>
             <span id="cpu-usage" class="px-2 text-xs text-slate-400">CPU: 0%</span>
         </div>
-        <div class="flex-grow"></div> <div id="clock" class="px-3 py-1 text-sm">12:00 PM</div>
+        <div class="flex-grow"></div> 
+        <div id="clock" class="px-3 py-1 text-sm">12:00 PM</div>
     </div>
 
     <div id="taskbar" class="fixed bottom-0 left-0 right-0 h-8 bg-slate-900/80 backdrop-blur-sm shadow-lg flex items-center px-2 z-[1000]">
         <div id="startMenuButton" class="px-3 py-1 bg-slate-700 hover:bg-blue-600 rounded-md cursor-pointer text-sm font-bold mr-2">
-            SnugOS
+            CREATE
         </div>
-        </div>
+    </div>
 
     <div id="notification-area" class="fixed bottom-10 right-4 z-[2000] flex flex-col items-end space-y-2">
-        </div>
+    </div>
 
-    <div id="startMenu" class="hidden absolute bottom-8 left-2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl w-64 p-2 z-[10001]"> <ul id="fileMenu" class="text-sm">
+    <div id="startMenu" class="hidden absolute bottom-8 left-2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl w-64 p-2 z-[10001]">
+        <ul id="fileMenu" class="text-sm">
             <li id="menuNewProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">New Project</li>
             <li><hr class="my-1 border-slate-600"></li>
             <li id="menuUndo" class="disabled px-3 py-1.5 cursor-default opacity-50 rounded-md" title="Undo">Undo</li>
@@ -80,6 +84,8 @@
 
     <input type="file" id="file-input-project" class="hidden" accept=".snug">
     <input type="file" id="file-input-audio" class="hidden" accept="audio/*" multiple>
-    <input type="file" id="file-input-background" class="hidden" accept="image/*"> <script type="module" src="js/main.js"></script>
+    <input type="file" id="file-input-background" class="hidden" accept="image/*"> 
+    
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
