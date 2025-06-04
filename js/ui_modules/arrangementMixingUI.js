@@ -31,9 +31,10 @@ export function openSequencerWindow(trackId, savedState = null) {
     }
 
     const windowId = `sequencer-${trackId}`;
-    if (!savedState && localAppServices.getWindowByIdState && localAppServices.getWindowByIdState(windowId)?.element) {
-        localAppServices.getWindowByIdState(windowId).focus();
-        return localAppServices.getWindowByIdState(windowId);
+    // Use getWindowById, as assigned in main.js appServices
+    if (!savedState && localAppServices.getWindowById && localAppServices.getWindowById(windowId)?.element) {
+        localAppServices.getWindowById(windowId).focus();
+        return localAppServices.getWindowById(windowId);
     }
 
     const activeSequence = track.getActiveSequence ? track.getActiveSequence() : null;
@@ -65,7 +66,7 @@ export function openSequencerWindow(trackId, savedState = null) {
         barsInput.addEventListener('change', (e) => {
             const newNumBars = parseInt(e.target.value);
             if (newNumBars > 0 && newNumBars <= Constants.MAX_BARS) {
-                if (track.updateActiveSequenceBars) track.updateActiveSequenceBars(newNumBars); // Assuming this method exists on track
+                if (track.updateActiveSequenceBars) track.updateActiveSequenceBars(newNumBars);
                 renderSequencerGrid(track, gridContainer, rows, rowLabels, newNumBars);
             } else {
                 if (localAppServices.showNotification) localAppServices.showNotification(`Invalid number of bars (1-${Constants.MAX_BARS}).`, "warning");
@@ -85,7 +86,7 @@ export function openSequencerWindow(trackId, savedState = null) {
 
         sequencerWindow.element.querySelector(`#addSequenceBtn-${track.id}`)?.addEventListener('click', () => {
             if (!track.addNewSequence || !track.setActiveSequence) return;
-            const newSeqId = track.addNewSequence(); // This should handle undo internally if needed
+            const newSeqId = track.addNewSequence();
             track.setActiveSequence(newSeqId);
             populateSequenceSelect(track, sequenceSelect);
             const newActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
@@ -95,18 +96,18 @@ export function openSequencerWindow(trackId, savedState = null) {
             }
         });
          sequencerWindow.element.querySelector(`#removeSequenceBtn-${track.id}`)?.addEventListener('click', () => {
-            if (!track.sequences || !track.removeSequence || !track.getActiveSequence) return; // Removed getSequenceById, rely on getActiveSequence
+            if (!track.sequences || !track.removeSequence || !track.getActiveSequence) return;
             const currentSeq = track.getActiveSequence();
             if (track.sequences.length > 1 && currentSeq) {
                 if (localAppServices.showConfirmationDialog) {
                     localAppServices.showConfirmationDialog(`Delete sequence "${currentSeq.name || currentSeq.id.slice(-4)}"?`, () => {
-                        track.removeSequence(currentSeq.id); // This should handle undo internally if needed
+                        track.removeSequence(currentSeq.id);
                         populateSequenceSelect(track, sequenceSelect);
                         const newActiveSeq = track.getActiveSequence();
                         if (newActiveSeq) {
                             barsInput.value = newActiveSeq.bars;
                             renderSequencerGrid(track, gridContainer, rows, rowLabels, newActiveSeq.bars);
-                        } else { // No sequences left or active one couldn't be determined
+                        } else {
                             gridContainer.innerHTML = '<p class="text-center text-slate-400 p-4">No active sequence.</p>';
                             barsInput.value = 1;
                         }
@@ -173,12 +174,10 @@ function renderSequencerGrid(track, gridContainer, rows, rowLabels, numBars) {
     gridContainer.style.gridTemplateColumns = `60px repeat(${totalSteps}, minmax(25px, 1fr))`;
     gridContainer.style.gridTemplateRows = `20px repeat(${rows}, 30px)`;
 
-    // Header Corner
     gridContainer.appendChild(Object.assign(document.createElement('div'), {
         className: 'sequencer-header-cell sequencer-label-cell bg-slate-700 dark:bg-slate-850 sticky top-0 left-0 z-20'
     }));
 
-    // Time Headers
     for (let step = 0; step < totalSteps; step++) {
         const bar = Math.floor(step / stepsPerBar) + 1;
         const beat = Math.floor((step % stepsPerBar) / (stepsPerBar / 4)) + 1;
@@ -186,12 +185,11 @@ function renderSequencerGrid(track, gridContainer, rows, rowLabels, numBars) {
         const cell = document.createElement('div');
         cell.className = 'sequencer-header-cell text-xxs flex items-center justify-center bg-slate-700 dark:bg-slate-850 sticky top-0 z-10';
         cell.textContent = `${bar}.${beat}.${subStep}`;
-        if (step % (stepsPerBar / 4) === 0) cell.classList.add('border-l', 'border-slate-500 dark:border-slate-700'); // Beat marker
-        if (step % stepsPerBar === 0) cell.classList.add('!border-l-2', '!border-slate-400 dark:!border-slate-600'); // Bar marker
+        if (step % (stepsPerBar / 4) === 0) cell.classList.add('border-l', 'border-slate-500 dark:border-slate-700');
+        if (step % stepsPerBar === 0) cell.classList.add('!border-l-2', '!border-slate-400 dark:!border-slate-600');
         gridContainer.appendChild(cell);
     }
 
-    // Row Labels and Step Cells
     for (let row = 0; row < rows; row++) {
         const labelCell = document.createElement('div');
         labelCell.className = 'sequencer-label-cell text-xxs flex items-center justify-end pr-1 bg-slate-700 dark:bg-slate-850 sticky left-0 z-10';
@@ -202,8 +200,8 @@ function renderSequencerGrid(track, gridContainer, rows, rowLabels, numBars) {
             const cell = document.createElement('div');
             let bgClass = (Math.floor(step / (stepsPerBar / 4)) % 2 === 0) ? 'bg-slate-800 dark:bg-slate-900' : 'bg-slate-850 dark:bg-gray-800';
             cell.className = `sequencer-step-cell ${bgClass} hover:bg-blue-700`;
-            if (step % (stepsPerBar / 4) === 0) cell.classList.add('border-l', 'border-slate-600 dark:border-slate-750'); // Beat marker
-            if (step % stepsPerBar === 0) cell.classList.add('!border-l-2', '!border-slate-500 dark:!border-slate-650'); // Bar marker
+            if (step % (stepsPerBar / 4) === 0) cell.classList.add('border-l', 'border-slate-600 dark:border-slate-750');
+            if (step % stepsPerBar === 0) cell.classList.add('!border-l-2', '!border-slate-500 dark:!border-slate-650');
 
             const noteData = activeSequence.steps.find(s => s.time === step && s.pitchOrPad === rowLabels[row]);
             let trackTypeClass = '';
@@ -212,21 +210,19 @@ function renderSequencerGrid(track, gridContainer, rows, rowLabels, numBars) {
             else if (track.type === 'DrumSampler') trackTypeClass = 'active-drum-sampler';
             else if (track.type === 'InstrumentSampler') trackTypeClass = 'active-instrument-sampler';
 
-
             if (noteData) {
                 cell.classList.add(trackTypeClass);
                 cell.dataset.velocity = noteData.velocity;
             }
 
             cell.addEventListener('click', () => {
-                if (!track.toggleStepInSequence) return; // Assuming a method on Track class
-                const currentSeqId = track.activeSequenceId; // Get current sequence ID before toggle
+                if (!track.toggleStepInSequence) return;
+                const currentSeqId = track.activeSequenceId;
                 if (!currentSeqId) return;
 
-                track.toggleStepInSequence(rowLabels[row], step, currentSeqId); // Track method handles undo
-                // Update UI based on new state from track.getActiveSequence()
+                track.toggleStepInSequence(rowLabels[row], step, currentSeqId);
                 const updatedActiveSequence = track.getActiveSequence();
-                if (!updatedActiveSequence) return; // Should not happen if toggleStep is successful
+                if (!updatedActiveSequence) return;
                 const isNowActive = updatedActiveSequence.steps.some(s => s.time === step && s.pitchOrPad === rowLabels[row]);
 
                 cell.classList.toggle(trackTypeClass, isNowActive);
@@ -249,40 +245,41 @@ export function openArrangementWindow(onReadyCallback, savedState = null) {
     // --- DETAILED CRITICAL CHECK ---
     if (!localAppServices) {
         console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices object itself is not available!");
-        alert("Timeline Error: Core services missing (1).");
+        if(localAppServices && typeof localAppServices.showNotification === 'function') localAppServices.showNotification("Timeline Error: Core services missing (1).", "error"); else alert("Timeline Error: Core services missing (1).");
         return null;
     }
-    if (typeof localAppServices.getWindowByIdState !== 'function') {
-        console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices.getWindowByIdState is NOT A FUNCTION. Type:", typeof localAppServices.getWindowByIdState, "Value:", localAppServices.getWindowByIdState);
-        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
-        alert("Timeline Error: Core services missing (2).");
+    // Corrected check: In main.js, State.getWindowByIdState is assigned to appServices.getWindowById
+    if (typeof localAppServices.getWindowById !== 'function') {
+        console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices.getWindowById is NOT A FUNCTION. Type:", typeof localAppServices.getWindowById, "Value:", localAppServices.getWindowById);
+        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices))); // Log the object
+        if(localAppServices && typeof localAppServices.showNotification === 'function') localAppServices.showNotification("Timeline Error: Core services missing (2).", "error"); else alert("Timeline Error: Core services missing (2).");
         return null;
     }
     if (typeof localAppServices.createWindow !== 'function') {
         console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices.createWindow is NOT A FUNCTION. Type:", typeof localAppServices.createWindow, "Value:", localAppServices.createWindow);
-        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
-        alert("Timeline Error: Core services missing (3).");
+        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices))); // Log the object
+        if(localAppServices && typeof localAppServices.showNotification === 'function') localAppServices.showNotification("Timeline Error: Core services missing (3).", "error"); else alert("Timeline Error: Core services missing (3).");
         return null;
     }
     // --- END DETAILED CRITICAL CHECK ---
 
-
-    if (!savedState && localAppServices.getWindowByIdState(windowId)?.element) {
-        localAppServices.getWindowByIdState(windowId).focus();
-        return localAppServices.getWindowByIdState(windowId);
+    // Use getWindowById (the corrected property name)
+    if (!savedState && localAppServices.getWindowById(windowId)?.element) {
+        localAppServices.getWindowById(windowId).focus();
+        return localAppServices.getWindowById(windowId);
     }
 
     const contentHTML = `
         <div id="timeline-container" class="w-full h-full flex flex-col bg-slate-800 text-slate-300 text-xs">
             <div id="timeline-header" class="h-6 flex-shrink-0 bg-slate-700 dark:bg-slate-850 border-b border-slate-600 dark:border-slate-700 relative overflow-hidden">
                 <div id="timeline-ruler-labels" class="absolute top-0 left-0 h-full flex items-center z-10" style="width: ${Constants.TIMELINE_TRACK_NAME_WIDTH || 120}px; background-color: var(--timeline-track-name-bg, #2a2a2a);">
-                    </div>
+                </div>
                 <div id="timeline-ruler" class="absolute top-0 h-full bg-slate-700 dark:bg-slate-850" style="left: ${Constants.TIMELINE_TRACK_NAME_WIDTH || 120}px;">
-                    </div>
+                </div>
             </div>
             <div id="timeline-tracks-container" class="flex-grow overflow-auto relative">
                 <div id="timeline-tracks-area" class="relative min-h-full">
-                    </div>
+                </div>
                 <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-red-500 z-20 pointer-events-none" style="left: ${Constants.TIMELINE_TRACK_NAME_WIDTH || 120}px; display: none;"></div>
             </div>
         </div>`;
@@ -303,19 +300,19 @@ export function openArrangementWindow(onReadyCallback, savedState = null) {
     const timelineWindow = localAppServices.createWindow(windowId, 'Arrangement', contentHTML, timelineOptions);
 
     if (timelineWindow?.element) {
-        renderTimeline(); // Initial render
+        renderTimeline();
         const tracksContainer = timelineWindow.element.querySelector('#timeline-tracks-container');
         const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-        const rulerLabels = timelineWindow.element.querySelector('#timeline-ruler-labels'); // For vertical scroll sync
+        const rulerLabels = timelineWindow.element.querySelector('#timeline-ruler-labels');
 
         if (tracksContainer && ruler && rulerLabels) {
             tracksContainer.addEventListener('scroll', () => {
                 ruler.style.transform = `translateX(-${tracksContainer.scrollLeft}px)`;
-                rulerLabels.style.transform = `translateY(-${tracksContainer.scrollTop}px)`; // Sync vertical scroll of name area
-                updatePlayheadPosition(); // Update playhead based on new scroll position
+                rulerLabels.style.transform = `translateY(-${tracksContainer.scrollTop}px)`;
+                updatePlayheadPosition();
             });
             setupTimelineDropHandling(tracksContainer);
-            setupClipInteractions(tracksContainer); // Setup drag/resize for clips
+            setupClipInteractions(tracksContainer);
         }
          if (typeof onReadyCallback === 'function') {
             onReadyCallback(timelineWindow);
@@ -338,22 +335,21 @@ function setupTimelineDropHandling(tracksContainer) {
         const dropDataString = event.dataTransfer.getData('application/json');
         const files = event.dataTransfer.files;
 
-        const pixelsPerSecond = parseFloat(tracksArea.dataset.pixelsPerSecond || "30"); // Default if not set
+        const pixelsPerSecond = parseFloat(tracksArea.dataset.pixelsPerSecond || "30");
         const trackNameWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').replace('px', '')) || Constants.TIMELINE_TRACK_NAME_WIDTH || 120;
 
-        const tracksContainerRect = tracksContainer.getBoundingClientRect(); // Use container rect for clientX/Y reference
+        const tracksContainerRect = tracksContainer.getBoundingClientRect();
         const dropXInTracksContainer = event.clientX - tracksContainerRect.left + tracksContainer.scrollLeft;
         const dropYInTracksContainer = event.clientY - tracksContainerRect.top + tracksContainer.scrollTop;
-        const dropXRelativeToGrid = dropXInTracksContainer - trackNameWidth; // Adjust for name area width
+        const dropXRelativeToGrid = dropXInTracksContainer - trackNameWidth;
         const timeAtDrop = Math.max(0, dropXRelativeToGrid / pixelsPerSecond);
 
         const bpmForSnap = (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : 120;
-        const snappedStartTime = snapTimeToGrid(timeAtDrop, bpmForSnap, pixelsPerSecond, false, '16n'); // Snap to 16th note
+        const snappedStartTime = snapTimeToGrid(timeAtDrop, bpmForSnap, pixelsPerSecond, false, '16n');
 
         const trackElements = Array.from(tracksArea.querySelectorAll('.timeline-track-lane'));
         let targetTrackId = null;
         for (const trackEl of trackElements) {
-            // Compare dropY against trackEl.offsetTop relative to tracksArea, not tracksContainer
             if (dropYInTracksContainer >= trackEl.offsetTop && dropYInTracksContainer < trackEl.offsetTop + trackEl.offsetHeight) {
                 targetTrackId = trackEl.dataset.trackId;
                 break;
@@ -363,7 +359,6 @@ function setupTimelineDropHandling(tracksContainer) {
         if (targetTrackId) {
             const dataToPass = dropDataString ? JSON.parse(dropDataString) : (files && files.length > 0 ? files : null);
             if(dataToPass) {
-                // Pass 'services' which is localAppServices
                 localAppServices.handleTimelineLaneDrop(dataToPass, targetTrackId, snappedStartTime, localAppServices);
             } else {
                  if(localAppServices.showNotification) localAppServices.showNotification("No valid data dropped.", "warning");
@@ -375,55 +370,46 @@ function setupTimelineDropHandling(tracksContainer) {
 }
 
 export function renderTimeline() {
-    if (!localAppServices.getWindowByIdState || !localAppServices.getTracksState || !localAppServices.getPlaybackModeState) {
+    if (!localAppServices.getWindowById || !localAppServices.getTracksState || !localAppServices.getPlaybackModeState) { // Changed getWindowByIdState
         console.warn("[ArrangementMixingUI renderTimeline] Required appServices for state access are missing.");
         return;
     }
-    const timelineWindow = localAppServices.getWindowByIdState('timeline');
+    const timelineWindow = localAppServices.getWindowById('timeline'); // Changed getWindowByIdState
     if (!timelineWindow || !timelineWindow.element) return;
 
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
     const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-    const rulerLabelsContainer = timelineWindow.element.querySelector('#timeline-ruler-labels'); // For fixed track name area
+    const rulerLabelsContainer = timelineWindow.element.querySelector('#timeline-ruler-labels');
 
     if (!tracksArea || !ruler || !rulerLabelsContainer) return;
 
-    // Clear previous content
     tracksArea.innerHTML = '';
     ruler.innerHTML = '';
-    // rulerLabelsContainer.innerHTML = ''; // This one is static, just for background
 
     const tracks = localAppServices.getTracksState();
     const bpm = (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : 120;
-    const secondsPerBar = (60 / bpm) * 4; // Assuming 4/4 time signature
-    const totalBarsToRender = Constants.MAX_BARS; // Max bars to draw ruler for
+    const secondsPerBar = (60 / bpm) * 4;
+    const totalBarsToRender = Constants.MAX_BARS;
     const totalDurationSeconds = totalBarsToRender * secondsPerBar;
-
-    // Use a dynamic pixelsPerSecond or a fixed one for now
-    const pixelsPerSecond = 30; // Example: 30 pixels per second
-    tracksArea.dataset.pixelsPerSecond = pixelsPerSecond; // Store for drop handling and playhead
+    const pixelsPerSecond = 30;
+    tracksArea.dataset.pixelsPerSecond = pixelsPerSecond;
 
     const timelineGridWidth = totalDurationSeconds * pixelsPerSecond;
     tracksArea.style.width = `${timelineGridWidth}px`;
     ruler.style.width = `${timelineGridWidth}px`;
 
-    // Draw Ruler Markings
     for (let bar = 1; bar <= totalBarsToRender; bar++) {
         const barTime = (bar - 1) * secondsPerBar;
         const barX = barTime * pixelsPerSecond;
-
         const barMark = document.createElement('div');
         barMark.className = 'absolute top-0 h-full border-l border-slate-500 dark:border-slate-700 w-px';
         barMark.style.left = `${barX}px`;
         ruler.appendChild(barMark);
-
         const label = document.createElement('span');
         label.className = 'absolute top-0.5 left-1 text-xxs text-slate-400';
         label.textContent = `${bar}`;
         barMark.appendChild(label);
-
-        // Subdivisions (beats)
-        for (let beat = 1; beat < 4; beat++) { // 3 beat lines inside a bar
+        for (let beat = 1; beat < 4; beat++) {
             const beatTime = barTime + beat * (secondsPerBar / 4);
             const beatX = beatTime * pixelsPerSecond;
             const beatMark = document.createElement('div');
@@ -433,19 +419,17 @@ export function renderTimeline() {
         }
     }
 
-
     tracks.forEach((track, index) => {
         const trackLane = document.createElement('div');
-        trackLane.className = 'timeline-track-lane h-16 border-b border-slate-600 dark:border-slate-700 relative flex items-stretch'; // items-stretch
+        trackLane.className = 'timeline-track-lane h-16 border-b border-slate-600 dark:border-slate-700 relative flex items-stretch';
         trackLane.dataset.trackId = track.id;
         trackLane.style.backgroundColor = (index % 2 === 0) ? 'var(--timeline-track-bg-odd, #1e1e1e)' : 'var(--timeline-track-bg-even, #1a1a1a)';
-
 
         const nameArea = document.createElement('div');
         nameArea.className = 'timeline-track-lane-name-area sticky left-0 z-10 p-2 h-full flex flex-col justify-center border-r border-slate-600 dark:border-slate-700';
         nameArea.style.minWidth = `${Constants.TIMELINE_TRACK_NAME_WIDTH || 120}px`;
         nameArea.style.maxWidth = `${Constants.TIMELINE_TRACK_NAME_WIDTH || 120}px`;
-        nameArea.style.backgroundColor = 'var(--timeline-track-name-bg, #2a2a2a)'; // Use CSS var
+        nameArea.style.backgroundColor = 'var(--timeline-track-name-bg, #2a2a2a)';
 
         const nameText = document.createElement('div');
         nameText.className = 'timeline-track-name-text text-xs font-medium truncate text-slate-300 dark:text-slate-200';
@@ -472,42 +456,39 @@ export function renderTimeline() {
             buttonsDiv.appendChild(btn);
         });
         nameArea.appendChild(buttonsDiv);
-        trackLane.appendChild(nameArea); // Name area is part of the track lane, not the ruler labels container
+        trackLane.appendChild(nameArea);
 
-        const clipArea = document.createElement('div'); // Create a dedicated area for clips within the lane
-        clipArea.className = 'timeline-clip-area relative flex-grow h-full'; // Takes up remaining space
+        const clipArea = document.createElement('div');
+        clipArea.className = 'timeline-clip-area relative flex-grow h-full';
         trackLane.appendChild(clipArea);
-
 
         (track.timelineClips || []).forEach(clip => {
             const clipEl = document.createElement('div');
-            let clipBgColor = 'bg-sky-600 border-sky-500'; // Default for sequence clips
+            let clipBgColor = 'bg-sky-600 border-sky-500';
             if (clip.type === 'audio') {
                 clipBgColor = 'bg-teal-600 border-teal-500';
             }
-            // Add selection highlight
-            const isSelected = localAppServices.getSelectedTimelineClipInfoState &&
-                               localAppServices.getSelectedTimelineClipInfoState().trackId === track.id &&
-                               localAppServices.getSelectedTimelineClipInfoState().clipId === clip.id;
+            const isSelected = localAppServices.getSelectedTimelineClipInfo && // check if function exists
+                               localAppServices.getSelectedTimelineClipInfo().trackId === track.id &&
+                               localAppServices.getSelectedTimelineClipInfo().clipId === clip.id;
 
             clipEl.className = `absolute h-4/5 top-[10%] rounded overflow-hidden text-white text-xxs p-1 cursor-grab shadow-md ${clipBgColor} ${isSelected ? 'ring-2 ring-yellow-400' : ''}`;
             clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-            clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`; // Ensure min width
+            clipEl.style.width = `${Math.max(5, clip.duration * pixelsPerSecond)}px`;
             clipEl.textContent = clip.name || (clip.type === 'audio' ? `Audio (${clip.id.slice(-4)})` : `Seq (${clip.id.slice(-4)})`);
             clipEl.title = clip.name || clip.id;
             clipEl.dataset.clipId = clip.id;
             clipEl.dataset.trackId = track.id;
-            clipArea.appendChild(clipEl); // Append to clipArea
+            clipArea.appendChild(clipEl);
         });
         tracksArea.appendChild(trackLane);
     });
     updatePlayheadPosition();
 }
 
-
 export function updatePlayheadPosition() {
-    if (!localAppServices.getWindowByIdState || typeof Tone === 'undefined' || typeof Tone.Transport === 'undefined') return;
-    const timelineWindow = localAppServices.getWindowByIdState('timeline');
+    if (!localAppServices.getWindowById || typeof Tone === 'undefined' || typeof Tone.Transport === 'undefined') return; // Changed getWindowByIdState
+    const timelineWindow = localAppServices.getWindowById('timeline'); // Changed getWindowByIdState
     if (!timelineWindow || !timelineWindow.element ) { return; }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
@@ -523,76 +504,60 @@ export function updatePlayheadPosition() {
     playhead.style.display = 'block';
 
     const pixelsPerSecond = parseFloat(tracksArea.dataset.pixelsPerSecond || "30");
-    // trackNameWidth should be the width of the fixed name area
     const trackNameWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').replace('px','')) || Constants.TIMELINE_TRACK_NAME_WIDTH || 120;
     const scrollLeft = tracksContainer.scrollLeft;
-
     const playheadPositionInGrid = Tone.Transport.seconds * pixelsPerSecond;
-    // The playhead's 'left' should be relative to the tracksContainer, considering its scroll and the fixed name area.
-    // So, it's its position on the grid + width of fixed name area - current scroll of the grid.
     playhead.style.left = `${trackNameWidth + playheadPositionInGrid - scrollLeft}px`;
 
-    // Auto-scroll logic (optional, can be performance intensive)
-    const containerWidth = tracksContainer.clientWidth - trackNameWidth; // Visible width of the grid area
+    const containerWidth = tracksContainer.clientWidth - trackNameWidth;
     const playheadVisiblePos = playheadPositionInGrid - scrollLeft;
 
-    if (playheadVisiblePos > containerWidth * 0.8) { // If playhead is past 80% of visible area
-        tracksContainer.scrollLeft += containerWidth * 0.5; // Scroll half a page
-    } else if (playheadVisiblePos < containerWidth * 0.1 && scrollLeft > 0) { // If playhead is near start and not at beginning
+    if (playheadVisiblePos > containerWidth * 0.8) {
+        tracksContainer.scrollLeft += containerWidth * 0.5;
+    } else if (playheadVisiblePos < containerWidth * 0.1 && scrollLeft > 0) {
          tracksContainer.scrollLeft = Math.max(0, scrollLeft - containerWidth * 0.5);
     }
 }
 
-
-export function highlightPlayingStep(trackId, stepTime, pitchOrPad) { // stepTime is absolute time in sequence
-    if(!localAppServices.getWindowByIdState || !localAppServices.getTrackById) return;
-    const sequencerWindow = localAppServices.getWindowByIdState(`sequencer-${trackId}`);
+export function highlightPlayingStep(trackId, stepTime, pitchOrPad) {
+    if(!localAppServices.getWindowById || !localAppServices.getTrackById) return; // Changed getWindowByIdState
+    const sequencerWindow = localAppServices.getWindowById(`sequencer-${trackId}`); // Changed getWindowByIdState
     if (!sequencerWindow || !sequencerWindow.element) return;
 
     const gridContainer = sequencerWindow.element.querySelector('.sequencer-grid-layout');
     if (!gridContainer) return;
 
-    // Remove previous highlights
-    gridContainer.querySelectorAll('.playing').forEach(cell => cell.classList.remove('playing', 'scale-110', 'z-20', 'outline', 'outline-yellow-400', 'outline-2', '-outline-offset-1')); // Clear all potential playing styles
+    gridContainer.querySelectorAll('.playing').forEach(cell => cell.classList.remove('playing', 'scale-110', 'z-20', 'outline', 'outline-yellow-400', 'outline-2', '-outline-offset-1'));
 
     const track = localAppServices.getTrackById(trackId);
     if (!track || !track.getActiveSequence || !track.getActiveSequence()) return;
 
     const activeSequence = track.getActiveSequence();
-    // The stepTime passed should be the 'time' property from the sequence step { time, pitchOrPad, ... }
-    // which is the index (0 to totalSteps-1)
     const stepIndex = stepTime;
-
-
-    // Determine row index (this part depends on how pitchOrPad maps to rows)
     let rowIndex = -1;
     const rowLabels = track.type === 'Synth' || track.type === 'InstrumentSampler' ? Constants.synthPitches :
                       [...Array(track.type === 'Sampler' ? Constants.numSlices : Constants.numDrumSamplerPads).keys()].map(i => `${track.type === 'Sampler' ? 'Slice' : 'Pad'} ${i + 1}`);
     rowIndex = rowLabels.indexOf(pitchOrPad);
 
-
     if (rowIndex !== -1 && stepIndex >= 0 && stepIndex < activeSequence.bars * Constants.STEPS_PER_BAR) {
-        // Calculate DOM cell index: (Header Row Cells) + (Full Rows Above * Cells Per Row) + (Header Cell in Current Row) + (Step Index in Current Row)
-        // Cells per row in DOM = totalSteps + 1 (for label)
         const totalGridSteps = activeSequence.bars * Constants.STEPS_PER_BAR;
         const domCellIndex = (totalGridSteps + 1) + (rowIndex * (totalGridSteps + 1)) + 1 + stepIndex;
-
         const targetCell = gridContainer.children[domCellIndex];
         if (targetCell && targetCell.classList.contains('sequencer-step-cell')) {
-            targetCell.classList.add('playing', 'scale-110', 'z-20', 'outline', 'outline-yellow-400', 'outline-2', '-outline-offset-1'); // Add playing style
+            targetCell.classList.add('playing', 'scale-110', 'z-20', 'outline', 'outline-yellow-400', 'outline-2', '-outline-offset-1');
         }
     }
 }
 
 export function openMixerWindow(savedState = null) {
-    if(!localAppServices.getWindowByIdState || !localAppServices.createWindow) {
+    if(!localAppServices.getWindowById || !localAppServices.createWindow) { // Changed getWindowByIdState
         console.error("[ArrangementMixingUI openMixerWindow] CRITICAL: Core services missing.");
         return null;
     }
     const windowId = 'mixer';
-    if (!savedState && localAppServices.getWindowByIdState(windowId)?.element) {
-        localAppServices.getWindowByIdState(windowId).focus();
-        return localAppServices.getWindowByIdState(windowId);
+    if (!savedState && localAppServices.getWindowById(windowId)?.element) { // Changed getWindowByIdState
+        localAppServices.getWindowById(windowId).focus();
+        return localAppServices.getWindowById(windowId);
     }
     const contentHTML = `<div id="mixer-strips-container" class="p-2 flex space-x-2 overflow-x-auto h-full bg-slate-800 dark:bg-slate-850"></div>`;
     const options = { width: 600, height: 350, minWidth:300, minHeight:200, initialContentKey: windowId };
@@ -609,15 +574,15 @@ export function openMixerWindow(savedState = null) {
 }
 
 export function updateMixerWindow() {
-    if(!localAppServices.getWindowByIdState || !localAppServices.getTracksState) {
+    if(!localAppServices.getWindowById || !localAppServices.getTracksState) { // Changed getWindowByIdState
         console.warn("[ArrangementMixingUI updateMixerWindow] Required appServices for state access are missing.");
         return;
     }
-    const mixerWindow = localAppServices.getWindowByIdState('mixer');
+    const mixerWindow = localAppServices.getWindowById('mixer'); // Changed getWindowByIdState
     if (!mixerWindow || !mixerWindow.element) return;
 
     const container = mixerWindow.element.querySelector('#mixer-strips-container');
-    container.innerHTML = ''; // Clear previous strips
+    container.innerHTML = '';
 
     const tracks = localAppServices.getTracksState();
     tracks.forEach(track => {
@@ -647,14 +612,14 @@ export function updateMixerWindow() {
         volumeSlider.addEventListener('input', (e) => {
             if(track.setVolumeDb) track.setVolumeDb(parseFloat(e.target.value));
         });
-        volumeSlider.addEventListener('change', (e) => { // For undo capture on release
+        volumeSlider.addEventListener('change', (e) => {
             if(localAppServices.captureStateForUndoInternal) localAppServices.captureStateForUndoInternal(`Set Volume for ${track.name}`);
         });
 
         panSlider.addEventListener('input', (e) => {
             if(track.setPan) track.setPan(parseFloat(e.target.value));
         });
-        panSlider.addEventListener('change', (e) => { // For undo capture on release
+        panSlider.addEventListener('change', (e) => {
              if(localAppServices.captureStateForUndoInternal) localAppServices.captureStateForUndoInternal(`Set Pan for ${track.name}`);
         });
 
@@ -665,38 +630,159 @@ export function updateMixerWindow() {
     });
 }
 
-// Placeholder - actual clip interaction logic is complex
 function setupClipInteractions(tracksContainer) {
-    // This function would handle mousedown on clips for dragging and resizing
-    // It would need to calculate snapped positions, update clip data in state,
-    // and re-render the timeline.
-    // Example (very basic drag start):
-    tracksContainer.addEventListener('mousedown', (event) => {
-        if (event.target.classList.contains('audio-clip') || event.target.classList.contains('sequence-clip')) {
-            const clipElement = event.target;
-            const trackId = clipElement.dataset.trackId;
-            const clipId = clipElement.dataset.clipId;
+    let dragInfo = null;
+    let resizeInfo = null; // {clipElement, edge: 'left' | 'right', initialX, initialWidth, initialLeft}
 
-            if (localAppServices.setSelectedTimelineClip) {
-                localAppServices.setSelectedTimelineClip(trackId, clipId); // Selects the clip
-            }
-            // Further logic for dragging/resizing would go here
-            // This is a simplified placeholder
-        } else {
-            // Clicked outside a clip, clear selection
-            if (localAppServices.setSelectedTimelineClip) {
+    tracksContainer.addEventListener('mousedown', (event) => {
+        const clipElement = event.target.closest('.audio-clip, .sequence-clip');
+        if (!clipElement) {
+            if (localAppServices.setSelectedTimelineClip) { // Use the correct appServices name
                 localAppServices.setSelectedTimelineClip(null, null);
             }
+            return;
+        }
+
+        const trackId = clipElement.dataset.trackId;
+        const clipId = clipElement.dataset.clipId;
+
+        if (localAppServices.setSelectedTimelineClip) {
+            localAppServices.setSelectedTimelineClip(trackId, clipId);
+        }
+
+        const rect = clipElement.getBoundingClientRect();
+        const isLeftEdge = event.clientX < rect.left + 8;  // 8px sensitivity for edge resize
+        const isRightEdge = event.clientX > rect.right - 8;
+        const pixelsPerSecond = parseFloat(tracksContainer.querySelector('#timeline-tracks-area').dataset.pixelsPerSecond || "30");
+
+
+        if (isLeftEdge || isRightEdge) {
+            event.stopPropagation(); // Prevent drag if resizing
+            resizeInfo = {
+                clipElement,
+                trackId,
+                clipId,
+                edge: isLeftEdge ? 'left' : 'right',
+                initialMouseX: event.clientX,
+                initialStartTime: parseFloat(clipElement.style.left) / pixelsPerSecond,
+                initialDuration: parseFloat(clipElement.style.width) / pixelsPerSecond,
+                pixelsPerSecond
+            };
+            document.body.style.cursor = 'ew-resize';
+            document.addEventListener('mousemove', onClipResize);
+            document.addEventListener('mouseup', onClipResizeEnd);
+        } else {
+            // Dragging
+            dragInfo = {
+                clipElement,
+                trackId,
+                clipId,
+                offsetX: event.clientX - rect.left,
+                // offsetY: event.clientY - rect.top, // Not used for horizontal drag only
+                initialLeft: parseFloat(clipElement.style.left),
+                pixelsPerSecond
+            };
+            clipElement.classList.add('dragging');
+            document.body.style.cursor = 'grabbing';
+            document.addEventListener('mousemove', onClipDrag);
+            document.addEventListener('mouseup', onClipDragEnd);
         }
     });
+
+    const onClipDrag = (event) => {
+        if (!dragInfo) return;
+        event.preventDefault();
+        const trackNameWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').replace('px', '')) || Constants.TIMELINE_TRACK_NAME_WIDTH || 120;
+        const tracksContainerRect = tracksContainer.getBoundingClientRect();
+        const newMouseXInGrid = event.clientX - tracksContainerRect.left + tracksContainer.scrollLeft - trackNameWidth;
+
+        let newLeftPx = dragInfo.initialLeft + (event.clientX - (dragInfo.initialLeft + dragInfo.offsetX + tracksContainerRect.left - tracksContainer.scrollLeft + trackNameWidth)); // Simpler calculation
+        newLeftPx = Math.max(0, newLeftPx); // Prevent dragging before time 0
+
+        // Snap newLeftPx to grid
+        const bpmForSnap = (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : 120;
+        const timeAtNewLeft = newLeftPx / dragInfo.pixelsPerSecond;
+        const snappedTime = snapTimeToGrid(timeAtNewLeft, bpmForSnap, dragInfo.pixelsPerSecond, false, '16n');
+        const snappedLeftPx = snappedTime * dragInfo.pixelsPerSecond;
+
+        dragInfo.clipElement.style.left = `${snappedLeftPx}px`;
+    };
+
+    const onClipDragEnd = (event) => {
+        if (!dragInfo) return;
+        document.body.style.cursor = 'default';
+        dragInfo.clipElement.classList.remove('dragging');
+        document.removeEventListener('mousemove', onClipDrag);
+        document.removeEventListener('mouseup', onClipDragEnd);
+
+        const newStartTime = parseFloat(dragInfo.clipElement.style.left) / dragInfo.pixelsPerSecond;
+        if (localAppServices.updateClipProperties && dragInfo.trackId && dragInfo.clipId) { // Assuming updateClipProperties exists
+            localAppServices.updateClipProperties(dragInfo.trackId, dragInfo.clipId, { startTime: newStartTime });
+            // Capture state for undo is handled within updateClipProperties in Track.js or state.js
+        }
+        dragInfo = null;
+    };
+
+    const onClipResize = (event) => {
+        if (!resizeInfo) return;
+        event.preventDefault();
+
+        const dx = event.clientX - resizeInfo.initialMouseX;
+        const dTime = dx / resizeInfo.pixelsPerSecond;
+        const bpmForSnap = (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : 120;
+
+
+        if (resizeInfo.edge === 'left') {
+            let newStartTime = resizeInfo.initialStartTime + dTime;
+            let newDuration = resizeInfo.initialDuration - dTime;
+
+            const snappedNewStartTime = snapTimeToGrid(newStartTime, bpmForSnap, resizeInfo.pixelsPerSecond, false, '16n');
+            const snapDiff = snappedNewStartTime - newStartTime;
+            newDuration -= snapDiff; // Adjust duration by how much start time was snapped
+
+            if (newDuration * resizeInfo.pixelsPerSecond < 5) { // Min width 5px
+                newDuration = 5 / resizeInfo.pixelsPerSecond;
+            }
+            newStartTime = snappedNewStartTime;
+
+
+            resizeInfo.clipElement.style.left = `${newStartTime * resizeInfo.pixelsPerSecond}px`;
+            resizeInfo.clipElement.style.width = `${newDuration * resizeInfo.pixelsPerSecond}px`;
+        } else { // Right edge
+            let newDuration = resizeInfo.initialDuration + dTime;
+            const endTime = resizeInfo.initialStartTime + newDuration;
+            const snappedEndTime = snapTimeToGrid(endTime, bpmForSnap, resizeInfo.pixelsPerSecond, false, '16n');
+            newDuration = snappedEndTime - resizeInfo.initialStartTime;
+
+            if (newDuration * resizeInfo.pixelsPerSecond < 5) {
+                newDuration = 5 / resizeInfo.pixelsPerSecond;
+            }
+            resizeInfo.clipElement.style.width = `${newDuration * resizeInfo.pixelsPerSecond}px`;
+        }
+    };
+    const onClipResizeEnd = (event) => {
+        if (!resizeInfo) return;
+        document.body.style.cursor = 'default';
+        document.removeEventListener('mousemove', onClipResize);
+        document.removeEventListener('mouseup', onClipResizeEnd);
+
+        const newStartTime = parseFloat(resizeInfo.clipElement.style.left) / resizeInfo.pixelsPerSecond;
+        const newDuration = parseFloat(resizeInfo.clipElement.style.width) / resizeInfo.pixelsPerSecond;
+
+        if (localAppServices.updateClipProperties && resizeInfo.trackId && resizeInfo.clipId) {
+            localAppServices.updateClipProperties(resizeInfo.trackId, resizeInfo.clipId, { startTime: newStartTime, duration: newDuration });
+        }
+        resizeInfo = null;
+    };
 }
 
+
 export function updateSequencerCellUI(trackId, pitchOrPad, timeStep, isActive) {
-    if (!localAppServices.getTrackById || !localAppServices.getWindowByIdState) return;
+    if (!localAppServices.getTrackById || !localAppServices.getWindowById) return; // Changed getWindowByIdState
     const track = localAppServices.getTrackById(trackId);
     if (!track || !track.getActiveSequence) return;
 
-    const sequencerWindow = localAppServices.getWindowByIdState(`sequencer-${trackId}`);
+    const sequencerWindow = localAppServices.getWindowById(`sequencer-${trackId}`); // Changed getWindowByIdState
     if (!sequencerWindow || !sequencerWindow.element) return;
 
     const gridContainer = sequencerWindow.element.querySelector('.sequencer-grid-layout');
@@ -710,7 +796,7 @@ export function updateSequencerCellUI(trackId, pitchOrPad, timeStep, isActive) {
     } else if (track.type === 'DrumSampler') {
         rowLabels = [...Array(Constants.numDrumSamplerPads).keys()].map(i => `Pad ${i + 1}`);
     } else {
-        return; // Not a sequenceable track type with these labels
+        return;
     }
 
     const rowIndex = rowLabels.indexOf(pitchOrPad);
@@ -720,7 +806,6 @@ export function updateSequencerCellUI(trackId, pitchOrPad, timeStep, isActive) {
     if (!activeSequence) return;
 
     const totalGridSteps = activeSequence.bars * Constants.STEPS_PER_BAR;
-    // DOM indexing: (header cells for steps + 1 for corner) + (rowIndex * (totalGridSteps + 1 for label)) + (1 for label cell) + stepIndex
     const domCellIndex = (totalGridSteps + 1) + (rowIndex * (totalGridSteps + 1)) + 1 + timeStep;
     const cell = gridContainer.children[domCellIndex];
 
