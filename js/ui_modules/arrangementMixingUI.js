@@ -4,16 +4,14 @@ import { SnugWindow } from '../SnugWindow.js';
 import { showNotification, createContextMenu, showConfirmationDialog, snapTimeToGrid } from '../utils.js';
 import * as Constants from '../constants.js';
 
-// This will be the single appServices instance from main.js
 let localAppServices = {};
 
 export function initializeArrangementMixingUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
-    // console.log("[ArrangementMixingUI] Module initialized, localAppServices keys:", Object.keys(localAppServices).join(', '));
 }
 
-// --- Sequencer Window ---
 export function openSequencerWindow(trackId, savedState = null) {
+    // ... (content of this function remains as previously corrected)
     if (!localAppServices || typeof localAppServices.getTrackById !== 'function' || typeof localAppServices.createWindow !== 'function') {
         console.error("[ArrangementMixingUI openSequencerWindow] CRITICAL: localAppServices or required methods missing.");
         if (localAppServices && localAppServices.showNotification) {
@@ -31,7 +29,6 @@ export function openSequencerWindow(trackId, savedState = null) {
     }
 
     const windowId = `sequencer-${trackId}`;
-    // Use getWindowById, as assigned in main.js appServices
     if (!savedState && localAppServices.getWindowById && localAppServices.getWindowById(windowId)?.element) {
         localAppServices.getWindowById(windowId).focus();
         return localAppServices.getWindowById(windowId);
@@ -66,7 +63,7 @@ export function openSequencerWindow(trackId, savedState = null) {
         barsInput.addEventListener('change', (e) => {
             const newNumBars = parseInt(e.target.value);
             if (newNumBars > 0 && newNumBars <= Constants.MAX_BARS) {
-                if (track.updateActiveSequenceBars) track.updateActiveSequenceBars(newNumBars);
+                if (track.updateActiveSequenceBars) track.updateActiveSequenceBars(newNumBars); // Assuming this method exists on track
                 renderSequencerGrid(track, gridContainer, rows, rowLabels, newNumBars);
             } else {
                 if (localAppServices.showNotification) localAppServices.showNotification(`Invalid number of bars (1-${Constants.MAX_BARS}).`, "warning");
@@ -86,7 +83,7 @@ export function openSequencerWindow(trackId, savedState = null) {
 
         sequencerWindow.element.querySelector(`#addSequenceBtn-${track.id}`)?.addEventListener('click', () => {
             if (!track.addNewSequence || !track.setActiveSequence) return;
-            const newSeqId = track.addNewSequence();
+            const newSeqId = track.addNewSequence(); // This should handle undo internally if needed
             track.setActiveSequence(newSeqId);
             populateSequenceSelect(track, sequenceSelect);
             const newActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
@@ -96,18 +93,18 @@ export function openSequencerWindow(trackId, savedState = null) {
             }
         });
          sequencerWindow.element.querySelector(`#removeSequenceBtn-${track.id}`)?.addEventListener('click', () => {
-            if (!track.sequences || !track.removeSequence || !track.getActiveSequence) return;
+            if (!track.sequences || !track.removeSequence || !track.getActiveSequence) return; // Removed getSequenceById, rely on getActiveSequence
             const currentSeq = track.getActiveSequence();
             if (track.sequences.length > 1 && currentSeq) {
                 if (localAppServices.showConfirmationDialog) {
                     localAppServices.showConfirmationDialog(`Delete sequence "${currentSeq.name || currentSeq.id.slice(-4)}"?`, () => {
-                        track.removeSequence(currentSeq.id);
+                        track.removeSequence(currentSeq.id); // This should handle undo internally if needed
                         populateSequenceSelect(track, sequenceSelect);
                         const newActiveSeq = track.getActiveSequence();
                         if (newActiveSeq) {
                             barsInput.value = newActiveSeq.bars;
                             renderSequencerGrid(track, gridContainer, rows, rowLabels, newActiveSeq.bars);
-                        } else {
+                        } else { // No sequences left or active one couldn't be determined
                             gridContainer.innerHTML = '<p class="text-center text-slate-400 p-4">No active sequence.</p>';
                             barsInput.value = 1;
                         }
@@ -121,6 +118,7 @@ export function openSequencerWindow(trackId, savedState = null) {
     return sequencerWindow;
 }
 
+// ... (populateSequenceSelect, buildSequencerContentDOM, renderSequencerGrid as before)
 function populateSequenceSelect(track, selectElement) {
     if (!selectElement || !track || !track.sequences) return;
     selectElement.innerHTML = '';
@@ -242,33 +240,30 @@ function renderSequencerGrid(track, gridContainer, rows, rowLabels, numBars) {
 export function openArrangementWindow(onReadyCallback, savedState = null) {
     const windowId = 'timeline';
 
-    // --- DETAILED CRITICAL CHECK ---
     if (!localAppServices) {
         console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices object itself is not available!");
-        if(localAppServices && typeof localAppServices.showNotification === 'function') localAppServices.showNotification("Timeline Error: Core services missing (1).", "error"); else alert("Timeline Error: Core services missing (1).");
+        alert("Timeline Error: Core services missing (1).");
         return null;
     }
-    // Corrected check: In main.js, State.getWindowByIdState is assigned to appServices.getWindowById
     if (typeof localAppServices.getWindowById !== 'function') {
         console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices.getWindowById is NOT A FUNCTION. Type:", typeof localAppServices.getWindowById, "Value:", localAppServices.getWindowById);
-        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices))); // Log the object
-        if(localAppServices && typeof localAppServices.showNotification === 'function') localAppServices.showNotification("Timeline Error: Core services missing (2).", "error"); else alert("Timeline Error: Core services missing (2).");
+        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
+        alert("Timeline Error: Core services missing (2).");
         return null;
     }
     if (typeof localAppServices.createWindow !== 'function') {
         console.error("[ArrangementMixingUI openArrangementWindow] CRITICAL: localAppServices.createWindow is NOT A FUNCTION. Type:", typeof localAppServices.createWindow, "Value:", localAppServices.createWindow);
-        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices))); // Log the object
-        if(localAppServices && typeof localAppServices.showNotification === 'function') localAppServices.showNotification("Timeline Error: Core services missing (3).", "error"); else alert("Timeline Error: Core services missing (3).");
+        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
+        alert("Timeline Error: Core services missing (3).");
         return null;
     }
-    // --- END DETAILED CRITICAL CHECK ---
 
-    // Use getWindowById (the corrected property name)
     if (!savedState && localAppServices.getWindowById(windowId)?.element) {
         localAppServices.getWindowById(windowId).focus();
         return localAppServices.getWindowById(windowId);
     }
 
+    // ... (rest of openArrangementWindow content as previously corrected) ...
     const contentHTML = `
         <div id="timeline-container" class="w-full h-full flex flex-col bg-slate-800 text-slate-300 text-xs">
             <div id="timeline-header" class="h-6 flex-shrink-0 bg-slate-700 dark:bg-slate-850 border-b border-slate-600 dark:border-slate-700 relative overflow-hidden">
@@ -321,6 +316,7 @@ export function openArrangementWindow(onReadyCallback, savedState = null) {
     return timelineWindow;
 }
 
+// ... (setupTimelineDropHandling as before)
 function setupTimelineDropHandling(tracksContainer) {
     tracksContainer.addEventListener('dragover', (event) => {
         event.preventDefault();
@@ -369,14 +365,35 @@ function setupTimelineDropHandling(tracksContainer) {
     });
 }
 
+
 export function renderTimeline() {
-    if (!localAppServices.getWindowById || !localAppServices.getTracksState || !localAppServices.getPlaybackModeState) { // Changed getWindowByIdState
-        console.warn("[ArrangementMixingUI renderTimeline] Required appServices for state access are missing.");
+    // DETAILED CHECK for renderTimeline
+    if (!localAppServices) {
+        console.warn("[ArrangementMixingUI renderTimeline] localAppServices object itself is not available!");
         return;
     }
-    const timelineWindow = localAppServices.getWindowById('timeline'); // Changed getWindowByIdState
+    if (typeof localAppServices.getWindowById !== 'function') {
+        console.warn(`[ArrangementMixingUI renderTimeline] localAppServices.getWindowById is NOT A FUNCTION. Type: ${typeof localAppServices.getWindowById}, Value: ${localAppServices.getWindowById}`);
+        console.log("Full localAppServices in renderTimeline:", JSON.parse(JSON.stringify(localAppServices)));
+        return;
+    }
+    if (typeof localAppServices.getTracksState !== 'function') {
+        console.warn(`[ArrangementMixingUI renderTimeline] localAppServices.getTracksState is NOT A FUNCTION. Type: ${typeof localAppServices.getTracksState}, Value: ${localAppServices.getTracksState}`);
+        console.log("Full localAppServices in renderTimeline:", JSON.parse(JSON.stringify(localAppServices)));
+        return;
+    }
+    // getPlaybackModeState was changed to getPlaybackMode in main.js appServices
+    if (typeof localAppServices.getPlaybackMode !== 'function') {
+        console.warn(`[ArrangementMixingUI renderTimeline] localAppServices.getPlaybackMode is NOT A FUNCTION. Type: ${typeof localAppServices.getPlaybackMode}, Value: ${localAppServices.getPlaybackMode}`);
+        console.log("Full localAppServices in renderTimeline:", JSON.parse(JSON.stringify(localAppServices)));
+        // This might be a non-critical failure for renderTimeline itself, but let's log it.
+    }
+    // END DETAILED CHECK
+
+    const timelineWindow = localAppServices.getWindowById('timeline');
     if (!timelineWindow || !timelineWindow.element) return;
 
+    // ... (rest of renderTimeline content as previously corrected) ...
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
     const ruler = timelineWindow.element.querySelector('#timeline-ruler');
     const rulerLabelsContainer = timelineWindow.element.querySelector('#timeline-ruler-labels');
@@ -468,9 +485,9 @@ export function renderTimeline() {
             if (clip.type === 'audio') {
                 clipBgColor = 'bg-teal-600 border-teal-500';
             }
-            const isSelected = localAppServices.getSelectedTimelineClipInfo && // check if function exists
-                               localAppServices.getSelectedTimelineClipInfo().trackId === track.id &&
-                               localAppServices.getSelectedTimelineClipInfo().clipId === clip.id;
+            const selectedClipInfo = localAppServices.getSelectedTimelineClipInfo ? localAppServices.getSelectedTimelineClipInfo() : {};
+            const isSelected = selectedClipInfo.trackId === track.id && selectedClipInfo.clipId === clip.id;
+
 
             clipEl.className = `absolute h-4/5 top-[10%] rounded overflow-hidden text-white text-xxs p-1 cursor-grab shadow-md ${clipBgColor} ${isSelected ? 'ring-2 ring-yellow-400' : ''}`;
             clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
@@ -486,9 +503,10 @@ export function renderTimeline() {
     updatePlayheadPosition();
 }
 
+// ... (updatePlayheadPosition, highlightPlayingStep, openMixerWindow, updateMixerWindow, setupClipInteractions, updateSequencerCellUI as previously corrected) ...
 export function updatePlayheadPosition() {
-    if (!localAppServices.getWindowById || typeof Tone === 'undefined' || typeof Tone.Transport === 'undefined') return; // Changed getWindowByIdState
-    const timelineWindow = localAppServices.getWindowById('timeline'); // Changed getWindowByIdState
+    if (!localAppServices.getWindowById || typeof Tone === 'undefined' || typeof Tone.Transport === 'undefined') return;
+    const timelineWindow = localAppServices.getWindowById('timeline');
     if (!timelineWindow || !timelineWindow.element ) { return; }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
@@ -520,8 +538,8 @@ export function updatePlayheadPosition() {
 }
 
 export function highlightPlayingStep(trackId, stepTime, pitchOrPad) {
-    if(!localAppServices.getWindowById || !localAppServices.getTrackById) return; // Changed getWindowByIdState
-    const sequencerWindow = localAppServices.getWindowById(`sequencer-${trackId}`); // Changed getWindowByIdState
+    if(!localAppServices.getWindowById || !localAppServices.getTrackById) return;
+    const sequencerWindow = localAppServices.getWindowById(`sequencer-${trackId}`);
     if (!sequencerWindow || !sequencerWindow.element) return;
 
     const gridContainer = sequencerWindow.element.querySelector('.sequencer-grid-layout');
@@ -550,12 +568,12 @@ export function highlightPlayingStep(trackId, stepTime, pitchOrPad) {
 }
 
 export function openMixerWindow(savedState = null) {
-    if(!localAppServices.getWindowById || !localAppServices.createWindow) { // Changed getWindowByIdState
+    if(!localAppServices.getWindowById || !localAppServices.createWindow) {
         console.error("[ArrangementMixingUI openMixerWindow] CRITICAL: Core services missing.");
         return null;
     }
     const windowId = 'mixer';
-    if (!savedState && localAppServices.getWindowById(windowId)?.element) { // Changed getWindowByIdState
+    if (!savedState && localAppServices.getWindowById(windowId)?.element) {
         localAppServices.getWindowById(windowId).focus();
         return localAppServices.getWindowById(windowId);
     }
@@ -574,11 +592,11 @@ export function openMixerWindow(savedState = null) {
 }
 
 export function updateMixerWindow() {
-    if(!localAppServices.getWindowById || !localAppServices.getTracksState) { // Changed getWindowByIdState
+    if(!localAppServices.getWindowById || !localAppServices.getTracksState) {
         console.warn("[ArrangementMixingUI updateMixerWindow] Required appServices for state access are missing.");
         return;
     }
-    const mixerWindow = localAppServices.getWindowById('mixer'); // Changed getWindowByIdState
+    const mixerWindow = localAppServices.getWindowById('mixer');
     if (!mixerWindow || !mixerWindow.element) return;
 
     const container = mixerWindow.element.querySelector('#mixer-strips-container');
@@ -632,12 +650,12 @@ export function updateMixerWindow() {
 
 function setupClipInteractions(tracksContainer) {
     let dragInfo = null;
-    let resizeInfo = null; // {clipElement, edge: 'left' | 'right', initialX, initialWidth, initialLeft}
+    let resizeInfo = null;
 
     tracksContainer.addEventListener('mousedown', (event) => {
         const clipElement = event.target.closest('.audio-clip, .sequence-clip');
         if (!clipElement) {
-            if (localAppServices.setSelectedTimelineClip) { // Use the correct appServices name
+            if (localAppServices.setSelectedTimelineClip) {
                 localAppServices.setSelectedTimelineClip(null, null);
             }
             return;
@@ -651,13 +669,13 @@ function setupClipInteractions(tracksContainer) {
         }
 
         const rect = clipElement.getBoundingClientRect();
-        const isLeftEdge = event.clientX < rect.left + 8;  // 8px sensitivity for edge resize
+        const isLeftEdge = event.clientX < rect.left + 8;
         const isRightEdge = event.clientX > rect.right - 8;
         const pixelsPerSecond = parseFloat(tracksContainer.querySelector('#timeline-tracks-area').dataset.pixelsPerSecond || "30");
 
 
         if (isLeftEdge || isRightEdge) {
-            event.stopPropagation(); // Prevent drag if resizing
+            event.stopPropagation();
             resizeInfo = {
                 clipElement,
                 trackId,
@@ -672,13 +690,11 @@ function setupClipInteractions(tracksContainer) {
             document.addEventListener('mousemove', onClipResize);
             document.addEventListener('mouseup', onClipResizeEnd);
         } else {
-            // Dragging
             dragInfo = {
                 clipElement,
                 trackId,
                 clipId,
                 offsetX: event.clientX - rect.left,
-                // offsetY: event.clientY - rect.top, // Not used for horizontal drag only
                 initialLeft: parseFloat(clipElement.style.left),
                 pixelsPerSecond
             };
@@ -695,11 +711,9 @@ function setupClipInteractions(tracksContainer) {
         const trackNameWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').replace('px', '')) || Constants.TIMELINE_TRACK_NAME_WIDTH || 120;
         const tracksContainerRect = tracksContainer.getBoundingClientRect();
         const newMouseXInGrid = event.clientX - tracksContainerRect.left + tracksContainer.scrollLeft - trackNameWidth;
+        let newLeftPx = newMouseXInGrid - dragInfo.offsetX; // Corrected drag calculation
+        newLeftPx = Math.max(0, newLeftPx);
 
-        let newLeftPx = dragInfo.initialLeft + (event.clientX - (dragInfo.initialLeft + dragInfo.offsetX + tracksContainerRect.left - tracksContainer.scrollLeft + trackNameWidth)); // Simpler calculation
-        newLeftPx = Math.max(0, newLeftPx); // Prevent dragging before time 0
-
-        // Snap newLeftPx to grid
         const bpmForSnap = (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : 120;
         const timeAtNewLeft = newLeftPx / dragInfo.pixelsPerSecond;
         const snappedTime = snapTimeToGrid(timeAtNewLeft, bpmForSnap, dragInfo.pixelsPerSecond, false, '16n');
@@ -716,9 +730,8 @@ function setupClipInteractions(tracksContainer) {
         document.removeEventListener('mouseup', onClipDragEnd);
 
         const newStartTime = parseFloat(dragInfo.clipElement.style.left) / dragInfo.pixelsPerSecond;
-        if (localAppServices.updateClipProperties && dragInfo.trackId && dragInfo.clipId) { // Assuming updateClipProperties exists
+        if (localAppServices.updateClipProperties && dragInfo.trackId && dragInfo.clipId) {
             localAppServices.updateClipProperties(dragInfo.trackId, dragInfo.clipId, { startTime: newStartTime });
-            // Capture state for undo is handled within updateClipProperties in Track.js or state.js
         }
         dragInfo = null;
     };
@@ -731,20 +744,20 @@ function setupClipInteractions(tracksContainer) {
         const dTime = dx / resizeInfo.pixelsPerSecond;
         const bpmForSnap = (typeof Tone !== 'undefined' && Tone.Transport) ? Tone.Transport.bpm.value : 120;
 
-
         if (resizeInfo.edge === 'left') {
             let newStartTime = resizeInfo.initialStartTime + dTime;
             let newDuration = resizeInfo.initialDuration - dTime;
-
             const snappedNewStartTime = snapTimeToGrid(newStartTime, bpmForSnap, resizeInfo.pixelsPerSecond, false, '16n');
             const snapDiff = snappedNewStartTime - newStartTime;
-            newDuration -= snapDiff; // Adjust duration by how much start time was snapped
+            newDuration -= snapDiff;
 
-            if (newDuration * resizeInfo.pixelsPerSecond < 5) { // Min width 5px
+            if (newDuration * resizeInfo.pixelsPerSecond < 5) {
                 newDuration = 5 / resizeInfo.pixelsPerSecond;
+                // Adjust start time if duration is clamped from left edge
+                newStartTime = (resizeInfo.initialStartTime + resizeInfo.initialDuration) - newDuration;
+            } else {
+                 newStartTime = snappedNewStartTime;
             }
-            newStartTime = snappedNewStartTime;
-
 
             resizeInfo.clipElement.style.left = `${newStartTime * resizeInfo.pixelsPerSecond}px`;
             resizeInfo.clipElement.style.width = `${newDuration * resizeInfo.pixelsPerSecond}px`;
@@ -776,13 +789,12 @@ function setupClipInteractions(tracksContainer) {
     };
 }
 
-
 export function updateSequencerCellUI(trackId, pitchOrPad, timeStep, isActive) {
-    if (!localAppServices.getTrackById || !localAppServices.getWindowById) return; // Changed getWindowByIdState
+    if (!localAppServices.getTrackById || !localAppServices.getWindowById) return;
     const track = localAppServices.getTrackById(trackId);
     if (!track || !track.getActiveSequence) return;
 
-    const sequencerWindow = localAppServices.getWindowById(`sequencer-${trackId}`); // Changed getWindowByIdState
+    const sequencerWindow = localAppServices.getWindowById(`sequencer-${trackId}`);
     if (!sequencerWindow || !sequencerWindow.element) return;
 
     const gridContainer = sequencerWindow.element.querySelector('.sequencer-grid-layout');
