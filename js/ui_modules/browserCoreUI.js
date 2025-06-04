@@ -97,25 +97,28 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
     // --- DETAILED CRITICAL CHECK ---
     if (!localAppServices) {
         console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: localAppServices object itself is not available!");
-        alert("Sound Browser Error: Core services missing (1).");
+        // Fallback to alert if showNotification itself is not on localAppServices
+        const notify = (localAppServices && localAppServices.showNotification) ? localAppServices.showNotification : alert;
+        notify("Sound Browser Error: Core services missing (1).", "error");
         return null;
     }
-    // The console log showed getWindowByIdState, so checking for getWindowById
-    if (typeof localAppServices.getWindowById !== 'function') { // Changed from getWindowByIdState to getWindowById based on log
+    // Corrected check: In main.js, State.getWindowByIdState is assigned to appServices.getWindowById
+    if (typeof localAppServices.getWindowById !== 'function') {
         console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: localAppServices.getWindowById is NOT A FUNCTION. Type:", typeof localAppServices.getWindowById, "Value:", localAppServices.getWindowById);
         console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
-        alert("Sound Browser Error: Core services missing (2).");
+        const notify = localAppServices.showNotification || alert;
+        notify("Sound Browser Error: Core services missing (2).", "error");
         return null;
     }
     if (typeof localAppServices.createWindow !== 'function') {
         console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: localAppServices.createWindow is NOT A FUNCTION. Type:", typeof localAppServices.createWindow, "Value:", localAppServices.createWindow);
         console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
-        alert("Sound Browser Error: Core services missing (3).");
+        const notify = localAppServices.showNotification || alert;
+        notify("Sound Browser Error: Core services missing (3).", "error");
         return null;
     }
     // --- END DETAILED CRITICAL CHECK ---
 
-    // Use getWindowById for existing window check
     if (!savedState && localAppServices.getWindowById(windowId)?.element) {
         localAppServices.getWindowById(windowId).focus();
         return localAppServices.getWindowById(windowId);
@@ -159,7 +162,7 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
             librarySelect.innerHTML = '<option value="">No Libraries Defined</option>';
         }
 
-        if (localAppServices.getCurrentLibraryName && localAppServices.getCurrentLibraryName()) { // Changed from getCurrentLibraryNameState
+        if (localAppServices.getCurrentLibraryName && localAppServices.getCurrentLibraryName()) {
             librarySelect.value = localAppServices.getCurrentLibraryName();
         } else if (librarySelect.options.length > 0 && librarySelect.options[0].value) {
             librarySelect.value = librarySelect.options[0].value;
@@ -186,14 +189,14 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
 }
 
 export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, isLoading = false, hasError = false) {
-    if (!localAppServices.getWindowById || !localAppServices.getCurrentLibraryName || // Changed from ...State versions
+    if (!localAppServices.getWindowById || !localAppServices.getCurrentLibraryName ||
         !localAppServices.getCurrentSoundBrowserPath || !localAppServices.getSoundLibraryFileTrees ||
         !localAppServices.getCurrentSoundFileTree) {
         console.warn("[BrowserCoreUI updateSoundBrowserDisplayForLibrary] Required appServices missing.");
         return;
     }
 
-    const browserWindow = localAppServices.getWindowById('soundBrowser'); // Changed from getWindowByIdState
+    const browserWindow = localAppServices.getWindowById('soundBrowser');
     if (!browserWindow || !browserWindow.element) return;
 
     const listDiv = browserWindow.element.querySelector('#soundBrowserList');
@@ -230,7 +233,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
         return;
     }
 
-    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {}; // Changed from ...State
+    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
     const currentZipStatus = loadedZips[currentLibraryName];
 
     if (!currentZipStatus && currentLibraryName && Constants.soundLibraries[currentLibraryName] && localAppServices.fetchSoundLibrary) {
@@ -406,8 +409,8 @@ export function getTheme() {
            (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 }
 
-export function closeAllTrackWindows(trackIdToClose = null) { // Changed parameter name for clarity
-    if (!localAppServices.getOpenWindowsState) { // Removed removeWindowFromStoreState as SnugWindow.close handles it
+export function closeAllTrackWindows(trackIdToClose = null) {
+    if (!localAppServices.getOpenWindowsState ) {
         console.warn("[BrowserCoreUI closeAllTrackWindows] Window state services missing.");
         return;
     }
@@ -420,10 +423,8 @@ export function closeAllTrackWindows(trackIdToClose = null) { // Changed paramet
                             win.id.startsWith('sequencer-');
 
         if (shouldClose) {
-            // If a specific trackId is provided, only close windows related to that track.
-            // If no trackId is provided (trackIdToClose is null), close all track-specific windows.
             if (trackIdStr && win.id.includes(`-${trackIdStr}`)) {
-                win.close(true); // true for reconstruction/programmatic close
+                win.close(true);
             } else if (!trackIdStr) {
                 win.close(true);
             }
@@ -432,8 +433,5 @@ export function closeAllTrackWindows(trackIdToClose = null) { // Changed paramet
 }
 
 export function updateTrackUI(trackId, reason, details = null) {
-    // This function is mostly a placeholder now.
-    // Specific UI update functions (renderTimeline, updateMixerWindow, etc.)
-    // should be called directly by the services that change the relevant state.
     // console.log(`[BrowserCoreUI updateTrackUI] Called for track ${trackId}, reason: ${reason}`, details);
 }
