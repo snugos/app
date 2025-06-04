@@ -24,6 +24,8 @@ export const synthPitches = [
 export const soundLibraries = {
     "Drums": "assets/drumss.zip", // Changed "samples/" to "assets/"
     "Instruments": "assets/instruments.zip" "assets/instruments2.zip" "assets/instruments3.zip", // Changed "samples/" to "assets/"
+    "Instruments 2": "assets/instruments2.zip", // Changed "samples/" to "assets/"
+    "Instruments 3": "assets/instruments3.zip", // Changed "samples/" to "assets/"
     // Add more libraries here as needed
 };
 
