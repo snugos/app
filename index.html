@@ -24,18 +24,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Ensure Tailwind respects the class-based dark mode
+            darkMode: 'class', // From your index.html in response #85/87
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="js/lib/Tone.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.5/jszip.min.js"></script> 
     
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-800 text-white font-sans overflow-hidden"> <div id="desktop" class="relative w-full h-screen bg-slate-800 overflow-hidden">
+<body class="bg-slate-800 text-white font-sans overflow-hidden">
+    <div id="desktop" class="relative w-full h-screen bg-slate-800 overflow-hidden">
         </div>
 
     <div id="topTaskbar" class="fixed top-0 left-0 right-0 h-8 bg-slate-900/80 backdrop-blur-sm shadow-md flex items-center px-2 z-[1000]">
@@ -48,56 +49,56 @@
             <div id="master-meter-container" class="w-24 h-5 bg-slate-800 rounded-md overflow-hidden relative border border-slate-700">
                 <div id="master-meter" class="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-50" style="width: 0%;"></div>
             </div>
-            <span id="cpu-usage" class="px-2 text-xs text-slate-400">CPU: --%</span>
-        </div>
+            <span id="cpu-usage" class="px-2 text-xs text-slate-400">CPU: --%</span> </div>
         <div class="flex-grow"></div> <div id="clock" class="px-3 py-1 text-sm text-slate-300">12:00 PM</div>
     </div>
 
     <div id="taskbar" class="fixed bottom-0 left-0 right-0 h-8 bg-slate-900/80 backdrop-blur-sm shadow-lg flex items-center px-2 z-[1000]">
-        <button id="startMenuButton" class="px-3 py-1 bg-slate-700 hover:bg-blue-600 rounded-md cursor-pointer text-sm font-bold mr-2 text-white">
+        <div id="startMenuButton" class="px-3 py-1 bg-slate-700 hover:bg-blue-600 rounded-md cursor-pointer text-sm font-bold mr-2 text-white">
             SnugOS
-        </button>
+        </div>
         <div id="taskbarButtons" class="flex items-center h-full overflow-x-auto">
             </div>
         <div id="taskbarTempoDisplay" class="ml-auto px-2 py-0.5 text-xs bg-slate-700 rounded text-slate-300" title="Current Tempo">120.0 BPM</div>
     </div>
 
-    <div id="startMenu" class="hidden absolute bottom-8 left-2 bg-slate-800/95 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl w-64 p-2 z-[10001]">
+    <div id="startMenu" class="hidden absolute bottom-8 left-2 bg-slate-800/90 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl w-64 p-2 z-[10001]">
         <ul id="fileMenu" class="text-sm text-slate-200">
-            <li id="menuNewProject" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">New Project</li>
-            <li id="menuSaveProject" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Save Project (.snug)</li>
-            <li id="menuLoadProject" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Load Project (.snug)</li>
-            <li id="menuExportWav" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Export to WAV</li>
+            <li id="menuNewProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">New Project</li>
             <li><hr class="my-1 border-slate-600"></li>
             
-            <li id="menuAddSynthTrack" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Add Synth Track</li>
-            <li id="menuAddSamplerTrack" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Add Slicer Sampler</li>
-            <li id="menuAddDrumSamplerTrack" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Add Drum Sampler (Pads)</li>
-            <li id="menuAddInstrumentSamplerTrack" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Add Instrument Sampler</li>
-            <li id="menuAddAudioTrack" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Add Audio Track</li>
+            <li id="menuAddSynthTrack" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Add Synth Track</li>
+            <li id="menuAddSamplerTrack" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Add Slicer Sampler</li>
+            <li id="menuAddDrumSamplerTrack" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Add Drum Sampler (Pads)</li>
+            <li id="menuAddInstrumentSamplerTrack" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Add Instrument Sampler</li>
+            <li id="menuAddAudioTrack" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Add Audio Track</li>
             <li><hr class="my-1 border-slate-600"></li>
 
-            <li id="menuOpenSoundBrowser" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Sound Browser</li>
-            <li id="menuOpenTimeline" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Arrangement (Timeline)</li>
-            <li id="menuOpenGlobalControls" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Global Controls</li>
-            <li id="menuOpenMixer" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Mixer</li>
-            <li id="menuOpenMasterEffects" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Master Effects</li>
+            <li id="menuOpenSoundBrowser" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Sound Browser</li>
+            <li id="menuOpenTimeline" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Arrangement</li> <li id="menuOpenGlobalControls" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Global Controls</li>
+            <li id="menuOpenMixer" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Mixer</li>
+            <li id="menuOpenMasterEffects" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Master Effects</li>
             <li><hr class="my-1 border-slate-600"></li>
 
-            <li id="menuUndo" class="disabled px-3 py-1.5 text-slate-500 cursor-default rounded-md" title="Undo">Undo</li>
-            <li id="menuRedo" class="disabled px-3 py-1.5 text-slate-500 cursor-default rounded-md" title="Redo">Redo</li>
+            <li id="menuUndo" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md disabled">Undo</li>
+            <li id="menuRedo" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md disabled">Redo</li>
             <li><hr class="my-1 border-slate-600"></li>
             
-            <li id="menuToggleFullScreen" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Toggle Full Screen</li>
+            <li id="menuSaveProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Save Project (.snug)</li>
+            <li id="menuLoadProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Load Project (.snug)</li>
+            <li id="menuExportWav" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Export to WAV</li>
+            <li><hr class="my-1 border-slate-600"></li>
+            
+            <li id="menuToggleFullScreen" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Toggle Full Screen</li>
              <li><hr class="my-1 border-slate-600"></li>
-            <li id="menuUploadBackground" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Upload Desktop BG</li>
-            <li id="menuRemoveBackground" class="px-3 py-1.5 hover:bg-blue-500 hover:text-white cursor-pointer rounded-md">Remove Desktop BG</li>
+            <li id="menuUploadBackground" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Upload Desktop BG</li>
+            <li id="menuRemoveBackground" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Remove Desktop BG</li>
         </ul>
     </div>
 
     <input type="file" id="loadProjectInput" class="hidden" accept=".snug">
-    <input type="file" id="customBgInput" class="hidden" accept="image/*"> <input type="file" id="sampleFileInput" class="hidden" accept="audio/*"> <input type="file" id="file-input-project" class="hidden" accept=".snug"> <input type="file" id="file-input-audio" class="hidden" accept="audio/*" multiple>
-    <input type="file" id="file-input-background" class="hidden" accept="image/*"> <div id="notification-area" class="fixed top-10 right-4 z-[20000] flex flex-col items-end space-y-2 w-80"></div>
+    <input type="file" id="customBgInput" class="hidden" accept="image/*"> 
+    <input type="file" id="sampleFileInput" class="hidden" accept="audio/*" multiple> <div id="notification-area" class="fixed top-10 right-4 z-[20000] flex flex-col items-end space-y-2 w-80"></div>
     <div id="modalContainer" class="fixed inset-0 z-[15000]"></div>
 
     <script type="module" src="js/main.js"></script>
