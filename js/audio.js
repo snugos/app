@@ -24,21 +24,20 @@ export function getActualMasterGainNode() { return masterGainNodeActual; }
 export function getMasterMeter() { return masterMeterNode; }
 
 export async function initAudioContextAndMasterMeter(forceStart = false) {
+    // ... (content as previously corrected)
     if (audioContextInitialized && !forceStart && Tone.context.state === 'running') {
-        // console.log("[Audio Init] AudioContext already initialized and running.");
-        // Ensure chain is still valid if already initialized.
-        _rechainMasterEffectsAudio(); // Call rechain to ensure connections are good.
+        _rechainMasterEffectsAudio();
         return;
     }
 
     if (typeof Tone === 'undefined') {
         console.error("[Audio Init] CRITICAL: Tone.js is not loaded.");
         if (localAppServices.showNotification) localAppServices.showNotification("Audio engine (Tone.js) failed to load!", "error", 0);
-        audioContextInitialized = false; // Explicitly set on failure
+        audioContextInitialized = false;
         return;
     }
 
-    audioContextInitialized = false; // Assume not initialized until successful completion
+    audioContextInitialized = false;
 
     try {
         if (Tone.context.state !== 'running' || forceStart) {
@@ -46,14 +45,12 @@ export async function initAudioContextAndMasterMeter(forceStart = false) {
             console.log("[Audio Init] AudioContext started successfully via Tone.start(). State:", Tone.context.state);
         }
 
-        // Create or verify masterEffectsBusInputNode
         if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
             masterEffectsBusInputNode = new Tone.Channel({ volume: 0, channelCount: 2 });
             console.log("[Audio Init] MasterEffectsBusInputNode created/verified.");
         }
 
-        // Create or verify masterGainNodeActual
-        let gainValue = 0.707; // Default
+        let gainValue = 0.707;
         if (localAppServices.getMasterGainValueState && typeof localAppServices.getMasterGainValueState === 'function') {
             gainValue = localAppServices.getMasterGainValueState();
         } else if (localAppServices.masterGainValue !== undefined) {
@@ -66,24 +63,21 @@ export async function initAudioContextAndMasterMeter(forceStart = false) {
             masterGainNodeActual.gain.value = gainValue;
         }
 
-        // Create or verify masterMeterNode
         if (!masterMeterNode || masterMeterNode.disposed) {
             masterMeterNode = new Tone.Meter({ channels: 2, smoothing: 0.8 });
             console.log("[Audio Init] MasterMeterNode created/verified.");
         }
         
-        // Check Tone.Destination validity
         if (!Tone.getDestination() || Tone.getDestination().disposed) {
             console.error("[Audio Init] Tone.Destination is not available or disposed. Cannot complete audio setup.");
             if (localAppServices.showNotification) localAppServices.showNotification("Audio output destination error.", "error", 0);
-            return; // Do not proceed if destination is invalid
+            return;
         }
 
-        // All essential nodes should be valid here. Now set the flag.
         audioContextInitialized = true;
         console.log("[Audio Init] Essential audio nodes ready. Proceeding to chain.");
 
-        _rechainMasterEffectsAudio(); // This is line 75 in your original log for the call site
+        _rechainMasterEffectsAudio(); 
 
         if (Tone.Transport && Tone.Transport.bpm) {
             Tone.Transport.bpm.value = (localAppServices.globalSettings?.tempo || Constants.MIN_TEMPO);
@@ -99,9 +93,11 @@ export async function initAudioContextAndMasterMeter(forceStart = false) {
     } catch (error) {
         console.error("[Audio Init] Error during initAudioContextAndMasterMeter:", error);
         if (localAppServices.showNotification) localAppServices.showNotification("Error initializing audio system. Please refresh.", "error", 0);
-        audioContextInitialized = false; // Ensure flag is false on any error
+        audioContextInitialized = false;
     }
 }
+
+// ... (setMasterVolume, addMasterEffectToAudio, removeMasterEffectFromAudio, etc. as before) ...
 export function setMasterVolume(linearGain) {
     if (masterGainNodeActual && !masterGainNodeActual.disposed) {
         masterGainNodeActual.gain.value = linearGain;
@@ -138,7 +134,7 @@ export async function removeMasterEffectFromAudio(effectId) {
         }
         activeMasterEffectNodes.delete(effectId);
     }
-    _rechainMasterEffectsAudio(); // Always rechain after removal
+    _rechainMasterEffectsAudio();
 }
 
 export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
@@ -172,60 +168,41 @@ export async function clearAllMasterEffectNodes() {
 }
 
 export function _rechainMasterEffectsAudio() {
-    // console.log(`[Audio _rechainMasterEffectsAudio] Attempting to rechain. audioContextInitialized: ${audioContextInitialized}`);
-    // console.log(`[Audio _rechainMasterEffectsAudio] masterEffectsBusInputNode: ${masterEffectsBusInputNode ? 'Exists' : 'Null'}, Disposed: ${masterEffectsBusInputNode?.disposed}`);
-    // console.log(`[Audio _rechainMasterEffectsAudio] masterGainNodeActual: ${masterGainNodeActual ? 'Exists' : 'Null'}, Disposed: ${masterGainNodeActual?.disposed}`);
-    // console.log(`[Audio _rechainMasterEffectsAudio] masterMeterNode: ${masterMeterNode ? 'Exists' : 'Null'}, Disposed: ${masterMeterNode?.disposed}`);
-    // console.log(`[Audio _rechainMasterEffectsAudio] Tone.getDestination(): ${Tone.getDestination() ? 'Exists' : 'Null'}, Disposed: ${Tone.getDestination()?.disposed}`);
-
     if (!audioContextInitialized ||
         !masterEffectsBusInputNode || masterEffectsBusInputNode.disposed ||
         !masterGainNodeActual || masterGainNodeActual.disposed ||
         !masterMeterNode || masterMeterNode.disposed ||
         !Tone.getDestination() || Tone.getDestination().disposed) {
-        // This is line 171 from your log
         console.warn("[Audio _rechainMasterEffectsAudio] Core audio nodes not ready. Cannot re-chain master effects.");
         return;
     }
 
-    // Disconnect previous chain cleanly
     masterEffectsBusInputNode.disconnect();
     activeMasterEffectNodes.forEach(node => {
         if (node && !node.disposed) node.disconnect();
     });
     masterGainNodeActual.disconnect();
     masterMeterNode.disconnect();
-    // console.log("[Audio _rechainMasterEffectsAudio] Previous chain disconnected.");
 
     let currentNode = masterEffectsBusInputNode;
     const masterEffectsState = localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : [];
-    // console.log("[Audio _rechainMasterEffectsAudio] Master effects state:", JSON.parse(JSON.stringify(masterEffectsState)));
-
 
     masterEffectsState.forEach(effectState => {
         const effectNode = activeMasterEffectNodes.get(effectState.id);
         if (effectNode && !effectNode.disposed) {
             if (!effectState.isBypassed) {
                 try {
-                    // console.log(`[Audio _rechainMasterEffectsAudio] Connecting to effect: ${effectState.type} (ID: ${effectState.id})`);
                     currentNode.connect(effectNode);
                     currentNode = effectNode;
                 } catch (e) { console.error(`Error connecting master effect ${effectState.type} (${effectState.id}):`, e); }
-            } else {
-                // console.log(`[Audio _rechainMasterEffectsAudio] Bypassing effect: ${effectState.type} (ID: ${effectState.id})`);
             }
-        } else {
-            // console.warn(`[Audio _rechainMasterEffectsAudio] Effect node for ID ${effectState.id} (Type: ${effectState.type}) not found or disposed.`);
         }
     });
 
     try {
-        // console.log("[Audio _rechainMasterEffectsAudio] Chaining final stage: CurrentNode -> Gain -> Meter -> Destination");
         currentNode.chain(masterGainNodeActual, masterMeterNode, Tone.getDestination());
-        // console.log("[Audio _rechainMasterEffectsAudio] Master chain reconfigured successfully.");
     } catch (e) {
         console.error("[Audio _rechainMasterEffectsAudio] Error chaining final part of master audio path:", e);
-        // Fallback connections if direct chain fails
         if (currentNode && !currentNode.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
             currentNode.connect(masterGainNodeActual);
             if (masterMeterNode && !masterMeterNode.disposed) masterGainNodeActual.connect(masterMeterNode);
@@ -233,11 +210,6 @@ export function _rechainMasterEffectsAudio() {
         }
     }
 }
-
-
-// Remaining functions (togglePlayback, stopPlayback, etc.) are kept as they were in your provided file,
-// as they primarily depend on audioContextInitialized and localAppServices,
-// which should be more stable with the main.js and above changes.
 
 export async function togglePlayback() {
     if (typeof Tone === 'undefined') return;
@@ -403,13 +375,15 @@ export async function stopAudioRecording() {
     }
 }
 
+
 export async function fetchSoundLibrary(libraryName, libraryPath) {
-    // ... (Content from your provided file, appears largely okay) ...
     if (!libraryName || !libraryPath) {
-        console.error("[Audio fetchSoundLibrary] Library name or path is missing.");
-        if (localAppServices.showNotification) localAppServices.showNotification("Error: Library information missing.", "error");
+        console.error("[Audio fetchSoundLibrary] Library name or path is missing for fetch.");
+        if (localAppServices.showNotification) localAppServices.showNotification("Error: Library information missing for fetch.", "error");
         return;
     }
+    console.log(`[Audio fetchSoundLibrary] Attempting to fetch: ${libraryName} from ${libraryPath}`);
+
     const loadedZips = localAppServices.getLoadedZipFilesState ? localAppServices.getLoadedZipFilesState() : {};
     if (loadedZips[libraryName] === "loading") {
         if (localAppServices.showNotification) localAppServices.showNotification(`Library "${libraryName}" is already loading.`, "info");
@@ -418,20 +392,34 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
 
     try {
         if (localAppServices.setLoadedZipFiles) {
-             localAppServices.setLoadedZipFiles({...loadedZips, [libraryName]: "loading" });
+            localAppServices.setLoadedZipFiles({ ...loadedZips, [libraryName]: "loading" });
         }
-        if (localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false);
+        if (localAppServices.updateSoundBrowserDisplayForLibrary) {
+            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false);
+        }
 
-        const response = await fetch(libraryPath);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${libraryPath}`);
+        const response = await fetch(libraryPath); // This is line 425 in your log
+        console.log(`[Audio fetchSoundLibrary] Response for ${libraryPath}: Status ${response.status}, OK: ${response.ok}`);
+
+        if (!response.ok) {
+            // Log more details if response is not ok
+            const errorText = await response.text().catch(() => "Could not read error response body.");
+            console.error(`[Audio fetchSoundLibrary] HTTP error! status: ${response.status} for ${libraryPath}. Response body: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status} for ${libraryPath}`);
+        }
+
         const zipBlob = await response.blob();
+        console.log(`[Audio fetchSoundLibrary] Blob received for ${libraryName}, size: ${zipBlob.size}, type: ${zipBlob.type}`);
+
 
         if (typeof JSZip === 'undefined') {
-            console.error("JSZip library is not loaded. Cannot process .zip file.");
+            console.error("[Audio fetchSoundLibrary] JSZip library is not loaded. Cannot process .zip file.");
             throw new Error("JSZip library is not loaded.");
         }
         const jszip = new JSZip();
         const zip = await jszip.loadAsync(zipBlob);
+        console.log(`[Audio fetchSoundLibrary] JSZip loaded for ${libraryName}.`);
+
 
         const fileTree = {};
         zip.forEach((relativePath, zipEntry) => {
@@ -466,21 +454,24 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
         } else if (localAppServices.updateSoundBrowserDisplayForLibrary) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
         }
-        if(localAppServices.showNotification) localAppServices.showNotification(`Library "${libraryName}" loaded.`, "success");
+        if(localAppServices.showNotification) localAppServices.showNotification(`Library "${libraryName}" loaded successfully.`, "success");
 
-    } catch (error) {
+    } catch (error) { // This is line 472 in your log
         console.error(`[Audio fetchSoundLibrary] Error loading library ${libraryName}:`, error);
-        if (localAppServices.showNotification) localAppServices.showNotification(`Failed to load library ${libraryName}: ${error.message}`, "error");
+        if (localAppServices.showNotification) localAppServices.showNotification(`Failed to load library ${libraryName}: ${error.message || 'Unknown fetch error'}. Check console and network tab.`, "error", 5000);
         if (localAppServices.setLoadedZipFiles) {
-             const currentLoaded = localAppServices.getLoadedZipFilesState ? localAppServices.getLoadedZipFilesState() : {};
+            const currentLoaded = localAppServices.getLoadedZipFilesState ? localAppServices.getLoadedZipFilesState() : {};
             localAppServices.setLoadedZipFiles({ ...currentLoaded, [libraryName]: "error" });
         }
-        if (localAppServices.updateSoundBrowserDisplayForLibrary) localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, true);
+        if (localAppServices.updateSoundBrowserDisplayForLibrary) {
+            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, true);
+        }
     }
 }
 
+
 export async function loadSoundFromBrowserToTarget(soundData, trackId, targetType, targetContext = {}) {
-    // ... (Content from your provided file, appears largely okay, ensure audioContextInitialized check) ...
+    // ... (content as before) ...
     if (typeof Tone === 'undefined') return;
     if (!audioContextInitialized) await initAudioContextAndMasterMeter(true);
     if (!audioContextInitialized) {
@@ -508,7 +499,7 @@ export async function loadSoundFromBrowserToTarget(soundData, trackId, targetTyp
         const blob = await fileEntry.async('blob');
         const audioFile = new File([blob], soundData.fileName, { type: blob.type || getMimeTypeFromFilename(soundData.fileName) });
 
-        if (targetTrack.type === 'Audio' && typeof track.addSoundBrowserItemAsClip === 'function') {
+        if (track.type === 'Audio' && typeof track.addSoundBrowserItemAsClip === 'function') {
             await track.addSoundBrowserItemAsClip(soundData, targetContext.startTime);
         } else if (['Sampler', 'DrumSampler', 'InstrumentSampler'].includes(track.type) && typeof track.loadSampleFromBrowser === 'function'){
             await track.loadSampleFromBrowser(soundData, targetType, targetContext);
@@ -529,7 +520,7 @@ export async function loadSoundFromBrowserToTarget(soundData, trackId, targetTyp
 }
 
 export async function loadAndPreviewSample(filePath, libraryName, fileNameToDisplay) {
-    // ... (Content from your provided file, ensure audioContextInitialized check) ...
+    // ... (content as before) ...
     if (typeof Tone === 'undefined') return;
     if (!audioContextInitialized) await initAudioContextAndMasterMeter(true);
     if (!audioContextInitialized) {
@@ -573,6 +564,7 @@ export async function loadAndPreviewSample(filePath, libraryName, fileNameToDisp
 }
 
 export function getMimeTypeFromFilename(filename) {
+    // ... (content as before) ...
     const ext = filename.split('.').pop().toLowerCase();
     switch (ext) {
         case 'mp3': return 'audio/mpeg';
@@ -586,6 +578,7 @@ export function getMimeTypeFromFilename(filename) {
 }
 
 export function updateMeters(globalMasterMeterElement, globalControlsMasterMeterElement, tracksForMetering) {
+    // ... (content as before) ...
     if (typeof Tone === 'undefined' || !audioContextInitialized || !masterMeterNode || masterMeterNode.disposed) {
         if (globalMasterMeterElement) globalMasterMeterElement.style.width = '0%';
         if (globalControlsMasterMeterElement) globalControlsMasterMeterElement.style.width = '0%';
@@ -619,6 +612,7 @@ export function updateMeters(globalMasterMeterElement, globalControlsMasterMeter
     });
 }
 
+// ... (playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile, autoSliceSample as before) ...
 export function playSlicePreview(trackId, sliceIndex) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if(track && typeof track.playSlice === 'function') track.playSlice(sliceIndex);
