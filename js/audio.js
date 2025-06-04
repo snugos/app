@@ -1,4 +1,4 @@
-console.log("*** audio.js V4 LOADED - Top of File ***"); // To be absolutely sure
+console.log("*** audio.js V5 LOADED - Top of File ***"); // To be absolutely sure
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 
 import * as Constants from './constants.js';
@@ -85,7 +85,7 @@ export async function initAudioContextAndMasterMeter(forceStart = false) {
         _rechainMasterEffectsAudio(); 
 
         if (Tone.Transport && Tone.Transport.bpm) {
-            const tempo = localAppServices.globalSettings?.tempo || (Constants.MIN_TEMPO + Constants.MAX_TEMPO) / 2; // More robust default
+            const tempo = localAppServices.globalSettings?.tempo || (Constants.MIN_TEMPO + Constants.MAX_TEMPO) / 2; 
             Tone.Transport.bpm.value = Math.max(Constants.MIN_TEMPO, Math.min(Constants.MAX_TEMPO, tempo));
             if (localAppServices.updateTaskbarTempoDisplay) {
                 localAppServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
@@ -103,6 +103,7 @@ export async function initAudioContextAndMasterMeter(forceStart = false) {
     }
 }
 
+// ... (rest of the functions like setMasterVolume, addMasterEffectToAudio, etc. remain unchanged) ...
 export function setMasterVolume(linearGain) {
     if (masterGainNodeActual && !masterGainNodeActual.disposed) {
         masterGainNodeActual.gain.value = linearGain;
@@ -404,7 +405,7 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
         if (localAppServices.showNotification) localAppServices.showNotification("Error: Library information missing for fetch.", "error");
         return;
     }
-    console.log(`[Audio fetchSoundLibrary] Attempting to fetch: ${libraryName} from ${libraryPath}`);
+    console.log(`[Audio fetchSoundLibrary] Attempting to fetch: ${libraryName} from ${libraryPath}`); // Line 407 in V4 log
 
     const loadedZips = localAppServices.getLoadedZipFilesState ? localAppServices.getLoadedZipFilesState() : {};
     if (loadedZips[libraryName] === "loading") {
@@ -412,6 +413,7 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
         return;
     }
 
+    let response; // V5: Declare response here to access in catch
     try {
         if (localAppServices.setLoadedZipFiles) {
             localAppServices.setLoadedZipFiles({ ...loadedZips, [libraryName]: "loading" });
@@ -420,9 +422,15 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false);
         }
 
-        console.log(`[Audio fetchSoundLibrary] ABOUT TO FETCH: ${libraryPath}`); // V4 DEBUG
-        const response = await fetch(libraryPath);
-        console.log(`[Audio fetchSoundLibrary] FETCH COMPLETED. Response for ${libraryPath}: Status ${response.status}, OK: ${response.ok}, Type: ${response.type}, URL: ${response.url}`); // V4 DEBUG + Original
+        console.log(`[Audio fetchSoundLibrary] ABOUT TO FETCH: ${libraryPath}`); // Line 423 in V4 log
+        response = await fetch(libraryPath, { cache: 'no-store' }); // V5: Added no-store
+        console.log(`[Audio fetchSoundLibrary] FETCH COMPLETED. Response for ${libraryPath}: Status ${response.status}, OK: ${response.ok}, Type: ${response.type}, URL: ${response.url}`); // Line 425 in V4 log
+        
+        // V5: Log all response headers
+        console.log(`[Audio fetchSoundLibrary] Response headers for ${libraryPath}:`);
+        response.headers.forEach((value, name) => {
+            console.log(`  ${name}: ${value}`);
+        });
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => "Could not read error response body.");
@@ -430,29 +438,52 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
             throw new Error(`HTTP error! status: ${response.status} for ${libraryPath}. Response likely not a valid ZIP file.`);
         }
         
-        console.log(`[Audio fetchSoundLibrary] Response OK. Attempting to get blob for ${libraryName}...`); // V4 DEBUG
-        const zipBlob = await response.blob();
-        console.log(`[Audio fetchSoundLibrary] Blob received for ${libraryName}, size: ${zipBlob.size}, type: ${zipBlob.type}`);
+        console.log(`[Audio fetchSoundLibrary] Response OK. Attempting to get data for ${libraryName}...`); // Line 433 in V4 log (modified V5)
+        
+        let dataForJszip;
+        try {
+            console.log(`[Audio fetchSoundLibrary] Trying response.blob() for ${libraryName}...`); // V5 DEBUG
+            dataForJszip = await response.blob();
+            console.log(`[Audio fetchSoundLibrary] Blob received for ${libraryName}, size: ${dataForJszip.size}, type: ${dataForJszip.type}`);
+        } catch (blobError) {
+            console.warn(`[Audio fetchSoundLibrary] response.blob() failed for ${libraryName}:`, blobError.message);
+            console.log(`[Audio fetchSoundLibrary] Trying response.arrayBuffer() as fallback for ${libraryName}...`); // V5 DEBUG
+            // Ensure the response object is fresh or clone it if necessary before trying another body-consuming method
+            // However, a typical Response object can only have its body consumed once.
+            // For simplicity, we'll assume the initial fetch needs to be re-done or that arrayBuffer is the primary target if blob fails.
+            // This part might need a more robust strategy if both blob() and arrayBuffer() are desired based on conditions.
+            // For now, if blob fails, we'll let it propagate to the main catch.
+            // A better approach would be to re-fetch or use a cloned response if that's supported.
+            // Let's assume for now if blob() fails, the original error is more indicative.
+            throw blobError; // Re-throw to be caught by the main catch block
+        }
 
-        if (zipBlob.size === 0) {
-            console.error(`[Audio fetchSoundLibrary] Fetched blob for ${libraryName} is empty (0 bytes). Path: ${libraryPath}`);
+
+        if (dataForJszip.size === 0) {
+            console.error(`[Audio fetchSoundLibrary] Fetched data for ${libraryName} is empty (0 bytes). Path: ${libraryPath}`);
             throw new Error(`Fetched file for ${libraryName} is empty. Ensure the file path is correct and the file is not empty.`);
         }
         
-        if (zipBlob.type && !zipBlob.type.includes('zip') && !zipBlob.type.includes('octet-stream') && !zipBlob.type.includes('binary') && !zipBlob.type.includes('x-zip-compressed')) {
-            const blobText = await zipBlob.text().catch(() => "Could not read blob as text for type checking.");
-            console.error(`[Audio fetchSoundLibrary] Fetched blob for ${libraryName} does NOT appear to be a ZIP file. Type: ${zipBlob.type}, Size: ${zipBlob.size}. Path: ${libraryPath}. Blob text snippet: ${blobText.substring(0, 500)}`);
-            throw new Error(`Fetched file for ${libraryName} is not a ZIP (Type: ${zipBlob.type}). Check the network response in developer tools. It might be an HTML error page or a misconfigured server response.`);
+        if (dataForJszip.type && !dataForJszip.type.includes('zip') && !dataForJszip.type.includes('octet-stream') && !dataForJszip.type.includes('binary') && !dataForJszip.type.includes('x-zip-compressed')) {
+            let blobText = "[Could not read blob as text for type checking - likely binary]";
+            try {
+                 // Only try to read as text if it's small enough or clearly not binary, to avoid performance issues.
+                if (dataForJszip.size < 1024 * 1024 && dataForJszip.type.startsWith('text/')) { // Example condition
+                    blobText = await dataForJszip.text();
+                 }
+            } catch (textReadError) { /* ignore */ }
+            console.error(`[Audio fetchSoundLibrary] Fetched data for ${libraryName} does NOT appear to be a ZIP file. Type: ${dataForJszip.type}, Size: ${dataForJszip.size}. Path: ${libraryPath}. Blob text snippet (if applicable): ${blobText.substring(0, 500)}`);
+            throw new Error(`Fetched file for ${libraryName} is not a ZIP (Type: ${dataForJszip.type}). Check the network response in developer tools. It might be an HTML error page or a misconfigured server response.`);
         }
         
-        console.log(`[Audio fetchSoundLibrary] Blob seems valid. Checking JSZip for ${libraryName}...`); // V4 DEBUG
+        console.log(`[Audio fetchSoundLibrary] Data seems valid. Checking JSZip for ${libraryName}...`);
         if (typeof JSZip === 'undefined') {
             console.error("[Audio fetchSoundLibrary] JSZip library is not loaded. Cannot process .zip file.");
             throw new Error("JSZip library is not loaded.");
         }
         const jszip = new JSZip();
-        console.log(`[Audio fetchSoundLibrary] Attempting jszip.loadAsync for ${libraryName}...`); // V4 DEBUG
-        const zip = await jszip.loadAsync(zipBlob);
+        console.log(`[Audio fetchSoundLibrary] Attempting jszip.loadAsync for ${libraryName}...`);
+        const zip = await jszip.loadAsync(dataForJszip); // Use dataForJszip (which is currently the blob)
         console.log(`[Audio fetchSoundLibrary] JSZip loaded for ${libraryName}.`);
 
         const fileTree = {};
@@ -493,7 +524,7 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
     } catch (error) {
         let userMessage = `Failed to load library ${libraryName}. `;
         if (error.message) {
-            if (error.message.toLowerCase().includes("failed to fetch") || error.message.toLowerCase().includes("http error")) {
+            if (error.message.toLowerCase().includes("failed to fetch") || error.message.toLowerCase().includes("http error") || (response && !response.ok) ) {
                 userMessage += `Could not retrieve the library file. Please check if the file exists at the specified path and that there are no network issues (e.g., CORS). Path: ${libraryPath}`;
             } else if (error.message.toLowerCase().includes("jszip") || error.message.toLowerCase().includes("not a zip") || error.message.toLowerCase().includes("zip file")) {
                 userMessage += `The file obtained from '${libraryPath}' is not a valid ZIP archive or is corrupted.`;
@@ -505,7 +536,7 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
         }
         userMessage += " Check console for technical details.";
 
-        console.error(`[Audio fetchSoundLibrary] Error loading library ${libraryName} from path ${libraryPath}:`, error); // This is line 548 in your log
+        console.error(`[Audio fetchSoundLibrary] Error loading library ${libraryName} from path ${libraryPath}:`, error); // Line 508 in V4 log
         if (localAppServices.showNotification) localAppServices.showNotification(userMessage, "error", 10000);
 
         if (localAppServices.setLoadedZipFiles) {
