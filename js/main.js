@@ -60,6 +60,7 @@ const appServices = {
     getUndoStackState: State.getUndoStackState,
     getRedoStackState: State.getRedoStackState,
     getCurrentThemeState: State.getCurrentThemeState,
+    getSelectedSoundForPreview: State.getSelectedSoundForPreviewState, // ADDED
     addWindowToStoreState: State.addWindowToStoreState,
     removeWindowFromStoreState: State.removeWindowFromStoreState,
     setHighestZState: State.setHighestZState,
@@ -74,6 +75,7 @@ const appServices = {
     handleProjectFileLoad: State.handleProjectFileLoadInternal,
     exportToWav: State.exportToWavInternal,
     setCurrentThemeState: State.setCurrentThemeState,
+    setSelectedSoundForPreview: State.setSelectedSoundForPreviewState, // ADDED
     addTrack: (type, initialData) => State.addTrackToStateInternal(type, initialData, true, appServices),
     removeTrack: State.removeTrackFromStateInternal,
     addMasterEffectToState: State.addMasterEffectToState,
@@ -112,8 +114,8 @@ const appServices = {
     autoSliceSample: AudioModule.autoSliceSample,
     getMimeTypeFromFilename: AudioModule.getMimeTypeFromFilename,
     getMasterEffectsBusInputNode: AudioModule.getMasterEffectsBusInputNode,
-    getActualMasterGainNode: AudioModule.getActualMasterGainNodeFromAudio, // From your audio.js
-    clearAllMasterEffectNodes: AudioModule.clearAllMasterEffectNodesInAudio, // From your audio.js
+    getActualMasterGainNode: AudioModule.getActualMasterGainNode,
+    clearAllMasterEffectNodes: AudioModule.clearAllMasterEffectNodes,
     startAudioRecording: AudioModule.startAudioRecording,
     stopAudioRecording: AudioModule.stopAudioRecording,
     addMasterEffectToAudio: AudioModule.addMasterEffectToAudio,
@@ -145,7 +147,7 @@ const appServices = {
     reorderMasterEffect: (effectId, newIndex) => {
         if (!appServices.getIsReconstructingDAW()) appServices.captureStateForUndoInternal(`Reorder Master Effects`);
         appServices.reorderMasterEffectInState(effectId, newIndex);
-        appServices.reorderMasterEffectInAudio(effectId, newIndex);
+        appServices.reorderMasterEffectInAudio(effectId, newIndex); // Corrected: was reorderMasterEffectInAudio(effectId, newIndex)
         if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
     },
     toggleBypassMasterEffect: (effectId) => {
@@ -167,8 +169,8 @@ const appServices = {
     openTrackInspectorWindow: UI.openTrackInspectorWindow,
     openTrackEffectsRackWindow: UI.openTrackEffectsRackWindow,
     openMasterEffectsRackWindow: UI.openMasterEffectsRackWindow,
-    openArrangementWindow: UI.openArrangementWindow, // This is UI.openArrangementWindow from browserCoreUI
-    openTimelineWindow: UI.openTimelineWindow, // From your ui.js (browserCoreUI)
+    openArrangementWindow: UI.openArrangementWindow,
+    openTimelineWindow: UI.openArrangementWindow, // Assuming timeline and arrangement are the same window for now
     openSequencerWindow: UI.openSequencerWindow,
     openMixerWindow: UI.openMixerWindow,
     updateMixerWindow: UI.updateMixerWindow,
@@ -181,8 +183,8 @@ const appServices = {
     drawInstrumentWaveform: UI.drawInstrumentWaveform,
     renderSamplePads: UI.renderSamplePads,
     updateSliceEditorUI: UI.updateSliceEditorUI,
-    updateDrumPadControlsUI: UI.updateDrumPadControlsUI,
     renderDrumSamplerPads: UI.renderDrumSamplerPads,
+    updateDrumPadControlsUI: UI.updateDrumPadControlsUI,
     renderEffectsList: UI.renderEffectsList,
     renderEffectControls: UI.renderEffectControls,
     createKnob: UI.createKnob,
@@ -190,7 +192,7 @@ const appServices = {
     renderTimeline: UI.renderTimeline,
     updatePlayheadPosition: UI.updatePlayheadPosition,
     openGlobalControlsWindow: GlobalControlsUI.openGlobalControlsWindow,
-    updateMasterEffectsRackUI: () => { /* ... same as your main.js ... */
+    updateMasterEffectsRackUI: () => {
         const rackWindow = appServices.getWindowById('masterEffectsRack');
         if (rackWindow?.element && !rackWindow.isMinimized && typeof UI.renderEffectsList === 'function') {
             const listDiv = rackWindow.element.querySelector('#effectsList-master');
@@ -207,7 +209,7 @@ const appServices = {
     handleOpenTrackInspector: EventHandlers.handleOpenTrackInspector,
     handleOpenEffectsRack: EventHandlers.handleOpenEffectsRack,
     handleOpenSequencer: EventHandlers.handleOpenSequencer,
-    panicStopAllAudio: () => { /* ... same as your main.js ... */
+    panicStopAllAudio: () => {
         if (typeof Tone !== 'undefined') {
             Tone.Transport.stop(); Tone.Transport.cancel(0);
         }
@@ -229,39 +231,39 @@ const appServices = {
         }
         appServices.showNotification("All audio stopped.", "info", 1500);
     },
-    updateTaskbarTempoDisplay: (tempo) => { /* ... same as your main.js ... */
+    updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
     },
-    updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => { /* ... same as your main.js ... */
+    updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => {
         const undoBtn = uiElementsCache.menuUndo; const redoBtn = uiElementsCache.menuRedo;
         const undoStackCurrent = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
         const redoStackCurrent = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
         if (undoBtn) { const canUndo = undoStackCurrent.length > 0; undoBtn.classList.toggle('disabled', !canUndo); undoBtn.title = canUndo && undoStateParam ? `Undo: ${undoStateParam.actionName || 'action'}` : "Undo"; }
         if (redoBtn) { const canRedo = redoStackCurrent.length > 0; redoBtn.classList.toggle('disabled', !canRedo); redoBtn.title = canRedo && redoStateParam ? `Redo: ${redoStateParam.actionName || 'action'}` : "Redo"; }
     },
-    updateRecordButtonUI: (isRec, isArmed) => { /* ... same as your main.js ... */
+    updateRecordButtonUI: (isRec, isArmed) => {
         const recActive = isRec && isArmed;
-        if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-500', recActive);
+        if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-500', !recActive); // Assuming default is not red when not active. Or handle better.
         if (uiElementsCache.recordBtnGlobal) uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', recActive);
     },
-    closeAllWindows: (isReconstruction = false) => { /* ... same as your main.js ... */
+    closeAllWindows: (isReconstruction = false) => {
         const openWindows = appServices.getOpenWindowsState();
         if (openWindows) openWindows.forEach(win => win.close(isReconstruction));
         if(appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
     },
     clearOpenWindowsMap: () => State.getOpenWindowsState().clear(),
-    triggerCustomBackgroundUpload: () => { /* ... same as your main.js ... */
+    triggerCustomBackgroundUpload: () => {
         const input = uiElementsCache.customBgInput;
         if (input) input.click();
     },
-    removeCustomDesktopBackground: async () => { /* ... same as your main.js ... */
+    removeCustomDesktopBackground: async () => {
         await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY);
         if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
         currentBackgroundImageObjectURL = null;
         applyDesktopBackground(null);
         appServices.showNotification("Background removed.", "info", 2000);
     },
-    onPlaybackModeChange: (newMode) => { /* ... same as your main.js ... */
+    onPlaybackModeChange: (newMode) => {
         const playbackBtn = uiElementsCache.playbackModeToggleBtnGlobal;
         if (playbackBtn) playbackBtn.textContent = newMode === 'timeline' ? 'Mode: Timeline' : 'Mode: Sequencer';
         if(appServices.renderTimeline) appServices.renderTimeline();
@@ -269,15 +271,12 @@ const appServices = {
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
-    getSelectedSoundForPreview: State.getSelectedSoundForPreviewState,
-    setSelectedSoundForPreview: State.setSelectedSoundForPreviewState,
-    // Added from your new ui.js file, assuming it should be here
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
             console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);
             return null;
         }
-        const loadedZips = appServices.getLoadedZipFiles(); // Use appService getter
+        const loadedZips = appServices.getLoadedZipFiles();
         if (loadedZips?.[soundData.libraryName] && loadedZips[soundData.libraryName] !== "loading") {
             const zipEntry = loadedZips[soundData.libraryName].file(soundData.fullPath);
             if (zipEntry) {
@@ -299,9 +298,6 @@ const appServices = {
 };
 
 function initializeCoreServices() {
-    // This function is now largely decorative as appServices is built with direct assignments.
-    // However, if there was specific logic (e.g. conditional assignments) it would go here.
-    // For now, we ensure EffectsRegistry is available on appServices if it wasn't directly assigned.
     if (!appServices.effectsRegistryAccess && EffectsRegistry) {
         appServices.effectsRegistryAccess = EffectsRegistry;
     }
@@ -317,30 +313,30 @@ function cacheUIElements() {
 
     uiElementsCache.taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
     
-    uiElementsCache.tempoDisplay = document.getElementById('tempoDisplay'); // In topTaskbar
-    uiElementsCache.playBtn = document.getElementById('playBtn'); // In topTaskbar
-    uiElementsCache.stopBtn = document.getElementById('stopBtn'); // In topTaskbar
-    uiElementsCache.recordBtn = document.getElementById('recordBtn'); // In topTaskbar
+    uiElementsCache.tempoDisplay = document.getElementById('tempoDisplay');
+    uiElementsCache.playBtn = document.getElementById('playBtn');
+    uiElementsCache.stopBtn = document.getElementById('stopBtn');
+    uiElementsCache.recordBtn = document.getElementById('recordBtn');
     uiElementsCache.masterMeter = document.getElementById('master-meter');
     uiElementsCache.cpuUsage = document.getElementById('cpu-usage');
     uiElementsCache.clock = document.getElementById('clock');
 
-    // Start Menu items from your index.html
     const menuItemsToCache = [
         'menuNewProject', 'menuAddSynthTrack', 'menuAddSamplerTrack', 
         'menuAddDrumSamplerTrack', 'menuAddInstrumentSamplerTrack', 'menuAddAudioTrack',
         'menuOpenSoundBrowser', 'menuOpenTimeline', 'menuOpenGlobalControls', 
         'menuOpenMixer', 'menuOpenMasterEffects', 'menuUndo', 'menuRedo', 
-        'menuSaveProject', 'menuLoadProject', 'menuExportWav', 'menuToggleFullScreen'
+        'menuSaveProject', 'menuLoadProject', 'menuExportWav', 'menuToggleFullScreen',
+        'menuUploadBackground', 'menuRemoveBackground' // Added from index.html
     ];
     menuItemsToCache.forEach(id => {
         uiElementsCache[id] = document.getElementById(id);
-        console.log(`[Main cacheUIElements] ${id} found in DOM:`, !!uiElementsCache[id]); // ADDED LOG
+        console.log(`[Main cacheUIElements] ${id} found in DOM:`, !!uiElementsCache[id]);
     });
     
     uiElementsCache.projectFileInput = document.getElementById('loadProjectInput');
-    uiElementsCache.customBgInput = document.getElementById('customBgInput'); // Matching your index.html
-    uiElementsCache.sampleFileInput = document.getElementById('sampleFileInput'); // Matching your index.html
+    uiElementsCache.customBgInput = document.getElementById('customBgInput');
+    uiElementsCache.sampleFileInput = document.getElementById('sampleFileInput');
     uiElementsCache.notificationArea = document.getElementById('notification-area');
     uiElementsCache.modalContainer = document.getElementById('modalContainer');
 }
@@ -351,14 +347,13 @@ async function initializeSnugOS() {
     
     initializeCoreServices(); 
 
-    State.initializeStateModule(appServices);
+    // Initialize UI first so its services are available for State's theme application
+    UI.initializeUIModule(appServices);
+    State.initializeStateModule(appServices); // Now State can potentially use UI services if needed during init, though we moved theme application out
     AudioModule.initializeAudioModule(appServices);
-    // Assuming UI is browserCoreUI.js from ui_modules
-    UI.initializeUIModule(appServices); 
     GlobalControlsUI.initializeGlobalControlsUIModule(appServices);
     EventHandlers.initializeEventHandlersModule(appServices);
 
-    // Corrected call to EventHandlers' exported function
     if (typeof EventHandlers.initializePrimaryEventListeners === 'function') {
         EventHandlers.initializePrimaryEventListeners(appServices); 
     } else {
@@ -374,7 +369,7 @@ async function initializeSnugOS() {
             uiElementsCache.stopBtnGlobal = elements.stopBtnGlobal;
             uiElementsCache.tempoGlobalInput = elements.tempoGlobalInput;
             uiElementsCache.midiInputSelectGlobal = elements.midiInputSelectGlobal;
-            uiElementsCache.masterMeterBarGlobal = elements.masterMeterBarGlobal;
+            uiElementsCache.masterMeterBarGlobal = elements.masterMeterBarGlobal; // Corrected from masterMeterContainerGlobal
             uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal;
             uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
             uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal;
@@ -389,18 +384,41 @@ async function initializeSnugOS() {
         } else {
             console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements.");
         }
-    }, null /* No saved state for initial global controls */ );
+    }, null );
     
     updateClock();
     setInterval(updateClock, 10000);
     if (appServices.updateUndoRedoButtonsUI) {
         appServices.updateUndoRedoButtonsUI(null, null);
     }
-    // Corrected setupGenericDropZoneListeners call
+
     if (uiElementsCache.desktop && typeof Utils.setupGenericDropZoneListeners === 'function') {
-        // The third argument to setupGenericDropZoneListeners in your utils.js was fileInputId
-        // For the desktop, we might not have a single file input ID, or it might be for background
-        Utils.setupGenericDropZoneListeners(uiElementsCache.desktop, handleDesktopDrop, 'file-input-background', appServices);
+        Utils.setupGenericDropZoneListeners(uiElementsCache.desktop, handleDesktopDrop, 'customBgInput', appServices); // Use customBgInput for desktop drops intended for background
+    }
+    
+    // Handle custom background input change
+    if (uiElementsCache.customBgInput) {
+        uiElementsCache.customBgInput.addEventListener('change', (event) => {
+            if (event.target.files && event.target.files[0]) {
+                const file = event.target.files[0];
+                 if (file.type && file.type.startsWith('image/')) {
+                    if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
+                    appServices.dbStoreItem(DESKTOP_BACKGROUND_IDB_KEY, file)
+                        .then(() => {
+                            currentBackgroundImageObjectURL = URL.createObjectURL(file);
+                            applyDesktopBackground(currentBackgroundImageObjectURL);
+                            appServices.showNotification("Background updated.", "success");
+                        })
+                        .catch(err => {
+                            console.error("Error saving background to DB:", err);
+                            appServices.showNotification("Failed to save background.", "error");
+                        });
+                } else {
+                    appServices.showNotification("Invalid file type for background. Please select an image.", "warning");
+                }
+            }
+            event.target.value = null; // Reset file input
+        });
     }
     
     try {
@@ -415,15 +433,27 @@ async function initializeSnugOS() {
     if (appServices.openArrangementWindow) appServices.openArrangementWindow();
     if (appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow();
 
+    // MODIFIED: Apply theme after all modules (especially UI) are initialized
+    if (appServices.updateTheme && appServices.getCurrentThemeState) {
+        appServices.updateTheme(appServices.getCurrentThemeState());
+    }
+    
     console.log(`[Main initializeSnugOS] SnugOS Initialized and Ready.`);
     startPerformanceMonitor();
 }
 
-function handleDesktopDrop(file) {
+function handleDesktopDrop(file) { // This is the callback for generic drop zone on desktop
     if (!file) return;
     if (file.name.endsWith('.snug')) {
+        // Create a synthetic event object that mimics a file input change
         const eventLike = { target: { files: [file] } };
-        appServices.handleProjectFileLoad(eventLike); 
+        if(appServices.handleProjectFileLoad) appServices.handleProjectFileLoad(eventLike); // Assuming handleProjectFileLoad can take the file directly or this eventLike
+        else if(appServices.loadProject) { // Fallback if handleProjectFileLoad is specific to input events
+            const fileInput = appServices.uiElementsCache?.projectFileInput || document.getElementById('loadProjectInput');
+            if (fileInput && typeof State.handleProjectFileLoadInternal === 'function') { // Directly call state if appService wrapper is problematic
+                State.handleProjectFileLoadInternal(file); // Pass the file directly
+            }
+        }
     } else if (file.name.endsWith('.zip')) {
         const libraryName = file.name.replace(/\.zip$/i, '');
         const url = URL.createObjectURL(file);
@@ -436,16 +466,18 @@ function handleDesktopDrop(file) {
             });
         appServices.showNotification(`Loading library: ${libraryName}...`, "info");
     } else if (file.type && file.type.startsWith('image/')) {
+        // This case is now primarily handled by the 'customBgInput' change event
+        // but can be a fallback if a direct image drop on desktop is desired outside the input.
         if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
         appServices.dbStoreItem(DESKTOP_BACKGROUND_IDB_KEY, file)
             .then(() => {
                 currentBackgroundImageObjectURL = URL.createObjectURL(file);
                 applyDesktopBackground(currentBackgroundImageObjectURL);
-                appServices.showNotification("Background updated.", "success");
+                appServices.showNotification("Background updated by drop.", "success");
             })
             .catch(err => {
-                console.error("Error saving background to DB:", err);
-                appServices.showNotification("Failed to save background.", "error");
+                console.error("Error saving background from drop to DB:", err);
+                appServices.showNotification("Failed to save background from drop.", "error");
             });
     } else {
         appServices.showNotification(`Unsupported file type dropped: ${file.name}`, 'warning');
@@ -470,8 +502,8 @@ function startPerformanceMonitor() {
         }
         if (appServices.updatePlayheadPosition) appServices.updatePlayheadPosition();
 
-        if (performance.now() - lastMeterUpdateTime > 500) {
-            if (uiElementsCache.cpuUsage) uiElementsCache.cpuUsage.textContent = "CPU: --%"; 
+        if (performance.now() - lastMeterUpdateTime > 500) { // Update less frequently
+            if (uiElementsCache.cpuUsage) uiElementsCache.cpuUsage.textContent = "CPU: --%"; // Placeholder
 
             if (appServices.updateUndoRedoButtonsUI && appServices.getUndoStackState && appServices.getRedoStackState) {
                 const undoStack = appServices.getUndoStackState();
@@ -494,13 +526,16 @@ function applyDesktopBackground(imageUrlOrObjectUrl) {
                 uiElementsCache.desktop.style.backgroundSize = 'cover';
                 uiElementsCache.desktop.style.backgroundPosition = 'center center';
                 uiElementsCache.desktop.style.backgroundRepeat = 'no-repeat';
-                uiElementsCache.desktop.style.backgroundColor = '';
+                uiElementsCache.desktop.style.backgroundColor = ''; // Clear solid color if image is set
             } else {
                 uiElementsCache.desktop.style.backgroundImage = '';
-                uiElementsCache.desktop.style.backgroundColor = Constants.defaultDesktopBg || '#101010';
+                uiElementsCache.desktop.style.backgroundColor = Constants.defaultDesktopBg || '#101010'; // Use constant or fallback
             }
         } catch (e) {
             console.error("Error applying desktop background style:", e);
+            // Fallback to a default color in case of error
+            uiElementsCache.desktop.style.backgroundImage = '';
+            uiElementsCache.desktop.style.backgroundColor = Constants.defaultDesktopBg || '#101010';
         }
     } else {
         console.warn("Desktop element not found in cache for applying background.");
@@ -511,8 +546,6 @@ window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => {
     const tracksExist = appServices.getTracksState && appServices.getTracksState().length > 0;
     const undoStackExists = appServices.getUndoStackState && appServices.getUndoStackState().length > 0;
-
-    // Check if getIsReconstructingDAW exists and use it
     const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
 
     if ((tracksExist || undoStackExists) && !isReconstructing) {
