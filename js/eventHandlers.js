@@ -1,11 +1,9 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 
 import * as Constants from './constants.js';
-// Utils are used directly, or their functions are on appServices
 import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js';
-// No direct state imports here; all state access should be via localAppServices
 
-let localAppServices = {}; // Populated by initializeEventHandlersModule
+let localAppServices = {};
 let isAudioUnlocked = false;
 
 // --- SIMPLIFIED AUDIO UNLOCK ---
@@ -46,9 +44,12 @@ let currentOctaveShift = 0;
 const MIN_OCTAVE_SHIFT = -2;
 const MAX_OCTAVE_SHIFT = 2;
 
-export function initializePrimaryEventListeners() { // Removed appContext, will use module-scoped localAppServices
-    const services = localAppServices; // Use module-scoped localAppServices
+export function initializePrimaryEventListeners(appContext) {
+    const services = appContext || localAppServices;
     const uiCache = services.uiElementsCache || {};
+    console.log('[EventHandlers initializePrimaryEventListeners] Initializing. appContext available:', !!appContext, 'localAppServices available:', !!localAppServices.showNotification);
+    console.log('[EventHandlers initializePrimaryEventListeners] uiCache keys:', Object.keys(uiCache));
+
 
     document.addEventListener('touchstart', playSilentBufferOnTouch, { passive: true, capture: true });
     document.addEventListener('mousedown', playSilentBufferOnTouch, { passive: true, capture: true });
@@ -69,7 +70,14 @@ export function initializePrimaryEventListeners() { // Removed appContext, will 
                 startMenuEl.classList.add('hidden');
             }
         });
-        setupStartMenuItems(startMenuEl, services);
+        // Check if startMenuEl has the ul#fileMenu before calling setupStartMenuItems
+        const fileMenuUl = startMenuEl.querySelector('ul#fileMenu'); // Assuming your UL has id="fileMenu"
+        if (fileMenuUl) {
+            console.log("[EventHandlers initializePrimaryEventListeners] Found ul#fileMenu. Calling setupStartMenuItems.");
+            setupStartMenuItems(startMenuEl, services); // Pass the whole startMenuEl and services
+        } else {
+            console.warn("[EventHandlers initializePrimaryEventListeners] ul#fileMenu NOT FOUND inside startMenuEl. Start Menu items might not be set up.");
+        }
     } else {
         console.warn('[EventHandlers initializePrimaryEventListeners] StartButton or StartMenu element not found in uiCache.');
     }
@@ -78,29 +86,25 @@ export function initializePrimaryEventListeners() { // Removed appContext, will 
     const topStopBtn = uiCache.stopBtn;
     const topRecordBtn = uiCache.recordBtn;
 
-    if (topPlayBtn && services.togglePlayback) {
-        topPlayBtn.addEventListener('click', () => services.togglePlayback());
-    }
-    if (topStopBtn && services.stopPlayback) {
-        topStopBtn.addEventListener('click', () => services.stopPlayback());
-    }
-    if (topRecordBtn && services.toggleRecording) {
-        topRecordBtn.addEventListener('click', () => services.toggleRecording());
-    }
+    if (topPlayBtn && services.togglePlayback) topPlayBtn.addEventListener('click', () => services.togglePlayback());
+    if (topStopBtn && services.stopPlayback) topStopBtn.addEventListener('click', () => services.stopPlayback());
+    if (topRecordBtn && services.toggleRecording) topRecordBtn.addEventListener('click', () => services.toggleRecording());
 }
 
 function setupStartMenuItems(startMenuEl, services) {
     const uiCache = services.uiElementsCache || {};
-    // console.log("[EventHandlers setupStartMenuItems] Setting up. Services.addTrack available:", !!services.addTrack);
+    // ADDED LOGS FOR DEBUGGING START MENU ITEMS
+    console.log("[EventHandlers setupStartMenuItems] Called. StartMenuEl valid:", !!startMenuEl);
+    console.log("[EventHandlers setupStartMenuItems] uiCache contains 'menuAddSynthTrack':", !!(uiCache.menuAddSynthTrack));
+    console.log("[EventHandlers setupStartMenuItems] services.addTrack available:", typeof services.addTrack);
 
-    // Menu items from your index.html
     const menuActions = {
         menuNewProject: () => services.newProject?.(),
-        menuAddSynthTrack: () => { console.log("Menu: Add Synth Track clicked"); services.addTrack?.('Synth', { _isUserActionPlaceholder: true }); },
-        menuAddSamplerTrack: () => { console.log("Menu: Add Slicer Sampler Track clicked"); services.addTrack?.('Sampler', { _isUserActionPlaceholder: true }); },
-        menuAddDrumSamplerTrack: () => { console.log("Menu: Add Sampler (Pads) clicked"); services.addTrack?.('DrumSampler', { _isUserActionPlaceholder: true }); },
-        menuAddInstrumentSamplerTrack: () => { console.log("Menu: Add Instrument Sampler Track clicked"); services.addTrack?.('InstrumentSampler', { _isUserActionPlaceholder: true }); },
-        menuAddAudioTrack: () => { console.log("Menu: Add Audio Track clicked"); services.addTrack?.('Audio', { _isUserActionPlaceholder: true }); },
+        menuAddSynthTrack: () => { console.log("Action: Add Synth Track"); services.addTrack?.('Synth', { _isUserActionPlaceholder: true }); },
+        menuAddSamplerTrack: () => { console.log("Action: Add Slicer Sampler Track"); services.addTrack?.('Sampler', { _isUserActionPlaceholder: true }); },
+        menuAddDrumSamplerTrack: () => { console.log("Action: Add Sampler (Pads)"); services.addTrack?.('DrumSampler', { _isUserActionPlaceholder: true }); },
+        menuAddInstrumentSamplerTrack: () => { console.log("Action: Add Instrument Sampler Track"); services.addTrack?.('InstrumentSampler', { _isUserActionPlaceholder: true }); },
+        menuAddAudioTrack: () => { console.log("Action: Add Audio Track"); services.addTrack?.('Audio', { _isUserActionPlaceholder: true }); },
         menuOpenSoundBrowser: () => services.openSoundBrowserWindow?.(),
         menuOpenTimeline: () => services.openArrangementWindow?.(),
         menuOpenGlobalControls: () => services.openGlobalControlsWindow?.(),
@@ -115,45 +119,82 @@ function setupStartMenuItems(startMenuEl, services) {
     };
 
     for (const menuItemId in menuActions) {
-        const menuItemElement = uiCache[menuItemId] || document.getElementById(menuItemId);
+        const menuItemElement = uiCache[menuItemId] || startMenuEl.querySelector(`#${menuItemId}`); // Fallback query within startMenuEl
+        
+        // ADDED LOGS
+        console.log(`[EventHandlers setupStartMenuItems] Processing: ${menuItemId}. Element in uiCache: ${!!uiCache[menuItemId]}. Element from querySelector: ${!!startMenuEl.querySelector(`#${menuItemId}`)}. Final Element: ${!!menuItemElement}`);
+
         if (menuItemElement) {
-            const newElement = menuItemElement.cloneNode(true); // Prevents multiple listeners on HMR
-            menuItemElement.parentNode.replaceChild(newElement, menuItemElement);
+            const newElement = menuItemElement.cloneNode(true);
+            if (menuItemElement.parentNode) {
+                menuItemElement.parentNode.replaceChild(newElement, menuItemElement);
+            } else {
+                console.warn(`[EventHandlers setupStartMenuItems] Parent node not found for ${menuItemId} during clone replace.`);
+                // If using getElementById directly and it's not in startMenuEl, this might be an issue.
+                // However, if it was found by getElementById, it exists in the document.
+            }
+            
             if (uiCache[menuItemId]) uiCache[menuItemId] = newElement; // Update cache reference
 
             newElement.addEventListener('click', () => {
+                console.log(`[EventHandlers] CLICKED Start Menu Item: ${menuItemId}`); // Log the click
                 if (typeof menuActions[menuItemId] === 'function') {
                     try {
                         menuActions[menuItemId]();
-                    } catch (e) { console.error(`Error executing action for menu item ${menuItemId}:`, e); }
+                    } catch (e) {
+                        console.error(`Error executing action for menu item ${menuItemId}:`, e);
+                        if (services.showNotification) services.showNotification(`Error with ${menuItemId}: ${e.message}`, "error");
+                    }
                 }
                 if (startMenuEl) startMenuEl.classList.add('hidden');
             });
+        } else {
+            console.warn(`[EventHandlers setupStartMenuItems] Menu item element NOT FOUND for ID: ${menuItemId}`);
         }
     }
 }
 
+// ... (attachGlobalControlEvents, handleGlobalKeyDown, setupMIDI, populateMIDIInputSelector, selectMIDIInput, handleMIDIMessage, track/timeline handlers as per your uploaded file, ensuring 'services' or 'localAppServices' is used)
 export function attachGlobalControlEvents(elements) {
     const services = localAppServices;
-    // ... (rest of function from your eventhandlers.js, using `services` for appServices calls) ...
-    // Ensure togglePlayback, panicStopAllAudio, toggleRecording, etc. use `services.FUNCTION_NAME`
     if (!elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
     const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
 
-    if (playBtnGlobal && services.togglePlayback) { // togglePlayback is now on AudioModule, accessed via appServices
-        playBtnGlobal.addEventListener('click', () => services.togglePlayback());
-    } else { console.warn("[EventHandlers] playBtnGlobal not found or togglePlayback service missing."); }
+    if (playBtnGlobal && services.togglePlayback) {
+        playBtnGlobal.addEventListener('click', async () => {
+            try {
+                if (!services.initAudioContextAndMasterMeter) {
+                    console.error("initAudioContextAndMasterMeter service not available.");
+                    (services.showNotification || showNotification)("Audio system error.", 3000); return;
+                }
+                const audioReady = await services.initAudioContextAndMasterMeter(true);
+                if (!audioReady) {
+                    (services.showNotification || showNotification)("Audio context not ready. Please interact with the page.", 3000);
+                    return;
+                }
+                if (services.togglePlayback) services.togglePlayback(); // Call the service from AudioModule
+                 // UI update for button text should be handled by togglePlayback or a state observer
+                playBtnGlobal.innerHTML = Tone.Transport.state === 'started' ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
 
-    if (stopBtnGlobal && services.panicStopAllAudio) { // panicStopAllAudio is on appServices from main.js
+
+            } catch (error) {
+                console.error("[EventHandlers Play/Pause Global] Error:", error);
+                (services.showNotification || showNotification)(`Error during playback: ${error.message}`, 4000);
+                if (playBtnGlobal) playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        });
+    } else { console.warn("[EventHandlers] playBtnGlobal not found in provided elements or service missing."); }
+
+    if (stopBtnGlobal && services.panicStopAllAudio) {
         stopBtnGlobal.addEventListener('click', () => services.panicStopAllAudio());
-    } else { console.warn("[EventHandlers] stopBtnGlobal not found or panicStopAllAudio service missing."); }
+    } else { console.warn("[EventHandlers] stopBtnGlobal not found or service missing."); }
 
-    if (recordBtnGlobal && services.toggleRecording) { // toggleRecording is on AudioModule, accessed via appServices
+    if (recordBtnGlobal && services.toggleRecording) {
         recordBtnGlobal.addEventListener('click', () => services.toggleRecording());
-    } else { console.warn("[EventHandlers] recordBtnGlobal not found or toggleRecording service missing."); }
+    } else { console.warn("[EventHandlers] recordBtnGlobal not found or service missing."); }
     
     if (tempoGlobalInput) {
         if (typeof Tone !== 'undefined' && Tone.Transport) {
@@ -192,22 +233,20 @@ export function attachGlobalControlEvents(elements) {
     } else { console.warn("[EventHandlers] playbackModeToggleBtnGlobal not found."); }
 }
 
-function handleGlobalKeyDown(event, services) { // services is localAppServices
+function handleGlobalKeyDown(event, services) { 
     const uiCache = services.uiElementsCache || {};
-    // ... (rest of handleGlobalKeyDown from your eventhandlers.js, using `services`)
     const activeEl = document.activeElement;
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) {
         if (event.key === "Escape") activeEl.blur();
         return;
     }
-
     const key = event.key.toLowerCase();
     const ctrlOrMeta = event.ctrlKey || event.metaKey;
 
     if (key === ' ' && !(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'))) {
         event.preventDefault();
         if (services.togglePlayback) services.togglePlayback();
-    } else if (key === 'enter' && Tone.Transport.state === 'started') {
+    } else if (key === 'enter' && typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
         if (services.stopPlayback) services.stopPlayback();
     } else if (key === 'r' && !ctrlOrMeta) {
         if (services.toggleRecording) services.toggleRecording();
@@ -220,16 +259,14 @@ function handleGlobalKeyDown(event, services) { // services is localAppServices
     } else if (key === 'o' && ctrlOrMeta) {
         event.preventDefault(); if (services.loadProject) services.loadProject();
     }
-     else if (key === '.' && (event.ctrlKey || event.metaKey)) { // Ctrl+. or Cmd+. for panic
+     else if (key === '.' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         if (services.panicStopAllAudio) services.panicStopAllAudio();
     }
 
-
     const getArmedTrackIdFn = services.getArmedTrackId;
     const getActiveMIDIInputFn = services.getActiveMIDIInput;
     const getTrackByIdFn = services.getTrackById;
-
     const armedTrackId = getArmedTrackIdFn ? getArmedTrackIdFn() : null;
     const activeMIDIInput = getActiveMIDIInputFn ? getActiveMIDIInputFn() : 'none';
 
@@ -240,7 +277,6 @@ function handleGlobalKeyDown(event, services) { // services is localAppServices
             if (midiNote === undefined && Constants.computerKeySynthMap[key]) {
                 midiNote = Constants.computerKeySynthMap[key];
             }
-
             if (midiNote !== undefined && !currentlyPressedComputerKeys[midiNote]) {
                 event.preventDefault();
                 const finalNote = midiNote + (currentOctaveShift * 12);
@@ -258,14 +294,15 @@ function handleGlobalKeyDown(event, services) { // services is localAppServices
     }
 }
 
-// Keyup listener for computer keyboard MIDI - uses localAppServices
-document.addEventListener('keyup', (event) => {
+document.addEventListener('keyup', (event) => { /* ... same as your file, ensure 'services' is used if needed from localAppServices ... */
     const services = localAppServices;
     const uiCache = services.uiElementsCache || {};
     const getArmedTrackIdFn = services.getArmedTrackId;
     const getTrackByIdFn = services.getTrackById;
     const key = event.key.toLowerCase();
-    if (uiCache.keyboardIndicatorGlobal) uiCache.keyboardIndicatorGlobal.classList.remove('active');
+    if (uiCache.keyboardIndicatorGlobal) {
+        uiCache.keyboardIndicatorGlobal.classList.remove('active');
+    }
     const armedTrackId = getArmedTrackIdFn ? getArmedTrackIdFn() : null;
     if (armedTrackId) {
         const track = getTrackByIdFn ? getTrackByIdFn(armedTrackId) : null;
@@ -285,13 +322,13 @@ document.addEventListener('keyup', (event) => {
 });
 
 export async function setupMIDI() {
-    const services = localAppServices; // Use module-scoped services
-    // Check against the exact names assigned in main.js appServices
+    const services = localAppServices;
     if (!services.getMidiAccess || !services.setMidiAccessState || 
         !services.setActiveMIDIInput || !services.selectMIDIInput) {
         console.warn("[EventHandlers setupMIDI] Core MIDI services not available in localAppServices. Needed: getMidiAccess, setMidiAccessState, setActiveMIDIInput, selectMIDIInput");
         return;
     }
+    // ... rest of the function from your eventhandlers.js, ensuring 'services' is used
     const uiCache = services.uiElementsCache || {};
     const selector = uiCache.midiInputSelectGlobal;
     if (!selector) {
@@ -302,12 +339,12 @@ export async function setupMIDI() {
     if (navigator.requestMIDIAccess) {
         try {
             const midiAccess = await navigator.requestMIDIAccess({ sysex: false });
-            services.setMidiAccessState(midiAccess); // Uses appServices function that calls State
+            services.setMidiAccessState(midiAccess);
             populateMIDIInputSelector(midiAccess, services);
             midiAccess.onstatechange = (e) => {
-                populateMIDIInputSelector(services.getMidiAccess(), services); // Use getter from appServices
-                const activeInput = services.getActiveMIDIInput ? services.getActiveMIDIInput() : null; // Use getter
-                const activeInputId = activeInput?.id || activeInput; // Handle if activeInput is string or object
+                populateMIDIInputSelector(services.getMidiAccess(), services);
+                const activeInput = services.getActiveMIDIInput ? services.getActiveMIDIInput() : null;
+                const activeInputId = activeInput?.id || activeInput;
 
                 if (activeInputId && activeInputId !== 'none' && activeInputId !== 'computerKeyboard') {
                     if (e.port.id === activeInputId && e.port.state === 'disconnected') {
@@ -319,11 +356,20 @@ export async function setupMIDI() {
                      if (services.showNotification) services.showNotification(`MIDI Device "${e.port.name}" connected. Re-select if needed.`, "info");
                 }
             };
-        } catch (error) { /* ... */ }
-    } else { /* ... */ }
+        } catch (error) { 
+            console.warn("[EventHandlers setupMIDI] MIDI Access request failed:", error);
+            if (services.showNotification) services.showNotification("Could not access MIDI devices.", "warning");
+            populateMIDIInputSelector(null, services);
+        }
+    } else { 
+        console.warn("[EventHandlers setupMIDI] Web MIDI API not supported.");
+        if (services.showNotification) services.showNotification("Web MIDI API not supported.", "info");
+        populateMIDIInputSelector(null, services);
+    }
 }
 
-function populateMIDIInputSelector(midiAccess, services) { // services is localAppServices
+function populateMIDIInputSelector(midiAccess, services) {
+    // ... (rest of the function from your eventhandlers.js, ensuring 'services' is used)
     const uiCache = services.uiElementsCache || {};
     const selector = uiCache.midiInputSelectGlobal;
     if (!selector) return;
@@ -351,32 +397,31 @@ function populateMIDIInputSelector(midiAccess, services) { // services is localA
     const currentActiveInputId = currentActiveInputObj?.id || currentActiveInputObj;
 
     if (services.selectMIDIInput && selector.value !== currentActiveInputId) {
-         services.selectMIDIInput(selector.value, true); // true for silent initial selection
+         services.selectMIDIInput(selector.value, true);
     }
 }
 
 export function selectMIDIInput(deviceId, silent = false) {
+    // ... (rest of the function from your eventhandlers.js, ensuring 'services' is used)
     const services = localAppServices;
     if (!services.setActiveMIDIInput || !services.getMidiAccess || !services.getActiveMIDIInput) return;
 
-    const midiAccess = services.getMidiAccess(); // This gets the MIDI Access object from state via appServices
-    const currentActiveInput = services.getActiveMIDIInput(); // This gets the currently stored active MIDIInputDevice object or ID string
+    const midiAccess = services.getMidiAccess();
+    const currentActiveInput = services.getActiveMIDIInput();
 
-    // Detach from previously active port object if it exists and is a MIDIInputMap entry
     if (currentActiveInput && typeof currentActiveInput.id !== 'undefined' && currentActiveInput.id !== 'computerKeyboard' && currentActiveInput.id !== 'none') {
         if (midiAccess && midiAccess.inputs.has(currentActiveInput.id)) {
             const portToClose = midiAccess.inputs.get(currentActiveInput.id);
             if (portToClose) portToClose.onmidimessage = null;
-            // Do not call port.close() here, as it can prevent reconnection.
         }
     }
     
     if (deviceId && deviceId !== 'none' && deviceId !== 'computerKeyboard' && midiAccess) {
         const inputToSelect = midiAccess.inputs.get(deviceId);
         if (inputToSelect) {
-            inputToSelect.open().then((port) => { // Port is MIDIInput
+            inputToSelect.open().then((port) => {
                 port.onmidimessage = (msg) => handleMIDIMessage(msg, services);
-                services.setActiveMIDIInput(port); // Store the full MIDIInput object in state
+                services.setActiveMIDIInput(port);
                 if (!silent && services.showNotification) services.showNotification(`MIDI Input: ${port.name}`, "info");
             }).catch(err => {
                 if (!silent && services.showNotification) services.showNotification(`Error opening MIDI port ${inputToSelect.name}.`, "error");
@@ -386,8 +431,8 @@ export function selectMIDIInput(deviceId, silent = false) {
             services.setActiveMIDIInput(null);
             if (!silent && services.showNotification) services.showNotification("Selected MIDI input not found.", "warning");
         }
-    } else { // "none" or "computerKeyboard"
-        services.setActiveMIDIInput(deviceId === 'computerKeyboard' ? 'computerKeyboard' : null); // Store string or null
+    } else {
+        services.setActiveMIDIInput(deviceId === 'computerKeyboard' ? 'computerKeyboard' : null);
         if (!silent && services.showNotification) {
             if (deviceId === 'computerKeyboard') services.showNotification("MIDI Input: Computer Keyboard", "info");
             else services.showNotification("MIDI Input: None", "info");
@@ -395,48 +440,77 @@ export function selectMIDIInput(deviceId, silent = false) {
     }
 }
 
-// --- Track Control Handlers (called by UI, use localAppServices) ---
-export function handleTrackMute(trackId) {
-    const track = localAppServices.getTrackById(trackId);
+function handleMIDIMessage(message, services) {
+    // ... (rest of the function from your eventhandlers.js, using 'services')
+    const uiCache = services.uiElementsCache || {};
+    const getArmedTrackIdFn = services.getArmedTrackId;
+    const getTrackByIdFn = services.getTrackById;
+
+    const [command, note, velocity] = message.data;
+    if (uiCache.midiIndicatorGlobal) {
+        uiCache.midiIndicatorGlobal.classList.add('active');
+        setTimeout(() => { if(uiCache.midiIndicatorGlobal) uiCache.midiIndicatorGlobal.classList.remove('active'); }, 100);
+    }
+
+    const armedTrackId = getArmedTrackIdFn ? getArmedTrackIdFn() : null;
+    if (armedTrackId) {
+        const track = getTrackByIdFn ? getTrackByIdFn(armedTrackId) : null;
+        if (track && typeof track.playNote === 'function' && typeof track.stopNote === 'function' && typeof Tone !== 'undefined') {
+            const freq = Tone.Frequency(note, "midi").toNote();
+            if (command === 144 && velocity > 0) { 
+                track.playNote(freq, Tone.now(), velocity / 127);
+            } else if (command === 128 || (command === 144 && velocity === 0)) {
+                track.stopNote(freq, Tone.now());
+            }
+        }
+    }
+}
+
+export function handleTrackMute(trackId) { /* ... use localAppServices ... */ 
+    const services = localAppServices;
+    const track = services.getTrackById(trackId);
     if (track) {
-        localAppServices.captureStateForUndoInternal(`Toggle Mute for ${track.name}`);
+        services.captureStateForUndoInternal(`Toggle Mute for ${track.name}`);
         track.setMute(!track.isMuted);
-        if(localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
-        if(localAppServices.renderTimeline) localAppServices.renderTimeline();
+        if(services.updateMixerWindow) services.updateMixerWindow();
+        if(services.renderTimeline) services.renderTimeline();
     }
 }
-export function handleTrackSolo(trackId) {
-    const track = localAppServices.getTrackById(trackId);
+export function handleTrackSolo(trackId) { /* ... use localAppServices ... */
+    const services = localAppServices;
+    const track = services.getTrackById(trackId);
     if (track) {
-        localAppServices.captureStateForUndoInternal(`Toggle Solo for ${track.name}`);
-        localAppServices.setSoloedTrackId(trackId);
+        services.captureStateForUndoInternal(`Toggle Solo for ${track.name}`);
+        services.setSoloedTrackId(trackId);
     }
 }
-export function handleTrackArm(trackId) {
-    const track = localAppServices.getTrackById(trackId);
+export function handleTrackArm(trackId) { /* ... use localAppServices ... */
+    const services = localAppServices;
+    const track = services.getTrackById(trackId);
     if (track) {
-        localAppServices.captureStateForUndoInternal(`Arm track ${track.name}`); // Or disarm
-        localAppServices.setArmedTrackId(trackId);
+        services.captureStateForUndoInternal(`Arm track ${track.name}`);
+        services.setArmedTrackId(trackId);
     }
 }
-export function handleRemoveTrack(trackId) {
-    const track = localAppServices.getTrackById(trackId);
+export function handleRemoveTrack(trackId) { /* ... use localAppServices ... */
+    const services = localAppServices;
+    const track = services.getTrackById(trackId);
     if (track) {
-        localAppServices.showConfirmationDialog(`Are you sure you want to delete track "${track.name}"? This can be undone.`, () => {
-            localAppServices.removeTrack(trackId);
+        services.showConfirmationDialog(`Are you sure you want to delete track "${track.name}"? This can be undone.`, () => {
+            services.removeTrack(trackId);
         });
     }
 }
-export function handleOpenTrackInspector(trackId) {
+export function handleOpenTrackInspector(trackId) { /* ... use localAppServices ... */
     if (localAppServices.openTrackInspectorWindow) localAppServices.openTrackInspectorWindow(trackId);
 }
-export function handleOpenEffectsRack(trackId) {
+export function handleOpenEffectsRack(trackId) { /* ... use localAppServices ... */
     if (localAppServices.openTrackEffectsRackWindow) localAppServices.openTrackEffectsRackWindow(trackId);
 }
-export function handleOpenSequencer(trackId) {
+export function handleOpenSequencer(trackId) { /* ... use localAppServices ... */
     if (localAppServices.openSequencerWindow) localAppServices.openSequencerWindow(trackId);
 }
-function toggleFullScreen() {
+function toggleFullScreen() { /* ... use localAppServices for notification ... */
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
             (localAppServices.showNotification || showNotification)(`Error enabling full-screen: ${err.message}`, "warning");
@@ -453,10 +527,7 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
         return;
     }
     const targetTrack = services.getTrackById(targetTrackId);
-    if (!targetTrack) {
-        services.showNotification("Target track not found for drop.", "warning");
-        return;
-    }
+    if (!targetTrack) { services.showNotification("Target track not found for drop.", "warning"); return; }
     const jsonDataString = event.dataTransfer.getData('application/json');
     const files = event.dataTransfer.files;
     try {
@@ -469,7 +540,7 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
                 } else { services.showNotification("Error: Track cannot accept sequence clips.", 3000); }
             } else if (droppedData.type === 'sound-browser-item') {
                 if (targetTrack.type !== 'Audio') { services.showNotification("Sound browser audio files can only be dropped onto Audio Track timeline lanes.", 3000); return; }
-                if (services.getAudioBlobFromSoundBrowserItem && typeof targetTrack.addExternalAudioFileAsClip === 'function') { // Ensure getAudioBlobFromSoundBrowserItem exists
+                if (services.getAudioBlobFromSoundBrowserItem && typeof targetTrack.addExternalAudioFileAsClip === 'function') {
                     const audioBlob = await services.getAudioBlobFromSoundBrowserItem(droppedData);
                     if (audioBlob) {
                         targetTrack.addExternalAudioFileAsClip(audioBlob, startTime, droppedData.fileName);
