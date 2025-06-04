@@ -28,6 +28,7 @@ import {
     getRecordingTrackIdState, getRecordingStartTimeState,
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState,
     getSelectedTimelineClipInfoState,
+    getCurrentUserThemePreferenceState, // Added for theme
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -39,6 +40,7 @@ import {
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
     setSelectedTimelineClipInfoState,
+    setCurrentUserThemePreferenceState, // Added for theme
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -68,7 +70,7 @@ import {
     deleteAudio as dbDeleteAudio
 } from './db.js';
 import {
-    initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, /* openGlobalControlsWindow removed from here */
+    initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow,
     openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openSoundBrowserWindow,
     renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep, drawWaveform,
     drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
@@ -79,8 +81,7 @@ import {
     updatePlayheadPosition,
     openTimelineWindow
 } from './ui.js';
-// Import from the new globalControlsUI.js file
-import { initializeGlobalControlsUIModule, openGlobalControlsWindow } from './globalControlsUI.js';
+// REMOVED: import { initializeGlobalControlsUIModule, openGlobalControlsWindow } from './globalControlsUI.js';
 
 
 console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
@@ -94,12 +95,22 @@ const uiElementsCache = {
     menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null,
     menuOpenSoundBrowser: null, menuOpenTimeline: null,
     menuUndo: null, menuRedo: null,
-    menuSaveProject: null, menuLoadProject: null, menuExportWav: null, menuOpenGlobalControls: null,
+    menuSaveProject: null, menuLoadProject: null, menuExportWav: null,
+    // menuOpenGlobalControls: null, // REMOVED - Global controls are now a top taskbar
     menuOpenMixer: null, menuOpenMasterEffects: null,
-    menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null,
-    tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
-    masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
-    playbackModeToggleBtnGlobal: null,
+    menuToggleFullScreen: null,
+    // Elements for the NEW top taskbar
+    topTaskbar: null,
+    playBtnGlobal: null, // Will be assigned to playBtnGlobalTop
+    recordBtnGlobal: null, // Will be assigned to recordBtnGlobalTop
+    stopBtnGlobal: null, // Will be assigned to stopBtnGlobalTop
+    tempoGlobalInput: null, // Will be assigned to tempoGlobalInputTop
+    midiInputSelectGlobal: null, // Will be assigned to midiInputSelectGlobalTop
+    masterMeterContainerGlobal: null, // Will be assigned to masterMeterContainerGlobalTop
+    masterMeterBarGlobal: null, // Will be assigned to masterMeterBarGlobalTop
+    midiIndicatorGlobal: null, // Will be assigned to midiIndicatorGlobalTop
+    keyboardIndicatorGlobal: null, // Will be assigned to keyboardIndicatorGlobalTop
+    playbackModeToggleBtnGlobal: null, // Will be assigned to playbackModeToggleBtnGlobalTop
 };
 
 const DESKTOP_BACKGROUND_LS_KEY = 'snugosDesktopBackground_LS';
@@ -157,6 +168,41 @@ function showSafeNotification(message, duration) {
     }
 }
 
+// --- Theme Switching Logic ---
+const THEME_STORAGE_KEY = 'snugosThemePreference_v2';
+
+function applyThemeCSS(themeName) { // 'light' or 'dark'
+    document.body.classList.remove('theme-light', 'theme-dark');
+    if (themeName === 'light') {
+        document.body.classList.add('theme-light');
+    } else {
+        document.body.classList.add('theme-dark'); // Default to dark if not explicitly light
+    }
+    console.log(`[Theme] Applied CSS for: ${themeName}`);
+    // Optionally, notify windows or components if they need to re-render for theme changes
+    // This is usually handled by CSS variables, but complex components might need a nudge.
+}
+
+function applyUserThemePreference() {
+    const preference = appServices.getCurrentUserThemePreference ? appServices.getCurrentUserThemePreference() : 'system';
+    console.log(`[Theme] Applying user preference: ${preference}`);
+    if (preference === 'system') {
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyThemeCSS(systemPrefersDark ? 'dark' : 'light');
+    } else {
+        applyThemeCSS(preference);
+    }
+}
+
+function handleSystemThemeChange(event) {
+    const preference = appServices.getCurrentUserThemePreference ? appServices.getCurrentUserThemePreference() : 'system';
+    if (preference === 'system') {
+        console.log(`[Theme] System theme changed. Applying: ${event.matches ? 'dark' : 'light'}`);
+        applyThemeCSS(event.matches ? 'dark' : 'light');
+    }
+}
+
+
 // --- AppServices Object (Centralized DI Container) ---
 const appServices = {
     dbStoreItem: dbStoreAudio,
@@ -196,6 +242,7 @@ const appServices = {
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
     getPlaybackMode: getPlaybackModeState,
     getSelectedTimelineClipInfo: getSelectedTimelineClipInfoState,
+    getCurrentUserThemePreference: getCurrentUserThemePreferenceState, // Added for theme
 
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
@@ -211,6 +258,9 @@ const appServices = {
     setActiveSequencerTrackId: setActiveSequencerTrackIdState,
     setPlaybackMode: setPlaybackModeState,
     setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
+    setCurrentUserThemePreference: setCurrentUserThemePreferenceState, // Added for theme
+    applyUserThemePreference: applyUserThemePreference, // Added for theme
+
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
     captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
     redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal,
@@ -333,9 +383,14 @@ const appServices = {
     },
 
     updateTaskbarTempoDisplay: (tempo) => {
-        if (uiElementsCache.taskbarTempoDisplay) {
+        if (uiElementsCache.taskbarTempoDisplay) { // This is for the bottom taskbar
             uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
-        } else { console.warn("Taskbar tempo display element not found in cache."); }
+        }
+        if (uiElementsCache.tempoGlobalInput) { // This is for the new top taskbar
+             if (uiElementsCache.tempoGlobalInput.value !== parseFloat(tempo).toFixed(1)) {
+                uiElementsCache.tempoGlobalInput.value = parseFloat(tempo).toFixed(1);
+             }
+        } else { console.warn("Taskbar tempo display or global input element not found in cache."); }
     },
     updateUndoRedoButtonsUI: (undoState, redoState) => {
         if (uiElementsCache.menuUndo) {
@@ -350,7 +405,7 @@ const appServices = {
     updateRecordButtonUI: (isRec) => {
         if (uiElementsCache.recordBtnGlobal) {
             uiElementsCache.recordBtnGlobal.textContent = isRec ? 'Stop Rec' : 'Record';
-            uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
+            uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec); // Add 'recording' class for styling
         } else { console.warn("Global record button not found in cache."); }
     },
     closeAllWindows: (isReconstruction = false) => {
@@ -693,11 +748,33 @@ async function initializeSnugOS() {
             if (element) {
                  uiElementsCache[key] = element;
             } else {
-                if (['desktop', 'taskbar', 'notification-area', 'modalContainer'].includes(key)) {
+                const criticalDesktopUI = ['desktop', 'taskbar', 'notification-area', 'modalContainer'];
+                const criticalTopTaskbarUI = [ // New top taskbar elements
+                    'topTaskbar', 'playBtnGlobalTop', 'stopBtnGlobalTop', 'recordBtnGlobalTop',
+                    'tempoGlobalInputTop', 'midiInputSelectGlobalTop', 'masterMeterContainerGlobalTop',
+                    'masterMeterBarGlobalTop', 'midiIndicatorGlobalTop', 'keyboardIndicatorGlobalTop',
+                    'playbackModeToggleBtnGlobalTop'
+                ];
+
+                if (criticalDesktopUI.includes(key) || (criticalTopTaskbarUI.includes(key) && !key.endsWith('Global'))) { // Allow cache to be null for Global elements
                     console.warn(`[Main initializeSnugOS] Critical UI Element ID "${key}" not found in DOM.`);
                 }
             }
         });
+
+        // Assign new top taskbar element IDs to their "Global" counterparts in uiElementsCache
+        uiElementsCache.topTaskbar = document.getElementById('topTaskbar');
+        uiElementsCache.playBtnGlobal = document.getElementById('playBtnGlobalTop');
+        uiElementsCache.recordBtnGlobal = document.getElementById('recordBtnGlobalTop');
+        uiElementsCache.stopBtnGlobal = document.getElementById('stopBtnGlobalTop');
+        uiElementsCache.tempoGlobalInput = document.getElementById('tempoGlobalInputTop');
+        uiElementsCache.midiInputSelectGlobal = document.getElementById('midiInputSelectGlobalTop');
+        uiElementsCache.masterMeterContainerGlobal = document.getElementById('masterMeterContainerGlobalTop');
+        uiElementsCache.masterMeterBarGlobal = document.getElementById('masterMeterBarGlobalTop');
+        uiElementsCache.midiIndicatorGlobal = document.getElementById('midiIndicatorGlobalTop');
+        uiElementsCache.keyboardIndicatorGlobal = document.getElementById('keyboardIndicatorGlobalTop');
+        uiElementsCache.playbackModeToggleBtnGlobal = document.getElementById('playbackModeToggleBtnGlobalTop');
+
 
         try {
             const effectsRegistry = await import('./effectsRegistry.js');
@@ -742,7 +819,7 @@ async function initializeSnugOS() {
 
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function");
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule is not a function");
-        if (typeof initializeGlobalControlsUIModule === 'function') initializeGlobalControlsUIModule(appServices); else console.warn("initializeGlobalControlsUIModule not found, global controls might not have direct appServices access.");
+        // REMOVED: if (typeof initializeGlobalControlsUIModule === 'function') initializeGlobalControlsUIModule(appServices); else console.warn("initializeGlobalControlsUIModule not found, global controls might not have direct appServices access.");
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function");
         if (typeof initializeEventHandlersModule === 'function') initializeEventHandlersModule(appServices); else console.error("initializeEventHandlersModule is not a function");
 
@@ -750,25 +827,18 @@ async function initializeSnugOS() {
              initializePrimaryEventListeners(appServices);
         } else { console.error("initializePrimaryEventListeners is not a function");}
 
-        if (typeof openGlobalControlsWindow === 'function') {
-            openGlobalControlsWindow((elements) => {
-                if (elements) {
-                    uiElementsCache.playBtnGlobal = elements.playBtnGlobal;
-                    uiElementsCache.recordBtnGlobal = elements.recordBtnGlobal;
-                    uiElementsCache.stopBtnGlobal = elements.stopBtnGlobal;
-                    uiElementsCache.tempoGlobalInput = elements.tempoGlobalInput;
-                    uiElementsCache.midiInputSelectGlobal = elements.midiInputSelectGlobal;
-                    uiElementsCache.masterMeterContainerGlobal = elements.masterMeterContainerGlobal;
-                    uiElementsCache.masterMeterBarGlobal = elements.masterMeterBarGlobal;
-                    uiElementsCache.midiIndicatorGlobal = elements.midiIndicatorGlobal;
-                    uiElementsCache.keyboardIndicatorGlobal = elements.keyboardIndicatorGlobal;
-                    uiElementsCache.playbackModeToggleBtnGlobal = elements.playbackModeToggleBtnGlobal;
+        // Directly attach event handlers for the new top taskbar elements
+        if (typeof attachGlobalControlEvents === 'function') {
+            attachGlobalControlEvents(uiElementsCache); // Pass the updated uiElementsCache
+        } else {
+            console.error("attachGlobalControlEvents is not a function");
+        }
+        if (typeof setupMIDI === 'function') {
+            setupMIDI(); // setupMIDI internally uses uiElementsCache.midiInputSelectGlobal
+        } else {
+            console.error("setupMIDI is not a function");
+        }
 
-                    if (typeof attachGlobalControlEvents === 'function') attachGlobalControlEvents(elements); else console.error("attachGlobalControlEvents is not a function");
-                    if (typeof setupMIDI === 'function') setupMIDI(); else console.error("setupMIDI is not a function");
-                } else { console.warn("Global controls elements not received in onReadyCallback.");}
-            }, null);
-        } else { console.error("openGlobalControlsWindow is not a function");}
 
         if (Constants.soundLibraries && typeof fetchSoundLibrary === 'function') {
             Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true));
@@ -780,9 +850,73 @@ async function initializeSnugOS() {
 
         requestAnimationFrame(updateMetersLoop);
         if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI(null, null);
+
+
+        // Theme Initialization
+        const savedThemePreference = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedThemePreference && appServices.setCurrentUserThemePreference) {
+            console.log(`[Theme Init] Found saved preference: ${savedThemePreference}`);
+            appServices.setCurrentUserThemePreference(savedThemePreference); // Setter will save and trigger apply
+        } else if (appServices.setCurrentUserThemePreference) {
+            console.log(`[Theme Init] No saved preference, defaulting to 'system'.`);
+            appServices.setCurrentUserThemePreference('system');
+        } else {
+            // Fallback if state management/appServices is not ready
+            console.warn(`[Theme Init] appServices.setCurrentUserThemePreference not available. Applying theme directly.`);
+            applyUserThemePreference();
+        }
+
+        // Listen for system theme changes
+        const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQueryList.addEventListener('change', handleSystemThemeChange);
+        console.log("[Theme Init] System theme change listener added.");
+
+        // Add a Theme Toggle option to the Start Menu
+        if (uiElementsCache.startMenu) {
+            const themeToggleMenuItem = document.createElement('li');
+            themeToggleMenuItem.id = 'menuToggleTheme';
+            themeToggleMenuItem.textContent = 'Cycle Theme';
+            themeToggleMenuItem.title = 'Cycle through Light, Dark, and System theme preferences';
+
+            const fullScreenMenuItem = uiElementsCache.menuToggleFullScreen;
+            const startMenuUl = uiElementsCache.startMenu.querySelector('ul');
+
+            if (startMenuUl) {
+                const hr = document.createElement('hr');
+                if (fullScreenMenuItem && fullScreenMenuItem.parentElement === startMenuUl) {
+                    startMenuUl.insertBefore(hr, fullScreenMenuItem);
+                    startMenuUl.insertBefore(themeToggleMenuItem, fullScreenMenuItem);
+                } else { // Append if fullscreen item isn't there or not in the main ul
+                    startMenuUl.appendChild(hr);
+                    startMenuUl.appendChild(themeToggleMenuItem);
+                }
+                console.log("[Theme Init] 'Cycle Theme' menu item added to Start Menu.");
+
+                themeToggleMenuItem.addEventListener('click', () => {
+                    let currentPref = appServices.getCurrentUserThemePreference ? appServices.getCurrentUserThemePreference() : 'system';
+                    let nextPref;
+                    if (currentPref === 'system') nextPref = 'light';
+                    else if (currentPref === 'light') nextPref = 'dark';
+                    else nextPref = 'system'; // dark -> system
+
+                    if (appServices.setCurrentUserThemePreference) {
+                        appServices.setCurrentUserThemePreference(nextPref);
+                    }
+                    if (uiElementsCache.startMenu) uiElementsCache.startMenu.classList.add('hidden');
+                    showSafeNotification(`Theme set to: ${nextPref.charAt(0).toUpperCase() + nextPref.slice(1)}`, 1500);
+                });
+            } else {
+                console.warn("[Theme Init] Could not find <ul> in Start Menu to add theme toggle.");
+            }
+        } else {
+            console.warn("[Theme Init] Start Menu element not found in cache for theme toggle.");
+        }
+        
+        // Apply initial playback mode UI if button exists
         if (appServices.onPlaybackModeChange && typeof getPlaybackModeState === 'function') {
             appServices.onPlaybackModeChange(getPlaybackModeState());
         }
+
 
         showSafeNotification(`Welcome to SnugOS ${Constants.APP_VERSION}!`, 2500);
         console.log(`[Main initializeSnugOS] SnugOS Version ${Constants.APP_VERSION} Initialized.`);
@@ -803,7 +937,7 @@ function updateMetersLoop() {
             const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null;
             const mixerMasterMeterBar = mixerWindow?.element && !mixerWindow.isMinimized ? mixerWindow.element.querySelector('#mixerMasterMeterBar') : null;
             const tracks = getTracksState ? getTracksState() : [];
-            updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks);
+            updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks); // masterMeterBarGlobal now points to top taskbar meter
         }
         if (typeof updatePlayheadPosition === 'function') {
             updatePlayheadPosition();
@@ -853,4 +987,3 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 console.log(`SCRIPT EXECUTION FINISHED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
-
