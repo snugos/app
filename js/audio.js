@@ -1,3 +1,4 @@
+console.log("*** audio.js V4 LOADED - Top of File ***"); // To be absolutely sure
 // js/audio.js - Audio Engine, Tone.js interactions, Sample Loading
 
 import * as Constants from './constants.js';
@@ -150,8 +151,6 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
             if (paramPath === 'wet' && effectNode.wet && typeof effectNode.wet.value !== 'undefined') {
                  effectNode.wet.value = value;
             } else {
-                // For nested params, Tone.js set might handle it if path is like 'oscillator.type'
-                // However, it's safer to check if the property exists and is a signal-like object
                 const pathParts = paramPath.split('.');
                 let target = effectNode;
                 for (let i = 0; i < pathParts.length - 1; i++) {
@@ -165,12 +164,11 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
                 const finalKey = pathParts[pathParts.length - 1];
                 if (target && target[finalKey] !== undefined) {
                     if (target[finalKey] && typeof target[finalKey].value !== 'undefined' && typeof value !== 'object') {
-                        target[finalKey].value = value; // For signal-like parameters
+                        target[finalKey].value = value;
                     } else {
-                         target[finalKey] = value; // For direct properties
+                         target[finalKey] = value;
                     }
                 } else {
-                    // Fallback to .set if direct path access fails or for complex objects
                     effectNode.set({ [paramPath]: value });
                 }
             }
@@ -204,55 +202,31 @@ export function _rechainMasterEffectsAudio() {
         console.warn("[Audio _rechainMasterEffectsAudio] Core audio nodes not ready. Cannot re-chain master effects.");
         return;
     }
-
-    // Disconnect the existing chain
     masterEffectsBusInputNode.disconnect();
     activeMasterEffectNodes.forEach(node => {
         if (node && !node.disposed) {
-            try { node.disconnect(); } catch(e) { /* ignore if already disconnected */ }
+            try { node.disconnect(); } catch(e) { /* ignore */ }
         }
     });
     masterGainNodeActual.disconnect();
-    masterMeterNode.disconnect(); // Meter was connected to destination, ensure it's cleared
-
+    masterMeterNode.disconnect();
     let currentNode = masterEffectsBusInputNode;
     const masterEffectsState = localAppServices.getMasterEffectsState ? localAppServices.getMasterEffectsState() : [];
-
     masterEffectsState.forEach(effectState => {
         const effectNode = activeMasterEffectNodes.get(effectState.id);
-        if (effectNode && !effectNode.disposed) {
-            if (!effectState.isBypassed) {
-                try {
-                    currentNode.connect(effectNode);
-                    currentNode = effectNode;
-                } catch (e) { console.error(`Error connecting master effect ${effectState.type} (${effectState.id}):`, e); }
-            }
+        if (effectNode && !effectNode.disposed && !effectState.isBypassed) {
+            try {
+                currentNode.connect(effectNode);
+                currentNode = effectNode;
+            } catch (e) { console.error(`Error connecting master effect ${effectState.type} (${effectState.id}):`, e); }
         }
     });
-
     try {
-        // Chain: last effect (or bus input) -> masterGain -> masterMeter -> Tone.Destination
         currentNode.connect(masterGainNodeActual);
         masterGainNodeActual.connect(masterMeterNode);
         masterMeterNode.connect(Tone.getDestination());
     } catch (e) {
         console.error("[Audio _rechainMasterEffectsAudio] Error chaining final part of master audio path:", e);
-        // Fallback connection attempts if the full chain fails
-        try {
-            if (currentNode && !currentNode.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
-                currentNode.connect(masterGainNodeActual);
-                if (masterMeterNode && !masterMeterNode.disposed) {
-                    masterGainNodeActual.connect(masterMeterNode);
-                    if (Tone.getDestination() && !Tone.getDestination().disposed) {
-                        masterMeterNode.connect(Tone.getDestination());
-                    }
-                } else if (Tone.getDestination() && !Tone.getDestination().disposed) {
-                    masterGainNodeActual.connect(Tone.getDestination());
-                }
-            }
-        } catch (fallbackError) {
-            console.error("[Audio _rechainMasterEffectsAudio] Fallback connection also failed:", fallbackError);
-        }
     }
 }
 
@@ -263,14 +237,13 @@ export async function togglePlayback() {
         if(localAppServices.showNotification) localAppServices.showNotification("Audio system not ready.", "warning");
         return;
     }
-
     if (Tone.Transport.state === 'started') {
         Tone.Transport.pause();
         if (localAppServices.showNotification) localAppServices.showNotification("Playback Paused", "info", 1000);
         if(localAppServices.uiElementsCache?.playBtn) localAppServices.uiElementsCache.playBtn.innerHTML = '<i class="fas fa-play"></i>';
         if(localAppServices.uiElementsCache?.playBtnGlobal) localAppServices.uiElementsCache.playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
     } else {
-        await Tone.start(); // Ensure context is running before starting transport
+        await Tone.start();
         Tone.Transport.start();
         if (localAppServices.showNotification) localAppServices.showNotification("Playback Started", "info", 1000);
         if(localAppServices.uiElementsCache?.playBtn) localAppServices.uiElementsCache.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -280,13 +253,11 @@ export async function togglePlayback() {
 
 export async function stopPlayback() {
     if (typeof Tone === 'undefined' || !audioContextInitialized) return;
-
     Tone.Transport.stop();
     Tone.Transport.position = 0;
     if (localAppServices.showNotification) localAppServices.showNotification("Playback Stopped", "info", 1000);
     if(localAppServices.uiElementsCache?.playBtn) localAppServices.uiElementsCache.playBtn.innerHTML = '<i class="fas fa-play"></i>';
     if(localAppServices.uiElementsCache?.playBtnGlobal) localAppServices.uiElementsCache.playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
-
     const tracks = localAppServices.getTracksState ? localAppServices.getTracksState() : [];
     tracks.forEach(track => {
         if (track.patternPlayerSequence && typeof track.patternPlayerSequence.stop === 'function' && track.patternPlayerSequence.state === "started") {
@@ -301,7 +272,7 @@ export async function stopPlayback() {
         }
     });
     if(localAppServices.updatePlayheadPosition) localAppServices.updatePlayheadPosition();
-    if(localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(false); // Also stop recording if it was active
+    if(localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(false);
     if(localAppServices.setRecordingTrackIdState) localAppServices.setRecordingTrackIdState(null);
 }
 
@@ -312,16 +283,12 @@ export async function toggleRecording() {
         if(localAppServices.showNotification) localAppServices.showNotification("Audio system not ready for recording.", "warning");
         return;
     }
-
     const isCurrentlyRecording = localAppServices.isGlobalRecordingActiveState ? localAppServices.isGlobalRecordingActiveState() : false;
     const armedTrackId = localAppServices.getArmedTrackIdState ? localAppServices.getArmedTrackIdState() : null;
-
     if (isCurrentlyRecording) {
-        // If it was an audio recording, stopAudioRecording handles notifications.
-        // If it was MIDI recording, just update state.
-        if (localAppServices.getRecordingTrackIdState && localAppServices.getRecordingTrackIdState()) { // Was audio recording
+        if (localAppServices.getRecordingTrackIdState && localAppServices.getRecordingTrackIdState()) {
             await stopAudioRecording();
-        } else { // Was MIDI/Sequencer recording
+        } else {
             if (localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(false);
             if (localAppServices.showNotification) localAppServices.showNotification("Recording stopped.", "info");
         }
@@ -337,10 +304,10 @@ export async function toggleRecording() {
         }
         if (track.type === 'Audio') {
             await startAudioRecording(armedTrackId);
-        } else { // Synth, Sampler, DrumSampler, InstrumentSampler
+        } else {
             if (localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(true);
             if (Tone.Transport.state !== 'started') {
-                await Tone.start(); // Ensure context is running
+                await Tone.start();
                 Tone.Transport.start();
                  if (localAppServices.showNotification) localAppServices.showNotification(`Playback started. Recording armed for ${track.name}.`, "info");
                  if(localAppServices.uiElementsCache?.playBtn) localAppServices.uiElementsCache.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -363,24 +330,21 @@ export async function startAudioRecording(trackId) {
             mic = new Tone.UserMedia();
         }
         if (mic.state !== "started") {
-            await mic.open(); // This might throw if permission denied
-            if (mic.state !== "started") { // Double check after open attempt
+            await mic.open();
+            if (mic.state !== "started") {
                  throw new Error("Microphone could not be started. Please grant permission.");
             }
         }
-
         if (!audioRecorder || audioRecorder.disposed) {
             audioRecorder = new Tone.Recorder();
         }
         mic.connect(audioRecorder);
         await audioRecorder.start();
-
         if (localAppServices.setRecordingTrackIdState) localAppServices.setRecordingTrackIdState(trackId);
         if (localAppServices.setRecordingStartTimeState) localAppServices.setRecordingStartTimeState(Tone.Transport.seconds);
         if (localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(true);
-
         if (Tone.Transport.state !== 'started') {
-            await Tone.start(); // Ensure context is running
+            await Tone.start();
             Tone.Transport.start();
              if (localAppServices.showNotification) localAppServices.showNotification(`Playback started. Recording audio started on track ${trackId}...`, "info");
              if(localAppServices.uiElementsCache?.playBtn) localAppServices.uiElementsCache.playBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -388,7 +352,6 @@ export async function startAudioRecording(trackId) {
         } else {
             if (localAppServices.showNotification) localAppServices.showNotification(`Recording audio started on track ${trackId}...`, "info");
         }
-
     } catch (error) {
         console.error("[Audio startAudioRecording] Error starting audio recording:", error);
         if (localAppServices.showNotification) localAppServices.showNotification(`Error starting audio recording: ${error.message}`, "error");
@@ -402,25 +365,21 @@ export async function startAudioRecording(trackId) {
 export async function stopAudioRecording() {
     if (typeof Tone === 'undefined') return;
     const wasGloballyRecording = localAppServices.isGlobalRecordingActiveState ? localAppServices.isGlobalRecordingActiveState() : false;
-    if (localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(false); // Update global recording state first
-
+    if (localAppServices.setIsRecordingState) localAppServices.setIsRecordingState(false);
     const recordingTrackId = localAppServices.getRecordingTrackIdState ? localAppServices.getRecordingTrackIdState() : null;
     const startTime = localAppServices.getRecordingStartTimeState ? localAppServices.getRecordingStartTimeState() : 0;
-
     if (audioRecorder && audioRecorder.state === "started") {
         try {
             const blob = await audioRecorder.stop();
             if (mic && mic.state === "started") mic.close();
-
             if (recordingTrackId !== null) {
                 const track = localAppServices.getTrackById ? localAppServices.getTrackById(recordingTrackId) : null;
                 if (track && typeof track.addAudioClip === 'function') {
                     const clipDuration = Tone.Transport.seconds - startTime;
-                    await track.addAudioClip(blob, startTime, clipDuration); // Pass duration
+                    await track.addAudioClip(blob, startTime, clipDuration);
                     if (localAppServices.showNotification) localAppServices.showNotification(`Audio recorded to ${track.name}.`, "success");
                 } else {
                     if (localAppServices.showNotification) localAppServices.showNotification("Error: Recorded track not found or cannot add clip.", "error");
-                    // Fallback to download the recording if track processing fails
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.style.display = "none"; a.href = url; a.download = `fallback_rec_${Date.now()}.webm`; document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); document.body.removeChild(a);
@@ -434,11 +393,10 @@ export async function stopAudioRecording() {
         } finally {
             if (localAppServices.setRecordingTrackIdState) localAppServices.setRecordingTrackIdState(null);
         }
-    } else if (wasGloballyRecording && !recordingTrackId) { // If it was a non-audio recording that was stopped
+    } else if (wasGloballyRecording && !recordingTrackId) {
          if (localAppServices.showNotification) localAppServices.showNotification("Recording stopped.", "info");
     }
 }
-
 
 export async function fetchSoundLibrary(libraryName, libraryPath) {
     if (!libraryName || !libraryPath) {
@@ -462,15 +420,17 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false);
         }
 
+        console.log(`[Audio fetchSoundLibrary] ABOUT TO FETCH: ${libraryPath}`); // V4 DEBUG
         const response = await fetch(libraryPath);
-        console.log(`[Audio fetchSoundLibrary] Response for ${libraryPath}: Status ${response.status}, OK: ${response.ok}, Type: ${response.type}, URL: ${response.url}`);
+        console.log(`[Audio fetchSoundLibrary] FETCH COMPLETED. Response for ${libraryPath}: Status ${response.status}, OK: ${response.ok}, Type: ${response.type}, URL: ${response.url}`); // V4 DEBUG + Original
 
         if (!response.ok) {
             const errorText = await response.text().catch(() => "Could not read error response body.");
             console.error(`[Audio fetchSoundLibrary] HTTP error! status: ${response.status} for ${libraryPath}. Response body snippet: ${errorText.substring(0, 200)}`);
             throw new Error(`HTTP error! status: ${response.status} for ${libraryPath}. Response likely not a valid ZIP file.`);
         }
-
+        
+        console.log(`[Audio fetchSoundLibrary] Response OK. Attempting to get blob for ${libraryName}...`); // V4 DEBUG
         const zipBlob = await response.blob();
         console.log(`[Audio fetchSoundLibrary] Blob received for ${libraryName}, size: ${zipBlob.size}, type: ${zipBlob.type}`);
 
@@ -485,15 +445,15 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
             throw new Error(`Fetched file for ${libraryName} is not a ZIP (Type: ${zipBlob.type}). Check the network response in developer tools. It might be an HTML error page or a misconfigured server response.`);
         }
         
-
+        console.log(`[Audio fetchSoundLibrary] Blob seems valid. Checking JSZip for ${libraryName}...`); // V4 DEBUG
         if (typeof JSZip === 'undefined') {
             console.error("[Audio fetchSoundLibrary] JSZip library is not loaded. Cannot process .zip file.");
             throw new Error("JSZip library is not loaded.");
         }
         const jszip = new JSZip();
+        console.log(`[Audio fetchSoundLibrary] Attempting jszip.loadAsync for ${libraryName}...`); // V4 DEBUG
         const zip = await jszip.loadAsync(zipBlob);
         console.log(`[Audio fetchSoundLibrary] JSZip loaded for ${libraryName}.`);
-
 
         const fileTree = {};
         zip.forEach((relativePath, zipEntry) => {
@@ -545,7 +505,7 @@ export async function fetchSoundLibrary(libraryName, libraryPath) {
         }
         userMessage += " Check console for technical details.";
 
-        console.error(`[Audio fetchSoundLibrary] Error loading library ${libraryName} from path ${libraryPath}:`, error);
+        console.error(`[Audio fetchSoundLibrary] Error loading library ${libraryName} from path ${libraryPath}:`, error); // This is line 548 in your log
         if (localAppServices.showNotification) localAppServices.showNotification(userMessage, "error", 10000);
 
         if (localAppServices.setLoadedZipFiles) {
@@ -566,7 +526,6 @@ export async function loadSoundFromBrowserToTarget(soundData, trackId, targetTyp
          if (localAppServices.showNotification) localAppServices.showNotification("Audio system not ready.", "warning");
         return;
     }
-
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) {
         if (localAppServices.showNotification) localAppServices.showNotification("Target track not found.", "error");
@@ -586,12 +545,11 @@ export async function loadSoundFromBrowserToTarget(soundData, trackId, targetTyp
     try {
         const blob = await fileEntry.async('blob');
         const audioFile = new File([blob], soundData.fileName, { type: blob.type || getMimeTypeFromFilename(soundData.fileName) });
-
         if (track.type === 'Audio' && typeof track.addSoundBrowserItemAsClip === 'function') {
             await track.addSoundBrowserItemAsClip(soundData, targetContext.startTime);
         } else if (['Sampler', 'DrumSampler', 'InstrumentSampler'].includes(track.type) && typeof track.loadSampleFromBrowser === 'function'){
             await track.loadSampleFromBrowser(soundData, targetType, targetContext);
-        } else if (typeof track.loadSample === 'function') { // Fallback for older track implementations
+        } else if (typeof track.loadSample === 'function') {
              await track.loadSample(audioFile, targetType, targetContext);
         }
         else {
@@ -600,7 +558,6 @@ export async function loadSoundFromBrowserToTarget(soundData, trackId, targetTyp
             return;
         }
         if (localAppServices.showNotification) localAppServices.showNotification(`${soundData.fileName} loaded to ${track.name}.`, "success");
-
     } catch (err) {
         console.error(`Error loading sound ${soundData.fileName} from zip:`, err);
         if (localAppServices.showNotification) localAppServices.showNotification(`Failed to load ${soundData.fileName}.`, "error");
@@ -614,10 +571,8 @@ export async function loadAndPreviewSample(filePath, libraryName, fileNameToDisp
         if (localAppServices.showNotification) localAppServices.showNotification("Audio system not ready for preview.", "warning");
         return;
     }
-
     const loadedZips = localAppServices.getLoadedZipFilesState ? localAppServices.getLoadedZipFilesState() : {};
     const zipInstance = loadedZips[libraryName];
-
     if (!zipInstance || zipInstance === "loading" || zipInstance === "error") {
         if (localAppServices.showNotification) localAppServices.showNotification(`Library ${libraryName} not ready for preview.`, "warning");
         return;
@@ -630,7 +585,6 @@ export async function loadAndPreviewSample(filePath, libraryName, fileNameToDisp
     try {
         const arrayBuffer = await fileEntry.async('arraybuffer');
         const audioBuffer = await (Tone.context?.decodeAudioData(arrayBuffer) || new AudioContext().decodeAudioData(arrayBuffer));
-
         let previewPlayer = localAppServices.getPreviewPlayerState ? localAppServices.getPreviewPlayerState() : null;
         if (previewPlayer && !previewPlayer.disposed) {
             previewPlayer.stop();
@@ -638,7 +592,6 @@ export async function loadAndPreviewSample(filePath, libraryName, fileNameToDisp
         }
         previewPlayer = new Tone.Player(audioBuffer).toDestination();
         if (localAppServices.setPreviewPlayerState) localAppServices.setPreviewPlayerState(previewPlayer);
-
         previewPlayer.start();
         if (localAppServices.setSelectedSoundForPreview && localAppServices.showNotification) {
             localAppServices.setSelectedSoundForPreview({ fullPath: filePath, libraryName, fileName: fileNameToDisplay });
@@ -659,7 +612,7 @@ export function getMimeTypeFromFilename(filename) {
         case 'aac': return 'audio/aac';
         case 'flac': return 'audio/flac';
         case 'webm': return 'audio/webm';
-        default: return 'application/octet-stream'; // A generic binary type
+        default: return 'application/octet-stream';
     }
 }
 
@@ -669,11 +622,9 @@ export function updateMeters(globalMasterMeterElement, globalControlsMasterMeter
         if (globalControlsMasterMeterElement) globalControlsMasterMeterElement.style.width = '0%';
         return;
     }
-
     const value = masterMeterNode.getValue();
     const db = Array.isArray(value) ? Tone.gainToDb(Math.max(value[0], value[1])) : Tone.gainToDb(value);
-    const percentage = Math.min(100, Math.max(0, ((db + 60) / 60) * 100)); // Assuming -60dB is 0% and 0dB is 100%
-
+    const percentage = Math.min(100, Math.max(0, ((db + 60) / 60) * 100));
     if (globalMasterMeterElement) {
         globalMasterMeterElement.style.width = `${percentage}%`;
         globalMasterMeterElement.classList.toggle('clipping', db >= 0);
@@ -682,16 +633,13 @@ export function updateMeters(globalMasterMeterElement, globalControlsMasterMeter
         globalControlsMasterMeterElement.style.width = `${percentage}%`;
         globalControlsMasterMeterElement.classList.toggle('clipping', db >= 0);
     }
-
     (tracksForMetering || []).forEach(track => {
         if (track && track.meterNode && !track.meterNode.disposed && track.channel && !track.channel.mute) {
             const mixerMeterEl = document.getElementById(`mixerMeter-${track.id}`);
             const inspectorMeterEl = document.getElementById(`trackMeterBar-${track.id}`);
-
             const trackValue = track.meterNode.getValue();
             const trackDb = Array.isArray(trackValue) ? Tone.gainToDb(Math.max(trackValue[0], trackValue[1])) : Tone.gainToDb(trackValue);
             const trackPercentage = Math.min(100, Math.max(0, ((trackDb + 60) / 60) * 100));
-            
             if (mixerMeterEl) {
                 mixerMeterEl.style.width = `${trackPercentage}%`;
                 mixerMeterEl.classList.toggle('clipping', trackDb >= 0);
@@ -700,7 +648,7 @@ export function updateMeters(globalMasterMeterElement, globalControlsMasterMeter
                 inspectorMeterEl.style.width = `${trackPercentage}%`;
                 inspectorMeterEl.classList.toggle('clipping', trackDb >= 0);
             }
-        } else if (track) { // If track is muted or meterNode not available, set meter to 0
+        } else if (track) {
             const mixerMeterEl = document.getElementById(`mixerMeter-${track.id}`);
             const inspectorMeterEl = document.getElementById(`trackMeterBar-${track.id}`);
             if (mixerMeterEl) mixerMeterEl.style.width = '0%';
