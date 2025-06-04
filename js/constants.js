@@ -22,7 +22,7 @@ export const synthPitches = [
 ].reverse();
 
 export const soundLibraries = {
-    "Drums": "assets/drumss.zip", // Changed "samples/" to "assets/"
+    "Drums": "assets/drums.zip", // Changed "samples/" to "assets/"
     "Instruments": "assets/instruments.zip", // Changed "samples/" to "assets/"
     "Instruments 2": "assets/instruments2.zip", // Changed "samples/" to "assets/"
     "Instruments 3": "assets/instruments3.zip", // Changed "samples/" to "assets/"
