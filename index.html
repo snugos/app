@@ -22,18 +22,56 @@
     <meta name="msapplication-TileImage" content="ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
-    <script src="https://cdn.tailwindcss.com"></script> <script src="js/lib/Tone.min.js"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/lib/Tone.min.js"></script> <!-- Ensure this path is correct -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div id="desktop">
-        </div>
+<body class="theme-dark"> <!-- Default to dark theme, JS will override -->
 
-    <div id="taskbar">
+    <div id="topTaskbar">
+        <div id="transportControls">
+            <button id="playBtnGlobalTop" title="Play/Pause (Spacebar)">Play</button>
+            <button id="stopBtnGlobalTop" title="Stop All Audio (Panic)">Stop</button>
+            <button id="recordBtnGlobalTop" title="Record Arm/Disarm">Record</button>
+        </div>
+        <div id="tempoControl">
+            <label for="tempoGlobalInputTop">BPM:</label>
+            <input type="number" id="tempoGlobalInputTop" value="120" min="30" max="300" step="0.1">
+        </div>
+        <div id="midiControl">
+            <label for="midiInputSelectGlobalTop">MIDI In:</label>
+            <select id="midiInputSelectGlobalTop">
+                <option value="">No MIDI Input</option>
+            </select>
+        </div>
+        <div id="masterMeterContainerGlobalTop" class="master-meter-top">
+            <div id="masterMeterBarGlobalTop" style="width: 0%;"></div>
+        </div>
+        <div id="activityIndicatorsTop">
+            <span id="midiIndicatorGlobalTop" title="MIDI Activity">MIDI</span>
+            <span id="keyboardIndicatorGlobalTop" title="Computer Keyboard Activity">KBD</span>
+        </div>
+        <div id="playbackModeControlTop">
+             <button id="playbackModeToggleBtnGlobalTop" title="Toggle Playback Mode (Sequencer/Timeline)">Mode: Sequencer</button>
+        </div>
+        <!-- Optional: A dedicated theme toggle button for the top taskbar -->
+        <!-- <div id="themeToggleContainerTop">
+            <button id="themeToggleBtnTop" title="Cycle Theme">Theme</button>
+        </div> -->
+    </div>
+
+    <div id="desktop">
+        <!-- Windows will be appended here by SnugWindow.js -->
+    </div>
+
+    <div id="taskbar"> <!-- Bottom taskbar -->
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
-            </div>
+            <!-- Taskbar buttons for open windows will be appended here -->
+        </div>
         <div id="taskbarTempoDisplay" title="Current Tempo">120.0 BPM</div>
     </div>
 
@@ -48,7 +86,7 @@
             <li id="menuOpenSoundBrowser">Sound Browser</li>
             <li><hr></li>
             <li id="menuOpenTimeline">Timeline</li>
-            <li id="menuOpenGlobalControls">Global Controls</li>
+            <!-- <li id="menuOpenGlobalControls">Global Controls</li> REMOVED -->
             <li id="menuOpenMixer">Mixer</li>
             <li id="menuOpenMasterEffects">Master Effects Rack</li>
             <li><hr></li>
@@ -59,6 +97,7 @@
             <li id="menuLoadProject">Load Project (.snug)</li>
             <li id="menuExportWav">Export to WAV</li>
             <li><hr></li>
+            <!-- Theme toggle will be added here by main.js if this is the preferred location -->
             <li id="menuToggleFullScreen">Toggle Full Screen</li>
         </ul>
     </div>
