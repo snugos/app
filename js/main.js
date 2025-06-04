@@ -8,7 +8,7 @@ import * as EventHandlers from './eventHandlers.js';
 import * as State from './state.js';
 import * as AudioModule from './audio.js';
 // Corrected import based on your file structure:
-import * as UI from './ui_modules/browserCoreUI.js';
+import * as UI from './ui_modules/browserCoreUI.js'; // ENSURE THIS PATH IS CORRECT
 import * as GlobalControlsUI from './globalControlsUI.js';
 import * as EffectsRegistry from './effectsRegistry.js';
 import * as DB from './db.js';
@@ -19,7 +19,7 @@ const uiElementsCache = {};
 let currentBackgroundImageObjectURL = null;
 const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB_v2';
 
-// --- appServices Definition (from your provided main.js) ---
+// --- appServices Definition ---
 const appServices = {
     uiElementsCache,
     _isReconstructingDAW_flag: false,
@@ -29,15 +29,12 @@ const appServices = {
     showConfirmationDialog: Utils.showConfirmationDialog,
     createContextMenu: Utils.createContextMenu,
     snapTimeToGrid: Utils.snapTimeToGrid,
-
     newProject: () => {
         Utils.showConfirmationDialog("Create a new project? All unsaved changes will be lost.", () => {
             window.location.reload();
         });
     },
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
-
-    // State Getters
     getTracksState: State.getTracksState,
     getTrackById: State.getTrackByIdState,
     getOpenWindowsState: State.getOpenWindowsState,
@@ -63,8 +60,6 @@ const appServices = {
     getUndoStackState: State.getUndoStackState,
     getRedoStackState: State.getRedoStackState,
     getCurrentThemeState: State.getCurrentThemeState,
-    
-    // State Setters & Core Actions
     addWindowToStoreState: State.addWindowToStoreState,
     removeWindowFromStoreState: State.removeWindowFromStoreState,
     setHighestZState: State.setHighestZState,
@@ -101,8 +96,6 @@ const appServices = {
     setIsRecording: State.setIsRecordingState,
     setActiveSequencerTrackId: State.setActiveSequencerTrackIdState,
     setMasterGainValueState: State.setMasterGainValueState,
-
-    // Audio services
     initAudioContextAndMasterMeter: AudioModule.initAudioContextAndMasterMeter,
     updateMeters: AudioModule.updateMeters,
     togglePlayback: AudioModule.togglePlayback,
@@ -119,8 +112,8 @@ const appServices = {
     autoSliceSample: AudioModule.autoSliceSample,
     getMimeTypeFromFilename: AudioModule.getMimeTypeFromFilename,
     getMasterEffectsBusInputNode: AudioModule.getMasterEffectsBusInputNode,
-    getActualMasterGainNode: AudioModule.getActualMasterGainNode,
-    clearAllMasterEffectNodes: AudioModule.clearAllMasterEffectNodes,
+    getActualMasterGainNode: AudioModule.getActualMasterGainNodeFromAudio, // From your audio.js
+    clearAllMasterEffectNodes: AudioModule.clearAllMasterEffectNodesInAudio, // From your audio.js
     startAudioRecording: AudioModule.startAudioRecording,
     stopAudioRecording: AudioModule.stopAudioRecording,
     addMasterEffectToAudio: AudioModule.addMasterEffectToAudio,
@@ -128,13 +121,9 @@ const appServices = {
     updateMasterEffectParamInAudio: AudioModule.updateMasterEffectParamInAudio,
     reorderMasterEffectInAudio: AudioModule.reorderMasterEffectInAudio,
     _rechainMasterEffectsAudio: AudioModule._rechainMasterEffectsAudio,
-
-    // DB services
     dbStoreItem: DB.storeAudio,
     dbGetItem: DB.getAudio,
     dbDeleteItem: DB.deleteAudio,
-
-    // Effects Management
     addMasterEffect: async (effectType) => {
         if (!appServices.getIsReconstructingDAW()) appServices.captureStateForUndoInternal(`Add Master Effect: ${effectType}`);
         const defaultParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
@@ -170,8 +159,6 @@ const appServices = {
         }
     },
     getMasterEffectParamValue: (effectId, paramPath) => State.getMasterEffectParamValue(effectId, paramPath),
-
-    // UI services (from UI module)
     initializeUIModule: UI.initializeUIModule,
     openSoundBrowserWindow: UI.openSoundBrowserWindow,
     updateSoundBrowserDisplayForLibrary: UI.updateSoundBrowserDisplayForLibrary,
@@ -180,7 +167,8 @@ const appServices = {
     openTrackInspectorWindow: UI.openTrackInspectorWindow,
     openTrackEffectsRackWindow: UI.openTrackEffectsRackWindow,
     openMasterEffectsRackWindow: UI.openMasterEffectsRackWindow,
-    openArrangementWindow: UI.openArrangementWindow,
+    openArrangementWindow: UI.openArrangementWindow, // This is UI.openArrangementWindow from browserCoreUI
+    openTimelineWindow: UI.openTimelineWindow, // From your ui.js (browserCoreUI)
     openSequencerWindow: UI.openSequencerWindow,
     openMixerWindow: UI.openMixerWindow,
     updateMixerWindow: UI.updateMixerWindow,
@@ -201,10 +189,8 @@ const appServices = {
     updateSequencerCellUI: UI.updateSequencerCellUI,
     renderTimeline: UI.renderTimeline,
     updatePlayheadPosition: UI.updatePlayheadPosition,
-
-    // Global Controls UI
     openGlobalControlsWindow: GlobalControlsUI.openGlobalControlsWindow,
-    updateMasterEffectsRackUI: () => {
+    updateMasterEffectsRackUI: () => { /* ... same as your main.js ... */
         const rackWindow = appServices.getWindowById('masterEffectsRack');
         if (rackWindow?.element && !rackWindow.isMinimized && typeof UI.renderEffectsList === 'function') {
             const listDiv = rackWindow.element.querySelector('#effectsList-master');
@@ -212,8 +198,6 @@ const appServices = {
             if (listDiv && controlsContainer) UI.renderEffectsList(null, 'master', listDiv, controlsContainer);
         }
     },
-    
-    // Event Handler Passthroughs
     selectMIDIInput: EventHandlers.selectMIDIInput,
     handleTimelineLaneDrop: (event, targetTrackId, startTime) => EventHandlers.handleTimelineLaneDrop(event, targetTrackId, startTime, appServices),
     handleTrackMute: EventHandlers.handleTrackMute,
@@ -223,26 +207,19 @@ const appServices = {
     handleOpenTrackInspector: EventHandlers.handleOpenTrackInspector,
     handleOpenEffectsRack: EventHandlers.handleOpenEffectsRack,
     handleOpenSequencer: EventHandlers.handleOpenSequencer,
-
-    // Misc local appServices functions
-    panicStopAllAudio: () => {
+    panicStopAllAudio: () => { /* ... same as your main.js ... */
         if (typeof Tone !== 'undefined') {
             Tone.Transport.stop(); Tone.Transport.cancel(0);
         }
         const tracks = appServices.getTracksState();
         if (tracks) {
             tracks.forEach(track => {
-                if (track && typeof track.stopPlayback === 'function') {
-                    try { track.stopPlayback(); } catch (e) { console.warn(`Error stopping playback for track ${track.id}:`, e); }
-                }
-                 if (track && track.instrument && !track.instrument.disposed && typeof track.instrument.releaseAll === 'function') {
-                    try {track.instrument.releaseAll(Tone.now());} catch(e) {console.warn(`Error releasing all on instrument for track ${track.id}:`, e);}
-                }
+                if (track && typeof track.stopPlayback === 'function') { try { track.stopPlayback(); } catch (e) { console.warn(`Error stopping playback for track ${track.id}:`, e); } }
+                if (track && track.instrument && !track.instrument.disposed && typeof track.instrument.releaseAll === 'function') { try {track.instrument.releaseAll(Tone.now());} catch(e) {console.warn(`Error releasing all on instrument for track ${track.id}:`, e);} }
             });
         }
         if (uiElementsCache.playBtnGlobal) uiElementsCache.playBtnGlobal.innerHTML = '<i class="fas fa-play"></i>';
         if (uiElementsCache.playBtn) uiElementsCache.playBtn.innerHTML = '<i class="fas fa-play"></i>';
-
         const isRec = appServices.isGlobalRecordingActiveState ? appServices.isGlobalRecordingActiveState() : false;
         if (isRec) {
             if (appServices.stopAudioRecording) appServices.stopAudioRecording();
@@ -252,39 +229,39 @@ const appServices = {
         }
         appServices.showNotification("All audio stopped.", "info", 1500);
     },
-    updateTaskbarTempoDisplay: (tempo) => {
+    updateTaskbarTempoDisplay: (tempo) => { /* ... same as your main.js ... */
         if (uiElementsCache.taskbarTempoDisplay) uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
     },
-    updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => {
+    updateUndoRedoButtonsUI: (undoStateParam, redoStateParam) => { /* ... same as your main.js ... */
         const undoBtn = uiElementsCache.menuUndo; const redoBtn = uiElementsCache.menuRedo;
         const undoStackCurrent = appServices.getUndoStackState ? appServices.getUndoStackState() : [];
         const redoStackCurrent = appServices.getRedoStackState ? appServices.getRedoStackState() : [];
         if (undoBtn) { const canUndo = undoStackCurrent.length > 0; undoBtn.classList.toggle('disabled', !canUndo); undoBtn.title = canUndo && undoStateParam ? `Undo: ${undoStateParam.actionName || 'action'}` : "Undo"; }
         if (redoBtn) { const canRedo = redoStackCurrent.length > 0; redoBtn.classList.toggle('disabled', !canRedo); redoBtn.title = canRedo && redoStateParam ? `Redo: ${redoStateParam.actionName || 'action'}` : "Redo"; }
     },
-    updateRecordButtonUI: (isRec, isArmed) => {
+    updateRecordButtonUI: (isRec, isArmed) => { /* ... same as your main.js ... */
         const recActive = isRec && isArmed;
         if (uiElementsCache.recordBtn) uiElementsCache.recordBtn.classList.toggle('text-red-500', recActive);
         if (uiElementsCache.recordBtnGlobal) uiElementsCache.recordBtnGlobal.classList.toggle('bg-red-700', recActive);
     },
-    closeAllWindows: (isReconstruction = false) => {
+    closeAllWindows: (isReconstruction = false) => { /* ... same as your main.js ... */
         const openWindows = appServices.getOpenWindowsState();
         if (openWindows) openWindows.forEach(win => win.close(isReconstruction));
         if(appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
     },
     clearOpenWindowsMap: () => State.getOpenWindowsState().clear(),
-    triggerCustomBackgroundUpload: () => {
-        const input = uiElementsCache.customBgInput; // From your cacheUIElements
+    triggerCustomBackgroundUpload: () => { /* ... same as your main.js ... */
+        const input = uiElementsCache.customBgInput;
         if (input) input.click();
     },
-    removeCustomDesktopBackground: async () => {
+    removeCustomDesktopBackground: async () => { /* ... same as your main.js ... */
         await appServices.dbDeleteItem(DESKTOP_BACKGROUND_IDB_KEY);
         if (currentBackgroundImageObjectURL) URL.revokeObjectURL(currentBackgroundImageObjectURL);
         currentBackgroundImageObjectURL = null;
         applyDesktopBackground(null);
         appServices.showNotification("Background removed.", "info", 2000);
     },
-    onPlaybackModeChange: (newMode) => {
+    onPlaybackModeChange: (newMode) => { /* ... same as your main.js ... */
         const playbackBtn = uiElementsCache.playbackModeToggleBtnGlobal;
         if (playbackBtn) playbackBtn.textContent = newMode === 'timeline' ? 'Mode: Timeline' : 'Mode: Sequencer';
         if(appServices.renderTimeline) appServices.renderTimeline();
@@ -294,17 +271,41 @@ const appServices = {
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
     getSelectedSoundForPreview: State.getSelectedSoundForPreviewState,
     setSelectedSoundForPreview: State.setSelectedSoundForPreviewState,
+    // Added from your new ui.js file, assuming it should be here
+    getAudioBlobFromSoundBrowserItem: async (soundData) => {
+        if (!soundData || !soundData.libraryName || !soundData.fullPath) {
+            console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);
+            return null;
+        }
+        const loadedZips = appServices.getLoadedZipFiles(); // Use appService getter
+        if (loadedZips?.[soundData.libraryName] && loadedZips[soundData.libraryName] !== "loading") {
+            const zipEntry = loadedZips[soundData.libraryName].file(soundData.fullPath);
+            if (zipEntry) {
+                try {
+                    const blob = await zipEntry.async("blob");
+                    return new File([blob], soundData.fileName, { type: appServices.getMimeTypeFromFilename(soundData.fileName) });
+                } catch (e) {
+                    console.error("[AppServices getAudioBlob] Error getting blob from zipEntry:", e);
+                    return null;
+                }
+            } else {
+                console.warn(`[AppServices getAudioBlob] ZipEntry not found for ${soundData.fullPath} in ${soundData.libraryName}`);
+            }
+        } else {
+            console.warn(`[AppServices getAudioBlob] Library ${soundData.libraryName} not loaded or is loading.`);
+        }
+        return null;
+    }
 };
 
-// This function definition was missing in the file you sent, but appServices tries to assign to it.
-// It's better to populate appServices *after* all modules are imported and their functions are available.
-// However, for now, I'll define it to keep the structure of appServices assignments as you had it.
 function initializeCoreServices() {
-    // This function is effectively replaced by the direct assignments in the appServices object literal.
-    // If you had specific logic here, it needs to be integrated into the appServices literal or called appropriately.
-    // For now, the appServices object above directly assigns functions from imported modules.
+    // This function is now largely decorative as appServices is built with direct assignments.
+    // However, if there was specific logic (e.g. conditional assignments) it would go here.
+    // For now, we ensure EffectsRegistry is available on appServices if it wasn't directly assigned.
+    if (!appServices.effectsRegistryAccess && EffectsRegistry) {
+        appServices.effectsRegistryAccess = EffectsRegistry;
+    }
 }
-
 
 function cacheUIElements() {
     uiElementsCache.desktop = document.getElementById('desktop');
@@ -312,49 +313,47 @@ function cacheUIElements() {
     uiElementsCache.taskbar = document.getElementById('taskbar');
     uiElementsCache.startMenuButton = document.getElementById('startMenuButton');
     uiElementsCache.startMenu = document.getElementById('startMenu');
+    console.log("[Main cacheUIElements] startMenu found in DOM:", !!uiElementsCache.startMenu);
+
     uiElementsCache.taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
     
-    uiElementsCache.tempoDisplay = document.getElementById('tempoDisplay');
-    uiElementsCache.playBtn = document.getElementById('playBtn');
-    uiElementsCache.stopBtn = document.getElementById('stopBtn');
-    uiElementsCache.recordBtn = document.getElementById('recordBtn');
+    uiElementsCache.tempoDisplay = document.getElementById('tempoDisplay'); // In topTaskbar
+    uiElementsCache.playBtn = document.getElementById('playBtn'); // In topTaskbar
+    uiElementsCache.stopBtn = document.getElementById('stopBtn'); // In topTaskbar
+    uiElementsCache.recordBtn = document.getElementById('recordBtn'); // In topTaskbar
     uiElementsCache.masterMeter = document.getElementById('master-meter');
     uiElementsCache.cpuUsage = document.getElementById('cpu-usage');
     uiElementsCache.clock = document.getElementById('clock');
 
-    uiElementsCache.menuNewProject = document.getElementById('menuNewProject');
-    uiElementsCache.menuAddSynthTrack = document.getElementById('menuAddSynthTrack');
-    uiElementsCache.menuAddSamplerTrack = document.getElementById('menuAddSamplerTrack');
-    uiElementsCache.menuAddDrumSamplerTrack = document.getElementById('menuAddDrumSamplerTrack');
-    uiElementsCache.menuAddInstrumentSamplerTrack = document.getElementById('menuAddInstrumentSamplerTrack');
-    uiElementsCache.menuAddAudioTrack = document.getElementById('menuAddAudioTrack');
-    uiElementsCache.menuOpenSoundBrowser = document.getElementById('menuOpenSoundBrowser');
-    uiElementsCache.menuOpenTimeline = document.getElementById('menuOpenTimeline');
-    uiElementsCache.menuOpenGlobalControls = document.getElementById('menuOpenGlobalControls');
-    uiElementsCache.menuOpenMixer = document.getElementById('menuOpenMixer');
-    uiElementsCache.menuOpenMasterEffects = document.getElementById('menuOpenMasterEffects');
-    uiElementsCache.menuUndo = document.getElementById('menuUndo');
-    uiElementsCache.menuRedo = document.getElementById('menuRedo');
-    uiElementsCache.menuSaveProject = document.getElementById('menuSaveProject');
-    uiElementsCache.menuLoadProject = document.getElementById('menuLoadProject');
-    uiElementsCache.menuExportWav = document.getElementById('menuExportWav');
-    uiElementsCache.menuToggleFullScreen = document.getElementById('menuToggleFullScreen');
+    // Start Menu items from your index.html
+    const menuItemsToCache = [
+        'menuNewProject', 'menuAddSynthTrack', 'menuAddSamplerTrack', 
+        'menuAddDrumSamplerTrack', 'menuAddInstrumentSamplerTrack', 'menuAddAudioTrack',
+        'menuOpenSoundBrowser', 'menuOpenTimeline', 'menuOpenGlobalControls', 
+        'menuOpenMixer', 'menuOpenMasterEffects', 'menuUndo', 'menuRedo', 
+        'menuSaveProject', 'menuLoadProject', 'menuExportWav', 'menuToggleFullScreen'
+    ];
+    menuItemsToCache.forEach(id => {
+        uiElementsCache[id] = document.getElementById(id);
+        console.log(`[Main cacheUIElements] ${id} found in DOM:`, !!uiElementsCache[id]); // ADDED LOG
+    });
     
     uiElementsCache.projectFileInput = document.getElementById('loadProjectInput');
-    uiElementsCache.customBgInput = document.getElementById('customBgInput'); 
-    uiElementsCache.sampleFileInput = document.getElementById('sampleFileInput'); 
+    uiElementsCache.customBgInput = document.getElementById('customBgInput'); // Matching your index.html
+    uiElementsCache.sampleFileInput = document.getElementById('sampleFileInput'); // Matching your index.html
+    uiElementsCache.notificationArea = document.getElementById('notification-area');
+    uiElementsCache.modalContainer = document.getElementById('modalContainer');
 }
 
 async function initializeSnugOS() {
     console.log(`[Main initializeSnugOS] Initializing SnugOS v${Constants.APP_VERSION}...`);
     cacheUIElements();
     
-    // Ensure appServices is fully populated before passing it to modules
-    // The appServices object literal above should now be mostly complete.
-    // If initializeCoreServices had complex logic, it would go here.
+    initializeCoreServices(); 
 
     State.initializeStateModule(appServices);
     AudioModule.initializeAudioModule(appServices);
+    // Assuming UI is browserCoreUI.js from ui_modules
     UI.initializeUIModule(appServices); 
     GlobalControlsUI.initializeGlobalControlsUIModule(appServices);
     EventHandlers.initializeEventHandlersModule(appServices);
@@ -390,18 +389,18 @@ async function initializeSnugOS() {
         } else {
             console.error("[Main initializeSnugOS] GlobalControlsWindow onReadyCallback received null elements.");
         }
-    });
+    }, null /* No saved state for initial global controls */ );
     
     updateClock();
     setInterval(updateClock, 10000);
     if (appServices.updateUndoRedoButtonsUI) {
         appServices.updateUndoRedoButtonsUI(null, null);
     }
-    // Corrected the setupGenericDropZoneListeners call to match its definition in your utils.js
+    // Corrected setupGenericDropZoneListeners call
     if (uiElementsCache.desktop && typeof Utils.setupGenericDropZoneListeners === 'function') {
+        // The third argument to setupGenericDropZoneListeners in your utils.js was fileInputId
+        // For the desktop, we might not have a single file input ID, or it might be for background
         Utils.setupGenericDropZoneListeners(uiElementsCache.desktop, handleDesktopDrop, 'file-input-background', appServices);
-    } else {
-        console.warn("Desktop element for drop zone or setupGenericDropZoneListeners function not available.");
     }
     
     try {
@@ -416,15 +415,13 @@ async function initializeSnugOS() {
     if (appServices.openArrangementWindow) appServices.openArrangementWindow();
     if (appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow();
 
-    console.log("[Main initializeSnugOS] SnugOS Initialized and Ready.");
+    console.log(`[Main initializeSnugOS] SnugOS Initialized and Ready.`);
     startPerformanceMonitor();
 }
 
-function handleDesktopDrop(file) { // file is the File object from setupGenericDropZoneListeners
+function handleDesktopDrop(file) {
     if (!file) return;
     if (file.name.endsWith('.snug')) {
-        // handleProjectFileLoad expects an event-like object, or just the file.
-        // Your state.js handleProjectFileLoadInternal expects an event.
         const eventLike = { target: { files: [file] } };
         appServices.handleProjectFileLoad(eventLike); 
     } else if (file.name.endsWith('.zip')) {
@@ -515,7 +512,10 @@ window.addEventListener('beforeunload', (e) => {
     const tracksExist = appServices.getTracksState && appServices.getTracksState().length > 0;
     const undoStackExists = appServices.getUndoStackState && appServices.getUndoStackState().length > 0;
 
-    if ((tracksExist || undoStackExists) && !(appServices.getIsReconstructingDAW && appServices.getIsReconstructingDAW())) {
+    // Check if getIsReconstructingDAW exists and use it
+    const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+
+    if ((tracksExist || undoStackExists) && !isReconstructing) {
         e.preventDefault(); 
         e.returnValue = ''; 
         return "You have unsaved changes. Are you sure you want to leave?"; 
