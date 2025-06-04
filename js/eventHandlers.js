@@ -1,60 +1,113 @@
 // js/eventHandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
-// Assuming showNotification, showConfirmationDialog, createContextMenu are available via localAppServices from main.js
 
 let localAppServices = {};
-// let transportKeepAliveBufferSource = null; // Temporarily removed for testing
-// let silentKeepAliveBuffer = null;        // Temporarily removed for testing
-let isAudioUnlocked = false;
+let transportKeepAliveBufferSource = null;
+let silentKeepAliveBuffer = null;
+let isAudioUnlocked = false; // Flag to ensure unlock happens only once / robustly
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
-// --- TEMPORARY SIMPLIFIED AUDIO UNLOCK FOR TESTING ---
+// Restored playSilentBufferOnTouch with more checks
 const playSilentBufferOnTouch = async () => {
     if (isAudioUnlocked || typeof Tone === 'undefined') {
+        // console.log("[EventHandlers playSilentBufferOnTouch] Already unlocked or Tone undefined.");
         return;
     }
 
+    let audioContextJustStarted = false;
     if (Tone.context.state !== 'running') {
         try {
+            console.log("[EventHandlers playSilentBufferOnTouch] AudioContext not running. Attempting Tone.start().");
             await Tone.start();
-            isAudioUnlocked = true; // Set flag after successful start
-            console.log("[EventHandlers playSilentBufferOnTouch] (Simplified Test) Tone.start() called successfully. Audio unlocked.");
-
-            // Remove listeners after the first successful interaction
-            document.removeEventListener('touchstart', playSilentBufferOnTouch, { passive: true, capture: true });
-            document.removeEventListener('mousedown', playSilentBufferOnTouch, { passive: true, capture: true });
-            document.removeEventListener('keydown', playSilentBufferOnTouch, { passive: true, capture: true });
-
+            audioContextJustStarted = true;
+            console.log("[EventHandlers playSilentBufferOnTouch] Tone.start() successfully called. State:", Tone.context.state);
         } catch (e) {
-            console.error("[EventHandlers playSilentBufferOnTouch] (Simplified Test) Error on Tone.start():", e);
+            console.error("[EventHandlers playSilentBufferOnTouch] Error on Tone.start():", e);
             if (localAppServices && localAppServices.showNotification) {
-                localAppServices.showNotification("Audio could not be started.", "error");
+                localAppServices.showNotification("Audio could not be started. Please interact again or refresh.", "error");
             }
-            // Do not set isAudioUnlocked = true if Tone.start() fails
+            return;
         }
-    } else {
-        // If context is already running, we can consider it unlocked for this test's purpose
-        isAudioUnlocked = true;
-        console.log("[EventHandlers playSilentBufferOnTouch] (Simplified Test) AudioContext already running. Considered unlocked.");
-        // Remove listeners as well if already running
-        document.removeEventListener('touchstart', playSilentBufferOnTouch, { passive: true, capture: true });
-        document.removeEventListener('mousedown', playSilentBufferOnTouch, { passive: true, capture: true });
-        document.removeEventListener('keydown', playSilentBufferOnTouch, { passive: true, capture: true });
+    }
+
+    if (audioContextJustStarted) {
+        // Small delay to allow the audio context to fully stabilize after starting
+        await new Promise(resolve => setTimeout(resolve, 100)); // Increased delay slightly
+    }
+
+    try {
+        // Ensure AudioContext is definitely running now
+        if (Tone.context.state !== 'running') {
+            console.warn("[EventHandlers playSilentBufferOnTouch] AudioContext still not running after Tone.start() attempt and delay.");
+            return;
+        }
+
+        // Create the silent buffer if it doesn't exist or if the context might have been recreated
+        if (!silentKeepAliveBuffer || silentKeepAliveBuffer.sampleRate !== Tone.context.sampleRate) {
+            if (Tone.context.createBuffer) {
+                silentKeepAliveBuffer = Tone.context.createBuffer(1, 1, Tone.context.sampleRate);
+                console.log("[EventHandlers playSilentBufferOnTouch] Silent keep-alive buffer created/recreated.");
+            } else {
+                console.error("[EventHandlers playSilentBufferOnTouch] Tone.context.createBuffer is not available.");
+                return;
+            }
+        }
+
+        // Manage the buffer source
+        if (silentKeepAliveBuffer) {
+            if (transportKeepAliveBufferSource) {
+                try {
+                    transportKeepAliveBufferSource.stop();
+                    transportKeepAliveBufferSource.disconnect();
+                    console.log("[EventHandlers playSilentBufferOnTouch] Old keep-alive source stopped and disconnected.");
+                } catch (e) {
+                    // console.warn("[EventHandlers playSilentBufferOnTouch] Error cleaning up old keep-alive source:", e.message);
+                }
+            }
+
+            transportKeepAliveBufferSource = Tone.context.createBufferSource();
+            transportKeepAliveBufferSource.buffer = silentKeepAliveBuffer;
+            transportKeepAliveBufferSource.loop = true;
+
+            const destination = Tone.getDestination();
+            if (destination && !destination.disposed) {
+                transportKeepAliveBufferSource.connect(destination);
+                transportKeepAliveBufferSource.start();
+                isAudioUnlocked = true;
+                console.log("[EventHandlers playSilentBufferOnTouch] Keep-alive buffer playing. Audio robustly unlocked.");
+
+                // Remove listeners after successful unlock
+                document.removeEventListener('touchstart', playSilentBufferOnTouch, { passive: true, capture: true });
+                document.removeEventListener('mousedown', playSilentBufferOnTouch, { passive: true, capture: true });
+                document.removeEventListener('keydown', playSilentBufferOnTouch, { passive: true, capture: true });
+            } else {
+                console.error("[EventHandlers playSilentBufferOnTouch] Tone.Destination is not valid or disposed for keep-alive connection.");
+                if (localAppServices && localAppServices.showNotification) {
+                    localAppServices.showNotification("Audio output error for keep-alive.", "error");
+                }
+            }
+        }
+    } catch (e) { // This is line 85 from your previous log trace if error happens inside this try
+        console.error("[EventHandlers playSilentBufferOnTouch] Error creating/starting silent buffer (Restored Logic):", e);
+        if (localAppServices && localAppServices.showNotification) {
+            localAppServices.showNotification("Error ensuring audio stays active.", "error");
+        }
+        // Don't set isAudioUnlocked to true if there's an error here
     }
 };
-// --- END TEMPORARY SIMPLIFIED AUDIO UNLOCK ---
+
 
 export function initializePrimaryEventListeners() {
-    // Attach audio unlock listeners (will be removed after first success)
     document.addEventListener('touchstart', playSilentBufferOnTouch, { passive: true, capture: true });
     document.addEventListener('mousedown', playSilentBufferOnTouch, { passive: true, capture: true });
     document.addEventListener('keydown', playSilentBufferOnTouch, { passive: true, capture: true });
 
     document.addEventListener('keydown', handleGlobalKeyDown);
 
+    // ... (rest of initializePrimaryEventListeners as before)
     const startButton = localAppServices.uiElementsCache?.startMenuButton;
     const startMenuEl = localAppServices.uiElementsCache?.startMenu;
 
@@ -90,6 +143,7 @@ export function initializePrimaryEventListeners() {
 }
 
 function setupStartMenuItems(startMenuEl) {
+    // ... (content as before - you'll need to add logic for dynamic instruments here later)
     startMenuEl.querySelector('#menuNewProject')?.addEventListener('click', () => {
         if (localAppServices.newProject) localAppServices.newProject();
         startMenuEl.classList.add('hidden');
@@ -120,8 +174,8 @@ function setupStartMenuItems(startMenuEl) {
     });
 }
 
+// ... (attachGlobalControlEvents, handleGlobalKeyDown, setupMIDI, populateMIDIInputSelector, selectMIDIInput, handleMIDIMessage, track/timeline handlers as before)
 export function attachGlobalControlEvents(elementsToAttachTo) {
-    // ... (content as before)
     const { playBtnGlobal, stopBtnGlobal, recordBtnGlobal, tempoGlobalInput, playbackModeToggleBtnGlobal, midiInputSelectGlobal } = elementsToAttachTo;
 
     if (playBtnGlobal && localAppServices.togglePlayback) playBtnGlobal.addEventListener('click', () => localAppServices.togglePlayback());
@@ -166,7 +220,6 @@ export function attachGlobalControlEvents(elementsToAttachTo) {
 }
 
 function handleGlobalKeyDown(event) {
-    // ... (content as before) ...
     if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT' || event.target.isContentEditable) {
         if (event.key === "Escape") event.target.blur();
         return;
@@ -202,7 +255,6 @@ function handleGlobalKeyDown(event) {
 }
 
 export async function setupMIDI() {
-    // ... (content as before) ...
     if (!localAppServices.getMidiAccess || !localAppServices.setMidiAccessState || !localAppServices.setActiveMIDIInput || !localAppServices.selectMIDIInput) {
         console.warn("[EventHandlers setupMIDI] Core MIDI services not available in localAppServices.");
         return;
@@ -220,7 +272,7 @@ export async function setupMIDI() {
             localAppServices.setMidiAccessState(midiAccess);
             populateMIDIInputSelector(midiAccess);
             midiAccess.onstatechange = (e) => {
-                console.log("[EventHandlers MIDI] MIDI state changed:", e.port.name, e.port.state);
+                // console.log("[EventHandlers MIDI] MIDI state changed:", e.port.name, e.port.state);
                 populateMIDIInputSelector(localAppServices.getMidiAccess());
                 const activeInput = localAppServices.getActiveMIDIInput();
                 if (activeInput && activeInput !== 'none' && activeInput !== 'computerKeyboard') {
@@ -230,7 +282,7 @@ export async function setupMIDI() {
                         currentMidiAccess.inputs.forEach(input => { if (input.id === activeInput) stillConnected = true; });
                     }
                     if (!stillConnected) {
-                        console.log(`[EventHandlers MIDI] Active MIDI input "${activeInput}" disconnected. Resetting.`);
+                        // console.log(`[EventHandlers MIDI] Active MIDI input "${activeInput}" disconnected. Resetting.`);
                         if(localAppServices.selectMIDIInput) localAppServices.selectMIDIInput('none');
                     }
                 }
@@ -247,7 +299,6 @@ export async function setupMIDI() {
     }
 }
 function populateMIDIInputSelector(midiAccess) {
-    // ... (content as before) ...
     const selector = localAppServices.uiElementsCache?.midiInputSelectGlobal;
     if (!selector) {
         return;
@@ -281,7 +332,6 @@ function populateMIDIInputSelector(midiAccess) {
     }
 }
 export function selectMIDIInput(deviceId) {
-    // ... (content as before) ...
     if (!localAppServices.setActiveMIDIInput || !localAppServices.getMidiAccess || !localAppServices.getActiveMIDIInput) {
         console.warn("[EventHandlers selectMIDIInput] Core MIDI services not available for input selection.");
         return;
@@ -316,7 +366,6 @@ export function selectMIDIInput(deviceId) {
 }
 
 function handleMIDIMessage(message) {
-    // ... (content as before) ...
     if (!localAppServices.getArmedTrackId || !localAppServices.getTrackById) {
         console.warn("[EventHandlers handleMIDIMessage] Armed track services not available.");
         return;
@@ -343,7 +392,6 @@ function handleMIDIMessage(message) {
     }
 }
 
-// ... (handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack, handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer, toggleFullScreen, handleTimelineLaneDrop as before) ...
 export function handleTrackMute(trackId) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (track && track.setMute) {
