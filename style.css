@@ -1,3 +1,4 @@
+// style.css
 /* js/style.css - SnugOS Stylesheet with Light/Dark Theme */
 
 /* --- CSS Custom Properties for Theming --- */
@@ -743,6 +744,15 @@ button.active { background-color: var(--accent-primary) !important; color: white
 #masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; }
 
 /* Modal Styling */
+#modalContainer {
+    /* By default, the container should not intercept any mouse events */
+    pointer-events: none;
+}
+#modalContainer > * {
+    /* Any direct child of the modal container (e.g., the modal overlay) should re-enable pointer events */
+    pointer-events: auto;
+}
+
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background-color: var(--bg-modal-overlay); 
