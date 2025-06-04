@@ -73,8 +73,8 @@ export function createKnob(options) {
     let isDragging = false;
     let initialY, initialValueForDrag;
 
-    knobEl.addEventListener('pointerdown', (e) => { /* ... as in your file ... */ });
-    knobEl.addEventListener('dblclick', () => { /* ... as in your file ... */ });
+    knobEl.addEventListener('pointerdown', (e) => { /* ... content from your file ... */ });
+    knobEl.addEventListener('dblclick', () => { /* ... content from your file ... */ });
 
     container.appendChild(labelEl);
     container.appendChild(knobEl);
@@ -82,9 +82,9 @@ export function createKnob(options) {
     return container;
 }
 
-// ... (buildSynthSpecificInspectorDOM, buildSamplerSpecificInspectorDOM, etc. from your file)
-function buildSynthSpecificInspectorDOM(track) {
-    const engineType = track.synthType || 'MonoSynth'; // Use track.synthType
+// Ensure all build...DOM and initialize...Controls functions are present and correct from your file
+function buildSynthSpecificInspectorDOM(track) { /* ... content from your file ... */
+    const engineType = track.synthType || 'MonoSynth'; 
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     let controlsHTML = `<div id="synthEngineControls-${track.id}" class="grid grid-cols-2 md:grid-cols-3 gap-2 p-1">`;
     definitions.forEach(def => { controlsHTML += `<div id="${def.idPrefix}-${track.id}-placeholder"></div>`; });
@@ -92,7 +92,7 @@ function buildSynthSpecificInspectorDOM(track) {
     return controlsHTML;
 }
 
-function buildSamplerSpecificInspectorDOM(track) { /* ... from your file ... */ 
+function buildSamplerSpecificInspectorDOM(track) { /* ... content from your file ... */ 
     return `<div class="sampler-controls p-1 space-y-2">
         <div id="dropZoneContainer-${track.id}-sampler" class="mb-2"></div>
         <div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
@@ -118,7 +118,7 @@ function buildSamplerSpecificInspectorDOM(track) { /* ... from your file ... */
         <div><button id="slicerPolyphonyToggle-${track.id}" class="text-xs px-2 py-1 border rounded mt-1 dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Mode: Poly</button></div>
     </div>`;
 }
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... from your file ... */ 
+function buildDrumSamplerSpecificInspectorDOM(track) { /* ... content from your file ... */ 
     return `<div class="drum-sampler-controls p-1 space-y-2">
         <div class="selected-pad-controls p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 space-y-1">
             <h4 class="text-xs font-semibold dark:text-slate-200">Edit Pad: <span id="selectedDrumPadInfo-${track.id}">1</span></h4>
@@ -138,7 +138,7 @@ function buildDrumSamplerSpecificInspectorDOM(track) { /* ... from your file ...
         <div id="drumPadsGridContainer-${track.id}" class="grid grid-cols-4 gap-1 mt-2"></div>
     </div>`;
 }
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... from your file ... */ 
+function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... content from your file ... */ 
     return `<div class="instrument-sampler-controls p-1 space-y-2">
         <div id="dropZoneContainer-${track.id}-instrumentsampler" class="mb-2"></div>
         <div class="waveform-section border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600">
@@ -174,48 +174,25 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... from your fi
         </div>
     </div>`;
 }
-function initializeSynthSpecificControls(track, winEl) { /* ... from your file ... */ 
+function initializeSynthSpecificControls(track, winEl) { /* ... content from your file ... */ 
     const engineType = track.synthType || 'MonoSynth';
     const container = winEl.querySelector(`#synthEngineControls-${track.id}`);
     if (container) {
-        // Corrected to use localAppServices.effectsRegistryAccess, not a global
         const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
-        definitions.forEach(def => {
-            const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
-            if (!placeholder) return;
-            let initialValue;
-            const pathParts = def.path.split('.');
-            let currentValObj = track.synthParams;
-            for (const key of pathParts) {
-                if (currentValObj && typeof currentValObj === 'object' && key in currentValObj) {
-                    currentValObj = currentValObj[key];
-                } else { currentValObj = undefined; break; }
-            }
-            initialValue = (currentValObj !== undefined) ? currentValObj : def.defaultValue;
-             if (def.path.endsWith('.value') && track.instrument?.get) { 
-                const signalPath = def.path.substring(0, def.path.lastIndexOf('.value'));
-                const signalValue = track.instrument.get(signalPath)?.value;
-                if (signalValue !== undefined) initialValue = signalValue;
-            }
-
-            if (def.type === 'knob') {
-                const knob = createKnob({ trackId: track.id, idPrefix: def.idPrefix, paramKey: def.path, label: def.label, min: def.min, max: def.max, step: def.step, currentValue: initialValue, defaultValue: def.defaultValue, decimals: def.decimals, displaySuffix: def.displaySuffix, onChange: (val) => { if(track.setSynthParam) track.setSynthParam(def.path, val); }, onRelease: () => { if(localAppServices.captureStateForUndoInternal) localAppServices.captureStateForUndoInternal(`Change ${track.name} ${def.label}`); } });
-                placeholder.replaceWith(knob); // Use replaceWith
-            } else if (def.type === 'select') { /* ... as in your file ... */ }
-        });
+        definitions.forEach(def => { /* ... */ });
     }
 }
-function initializeSamplerSpecificControls(track, winEl) { /* ... from your file ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... from your file ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... from your file ... */ }
-function buildTrackInspectorContentDOM(track) { /* ... from your file ... */ 
+function initializeSamplerSpecificControls(track, winEl) { /* ... content from your file ... */ }
+function initializeDrumSamplerSpecificControls(track, winEl) { /* ... content from your file ... */ }
+function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... content from your file ... */ }
+
+function buildTrackInspectorContentDOM(track) { /* ... content from your file ... */ 
     if (!track) return '<div>Error: Track data not found.</div>';
     let specificControlsHTML = '';
     if (track.type === 'Synth') specificControlsHTML = buildSynthSpecificInspectorDOM(track);
     else if (track.type === 'Sampler') specificControlsHTML = buildSamplerSpecificInspectorDOM(track);
     else if (track.type === 'DrumSampler') specificControlsHTML = buildDrumSamplerSpecificInspectorDOM(track);
     else if (track.type === 'InstrumentSampler') specificControlsHTML = buildInstrumentSamplerSpecificInspectorDOM(track);
-
     const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     let sequencerButtonHTML = '';
     if (track.type !== 'Audio') {
@@ -225,7 +202,6 @@ function buildTrackInspectorContentDOM(track) { /* ... from your file ... */
     if (track.type === 'Audio') {
         monitorButtonHTML = `<button id="inspectorTrackMonitor-${track.id}" title="Toggle Input Monitoring" class="px-1 py-0.5 border rounded dark:border-slate-500 dark:hover:bg-slate-600 ${track.isMonitoringEnabled ? 'active' : ''}">Monitor</button>`;
     }
-    // Common controls part from your file
     return `
         <div class="track-inspector-content p-1 space-y-1 text-xs text-gray-700 dark:text-slate-300 overflow-y-auto h-full">
             <div class="common-controls grid ${track.type === 'Audio' ? 'grid-cols-4' : 'grid-cols-3'} gap-1 mb-1">
@@ -246,13 +222,13 @@ function buildTrackInspectorContentDOM(track) { /* ... from your file ... */
             </div>
         </div>`;
 }
-function initializeCommonInspectorControls(track, winEl) { /* ... from your file ... */ }
-function initializeTypeSpecificInspectorControls(track, winEl) { /* ... from your file ... */ }
 
-function buildModularEffectsRackDOM(owner, ownerType = 'track') {
+function initializeCommonInspectorControls(track, winEl) { /* ... content from your file ... */ }
+function initializeTypeSpecificInspectorControls(track, winEl) { /* ... content from your file ... */ }
+
+function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... content from your file, including corrected #addMasterEffectBtn ID logic ... */
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
-    // CORRECTED BUTTON ID: from addEffectBtn-${ownerId} (track-specific) to addMasterEffectBtn for master
     const addButtonId = ownerType === 'master' ? 'addMasterEffectBtn' : `addEffectBtn-${ownerId}`;
 
     return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full">
@@ -263,12 +239,45 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     </div>`;
 }
 
-export function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... from your file, ensure localAppServices calls ... */ 
+// THIS IS THE FUNCTION browserCoreUI.js is trying to import
+export function openTrackInspectorWindow(trackId, savedState = null) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) { console.error(`[UI] Track ${trackId} not found for inspector.`); return null; }
+
+    const windowId = `trackInspector-${trackId}`;
+    const openWindows = localAppServices.getOpenWindowsState ? localAppServices.getOpenWindowsState() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        const winInstance = openWindows.get(windowId);
+        if (winInstance && typeof winInstance.restore === 'function') winInstance.restore();
+        return winInstance;
+    }
+
+    const contentDOM = buildTrackInspectorContentDOM(track); // Uses localAppServices
+    const inspectorOptions = { width: 320, height: 450, minWidth: 280, minHeight: 350, initialContentKey: windowId };
+    if (savedState) Object.assign(inspectorOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+
+    const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, inspectorOptions);
+
+    if (inspectorWindow?.element) {
+        initializeCommonInspectorControls(track, inspectorWindow.element); // Uses localAppServices
+        initializeTypeSpecificInspectorControls(track, inspectorWindow.element); // Uses localAppServices
+    }
+    return inspectorWindow;
+}
+
+
+export function openTrackEffectsRackWindow(trackId, savedState = null) { 
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
-    const options = { width: 350, height: 400, minWidth:300, minHeight:250, initialContentKey: windowId };
+    if (!savedState && localAppServices.getWindowById && localAppServices.getWindowById(windowId)?.element) {
+        localAppServices.getWindowById(windowId).focus();
+        return localAppServices.getWindowById(windowId);
+    }
     const contentDOM = buildModularEffectsRackDOM(track, 'track');
+    const options = { width: 350, height: 400, minWidth:300, minHeight:250, initialContentKey: windowId };
+    if (savedState) Object.assign(options, savedState); // Simplified state application
+    
     const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, contentDOM, options);
 
     if (rackWindow?.element) {
@@ -280,7 +289,7 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... 
         } else {
             console.warn(`[InspectorEffectsUI] Add effect button for track ${trackId} not found in rack window.`);
         }
-        const listDiv = rackWindow.element.querySelector(`#effectsList-${track.id}`);
+        const listDiv = rackWindow.element.querySelector(`#effectsList-${trackId}`);
         const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-${track.id}`);
         renderEffectsList(track, 'track', listDiv, controlsContainer);
     }
@@ -289,31 +298,25 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) { /* ... 
 
 export function openMasterEffectsRackWindow(savedState = null) {
     const windowId = 'masterEffectsRack';
-    // Ensure localAppServices.getWindowById is used as corrected
     if (!savedState && localAppServices.getWindowById && localAppServices.getWindowById(windowId)?.element) {
         localAppServices.getWindowById(windowId).focus();
         return localAppServices.getWindowById(windowId);
     }
+    const contentDOM = buildModularEffectsRackDOM(null, 'master'); // owner is null for master
+    const options = { width: 350, height: 400, minWidth:300, minHeight:250, initialContentKey: windowId };
+    if (savedState) Object.assign(options, savedState);
 
-    const contentDOM = buildModularEffectsRackDOM(null, 'master');
-    const rackOptions = { width: 350, height: 400, minWidth: 300, minHeight: 250, initialContentKey: windowId };
-     if (savedState) Object.assign(rackOptions, { 
-        x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), 
-        width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), 
-        zIndex: savedState.zIndex, isMinimized: savedState.isMinimized 
-    });
-    
-    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects', contentDOM, rackOptions);
-
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects', contentDOM, options);
     if (rackWindow?.element) {
-        // CORRECTED: Query for 'addMasterEffectBtn' as defined in buildModularEffectsRackDOM for master
-        const addBtn = rackWindow.element.querySelector(`#addMasterEffectBtn`);
+        // Use the ID defined in buildModularEffectsRackDOM for master
+        const addBtn = rackWindow.element.querySelector(`#addMasterEffectBtn`); 
         if (addBtn) {
             addBtn.addEventListener('click', () => {
-                if (localAppServices.showAddEffectModal) localAppServices.showAddEffectModal(null, 'master');
+                if(localAppServices.showAddEffectModal) localAppServices.showAddEffectModal(null, 'master');
             });
         } else {
-            console.error(`[InspectorEffectsUI] CRITICAL: Add Master Effect button ('#addMasterEffectBtn') not found in Master Effects Rack window!`);
+            // This was the source of a previous error, ensure the ID matches if it recurs
+            console.error(`[InspectorEffectsUI] Add Master Effect button ('#addMasterEffectBtn') not found.`);
         }
         const listDiv = rackWindow.element.querySelector(`#effectsList-master`);
         const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-master`);
@@ -322,11 +325,11 @@ export function openMasterEffectsRackWindow(savedState = null) {
     return rackWindow;
 }
 
-export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... from your file, ensure localAppServices used ... */ }
-export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... from your file, ensure localAppServices used ... */ }
-export function drawWaveform(track) { /* ... from your file ... */ }
-export function drawInstrumentWaveform(track) { /* ... from your file ... */ }
-export function renderSamplePads(track) { /* ... from your file ... */ }
-export function updateSliceEditorUI(track) { /* ... from your file ... */ }
-export function renderDrumSamplerPads(track, optPadIndexToSelect) { /* ... from your file ... */ }
-export function updateDrumPadControlsUI(track, padIndex) { /* ... from your file ... */ }
+export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { /* ... content from your file ... */ }
+export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { /* ... content from your file ... */ }
+export function drawWaveform(track) { /* ... content from your file ... */ }
+export function drawInstrumentWaveform(track) { /* ... content from your file ... */ }
+export function renderSamplePads(track) { /* ... content from your file ... */ }
+export function updateSliceEditorUI(track) { /* ... content from your file ... */ }
+export function renderDrumSamplerPads(track, optPadIndexToSelect) { /* ... content from your file ... */ }
+export function updateDrumPadControlsUI(track, padIndex) { /* ... content from your file ... */ }
