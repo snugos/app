@@ -68,22 +68,30 @@
     <div id="notification-area" class="fixed bottom-10 right-4 z-[2000] flex flex-col items-end space-y-2">
     </div>
 
-<div id="startMenu" class="hidden absolute bottom-8 left-2 ...">
+<div id="startMenu" class="hidden ...">
     <ul id="fileMenu" class="text-sm">
         <li id="menuNewProject" ...>New Project</li>
-        <li><hr ...></li>
         <li id="menuAddSynthTrack">Add Synth Track</li>
         <li id="menuAddSamplerTrack">Add Slicer Sampler Track</li>
         <li id="menuAddDrumSamplerTrack">Add Sampler (Pads)</li>
         <li id="menuAddInstrumentSamplerTrack">Add Instrument Sampler Track</li>
         <li id="menuAddAudioTrack">Add Audio Track</li>
-        <li><hr></li>
+        <li><hr ...></li>
         <li id="menuOpenSoundBrowser">Sound Browser</li>
         <li id="menuOpenTimeline">Timeline</li>
         <li id="menuOpenGlobalControls">Global Controls</li>
         <li id="menuOpenMixer">Mixer</li>
         <li id="menuOpenMasterEffects">Master Effects Rack</li>
-        </ul>
+        <li id="menuUndo" class="disabled" title="Undo">Undo</li>
+        <li id="menuRedo" class="disabled" title="Redo">Redo</li>
+        <li><hr class="my-1 border-slate-600"></li>
+        <li id="menuSaveProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Save Project (.snug)</li>
+        <li id="menuLoadProject" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Load Project (.snug)</li>
+        <li id="menuExportWav" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Export to WAV</li>
+        <li><hr class="my-1 border-slate-600"></li>
+        <li id="menuToggleFullScreen" class="px-3 py-1.5 hover:bg-blue-500 dark:hover:bg-blue-600 hover:text-white dark:hover:text-white cursor-pointer rounded-md">Toggle Full Screen</li>
+
+    </ul>
 </div>
 
     <input type="file" id="file-input-project" class="hidden" accept=".snug">
