@@ -57,6 +57,11 @@ let redoStack = [];
 // --- AppServices Placeholder (will be populated by main.js) ---
 let appServices = {};
 
+// --- Theme Preference State ---
+let currentUserThemePreference = 'system'; // 'light', 'dark', or 'system'
+const THEME_STORAGE_KEY = 'snugosThemePreference_v2';
+
+
 export function initializeStateModule(services) {
     appServices = services || {};
     // Ensure masterEffectsChainState is always an array
@@ -110,6 +115,11 @@ export function getPlaybackModeState() { return globalPlaybackMode; }
 export function getSelectedTimelineClipInfoState() { return selectedTimelineClipInfoGlobal; }
 // MODIFICATION END
 
+// --- Theme Preference Getters/Setters ---
+export function getCurrentUserThemePreferenceState() {
+    return currentUserThemePreference;
+}
+
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
@@ -149,6 +159,26 @@ export function setSelectedTimelineClipInfoState(trackId, clipId) {
     }
 }
 // MODIFICATION END
+
+export function setCurrentUserThemePreferenceState(theme) {
+    if (['light', 'dark', 'system'].includes(theme)) {
+        currentUserThemePreference = theme;
+        try {
+            localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch (e) {
+            console.warn("[State] Could not save theme preference to localStorage:", e.message);
+        }
+        console.log(`[State] User theme preference set to: ${theme}`);
+        if (appServices.applyUserThemePreference) {
+            appServices.applyUserThemePreference();
+        } else {
+            console.warn("[State] appServices.applyUserThemePreference not available to apply theme change immediately.");
+        }
+    } else {
+        console.warn(`[State] Invalid theme preference attempted: ${theme}`);
+    }
+}
+
 
 export function setPlaybackModeStateInternal(mode) {
     const displayMode = typeof mode === 'string' ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Unknown';
@@ -502,6 +532,7 @@ export function gatherProjectDataInternal() {
                 // MODIFICATION START: Add selected timeline clip info to project data
                 selectedTimelineClipInfo: getSelectedTimelineClipInfoState(),
                 // MODIFICATION END
+                currentUserThemePreference: getCurrentUserThemePreferenceState(), // Save theme preference
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
@@ -651,6 +682,14 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             setSelectedTimelineClipInfoState(gs.selectedTimelineClipInfo.trackId, gs.selectedTimelineClipInfo.clipId);
         }
         // MODIFICATION END
+        // Restore theme preference
+        if (gs.currentUserThemePreference && appServices.setCurrentUserThemePreference) {
+            // The setter in state.js will handle applying it via appServices.applyUserThemePreference
+            appServices.setCurrentUserThemePreference(gs.currentUserThemePreference);
+        } else if (appServices.setCurrentUserThemePreference) {
+             appServices.setCurrentUserThemePreference('system'); // Default if not in project data
+        }
+
     } catch (error) {
         console.error("[State reconstructDAWInternal] Error applying global settings:", error);
         if (appServices.showNotification) appServices.showNotification("Error loading global settings.", 3000);
@@ -691,7 +730,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             if (globalSettings.soloedTrackId !== null && typeof globalSettings.soloedTrackId !== 'undefined') {
                 setSoloedTrackIdState(globalSettings.soloedTrackId);
                 // Re-apply solo state to all tracks now that they exist
-                getTracksState().forEach(t => { 
+                getTracksState().forEach(t => {
                     if (t) {
                         t.isSoloed = (t.id === getSoloedTrackIdState());
                         if (typeof t.applySoloState === 'function') t.applySoloState();
@@ -715,7 +754,12 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
                 const key = winState.initialContentKey || winState.id; // Use initialContentKey for identification
                 console.log(`[State reconstructDAWInternal] Reconstructing window: ${key}, ID: ${winState.id}`);
                 // Call appropriate window opening functions from appServices (UI module)
-                if (key === 'globalControls' && appServices.openGlobalControlsWindow) appServices.openGlobalControlsWindow(null, winState); // null for onReadyCallback during reconstruct
+                if (key === 'globalControls' && appServices.openGlobalControlsWindow) {
+                    // If globalControls is now a top taskbar, this might not be needed,
+                    // or it might set initial values if the top taskbar has stateful UI elements.
+                    // For now, we assume it's being removed as a separate window.
+                    console.log("[State reconstructDAWInternal] Skipping reconstruction of 'globalControls' window as it's becoming a top taskbar.");
+                }
                 else if (key === 'mixer' && appServices.openMixerWindow) appServices.openMixerWindow(winState);
                 else if (key === 'soundBrowser' && appServices.openSoundBrowserWindow) appServices.openSoundBrowserWindow(winState);
                 else if (key === 'masterEffectsRack' && appServices.openMasterEffectsRackWindow) appServices.openMasterEffectsRackWindow(winState);
@@ -811,11 +855,11 @@ export async function handleProjectFileLoadInternal(event) {
                 if (!e.target || !e.target.result) throw new Error("FileReader did not produce a result.");
                 const projectData = JSON.parse(e.target.result);
                 // Clear undo/redo stacks before loading a new project
-                undoStack = []; 
+                undoStack = [];
                 redoStack = [];
                 await reconstructDAWInternal(projectData, false); // false for isUndoRedo
                 // Create an initial undo state for the loaded project
-                captureStateForUndoInternal("Load Project: " + file.name.substring(0, 20)); 
+                captureStateForUndoInternal("Load Project: " + file.name.substring(0, 20));
             } catch (error) {
                 console.error("[State handleProjectFileLoadInternal] Error loading project from file:", error);
                 if (appServices.showNotification) appServices.showNotification(`Error loading project: ${error.message}. File might be corrupt or invalid.`, 5000);
