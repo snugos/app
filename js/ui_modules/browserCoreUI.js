@@ -1,7 +1,8 @@
-// js/ui_modules/browserCoreUI.js (MODIFIED - Ensured direct appServices reference passing)
+// js/ui_modules/browserCoreUI.js
+
 import { SnugWindow } from '../SnugWindow.js';
 import {
-    showNotification as utilShowNotification, // Renamed to avoid conflict if localAppServices.showNotification is different
+    showNotification as utilShowNotification,
     createDropZoneHTML,
     setupGenericDropZoneListeners,
     showCustomModal,
@@ -40,7 +41,6 @@ import {
 } from './arrangementMixingUI.js';
 
 export {
-    // Re-export functions that main.js (via appServices) will call
     openTrackInspectorWindow,
     openTrackEffectsRackWindow,
     openMasterEffectsRackWindow,
@@ -48,7 +48,6 @@ export {
     openSequencerWindow,
     openMixerWindow,
     updateMixerWindow,
-    // Also re-export UI update functions that might be called from state mutations or other services
     drawWaveformFromInspectorUI as drawWaveform,
     drawInstrumentWaveformFromInspectorUI as drawInstrumentWaveform,
     renderSamplePadsFromInspectorUI as renderSamplePads,
@@ -64,29 +63,22 @@ export {
     highlightPlayingStepFromArrangement as highlightPlayingStep
 };
 
-// This will be the single appServices instance from main.js
 let localAppServices = {};
-// selectedSoundForPreviewData was moved to state.js and accessed via appServices.getSelectedSoundForPreview / setSelectedSoundForPreview
 
 export function initializeUIModule(appServicesFromMain) {
-    localAppServices = appServicesFromMain; // Use the direct reference from main.js
+    localAppServices = appServicesFromMain;
 
-    // Pass the same, original appServicesFromMain to sub-modules
     initializeInspectorEffectsUI(appServicesFromMain);
     initializeArrangementMixingUI(appServicesFromMain);
 
-    // Ensure selectedSoundForPreview services exist on appServices (provided by main.js from state.js)
     if (!localAppServices.getSelectedSoundForPreview || !localAppServices.setSelectedSoundForPreview) {
-        console.warn("[BrowserCoreUI] getSelectedSoundForPreview or setSelectedSoundForPreview services are missing from appServices. Preview functionality might be affected.");
-        // Provide no-op fallbacks if absolutely necessary, though main.js should guarantee these from state.js
+        console.warn("[BrowserCoreUI] getSelectedSoundForPreview or setSelectedSoundForPreview services missing.");
         if (!localAppServices.getSelectedSoundForPreview) localAppServices.getSelectedSoundForPreview = () => null;
         if (!localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview = () => {};
     }
 
-
     if (!localAppServices.effectsRegistryAccess) {
-        console.warn("[BrowserCoreUI] effectsRegistryAccess not found in appServices. UI relying on it may fail.");
-        // Fallback to prevent immediate crashes but functionality will be impaired.
+        console.warn("[BrowserCoreUI] effectsRegistryAccess not found in appServices.");
         localAppServices.effectsRegistryAccess = {
             AVAILABLE_EFFECTS: {},
             getEffectParamDefinitions: () => [],
@@ -95,24 +87,38 @@ export function initializeUIModule(appServicesFromMain) {
         };
     }
     if (!localAppServices.effectsRegistryAccess.synthEngineControlDefinitions) {
-        // Ensure this nested property also exists if effectsRegistryAccess was a fallback.
         localAppServices.effectsRegistryAccess.synthEngineControlDefinitions = {};
     }
-    // console.log("[BrowserCoreUI] UI Module Initialized with submodules.");
 }
 
 export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null) {
-    // Ensure localAppServices are available (this was the source of a critical error)
-    if (!localAppServices || !localAppServices.getWindowByIdState || !localAppServices.createWindow) {
-        console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: Core appServices (getWindowByIdState, createWindow) not available!", localAppServices);
-        const errNotification = localAppServices.showNotification || utilShowNotification; // Use utilShowNotification as fallback
-        errNotification("Cannot open Sound Browser: internal services missing.", "error");
+    const windowId = 'soundBrowser';
+
+    // --- DETAILED CRITICAL CHECK ---
+    if (!localAppServices) {
+        console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: localAppServices object itself is not available!");
+        alert("Sound Browser Error: Core services missing (1).");
         return null;
     }
-    const windowId = 'soundBrowser';
-    if (!savedState && localAppServices.getWindowByIdState(windowId)?.element) {
-        localAppServices.getWindowByIdState(windowId).focus();
-        return localAppServices.getWindowByIdState(windowId);
+    // The console log showed getWindowByIdState, so checking for getWindowById
+    if (typeof localAppServices.getWindowById !== 'function') { // Changed from getWindowByIdState to getWindowById based on log
+        console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: localAppServices.getWindowById is NOT A FUNCTION. Type:", typeof localAppServices.getWindowById, "Value:", localAppServices.getWindowById);
+        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
+        alert("Sound Browser Error: Core services missing (2).");
+        return null;
+    }
+    if (typeof localAppServices.createWindow !== 'function') {
+        console.error("[BrowserCoreUI openSoundBrowserWindow] CRITICAL: localAppServices.createWindow is NOT A FUNCTION. Type:", typeof localAppServices.createWindow, "Value:", localAppServices.createWindow);
+        console.log("Full localAppServices at this point:", JSON.parse(JSON.stringify(localAppServices)));
+        alert("Sound Browser Error: Core services missing (3).");
+        return null;
+    }
+    // --- END DETAILED CRITICAL CHECK ---
+
+    // Use getWindowById for existing window check
+    if (!savedState && localAppServices.getWindowById(windowId)?.element) {
+        localAppServices.getWindowById(windowId).focus();
+        return localAppServices.getWindowById(windowId);
     }
 
     const contentHTML = `
@@ -122,7 +128,8 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
             <button id="soundBrowserUpBtn" class="px-2 py-0.5 bg-slate-600 hover:bg-slate-500 rounded-sm mr-1" title="Up a level"><i class="fas fa-arrow-up"></i></button>
         </div>
         <div id="soundBrowserPathDisplay" class="p-1 text-xs bg-slate-750 text-slate-400 truncate">/</div>
-        <div id="soundBrowserList" class="p-1 space-y-0.5 overflow-y-auto h-full text-xs" style="max-height: calc(100% - 90px);"> </div>
+        <div id="soundBrowserList" class="p-1 space-y-0.5 overflow-y-auto h-full text-xs" style="max-height: calc(100% - 90px);">
+        </div>
         <div class="p-1 border-t border-slate-600 text-xs">
             <button id="soundBrowserPreviewBtn" class="w-full p-1 bg-blue-600 hover:bg-blue-500 rounded-sm disabled:opacity-50 text-white" disabled>Preview</button>
         </div>
@@ -140,8 +147,6 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
         const librarySelect = browserWindow.element.querySelector('#soundLibrarySelect');
         const upButton = browserWindow.element.querySelector('#soundBrowserUpBtn');
         const previewButton = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
-        const listDiv = browserWindow.element.querySelector('#soundBrowserList');
-
 
         if (Constants.soundLibraries && Object.keys(Constants.soundLibraries).length > 0) {
             Object.keys(Constants.soundLibraries).forEach(libName => {
@@ -154,21 +159,18 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
             librarySelect.innerHTML = '<option value="">No Libraries Defined</option>';
         }
 
-        if (localAppServices.getCurrentLibraryNameState && localAppServices.getCurrentLibraryNameState()) {
-            librarySelect.value = localAppServices.getCurrentLibraryNameState();
+        if (localAppServices.getCurrentLibraryName && localAppServices.getCurrentLibraryName()) { // Changed from getCurrentLibraryNameState
+            librarySelect.value = localAppServices.getCurrentLibraryName();
         } else if (librarySelect.options.length > 0 && librarySelect.options[0].value) {
             librarySelect.value = librarySelect.options[0].value;
-             if(localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(librarySelect.value); // This should trigger update via state
+             if(localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(librarySelect.value);
         }
 
-
         librarySelect.addEventListener('change', (e) => {
-            // This will trigger updateSoundBrowserDisplayForLibrary via the state setter's side effect
             if(localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(e.target.value);
         });
 
         upButton.addEventListener('click', () => {
-            // This will trigger updateSoundBrowserDisplayForLibrary via the state setter's side effect
             if(localAppServices.popFromSoundBrowserPath) localAppServices.popFromSoundBrowserPath();
         });
 
@@ -178,21 +180,20 @@ export function openSoundBrowserWindow(onFileSelectedCallback, savedState = null
                 localAppServices.loadAndPreviewSample(selectedSound.fullPath, selectedSound.libraryName, selectedSound.fileName);
             }
         });
-        // Initial population of the browser list
         updateSoundBrowserDisplayForLibrary();
     }
     return browserWindow;
 }
 
 export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, isLoading = false, hasError = false) {
-    if (!localAppServices.getWindowByIdState || !localAppServices.getCurrentLibraryNameState ||
-        !localAppServices.getCurrentSoundBrowserPathState || !localAppServices.getSoundLibraryFileTreesState ||
-        !localAppServices.getCurrentSoundFileTreeState) { // Added check for getCurrentSoundFileTreeState
-        console.warn("[BrowserCoreUI updateSoundBrowserDisplayForLibrary] Required appServices for state access are missing.");
+    if (!localAppServices.getWindowById || !localAppServices.getCurrentLibraryName || // Changed from ...State versions
+        !localAppServices.getCurrentSoundBrowserPath || !localAppServices.getSoundLibraryFileTrees ||
+        !localAppServices.getCurrentSoundFileTree) {
+        console.warn("[BrowserCoreUI updateSoundBrowserDisplayForLibrary] Required appServices missing.");
         return;
     }
 
-    const browserWindow = localAppServices.getWindowByIdState('soundBrowser');
+    const browserWindow = localAppServices.getWindowById('soundBrowser'); // Changed from getWindowByIdState
     if (!browserWindow || !browserWindow.element) return;
 
     const listDiv = browserWindow.element.querySelector('#soundBrowserList');
@@ -201,21 +202,20 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
     const previewButton = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
 
     if(!listDiv || !pathDisplay || !librarySelect || !previewButton) {
-        console.warn("[BrowserCoreUI updateSoundBrowserDisplayForLibrary] UI elements within sound browser not found.");
+        console.warn("[BrowserCoreUI updateSoundBrowserDisplayForLibrary] UI elements not found.");
         return;
     }
-    listDiv.innerHTML = ''; // Clear previous list
+    listDiv.innerHTML = '';
 
-    const currentLibraryName = libraryNameOverride || localAppServices.getCurrentLibraryNameState() || librarySelect.value;
-    if (librarySelect.value !== currentLibraryName && currentLibraryName) { // Ensure select reflects current library
+    const currentLibraryName = libraryNameOverride || localAppServices.getCurrentLibraryName() || librarySelect.value;
+    if (librarySelect.value !== currentLibraryName && currentLibraryName) {
         librarySelect.value = currentLibraryName;
     }
 
-    const currentPathArray = localAppServices.getCurrentSoundBrowserPathState();
+    const currentPathArray = localAppServices.getCurrentSoundBrowserPath();
     pathDisplay.textContent = `/${currentPathArray.join('/')}`;
 
-    // Get the specific file tree for the current library and path
-    let displayItems = localAppServices.getCurrentSoundFileTreeState(); // This getter from state.js should handle path logic
+    let displayItems = localAppServices.getCurrentSoundFileTree();
 
     if (isLoading) {
         listDiv.innerHTML = '<div class="p-2 text-slate-400">Loading library...</div>';
@@ -230,16 +230,15 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
         return;
     }
 
-    const loadedZips = localAppServices.getLoadedZipFilesState ? localAppServices.getLoadedZipFilesState() : {};
+    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {}; // Changed from ...State
     const currentZipStatus = loadedZips[currentLibraryName];
 
     if (!currentZipStatus && currentLibraryName && Constants.soundLibraries[currentLibraryName] && localAppServices.fetchSoundLibrary) {
-        // Library exists in constants but not loaded yet, initiate fetch
         listDiv.innerHTML = `<div class="p-2 text-slate-400">Fetching library: ${currentLibraryName}...</div>`;
         localAppServices.fetchSoundLibrary(currentLibraryName, Constants.soundLibraries[currentLibraryName]);
         if (previewButton) previewButton.disabled = true;
         if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview(null);
-        return; // fetchSoundLibrary will trigger another update once done/failed
+        return;
     }
 
     if (!displayItems && currentZipStatus === "loading") {
@@ -255,8 +254,6 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
         return;
     }
 
-
-    // Render folders first, then files, sorted alphabetically
     Object.entries(displayItems).sort((a,b) => a[0].localeCompare(b[0])).forEach(([name, item]) => {
         if (item.type === 'folder') {
             const folderEl = document.createElement('div');
@@ -264,7 +261,6 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
             folderEl.innerHTML = `<i class="fas fa-folder mr-2 text-yellow-400"></i> ${name}`;
             folderEl.addEventListener('click', () => {
                 if (localAppServices.pushToSoundBrowserPath) localAppServices.pushToSoundBrowserPath(name);
-                // update is triggered by state change
             });
             listDiv.appendChild(folderEl);
         }
@@ -293,7 +289,7 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
                     localAppServices.setSelectedSoundForPreview({ fileName: name, fullPath: item.fullPath, libraryName: currentLibraryName });
                 }
                 if (previewButton && localAppServices.loadAndPreviewSample) {
-                     previewButton.click(); // Simulate click on preview button
+                     previewButton.click();
                 }
             });
             fileEl.addEventListener('dragstart', (ev) => {
@@ -309,13 +305,13 @@ export function updateSoundBrowserDisplayForLibrary(libraryNameOverride = null, 
             listDiv.appendChild(fileEl);
         }
     });
-     if (previewButton) previewButton.disabled = true; // Disable by default, enable on selection
-     if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview(null); // Clear selection
+     if (previewButton) previewButton.disabled = true;
+     if (localAppServices.setSelectedSoundForPreview) localAppServices.setSelectedSoundForPreview(null);
 }
 
 export function showAddTrackModal() {
     if (!localAppServices.showCustomModal || !localAppServices.addTrack) {
-        console.error("[BrowserCoreUI showAddTrackModal] Missing required appServices: showCustomModal or addTrack");
+        console.error("[BrowserCoreUI showAddTrackModal] Missing required appServices.");
         return;
     }
     const trackTypes = ['Synth', 'Sampler', 'DrumSampler', 'InstrumentSampler', 'Audio'];
@@ -342,8 +338,8 @@ export function showAddTrackModal() {
             action: (e, modal) => {
                 const type = modal.contentDiv.querySelector('#newTrackType').value;
                 const nameInput = modal.contentDiv.querySelector('#newTrackName');
-                const name = nameInput.value.trim() || ''; // Use empty string if no name
-                localAppServices.addTrack(type, { name: name }); // Pass name in initialData
+                const name = nameInput.value.trim() || '';
+                localAppServices.addTrack(type, { name: name });
                 modal.overlay.remove();
             },
             classes: 'bg-blue-600 hover:bg-blue-500 text-white'
@@ -353,11 +349,11 @@ export function showAddTrackModal() {
 }
 
 
-export function showAddEffectModal(owner, ownerType = 'track') { // owner is track object or null for master
+export function showAddEffectModal(owner, ownerType = 'track') {
     if (!localAppServices.effectsRegistryAccess || !localAppServices.showCustomModal ||
         (ownerType === 'track' && (!owner || !owner.addEffect)) ||
         (ownerType === 'master' && !localAppServices.addMasterEffect)) {
-        console.error("[BrowserCoreUI showAddEffectModal] Missing required services or owner methods.");
+        console.error("[BrowserCoreUI showAddEffectModal] Missing services or owner methods.");
         const notify = localAppServices.showNotification || utilShowNotification;
         notify("Cannot add effect: internal error.", "error");
         return;
@@ -383,9 +379,9 @@ export function showAddEffectModal(owner, ownerType = 'track') { // owner is tra
             action: (e, modal) => {
                 const type = modal.contentDiv.querySelector('#newEffectType').value;
                 if (ownerType === 'track' && owner && owner.addEffect) {
-                    owner.addEffect(type); // Track method handles undo and UI update
+                    owner.addEffect(type);
                 } else if (ownerType === 'master' && localAppServices.addMasterEffect) {
-                    localAppServices.addMasterEffect(type); // App service handles undo and UI update for master
+                    localAppServices.addMasterEffect(type);
                 }
                 modal.overlay.remove();
             },
@@ -398,86 +394,46 @@ export function showAddEffectModal(owner, ownerType = 'track') { // owner is tra
 
 export function updateTheme(theme) {
     if (localAppServices.setCurrentThemeState) {
-        localAppServices.setCurrentThemeState(theme); // State module handles localStorage
+        localAppServices.setCurrentThemeState(theme);
     } else {
         console.warn("[BrowserCoreUI updateTheme] setCurrentThemeState service not available.");
     }
-    // Actual DOM manipulation (adding/removing 'dark' class) should be triggered by the state change,
-    // or done directly in main.js as a subscriber to theme changes.
-    // For safety, we can leave the direct manipulation here as a fallback.
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.classList.toggle('light', theme === 'light');
-    // console.log(`[BrowserCoreUI updateTheme] Theme set to ${theme}`);
 }
 export function getTheme() {
     return localAppServices.getCurrentThemeState ? localAppServices.getCurrentThemeState() :
            (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 }
 
-export function closeAllTrackWindows(trackIdToExcludeOrObject = null) {
-    if (!localAppServices.getOpenWindowsState || !localAppServices.removeWindowFromStoreState) {
+export function closeAllTrackWindows(trackIdToClose = null) { // Changed parameter name for clarity
+    if (!localAppServices.getOpenWindowsState) { // Removed removeWindowFromStoreState as SnugWindow.close handles it
         console.warn("[BrowserCoreUI closeAllTrackWindows] Window state services missing.");
         return;
     }
-    let trackIdStr = null;
-    if (trackIdToExcludeOrObject && typeof trackIdToExcludeOrObject === 'object' && trackIdToExcludeOrObject.id) {
-        trackIdStr = trackIdToExcludeOrObject.id.toString();
-    } else if (trackIdToExcludeOrObject) {
-        trackIdStr = trackIdToExcludeOrObject.toString();
-    }
+
+    const trackIdStr = trackIdToClose ? trackIdToClose.toString() : null;
 
     localAppServices.getOpenWindowsState().forEach(win => {
-        if (win.id.startsWith('trackInspector-') || win.id.startsWith('effectsRack-') || win.id.startsWith('sequencer-')) {
-            if (trackIdStr && win.id.includes(trackIdStr)) {
-                // Don't close if it's for the track being excluded (e.g. if a track is removed, its windows should close)
-                // This logic might need refinement: if a track is *not* excluded, its windows *should* close.
-                // If trackIdToExcludeOrObject is the ID of a track being deleted, its windows SHOULD be closed.
-                // The current interpretation is: close all track-specific windows *unless* it's for the track ID specified to be kept open.
-                // This seems backward if trackIdToExclude is for a deleted track.
-                // Assuming `trackIdToExcludeOrObject` means "close all windows RELATED to this trackId"
-                if (win.id.includes(trackIdStr)) {
-                     win.close(true); // Close without undo, as it's part of a larger operation
-                }
-            } else if (!trackIdStr) { // If no trackId is specified to exclude, close all track windows
-                 win.close(true);
+        const shouldClose = win.id.startsWith('trackInspector-') ||
+                            win.id.startsWith('effectsRack-') ||
+                            win.id.startsWith('sequencer-');
+
+        if (shouldClose) {
+            // If a specific trackId is provided, only close windows related to that track.
+            // If no trackId is provided (trackIdToClose is null), close all track-specific windows.
+            if (trackIdStr && win.id.includes(`-${trackIdStr}`)) {
+                win.close(true); // true for reconstruction/programmatic close
+            } else if (!trackIdStr) {
+                win.close(true);
             }
         }
     });
 }
 
 export function updateTrackUI(trackId, reason, details = null) {
-    // This function acts as a central dispatcher for UI updates related to a specific track.
-    // It would typically call more specific rendering functions based on the 'reason'.
-    // For instance, if a track's name changes, it might update the mixer strip, timeline lane, etc.
-    // The actual rendering functions are now imported from submodules and re-exported.
-    // State changes should trigger calls to these specific rendering functions directly or via appServices.
-
-    // Example of how it might have been used (now specific functions are called directly):
-    // const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
-    // if (!track) return;
-
-    // switch (reason) {
-    //     case 'nameChange':
-    //         if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
-    //         if (localAppServices.renderTimeline) localAppServices.renderTimeline();
-    //         // Update inspector window title if open
-    //         const inspectorWindow = localAppServices.getWindowByIdState(`trackInspector-${trackId}`);
-    //         if (inspectorWindow && inspectorWindow.titleBar) {
-    //             const titleSpan = inspectorWindow.titleBar.querySelector('span');
-    //             if (titleSpan) titleSpan.textContent = `Inspector: ${track.name}`;
-    //         }
-    //         break;
-    //     case 'effectAdded':
-    //     case 'effectRemoved':
-    //         // Call renderEffectsList for the specific track's effects rack if open
-    //         const effectsRackWindow = localAppServices.getWindowByIdState(`effectsRack-${trackId}`);
-    //         if (effectsRackWindow && effectsRackWindow.element) {
-    //             const listDiv = effectsRackWindow.element.querySelector(`#effectsList-${trackId}`);
-    //             const controlsContainer = effectsRackWindow.element.querySelector(`#effectControlsContainer-${trackId}`);
-    //             if (renderEffectsList && listDiv && controlsContainer) renderEffectsList(track, 'track', listDiv, controlsContainer);
-    //         }
-    //         break;
-    //     // Add more cases as needed
-    // }
+    // This function is mostly a placeholder now.
+    // Specific UI update functions (renderTimeline, updateMixerWindow, etc.)
+    // should be called directly by the services that change the relevant state.
     // console.log(`[BrowserCoreUI updateTrackUI] Called for track ${trackId}, reason: ${reason}`, details);
 }
