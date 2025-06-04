@@ -22,11 +22,11 @@ export const synthPitches = [
 ].reverse();
 
 export const soundLibraries = {
-    "Drums": "assets/drums.zip", // Changed "samples/" to "assets/"
-    "Instruments": "assets/instruments.zip", // Changed "samples/" to "assets/"
-    "Instruments 2": "assets/instruments2.zip", // Changed "samples/" to "assets/"
-    "Instruments 3": "assets/instruments3.zip", // Changed "samples/" to "assets/"
-    // Add more libraries here as needed
+    "Drums": "assets/drums.zip", // Corrected filename
+    "Instruments": "assets/instruments.zip", // Corrected and new entry
+    "Instruments 2": "assets/instruments2.zip", // New entry
+    "Instruments 3": "assets/instruments3.zip", // New entry
+    // You can remove or keep "Synths" if it's no longer used or maps to one of these
 };
 
 export const defaultDesktopBg = '#181818';
