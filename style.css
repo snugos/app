@@ -1,63 +1,409 @@
+/* js/style.css - SnugOS Stylesheet */
+
+:root {
+    /* Dark Theme Variables (default) */
+    --bg-primary: #101010;
+    --bg-window: #1e1e1e;
+    --bg-window-content: #181818;
+    --bg-title-bar: #2a2a2a;
+    --bg-taskbar: #1a1a1a; /* Used for both top and bottom taskbars */
+    --bg-start-menu: #1e1e1e;
+    --bg-button: #2c2c2c;
+    --bg-button-hover: #3a3a3a;
+    --bg-button-active: #202020;
+    --bg-input: #282828;
+    --bg-dropzone: #1c1c1c;
+    --bg-dropzone-dragover: #2a2a2a;
+    --bg-sequencer-header: #1c1c1c;
+    --bg-sequencer-label: #1c1c1c;
+    --bg-sequencer-step-even: #161616;
+    --bg-sequencer-step-odd: #1e1e1e;
+    --bg-sequencer-step-hover: #2c2c2c;
+    --bg-meter-track: #101010;
+    --bg-meter-bar-container: #101010;
+    --bg-modal-overlay: rgba(0,0,0,0.75);
+    --bg-modal-dialog: #1e1e1e;
+    --bg-context-menu: #2a2a2a;
+    --bg-timeline-container: #1c1c1c;
+    --bg-timeline-header: #2a2a2a;
+    --bg-timeline-track-lane: #1e1e1e;
+    --bg-timeline-track-lane-even: #1a1a1a;
+    --bg-timeline-track-name: #2f2f2f;
+
+
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-placeholder: #777777;
+    --text-title-bar: #f0f0f0;
+    --text-button: #e0e0e0;
+    --text-button-hover: #ffffff;
+    --text-start-menu-disabled: #555555;
+    --text-dropzone: #888888;
+    --text-dropzone-dragover: #cccccc;
+    --text-dropzone-label: #7dd3fc;
+    --text-dropzone-label-hover: #38bdf8;
+    --text-knob: #a0a0a0;
+    --text-sequencer-header: #b0b0b0;
+    --text-sequencer-step: #777777;
+
+    --border-primary: #383838;
+    --border-secondary: #303030; /* For subtle borders like taskbar top */
+    --border-window-title-bottom: #121212;
+    --border-button: #121212;
+    --border-button-hover: #3c3c3c; /* Example */
+    --border-button-active-outer: #181818;
+    --border-button-active-inner: #3c3c3c;
+    --border-start-menu: #3a3a3a;
+    --border-start-menu-shadow: #484848 #2a2a2a #2a2a2a #484848;
+    --border-pad: #404040;
+    --border-pad-active: #505050;
+    --border-pad-selected: #60a5fa;
+    --border-dropzone: #4a4a4a;
+    --border-dropzone-dragover: #5a5a5a;
+    --border-knob: #1e1e1e;
+    --border-input: #4a4a4a;
+    --border-sequencer: #2a2a2a;
+    --border-waveform: #3a3a3a;
+    --border-meter-bar-container: #3a3a3a;
+    --border-modal: #3a3a3a;
+    --border-context-menu: #484848;
+    --border-timeline-header: #3a3a3a;
+    --border-timeline-track-lane: #2a2a2a;
+    --border-timeline-track-name: #3a3a3a;
+
+
+    --shadow-window: 0px 0px 15px rgba(0,0,0,0.5);
+    --shadow-start-menu: 2px 2px 8px rgba(0,0,0,0.6);
+    --shadow-button-inset-main: #3c3c3c;
+    --shadow-button-inset-secondary: #181818;
+    --shadow-pad-inset-main: #1a1a1a;
+    --shadow-pad-inset-secondary: #3a3a3a;
+    --shadow-knob: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    --shadow-modal: 2px 2px 10px rgba(0,0,0,0.7);
+    --shadow-context-menu: 2px 2px 8px rgba(0,0,0,0.6);
+
+    --accent-focus: #0060c0; /* Used for Start Menu hover, can be reused */
+    --accent-muted: #991b1b;
+    --accent-muted-text: #fecaca;
+    --accent-muted-border-dark: #7f1d1d;
+    --accent-muted-border-light: #ef4444;
+    --accent-soloed: #b45309;
+    --accent-soloed-text: #1c1917;
+    --accent-soloed-border-dark: #92400e;
+    --accent-soloed-border-light: #fde68a;
+    --accent-armed: #c2410c;
+    --accent-armed-text: #fff7ed;
+    --accent-armed-border-dark: #9a3412;
+    --accent-armed-border-light: #fed7aa;
+    --accent-active: #1d4ed8;
+    --accent-active-text: #dbeafe;
+    --accent-active-border-dark: #1e40af;
+    --accent-active-border-light: #93c5fd;
+    --accent-sequencer-step: #008080;
+    --accent-sequencer-step-border: #009090;
+    --accent-sequencer-playing-outline: #00ffff;
+    --accent-meter: #00b0b0;
+    --accent-meter-clip: #e04040;
+    --accent-playhead: #00ffff;
+    --accent-clip-bg: #008080;
+    --accent-clip-border: #009090;
+
+
+    --scrollbar-track: #1e1e1e;
+    --scrollbar-thumb: #4a4a4a;
+    --scrollbar-thumb-hover: #5a5a5a;
+    --scrollbar-thumb-border: #5a5a5a; /* Added for thumb border */
+    --scrollbar-corner: #1e1e1e;
+}
+
+.theme-light {
+    --bg-primary: #f4f4f4;
+    --bg-window: #ffffff;
+    --bg-window-content: #fdfdfd;
+    --bg-title-bar: #e8e8e8;
+    --bg-taskbar: #e0e0e0;
+    --bg-start-menu: #f8f8f8;
+    --bg-button: #efefef;
+    --bg-button-hover: #e0e0e0;
+    --bg-button-active: #dcdcdc;
+    --bg-input: #ffffff;
+    --bg-dropzone: #f0f0f0;
+    --bg-dropzone-dragover: #e0e0e0;
+    --bg-sequencer-header: #f0f0f0;
+    --bg-sequencer-label: #f0f0f0;
+    --bg-sequencer-step-even: #fafafa;
+    --bg-sequencer-step-odd: #fdfdfd;
+    --bg-sequencer-step-hover: #e8e8e8;
+    --bg-meter-track: #dddddd;
+    --bg-meter-bar-container: #dddddd;
+    --bg-modal-overlay: rgba(50,50,50,0.6);
+    --bg-modal-dialog: #ffffff;
+    --bg-context-menu: #f8f8f8;
+    --bg-timeline-container: #ececec;
+    --bg-timeline-header: #e0e0e0;
+    --bg-timeline-track-lane: #fdfdfd;
+    --bg-timeline-track-lane-even: #f4f4f4;
+    --bg-timeline-track-name: #e7e7e7;
+
+
+    --text-primary: #333333;
+    --text-secondary: #555555;
+    --text-placeholder: #aaaaaa;
+    --text-title-bar: #111111;
+    --text-button: #333333;
+    --text-button-hover: #000000;
+    --text-start-menu-disabled: #aaaaaa;
+    --text-dropzone: #777777;
+    --text-dropzone-dragover: #444444;
+    --text-dropzone-label: #007acc;
+    --text-dropzone-label-hover: #005c99;
+    --text-knob: #666666;
+    --text-sequencer-header: #555555;
+    --text-sequencer-step: #999999;
+
+    --border-primary: #cccccc;
+    --border-secondary: #d0d0d0;
+    --border-window-title-bottom: #d0d0d0;
+    --border-button: #cccccc;
+    --border-button-hover: #b0b0b0;
+    --border-button-active-outer: #b0b0b0;
+    --border-button-active-inner: #d0d0d0;
+    --border-start-menu: #bbbbbb;
+    --border-start-menu-shadow: #cccccc #aaaaaa #aaaaaa #cccccc;
+    --border-pad: #b0b0b0;
+    --border-pad-active: #a0a0a0;
+    --border-pad-selected: #007acc;
+    --border-dropzone: #bbbbbb;
+    --border-dropzone-dragover: #aaaaaa;
+    --border-knob: #dddddd;
+    --border-input: #bbbbbb;
+    --border-sequencer: #d0d0d0;
+    --border-waveform: #cccccc;
+    --border-meter-bar-container: #cccccc;
+    --border-modal: #bbbbbb;
+    --border-context-menu: #aaaaaa;
+    --border-timeline-header: #cccccc;
+    --border-timeline-track-lane: #d0d0d0;
+    --border-timeline-track-name: #cccccc;
+
+    --shadow-window: 0px 0px 15px rgba(0,0,0,0.15);
+    --shadow-start-menu: 2px 2px 8px rgba(0,0,0,0.2);
+    --shadow-button-inset-main: #d0d0d0;
+    --shadow-button-inset-secondary: #f0f0f0;
+    --shadow-pad-inset-main: #d0d0d0;
+    --shadow-pad-inset-secondary: #f0f0f0;
+    --shadow-knob: 0 1px 2px rgba(0,0,0,0.15), inset 0 1px 0 rgba(0,0,0,0.02);
+    --shadow-modal: 2px 2px 10px rgba(0,0,0,0.25);
+    --shadow-context-menu: 2px 2px 8px rgba(0,0,0,0.2);
+
+
+    --accent-focus: #007bff;
+    --accent-muted: #dc3545;
+    --accent-muted-text: #ffffff;
+    --accent-muted-border-dark: #c82333;
+    --accent-muted-border-light: #f5c6cb;
+    --accent-soloed: #ffc107;
+    --accent-soloed-text: #212529;
+    --accent-soloed-border-dark: #e0a800;
+    --accent-soloed-border-light: #ffeeba;
+    --accent-armed: #fd7e14;
+    --accent-armed-text: #ffffff;
+    --accent-armed-border-dark: #e66a0a;
+    --accent-armed-border-light: #ffc99c;
+    --accent-active: #007bff;
+    --accent-active-text: #ffffff;
+    --accent-active-border-dark: #0069d9;
+    --accent-active-border-light: #b8daff;
+    --accent-sequencer-step: #17a2b8;
+    --accent-sequencer-step-border: #138496;
+    --accent-sequencer-playing-outline: #00aeff;
+    --accent-meter: #28a745;
+    --accent-meter-clip: #dc3545;
+    --accent-playhead: #007bff;
+    --accent-clip-bg: #17a2b8;
+    --accent-clip-border: #138496;
+
+    --scrollbar-track: #f0f0f0;
+    --scrollbar-thumb: #c1c1c1;
+    --scrollbar-thumb-hover: #a8a8a8;
+    --scrollbar-thumb-border: #a8a8a8;
+    --scrollbar-corner: #f0f0f0;
+}
+
+
 /* --- SnugOS General & Desktop Styling --- */
 body {
-    font-family: 'Inter', sans-serif; 
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
-    margin: 0; 
-    overflow: hidden; 
-    background-color: #101010; /* Very dark base background */
-    color: #e0e0e0; /* Light grey default text for the entire application */
+    margin: 0;
+    overflow: hidden;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding-top: 40px; /* For the new top taskbar */
 }
 
 #desktop {
     width: 100vw;
-    height: 100vh;
-    overflow: hidden; 
-    position: relative; 
-    background-color: #101010; /* Consistent very dark desktop */
+    /* height: 100vh; OLD */
+    height: calc(100vh - 40px - 32px); /* Adjusted for top and bottom taskbars */
+    overflow: hidden;
+    position: relative;
+    background-color: var(--bg-primary); /* Consistent very dark desktop */
 }
+
+/* --- Top Taskbar Styling --- */
+#topTaskbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background-color: var(--bg-taskbar);
+    border-bottom: 1px solid var(--border-secondary);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    color: var(--text-secondary);
+    gap: 10px; /* Space out sections */
+}
+
+#topTaskbar > div { /* Direct children (sections) */
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#topTaskbar button {
+    background-color: var(--bg-button);
+    border: 1px solid var(--border-button);
+    color: var(--text-button);
+    padding: 5px 10px; /* Slightly larger padding */
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+#topTaskbar button:hover {
+    background-color: var(--bg-button-hover);
+    border-color: var(--border-button-hover);
+}
+#topTaskbar button:active {
+    background-color: var(--bg-button-active);
+}
+
+#topTaskbar button.recording { /* For record button when active */
+    background-color: var(--accent-armed);
+    color: var(--accent-armed-text);
+    border-color: var(--accent-armed-border-dark);
+}
+#topTaskbar button#playbackModeToggleBtnGlobalTop.active {
+    background-color: var(--accent-active);
+    color: var(--accent-active-text);
+    border-color: var(--accent-active-border-dark);
+}
+
+
+#topTaskbar input[type="number"],
+#topTaskbar select {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-input);
+    padding: 5px 6px;
+    font-size: 0.8rem;
+    border-radius: 3px;
+}
+#topTaskbar input[type="number"] {
+    width: 65px; /* For tempo input */
+}
+#topTaskbar select {
+    min-width: 120px; /* For MIDI input */
+    max-width: 200px;
+}
+
+#topTaskbar label {
+    font-size: 0.8rem;
+    margin-right: 4px;
+    color: var(--text-secondary);
+}
+
+.master-meter-top { /* Container for the meter in the top taskbar */
+    width: 120px;
+    height: 12px; /* Slightly smaller */
+    background-color: var(--bg-meter-bar-container);
+    border: 1px solid var(--border-secondary);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-left: auto; /* Push to the right if in a flex container */
+}
+.master-meter-top > div { /* The actual meter bar */
+    height: 100%;
+    background-color: var(--accent-meter);
+    transition: width 0.05s linear;
+}
+.master-meter-top > div.clipping {
+    background-color: var(--accent-meter-clip);
+}
+
+#activityIndicatorsTop span {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background-color: var(--bg-button);
+    color: var(--text-secondary);
+    margin-left: 5px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+#activityIndicatorsTop span.active {
+    background-color: var(--accent-active);
+    color: var(--accent-active-text);
+}
+
 
 /* --- Window Styling (Unified Dark Theme) --- */
 .window {
-    position: absolute; 
-    border: 1px solid #383838; /* Dark border, slightly lighter than deepest blacks */
-    box-shadow: 0px 0px 15px rgba(0,0,0,0.5); /* Softer, more modern shadow */
-    background-color: #1e1e1e; /* Main window background - very dark grey */
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; 
-    min-width: 150px; 
+    position: absolute;
+    border: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-window);
+    background-color: var(--bg-window);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 150px;
     min-height: 100px;
-    color: #e0e0e0; /* Default text color for windows */
-    border-radius: 3px; /* Subtle rounding for a more modern feel */
+    color: var(--text-primary);
+    border-radius: 3px;
 }
 
 .window.minimized {
-    display: none !important; 
+    display: none !important;
 }
 
 .window-title-bar {
-    background-color: #2a2a2a; /* Slightly lighter than window body for definition */
-    color: #f0f0f0; /* Bright white text for title */
-    padding: 5px 8px; 
+    background-color: var(--bg-title-bar);
+    color: var(--text-title-bar);
+    padding: 5px 8px;
     cursor: grab;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 28px; /* Slightly taller */
-    flex-shrink: 0; 
-    font-size: 0.9rem; 
-    font-weight: 600; /* Semibold */
-    user-select: none; 
-    border-bottom: 1px solid #121212; /* Darker separator line */
-    border-top-left-radius: 2px; /* Match window rounding */
+    height: 28px;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    user-select: none;
+    border-bottom: 1px solid var(--border-window-title-bottom);
+    border-top-left-radius: 2px;
     border-top-right-radius: 2px;
 }
 
-.window-title-bar span { 
+.window-title-bar span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-right: 8px; 
+    padding-right: 8px;
 }
 
 .window-title-buttons {
@@ -65,229 +411,229 @@ body {
 }
 
 .window-title-buttons button {
-    background: #383838; /* Dark grey button background */
-    border: 1px solid #1a1a1a; 
-    color: #d0d0d0; /* Light grey text */
-    width: 20px; 
+    background: var(--bg-button); /* Dark grey button background */
+    border: 1px solid var(--border-button);
+    color: var(--text-button); /* Light grey text */
+    width: 20px;
     height: 20px;
-    line-height: 18px; 
+    line-height: 18px;
     text-align: center;
     font-size: 11px;
     font-weight: bold;
-    margin-left: 4px; /* Slightly more spacing */
+    margin-left: 4px;
     padding: 0;
-    cursor: default; 
+    cursor: default;
     flex-shrink: 0;
-    border-radius: 3px; 
+    border-radius: 3px;
     transition: background-color 0.15s ease;
 }
 
 .window-title-buttons button:hover {
-    background: #4a4a4a; /* Lighter on hover */
-    color: #ffffff;
+    background: var(--bg-button-hover);
+    color: var(--text-button-hover);
 }
 
 .window-title-buttons button:active {
-    background: #2a2a2a; /* Darker when pressed */
-    border-color: #121212;
+    background: var(--bg-button-active);
+    border-color: var(--border-button);
 }
 
 .window-content {
-    flex-grow: 1; 
-    padding: 0; /* Remove padding for windows that need edge-to-edge content like the timeline */
-    background-color: #181818; /* Main content area - very dark */
-    overflow: auto; 
-    color: #e0e0e0; /* Light grey text for content */
+    flex-grow: 1;
+    padding: 0;
+    background-color: var(--bg-window-content);
+    overflow: auto;
+    color: var(--text-primary);
 }
 
-/* --- Taskbar Styling (Unified Dark Theme) --- */
+/* --- Taskbar Styling (Bottom Taskbar) --- */
 #taskbar {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 32px; /* Slightly taller */
-    background-color: #1a1a1a; /* Dark taskbar */
-    border-top: 1px solid #303030; /* Subtle top border */
-    z-index: 10000; 
+    height: 32px;
+    background-color: var(--bg-taskbar);
+    border-top: 1px solid var(--border-secondary);
+    z-index: 10000;
     display: flex;
     align-items: center;
     padding: 0 6px;
     box-sizing: border-box;
-    color: #d0d0d0; 
+    color: var(--text-secondary);
 }
 
 #startButton {
-    background-color: #2c2c2c; 
-    border: 1px solid #121212;
-    border-color: #3c3c3c #181818 #181818 #3c3c3c; 
-    box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
-    padding: 3px 12px; 
-    font-weight: 600; /* Semibold */
+    background-color: var(--bg-button);
+    border: 1px solid var(--border-button);
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover);
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset;
+    padding: 3px 12px;
+    font-weight: 600;
     margin-right: 6px;
-    color: #e0e0e0; 
+    color: var(--text-button);
     border-radius: 3px;
     transition: background-color 0.15s ease;
 }
 #startButton:hover {
-    background-color: #3a3a3a;
+    background-color: var(--bg-button-hover);
 }
 #startButton:active {
-    border-color: #181818 #3c3c3c #3c3c3c #181818; 
-    box-shadow: -1px -1px 0 #3c3c3c inset, 1px 1px 0 #181818 inset;
-    background-color: #202020;
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer);
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset;
+    background-color: var(--bg-button-active);
 }
 
 #taskbarButtons .taskbar-button {
-    background-color: #2c2c2c; 
-    border: 1px solid #121212;
-    border-color: #3c3c3c #181818 #181818 #3c3c3c;
-    box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
-    padding: 3px 10px; 
+    background-color: var(--bg-button);
+    border: 1px solid var(--border-button);
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover);
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset;
+    padding: 3px 10px;
     margin: 0 3px;
     max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.8rem;
-    flex-shrink: 0; 
-    color: #d0d0d0; 
+    flex-shrink: 0;
+    color: var(--text-secondary);
     border-radius: 3px;
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 #taskbarButtons .taskbar-button:hover {
-    background-color: #3a3a3a;
-    color: #ffffff;
+    background-color: var(--bg-button-hover);
+    color: var(--text-button-hover);
 }
 #taskbarButtons .taskbar-button.active,
 #taskbarButtons .taskbar-button:active {
-    border-color: #181818 #3c3c3c #3c3c3c #181818;
-    box-shadow: -1px -1px 0 #3c3c3c inset, 1px 1px 0 #181818 inset;
-    background-color: #202020; 
-    color: #ffffff; 
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer);
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset;
+    background-color: var(--bg-button-active);
+    color: var(--text-button-hover);
 }
 #taskbarButtons .taskbar-button.minimized-on-taskbar {
-    background-color: #282828; 
-    opacity: 0.65; /* More dim for minimized */
+    background-color: var(--bg-button);
+    opacity: 0.65;
 }
 
 #taskbarTempoDisplay {
-    margin-left: auto; 
+    margin-left: auto;
     padding: 3px 10px;
-    border: 1px solid #121212;
-    border-color: #3c3c3c #181818 #181818 #3c3c3c; 
-    box-shadow: 1px 1px 0 #3c3c3c inset, -1px -1px 0 #181818 inset;
+    border: 1px solid var(--border-button);
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover);
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset;
     font-size: 0.8rem;
-    background-color: #2c2c2c; 
+    background-color: var(--bg-button);
     cursor: pointer;
-    color: #d0d0d0; 
+    color: var(--text-secondary);
     border-radius: 3px;
 }
 #taskbarTempoDisplay:hover {
-    background-color: #3a3a3a;
+    background-color: var(--bg-button-hover);
 }
 
-/* --- Start Menu Styling (Unified Dark Theme) --- */
+/* --- Start Menu Styling --- */
 #startMenu {
     position: absolute;
-    bottom: 32px; /* Adjusted for slightly taller taskbar */
+    bottom: 32px;
     left: 0;
-    background: #1e1e1e; 
-    border: 1px solid #3a3a3a; 
-    border-color: #484848 #2a2a2a #2a2a2a #484848; 
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-    z-index: 10001; 
-    padding: 4px; /* More padding */
-    min-width: 220px; 
-    color: #e0e0e0; 
+    background: var(--bg-start-menu);
+    border: 1px solid var(--border-start-menu);
+    border-color: var(--border-start-menu-shadow);
+    box-shadow: var(--shadow-start-menu);
+    z-index: 10001;
+    padding: 4px;
+    min-width: 220px;
+    color: var(--text-primary);
     border-radius: 3px;
 }
 
 #startMenu.hidden { display: none; }
 #startMenu ul { list-style: none; padding: 0; margin: 0; }
-#startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; color: #e0e0e0; border-radius: 2px; transition: background-color 0.1s ease;}
-#startMenu li:hover, #startMenu li.disabled:hover { background: #0060c0; color: white; } /* Brighter blue hover */
-#startMenu li.disabled { color: #555555; cursor: default; }
-#startMenu hr { border: none; border-top: 1px solid #3a3a3a; margin: 4px 0; }
+#startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; color: var(--text-primary); border-radius: 2px; transition: background-color 0.1s ease;}
+#startMenu li:hover, #startMenu li.disabled:hover { background: var(--accent-focus); color: white; }
+#startMenu li.disabled { color: var(--text-start-menu-disabled); cursor: default; }
+#startMenu hr { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
 
 
-/* --- Pad Button Styling (Unified Dark Theme) --- */
+/* --- Pad Button Styling --- */
 .pad-button {
     padding: 8px;
-    border: 1px solid #404040; 
-    background-color: #282828; 
-    color: #cccccc; 
+    border: 1px solid var(--border-pad);
+    background-color: var(--bg-button);
+    color: var(--text-secondary);
     cursor: pointer;
     text-align: center;
-    min-width: 70px; 
+    min-width: 70px;
     min-height: 70px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: inset -1px -1px 1px #1a1a1a, inset 1px 1px 1px #3a3a3a; 
+    box-shadow: inset -1px -1px 1px var(--shadow-pad-inset-main), inset 1px 1px 1px var(--shadow-pad-inset-secondary);
     transition: background-color 0.15s ease, box-shadow 0.15s ease;
-    overflow: hidden; 
-    position: relative; 
+    overflow: hidden;
+    position: relative;
     border-radius: 3px;
 }
 .pad-button:hover {
-    background-color: #3a3a3a; 
+    background-color: var(--bg-button-hover);
 }
 .pad-button:active, .pad-button.selected-for-edit {
-    background-color: #202020; 
-    box-shadow: inset 1px 1px 1px #1a1a1a, inset -1px -1px 1px #3a3a3a; 
-    border-color: #505050;
+    background-color: var(--bg-button-active);
+    box-shadow: inset 1px 1px 1px var(--shadow-pad-inset-main), inset -1px -1px 1px var(--shadow-pad-inset-secondary);
+    border-color: var(--border-pad-active);
 }
 .pad-button.selected-for-edit {
-    border-color: #60a5fa; /* Lighter blue accent for selected */
+    border-color: var(--border-pad-selected);
     border-width: 2px;
-    padding: 7px; 
+    padding: 7px;
 }
 .pad-label {
-    font-size: 0.65rem; 
-    color: #b0b0b0; 
+    font-size: 0.65rem;
+    color: var(--text-secondary);
     display: block;
     margin-top: 5px;
-    word-break: break-all; 
+    word-break: break-all;
     line-height: 1.2;
-    max-height: 2.4em; 
+    max-height: 2.4em;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* --- General Drop Zone Styling (Unified Dark Theme) --- */
+/* --- General Drop Zone Styling --- */
 .drop-zone {
-    border: 2px dashed #4a4a4a; 
-    padding: 10px;          
+    border: 2px dashed var(--border-dropzone);
+    padding: 10px;
     text-align: center;
-    background-color: #1c1c1c;  
-    color: #888888;            
-    font-size: 0.8em; 
-    border-radius: 4px;         
-    margin-bottom: 5px;    
+    background-color: var(--bg-dropzone);
+    color: var(--text-dropzone);
+    font-size: 0.8em;
+    border-radius: 4px;
+    margin-bottom: 5px;
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 .drop-zone.dragover {
-    background-color: #2a2a2a; 
-    border-color: #5a5a5a;     
-    color: #cccccc; 
+    background-color: var(--bg-dropzone-dragover);
+    border-color: var(--border-dropzone-dragover);
+    color: var(--text-dropzone-dragover);
 }
-.drop-zone label { color: #7dd3fc; text-decoration: underline; cursor: pointer; }
-.drop-zone label:hover { color: #38bdf8; }
+.drop-zone label { color: var(--text-dropzone-label); text-decoration: underline; cursor: pointer; }
+.drop-zone label:hover { color: var(--text-dropzone-label-hover); }
 
 
-/* --- Knob Styling (Unified Dark Theme) --- */
+/* --- Knob Styling --- */
 .knob-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 5px; 
-    min-width: 60px; 
+    margin: 5px;
+    min-width: 60px;
 }
 .knob-label {
-    font-size: 0.7rem; 
-    color: #b0b0b0; 
+    font-size: 0.7rem;
+    color: var(--text-secondary);
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -296,82 +642,82 @@ body {
     text-align: center;
 }
 .knob {
-    width: 36px; 
-    height: 36px; 
-    background-color: #303030; 
+    width: 36px;
+    height: 36px;
+    background-color: var(--bg-button);
     border-radius: 50%;
     position: relative;
-    border: 1px solid #1e1e1e; 
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); 
-    cursor: ns-resize; 
+    border: 1px solid var(--border-knob);
+    box-shadow: var(--shadow-knob);
+    cursor: ns-resize;
 }
 .knob-handle {
-    width: 4px; 
-    height: 10px; 
-    background-color: #909090; 
+    width: 4px;
+    height: 10px;
+    background-color: var(--text-secondary); /* Knob handle matches secondary text */
     position: absolute;
-    top: 3px; 
+    top: 3px;
     left: 50%;
-    transform: translateX(-50%); 
-    transform-origin: bottom center; 
-    border-radius: 2px; 
+    transform: translateX(-50%);
+    transform-origin: bottom center;
+    border-radius: 2px;
 }
 .knob-value {
-    font-size: 0.65rem; 
-    color: #a0a0a0; 
+    font-size: 0.65rem;
+    color: var(--text-knob);
     margin-top: 2px;
-    min-height: 1em; 
+    min-height: 1em;
     text-align: center;
 }
 
-/* --- General Button Active States (Unified Dark Theme) --- */
-button.muted { 
-    background-color: #991b1b !important; 
-    color: #fecaca !important; 
-    border-color: #7f1d1d #991b1b #991b1b #7f1d1d !important; 
-    box-shadow: inset 1px 1px 0 #7f1d1d, inset -1px -1px 0 #ef4444 !important; 
+/* --- General Button Active States --- */
+button.muted {
+    background-color: var(--accent-muted) !important;
+    color: var(--accent-muted-text) !important;
+    border-color: var(--accent-muted-border-dark) var(--accent-muted) var(--accent-muted) var(--accent-muted-border-dark) !important;
+    box-shadow: inset 1px 1px 0 var(--accent-muted-border-dark), inset -1px -1px 0 var(--accent-muted-border-light) !important;
 }
-button.soloed { 
-    background-color: #b45309 !important; 
-    color: #1c1917 !important; /* Darker text for yellow contrast */
-    border-color: #92400e #b45309 #b45309 #92400e !important; 
-    box-shadow: inset 1px 1px 0 #92400e, inset -1px -1px 0 #fde68a !important; 
+button.soloed {
+    background-color: var(--accent-soloed) !important;
+    color: var(--accent-soloed-text) !important;
+    border-color: var(--accent-soloed-border-dark) var(--accent-soloed) var(--accent-soloed) var(--accent-soloed-border-dark) !important;
+    box-shadow: inset 1px 1px 0 var(--accent-soloed-border-dark), inset -1px -1px 0 var(--accent-soloed-border-light) !important;
 }
-button.armed { 
-    background-color: #c2410c !important; 
-    color: #fff7ed !important; 
-    border-color: #9a3412 #c2410c #c2410c #9a3412 !important; 
-    box-shadow: inset 1px 1px 0 #9a3412, inset -1px -1px 0 #fed7aa !important; 
+button.armed, button.recording { /* Unified 'armed' and 'recording' for record button */
+    background-color: var(--accent-armed) !important;
+    color: var(--accent-armed-text) !important;
+    border-color: var(--accent-armed-border-dark) var(--accent-armed) var(--accent-armed) var(--accent-armed-border-dark) !important;
+    box-shadow: inset 1px 1px 0 var(--accent-armed-border-dark), inset -1px -1px 0 var(--accent-armed-border-light) !important;
 }
 button.active { /* Generic active state for other toggles if needed */
-    background-color: #1d4ed8 !important; 
-    color: #dbeafe !important; 
-    border-color: #1e40af #1d4ed8 #1d4ed8 #1e40af !important; 
-    box-shadow: inset 1px 1px 0 #1e40af, inset -1px -1px 0 #93c5fd !important; 
+    background-color: var(--accent-active) !important;
+    color: var(--accent-active-text) !important;
+    border-color: var(--accent-active-border-dark) var(--accent-active) var(--accent-active) var(--accent-active-border-dark) !important;
+    box-shadow: inset 1px 1px 0 var(--accent-active-border-dark), inset -1px -1px 0 var(--accent-active-border-light) !important;
 }
 
-/* --- Sequencer Grid Styling (Unified Dark Theme) --- */
-.sequencer-container .controls { 
+/* --- Sequencer Grid Styling --- */
+.sequencer-container .controls {
     position: sticky;
     top: 0;
-    left: 0; 
-    background-color: #1e1e1e; 
-    z-index: 30; 
-    border-bottom: 1px solid #3a3a3a;
-    padding: 0.25rem; 
-    color: #cccccc; 
+    left: 0;
+    background-color: var(--bg-title-bar); /* Match window title bar for consistency */
+    z-index: 30;
+    border-bottom: 1px solid var(--border-primary);
+    padding: 0.25rem;
+    color: var(--text-title-bar);
 }
 .sequencer-container .controls input,
 .sequencer-container .controls label {
-    color: #cccccc; 
+    color: var(--text-primary);
 }
 .sequencer-container .controls input {
-    background-color: #282828; 
-    border-color: #404040;
+    background-color: var(--bg-input);
+    border-color: var(--border-input);
 }
 
 .sequencer-grid-layout {
-    background-color: #121212; 
+    background-color: var(--bg-primary); /* Darkest bg for grid background */
 }
 
 .sequencer-grid-layout > div {
@@ -382,287 +728,261 @@ button.active { /* Generic active state for other toggles if needed */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.65rem; 
-    border: 1px solid #2a2a2a; 
+    font-size: 0.65rem;
+    border: 1px solid var(--border-sequencer);
 }
 
 .sequencer-grid-layout .sequencer-header-cell {
     position: sticky;
     top: 0;
-    background-color: #1c1c1c; 
+    background-color: var(--bg-sequencer-header);
     font-weight: 500;
-    color: #b0b0b0; 
-    z-index: 20; 
+    color: var(--text-sequencer-header);
+    z-index: 20;
 }
-.sequencer-grid-layout .sequencer-header-cell:first-child { 
-    z-index: 25; 
-    left: 0; 
+.sequencer-grid-layout .sequencer-header-cell:first-child {
+    z-index: 25;
+    left: 0;
 }
 
 .sequencer-grid-layout .sequencer-label-cell {
     position: sticky;
     left: 0;
-    background-color: #1c1c1c; 
+    background-color: var(--bg-sequencer-label);
     justify-content: flex-end;
-    padding-right: 0.25rem; 
+    padding-right: 0.25rem;
     font-weight: 500;
-    color: #b0b0b0; 
-    z-index: 10; 
+    color: var(--text-sequencer-header);
+    z-index: 10;
 }
 
 .sequencer-grid-layout .sequencer-step-cell {
     cursor: pointer;
     transition: background-color 0.1s ease;
-    color: #777777; 
+    color: var(--text-sequencer-step);
 }
 
 /* Alternating background colors for 4-step blocks */
-.sequencer-step-cell.bg-gray-50 { background-color: #161616; } /* Very dark */
-.sequencer-step-cell.bg-white { background-color: #1e1e1e; }  /* Slightly off-very-dark */
+.sequencer-step-cell.bg-gray-50 { background-color: var(--bg-sequencer-step-even); }
+.sequencer-step-cell.bg-white { background-color: var(--bg-sequencer-step-odd); }
 
 .sequencer-step-cell:hover {
-    background-color: #2c2c2c !important; 
+    background-color: var(--bg-sequencer-step-hover) !important;
 }
 
-/* Active step colors (using example teal/blue from images) */
 .sequencer-step-cell.active-synth,
 .sequencer-step-cell.active-sampler,
 .sequencer-step-cell.active-drum-sampler,
-.sequencer-step-cell.active-instrument-sampler { 
-    background-color: #008080 !important; /* Teal */
-    color: #FFFFFF !important; 
-    border-color: #009090 !important; /* Slightly lighter teal for border */
-} 
+.sequencer-step-cell.active-instrument-sampler {
+    background-color: var(--accent-sequencer-step) !important;
+    color: white !important; /* High contrast on active step */
+    border-color: var(--accent-sequencer-step-border) !important;
+}
 
 .sequencer-step-cell.playing {
-    outline: 2px solid #00ffff; /* Cyan outline for playing step */
+    outline: 2px solid var(--accent-sequencer-playing-outline);
     outline-offset: -2px;
-    z-index: 5; 
+    z-index: 5;
 }
 
 /* --- Notification Area --- */
-#notification-area { /* ... unchanged ... */ }
-.notification-message { /* ... unchanged ... */ }
-.notification-message.show { /* ... unchanged ... */ }
+#notification-area { position: fixed; bottom: 40px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
+.notification-message { background-color: rgba(0,0,0,0.8); color: white; padding: 10px 15px; margin-top: 5px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; font-size: 0.85rem; max-width: 300px; }
+.notification-message.show { opacity: 1; transform: translateY(0); }
+.theme-light .notification-message { background-color: rgba(230,230,230,0.9); color: #333; }
+
 
 /* --- Panel and Control Group --- */
-.panel { /* ... unchanged ... */ }
-.control-group { /* ... unchanged ... */ }
-.single-control-container { /* ... unchanged ... */ }
+.panel { border: 1px solid var(--border-primary); padding: 8px; margin-bottom: 8px; border-radius: 3px; background-color: var(--bg-window); }
+.control-group { margin-bottom: 6px; } .control-group label { display: block; margin-bottom: 2px; font-size: 0.75rem; color: var(--text-secondary); }
+.single-control-container { display: inline-block; vertical-align: top; margin-right: 8px; margin-bottom: 4px; }
 
 /* --- Waveform Canvas --- */
-.waveform-canvas { 
-    border: 1px solid #3a3a3a;
-    background-color: #101010; /* Very dark background */
-    width: 100%; 
-    height: 70px; 
-    display: block; 
+.waveform-canvas {
+    border: 1px solid var(--border-waveform);
+    background-color: var(--bg-meter-track); /* Very dark background */
+    width: 100%;
+    height: 70px;
+    display: block;
 }
 
 /* --- Meter Bar Styling --- */
-.meter-bar-container { 
-    background-color: #101010; /* Very dark */
+.meter-bar-container {
+    background-color: var(--bg-meter-bar-container);
     border-radius: 3px;
     overflow: hidden;
-    border: 1px solid #3a3a3a;
-    height: 10px; 
+    border: 1px solid var(--border-meter-bar-container);
+    height: 10px;
     box-sizing: border-box;
 }
 .meter-bar {
-    background-color: #00b0b0; /* Cyan/Teal for meter */
+    background-color: var(--accent-meter);
     height: 100%;
     width: 0%;
     transition: width 0.05s linear;
 }
 .meter-bar.clipping {
-    background-color: #e04040; /* Brighter Red for clipping */
+    background-color: var(--accent-meter-clip);
 }
 .track-meter-container { height: 16px; margin-top: 2px; }
 .mixer-meter-container { height: 12px; margin-top: 4px; }
-#masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; }
+#masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; } /* These IDs might be legacy or specific to certain window contexts */
 
-/* Modal Styling (Unified Dark Theme) */
+/* Modal Styling */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.75); /* Even darker overlay */
+    background-color: var(--bg-modal-overlay);
     display: flex; justify-content: center; align-items: center;
-    z-index: 15000; 
+    z-index: 15000;
 }
 .modal-dialog {
-    background-color: #1e1e1e; /* Very dark dialog */
-    border: 1px solid #3a3a3a; 
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.7);
+    background-color: var(--bg-modal-dialog);
+    border: 1px solid var(--border-modal);
+    box-shadow: var(--shadow-modal);
     min-width: 300px; max-width: 90%; max-height: 90vh;
     display: flex; flex-direction: column;
-    color: #e0e0e0; /* Light text in modal */
-    border-radius: 4px; 
+    color: var(--text-primary);
+    border-radius: 4px;
 }
 .modal-title-bar {
-    background-color: #2a2a2a; /* Darker title bar */
-    color: #f0f0f0;
-    padding: 6px 10px; 
+    background-color: var(--bg-title-bar);
+    color: var(--text-title-bar);
+    padding: 6px 10px;
     font-weight: bold; font-size: 0.9rem; user-select: none;
-    border-bottom: 1px solid #121212; /* Darkest separator */
-    border-top-left-radius: 3px; 
+    border-bottom: 1px solid var(--border-window-title-bottom);
+    border-top-left-radius: 3px;
     border-top-right-radius: 3px;
 }
 .modal-content {
     padding: 15px; overflow-y: auto; flex-grow: 1;
-    background-color: #1e1e1e; 
-    color: #e0e0e0; 
+    background-color: var(--bg-window-content); /* Match window content bg */
+    color: var(--text-primary);
 }
 .modal-content p { margin-bottom: 10px; }
 .modal-content p:last-child { margin-bottom: 0; }
 .modal-buttons {
     padding: 10px 15px; text-align: right;
-    border-top: 1px solid #3a3a3a; 
-    background-color: #1e1e1e;
+    border-top: 1px solid var(--border-primary);
+    background-color: var(--bg-window); /* Match window bg */
     border-bottom-left-radius: 3px;
     border-bottom-right-radius: 3px;
 }
 .modal-buttons button {
-    background-color: #3a3a3a;
-    border: 1px solid #1a1a1a;
-    border-color: #484848 #2a2a2a #2a2a2a #484848; 
-    box-shadow: 1px 1px 0 #484848 inset, -1px -1px 0 #2a2a2a inset;
-    color: #e0e0e0;
-    padding: 6px 15px; 
+    background-color: var(--bg-button);
+    border: 1px solid var(--border-button);
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover);
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset;
+    color: var(--text-button);
+    padding: 6px 15px;
     margin-left: 10px; cursor: pointer; font-size: 0.85rem;
     border-radius: 3px;
     transition: background-color 0.15s ease;
 }
 .modal-buttons button:hover {
-    background-color: #484848;
+    background-color: var(--bg-button-hover);
 }
 .modal-buttons button:active {
-    border-color: #2a2a2a #484848 #484848 #2a2a2a; 
-    box-shadow: -1px -1px 0 #484848 inset, 1px 1px 0 #2a2a2a inset;
-    background-color: #303030;
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer);
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset;
+    background-color: var(--bg-button-active);
 }
 
-.window-resizer { /* ... unchanged ... */ }
-.modular-effects-rack { /* ... unchanged ... */ }
-.effects-list-container { /* ... unchanged ... */ }
-.effect-controls-panel { /* ... unchanged ... */ }
-.effect-item.dragging { /* ... unchanged ... */ }
-.effect-item.dragover-target { /* ... unchanged ... */ }
-.drop-zone-relink-container { /* ... unchanged ... */ }
-.drop-zone-relink-button { /* ... unchanged ... */ }
-.drop-zone-missing { /* ... unchanged ... */ }
-.drop-zone-error { /* ... unchanged ... */ }
-.drop-zone-loading { /* ... unchanged ... */ }
-#midiIndicatorGlobal, #keyboardIndicatorGlobal { /* ... unchanged ... */ }
-#midiIndicatorGlobal.active, #keyboardIndicatorGlobal.active { /* ... unchanged ... */ }
-.global-controls-window .flex { /* ... unchanged ... */ }
-.global-controls-window label { /* ... unchanged ... */ }
+.window-resizer { position: absolute; width: 10px; height: 10px; right: 0; bottom: 0; cursor: nwse-resize; }
+.modular-effects-rack { /* unchanged */ }
+.effects-list-container { /* unchanged */ }
+.effect-controls-panel { /* unchanged */ }
+.effect-item.dragging { opacity: 0.5; background-color: var(--bg-button-hover); }
+.effect-item.dragover-target { border-top: 2px solid var(--accent-focus); }
+.drop-zone-relink-container { margin-top: 5px; }
+.drop-zone-relink-button { font-size: 0.75em; padding: 2px 5px; margin-top: 3px; background-color: var(--bg-button); border: 1px solid var(--border-button); cursor: pointer; }
+.drop-zone-missing, .drop-zone-error { border-color: var(--accent-meter-clip); background-color: var(--accent-muted); color: var(--accent-muted-text); }
+.drop-zone-loading { border-color: var(--accent-active); background-color: var(--accent-active); color: var(--accent-active-text); }
+#midiIndicatorGlobal, #keyboardIndicatorGlobal { /* These specific IDs might be obsolete if moved to topTaskbar */ }
+#midiIndicatorGlobal.active, #keyboardIndicatorGlobal.active { /* These specific IDs might be obsolete */ }
+/* .global-controls-window .flex { unchanged } */ /* If global-controls-window is removed, this is obsolete */
+/* .global-controls-window label { unchanged } */ /* If global-controls-window is removed, this is obsolete */
 
 /* Input and Select for Dark Theme (High Contrast) */
 select, input[type="text"], input[type="number"],
 .window-content select, .modal-content select,
 .window-content input[type="text"], .window-content input[type="number"],
 .modal-content input[type="text"], .modal-content input[type="number"] {
-    background-color: #282828; /* Dark input background */
-    color: #e0e0e0; /* Light text */
-    border: 1px solid #4a4a4a; /* Contrasting border */
-    padding: 5px 8px; /* More padding */
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-input);
+    padding: 5px 8px;
     border-radius: 3px;
-    font-size: 0.85rem; /* Slightly larger font */
+    font-size: 0.85rem;
 }
-input::placeholder, 
+input::placeholder,
 .window-content input::placeholder, .modal-content input::placeholder {
-    color: #777777; /* Lighter placeholder text */
+    color: var(--text-placeholder);
 }
 
-/* Custom Scrollbar Styling (Dark Theme Inspired) */
+/* Custom Scrollbar Styling */
 ::-webkit-scrollbar {
-    width: 10px; /* Width of the vertical scrollbar */
-    height: 10px; /* Height of the horizontal scrollbar */
+    width: 10px;
+    height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #1e1e1e; /* Very dark track, matching window content areas */
-    border-radius: 0px; /* Keep it square like the UI */
+    background: var(--scrollbar-track);
+    border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #4a4a4a; /* Dark grey thumb, lighter than track */
-    border-radius: 2px; /* Slightly rounded thumb */
-    border: 1px solid #5a5a5a; /* Subtle border for the thumb */
+    background: var(--scrollbar-thumb);
+    border-radius: 2px;
+    border: 1px solid var(--scrollbar-thumb-border);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #5a5a5a; /* Lighter thumb on hover */
+    background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-corner {
-    background: #1e1e1e; /* Match track background */
+    background: var(--scrollbar-corner);
 }
 
-/* Firefox scrollbar styling (basic) */
-/* Note: Firefox scrollbar styling is less customizable than WebKit */
+/* Firefox scrollbar styling */
 * {
-  scrollbar-width: thin; /* "auto" or "thin" */
-  scrollbar-color: #4a4a4a #1e1e1e; /* thumb and track */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-/* --- Context Menu Styling (Unified Dark Theme) --- */
+/* --- Context Menu Styling --- */
 .context-menu {
-    background-color: #2a2a2a; /* Dark background */
-    border: 1px solid #484848;   /* Slightly lighter border */
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+    background-color: var(--bg-context-menu);
+    border: 1px solid var(--border-context-menu);
+    box-shadow: var(--shadow-context-menu);
     padding: 4px 0;
     min-width: 180px;
     border-radius: 3px;
-    color: #e0e0e0; /* Light text */
-    position: absolute; /* Changed from fixed to absolute for potential parent relative positioning if needed, but fixed is often better for global menus */
-    /* z-index is set by JS */
+    color: var(--text-primary);
+    position: absolute;
 }
 
-.context-menu ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.context-menu-item {
-    padding: 6px 15px 6px 12px; /* Adjust padding as needed */
-    cursor: pointer;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    transition: background-color 0.1s ease, color 0.1s ease;
-}
-
-.context-menu-item:not(.disabled):hover {
-    background-color: #0060c0; /* Brighter blue hover */
-    color: white;
-}
-
-.context-menu-item.disabled {
-    color: #555555; /* Darker grey for disabled items */
-    cursor: default;
-}
-
-.context-menu-separator {
-    border: none;
-    border-top: 1px solid #3a3a3a; /* Dark separator line */
-    margin: 4px 0;
-}
+.context-menu ul { list-style: none; padding: 0; margin: 0; }
+.context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
+.context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: white; }
+.context-menu-item.disabled { color: var(--text-start-menu-disabled); cursor: default; }
+.context-menu-separator { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
 
 /* --- Timeline Styling --- */
 #timeline-container {
-    height: 100%; /* Fill the window content area */
+    height: 100%;
     width: 100%;
-    background-color: #1c1c1c;
+    background-color: var(--bg-timeline-container);
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Let the parent .window-content handle scrolling */
+    overflow: hidden;
     position: relative;
 }
 
 #timeline-header {
     height: 20px;
-    background-color: #2a2a2a;
-    border-bottom: 1px solid #3a3a3a;
+    background-color: var(--bg-timeline-header);
+    border-bottom: 1px solid var(--border-timeline-header);
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
@@ -670,12 +990,13 @@ input::placeholder,
 }
 
 #timeline-ruler {
-    width: 4000px; 
+    width: 4000px; /* Or a very large width */
     height: 100%;
+    /* Use CSS variables for ruler colors if desired */
     background-image:
-        repeating-linear-gradient(to right, #555 0 1px, transparent 1px 100%),
-        repeating-linear-gradient(to right, #444 0 1px, transparent 1px 100%);
-    background-size: 120px 100%, 30px 100%; 
+        repeating-linear-gradient(to right, var(--text-secondary) 0 1px, transparent 1px 100%),
+        repeating-linear-gradient(to right, var(--text-placeholder) 0 1px, transparent 1px 100%);
+    background-size: 120px 100%, 30px 100%; /* Example: Major ticks every 120px, minor every 30px */
     background-position: left top;
     position: absolute;
     top: 0;
@@ -685,20 +1006,20 @@ input::placeholder,
 #timeline-tracks-container {
     flex-grow: 1;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: hidden; /* Let window-content handle main x-scroll */
     position: relative;
     width: 100%;
 }
 
 #timeline-tracks-area {
-    width: 4000px;
+    width: 4000px; /* Match ruler width or make very large */
     position: relative;
 }
 
 .timeline-track-lane {
     height: 50px;
-    background-color: #1e1e1e;
-    border-bottom: 1px solid #2a2a2a;
+    background-color: var(--bg-timeline-track-lane);
+    border-bottom: 1px solid var(--border-timeline-track-lane);
     box-sizing: border-box;
     position: relative;
     overflow: hidden;
@@ -706,34 +1027,35 @@ input::placeholder,
     align-items: center;
 }
 .timeline-track-lane:nth-child(even) {
-    background-color: #1a1a1a;
+    background-color: var(--bg-timeline-track-lane-even);
 }
 .timeline-track-lane-name {
     position: sticky;
     left: 0;
     z-index: 2;
-    background-color: #2f2f2f;
+    background-color: var(--bg-timeline-track-name);
     padding: 0 8px;
     height: 100%;
     display: flex;
     align-items: center;
-    border-right: 1px solid #3a3a3a;
+    border-right: 1px solid var(--border-timeline-track-name);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-width: 120px;
-    max-width: 120px;
+    min-width: 120px; /* Default, can be overridden by CSS var */
+    max-width: 120px; /* Default, can be overridden by CSS var */
     font-size: 0.8rem;
     font-weight: 500;
+    color: var(--text-primary);
 }
 
 #timeline-playhead {
     position: absolute;
-    top: 0; /* Starts at the top of the container */
-    left: 120px; /* Start after the track names area */
+    top: 0;
+    left: 120px; /* Default, should match track name width */
     width: 2px;
     height: 100%;
-    background-color: #00ffff;
+    background-color: var(--accent-playhead);
     z-index: 4;
     pointer-events: none;
 }
@@ -742,8 +1064,8 @@ input::placeholder,
     position: absolute;
     height: 80%;
     top: 10%;
-    background-color: #008080;
-    border: 1px solid #009090;
+    background-color: var(--accent-clip-bg);
+    border: 1px solid var(--accent-clip-border);
     border-radius: 3px;
     box-sizing: border-box;
     overflow: hidden;
@@ -754,14 +1076,9 @@ input::placeholder,
     text-overflow: ellipsis;
     cursor: grab;
 }
-/* In style.css */
-:root {
-    --timeline-track-name-width: 120px; /* Or your desired width */
+/* Ensure .timeline-track-lane-name uses this variable for dynamic width adjustments */
+.timeline-track-lane-name {
+    min-width: var(--timeline-track-name-width, 120px);
+    max-width: var(--timeline-track-name-width, 120px);
 }
 
-/* Ensure .timeline-track-lane-name uses this variable */
-.timeline-track-lane-name {
-    /* ... other styles ... */
-    min-width: var(--timeline-track-name-width);
-    max-width: var(--timeline-track-name-width);
-}
