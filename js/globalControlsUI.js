@@ -4,7 +4,7 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 
 // This will be the single appServices instance from main.js
-let localAppServices = {}; 
+let localAppServices = {};
 
 export function initializeGlobalControlsUIModule(appServicesFromMain) {
     localAppServices = appServicesFromMain; // Use the direct reference
@@ -13,34 +13,44 @@ export function initializeGlobalControlsUIModule(appServicesFromMain) {
 
 export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
     const windowId = 'globalControls';
-    
-    // Access appServices directly from the module-scoped localAppServices
-    // which should be the instance from main.js
-    const getOpenWindows = localAppServices.getOpenWindowsState; // Changed from getOpenWindows
-    const removeWindowFromStore = localAppServices.removeWindowFromStoreState; // Changed from removeWindowFromStore
-    const createWindow = localAppServices.createWindow;
 
-    if (!createWindow || !getOpenWindows) {
+    // Access appServices directly from the module-scoped localAppServices
+    if (!localAppServices.createWindow || !localAppServices.getOpenWindowsState) {
         console.error("[GlobalControlsUI openGlobalControlsWindow] CRITICAL: Core appServices (createWindow, getOpenWindowsState) not available via localAppServices!");
-        if (localAppServices.showNotification) {
-            localAppServices.showNotification("Error: Cannot open Global Controls window (internal services missing).", "error");
-        } else {
-            alert("Error: Cannot open Global Controls window (internal services missing).");
-        }
+        // Fallback to a generic alert if showNotification is also missing
+        const notify = localAppServices.showNotification || alert;
+        notify("Error: Cannot open Global Controls window (internal services missing).", "error");
         return null;
     }
+
+    const getOpenWindows = localAppServices.getOpenWindowsState;
+    const removeWindowFromStore = localAppServices.removeWindowFromStoreState;
+    const createWindow = localAppServices.createWindow;
 
     const openWindows = getOpenWindows();
 
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
-        if (win && !win.element) { // Window instance exists but DOM element is gone
-            if (removeWindowFromStore) {
-                removeWindowFromStore(windowId);
-            }
+        if (win && !win.element && removeWindowFromStore) { // Window instance exists but DOM element is gone
+            removeWindowFromStore(windowId);
             // Proceed to create new window
         } else if (win && win.focus && typeof win.focus === 'function') {
             win.focus();
+            if (typeof onReadyCallback === 'function' && win.element) {
+                 // If reusing an existing window, still call the callback with its elements
+                onReadyCallback({
+                    playBtnGlobal: win.element.querySelector('#playBtnGlobal'),
+                    recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'),
+                    stopBtnGlobal: win.element.querySelector('#stopBtnGlobal'),
+                    tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'),
+                    midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'),
+                    masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'),
+                    masterMeterBarGlobal: win.element.querySelector('#masterMeterBarGlobal'),
+                    midiIndicatorGlobal: win.element.querySelector('#midiIndicatorGlobal'),
+                    keyboardIndicatorGlobal: win.element.querySelector('#keyboardIndicatorGlobal'),
+                    playbackModeToggleBtnGlobal: win.element.querySelector('#playbackModeToggleBtnGlobal')
+                });
+            }
             return win;
         }
     }
@@ -82,23 +92,23 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         </div>
     `;
 
-    const options = { 
-        width: 250, minWidth: 230, 
-        height: 340, minHeight: 320, 
-        closable: true, minimizable: true, resizable: true, 
-        initialContentKey: windowId 
+    const options = {
+        width: 250, minWidth: 230,
+        height: 340, minHeight: 320,
+        closable: true, minimizable: true, resizable: true,
+        initialContentKey: windowId
     };
     if (savedState) {
-        Object.assign(options, { 
-            x: parseInt(savedState.left,10), 
-            y: parseInt(savedState.top,10), 
-            width: parseInt(savedState.width,10), 
-            height: parseInt(savedState.height,10), 
-            zIndex: savedState.zIndex, 
-            isMinimized: savedState.isMinimized 
+        Object.assign(options, {
+            x: parseInt(savedState.left,10),
+            y: parseInt(savedState.top,10),
+            width: parseInt(savedState.width,10),
+            height: parseInt(savedState.height,10),
+            zIndex: savedState.zIndex,
+            isMinimized: savedState.isMinimized
         });
     }
-    
+
     const newWindow = createWindow(windowId, 'Global Controls', contentHTML, options);
 
     if (newWindow?.element && typeof onReadyCallback === 'function') {
