@@ -4,7 +4,7 @@ import { showNotification, createDropZoneHTML, setupGenericDropZoneListeners, sh
 import * as Constants from './constants.js';
 import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
-    handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
+    handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer // handleOpenSequencer will still be called by eventHandlers
 } from './eventHandlers.js';
 import { getTracksState } from './state.js';
 
@@ -22,6 +22,11 @@ import {
     updateSoundBrowserDisplayForLibrary as importedUpdateSoundBrowserDisplayForLibrary, 
     renderSoundBrowserDirectory as importedRenderSoundBrowserDirectory 
 } from './ui/soundBrowserUI.js';
+import { 
+    initializePianoRollUI,
+    createPianoRollStage 
+} from './ui/pianoRollUI.js';
+
 
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
@@ -40,6 +45,12 @@ export function initializeUIModule(appServicesFromMain) {
         initializeSoundBrowserUI(localAppServices);
     } else {
         console.error("[UI Init] initializeSoundBrowserUI is not a function. Check import from ./ui/soundBrowserUI.js");
+    }
+
+    if (typeof initializePianoRollUI === 'function') {
+        initializePianoRollUI(localAppServices);
+    } else {
+        console.error("[UI Init] initializePianoRollUI is not a function. Check import from ./ui/pianoRollUI.js");
     }
     
     if (localAppServices && !localAppServices.createKnob) {
@@ -327,7 +338,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const createAndPlaceKnob = (placeholderId, options) => {
         const placeholder = winEl.querySelector(`#${placeholderId}`);
         if (placeholder) {
-            const knob = importedCreateKnob(options, localAppServices); // Use importedCreateKnob
+            const knob = importedCreateKnob(options, localAppServices);
             placeholder.innerHTML = ''; placeholder.appendChild(knob.element); return knob;
         }
         return null;
@@ -365,7 +376,7 @@ function buildTrackInspectorContentDOM(track) {
     const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     let sequencerButtonHTML = '';
     if (track.type !== 'Audio') {
-        sequencerButtonHTML = `<button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Sequencer</button>`;
+        sequencerButtonHTML = `<button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Piano Roll</button>`;
     }
 
     let monitorButtonHTML = '';
@@ -620,7 +631,7 @@ function showAddEffectModal(owner, ownerType) {
     ]);
 }
 
-// --- Window Opening Functions ---
+// --- Window Opening Functions (Original Track Effects & Master Effects) ---
 export function openTrackEffectsRackWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track) return null;
@@ -738,56 +749,26 @@ export function renderMixer(container) {
     });
 }
 
-// --- Sequencer Window ---
-function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
-    const stepsPerBar = Constants.STEPS_PER_BAR;
-    const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar;
-
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" class="w-12 p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> </div>`;
-    html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
-    for (let i = 0; i < totalSteps; i++) { html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[10px] text-gray-500 dark:text-slate-400">${(i % stepsPerBar === 0) ? (Math.floor(i / stepsPerBar) + 1) : ((i % 4 === 0) ? '&#x2022;' : '')}</div>`; }
-
-    const activeSequence = track.getActiveSequence();
-    const sequenceData = (activeSequence && Array.isArray(activeSequence.data)) ? activeSequence.data : [];
-     if (activeSequence && !Array.isArray(activeSequence.data)) {
-        console.warn(`[UI buildSequencerContentDOM] Track ${track.id} active sequence data is not an array:`, activeSequence.data);
-    }
-
-
-    for (let i = 0; i < rows; i++) {
-        let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
-        html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px]" title="${rowLabels[i] || ''}">${labelText}</div>`;
-        for (let j = 0; j < totalSteps; j++) {
-            const stepData = sequenceData[i]?.[j];
-            let activeClass = '';
-            if (stepData?.active) { if (track.type === 'Synth') activeClass = 'active-synth'; else if (track.type === 'Sampler') activeClass = 'active-sampler'; else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler'; else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler'; }
-            let beatBlockClass = (Math.floor((j % stepsPerBar) / 4) % 2 === 0) ? 'bg-gray-50 dark:bg-slate-700' : 'bg-white dark:bg-slate-750';
-            if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-400 dark:border-l-slate-600';
-            else if (j > 0 && j % (stepsPerBar / 2) === 0) beatBlockClass += ' border-l-gray-300 dark:border-l-slate-650';
-            else if (j > 0 && j % (stepsPerBar / 4) === 0) beatBlockClass += ' border-l-gray-200 dark:border-l-slate-675';
-            html += `<div class="sequencer-step-cell ${activeClass} ${beatBlockClass} border-r border-b border-gray-200 dark:border-slate-600" data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}"></div>`;
-        }
-    }
-    html += `</div></div>`; return html;
-}
-
+// --- Piano Roll / Sequencer Window ---
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
-    console.log(`[UI openTrackSequencerWindow] Called for track ID: ${trackId}. Force redraw: ${forceRedraw}, SavedState exists: ${!!savedState}`);
+    console.log(`[UI openTrackSequencerWindow START] Called for track ID: ${trackId}. Force redraw: ${forceRedraw}, SavedState: ${!!savedState}`);
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
 
     if (!track) {
         console.error(`[UI openTrackSequencerWindow] Track ${trackId} not found. Aborting.`);
-        if (localAppServices.showNotification) localAppServices.showNotification(`Track ${trackId} not found. Cannot open sequencer.`, 3000);
+        if (localAppServices.showNotification) localAppServices.showNotification(`Track ${trackId} not found. Cannot open Piano Roll.`, 3000);
         return null;
     }
     if (track.type === 'Audio') {
-        console.warn(`[UI openTrackSequencerWindow] Track ${trackId} is an Audio track. Sequencer not applicable. Aborting.`);
-        if (localAppServices.showNotification) localAppServices.showNotification(`Sequencer is not available for Audio tracks.`, 3000);
+        console.warn(`[UI openTrackSequencerWindow] Track ${trackId} is an Audio track. Piano Roll not applicable. Aborting.`);
+        if (localAppServices.showNotification) localAppServices.showNotification(`Piano Roll is not available for Audio tracks.`, 3000);
         return null;
     }
-    console.log(`[UI openTrackSequencerWindow] Track found: ${track.name}, Type: ${track.type}, Sequences:`, JSON.stringify(track.sequences), `ActiveSeqID: ${track.activeSequenceId}`);
+     console.log(`[UI openTrackSequencerWindow] Track details: Name: ${track.name}, Type: ${track.type}, ActiveSeqID: ${track.activeSequenceId}`);
+     if(track.sequences) console.log(`[UI openTrackSequencerWindow] Track sequences (count: ${track.sequences.length}):`, JSON.parse(JSON.stringify(track.sequences)));
 
-    const windowId = `sequencerWin-${trackId}`;
+
+    const windowId = `sequencerWin-${trackId}`; // Keep same ID for now, can change to pianoRollWin-${trackId} later
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
 
     if (openWindows.has(windowId)) {
@@ -797,96 +778,106 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             if (localAppServices.removeWindowFromStore) localAppServices.removeWindowFromStore(windowId);
         }
     }
-
+    
     if (forceRedraw && openWindows.has(windowId)) {
         const existingWindow = openWindows.get(windowId);
         if (existingWindow && typeof existingWindow.close === 'function' && existingWindow.element) {
-            try { console.log(`[UI openTrackSequencerWindow] Force redraw: Closing existing window ${windowId}`); existingWindow.close(true); }
-            catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
+            try { 
+                console.log(`[UI openTrackSequencerWindow] Force redraw: Closing existing window ${windowId}`); 
+                existingWindow.close(true); // Pass true to indicate it's a programmatic close (e.g., for reconstruction)
+            } catch (e) {
+                console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e);
+            }
         }
     }
 
-    if (openWindows.has(windowId) && !forceRedraw && !savedState) {
-        const win = openWindows.get(windowId);
-        if (win && typeof win.restore === 'function' && win.element) {
-            console.log(`[UI openTrackSequencerWindow] Restoring existing window ${windowId}`); win.restore();
-            if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId); return win;
-        } else if (win && (!win.element || typeof win.restore !== 'function')) {
-            console.warn(`[UI openTrackSequencerWindow] Window ${windowId} in map but invalid/corrupt. Removing and recreating.`);
-            if(localAppServices.removeWindowFromStore) localAppServices.removeWindowFromStore(windowId);
-        }
-    }
 
     const activeSequence = track.getActiveSequence();
-    console.log(`[UI openTrackSequencerWindow] Active sequence object for track ${trackId}:`, activeSequence ? {id: activeSequence.id, name: activeSequence.name, length: activeSequence.length, dataExists: !!activeSequence.data, dataIsArray: Array.isArray(activeSequence.data)} : 'None');
-
     if (!activeSequence) {
-        console.error(`[UI openTrackSequencerWindow] CRITICAL: Track ${trackId} ("${track.name}") has no active sequence (getActiveSequence returned null). Cannot open sequencer.`);
-        if (localAppServices.showNotification) localAppServices.showNotification(`Track "${track.name}" has no active sequence. Please check track data or add a sequence.`, 3500);
+        console.error(`[UI openTrackSequencerWindow] CRITICAL: Track ${trackId} ("${track.name}") has NO active sequence object. Cannot open Piano Roll.`);
+        if (localAppServices.showNotification) localAppServices.showNotification(`Track "${track.name}" has no active sequence. Please add/select a sequence.`, 3500);
         return null;
     }
-    if (!activeSequence.data || !Array.isArray(activeSequence.data)) {
-        console.error(`[UI openTrackSequencerWindow] CRITICAL: Active sequence for track ${trackId} ("${track.name}") has invalid 'data' property. Data:`, activeSequence.data);
-        if (localAppServices.showNotification) localAppServices.showNotification(`Sequence data for "${track.name}" is corrupted or missing.`, 3500);
-        return null;
-    }
+    console.log(`[UI openTrackSequencerWindow] Active sequence for track ${track.id}:`, JSON.parse(JSON.stringify(activeSequence)));
 
 
-    let rows, rowLabels;
-    const numBars = activeSequence.length > 0 ? Math.max(1, activeSequence.length / Constants.STEPS_PER_BAR) : 1;
+    // Create a container for Konva stage
+    const konvaContainer = document.createElement('div');
+    konvaContainer.id = `pianoRollContainer-${trackId}`;
+    konvaContainer.className = 'w-full h-full overflow-auto'; // Konva will manage its internal scrolling/zooming
+    // Style it to take up the full window content area
+    konvaContainer.style.width = '100%';
+    konvaContainer.style.height = '100%';
+    konvaContainer.style.position = 'relative'; // For absolute positioning of Konva canvas if needed
 
-    if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; }
-    else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({ length: rows }, (_, i) => `Slice ${i + 1}`); }
-    else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({ length: rows }, (_, i) => `Pad ${i + 1}`); }
-    else { console.warn(`[UI openTrackSequencerWindow] Unknown track type "${track.type}" for sequencer rows/labels.`); rows = 0; rowLabels = []; }
 
-    if (rows === 0) {
-        console.error(`[UI openTrackSequencerWindow] Calculated 0 rows for sequencer for track type ${track.type}. Aborting window creation.`);
-        if (localAppServices.showNotification) localAppServices.showNotification(`Cannot open sequencer: Invalid configuration for track type ${track.type}.`, 3500);
-        return null;
-    }
-
-    const contentDOM = buildSequencerContentDOM(track, rows, rowLabels, numBars);
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
-    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
-
-    let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
-    let calculatedHeight = 400;
-    if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) { calculatedWidth = 600; }
-    if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) { calculatedHeight = 400; }
-
-    const seqOptions = { width: calculatedWidth, height: calculatedHeight, minWidth: 400, minHeight: 250, initialContentKey: windowId, onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); } };
+    
+    const seqOptions = { 
+        width: Math.max(600, Math.min(1000, safeDesktopWidth - 40)), // Wider default for piano roll
+        height: 450, // Taller default
+        minWidth: 500, 
+        minHeight: 300, 
+        initialContentKey: windowId, 
+        onCloseCallback: () => { 
+            if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) {
+                localAppServices.setActiveSequencerTrackId(null); 
+            }
+            // Destroy Konva stage if window is closed
+            const win = openWindows.get(windowId);
+            if (win && win.konvaStage && typeof win.konvaStage.destroy === 'function') {
+                console.log(`[UI openTrackSequencerWindow onCloseCallback] Destroying Konva stage for track ${trackId}`);
+                win.konvaStage.destroy();
+                win.konvaStage = null;
+            }
+        } 
+    };
     if (savedState) { Object.assign(seqOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized }); }
 
-    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Creating window with options:`, JSON.parse(JSON.stringify(seqOptions)));
-    const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name} - ${activeSequence.name}`, contentDOM, seqOptions);
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name} - ${activeSequence.name}`, konvaContainer, seqOptions);
 
-    if (sequencerWindow?.element) {
-        const allCells = Array.from(sequencerWindow.element.querySelectorAll('.sequencer-step-cell'));
-        sequencerWindow.stepCellsGrid = [];
-        const currentSequenceLength = activeSequence.length || Constants.defaultStepsPerBar;
-        for (let i = 0; i < rows; i++) {
-            sequencerWindow.stepCellsGrid[i] = allCells.slice(i * currentSequenceLength, (i + 1) * currentSequenceLength);
-        }
-        sequencerWindow.lastPlayedCol = -1;
+    if (pianoRollWindow?.element) {
+        // Ensure the content div (konvaContainer) has dimensions before creating the stage
+        // Sometimes offsetWidth/Height might be 0 if the window isn't fully in the DOM/visible yet.
+        // A small delay or ensuring the window is rendered before stage creation can help.
+        // The SnugWindow class should ensure its content div is in the DOM before returning.
+        setTimeout(() => {
+            if (konvaContainer.offsetWidth > 0 && konvaContainer.offsetHeight > 0) {
+                 pianoRollWindow.konvaStage = createPianoRollStage(konvaContainer, track);
+                if (pianoRollWindow.konvaStage) {
+                    console.log(`[UI openTrackSequencerWindow] Konva stage successfully created for track ${trackId}`);
+                    // Add resize listener for the window to update Konva stage size
+                    const resizeObserver = new ResizeObserver(entries => {
+                        for (let entry of entries) {
+                            if (pianoRollWindow.konvaStage) {
+                                const { width, height } = entry.contentRect;
+                                pianoRollWindow.konvaStage.width(width);
+                                pianoRollWindow.konvaStage.height(height);
+                                // TODO: Re-render/redraw Konva content if necessary on resize
+                                // e.g., pianoRollWindow.konvaStage.findOne('Layer').batchDraw();
+                                console.log(`[UI] Konva stage for ${trackId} resized to ${width}x${height}`);
+                            }
+                        }
+                    });
+                    resizeObserver.observe(konvaContainer);
+                    pianoRollWindow.konvaResizeObserver = resizeObserver; // Store for cleanup
+
+                } else {
+                     console.error(`[UI openTrackSequencerWindow] createPianoRollStage returned null for track ${trackId}`);
+                }
+            } else {
+                console.warn(`[UI openTrackSequencerWindow] Konva container for track ${trackId} has no dimensions. Width: ${konvaContainer.offsetWidth}, Height: ${konvaContainer.offsetHeight}. Stage creation deferred or might fail.`);
+            }
+        }, 50); // Small delay to ensure DOM is ready for Konva
 
         if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
-        const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
-        const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
-
-        if (controlsDiv) { /* ... (drag start event listener) ... */ }
-        const sequencerContextMenuHandler = (event) => { /* ... (context menu logic) ... */ };
-        if (grid) grid.addEventListener('contextmenu', sequencerContextMenuHandler);
-        if (controlsDiv) controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
-
-        if (grid) grid.addEventListener('click', (e) => { /* ... (step cell click logic) ... */ });
-        const lengthInput = sequencerWindow.element.querySelector(`#seqLengthInput-${track.id}`);
-        if (lengthInput) { /* ... (length input event listener) ... */ }
+        
+        console.log(`[UI openTrackSequencerWindow END] Piano Roll window for track ${trackId} initialized.`);
     } else {
-        console.error(`[UI openTrackSequencerWindow] Failed to create sequencer window for track ${trackId}.`);
+        console.error(`[UI openTrackSequencerWindow END] Failed to create Piano Roll window for track ${trackId}.`);
     }
-    return sequencerWindow;
+    return pianoRollWindow;
 }
 
 
@@ -895,15 +886,15 @@ export function drawWaveform(track) {
     if (!track.waveformCanvasCtx || !track.audioBuffer || !track.audioBuffer.loaded) return;
     const ctx = track.waveformCanvasCtx;
     const canvas = ctx.canvas;
-    const buffer = track.audioBuffer.get();
+    const buffer = track.audioBuffer.get(); // Get the AudioBuffer
     if (!buffer) return;
 
-    const data = buffer.getChannelData(0);
+    const data = buffer.getChannelData(0); // Get data from channel 0
     const step = Math.ceil(data.length / canvas.width);
     const amp = canvas.height / 2;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent-active').trim() || '#007bff';
+    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent-active').trim() || '#007bff'; // Use theme variable
     ctx.lineWidth = 0.5;
     ctx.beginPath();
 
@@ -1125,9 +1116,32 @@ export function updateDrumPadControlsUI(track) {
         stretchBPMInput.value = padData.stretchOriginalBPM || 120;
         stretchBeatsInput.value = padData.stretchBeats || 1;
 
-        if (!autoStretchToggle.hasAttribute('listener-attached')) { /* ... listener attachment ... */ }
-        if (!stretchBPMInput.hasAttribute('listener-attached')) { /* ... listener attachment ... */ }
-        if (!stretchBeatsInput.hasAttribute('listener-attached')) { /* ... listener attachment ... */ }
+        if (!autoStretchToggle.hasAttribute('listener-attached')) {
+            autoStretchToggle.addEventListener('click', () => {
+                const currentPadIndex = track.selectedDrumPadForEdit;
+                const newState = !track.drumSamplerPads[currentPadIndex].autoStretchEnabled;
+                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Auto-Stretch for Pad ${currentPadIndex + 1} on ${track.name}`);
+                track.setDrumSamplerPadAutoStretch(currentPadIndex, newState);
+                updateDrumPadControlsUI(track);
+            });
+            autoStretchToggle.setAttribute('listener-attached', 'true');
+        }
+        if (!stretchBPMInput.hasAttribute('listener-attached')) {
+            stretchBPMInput.addEventListener('change', (e) => {
+                const currentPadIndex = track.selectedDrumPadForEdit;
+                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Stretch BPM for Pad ${currentPadIndex + 1} on ${track.name}`);
+                track.setDrumSamplerPadStretchOriginalBPM(currentPadIndex, parseFloat(e.target.value));
+            });
+            stretchBPMInput.setAttribute('listener-attached', 'true');
+        }
+        if (!stretchBeatsInput.hasAttribute('listener-attached')) {
+             stretchBeatsInput.addEventListener('change', (e) => {
+                const currentPadIndex = track.selectedDrumPadForEdit;
+                if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Stretch Beats for Pad ${currentPadIndex + 1} on ${track.name}`);
+                track.setDrumSamplerPadStretchBeats(currentPadIndex, parseFloat(e.target.value));
+            });
+            stretchBeatsInput.setAttribute('listener-attached', 'true');
+        }
     }
 
     track.inspectorControls.drumPadEnvAttack = createAndPlaceKnob(`drumPadEnvAttack-${track.id}-placeholder`, { label: 'Attack', min:0.001, max:1, step:0.001, initialValue: env.attack, decimals:3, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'attack', val)});
@@ -1137,34 +1151,29 @@ export function updateDrumPadControlsUI(track) {
 }
 
 export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {
-    if (!sequencerWindowElement) return;
-    const cell = sequencerWindowElement.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${col}"]`);
-    if (cell) {
-        let activeClass = '';
-        if (isActive) {
-            if (trackType === 'Synth') activeClass = 'active-synth';
-            else if (trackType === 'Sampler') activeClass = 'active-sampler';
-            else if (trackType === 'DrumSampler') activeClass = 'active-drum-sampler';
-            else if (trackType === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
-        }
-        cell.classList.remove('active-synth', 'active-sampler', 'active-drum-sampler', 'active-instrument-sampler');
-        if (activeClass) cell.classList.add(activeClass);
-    }
+    // This function will need to be adapted for Konva.
+    // Instead of DOM manipulation, it would find the Konva.Rect for that cell and change its fill/stroke.
+    // For now, it's a no-op as we're moving to Konva for the piano roll.
+    // console.warn("[UI updateSequencerCellUI] Called, but DOM sequencer is being replaced by Konva piano roll. This function needs updating if still used.");
 }
-
 export function highlightPlayingStep(trackId, col) {
-    const sequencerWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`sequencerWin-${trackId}`) : null;
-    if (sequencerWindow?.element && !sequencerWindow.isMinimized) {
-        if (sequencerWindow.lastPlayedCol !== undefined && sequencerWindow.lastPlayedCol >= 0) {
-            sequencerWindow.element.querySelectorAll(`.sequencer-step-cell[data-col="${sequencerWindow.lastPlayedCol}"]`).forEach(c => c.classList.remove('playing'));
-        }
-        sequencerWindow.element.querySelectorAll(`.sequencer-step-cell[data-col="${col}"]`).forEach(c => c.classList.add('playing'));
-        sequencerWindow.lastPlayedCol = col;
+    // This function will need to be adapted for Konva.
+    // It would find the Konva shapes corresponding to the 'col' and highlight them.
+    // e.g., draw a vertical "playhead" line on the Konva stage or highlight notes in that column.
+    const pianoRollWindow = localAppServices.getWindowById ? localAppServices.getWindowById(`sequencerWin-${trackId}`) : null;
+    if (pianoRollWindow?.konvaStage) {
+        // TODO: Implement Konva-based playhead highlighting
+        // This would involve accessing the Konva stage and its layers/shapes.
+        // console.log(`[UI highlightPlayingStep] Konva: Highlight column ${col} for track ${trackId}`);
+    } else {
+        // Fallback or legacy if needed, though ideally this also transitions
+        // console.warn(`[UI highlightPlayingStep] Konva stage not found for track ${trackId}`);
     }
 }
-
 
 // Re-export functions from sub-modules AND createKnob
+// This ensures that main.js and other parts of the application can still import these
+// from 'ui.js' as a central point for UI-related functionalities.
 export {
     importedCreateKnob as createKnob,
     importedOpenTimelineWindow as openTimelineWindow,
