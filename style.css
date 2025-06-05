@@ -29,7 +29,7 @@
     --bg-timeline-track-lane: #1e1e1e;
     --bg-timeline-track-lane-even: #1a1a1a;
     --bg-timeline-track-name: #2f2f2f;
-    --bg-theme-toggle-button-hover: #4a4a4a;
+    --bg-theme-toggle-button-hover: #4a4a4a; /* New for theme buttons */
 
 
     --text-primary: #e0e0e0;
@@ -46,13 +46,13 @@
     --text-knob: #a0a0a0;
     --text-sequencer-header: #b0b0b0;
     --text-sequencer-step: #777777;
-    --text-theme-toggle-icon: #e0e0e0;
+    --text-theme-toggle-icon: #e0e0e0; /* New for theme icons */
 
     --border-primary: #383838;
-    --border-secondary: #303030;
+    --border-secondary: #303030; /* For subtle borders like taskbar top */
     --border-window-title-bottom: #121212;
     --border-button: #121212;
-    --border-button-hover: #3c3c3c;
+    --border-button-hover: #3c3c3c; /* Example */
     --border-button-active-outer: #181818;
     --border-button-active-inner: #3c3c3c;
     --border-start-menu: #3a3a3a;
@@ -72,7 +72,7 @@
     --border-timeline-header: #3a3a3a;
     --border-timeline-track-lane: #2a2a2a;
     --border-timeline-track-name: #3a3a3a;
-    --border-theme-toggle-button: #303030;
+    --border-theme-toggle-button: #303030; /* New for theme buttons */
 
 
     --shadow-window: 0px 0px 15px rgba(0,0,0,0.5);
@@ -85,7 +85,7 @@
     --shadow-modal: 2px 2px 10px rgba(0,0,0,0.7);
     --shadow-context-menu: 2px 2px 8px rgba(0,0,0,0.6);
 
-    --accent-focus: #0060c0;
+    --accent-focus: #0060c0; /* Used for Start Menu hover, can be reused */
     --accent-muted: #991b1b;
     --accent-muted-text: #fecaca;
     --accent-muted-border-dark: #7f1d1d;
@@ -115,7 +115,7 @@
     --scrollbar-track: #1e1e1e;
     --scrollbar-thumb: #4a4a4a;
     --scrollbar-thumb-hover: #5a5a5a;
-    --scrollbar-thumb-border: #5a5a5a;
+    --scrollbar-thumb-border: #5a5a5a; /* Added for thumb border */
     --scrollbar-corner: #1e1e1e;
 }
 
@@ -147,7 +147,7 @@
     --bg-timeline-track-lane: #fdfdfd;
     --bg-timeline-track-lane-even: #f4f4f4;
     --bg-timeline-track-name: #e7e7e7;
-    --bg-theme-toggle-button-hover: #d0d0d0;
+    --bg-theme-toggle-button-hover: #d0d0d0; /* New for theme buttons */
 
 
     --text-primary: #333333;
@@ -164,7 +164,7 @@
     --text-knob: #666666;
     --text-sequencer-header: #555555;
     --text-sequencer-step: #999999;
-    --text-theme-toggle-icon: #333333;
+    --text-theme-toggle-icon: #333333; /* New for theme icons */
 
     --border-primary: #cccccc;
     --border-secondary: #d0d0d0;
@@ -190,7 +190,7 @@
     --border-timeline-header: #cccccc;
     --border-timeline-track-lane: #d0d0d0;
     --border-timeline-track-name: #cccccc;
-    --border-theme-toggle-button: #d0d0d0;
+    --border-theme-toggle-button: #d0d0d0; /* New for theme buttons */
 
 
     --shadow-window: 0px 0px 15px rgba(0,0,0,0.15);
@@ -301,7 +301,7 @@ body {
 }
 
 #topTaskbar button.recording {
-    background-color: var(--accent-armed) !important;
+    background-color: var(--accent-armed) !important; /* Ensure it overrides */
     color: var(--accent-armed-text) !important;
     border-color: var(--accent-armed-border-dark) !important;
 }
@@ -341,6 +341,7 @@ body {
     border: 1px solid var(--border-secondary);
     border-radius: 2px;
     overflow: hidden;
+    /* margin-left: auto; /* Removed to allow theme toggle to be further right */
 }
 .master-meter-top > div {
     height: 100%;
@@ -374,14 +375,14 @@ body {
 
 #themeToggleBtn { /* Single button container for icons */
     background-color: transparent;
-    border: 1px solid transparent;
+    border: 1px solid transparent; /* Transparent border by default */
     padding: 4px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 3px;
-    width: 28px; /* Adjust to fit one icon comfortably */
+    width: 28px;
     height: 28px;
     color: var(--text-theme-toggle-icon); /* SVG stroke will inherit this */
 }
@@ -392,8 +393,8 @@ body {
 }
 
 #themeToggleBtn svg {
-    /* stroke: currentColor; /* This ensures the SVG uses the button's text color (set by --text-theme-toggle-icon on #themeToggleBtn) */
-    width: 18px; /* Adjust size as needed */
+    /* stroke: currentColor; /* This ensures the SVG uses the button's text color which is set by --text-theme-toggle-icon on #themeToggleBtn */
+    width: 18px;
     height: 18px;
 }
 
@@ -413,12 +414,12 @@ body {
 }
 
 /* Default state if no theme class is on body (e.g., initial load before JS adds a class)
-   This assumes your default visual state (without .theme-dark or .theme-light) is dark-like.
-   If your CSS base (without theme classes) is light, invert these. */
-body:not(.theme-light):not(.theme-dark) #themeToggleBtn svg#themeIconMoon {
+   This assumes your default visual state (without .theme-dark or .theme-light) is dark-like via the body class.
+   If body starts with no theme class, this ensures sun is visible. */
+body:not(.theme-light):not(.theme-dark) #themeToggleBtn #themeIconMoon {
     display: none;
 }
-body:not(.theme-light):not(.theme-dark) #themeToggleBtn svg#themeIconSun {
+body:not(.theme-light):not(.theme-dark) #themeToggleBtn #themeIconSun {
     display: inline-block;
 }
 
@@ -1101,7 +1102,7 @@ input::placeholder,
 #timeline-playhead {
     position: absolute;
     top: 0;
-    left: var(--timeline-track-name-width, 120px);
+    left: var(--timeline-track-name-width, 120px); /* Use CSS var for left offset */
     width: 2px;
     height: 100%;
     background-color: var(--accent-playhead);
