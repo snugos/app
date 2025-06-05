@@ -68,18 +68,33 @@ import {
     getAudio as dbGetAudio,
     deleteAudio as dbDeleteAudio
 } from './db.js';
+// Import ALL necessary functions from ui.js (which should re-export from submodules)
 import {
-    initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow,
-    openTrackInspectorWindow, openMixerWindow, updateMixerWindow,
-    // Timeline and Sound Browser functions are now imported from their specific modules
-    openTimelineWindow, renderTimeline, updatePlayheadPosition, // MODIFICATION: Uncommented
-    openSoundBrowserWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory, // MODIFICATION: Uncommented
-    renderEffectsList, renderEffectControls, createKnob,
+    initializeUIModule,
+    openTrackEffectsRackWindow,
+    openTrackSequencerWindow,
+    openTrackInspectorWindow,
+    openMixerWindow,
+    updateMixerWindow,
+    openTimelineWindow,         // Expected from ui.js (re-exported from timelineUI.js)
+    renderTimeline,             // Expected from ui.js (re-exported from timelineUI.js)
+    updatePlayheadPosition,     // Expected from ui.js (re-exported from timelineUI.js)
+    openSoundBrowserWindow,     // Expected from ui.js (re-exported from soundBrowserUI.js)
+    updateSoundBrowserDisplayForLibrary, // Expected from ui.js (re-exported from soundBrowserUI.js)
+    renderSoundBrowserDirectory, // Expected from ui.js (re-exported from soundBrowserUI.js)
+    renderEffectsList,
+    renderEffectControls,
+    createKnob,                 // Expected from ui.js (re-exported from knobUI.js)
     updateSequencerCellUI,
     openMasterEffectsRackWindow,
-    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPads, updateDrumPadControlsUI, highlightPlayingStep
-} from './ui.js'; // Main ui.js imports the sub-modules
+    drawWaveform,
+    drawInstrumentWaveform,
+    renderSamplePads,
+    updateSliceEditorUI,
+    renderDrumSamplerPads,
+    updateDrumPadControlsUI,
+    highlightPlayingStep
+} from './ui.js';
 
 console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
 
@@ -106,12 +121,12 @@ const uiElementsCache = {
     midiIndicatorGlobal: null,
     keyboardIndicatorGlobal: null,
     playbackModeToggleBtnGlobal: null,
-    themeToggleBtn: null, // Single theme toggle button in top taskbar
+    themeToggleBtn: null,
 };
 
 const DESKTOP_BACKGROUND_LS_KEY = 'snugosDesktopBackground_LS';
 const DESKTOP_BACKGROUND_IDB_KEY = 'snugosDesktopBackground_IDB';
-const THEME_STORAGE_KEY = 'snugosThemePreference_v2'; // Consistent key
+const THEME_STORAGE_KEY = 'snugosThemePreference_v2';
 
 let currentBackgroundImageObjectURL = null;
 
@@ -163,21 +178,19 @@ function showSafeNotification(message, duration) {
 }
 
 // --- Theme Switching Logic ---
-function applyThemeCSS(themeName) { // themeName is 'light' or 'dark'
+function applyThemeCSS(themeName) {
     document.body.classList.remove('theme-light', 'theme-dark');
     if (themeName === 'light') {
         document.body.classList.add('theme-light');
     } else {
-        document.body.classList.add('theme-dark'); // Default to dark if not explicitly light
+        document.body.classList.add('theme-dark');
     }
     console.log(`[Theme] Applied CSS class for: ${themeName}`);
-    // The CSS in style.css will handle showing/hiding the correct SVG icon inside #themeToggleBtn
 }
 
 function applyUserThemePreference() {
     const preference = appServices.getCurrentUserThemePreference ? appServices.getCurrentUserThemePreference() : 'system';
-    let actualThemeToApply = 'dark'; // Default to dark
-
+    let actualThemeToApply = 'dark';
     if (preference === 'system') {
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         actualThemeToApply = systemPrefersDark ? 'dark' : 'light';
@@ -204,16 +217,16 @@ const appServices = {
     dbDeleteItem: dbDeleteAudio,
     openTrackInspectorWindow, openTrackEffectsRackWindow, openTrackSequencerWindow,
     openMixerWindow, updateMixerWindow,
-    openSoundBrowserWindow, // This will now be from the re-exported functions in ui.js
-    updateSoundBrowserDisplayForLibrary, // from ui.js (which imports from soundBrowserUI.js)
-    renderSoundBrowserDirectory, // from ui.js (which imports from soundBrowserUI.js)
-    openTimelineWindow, // from ui.js (which imports from timelineUI.js)
-    renderTimeline, // from ui.js (which imports from timelineUI.js)
-    updatePlayheadPosition, // from ui.js (which imports from timelineUI.js)
+    openSoundBrowserWindow,
+    updateSoundBrowserDisplayForLibrary,
+    renderSoundBrowserDirectory,
+    openTimelineWindow,
+    renderTimeline,
+    updatePlayheadPosition,
     highlightPlayingStep,
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
     updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
-    createKnob, // from ui.js (which imports from knobUI.js)
+    createKnob,
     updateSequencerCellUI,
     openMasterEffectsRackWindow,
     showNotification: showSafeNotification,
@@ -694,8 +707,7 @@ async function initializeSnugOS() {
         uiElementsCache.midiIndicatorGlobal = document.getElementById('midiIndicatorGlobalTop');
         uiElementsCache.keyboardIndicatorGlobal = document.getElementById('keyboardIndicatorGlobalTop');
         uiElementsCache.playbackModeToggleBtnGlobal = document.getElementById('playbackModeToggleBtnGlobalTop');
-        uiElementsCache.themeToggleBtn = document.getElementById('themeToggleBtn'); // Cache the single theme button
-        // SVGs inside #themeToggleBtn are controlled by CSS, direct caching not strictly needed for display logic
+        uiElementsCache.themeToggleBtn = document.getElementById('themeToggleBtn');
 
 
         try {
@@ -769,13 +781,13 @@ async function initializeSnugOS() {
         const savedThemePreference = localStorage.getItem(THEME_STORAGE_KEY);
         if (savedThemePreference && appServices.setCurrentUserThemePreference) {
             console.log(`[Theme Init] Found saved preference: ${savedThemePreference}`);
-            appServices.setCurrentUserThemePreference(savedThemePreference); // This will trigger applyUserThemePreference
+            appServices.setCurrentUserThemePreference(savedThemePreference);
         } else if (appServices.setCurrentUserThemePreference) {
             console.log(`[Theme Init] No saved preference, defaulting to 'system'.`);
-            appServices.setCurrentUserThemePreference('system'); // This will trigger applyUserThemePreference
+            appServices.setCurrentUserThemePreference('system');
         } else {
             console.warn(`[Theme Init] appServices.setCurrentUserThemePreference not available. Applying theme directly.`);
-            applyUserThemePreference(); // Fallback
+            applyUserThemePreference();
         }
 
         const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
@@ -786,7 +798,6 @@ async function initializeSnugOS() {
         const cycleThemeMenuItem = document.getElementById('menuToggleTheme');
         if (cycleThemeMenuItem && cycleThemeMenuItem.parentElement) {
             const prevHr = cycleThemeMenuItem.previousElementSibling;
-            // Check if the previous sibling is an HR and also remove it if it seems to be paired
             if (prevHr && prevHr.tagName === 'HR' && prevHr.nextElementSibling === cycleThemeMenuItem) {
                 prevHr.remove();
             }
@@ -798,25 +809,20 @@ async function initializeSnugOS() {
         if (uiElementsCache.themeToggleBtn) {
             uiElementsCache.themeToggleBtn.addEventListener('click', () => {
                 const currentPreference = appServices.getCurrentUserThemePreference ? appServices.getCurrentUserThemePreference() : 'system';
-                // Determine the currently *applied* theme by checking the body class
                 const isCurrentlyLight = document.body.classList.contains('theme-light');
                 const actualCurrentTheme = isCurrentlyLight ? 'light' : 'dark';
                 let nextPreferenceToStore;
 
                 if (currentPreference === 'system') {
-                    // If system is current, clicking should switch to the *opposite* of the *current actual theme*
-                    // and set the preference to that explicit theme.
                     nextPreferenceToStore = actualCurrentTheme === 'light' ? 'dark' : 'light';
                 } else if (currentPreference === 'light') {
-                    // If light, switch preference to dark
                     nextPreferenceToStore = 'dark';
                 } else { // currentPreference === 'dark'
-                    // If dark, switch preference back to system
                     nextPreferenceToStore = 'system';
                 }
 
                 if (appServices.setCurrentUserThemePreference) {
-                    appServices.setCurrentUserThemePreference(nextPreferenceToStore); // This will save and apply
+                    appServices.setCurrentUserThemePreference(nextPreferenceToStore);
                 }
                 showSafeNotification(`Theme preference set to: ${nextPreferenceToStore.charAt(0).toUpperCase() + nextPreferenceToStore.slice(1)}`, 1500);
             });
