@@ -206,7 +206,6 @@ export class Track {
     // --- Sequence Management ---
     getActiveSequence() {
         if (this.type === 'Audio' || !this.activeSequenceId || !this.sequences || this.sequences.length === 0) {
-            // console.warn(`[Track ${this.id} getActiveSequence] Conditions not met for returning active sequence. Type: ${this.type}, activeSeqId: ${this.activeSequenceId}, sequences count: ${this.sequences?.length}`);
             return null;
         }
         const foundSequence = this.sequences.find(s => s.id === this.activeSequenceId);
