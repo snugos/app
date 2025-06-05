@@ -915,8 +915,7 @@ export class Track {
         this.activeSequenceId = newSeqId;
         this.recreateToneSequence(true); // Recreate sequence for playback
 
-        // MODIFIED: Only update UI and capture undo if not skipping (i.e., not initial constructor call)
-        if (!skipUndoAndUI) {
+        if (!skipUndoAndUI) { 
             if (this.appServices.updateTrackUI) {
                 this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
             }
@@ -941,10 +940,9 @@ export class Track {
                 this.activeSequenceId = this.sequences[0]?.id || null;
             }
             this.recreateToneSequence(true);
-            // Remove associated timeline clips
             this.timelineClips = this.timelineClips.filter(clip => clip.type !== 'sequence' || clip.sourceSequenceId !== sequenceId);
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-            if (this.appServices.renderTimeline) this.appServices.renderTimeline(); // Update timeline view
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline(); 
             console.log(`[Track ${this.id}] Deleted sequence: ${deletedSeqName} (ID: ${sequenceId})`);
         } else {
             console.warn(`[Track ${this.id}] Sequence ID ${sequenceId} not found for deletion.`);
@@ -959,7 +957,6 @@ export class Track {
             if (oldName === newName.trim()) return;
             this._captureUndoState(`Rename sequence "${oldName}" to "${newName.trim()}" on ${this.name}`);
             sequence.name = newName.trim();
-            // Update names of timeline clips associated with this sequence
             this.timelineClips.forEach(clip => { if (clip.type === 'sequence' && clip.sourceSequenceId === sequenceId) clip.name = sequence.name; });
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
@@ -981,7 +978,7 @@ export class Track {
         const newSequence = {
             id: newSeqId,
             name: `${originalSequence.name} Copy`,
-            data: JSON.parse(JSON.stringify(originalSequence.data || [])), // Deep copy data
+            data: JSON.parse(JSON.stringify(originalSequence.data || [])), 
             length: originalSequence.length
         };
         this.sequences.push(newSequence);
@@ -998,7 +995,7 @@ export class Track {
         if (seq && this.activeSequenceId !== sequenceId) {
             console.log(`[Track ${this.id}] Setting active sequence to: "${seq.name}" (ID: ${sequenceId})`);
             this.activeSequenceId = sequenceId;
-            this.recreateToneSequence(true); // Recreate sequence player with new active sequence
+            this.recreateToneSequence(true); 
             if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         } else if (!seq) {
             console.warn(`[Track ${this.id}] Sequence ID ${sequenceId} not found to set as active.`);
@@ -1025,9 +1022,8 @@ export class Track {
         activeSeq.data.forEach(row => {
             if (row && Array.isArray(row)) {
                const copyOfOriginal = row.slice(0, oldLength);
-               row.length = newLength; // Extend the row
-               for(let i = oldLength; i < newLength; i++) row[i] = null; // Fill new part with null
-               // Copy original content to the second half
+               row.length = newLength; 
+               for(let i = oldLength; i < newLength; i++) row[i] = null; 
                for(let i = 0; i < oldLength; i++) {
                    if (copyOfOriginal[i]) row[oldLength + i] = JSON.parse(JSON.stringify(copyOfOriginal[i]));
                }
@@ -1049,30 +1045,28 @@ export class Track {
 
         const oldActualLength = activeSeq.length || 0;
         let validatedNewLength = Math.max(Constants.STEPS_PER_BAR, parseInt(newLengthInSteps) || Constants.defaultStepsPerBar);
-        validatedNewLength = Math.ceil(validatedNewLength / Constants.STEPS_PER_BAR) * Constants.STEPS_PER_BAR; // Ensure it's a multiple of steps_per_bar
-        validatedNewLength = Math.min(validatedNewLength, Constants.MAX_BARS * Constants.STEPS_PER_BAR); // Cap at max bars
+        validatedNewLength = Math.ceil(validatedNewLength / Constants.STEPS_PER_BAR) * Constants.STEPS_PER_BAR; 
+        validatedNewLength = Math.min(validatedNewLength, Constants.MAX_BARS * Constants.STEPS_PER_BAR); 
 
-        if (oldActualLength === validatedNewLength && activeSeq.length === validatedNewLength) return; // No change
+        if (oldActualLength === validatedNewLength && activeSeq.length === validatedNewLength) return; 
 
         if (!skipUndoCapture) {
             this._captureUndoState(`Set Seq Length for "${activeSeq.name}" on ${this.name} to ${validatedNewLength / Constants.STEPS_PER_BAR} bars`);
         }
         activeSeq.length = validatedNewLength;
 
-        // Ensure data array matches the new length for all rows
-        let numRows; // Determine expected number of rows
+        let numRows; 
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
         else if (this.type === 'Sampler') numRows = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
         else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
-        else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1; // Fallback, though should be covered
+        else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1;
 
-        if (numRows <= 0) numRows = 1; // Safety for numRows
+        if (numRows <= 0) numRows = 1; 
 
         const currentSequenceData = activeSeq.data || [];
         activeSeq.data = Array(numRows).fill(null).map((_, rIndex) => {
-            const currentRow = currentSequenceData[rIndex] || []; // Get existing row or empty array
-            const newRow = Array(activeSeq.length).fill(null); // Create new row with new length
-            // Copy existing data up to the shorter of old/new length
+            const currentRow = currentSequenceData[rIndex] || []; 
+            const newRow = Array(activeSeq.length).fill(null); 
             for (let c = 0; c < Math.min(currentRow.length, activeSeq.length); c++) {
                 newRow[c] = currentRow[c];
             }
@@ -1206,8 +1200,13 @@ export class Track {
                         const player = this.drumPadPlayers[padIndex];
                         if (step?.active && padData && player && !player.disposed && player.loaded) {
                             player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7);
-                            if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) { /* auto-stretch logic */ }
-                            else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
+                            if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) {
+                                const currentProjectTempo = Tone.Transport.bpm.value;
+                                const sampleBufferDuration = player.buffer.duration;
+                                const targetDurationAtCurrentTempo = (60 / currentProjectTempo) * padData.stretchBeats;
+                                if (targetDurationAtCurrentTempo > 1e-6 && sampleBufferDuration > 1e-6) { player.playbackRate = sampleBufferDuration / targetDurationAtCurrentTempo; }
+                                else { player.playbackRate = 1; }
+                            } else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
                             player.start(time);
                         }
                     });
