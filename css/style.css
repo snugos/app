@@ -400,24 +400,17 @@ body {
     height: 18px;
 }
 
-/* CORRECTED Show/Hide logic for Sun/Moon icons */
-/* By default (assuming .theme-dark is the initial state or no theme class is set), show SUN */
-body.theme-dark #themeToggleBtn #themeIconSun,
-body:not(.theme-light) #themeToggleBtn #themeIconSun { /* This covers initial state if no class, or if .theme-dark */
-    display: inline-block !important;
-}
-body.theme-dark #themeToggleBtn #themeIconMoon,
-body:not(.theme-light) #themeToggleBtn #themeIconMoon {
-    display: none !important;
-}
+/* Default icon visibility (assuming body starts with .theme-dark or no theme class) */
+#themeIconSun { display: inline-block; } /* Show Sun by default */
+#themeIconMoon { display: none; }      /* Hide Moon by default */
 
-/* When .theme-light is on body, show MOON */
-body.theme-light #themeToggleBtn #themeIconSun {
-    display: none !important;
-}
-body.theme-light #themeToggleBtn #themeIconMoon {
-    display: inline-block !important;
-}
+/* When light theme is active on body */
+body.theme-light #themeIconSun { display: none; }
+body.theme-light #themeIconMoon { display: inline-block; }
+
+/* When dark theme is active on body (explicitly set by JS, reinforces default) */
+body.theme-dark #themeIconSun { display: inline-block; }
+body.theme-dark #themeIconMoon { display: none; }
 
 
 /* --- Window Styling --- */
