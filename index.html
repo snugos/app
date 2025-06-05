@@ -47,6 +47,12 @@
                 <option value="">No MIDI Input</option>
             </select>
         </div>
+        <div id="playbackModeControlTop">
+             <button id="playbackModeToggleBtnGlobalTop" title="Toggle Playback Mode (Sequencer/Timeline)">Mode: Sequencer</button>
+        </div>
+        <!-- Spacer to push subsequent items to the right -->
+        <div style="margin-left: auto;"></div>
+
         <div id="masterMeterContainerGlobalTop" class="master-meter-top">
             <div id="masterMeterBarGlobalTop" style="width: 0%;"></div>
         </div>
@@ -54,13 +60,14 @@
             <span id="midiIndicatorGlobalTop" title="MIDI Activity">MIDI</span>
             <span id="keyboardIndicatorGlobalTop" title="Computer Keyboard Activity">KBD</span>
         </div>
-        <div id="playbackModeControlTop">
-             <button id="playbackModeToggleBtnGlobalTop" title="Toggle Playback Mode (Sequencer/Timeline)">Mode: Sequencer</button>
+        <div id="themeToggleContainerTopRight">
+            <button id="themeToggleLightBtn" title="Switch to Light Mode">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            </button>
+            <button id="themeToggleDarkBtn" title="Switch to Dark Mode">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
         </div>
-        <!-- Optional: A dedicated theme toggle button for the top taskbar -->
-        <!-- <div id="themeToggleContainerTop">
-            <button id="themeToggleBtnTop" title="Cycle Theme">Theme</button>
-        </div> -->
     </div>
 
     <div id="desktop">
@@ -86,7 +93,6 @@
             <li id="menuOpenSoundBrowser">Sound Browser</li>
             <li><hr></li>
             <li id="menuOpenTimeline">Timeline</li>
-            <!-- <li id="menuOpenGlobalControls">Global Controls</li> REMOVED -->
             <li id="menuOpenMixer">Mixer</li>
             <li id="menuOpenMasterEffects">Master Effects Rack</li>
             <li><hr></li>
@@ -97,7 +103,7 @@
             <li id="menuLoadProject">Load Project (.snug)</li>
             <li id="menuExportWav">Export to WAV</li>
             <li><hr></li>
-            <!-- Theme toggle will be added here by main.js if this is the preferred location -->
+            <!-- The "Cycle Theme" li will be removed by main.js logic -->
             <li id="menuToggleFullScreen">Toggle Full Screen</li>
         </ul>
     </div>
