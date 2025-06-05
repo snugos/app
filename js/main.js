@@ -561,7 +561,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 if (mixerElement && typeof updateMixerWindow === 'function') {
                     updateMixerWindow();
                 }
-                if (typeof renderTimeline === 'function' && appServices.renderTimeline) { // Ensure service exists
+                if (typeof renderTimeline === 'function' && appServices.renderTimeline) {
                     appServices.renderTimeline();
                 }
                 break;
@@ -856,7 +856,7 @@ function updateMetersLoop() {
             const tracks = getTracksState ? getTracksState() : [];
             updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks);
         }
-        if (typeof updatePlayheadPosition === 'function' && appServices.updatePlayheadPosition) { // Check service exists
+        if (typeof updatePlayheadPosition === 'function' && appServices.updatePlayheadPosition) {
             appServices.updatePlayheadPosition();
         }
     } catch (loopError) {
