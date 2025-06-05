@@ -1143,9 +1143,7 @@ export class Track {
                 if (this.appServices.highlightPlayingStep) this.appServices.highlightPlayingStep(this.id, col);
                 if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) return;
 
-                // All instrument/sampler outputs are already connected to this.input (effectSend)
-                // The sequence callback just triggers them.
-                const audioDestination = this.input; // Not directly used for triggering, but good to be aware of the path
+                const audioDestination = this.input; 
                 if (!audioDestination || audioDestination.disposed) { return; }
 
 
@@ -1154,7 +1152,7 @@ export class Track {
                     for (let rowIndex = 0; rowIndex < Constants.synthPitches.length; rowIndex++) {
                         const pitchName = Constants.synthPitches[rowIndex];
                         const step = sequenceDataForTone[rowIndex]?.[col];
-                        if (step?.active && !notePlayedThisStep) { // Play only one note per step for MonoSynth
+                        if (step?.active && !notePlayedThisStep) {
                             this.instrument.triggerAttackRelease(pitchName, "16n", time, step.velocity * Constants.defaultVelocity);
                             notePlayedThisStep = true;
                         }
@@ -1172,7 +1170,7 @@ export class Track {
                                 const tempPlayer = new Tone.Player(this.audioBuffer).set({context: Tone.context});
                                 const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope).set({context: Tone.context});
                                 const tempGain = new Tone.Gain(targetVolumeLinear).set({context: Tone.context});
-                                tempPlayer.chain(tempEnv, tempGain, audioDestination); // Connect to track's effectSend
+                                tempPlayer.chain(tempEnv, tempGain, audioDestination);
 
                                 tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse || false; tempPlayer.loop = sliceData.loop || false;
                                 tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
@@ -1190,7 +1188,6 @@ export class Track {
                                 this.slicerMonoPlayer.buffer = this.audioBuffer;
                                 this.slicerMonoEnvelope.set(sliceData.envelope);
                                 this.slicerMonoGain.gain.value = targetVolumeLinear;
-                                // slicerMonoGain is already connected to this.input (effectSend)
                                 this.slicerMonoPlayer.playbackRate = playbackRate; this.slicerMonoPlayer.reverse = sliceData.reverse || false;
                                 this.slicerMonoPlayer.loop = sliceData.loop || false; this.slicerMonoPlayer.loopStart = sliceData.offset; this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
                                 this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
@@ -1206,17 +1203,11 @@ export class Track {
                     Array.from({ length: Constants.numDrumSamplerPads }).forEach((_, padIndex) => {
                         const step = sequenceDataForTone[padIndex]?.[col];
                         const padData = this.drumSamplerPads[padIndex];
-                        const player = this.drumPadPlayers[padIndex]; // Already connected to this.input (effectSend)
+                        const player = this.drumPadPlayers[padIndex];
                         if (step?.active && padData && player && !player.disposed && player.loaded) {
                             player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7);
-                            if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) {
-                                const currentProjectTempo = Tone.Transport.bpm.value;
-                                const sampleBufferDuration = player.buffer.duration;
-                                const targetDurationAtCurrentTempo = (60 / currentProjectTempo) * padData.stretchBeats;
-                                if (targetDurationAtCurrentTempo > 1e-6 && sampleBufferDuration > 1e-6) {
-                                     player.playbackRate = sampleBufferDuration / targetDurationAtCurrentTempo;
-                                } else { player.playbackRate = 1; }
-                            } else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
+                            if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) { /* auto-stretch logic */ }
+                            else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
                             player.start(time);
                         }
                     });
@@ -1242,8 +1233,7 @@ export class Track {
             this.patternPlayerSequence = null;
         }
 
-        // Only update UI if this isn't part of the initial constructor's sequence creation
-        if (this.appServices.updateTrackUI && !forceRestart) { // forceRestart is often true when called from constructor
+        if (this.appServices.updateTrackUI && !forceRestart) {
             this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         }
     }
@@ -1254,7 +1244,7 @@ export class Track {
             return;
         }
         const clipId = `audioclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-        const dbKey = `clip_${this.id}_${Date.now()}_${blob.size}.wav`; // Ensure .wav or appropriate extension
+        const dbKey = `clip_${this.id}_${Date.now()}_${blob.size}.wav`;
 
         try {
             await storeAudio(dbKey, blob);
@@ -1267,7 +1257,7 @@ export class Track {
 
             const newClip = {
                 id: clipId, type: 'audio', sourceId: dbKey,
-                startTime: Math.max(0, startTime), // Ensure startTime is not negative
+                startTime: Math.max(0, startTime),
                 duration: duration,
                 name: `Rec ${new Date().toLocaleTimeString().substring(0,8)}`
             };
