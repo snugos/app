@@ -9,7 +9,7 @@ import {
 import { getTracksState } from './state.js';
 
 // Import from new UI sub-modules
-import { createKnob as importedCreateKnob } from './ui/knobUI.js'; // Alias to avoid conflict if createKnob was defined here
+import { createKnob as importedCreateKnob } from './ui/knobUI.js';
 import { 
     initializeTimelineUI, 
     openTimelineWindow as importedOpenTimelineWindow, 
@@ -25,13 +25,11 @@ import {
 
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
-// selectedSoundForPreviewData is now managed within soundBrowserUI.js via its initializeSoundBrowserUI
 
 export function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 
     // Initialize sub-UI modules, passing appServices
-    // These functions are imported from their respective modules
     if (typeof initializeTimelineUI === 'function') {
         initializeTimelineUI(localAppServices);
     } else {
@@ -44,11 +42,7 @@ export function initializeUIModule(appServicesFromMain) {
         console.error("[UI Init] initializeSoundBrowserUI is not a function. Check import from ./ui/soundBrowserUI.js");
     }
     
-    // KnobUI's createKnob function is directly imported and used.
-    // Ensure createKnob is available via appServices if it's expected there
     if (localAppServices && !localAppServices.createKnob) {
-        // Pass localAppServices to createKnob when it's added to appServices
-        // The actual importedCreateKnob will be used in functions within this file.
         localAppServices.createKnob = (options) => importedCreateKnob(options, localAppServices);
     }
 
@@ -333,7 +327,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const createAndPlaceKnob = (placeholderId, options) => {
         const placeholder = winEl.querySelector(`#${placeholderId}`);
         if (placeholder) {
-            const knob = importedCreateKnob(options, localAppServices);
+            const knob = importedCreateKnob(options, localAppServices); // Use importedCreateKnob
             placeholder.innerHTML = ''; placeholder.appendChild(knob.element); return knob;
         }
         return null;
@@ -1172,7 +1166,7 @@ export function highlightPlayingStep(trackId, col) {
 
 // Re-export functions from sub-modules AND createKnob
 export {
-    importedCreateKnob as createKnob, // Re-export createKnob from knobUI.js
+    importedCreateKnob as createKnob,
     importedOpenTimelineWindow as openTimelineWindow,
     importedRenderTimeline as renderTimeline,
     importedUpdatePlayheadPosition as updatePlayheadPosition,
