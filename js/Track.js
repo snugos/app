@@ -915,7 +915,7 @@ export class Track {
         this.activeSequenceId = newSeqId;
         this.recreateToneSequence(true); // Recreate sequence for playback
 
-        // MODIFICATION: Only update UI and capture undo if not skipping (i.e., not initial constructor call)
+        // MODIFIED: Only update UI and capture undo if not skipping (i.e., not initial constructor call)
         if (!skipUndoAndUI) {
             if (this.appServices.updateTrackUI) {
                 this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
@@ -1457,7 +1457,6 @@ export class Track {
                                 for (let rowIdx = 0; rowIdx < sourceSequence.data.length; rowIdx++) {
                                     const stepData = sourceSequence.data[rowIdx]?.[stepIdx];
                                     if (stepData?.active) {
-                                        // ... (event creation logic as before)
                                         let noteValue;
                                         let noteDuration = "16n";
                                         if (this.type === 'Synth' || this.type === 'InstrumentSampler') { noteValue = Constants.synthPitches[rowIdx]; }
@@ -1488,15 +1487,24 @@ export class Track {
                                         Tone.Transport.scheduleOnce(() => { try { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); } catch(e){} try { if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); } catch(e){} try { if(tempGain && !tempGain.disposed) tempGain.dispose(); } catch(e){} }, time + playDurationPart + (sliceData.envelope?.release || 0.1) + 0.3);
                                     } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                                         if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time); this.slicerMonoEnvelope.triggerRelease(time); this.slicerMonoPlayer.buffer = this.audioBuffer; this.slicerMonoEnvelope.set(sliceData.envelope); this.slicerMonoGain.gain.value = targetVolumeLinear;
-                                        this.slicerMonoPlayer.playbackRate = playbackRate; this.slicerMonoPlayer.reverse = sliceData.reverse || false; this.slicerMonoPlayer.loop = sliceData.loop || false; this.slicerMonoPlayer.loopStart = sliceData.offset; this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
-                                        this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDurationPart); this.slicerMonoEnvelope.triggerAttack(time); if (!sliceData.loop) { const releaseTime = time + playDurationPart - (sliceData.envelope.release * 0.05); this.slicerMonoEnvelope.triggerRelease(Math.max(time, releaseTime)); }
+                                        // slicerMonoGain is already connected to this.input (effectSend)
+                                        this.slicerMonoPlayer.playbackRate = playbackRate; this.slicerMonoPlayer.reverse = sliceData.reverse || false;
+                                        this.slicerMonoPlayer.loop = sliceData.loop || false; this.slicerMonoPlayer.loopStart = sliceData.offset; this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
+                                        this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDurationPart);
+                                        this.slicerMonoEnvelope.triggerAttack(time);
+                                        if (!sliceData.loop) { const releaseTime = time + playDurationPart - (sliceData.envelope.release * 0.05); this.slicerMonoEnvelope.triggerRelease(Math.max(time, releaseTime)); }
                                     }
                                 } else if (this.type === 'DrumSampler' && value.note.type === 'drum') {
                                     const padData = value.note.data; const player = this.drumPadPlayers[value.note.index];
                                     if (player && !player.disposed && player.loaded) {
                                         player.volume.value = Tone.gainToDb(padData.volume * value.velocity * 0.7);
-                                        if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) { /* auto-stretch logic */ }
-                                        else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
+                                        if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) {
+                                            const currentProjectTempo = Tone.Transport.bpm.value;
+                                            const sampleBufferDuration = player.buffer.duration;
+                                            const targetDurationAtCurrentTempo = (60 / currentProjectTempo) * padData.stretchBeats;
+                                            if (targetDurationAtCurrentTempo > 1e-6 && sampleBufferDuration > 1e-6) { player.playbackRate = sampleBufferDuration / targetDurationAtCurrentTempo; }
+                                            else { player.playbackRate = 1; }
+                                        } else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
                                         player.start(time);
                                     }
                                 }
