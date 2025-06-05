@@ -27,7 +27,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Corrected path to style.css - assuming it's in a 'css' folder relative to index.html -->
     <link rel="stylesheet" href="css/style.css"> 
     
     <script src="https://cdn.tailwindcss.com"></script> <!-- Development only -->
@@ -36,9 +35,9 @@
         // tailwind.config = { theme: { extend: { colors: { ... } } } }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    <!-- Added Konva.js -->
+    <!-- Konva.js for Piano Roll / Advanced Visuals -->
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
-    <!-- Added JSZip library -->
+    <!-- JSZip library for handling sound packs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body class="theme-dark"> <!-- Default theme -->
@@ -113,7 +112,7 @@
             <li id="menuOpenSoundBrowser">Sound Browser</li>
             <li><hr></li>
             <li id="menuOpenTimeline">Timeline</li>
-            <!-- <li id="menuOpenGlobalControls">Global Controls (Legacy)</li> -->
+            <li id="menuOpenPianoRoll">Open Piano Roll</li> <!-- MODIFIED TEXT -->
             <li id="menuOpenMixer">Mixer</li>
             <li id="menuOpenMasterEffects">Master Effects Rack</li>
             <li><hr></li>
