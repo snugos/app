@@ -8,35 +8,48 @@ import {
 } from './eventHandlers.js';
 import { getTracksState } from './state.js';
 
-// Import createKnob from its new location
-import { createKnob } from './ui/knobUI.js'; // Assumes knobUI.js is in a 'js/ui/' subdirectory
+// Import from new UI sub-modules
+import { createKnob as importedCreateKnob } from './ui/knobUI.js'; // Alias to avoid conflict if createKnob was defined here
+import { 
+    initializeTimelineUI, 
+    openTimelineWindow as importedOpenTimelineWindow, 
+    renderTimeline as importedRenderTimeline, 
+    updatePlayheadPosition as importedUpdatePlayheadPosition 
+} from './ui/timelineUI.js';
+import { 
+    initializeSoundBrowserUI, 
+    openSoundBrowserWindow as importedOpenSoundBrowserWindow, 
+    updateSoundBrowserDisplayForLibrary as importedUpdateSoundBrowserDisplayForLibrary, 
+    renderSoundBrowserDirectory as importedRenderSoundBrowserDirectory 
+} from './ui/soundBrowserUI.js';
 
 // Module-level state for appServices, to be set by main.js
 let localAppServices = {};
-let selectedSoundForPreviewData = null; // This will be used by sound browser functions
+// selectedSoundForPreviewData is now managed within soundBrowserUI.js via its initializeSoundBrowserUI
 
 export function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 
-    // Sound Browser specific initialization (if it were its own module, it would do this)
-    if (!localAppServices.getSelectedSoundForPreview) {
-        console.log('[UI Init] getSelectedSoundForPreview service not found in appServices, wiring locally for Sound Browser.');
-        localAppServices.getSelectedSoundForPreview = () => selectedSoundForPreviewData;
+    // Initialize sub-UI modules, passing appServices
+    // These functions are imported from their respective modules
+    if (typeof initializeTimelineUI === 'function') {
+        initializeTimelineUI(localAppServices);
+    } else {
+        console.error("[UI Init] initializeTimelineUI is not a function. Check import from ./ui/timelineUI.js");
     }
-    if (!localAppServices.setSelectedSoundForPreview) {
-        console.log('[UI Init] setSelectedSoundForPreview service not found in appServices, wiring locally for Sound Browser.');
-        localAppServices.setSelectedSoundForPreview = (data) => {
-            console.log('[UI setSelectedSoundForPreview] Setting selected sound data:', data ? JSON.stringify(data).substring(0,100) : 'null');
-            selectedSoundForPreviewData = data;
-             // Update preview button state when selection changes
-            const browserWindow = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser') : null;
-            if (browserWindow?.element) {
-                const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
-                if (previewBtn) {
-                    previewBtn.disabled = !selectedSoundForPreviewData;
-                }
-            }
-        };
+
+    if (typeof initializeSoundBrowserUI === 'function') {
+        initializeSoundBrowserUI(localAppServices);
+    } else {
+        console.error("[UI Init] initializeSoundBrowserUI is not a function. Check import from ./ui/soundBrowserUI.js");
+    }
+    
+    // KnobUI's createKnob function is directly imported and used.
+    // Ensure createKnob is available via appServices if it's expected there
+    if (localAppServices && !localAppServices.createKnob) {
+        // Pass localAppServices to createKnob when it's added to appServices
+        // The actual importedCreateKnob will be used in functions within this file.
+        localAppServices.createKnob = (options) => importedCreateKnob(options, localAppServices);
     }
 
     if (!localAppServices.effectsRegistryAccess) {
@@ -50,10 +63,6 @@ export function initializeUIModule(appServicesFromMain) {
     }
     if (!localAppServices.effectsRegistryAccess.synthEngineControlDefinitions) {
         localAppServices.effectsRegistryAccess.synthEngineControlDefinitions = {};
-    }
-     // Ensure createKnob is available via appServices if it's expected there
-    if (localAppServices && !localAppServices.createKnob) {
-        localAppServices.createKnob = (options) => createKnob(options, localAppServices);
     }
 }
 
@@ -191,7 +200,7 @@ function buildSynthEngineControls(track, container, engineType) {
         }
 
         if (def.type === 'knob') {
-            const knob = createKnob({ label: def.label, min: def.min, max: def.max, step: def.step, initialValue, decimals: def.decimals, displaySuffix: def.displaySuffix, trackRef: track, onValueChange: (val) => track.setSynthParam(def.path, val) }, localAppServices);
+            const knob = importedCreateKnob({ label: def.label, min: def.min, max: def.max, step: def.step, initialValue, decimals: def.decimals, displaySuffix: def.displaySuffix, trackRef: track, onValueChange: (val) => track.setSynthParam(def.path, val) }, localAppServices);
             placeholder.innerHTML = ''; placeholder.appendChild(knob.element); track.inspectorControls[def.idPrefix] = knob;
         } else if (def.type === 'select') {
             const selectEl = document.createElement('select');
@@ -241,7 +250,7 @@ function initializeSamplerSpecificControls(track, winEl) {
         track.waveformCanvasCtx = canvas.getContext('2d');
         if(track.audioBuffer?.loaded) drawWaveform(track);
     }
-    updateSliceEditorUI(track); // This will create the knobs using the imported createKnob
+    updateSliceEditorUI(track);
 
     const polyToggleBtn = winEl.querySelector(`#slicerPolyphonyToggle-${track.id}`);
     if (polyToggleBtn) {
@@ -261,7 +270,7 @@ function initializeSamplerSpecificControls(track, winEl) {
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
     renderDrumSamplerPads(track);
-    updateDrumPadControlsUI(track); // This will call createKnob internally
+    updateDrumPadControlsUI(track);
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
@@ -324,7 +333,7 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     const createAndPlaceKnob = (placeholderId, options) => {
         const placeholder = winEl.querySelector(`#${placeholderId}`);
         if (placeholder) {
-            const knob = createKnob(options, localAppServices); // Pass appServices
+            const knob = importedCreateKnob(options, localAppServices);
             placeholder.innerHTML = ''; placeholder.appendChild(knob.element); return knob;
         }
         return null;
@@ -448,7 +457,7 @@ function initializeCommonInspectorControls(track, winEl) {
 
     const volumeKnobPlaceholder = winEl.querySelector(`#volumeKnob-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
-        const volumeKnob = createKnob({ label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }, localAppServices);
+        const volumeKnob = importedCreateKnob({ label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }, localAppServices);
         volumeKnobPlaceholder.innerHTML = ''; volumeKnobPlaceholder.appendChild(volumeKnob.element); track.inspectorControls.volume = volumeKnob;
     }
 }
@@ -551,7 +560,7 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
             currentValue = (tempVal !== undefined) ? tempVal : paramDef.defaultValue;
 
             if (paramDef.type === 'knob') {
-                const knob = createKnob({ label: paramDef.label, min: paramDef.min, max: paramDef.max, step: paramDef.step, initialValue: currentValue, decimals: paramDef.decimals, displaySuffix: paramDef.displaySuffix, trackRef: (ownerType === 'track' ? owner : null), onValueChange: (val) => { if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, val); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, val); } }, localAppServices);
+                const knob = importedCreateKnob({ label: paramDef.label, min: paramDef.min, max: paramDef.max, step: paramDef.step, initialValue: currentValue, decimals: paramDef.decimals, displaySuffix: paramDef.displaySuffix, trackRef: (ownerType === 'track' ? owner : null), onValueChange: (val) => { if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, val); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, val); } }, localAppServices);
                 controlWrapper.appendChild(knob.element);
             } else if (paramDef.type === 'select') {
                 const label = document.createElement('label'); label.className = 'block text-xs font-medium mb-0.5 dark:text-slate-300'; label.textContent = paramDef.label + ':';
@@ -702,7 +711,7 @@ export function renderMixer(container) {
     if (masterVolKnobPlaceholder) {
         const masterGainNode = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
         const masterVolume = masterGainNode;
-        const masterVolKnob = createKnob({ label: 'Master Vol', min: 0, max: 1.2, step: 0.01, initialValue: masterVolume, decimals: 2, onValueChange: (val, o, fromInteraction) => {
+        const masterVolKnob = importedCreateKnob({ label: 'Master Vol', min: 0, max: 1.2, step: 0.01, initialValue: masterVolume, decimals: 2, onValueChange: (val, o, fromInteraction) => {
             if (localAppServices.setActualMasterVolume) localAppServices.setActualMasterVolume(val);
             if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(val);
             if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Master Volume to ${val.toFixed(2)}`);
@@ -729,7 +738,7 @@ export function renderMixer(container) {
         });
         container.appendChild(trackDiv);
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
-        if (volKnobPlaceholder) { const volKnob = createKnob({ label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }, localAppServices); volKnobPlaceholder.innerHTML = ''; volKnobPlaceholder.appendChild(volKnob.element); }
+        if (volKnobPlaceholder) { const volKnob = importedCreateKnob({ label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }, localAppServices); volKnobPlaceholder.innerHTML = ''; volKnobPlaceholder.appendChild(volKnob.element); }
         trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', (e) => { e.stopPropagation(); localAppServices.handleTrackMute(track.id); });
         trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', (e) => { e.stopPropagation(); localAppServices.handleTrackSolo(track.id); });
     });
@@ -892,15 +901,15 @@ export function drawWaveform(track) {
     if (!track.waveformCanvasCtx || !track.audioBuffer || !track.audioBuffer.loaded) return;
     const ctx = track.waveformCanvasCtx;
     const canvas = ctx.canvas;
-    const buffer = track.audioBuffer.get(); // Get the AudioBuffer
+    const buffer = track.audioBuffer.get();
     if (!buffer) return;
 
-    const data = buffer.getChannelData(0); // Get data from channel 0
+    const data = buffer.getChannelData(0);
     const step = Math.ceil(data.length / canvas.width);
     const amp = canvas.height / 2;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent-active').trim() || '#007bff'; // Use theme variable
+    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent-active').trim() || '#007bff';
     ctx.lineWidth = 0.5;
     ctx.beginPath();
 
@@ -945,13 +954,12 @@ export function drawInstrumentWaveform(track) {
     }
     ctx.stroke();
 
-    // Draw loop points if loop is enabled
     if (track.instrumentSamplerSettings.loop && track.instrumentSamplerSettings.loopEnd > track.instrumentSamplerSettings.loopStart) {
         const pixelsPerSecond = canvas.width / buffer.duration;
         const loopStartPx = track.instrumentSamplerSettings.loopStart * pixelsPerSecond;
         const loopEndPx = track.instrumentSamplerSettings.loopEnd * pixelsPerSecond;
 
-        ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)'; // Orange for loop markers
+        ctx.strokeStyle = 'rgba(255, 165, 0, 0.7)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(loopStartPx, 0); ctx.lineTo(loopStartPx, canvas.height);
@@ -981,8 +989,8 @@ export function renderSamplePads(track) {
                 if (localAppServices.playSlicePreview) localAppServices.playSlicePreview(track.id, index);
             }
             track.selectedSliceForEdit = index;
-            updateSliceEditorUI(track); // Update editor controls
-            renderSamplePads(track); // Re-render pads to update selection highlight
+            updateSliceEditorUI(track);
+            renderSamplePads(track);
         });
         padsContainer.appendChild(padButton);
     });
@@ -1089,7 +1097,7 @@ export function updateDrumPadControlsUI(track) {
     const createAndPlaceKnob = (placeholderId, options) => {
         const placeholder = inspector.querySelector(`#${placeholderId}`);
         if (placeholder) {
-            const knob = createKnob(options, localAppServices);
+            const knob = importedCreateKnob(options, localAppServices); // Use importedCreateKnob
             placeholder.innerHTML = ''; placeholder.appendChild(knob.element);
             return knob;
         }
@@ -1123,18 +1131,9 @@ export function updateDrumPadControlsUI(track) {
         stretchBPMInput.value = padData.stretchOriginalBPM || 120;
         stretchBeatsInput.value = padData.stretchBeats || 1;
 
-        if (!autoStretchToggle.hasAttribute('listener-attached')) {
-            autoStretchToggle.addEventListener('click', () => { /* ... */ });
-            autoStretchToggle.setAttribute('listener-attached', 'true');
-        }
-        if (!stretchBPMInput.hasAttribute('listener-attached')) {
-            stretchBPMInput.addEventListener('change', (e) => { /* ... */ });
-            stretchBPMInput.setAttribute('listener-attached', 'true');
-        }
-        if (!stretchBeatsInput.hasAttribute('listener-attached')) {
-             stretchBeatsInput.addEventListener('change', (e) => { /* ... */ });
-            stretchBeatsInput.setAttribute('listener-attached', 'true');
-        }
+        if (!autoStretchToggle.hasAttribute('listener-attached')) { /* ... listener attachment ... */ }
+        if (!stretchBPMInput.hasAttribute('listener-attached')) { /* ... listener attachment ... */ }
+        if (!stretchBeatsInput.hasAttribute('listener-attached')) { /* ... listener attachment ... */ }
     }
 
     track.inspectorControls.drumPadEnvAttack = createAndPlaceKnob(`drumPadEnvAttack-${track.id}-placeholder`, { label: 'Attack', min:0.001, max:1, step:0.001, initialValue: env.attack, decimals:3, trackRef: track, onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'attack', val)});
@@ -1170,14 +1169,14 @@ export function highlightPlayingStep(trackId, col) {
     }
 }
 
-// Re-export functions from sub-modules to maintain a single point of import for main.js if desired
-// This also makes them available to other functions within this ui.js file if they were previously defined here.
+
+// Re-export functions from sub-modules AND createKnob
 export {
-    createKnob,
-    openTimelineWindow,
-    renderTimeline,
-    updatePlayheadPosition,
-    openSoundBrowserWindow,
-    updateSoundBrowserDisplayForLibrary,
-    renderSoundBrowserDirectory
+    importedCreateKnob as createKnob, // Re-export createKnob from knobUI.js
+    importedOpenTimelineWindow as openTimelineWindow,
+    importedRenderTimeline as renderTimeline,
+    importedUpdatePlayheadPosition as updatePlayheadPosition,
+    importedOpenSoundBrowserWindow as openSoundBrowserWindow,
+    importedUpdateSoundBrowserDisplayForLibrary as updateSoundBrowserDisplayForLibrary,
+    importedRenderSoundBrowserDirectory as renderSoundBrowserDirectory
 };
