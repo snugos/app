@@ -107,9 +107,6 @@ const uiElementsCache = {
     keyboardIndicatorGlobal: null,
     playbackModeToggleBtnGlobal: null,
     themeToggleBtn: null, // Single theme toggle button in top taskbar
-    // SVGs inside the button are not directly manipulated by JS for display, CSS handles it
-    // themeIconSun: null,
-    // themeIconMoon: null,
 };
 
 const DESKTOP_BACKGROUND_LS_KEY = 'snugosDesktopBackground_LS';
