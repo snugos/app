@@ -1452,8 +1452,31 @@ export class Track {
                                 if (!trackAudioDestinationForClips || trackAudioDestinationForClips.disposed || muted) return;
                                 if (this.type === 'Synth' && this.instrument && !this.instrument.disposed && typeof value.note === 'string') { this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity); }
                                 else if (this.type === 'InstrumentSampler' && this.toneSampler && !this.toneSampler.disposed && this.toneSampler.loaded && typeof value.note === 'string') { let np=false; if(!this.instrumentSamplerIsPolyphonic && !np){this.toneSampler.releaseAll(time); np=true;} this.toneSampler.triggerAttackRelease(Tone.Frequency(value.note).toNote(), value.duration, time, value.velocity); }
-                                else if (this.type === 'Sampler' && value.note.type === 'slice' && this.audioBuffer?.loaded) { /* ... (Sampler poly/mono playback logic from recreateToneSequence) ... */ }
-                                else if (this.type === 'DrumSampler' && value.note.type === 'drum') { /* ... (DrumSampler playback logic from recreateToneSequence) ... */ }
+                                else if (this.type === 'Sampler' && value.note.type === 'slice' && this.audioBuffer?.loaded) {
+                                    const sliceData = value.note.data; const targetVolumeLinear = sliceData.volume * value.velocity; const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12); let playDurationPart = sliceData.duration / playbackRate; if (sliceData.loop) playDurationPart = Tone.Time(value.duration).toSeconds();
+                                    if (this.slicerIsPolyphonic) {
+                                        const tempPlayer = new Tone.Player(this.audioBuffer).set({context: Tone.context}); const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope).set({context: Tone.context}); const tempGain = new Tone.Gain(targetVolumeLinear).set({context: Tone.context}); tempPlayer.chain(tempEnv, tempGain, trackAudioDestinationForClips);
+                                        tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse || false; tempPlayer.loop = sliceData.loop || false; tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
+                                        tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDurationPart); tempEnv.triggerAttack(time); if (!sliceData.loop) tempEnv.triggerRelease(time + playDurationPart * 0.95);
+                                        Tone.Transport.scheduleOnce(() => { try { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); } catch(e){} try { if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); } catch(e){} try { if(tempGain && !tempGain.disposed) tempGain.dispose(); } catch(e){} }, time + playDurationPart + (sliceData.envelope?.release || 0.1) + 0.3);
+                                    } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
+                                        if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time); this.slicerMonoEnvelope.triggerRelease(time); this.slicerMonoPlayer.buffer = this.audioBuffer; this.slicerMonoEnvelope.set(sliceData.envelope); this.slicerMonoGain.gain.value = targetVolumeLinear;
+                                        // slicerMonoGain is already connected to this.input (effectSend)
+                                        this.slicerMonoPlayer.playbackRate = playbackRate; this.slicerMonoPlayer.reverse = sliceData.reverse || false;
+                                        this.slicerMonoPlayer.loop = sliceData.loop || false; this.slicerMonoPlayer.loopStart = sliceData.offset; this.slicerMonoPlayer.loopEnd = sliceData.offset + sliceData.duration;
+                                        this.slicerMonoPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDurationPart);
+                                        this.slicerMonoEnvelope.triggerAttack(time);
+                                        if (!sliceData.loop) { const releaseTime = time + playDurationPart - (sliceData.envelope.release * 0.05); this.slicerMonoEnvelope.triggerRelease(Math.max(time, releaseTime)); }
+                                    }
+                                } else if (this.type === 'DrumSampler' && value.note.type === 'drum') {
+                                    const padData = value.note.data; const player = this.drumPadPlayers[value.note.index];
+                                    if (player && !player.disposed && player.loaded) {
+                                        player.volume.value = Tone.gainToDb(padData.volume * value.velocity * 0.7);
+                                        if (padData.autoStretchEnabled && padData.stretchOriginalBPM > 0 && padData.stretchBeats > 0 && player.buffer) { /* auto-stretch logic */ }
+                                        else { player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12); }
+                                        player.start(time);
+                                    }
+                                }
                             }, events).set({context: Tone.context});
                             part.loop = false; part.start(effectivePlayStart);
                             if (playDurationInWindow > 0 && playDurationInWindow !== Infinity) part.stop(effectivePlayStart + playDurationInWindow);
