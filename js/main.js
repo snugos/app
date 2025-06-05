@@ -70,16 +70,16 @@ import {
 } from './db.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow,
-    openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openSoundBrowserWindow,
-    renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep, drawWaveform,
-    drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
+    openTrackInspectorWindow, openMixerWindow, updateMixerWindow,
+    // Timeline and Sound Browser functions are now imported from their specific modules
+    // openTimelineWindow, renderTimeline, updatePlayheadPosition,
+    // openSoundBrowserWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory,
     renderEffectsList, renderEffectControls, createKnob,
     updateSequencerCellUI,
     openMasterEffectsRackWindow,
-    renderTimeline,
-    updatePlayheadPosition,
-    openTimelineWindow
-} from './ui.js';
+    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
+    renderDrumSamplerPads, updateDrumPadControlsUI, highlightPlayingStep
+} from './ui.js'; // Main ui.js imports the sub-modules
 
 console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
 
@@ -203,12 +203,19 @@ const appServices = {
     dbGetItem: dbGetAudio,
     dbDeleteItem: dbDeleteAudio,
     openTrackInspectorWindow, openTrackEffectsRackWindow, openTrackSequencerWindow,
-    openMixerWindow, updateMixerWindow, openSoundBrowserWindow, openMasterEffectsRackWindow,
-    renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep,
+    openMixerWindow, updateMixerWindow,
+    openSoundBrowserWindow, // This will now be from the re-exported functions in ui.js
+    updateSoundBrowserDisplayForLibrary, // from ui.js (which imports from soundBrowserUI.js)
+    renderSoundBrowserDirectory, // from ui.js (which imports from soundBrowserUI.js)
+    openTimelineWindow, // from ui.js (which imports from timelineUI.js)
+    renderTimeline, // from ui.js (which imports from timelineUI.js)
+    updatePlayheadPosition, // from ui.js (which imports from timelineUI.js)
+    highlightPlayingStep,
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
     updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
-    createKnob, updateSequencerCellUI,
-    renderTimeline, openTimelineWindow, updatePlayheadPosition,
+    createKnob, // from ui.js (which imports from knobUI.js)
+    updateSequencerCellUI,
+    openMasterEffectsRackWindow,
     showNotification: showSafeNotification,
     createContextMenu, showConfirmationDialog,
     initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
@@ -541,8 +548,8 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 if (mixerElement && typeof updateMixerWindow === 'function') {
                     updateMixerWindow();
                 }
-                if (typeof renderTimeline === 'function') {
-                    renderTimeline();
+                if (typeof renderTimeline === 'function' && appServices.renderTimeline) { // Ensure service exists
+                    appServices.renderTimeline();
                 }
                 break;
             case 'muteChanged':
@@ -843,8 +850,8 @@ function updateMetersLoop() {
             const tracks = getTracksState ? getTracksState() : [];
             updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks);
         }
-        if (typeof updatePlayheadPosition === 'function') {
-            updatePlayheadPosition();
+        if (typeof updatePlayheadPosition === 'function' && appServices.updatePlayheadPosition) { // Check service exists
+            appServices.updatePlayheadPosition();
         }
     } catch (loopError) {
         console.warn("[Main updateMetersLoop] Error in UI update loop:", loopError);
