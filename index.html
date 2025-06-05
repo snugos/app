@@ -27,7 +27,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Make sure this path is correct for your project structure -->
     <link rel="stylesheet" href="css/style.css"> 
     
     <script src="https://cdn.tailwindcss.com"></script> <!-- Development only -->
@@ -46,9 +45,15 @@
     <div id="topTaskbar" class="select-none">
         <!-- Play, Stop, Record -->
         <div id="transportControlsTop">
-            <button id="playBtnGlobalTop" title="Play/Pause (Spacebar)">Play</button>
-            <button id="stopBtnGlobalTop" title="Stop (Spacebar again, or Esc)">Stop</button>
-            <button id="recordBtnGlobalTop" title="Record (R)">Record</button>
+            <button id="playBtnGlobalTop" title="Play/Pause (Spacebar)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
+            <button id="stopBtnGlobalTop" title="Stop (Spacebar again, or Esc)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+            </button>
+            <button id="recordBtnGlobalTop" title="Record (R)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="red" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-circle"><circle cx="12" cy="12" r="10"></circle></svg>
+            </button>
         </div>
 
         <!-- Tempo -->
@@ -113,7 +118,7 @@
             <li id="menuOpenSoundBrowser">Sound Browser</li>
             <li><hr></li>
             <li id="menuOpenTimeline">Timeline</li>
-            <li id="menuOpenPianoRoll">Open Piano Roll</li>
+            <li id="menuOpenPianoRoll">Open Piano Roll</li> <!-- MODIFIED TEXT -->
             <li id="menuOpenMixer">Mixer</li>
             <li id="menuOpenMasterEffects">Master Effects Rack</li>
             <li><hr></li>
