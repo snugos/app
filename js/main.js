@@ -72,8 +72,8 @@ import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow,
     openTrackInspectorWindow, openMixerWindow, updateMixerWindow,
     // Timeline and Sound Browser functions are now imported from their specific modules
-    // openTimelineWindow, renderTimeline, updatePlayheadPosition,
-    // openSoundBrowserWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory,
+    openTimelineWindow, renderTimeline, updatePlayheadPosition, // MODIFICATION: Uncommented
+    openSoundBrowserWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory, // MODIFICATION: Uncommented
     renderEffectsList, renderEffectControls, createKnob,
     updateSequencerCellUI,
     openMasterEffectsRackWindow,
