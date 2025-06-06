@@ -284,35 +284,160 @@ const appServices = {
     handleRemoveTrack: eventHandleRemoveTrack,
     handleOpenTrackInspector: eventHandleOpenTrackInspector,
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
-    handleOpenPianoRoll: eventHandleOpenPianoRoll, // CORRECTED: Map to the correct handler
+    handleOpenPianoRoll: eventHandleOpenPianoRoll, // CORRECTED: Use the imported handler for the service
     handleTimelineLaneDrop: (event, targetTrackId, startTime) => handleTimelineLaneDrop(event, targetTrackId, startTime, appServices),
-    getAudioBlobFromSoundBrowserItem: async (soundData) => { /* ... (implementation unchanged) ... */ },
-    panicStopAllAudio: () => { /* ... (implementation unchanged) ... */ },
-    updateTaskbarTempoDisplay: (tempo) => { /* ... (implementation unchanged) ... */ },
-    updateUndoRedoButtonsUI: (undoState, redoState) => { /* ... (implementation unchanged) ... */ },
-    updateRecordButtonUI: (isRec) => { /* ... (implementation unchanged) ... */ },
-    closeAllWindows: (isReconstruction = false) => { /* ... (implementation unchanged) ... */ },
-    clearOpenWindowsMap: () => { /* ... (implementation unchanged) ... */ },
-    closeAllTrackWindows: (trackIdToClose) => { /* ... (implementation unchanged) ... */ },
+    getAudioBlobFromSoundBrowserItem: async (soundData) => {
+        if (!soundData || !soundData.libraryName || !soundData.fullPath) {
+            console.error("[Main getAudioBlobFromSoundBrowserItem] Invalid soundData:", soundData);
+            return null;
+        }
+        try {
+            const blob = await dbGetAudio(soundData.fullPath); 
+            if (!blob) {
+                console.warn(`[Main getAudioBlobFromSoundBrowserItem] Blob not found in DB for key: ${soundData.fullPath}`);
+                if (appServices.fetchSoundLibrary && typeof appServices.fetchSoundLibrary === 'function') {
+                    console.log(`[Main getAudioBlobFromSoundBrowserItem] Attempting to re-fetch library ${soundData.libraryName} for missing blob.`);
+                    await appServices.fetchSoundLibrary(soundData.libraryName, Constants.soundLibraries[soundData.libraryName], false);
+                    const reBlob = await dbGetAudio(soundData.fullPath);
+                    if (reBlob) return reBlob;
+                    else console.warn(`[Main getAudioBlobFromSoundBrowserItem] Blob still not found after re-fetch for: ${soundData.fullPath}`);
+                }
+            }
+            return blob;
+        } catch (err) {
+            console.error(`[Main getAudioBlobFromSoundBrowserItem] Error fetching blob for ${soundData.fullPath}:`, err);
+            return null;
+        }
+    },
+    panicStopAllAudio: () => {
+        console.warn("[Main panicStopAllAudio] PANIC! Stopping all audio.");
+        Tone.Transport.stop();
+        Tone.Transport.cancel(0);
+        getTracksState().forEach(track => {
+            if (track && typeof track.stopPlayback === 'function') track.stopPlayback();
+            if (track && track.instrument && typeof track.instrument.releaseAll === 'function') track.instrument.releaseAll(0);
+            if (track && track.toneSampler && typeof track.toneSampler.releaseAll === 'function') track.toneSampler.releaseAll(0);
+        });
+        if (isTrackRecordingState()) {
+            if (appServices.stopAudioRecording) appServices.stopAudioRecording(true); 
+            else { setIsRecordingState(false); setRecordingTrackIdState(null); }
+        }
+        if (uiElementsCache.playBtnGlobal) {
+            uiElementsCache.playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+        }
+         if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(false);
+    },
+    updateTaskbarTempoDisplay: (tempo) => { if (uiElementsCache.taskbarTempoDisplay) uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`; },
+    updateUndoRedoButtonsUI: (undoState, redoState) => {
+        if (uiElementsCache.menuUndo) {
+            uiElementsCache.menuUndo.classList.toggle('disabled', !undoState);
+            uiElementsCache.menuUndo.title = undoState ? `Undo: ${undoState.action}` : "Undo";
+        }
+        if (uiElementsCache.menuRedo) {
+            uiElementsCache.menuRedo.classList.toggle('disabled', !redoState);
+            uiElementsCache.menuRedo.title = redoState ? `Redo: ${redoState.action}` : "Redo";
+        }
+    },
+    updateRecordButtonUI: (isRec) => {
+        const recordBtn = uiElementsCache.recordBtnGlobal;
+        if (recordBtn) {
+            recordBtn.classList.toggle('recording', isRec);
+            if (isRec) {
+                recordBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>`; 
+            } else {
+                recordBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="red" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-circle"><circle cx="12" cy="12" r="10"></circle></svg>`;
+            }
+        }
+    },
+    closeAllWindows: (isReconstruction = false) => {
+        const openWindows = getOpenWindowsState();
+        Array.from(openWindows.values()).forEach(win => {
+            if (win && typeof win.close === 'function') {
+                try {
+                    win.close(isReconstruction); 
+                } catch(e) { console.warn(`Error closing window ${win.id}:`, e); }
+            }
+        });
+    },
+    clearOpenWindowsMap: () => { 
+        const openWindows = getOpenWindowsState();
+        if (openWindows && typeof openWindows.clear === 'function') {
+            openWindows.clear();
+        }
+    },
+    closeAllTrackWindows: (trackIdToClose) => {
+        const openWindows = getOpenWindowsState();
+        Array.from(openWindows.values()).forEach(winInstance => {
+            if (winInstance && winInstance.id.includes(`-${trackIdToClose}`)) {
+                if (typeof winInstance.close === 'function') winInstance.close(true); 
+            }
+        });
+    },
     updateTrackUI: handleTrackUIUpdate,
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     uiElementsCache: uiElementsCache,
-    addMasterEffect: async (effectType) => { /* ... (implementation unchanged) ... */ },
-    removeMasterEffect: async (effectId) => { /* ... (implementation unchanged) ... */ },
-    updateMasterEffectParam: (effectId, paramPath, value) => { /* ... (implementation unchanged) ... */ },
-    reorderMasterEffect: (effectId, newIndex) => { /* ... (implementation unchanged) ... */ },
-    setActualMasterVolume: (volumeValue) => { /* ... (implementation unchanged) ... */ },
+    addMasterEffect: async (effectType) => { await addMasterEffectToState(effectType); if (typeof addMasterEffectToAudio === 'function') addMasterEffectToAudio(effectType); },
+    removeMasterEffect: async (effectId) => { await removeMasterEffectFromState(effectId); if (typeof removeMasterEffectFromAudio === 'function') removeMasterEffectFromAudio(effectId); },
+    updateMasterEffectParam: (effectId, paramPath, value) => { updateMasterEffectParamInState(effectId, paramPath, value); if (typeof updateMasterEffectParamInAudio === 'function') updateMasterEffectParamInAudio(effectId, paramPath, value); },
+    reorderMasterEffect: (effectId, newIndex) => { reorderMasterEffectInState(effectId, newIndex); if (typeof reorderMasterEffectInAudio === 'function') reorderMasterEffectInAudio(effectId, newIndex); },
+    setActualMasterVolume: (volumeValue) => { 
+        const masterGainNode = getActualMasterGainNodeFromAudio();
+        if (masterGainNode) masterGainNode.gain.value = volumeValue; 
+    },
     effectsRegistryAccess: { AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null, getEffectDefaultParams: null, synthEngineControlDefinitions: null, },
     getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
-    updateTrackMeterUI: (trackId, level, isClipping) => { /* ... (implementation unchanged) ... */ },
-    updateMasterEffectsRackUI: () => { /* ... (implementation unchanged) ... */ },
+    updateTrackMeterUI: (trackId, level, isClipping) => {
+        const inspectorWindow = appServices.getWindowById(`trackInspector-${trackId}`);
+        const inspectorMeter = inspectorWindow?.element?.querySelector(`#trackMeterBar-${trackId}`);
+        if (inspectorMeter) {
+            inspectorMeter.style.width = `${Math.max(0, Math.min(100, (level + 60) / 60 * 100))}%`;
+            inspectorMeter.classList.toggle('clipping', isClipping);
+        }
+        const mixerMeter = document.getElementById(`mixerTrackMeterBar-${trackId}`); 
+        if (mixerMeter) {
+            mixerMeter.style.width = `${Math.max(0, Math.min(100, (level + 60) / 60 * 100))}%`;
+            mixerMeter.classList.toggle('clipping', isClipping);
+        }
+    },
+    updateMasterEffectsRackUI: () => {
+        const rackWindow = appServices.getWindowById('masterEffectsRack');
+        if (rackWindow?.element && !rackWindow.isMinimized) {
+            const listDiv = rackWindow.element.querySelector('#effectsList-master');
+            const controlsContainer = rackWindow.element.querySelector('#effectControlsContainer-master');
+            if (listDiv && controlsContainer && typeof renderEffectsList === 'function') {
+                renderEffectsList(null, 'master', listDiv, controlsContainer);
+            }
+        }
+    },
     triggerCustomBackgroundUpload: () => { if (uiElementsCache.customBgInput) uiElementsCache.customBgInput.click(); else console.warn("Custom background input element not found in cache."); },
     removeCustomDesktopBackground: removeCustomDesktopBackground,
-    onPlaybackModeChange: (newMode) => { /* ... (implementation unchanged) ... */ }
+    onPlaybackModeChange: (newMode) => {
+        const playbackModeToggle = uiElementsCache.playbackModeToggleBtnGlobal;
+        if (playbackModeToggle) {
+            playbackModeToggle.textContent = `Mode: ${newMode.charAt(0).toUpperCase() + newMode.slice(1)}`;
+        }
+        console.log(`[Main onPlaybackModeChange] Mode changed to ${newMode}. Re-initializing sequences/playback for ${getTracksState().length} tracks.`);
+        const currentPlayheadPosition = Tone.Transport.seconds;
+        Tone.Transport.stop();
+        Tone.Transport.cancel(0);
+
+        getTracksState().forEach(async track => {
+            if (track && typeof track.recreateToneSequence === 'function' && track.type !== 'Audio') {
+                 track.recreateToneSequence(true); 
+            }
+            if(track && typeof track.stopPlayback === 'function') {
+                track.stopPlayback(); 
+            }
+        });
+        if(uiElementsCache.playBtnGlobal) {
+            uiElementsCache.playBtnGlobal.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+        }
+        console.log(`[Main onPlaybackModeChange] Playback mode changed to ${newMode}. UI updated.`);
+    }
 };
 
 // --- Centralized UI Update Handler ---
@@ -328,10 +453,10 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         const inspectorContent = inspectorWindow.element.querySelector('.track-inspector-content');
         if (inspectorContent) {
-            // To avoid errors if ui.js hasn't fully populated appServices yet during a rapid init/reconstruct
-            const buildContentFunc = appServices.buildTrackInspectorContentDOM || (localAppServices && localAppServices.buildTrackInspectorContentDOM);
-            const initCommonFunc = appServices.initializeCommonInspectorControls || (localAppServices && localAppServices.initializeCommonInspectorControls);
-            const initTypeSpecificFunc = appServices.initializeTypeSpecificInspectorControls || (localAppServices && localAppServices.initializeTypeSpecificInspectorControls);
+            const buildContentFunc = localAppServices.buildTrackInspectorContentDOM || (typeof buildTrackInspectorContentDOM !== 'undefined' ? buildTrackInspectorContentDOM : null);
+            const initCommonFunc = localAppServices.initializeCommonInspectorControls || (typeof initializeCommonInspectorControls !== 'undefined' ? initializeCommonInspectorControls : null);
+            const initTypeSpecificFunc = localAppServices.initializeTypeSpecificInspectorControls || (typeof initializeTypeSpecificInspectorControls !== 'undefined' ? initializeTypeSpecificInspectorControls : null);
+
 
             if (reason === 'nameChanged' || reason === 'typeSpecificControlsChanged' || reason === 'effectsListChanged' || reason === 'sampleLoaded' || reason === 'slicesUpdated' || reason === 'drumPadsUpdated') {
                 const scrollY = inspectorContent.scrollTop;
@@ -342,7 +467,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                         inspectorContent.scrollTop = scrollY;
                         console.log(`[Main UI Update] Inspector for ${track.name} re-rendered due to ${reason}.`);
                 } else {
-                     console.warn("[Main UI Update] Inspector rebuild functions not found on appServices. Full inspector refresh might not occur.");
+                     console.warn("[Main UI Update] Inspector rebuild functions not found. Full inspector refresh might not occur.");
                 }
             }
             const muteBtn = inspectorContent.querySelector(`#muteBtn-${trackId}`);
@@ -368,7 +493,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         const pianoRollWindow = appServices.getWindowById(`pianoRollWin-${trackId}`);
         if (pianoRollWindow && pianoRollWindow.element && !pianoRollWindow.isMinimized && pianoRollWindow.konvaStage) {
             console.log(`[Main UI Update] Triggering Piano Roll redraw for track ${trackId} due to ${reason}.`);
-             const backgroundLayer = pianoRollWindow.konvaStage.findOne('Layer'); 
+            const backgroundLayer = pianoRollWindow.konvaStage.findOne('Layer'); 
             if (backgroundLayer) backgroundLayer.batchDraw();
         }
     }
@@ -463,12 +588,7 @@ async function initializeSnugOS() {
 
         // Module initializations
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function");
-        
-        // Ensure critical UI functions are available in appServices before other modules use them
-        // This is a common pattern to ensure DI container is fully populated for core UI operations.
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule is not a function");
-        
-        // Pass appServices directly to other module initializers
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function");
         if (typeof initializeEventHandlersModule === 'function') initializeEventHandlersModule(appServices); else console.error("initializeEventHandlersModule is not a function");
 
