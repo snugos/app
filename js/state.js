@@ -234,16 +234,18 @@ export function removeTrackFromStateInternal(trackId, isUserAction = true) {
     }
 }
 
-export function captureStateForUndoInternal(actionDescription, customRedo) { /* implementation unchanged */ }
-export function undoLastActionInternal() { /* implementation unchanged */ }
-export function redoLastActionInternal() { /* implementation unchanged */ }
-export function gatherProjectDataInternal(includeEffectsRegistry = false) { /* implementation unchanged */ }
-export async function reconstructDAWInternal(projectData) { /* implementation unchanged */ }
-export async function saveProjectInternal() { /* implementation unchanged */ }
-export async function loadProjectInternal(file) { /* implementation unchanged */ }
-export async function handleProjectFileLoadInternal(event) { /* implementation unchanged */ }
-export async function exportToWavInternal() { /* implementation unchanged */ }
-export function addMasterEffectToState(effectType) { /* implementation unchanged */ }
-export function removeMasterEffectFromState(effectId) { /* implementation unchanged */ }
-export function updateMasterEffectParamInState(effectId, paramPath, value) { /* implementation unchanged */ }
-export function reorderMasterEffectInState(effectId, newIndex) { /* implementation unchanged */ }
+export function captureStateForUndoInternal(actionDescription, customRedo) {}
+export function undoLastActionInternal() {}
+export function redoLastActionInternal() {}
+export function gatherProjectDataInternal(includeEffectsRegistry = false) {}
+export async function reconstructDAWInternal(projectData) {}
+export async function saveProjectInternal() {}
+export async function loadProjectInternal(file) {}
+export async function handleProjectFileLoadInternal(event) {}
+export async function exportToWavInternal() {}
+
+// Master Effects Chain State Management
+export function addMasterEffectToState(effectType) {}
+export function removeMasterEffectFromState(effectId) {}
+export function updateMasterEffectParamInState(effectId, paramPath, value) {}
+export function reorderMasterEffectInState(effectId, newIndex) {}
