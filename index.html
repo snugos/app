@@ -25,18 +25,22 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
     
-    <!-- Corrected path to style.css - Ensure this path is valid for your deployment -->
-    <!-- If style.css is in the root, use href="style.css". If in /public/css, use "/css/style.css" etc. -->
     <link rel="stylesheet" href="css/style.css"> 
     
     <script src="https://cdn.tailwindcss.com"></script> <!-- Development only -->
     <script>
-        // Tailwind config (if needed, or use default)
-        // tailwind.config = { theme: { extend: { colors: { ... } } } }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pixelify Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
     </script>
-    <!-- Libraries should be loaded before your custom scripts that use them -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -117,9 +121,10 @@
             <li id="menuAddAudioTrack">Add Audio Track</li>
             <li><hr></li>
             <li id="menuOpenSoundBrowser">Sound Browser</li>
+            <li id="menuOpenYouTubeImporter">Import from YouTube</li> <!-- ADDED -->
             <li><hr></li>
             <li id="menuOpenTimeline">Timeline</li>
-            <li id="menuOpenPianoRoll">Open Piano Roll</li>
+            <li id="menuOpenPianoRoll">Open Piano Roll</li> 
             <li id="menuOpenMixer">Mixer</li>
             <li id="menuOpenMasterEffects">Master Effects Rack</li>
             <li><hr></li>
