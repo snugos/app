@@ -60,7 +60,7 @@ export function initializePrimaryEventListeners() {
     
     console.log("[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:", Object.keys(localAppServices.uiElementsCache || {}));
 
-    const uiCache = localAppServices.uiElementsCache || {};
+   
 
     uiCache.startButton?.addEventListener('click', () => {
         uiCache.startMenu?.classList.toggle('hidden');
