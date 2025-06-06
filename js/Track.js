@@ -89,7 +89,7 @@ export class Track {
                 dbKey: initialPadData?.dbKey || null,
                 volume: initialPadData?.volume ?? 0.7,
                 pitchShift: initialPadData?.pitchShift ?? 0,
-                envelope: initialPadData?.envelope ? JSON.parse(JSON.stringify(initialPadData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
+                envelope: initialPadData?.envelope ? JSON.parse(JSON.stringify(initialData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
                 status: initialPadData?.status || (initialData?.dbKey || initialData?.audioBufferDataURL ? 'missing' : 'empty'),
                 autoStretchEnabled: initialPadData?.autoStretchEnabled || false,
                 stretchOriginalBPM: initialPadData?.stretchOriginalBPM || 120,
@@ -266,19 +266,19 @@ export class Track {
         return newSequence;
     }
 
-    deleteSequence(sequenceId) { /* ... (implementation unchanged) ... */ }
-    renameSequence(sequenceId, newName) { /* ... (implementation unchanged) ... */ }
-    duplicateSequence(sequenceId) { /* ... (implementation unchanged) ... */ }
-    setActiveSequence(sequenceId) { /* ... (implementation unchanged) ... */ }
-    doubleSequence() { /* ... (implementation unchanged) ... */ }
-    setSequenceLength(newLengthInSteps, skipUndoCapture = false) { /* ... (implementation unchanged) ... */ }
-    recreateToneSequence(forceRestart = false, startTimeOffset = 0) { /* ... (implementation unchanged) ... */ }
-    async addAudioClip(blob, startTime) { /* ... (implementation unchanged) ... */ }
-    async addExternalAudioFileAsClip(audioFileBlob, startTime, clipName = null) { /* ... (implementation unchanged) ... */ }
-    addSequenceClipToTimeline(sourceSequenceId, startTime, clipName = null) { /* ... (implementation unchanged) ... */ }
-    async getBlobDuration(blob) { /* ... (implementation unchanged) ... */ }
-    async schedulePlayback(transportStartTime, transportStopTime) { /* ... (implementation unchanged) ... */ }
-    stopPlayback() { /* ... (implementation unchanged) ... */ }
-    async updateAudioClipPosition(clipId, newStartTime) { /* ... (implementation unchanged) ... */ }
-    dispose() { /* ... (implementation unchanged) ... */ }
+    deleteSequence(sequenceId) { /* ... */ }
+    renameSequence(sequenceId, newName) { /* ... */ }
+    duplicateSequence(sequenceId) { /* ... */ }
+    setActiveSequence(sequenceId) { /* ... */ }
+    doubleSequence() { /* ... */ }
+    setSequenceLength(newLengthInSteps, skipUndoCapture = false) { /* ... */ }
+    recreateToneSequence(forceRestart = false, startTimeOffset = 0) { /* ... */ }
+    async addAudioClip(blob, startTime) { /* ... */ }
+    async addExternalAudioFileAsClip(audioFileBlob, startTime, clipName = null) { /* ... */ }
+    addSequenceClipToTimeline(sourceSequenceId, startTime, clipName = null) { /* ... */ }
+    async getBlobDuration(blob) { /* ... */ }
+    async schedulePlayback(transportStartTime, transportStopTime) { /* ... */ }
+    stopPlayback() { /* ... */ }
+    async updateAudioClipPosition(clipId, newStartTime) { /* ... */ }
+    dispose() { /* ... */ }
 }
