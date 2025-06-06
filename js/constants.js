@@ -31,9 +31,15 @@ export const SYNTH_PITCHES = (() => {
             pitches.push(`${MIDI_NOTE_NAMES[noteIndexInOctave]}${octave}`);
         }
     } else {
-        console.error("[Constants] MIDI_NOTE_NAMES is not correctly defined. SYNTH_PITCHES will be empty.");
+        console.error("[Constants] MIDI_NOTE_NAMES is not correctly defined. SYNTH_PITCHES will be empty. Using fallback.");
+        // Fallback to a generic list if MIDI_NOTE_NAMES is broken
+        for (let i = 83; i >= 36; i--) { pitches.push(`N${i}`);} 
     }
-    return pitches; // Example: ['B5', 'A#5', ..., 'C#2', 'C2']
+    if (pitches.length === 0) { // Additional fallback if loop didn't run
+        console.error("[Constants] SYNTH_PITCHES generation failed, using hardcoded fallback.");
+        return ['B5', 'A#5', 'A5', 'G#5', 'G5', 'F#5', 'F5', 'E5', 'D#5', 'D5', 'C#5', 'C5', 'B4', 'A#4', 'A4', 'G#4', 'G4', 'F#4', 'F4', 'E4', 'D#4', 'D4', 'C#4', 'C4', 'B3', 'A#3', 'A3', 'G#3', 'G3', 'F#3', 'F3', 'E3', 'D#3', 'D3', 'C#3', 'C3', 'B2', 'A#2', 'A2', 'G#2', 'G2', 'F#2', 'F2', 'E2', 'D#2', 'D2', 'C#2', 'C2'];
+    }
+    return pitches; 
 })();
 
 
@@ -86,17 +92,11 @@ export const computerKeySynthMap = {
     'u': 58, // A#3
 };
 
-// Safety check: Ensure critical constants are defined
-if (!Array.isArray(SYNTH_PITCHES) || SYNTH_PITCHES.length === 0) {
-    console.error("[Constants] CRITICAL: SYNTH_PITCHES is not a valid array or is empty. Defaulting to a fallback array.");
-    // Provide a fallback in case generation fails (though the IIFE should prevent this if MIDI_NOTE_NAMES is good)
-    const fallbackPitches = [];
-    for (let i = 83; i >= 36; i--) { fallbackPitches.push(`N${i}`);} // Generic note names
-    Object.defineProperty(exports, "SYNTH_PITCHES", { value: fallbackPitches, writable: false });
+// Safety check log to see what SYNTH_PITCHES resolves to
+console.log('[Constants] Initialized SYNTH_PITCHES count:', SYNTH_PITCHES.length);
+if (SYNTH_PITCHES.length === 0) {
+    console.error("[Constants] CRITICAL FAILURE: SYNTH_PITCHES is empty after all fallbacks. Piano roll will likely fail for synth tracks.");
 }
-
 if (typeof numDrumSamplerPads !== 'number' || numDrumSamplerPads <= 0) {
-    console.error("[Constants] CRITICAL: numDrumSamplerPads is not a valid number. Defaulting to 16.");
-    Object.defineProperty(exports, "numDrumSamplerPads", { value: 16, writable: false });
+    console.error("[Constants] CRITICAL: numDrumSamplerPads is not a valid positive number:", numDrumSamplerPads);
 }
-
