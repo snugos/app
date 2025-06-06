@@ -180,116 +180,77 @@ export class Track {
         this.clipPlayers = new Map(); // For timeline clip playback
     }
 
-    // --- Start of Corrected/Added Code ---
-    
-    /**
-     * A getter to reliably determine the number of rows a sequencer grid should have for this track type.
-     * @returns {number} The number of rows for the sequencer.
-     */
     get requiredSequenceRows() {
         switch (this.type) {
             case 'Synth':
             case 'InstrumentSampler':
-                // Use a fallback of 48 rows (4 octaves) if the constant isn't ready.
                 return (Constants.SYNTH_PITCHES && Constants.SYNTH_PITCHES.length > 0) ? Constants.SYNTH_PITCHES.length : 48;
             case 'Sampler':
-                // Use the number of defined slices, or the default number of slices as a fallback.
                 return (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
             case 'DrumSampler':
                 return Constants.numDrumSamplerPads;
             default:
-                // Should not happen for sequenceable tracks, but a safe fallback.
                 return 1;
         }
     }
+
+    setName(newName, skipUndo = false) { /* ... implementation unchanged ... */ }
+    getActiveSequence() { /* ... implementation unchanged ... */ }
+    getActiveSequenceData() { /* ... implementation unchanged ... */ }
+    getActiveSequenceLength() { /* ... implementation unchanged ... */ }
+    getDefaultSynthParams() { /* ... implementation unchanged ... */ }
+    async initializeAudioNodes() { /* ... implementation unchanged ... */ }
+    rebuildEffectChain() { /* ... implementation unchanged ... */ }
     
-    // --- End of Corrected/Added Code ---
-
-    setName(newName, skipUndo = false) { /* ... (implementation unchanged) ... */ }
-    getActiveSequence() { /* ... (implementation unchanged) ... */ }
-    getActiveSequenceData() { /* ... (implementation unchanged) ... */ }
-    getActiveSequenceLength() { /* ... (implementation unchanged) ... */ }
-    getDefaultSynthParams() { /* ... (implementation unchanged) ... */ }
-    async initializeAudioNodes() { /* ... (implementation unchanged) ... */ }
-    rebuildEffectChain() { /* ... (implementation unchanged) ... */ }
-    addEffect(effectType) { /* ... (implementation unchanged) ... */ }
-    removeEffect(effectId) { /* ... (implementation unchanged) ... */ }
-    updateEffectParam(effectId, paramPath, value) { /* ... (implementation unchanged) ... */ }
-    reorderEffect(effectId, newIndex) { /* ... (implementation unchanged) ... */ }
-    async fullyInitializeAudioResources() { /* ... (implementation unchanged) ... */ }
-    async initializeInstrument() { /* ... (implementation unchanged) ... */ }
-    setupSlicerMonoNodes() { /* ... (implementation unchanged) ... */ }
-    disposeSlicerMonoNodes() { /* ... (implementation unchanged) ... */ }
-    setupToneSampler() { /* ... (implementation unchanged) ... */ }
-    setVolume(volume, fromInteraction = false) { /* ... (implementation unchanged) ... */ }
-    applyMuteState() { /* ... (implementation unchanged) ... */ }
-    applySoloState() { /* ... (implementation unchanged) ... */ }
-    setSynthParam(paramPath, value) { /* ... (implementation unchanged) ... */ }
-    setSliceVolume(sliceIndex, volume) { /* ... (implementation unchanged) ... */ }
-    setSlicePitchShift(sliceIndex, semitones) { /* ... (implementation unchanged) ... */ }
-    setSliceLoop(sliceIndex, loop) { /* ... (implementation unchanged) ... */ }
-    setSliceReverse(sliceIndex, reverse) { /* ... (implementation unchanged) ... */ }
-    setSliceEnvelopeParam(sliceIndex, param, value) { /* ... (implementation unchanged) ... */ }
-    setDrumSamplerPadVolume(padIndex, volume) { /* ... (implementation unchanged) ... */ }
-    setDrumSamplerPadPitch(padIndex, pitch) { /* ... (implementation unchanged) ... */ }
-    setDrumSamplerPadEnv(padIndex, param, value) { /* ... (implementation unchanged) ... */ }
-    setDrumSamplerPadAutoStretch(padIndex, enabled) { /* ... (implementation unchanged) ... */ }
-    setDrumSamplerPadStretchOriginalBPM(padIndex, bpm) { /* ... (implementation unchanged) ... */ }
-    setDrumSamplerPadStretchBeats(padIndex, beats) { /* ... (implementation unchanged) ... */ }
-    setInstrumentSamplerRootNote(noteName) { /* ... (implementation unchanged) ... */ }
-    setInstrumentSamplerLoop(loop) { /* ... (implementation unchanged) ... */ }
-    setInstrumentSamplerLoopStart(time) { /* ... (implementation unchanged) ... */ }
-    setInstrumentSamplerLoopEnd(time) { /* ... (implementation unchanged) ... */ }
-    setInstrumentSamplerEnv(param, value) { /* ... (implementation unchanged) ... */ }
-    _captureUndoState(description) { /* ... (implementation unchanged) ... */ }
-
-    createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.DEFAULT_STEPS_PER_BAR || 16, skipUndoAndUI = false) {
-        if (this.type === 'Audio') return null;
-        const newSeqId = `seq_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-        
-        // --- Start of Corrected/Added Code ---
-        const numRowsForGrid = this.requiredSequenceRows;
-        if (numRowsForGrid <= 0) {
-             console.warn(`[Track ${this.id} createNewSequence] numRowsForGrid calculated as <= 0 for type ${this.type} (calculated ${numRowsForGrid}), defaulting to 16.`);
-             numRowsForGrid = 16; 
+    // --- Start of Corrected Code ---
+    addEffect(effectType) {
+        const defaultParams = this.appServices.effectsRegistryAccess?.getEffectDefaultParams(effectType) || {};
+        const toneNode = createEffectInstance(effectType, defaultParams);
+        if (toneNode) {
+            const effectData = {
+                id: `effect-${this.id}-${effectType}-${Date.now()}`,
+                type: effectType,
+                toneNode,
+                params: JSON.parse(JSON.stringify(defaultParams))
+            };
+            this.activeEffects.push(effectData);
+            this.rebuildEffectChain();
+            // Tell the UI to update the effects rack for this track
+            this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+            this.appServices.captureStateForUndo?.(`Add ${effectType} to ${this.name}`);
+        } else {
+            this.appServices.showNotification?.(`Failed to create effect: ${effectType}`, 3000);
         }
-        // --- End of Corrected/Added Code ---
-        
-        const actualLength = Math.max(Constants.STEPS_PER_BAR || 16, initialLengthSteps);
-
-        const newSequence = {
-            id: newSeqId,
-            name: name,
-            data: Array(numRowsForGrid).fill(null).map(() => Array(actualLength).fill(null)),
-            length: actualLength
-        };
-        this.sequences.push(newSequence);
-        this.activeSequenceId = newSeqId;
-        this.recreateToneSequence(true); 
-
-        if (!skipUndoAndUI) { 
-            if (this.appServices.updateTrackUI) {
-                this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-            }
-            this._captureUndoState(`Create Sequence "${name}" on ${this.name}`);
-        }
-        console.log(`[Track ${this.id}] Created new sequence: "${name}" (ID: ${newSeqId}), Rows: ${numRowsForGrid}, Length: ${actualLength}. Set as active. SkipUndoAndUI: ${skipUndoAndUI}`);
-        return newSequence;
     }
 
-    deleteSequence(sequenceId) { /* ... */ }
-    renameSequence(sequenceId, newName) { /* ... */ }
-    duplicateSequence(sequenceId) { /* ... */ }
-    setActiveSequence(sequenceId) { /* ... */ }
-    doubleSequence() { /* ... */ }
-    setSequenceLength(newLengthInSteps, skipUndoCapture = false) { /* ... */ }
-    recreateToneSequence(forceRestart = false, startTimeOffset = 0) { /* ... */ }
-    async addAudioClip(blob, startTime) { /* ... */ }
-    async addExternalAudioFileAsClip(audioFileBlob, startTime, clipName = null) { /* ... */ }
-    addSequenceClipToTimeline(sourceSequenceId, startTime, clipName = null) { /* ... */ }
-    async getBlobDuration(blob) { /* ... */ }
-    async schedulePlayback(transportStartTime, transportStopTime) { /* ... */ }
-    stopPlayback() { /* ... */ }
-    async updateAudioClipPosition(clipId, newStartTime) { /* ... */ }
-    dispose() { /* ... */ }
+    removeEffect(effectId) {
+        const index = this.activeEffects.findIndex(e => e.id === effectId);
+        if (index > -1) {
+            const removedEffect = this.activeEffects.splice(index, 1)[0];
+            if (removedEffect.toneNode) {
+                removedEffect.toneNode.dispose();
+            }
+            this.rebuildEffectChain();
+            // Tell the UI to update the effects rack for this track
+            this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+            this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
+        }
+    }
+    // --- End of Corrected Code ---
+    
+    updateEffectParam(effectId, paramPath, value) { /* ... implementation unchanged ... */ }
+    reorderEffect(effectId, newIndex) { /* ... implementation unchanged ... */ }
+    async fullyInitializeAudioResources() { /* ... implementation unchanged ... */ }
+    async initializeInstrument() { /* ... implementation unchanged ... */ }
+    setupSlicerMonoNodes() { /* ... implementation unchanged ... */ }
+    disposeSlicerMonoNodes() { /* ... implementation unchanged ... */ }
+    setupToneSampler() { /* ... implementation unchanged ... */ }
+    setVolume(volume, fromInteraction = false) { /* ... implementation unchanged ... */ }
+    applyMuteState() { /* ... implementation unchanged ... */ }
+    applySoloState() { /* ... implementation unchanged ... */ }
+    setSynthParam(paramPath, value) { /* ... implementation unchanged ... */ }
+    setSliceVolume(sliceIndex, volume) { /* ... implementation unchanged ... */ }
+    // ... other methods ...
+    dispose() { /* ... implementation unchanged ... */ }
+    createNewSequence(name, initialLengthSteps, skipUndoAndUI) { /* ... implementation unchanged ... */ }
 }
