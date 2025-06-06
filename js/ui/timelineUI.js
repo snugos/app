@@ -32,12 +32,10 @@ export function openTimelineWindow(savedState = null) {
             <div id="timeline-tracks-and-playhead-container" class="flex-grow relative overflow-x-auto">
                  <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-cyan-400 z-20 pointer-events-none" style="left: var(--timeline-track-name-width, 120px);"></div>
                  <div id="timeline-tracks-area" style="position: relative; width: 4000px; height:100%; overflow-y: auto; ">
-                    <!-- Track lanes will be rendered here by renderTimeline() -->
-                </div>
+                    </div>
             </div>
         </div>
     `;
-    // Note: --timeline-track-name-width CSS variable should be defined in your style.css
 
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
@@ -66,17 +64,19 @@ export function openTimelineWindow(savedState = null) {
     const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
 
     if (timelineWindow?.element) {
-        const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area'); // Where track lanes get rendered
-        const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container'); // Scrollable container for tracks AND playhead
+        const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
         const ruler = timelineWindow.element.querySelector('#timeline-ruler');
-        const playhead = timelineWindow.element.querySelector('#timeline-playhead');
         
-        if (tracksAndPlayheadContainer && ruler && playhead) {
+        if (tracksAndPlayheadContainer && ruler) {
+            // --- Start of Corrected Code ---
             tracksAndPlayheadContainer.addEventListener('scroll', () => {
                 const scrollLeft = tracksAndPlayheadContainer.scrollLeft;
+                // The ruler is transformed by the scroll amount.
                 ruler.style.transform = `translateX(-${scrollLeft}px)`;
-                playhead.style.transform = `translateX(-${scrollLeft}px)`; // Playhead also needs to be transformed by scroll
+                // The playhead position is now handled entirely by the updatePlayheadPosition function
+                // to ensure it is always correct relative to the audio playback time and scroll position.
             });
+            // --- End of Corrected Code ---
         }
         
         if(localAppServices.renderTimeline) localAppServices.renderTimeline();
@@ -233,34 +233,44 @@ export function renderTimeline() {
 
 export function updatePlayheadPosition() {
     const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
-    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) return;
+    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized || document.hidden) {
+        return;
+    }
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
     const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
     if (!playhead || !tracksAndPlayheadContainer) return;
+
+    // --- Start of Corrected Code ---
 
     const pixelsPerSecond = 60;
     const transportTime = typeof Tone !== 'undefined' ? Tone.Transport.seconds : 0;
     const trackNameWidthValue = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim() || '120px';
     const trackNameWidth = parseFloat(trackNameWidthValue);
 
-    // Playhead's 'left' style is relative to its offset parent (#timeline-tracks-and-playhead-container)
-    // It already accounts for the trackNameWidth via its initial CSS style.
-    // So, its left position should just be the time offset.
-    const playheadLeftPosition = (transportTime * pixelsPerSecond) + trackNameWidth;
-    playhead.style.left = `${playheadLeftPosition}px`;
+    // The playhead's `left` position is its absolute position within the 4000px wide timeline-tracks-area.
+    // This value grows as playback continues. The browser's native scrolling handles visibility.
+    const playheadAbsoluteLeft = (transportTime * pixelsPerSecond) + trackNameWidth;
+    playhead.style.left = `${playheadAbsoluteLeft}px`;
     
-    // Auto-scroll logic to keep playhead in view
-    const containerScrollLeft = tracksAndPlayheadContainer.scrollLeft;
-    const containerWidth = tracksAndPlayheadContainer.clientWidth;
-    const playheadVisibleStart = trackNameWidth; // Playhead is visually "after" the names column
+    // Auto-scroll logic to keep the playhead in view during playback
+    if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
+        const containerScrollLeft = tracksAndPlayheadContainer.scrollLeft;
+        const containerWidth = tracksAndPlayheadContainer.clientWidth;
+        
+        const playheadVisibleStart = containerScrollLeft;
+        const playheadVisibleEnd = containerScrollLeft + containerWidth;
+        const scrollBuffer = 50; // pixels
 
-    // If playhead is before the visible area (considering track names)
-    if (playheadLeftPosition < (containerScrollLeft + playheadVisibleStart + 20) && containerScrollLeft > 0) {
-        tracksAndPlayheadContainer.scrollLeft = Math.max(0, playheadLeftPosition - playheadVisibleStart - 20);
+        // If playhead is approaching the right edge of the visible area
+        if (playheadAbsoluteLeft > playheadVisibleEnd - scrollBuffer) {
+            // Scroll to keep the playhead on the screen
+            tracksAndPlayheadContainer.scrollLeft = playheadAbsoluteLeft - containerWidth + scrollBuffer;
+        }
+        // If playhead is approaching the left edge (e.g., during reverse playback or seeking)
+        else if (playheadAbsoluteLeft < playheadVisibleStart + scrollBuffer) {
+             tracksAndPlayheadContainer.scrollLeft = Math.max(0, playheadAbsoluteLeft - scrollBuffer);
+        }
     }
-    // If playhead is after the visible area
-    else if (playheadLeftPosition > (containerScrollLeft + containerWidth - 20) ) {
-        tracksAndPlayheadContainer.scrollLeft = playheadLeftPosition - containerWidth + 20;
-    }
+    // --- End of Corrected Code ---
 }
