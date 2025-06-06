@@ -45,7 +45,7 @@ export function openYouTubeImporterWindow(savedState = null) {
         windowId, 
         'YouTube Importer', 
         contentHTML, 
-        { width: 450, height: 220, minWidth: 400, minHeight: 200 }
+        { width: 450, height: 220, minWidth: 400, minHeight: 220 }
     );
 
     if (importerWindow?.element) {
@@ -115,6 +115,7 @@ function attachImporterEventListeners(windowElement) {
                 
                 setStatus('Audio downloaded. Adding to a new track...');
 
+                // Add to a new Audio track.
                 let newTrack = localAppServices.addTrack('Audio');
                 if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
                     // Attempt to generate a more descriptive name
