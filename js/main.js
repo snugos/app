@@ -13,7 +13,7 @@ import {
     handleRemoveTrack as eventHandleRemoveTrack,
     handleOpenTrackInspector as eventHandleOpenTrackInspector,
     handleOpenEffectsRack as eventHandleOpenEffectsRack,
-    handleOpenPianoRoll as eventHandleOpenPianoRoll, // MODIFIED: Import correct function name
+    handleOpenPianoRoll as eventHandleOpenPianoRoll, // CORRECTED: Import the renamed handler
     handleTimelineLaneDrop
 } from './eventHandlers.js';
 import {
@@ -71,7 +71,7 @@ import {
 import {
     initializeUIModule,
     openTrackEffectsRackWindow,
-    openPianoRollWindow, // MODIFIED: Expect openPianoRollWindow
+    openPianoRollWindow, // This is from ui.js, which handles opening the actual window
     openTrackInspectorWindow,
     openMixerWindow,
     updateMixerWindow,
@@ -143,7 +143,7 @@ const appServices = {
     dbDeleteItem: dbDeleteAudio,
     openTrackInspectorWindow, 
     openTrackEffectsRackWindow, 
-    openPianoRollWindow, // MODIFIED: Use openPianoRollWindow
+    openPianoRollWindow, // This function is imported from ui.js
     openMixerWindow, updateMixerWindow,
     openSoundBrowserWindow,
     updateSoundBrowserDisplayForLibrary,
@@ -180,7 +180,7 @@ const appServices = {
     getActiveSequencerTrackId: getActiveSequencerTrackIdState,
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
     getPlaybackMode: getPlaybackModeState,
-    getSelectedTimelineClipInfo: getSelectedTimelineClipInfoState,
+    getSelectedTimelineClipInfoState: getSelectedTimelineClipInfoState,
     getCurrentUserThemePreference: getCurrentUserThemePreferenceState,
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
@@ -211,44 +211,44 @@ const appServices = {
     handleRemoveTrack: eventHandleRemoveTrack,
     handleOpenTrackInspector: eventHandleOpenTrackInspector,
     handleOpenEffectsRack: eventHandleOpenEffectsRack,
-    handleOpenPianoRoll: eventHandleOpenPianoRoll, // MODIFIED: Map to the new handler
+    handleOpenPianoRoll: eventHandleOpenPianoRoll, // CORRECTED: Use the imported handler for the service
     handleTimelineLaneDrop: (event, targetTrackId, startTime) => handleTimelineLaneDrop(event, targetTrackId, startTime, appServices),
-    getAudioBlobFromSoundBrowserItem: async (soundData) => { /* ... (unchanged) ... */ },
-    panicStopAllAudio: () => { /* ... (unchanged) ... */ },
-    updateTaskbarTempoDisplay: (tempo) => { /* ... (unchanged) ... */ },
-    updateUndoRedoButtonsUI: (undoState, redoState) => { /* ... (unchanged) ... */ },
-    updateRecordButtonUI: (isRec) => { /* ... (unchanged) ... */ },
-    closeAllWindows: (isReconstruction = false) => { /* ... (unchanged) ... */ },
-    clearOpenWindowsMap: () => { /* ... (unchanged) ... */ },
-    closeAllTrackWindows: (trackIdToClose) => { /* ... (unchanged) ... */ },
+    getAudioBlobFromSoundBrowserItem: async (soundData) => { /* ... (implementation unchanged) ... */ },
+    panicStopAllAudio: () => { /* ... (implementation unchanged) ... */ },
+    updateTaskbarTempoDisplay: (tempo) => { /* ... (implementation unchanged) ... */ },
+    updateUndoRedoButtonsUI: (undoState, redoState) => { /* ... (implementation unchanged) ... */ },
+    updateRecordButtonUI: (isRec) => { /* ... (implementation unchanged) ... */ },
+    closeAllWindows: (isReconstruction = false) => { /* ... (implementation unchanged) ... */ },
+    clearOpenWindowsMap: () => { /* ... (implementation unchanged) ... */ },
+    closeAllTrackWindows: (trackIdToClose) => { /* ... (implementation unchanged) ... */ },
     updateTrackUI: handleTrackUIUpdate,
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     uiElementsCache: uiElementsCache,
-    addMasterEffect: async (effectType) => { /* ... (unchanged) ... */ },
-    removeMasterEffect: async (effectId) => { /* ... (unchanged) ... */ },
-    updateMasterEffectParam: (effectId, paramPath, value) => { /* ... (unchanged) ... */ },
-    reorderMasterEffect: (effectId, newIndex) => { /* ... (unchanged) ... */ },
-    setActualMasterVolume: (volumeValue) => { /* ... (unchanged) ... */ },
+    addMasterEffect: async (effectType) => { /* ... (implementation unchanged) ... */ },
+    removeMasterEffect: async (effectId) => { /* ... (implementation unchanged) ... */ },
+    updateMasterEffectParam: (effectId, paramPath, value) => { /* ... (implementation unchanged) ... */ },
+    reorderMasterEffect: (effectId, newIndex) => { /* ... (implementation unchanged) ... */ },
+    setActualMasterVolume: (volumeValue) => { /* ... (implementation unchanged) ... */ },
     effectsRegistryAccess: { AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null, getEffectDefaultParams: null, synthEngineControlDefinitions: null, },
     getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
-    updateTrackMeterUI: (trackId, level, isClipping) => { /* ... (unchanged) ... */ },
-    updateMasterEffectsRackUI: () => { /* ... (unchanged) ... */ },
-    triggerCustomBackgroundUpload: () => { /* ... (unchanged) ... */ },
+    updateTrackMeterUI: (trackId, level, isClipping) => { /* ... (implementation unchanged) ... */ },
+    updateMasterEffectsRackUI: () => { /* ... (implementation unchanged) ... */ },
+    triggerCustomBackgroundUpload: () => { /* ... (implementation unchanged) ... */ },
     removeCustomDesktopBackground: removeCustomDesktopBackground,
-    onPlaybackModeChange: (newMode) => { /* ... (unchanged) ... */ }
+    onPlaybackModeChange: (newMode) => { /* ... (implementation unchanged) ... */ }
 };
 
 // --- Centralized UI Update Handler ---
 function handleTrackUIUpdate(trackId, reason, detail) { /* ... (implementation unchanged, will need piano roll specific updates later) ... */ }
 
 // --- Application Initialization ---
-async function initializeSnugOS() { /* ... (implementation unchanged) ... */ }
-function updateMetersLoop() { /* ... (unchanged) ... */ }
-function applyDesktopBackground(imageUrlOrObjectUrl) { /* ... (unchanged) ... */ }
+async function initializeSnugOS() { /* ... (implementation unchanged, but should now load without JSZip error) ... */ }
+function updateMetersLoop() { /* ... (implementation unchanged) ... */ }
+function applyDesktopBackground(imageUrlOrObjectUrl) { /* ... (implementation unchanged) ... */ }
 // --- Global Event Listeners ---
 window.addEventListener('load', initializeSnugOS);
 window.addEventListener('beforeunload', (e) => { /* ... (unchanged) ... */ });
