@@ -1,0 +1,157 @@
+// js/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube via Cobalt API
+
+let localAppServices = {};
+
+/**
+ * Initializes the YouTube Importer UI module with a reference to app services.
+ * @param {object} appServicesFromMain - A reference to the main appServices object.
+ */
+export function initializeYouTubeImporterUI(appServicesFromMain) {
+    localAppServices = appServicesFromMain || {};
+    console.log("[YouTubeImporterUI] Initialized.");
+}
+
+/**
+ * Opens a window for importing audio from a YouTube URL.
+ * @param {object} savedState - Optional saved state for restoring window position/size.
+ * @returns {SnugWindow|null} The created window instance or null if it fails.
+ */
+export function openYouTubeImporterWindow(savedState = null) {
+    const windowId = 'youtubeImporter';
+    if (localAppServices.getWindowById && localAppServices.getWindowById(windowId)) {
+        localAppServices.getWindowById(windowId).restore();
+        return;
+    }
+
+    const contentHTML = `
+        <div class="p-4 flex flex-col h-full bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
+            <h3 class="text-lg font-bold mb-2">Import Audio from YouTube</h3>
+            <p class="text-xs mb-4 text-gray-600 dark:text-slate-400">
+                Enter a YouTube video URL to download its audio as an MP3. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-blue-500 hover:underline">Cobalt</a> API.
+            </p>
+            
+            <div class="flex items-center space-x-2">
+                <input type="text" id="youtubeUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="flex-grow p-2 border rounded bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <button id="youtubeImportBtn" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Import
+                </button>
+            </div>
+
+            <div id="youtubeImportStatus" class="mt-4 text-sm h-12"></div>
+        </div>
+    `;
+
+    const importerWindow = localAppServices.createWindow(
+        windowId, 
+        'YouTube Importer', 
+        contentHTML, 
+        { width: 450, height: 220, minWidth: 400, minHeight: 200 }
+    );
+
+    if (importerWindow?.element) {
+        attachImporterEventListeners(importerWindow.element);
+    }
+    return importerWindow;
+}
+
+/**
+ * Attaches event listeners to the controls within the YouTube Importer window.
+ * @param {HTMLElement} windowElement - The root element of the importer window.
+ */
+function attachImporterEventListeners(windowElement) {
+    const urlInput = windowElement.querySelector('#youtubeUrlInput');
+    const importBtn = windowElement.querySelector('#youtubeImportBtn');
+    const statusDiv = windowElement.querySelector('#youtubeImportStatus');
+
+    const setStatus = (message, isError = false) => {
+        statusDiv.textContent = message;
+        statusDiv.className = `mt-4 text-sm h-12 ${isError ? 'text-red-500' : 'text-gray-500 dark:text-slate-300'}`;
+    };
+
+    const handleImport = async () => {
+        const youtubeUrl = urlInput.value.trim();
+        if (!youtubeUrl || !youtubeUrl.includes('youtu')) {
+            setStatus('Please enter a valid YouTube URL.', true);
+            return;
+        }
+
+        importBtn.disabled = true;
+        urlInput.disabled = true;
+        importBtn.textContent = 'Working...';
+        setStatus('Requesting download link from Cobalt API...');
+
+        try {
+            const response = await fetch('https://co.wuk.sh/api/json', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url: youtubeUrl,
+                    aFormat: "mp3",    // We specifically want MP3 format
+                    isAudioOnly: true // Request only the audio stream
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Cobalt API returned an error: ${response.status} ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log("[YouTubeImporter] Cobalt API Response:", result);
+
+            if (result.status === 'stream' || result.status === 'redirect') {
+                setStatus('Download link received. Fetching audio...');
+                const audioUrl = result.url;
+                
+                const audioResponse = await fetch(audioUrl);
+                if (!audioResponse.ok) {
+                    throw new Error(`Failed to download the audio file: ${audioResponse.status} ${audioResponse.statusText}`);
+                }
+                
+                const audioBlob = await audioResponse.blob();
+                console.log(`[YouTubeImporter] Downloaded audio blob. Size: ${audioBlob.size} bytes, Type: ${audioBlob.type}`);
+                
+                setStatus('Audio downloaded. Adding to a new track...');
+
+                let newTrack = localAppServices.addTrack('Audio');
+                if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
+                    // Attempt to generate a more descriptive name
+                    let clipName = `YT Import - ${new URL(youtubeUrl).searchParams.get('v') || youtubeUrl.split('/').pop()}`;
+                    await newTrack.addExternalAudioFileAsClip(audioBlob, 0, clipName);
+                    
+                    setStatus('Success! Track added to your project.', false);
+                    setTimeout(() => {
+                        const win = localAppServices.getWindowById('youtubeImporter');
+                        if (win) win.close();
+                    }, 2000);
+
+                } else {
+                    throw new Error("Could not create a new audio track or add the clip.");
+                }
+
+            } else if (result.status === 'error') {
+                throw new Error(result.text || 'Cobalt API returned an error.');
+            } else if (result.status === 'rate-limit') {
+                throw new Error('You are being rate-limited by the API. Please try again later.');
+            } else {
+                 throw new Error(`Unsupported API status: ${result.status}`);
+            }
+
+        } catch (error) {
+            console.error('[YouTubeImporter] Import failed:', error);
+            setStatus(`Error: ${error.message}`, true);
+            importBtn.disabled = false;
+            urlInput.disabled = false;
+            importBtn.textContent = 'Import';
+        }
+    };
+
+    importBtn.addEventListener('click', handleImport);
+    urlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleImport();
+        }
+    });
+}
