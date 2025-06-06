@@ -58,7 +58,6 @@ export function initializeUIModule(appServicesFromMain) {
     }
 }
 
-// --- START OF FULLY MERGED IMPLEMENTATION ---
 
 // --- Specific Inspector DOM Builders ---
 function buildSynthSpecificInspectorDOM(track) {
@@ -145,20 +144,62 @@ function initializeSynthSpecificControls(track, winEl) {
 }
 
 function initializeSamplerSpecificControls(track, winEl) {
-    // Implement or merge logic from old ui.js
+    const dzEl = winEl.querySelector(`.drop-zone[data-track-id="${track.id}"]`);
+    if (dzEl) {
+        setupGenericDropZoneListeners(dzEl, track.id, 'sampler', null, 
+            (soundData, trackId) => localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'sampler', null),
+            (event, trackId) => localAppServices.loadSampleFile(event, trackId, 'sampler')
+        );
+        winEl.querySelector(`#sampler-file-input-${track.id}`)?.addEventListener('change', (e) => localAppServices.loadSampleFile(e, track.id, 'sampler'));
+    }
     renderSamplePads(track);
+    const canvas = winEl.querySelector(`#waveformCanvas-${track.id}`);
+    if (canvas) {
+        track.waveformCanvasCtx = canvas.getContext('2d');
+        if (track.audioBuffer?.loaded) drawWaveform(track);
+    }
     updateSliceEditorUI(track);
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
-    // Implement or merge logic from old ui.js
     renderDrumSamplerPads(track);
     updateDrumPadControlsUI(track);
 }
 
 function initializeInstrumentSamplerSpecificControls(track, winEl) {
-    // Implement or merge logic from old ui.js
-    drawInstrumentWaveform(track);
+    const dzEl = winEl.querySelector(`.drop-zone[data-track-id="${track.id}"]`);
+    if (dzEl) {
+        setupGenericDropZoneListeners(dzEl, track.id, 'instrumentsampler', null, 
+            (soundData, trackId) => localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'InstrumentSampler', null),
+            (event, trackId) => localAppServices.loadSampleFile(event, trackId, 'InstrumentSampler')
+        );
+        winEl.querySelector(`#inst-sampler-file-input-${track.id}`)?.addEventListener('change', (e) => localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler'));
+    }
+    
+    const canvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
+    if (canvas) {
+        track.instrumentWaveformCanvasCtx = canvas.getContext('2d');
+        if(track.instrumentSamplerSettings.audioBuffer?.loaded) drawInstrumentWaveform(track);
+    }
+
+    const controlsContainer = winEl.querySelector(`#inst-sampler-controls-container-${track.id}`);
+    if(controlsContainer) {
+        const env = track.instrumentSamplerSettings.envelope || { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 };
+        const knobsHTML = `<div class="grid grid-cols-4 gap-2">
+            <div id="instr-attack-placeholder"></div><div id="instr-decay-placeholder"></div>
+            <div id="instr-sustain-placeholder"></div><div id="instr-release-placeholder"></div>
+        </div>`;
+        controlsContainer.innerHTML = knobsHTML;
+        
+        const createKnob = (id, options) => {
+            const placeholder = controlsContainer.querySelector(`#${id}`);
+            if(placeholder) placeholder.appendChild(importedCreateKnob(options, localAppServices).element);
+        };
+        createKnob('instr-attack-placeholder', { label: 'Attack', min: 0.001, max: 2, step: 0.001, initialValue: env.attack, onValueChange: val => track.setInstrumentSamplerEnv('attack', val) });
+        createKnob('instr-decay-placeholder', { label: 'Decay', min: 0.01, max: 2, step: 0.01, initialValue: env.decay, onValueChange: val => track.setInstrumentSamplerEnv('decay', val) });
+        createKnob('instr-sustain-placeholder', { label: 'Sustain', min: 0, max: 1, step: 0.01, initialValue: env.sustain, onValueChange: val => track.setInstrumentSamplerEnv('sustain', val) });
+        createKnob('instr-release-placeholder', { label: 'Release', min: 0.01, max: 5, step: 0.01, initialValue: env.release, onValueChange: val => track.setInstrumentSamplerEnv('release', val) });
+    }
 }
 
 // --- Track Inspector Window (Entry Point) ---
@@ -333,7 +374,7 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
     grid.className = 'grid grid-cols-2 gap-2';
     effectDef.params.forEach(paramDef => {
         const placeholder = document.createElement('div');
-        let initialValue = effect.params[paramDef.key]; // Simplified; needs deep access
+        let initialValue = effect.params[paramDef.key]; // Simplified
         if (paramDef.type === 'knob') {
             const knob = importedCreateKnob({
                 label: paramDef.label, min: paramDef.min, max: paramDef.max, step: paramDef.step,
@@ -398,35 +439,28 @@ export function updateMixerWindow() {
 export function renderMixer(container) {
     container.innerHTML = '';
     const tracks = getTracksState();
-
-    const renderTrackStrip = (track) => {
+    tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-slate-700 border-slate-600 shadow w-24 mr-2 text-xs';
-        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-slate-200" title="${track.name}">${track.name}</div><div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>`;
+        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-slate-700 border-slate-600 w-24 mr-2 text-xs';
+        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-slate-200">${track.name}</div><div id="volumeKnob-mixer-${track.id}-placeholder"></div>`;
         container.appendChild(trackDiv);
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
-            const volKnob = importedCreateKnob({ label: `Vol`, min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, onValueChange: val => track.setVolume(val, true) }, localAppServices);
+            const volKnob = importedCreateKnob({ label: `Vol`, min: 0, max: 1.2, initialValue: track.previousVolumeBeforeMute, onValueChange: val => track.setVolume(val, true) }, localAppServices);
             volKnobPlaceholder.appendChild(volKnob.element);
         }
-    };
-
-    tracks.forEach(renderTrackStrip);
-
-    // Master track strip
-    const masterTrackDiv = document.createElement('div');
-    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-slate-600 border-slate-500 shadow w-24 mr-2 text-xs';
-    masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-slate-200" title="Master">Master</div><div id="masterVolumeKnob-mixer-placeholder" class="h-16 mx-auto mb-1"></div>`;
-    container.appendChild(masterTrackDiv);
-    const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#masterVolumeKnob-mixer-placeholder');
-    if (masterVolKnobPlaceholder) {
-        const masterVolKnob = importedCreateKnob({ label: 'Master', min: 0, max: 1.2, step: 0.01, initialValue: localAppServices.getMasterGainValue?.() || 1, onValueChange: val => localAppServices.setActualMasterVolume?.(val) }, localAppServices);
-        masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
-    }
+    });
 }
 
-
-// --- Piano Roll Window ---
+// --- UI Update & Drawing Functions ---
+export function drawWaveform(track) { /* implementation from old file */ }
+export function drawInstrumentWaveform(track) { /* implementation from old file */ }
+export function renderSamplePads(track) { /* implementation from old file */ }
+export function updateSliceEditorUI(track) { /* implementation from old file */ }
+export function renderDrumSamplerPads(track) { /* implementation from old file */ }
+export function updateDrumPadControlsUI(track) { /* implementation from old file */ }
+export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {}
+export function highlightPlayingStep(trackId, col) {}
 export function openPianoRollWindow(trackId, forceRedraw = false, savedState = null) {
     const track = localAppServices.getTrackById?.(trackId);
     if (!track || track.type === 'Audio') return;
@@ -440,23 +474,13 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
     const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, konvaContainer, { width: 800, height: 500 });
     if (pianoRollWindow?.element) {
         setTimeout(() => {
-            if (konvaContainer.offsetWidth > 0) { pianoRollWindow.konvaStage = createPianoRollStage(konvaContainer, track); }
+            if (konvaContainer.offsetWidth > 0) pianoRollWindow.konvaStage = createPianoRollStage(konvaContainer, track);
         }, 150);
     }
 }
 
-// --- UI Update & Drawing Functions ---
-export function drawWaveform(track) { /* implementation from old file */ }
-export function drawInstrumentWaveform(track) { /* implementation from old file */ }
-export function renderSamplePads(track) { /* implementation from old file */ }
-export function updateSliceEditorUI(track) { /* implementation from old file */ }
-export function renderDrumSamplerPads(track) { /* implementation from old file */ }
-export function updateDrumPadControlsUI(track) { /* implementation from old file */ }
-export function updateSequencerCellUI(sequencerWindowElement, trackType, row, col, isActive) {}
-export function highlightPlayingStep(trackId, col) {}
 
-
-// --- Re-export functions from sub-modules ---
+// Re-export functions from sub-modules
 export {
     importedCreateKnob as createKnob,
     importedOpenTimelineWindow as openTimelineWindow,
