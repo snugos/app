@@ -103,10 +103,15 @@ export function initializePrimaryEventListeners() {
         if (localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow();
         uiCache.startMenu.classList.add('hidden');
     });
+    
     // ADDED: YouTube Importer listener
     const menuOpenYouTubeImporter = document.getElementById('menuOpenYouTubeImporter');
     menuOpenYouTubeImporter?.addEventListener('click', () => {
-        handleOpenYouTubeImporter(); // Call the new handler
+        if (localAppServices.openYouTubeImporterWindow) {
+            localAppServices.openYouTubeImporterWindow();
+        } else {
+            console.error("openYouTubeImporterWindow service not available.");
+        }
         uiCache.startMenu.classList.add('hidden');
     });
 
@@ -193,7 +198,22 @@ export function handleTrackArm(trackId) { /* ... */ }
 export function handleRemoveTrack(trackId) { /* ... */ }
 export function handleOpenTrackInspector(trackId) { /* ... */ }
 export function handleOpenEffectsRack(trackId) { /* ... */ }
-export function handleOpenPianoRoll(trackId) { /* ... */ }
+
+// MODIFIED: Renamed from handleOpenSequencer to handleOpenPianoRoll
+export function handleOpenPianoRoll(trackId) {
+    if (localAppServices.openPianoRollWindow) { // Call the new function name in appServices
+        localAppServices.openPianoRollWindow(trackId);
+    } else {
+        console.error("openPianoRollWindow service not available in appServices.");
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification("Piano Roll UI is currently unavailable.", 3000);
+        }
+    }
+}
+
+
+// --- Timeline Lane Drop Handling ---
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime, services = localAppServices) { /* ... */ }
 
 // ADDED: New handler for YouTube Importer
 export function handleOpenYouTubeImporter() {
@@ -206,8 +226,3 @@ export function handleOpenYouTubeImporter() {
         }
     }
 }
-
-
-// --- Timeline Lane Drop Handling ---
-export async function handleTimelineLaneDrop(event, targetTrackId, startTime, services = localAppServices) { /* ... */ }
-
