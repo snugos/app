@@ -54,12 +54,7 @@ export function initializePrimaryEventListeners() {
     console.log('[DEBUG] Checking UI Cache for Start Menu:', uiCache.startMenu);
     // --- END OF ADDED CODE ---
 
-    uiCache.startButton?.addEventListener('click', () => {
-        uiCache.startMenu?.classList.toggle('hidden');
-        if (!uiCache.startMenu?.classList.contains('hidden')) {
-            updateUndoRedoButtons();
-        }
-    });
+
 
     // ... rest of the function
     
