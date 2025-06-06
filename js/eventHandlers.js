@@ -48,6 +48,21 @@ export function initializeEventHandlersModule(appServicesFromMain) {
 }
 
 export function initializePrimaryEventListeners() {
+    // --- START OF ADDED CODE ---
+    const uiCache = localAppServices.uiElementsCache || {};
+    console.log('[DEBUG] Checking UI Cache for Start Button:', uiCache.startButton);
+    console.log('[DEBUG] Checking UI Cache for Start Menu:', uiCache.startMenu);
+    // --- END OF ADDED CODE ---
+
+    uiCache.startButton?.addEventListener('click', () => {
+        uiCache.startMenu?.classList.toggle('hidden');
+        if (!uiCache.startMenu?.classList.contains('hidden')) {
+            updateUndoRedoButtons();
+        }
+    });
+
+    // ... rest of the function
+    
     console.log("[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:", Object.keys(localAppServices.uiElementsCache || {}));
 
     const uiCache = localAppServices.uiElementsCache || {};
