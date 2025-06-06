@@ -22,12 +22,16 @@ export const PIANO_ROLL_END_MIDI_NOTE = PIANO_ROLL_START_MIDI_NOTE + (PIANO_ROLL
 // This array is crucial for determining the number of rows in the piano roll/sequencer for synths.
 export const SYNTH_PITCHES = (() => {
     const pitches = [];
-    for (let midiNote = PIANO_ROLL_END_MIDI_NOTE; midiNote >= PIANO_ROLL_START_MIDI_NOTE; midiNote--) {
-        const noteIndexInOctave = midiNote % 12;
-        // MIDI octave convention: C4 is MIDI note 60. Octave number for MIDI note X is floor(X/12) - 1.
-        // Tone.js convention: "C4" implies octave 4.
-        const octave = Math.floor(midiNote / 12) -1; 
-        pitches.push(`${MIDI_NOTE_NAMES[noteIndexInOctave]}${octave}`);
+    if (Array.isArray(MIDI_NOTE_NAMES) && MIDI_NOTE_NAMES.length === 12) {
+        for (let midiNote = PIANO_ROLL_END_MIDI_NOTE; midiNote >= PIANO_ROLL_START_MIDI_NOTE; midiNote--) {
+            const noteIndexInOctave = midiNote % 12;
+            // MIDI octave convention: C4 is MIDI note 60. Octave number for MIDI note X is floor(X/12) - 1.
+            // Tone.js convention: "C4" implies octave 4.
+            const octave = Math.floor(midiNote / 12) -1; 
+            pitches.push(`${MIDI_NOTE_NAMES[noteIndexInOctave]}${octave}`);
+        }
+    } else {
+        console.error("[Constants] MIDI_NOTE_NAMES is not correctly defined. SYNTH_PITCHES will be empty.");
     }
     return pitches; // Example: ['B5', 'A#5', ..., 'C#2', 'C2']
 })();
@@ -81,4 +85,18 @@ export const computerKeySynthMap = {
     'y': 56, // G#3
     'u': 58, // A#3
 };
+
+// Safety check: Ensure critical constants are defined
+if (!Array.isArray(SYNTH_PITCHES) || SYNTH_PITCHES.length === 0) {
+    console.error("[Constants] CRITICAL: SYNTH_PITCHES is not a valid array or is empty. Defaulting to a fallback array.");
+    // Provide a fallback in case generation fails (though the IIFE should prevent this if MIDI_NOTE_NAMES is good)
+    const fallbackPitches = [];
+    for (let i = 83; i >= 36; i--) { fallbackPitches.push(`N${i}`);} // Generic note names
+    Object.defineProperty(exports, "SYNTH_PITCHES", { value: fallbackPitches, writable: false });
+}
+
+if (typeof numDrumSamplerPads !== 'number' || numDrumSamplerPads <= 0) {
+    console.error("[Constants] CRITICAL: numDrumSamplerPads is not a valid number. Defaulting to 16.");
+    Object.defineProperty(exports, "numDrumSamplerPads", { value: 16, writable: false });
+}
 
