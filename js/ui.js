@@ -64,18 +64,193 @@ export function initializeUIModule(appServicesFromMain) {
 }
 
 
+// --- START OF ADDED/CORRECTED IMPLEMENTATION ---
+
 // --- Specific Inspector DOM Builders ---
-function buildSynthSpecificInspectorDOM(track) { /* ... (implementation unchanged) ... */ }
-function buildSamplerSpecificInspectorDOM(track) { /* ... (implementation unchanged) ... */ }
-function buildDrumSamplerSpecificInspectorDOM(track) { /* ... (implementation unchanged) ... */ }
-function buildInstrumentSamplerSpecificInspectorDOM(track) { /* ... (implementation unchanged) ... */ }
+function buildSynthSpecificInspectorDOM(track) {
+    let controlsHTML = `
+        <div class="panel">
+            <div class="control-group">
+                <label>Synth Engine</label>
+                <select id="synthEngineSelect-${track.id}" class="w-full p-1.5 border rounded">
+                    <option value="MonoSynth" ${track.synthEngineType === 'MonoSynth' ? 'selected' : ''}>MonoSynth</option>
+                    </select>
+            </div>
+            <div id="synth-engine-controls-${track.id}" class="grid grid-cols-3 gap-2 mt-2">
+                </div>
+        </div>
+    `;
+    return controlsHTML;
+}
+
+function buildSamplerSpecificInspectorDOM(track) {
+    const dropZoneId = `sampler-drop-zone-${track.id}`;
+    const fileInputId = `sampler-file-input-${track.id}`;
+    const dropZoneHTML = createDropZoneHTML(track.id, fileInputId, 'sampler', null, track.samplerAudioData);
+
+    return `
+        <div class="panel">
+            <h4 class="text-xs font-bold uppercase mb-1">Sample</h4>
+            ${dropZoneHTML}
+            <div id="sampler-waveform-placeholder-${track.id}" class="mt-2">
+                 <canvas id="sampler-waveform-canvas-${track.id}" class="waveform-canvas"></canvas>
+            </div>
+        </div>
+        <div class="panel mt-2">
+            <h4 class="text-xs font-bold uppercase mb-1">Slicer</h4>
+             <div class="control-group">
+                <label for="polyphonicToggle-${track.id}">Polyphonic</label>
+                <input type="checkbox" id="polyphonicToggle-${track.id}" ${track.slicerIsPolyphonic ? 'checked' : ''}>
+            </div>
+            <div class="grid grid-cols-4 gap-2 mt-2" id="sampler-pads-container-${track.id}">
+                </div>
+            <div id="slice-editor-container-${track.id}" class="mt-2">
+                 </div>
+        </div>
+    `;
+}
+
+function buildDrumSamplerSpecificInspectorDOM(track) {
+    return `
+        <div class="panel">
+             <div class="grid grid-cols-4 gap-2" id="drum-sampler-pads-container-${track.id}">
+                </div>
+        </div>
+        <div id="drum-pad-editor-container-${track.id}" class="panel mt-2">
+             </div>
+    `;
+}
+
+function buildInstrumentSamplerSpecificInspectorDOM(track) {
+    const dropZoneId = `inst-sampler-drop-zone-${track.id}`;
+    const fileInputId = `inst-sampler-file-input-${track.id}`;
+    const dropZoneHTML = createDropZoneHTML(track.id, fileInputId, 'instrumentsampler', null, track.instrumentSamplerSettings);
+
+    return `
+        <div class="panel">
+            ${dropZoneHTML}
+            <div id="inst-sampler-waveform-placeholder-${track.id}" class="mt-2">
+                 <canvas id="inst-sampler-waveform-canvas-${track.id}" class="waveform-canvas"></canvas>
+            </div>
+             <div class="control-group mt-2">
+                <label for="polyphonicToggle-${track.id}">Polyphonic</label>
+                <input type="checkbox" id="polyphonicToggle-${track.id}" ${track.instrumentSamplerIsPolyphonic ? 'checked' : ''}>
+            </div>
+        </div>
+        <div id="inst-sampler-controls-container-${track.id}" class="panel mt-2">
+            </div>
+    `;
+}
 
 // --- Specific Inspector Control Initializers ---
-function buildSynthEngineControls(track, container, engineType) { /* ... (implementation unchanged) ... */ }
-function initializeSynthSpecificControls(track, winEl) { /* ... (implementation unchanged) ... */ }
-function initializeSamplerSpecificControls(track, winEl) { /* ... (implementation unchanged) ... */ }
-function initializeDrumSamplerSpecificControls(track, winEl) { /* ... (implementation unchanged) ... */ }
-function initializeInstrumentSamplerSpecificControls(track, winEl) { /* ... (implementation unchanged) ... */ }
+function buildSynthEngineControls(track, container, engineType) {
+    container.innerHTML = '';
+    const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions[engineType];
+    if (!definitions) {
+        container.innerHTML = `<p class="text-xs text-gray-500 col-span-3">No controls defined for ${engineType}.</p>`;
+        return;
+    }
+
+    definitions.forEach(def => {
+        const placeholder = document.createElement('div');
+        placeholder.id = `${def.idPrefix}-placeholder-${track.id}`;
+        container.appendChild(placeholder);
+    });
+}
+
+function initializeSynthSpecificControls(track, winEl) {
+    const controlsContainer = winEl.querySelector(`#synth-engine-controls-${track.id}`);
+    if (controlsContainer) {
+        buildSynthEngineControls(track, controlsContainer, track.synthEngineType);
+
+        const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions[track.synthEngineType] || [];
+        definitions.forEach(def => {
+            const placeholder = winEl.querySelector(`#${def.idPrefix}-placeholder-${track.id}`);
+            if (!placeholder) return;
+
+            const currentVal = def.path.split('.').reduce((o, i) => o?.[i], track.synthParams) ?? def.defaultValue;
+
+            if (def.type === 'knob') {
+                const knob = importedCreateKnob({
+                    label: def.label,
+                    min: def.min,
+                    max: def.max,
+                    step: def.step,
+                    initialValue: currentVal,
+                    decimals: def.decimals,
+                    displaySuffix: def.displaySuffix,
+                    trackRef: track,
+                    onValueChange: (val) => track.setSynthParam(def.path, val)
+                }, localAppServices);
+                placeholder.appendChild(knob.element);
+                track.inspectorControls[def.path] = knob;
+            } else if (def.type === 'select') {
+                const selectEl = document.createElement('select');
+                selectEl.className = 'w-full p-1 text-xs border rounded bg-white dark:bg-slate-700 dark:border-slate-600';
+                selectEl.innerHTML = def.options.map(opt => `<option value="${opt}" ${opt === currentVal ? 'selected' : ''}>${opt}</option>`).join('');
+                selectEl.addEventListener('change', (e) => track.setSynthParam(def.path, e.target.value));
+                const labelEl = document.createElement('div');
+                labelEl.className = 'knob-label';
+                labelEl.textContent = def.label;
+                placeholder.appendChild(labelEl);
+                placeholder.appendChild(selectEl);
+                track.inspectorControls[def.path] = { element: selectEl, type: 'select' };
+            }
+        });
+    }
+
+    const engineSelect = winEl.querySelector(`#synthEngineSelect-${track.id}`);
+    engineSelect?.addEventListener('change', (e) => {
+        // This would re-initialize the synth engine on the track and re-render controls
+        console.log(`Synth engine changed to: ${e.target.value}. Re-rendering controls is needed.`);
+        // track.setSynthEngine(e.target.value); // Future implementation
+    });
+}
+
+function initializeSamplerSpecificControls(track, winEl) {
+    const dropZoneElement = winEl.querySelector(`.drop-zone[data-track-id="${track.id}"]`);
+    if (dropZoneElement) {
+        setupGenericDropZoneListeners(dropZoneElement, track.id, 'sampler', null,
+            (soundData, trackId) => localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'Sampler', null),
+            (event, trackId) => localAppServices.loadSampleFile(event, trackId, 'Sampler')
+        );
+        const fileInput = winEl.querySelector(`#sampler-file-input-${track.id}`);
+        fileInput?.addEventListener('change', (e) => localAppServices.loadSampleFile(e, track.id, 'Sampler'));
+    }
+    const polyToggle = winEl.querySelector(`#polyphonicToggle-${track.id}`);
+    polyToggle?.addEventListener('change', (e) => {
+        track.slicerIsPolyphonic = e.target.checked;
+        if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Slicer Polyphonic to ${e.target.checked}`);
+    });
+    renderSamplePads(track);
+}
+
+function initializeDrumSamplerSpecificControls(track, winEl) {
+    renderDrumSamplerPads(track);
+    updateDrumPadControlsUI(track);
+}
+
+function initializeInstrumentSamplerSpecificControls(track, winEl) {
+    const dropZoneElement = winEl.querySelector(`.drop-zone[data-track-id="${track.id}"]`);
+     if (dropZoneElement) {
+        setupGenericDropZoneListeners(dropZoneElement, track.id, 'instrumentsampler', null,
+            (soundData, trackId) => localAppServices.loadSoundFromBrowserToTarget(soundData, trackId, 'InstrumentSampler', null),
+            (event, trackId) => localAppServices.loadSampleFile(event, trackId, 'InstrumentSampler')
+        );
+        const fileInput = winEl.querySelector(`#inst-sampler-file-input-${track.id}`);
+        fileInput?.addEventListener('change', (e) => localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler'));
+    }
+    const polyToggle = winEl.querySelector(`#polyphonicToggle-${track.id}`);
+    polyToggle?.addEventListener('change', (e) => {
+        track.instrumentSamplerIsPolyphonic = e.target.checked;
+        if(localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set Instrument Sampler Polyphonic to ${e.target.checked}`);
+    });
+    drawInstrumentWaveform(track);
+    // Logic to build and initialize envelope knobs etc. would go here
+}
+
+// --- END OF ADDED/CORRECTED IMPLEMENTATION ---
+
 
 // --- Track Inspector Window (Entry Point) ---
 function buildTrackInspectorContentDOM(track) {
@@ -165,11 +340,21 @@ function initializeCommonInspectorControls(track, winEl) {
     if (volumeKnobPlaceholder) {
         const volumeKnob = importedCreateKnob({ label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }, localAppServices);
         volumeKnobPlaceholder.innerHTML = '';
-        volumeKnobPlaceholder.appendChild(volumeKnob.element);
+        volumeKnobPlaceholder.appendChild(knob.element);
         track.inspectorControls.volume = volumeKnob;
     }
 }
-function initializeTypeSpecificInspectorControls(track, winEl) { /* ... (implementation unchanged) ... */ }
+function initializeTypeSpecificInspectorControls(track, winEl) {
+    if (track.type === 'Synth') {
+        initializeSynthSpecificControls(track, winEl);
+    } else if (track.type === 'Sampler') {
+        initializeSamplerSpecificControls(track, winEl);
+    } else if (track.type === 'DrumSampler') {
+        initializeDrumSamplerSpecificControls(track, winEl);
+    } else if (track.type === 'InstrumentSampler') {
+        initializeInstrumentSamplerSpecificControls(track, winEl);
+    }
+}
 
 // --- Modular Effects Rack UI ---
 function buildModularEffectsRackDOM(owner, ownerType = 'track') { /* ... (implementation unchanged) ... */ }
@@ -214,7 +399,6 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
         return null;
     }
 
-    // Create a container for Konva stage
     const konvaContainer = document.createElement('div');
     konvaContainer.id = `pianoRollKonvaContainer-${trackId}`;
     konvaContainer.className = 'w-full h-full overflow-hidden bg-slate-800 dark:bg-slate-900';
@@ -223,7 +407,12 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
     const pianoRollOptions = { 
         width: 800, height: 500, minWidth: 500, minHeight: 300, 
         initialContentKey: windowId, 
-        onCloseCallback: () => { /* ... (Konva cleanup logic as before) ... */ }
+        onCloseCallback: () => {
+             const win = localAppServices.getWindowById(`pianoRollWin-${trackId}`);
+             if (win && win.konvaStage) {
+                 win.konvaStage.destroy();
+             }
+        }
     };
 
     const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name} - ${activeSequence.name}`, konvaContainer, pianoRollOptions);
@@ -267,5 +456,5 @@ export {
     importedOpenSoundBrowserWindow as openSoundBrowserWindow,
     importedUpdateSoundBrowserDisplayForLibrary as updateSoundBrowserDisplayForLibrary,
     importedRenderSoundBrowserDirectory as renderSoundBrowserDirectory,
-    importedOpenYouTubeImporterWindow as openYouTubeImporterWindow // ADDED
+    importedOpenYouTubeImporterWindow as openYouTubeImporterWindow
 };
