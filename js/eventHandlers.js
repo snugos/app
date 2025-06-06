@@ -103,15 +103,10 @@ export function initializePrimaryEventListeners() {
         if (localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow();
         uiCache.startMenu.classList.add('hidden');
     });
-    
     // ADDED: YouTube Importer listener
     const menuOpenYouTubeImporter = document.getElementById('menuOpenYouTubeImporter');
     menuOpenYouTubeImporter?.addEventListener('click', () => {
-        if (localAppServices.openYouTubeImporterWindow) {
-            localAppServices.openYouTubeImporterWindow();
-        } else {
-            console.error("openYouTubeImporterWindow service not available.");
-        }
+        handleOpenYouTubeImporter(); // Call the new handler
         uiCache.startMenu.classList.add('hidden');
     });
 
@@ -177,29 +172,28 @@ export function initializePrimaryEventListeners() {
 }
 
 // ... (attachGlobalControlEvents and other functions remain the same)
-export function attachGlobalControlEvents(uiCache) { /* ... */ }
-function calculateScheduleEndTime(tracks, currentPlayheadPosition) { /* ... */ }
-function updateUndoRedoButtons() { /* ... */ }
-function audioContextInitialized() { /* ... */ }
-function toggleFullScreen() { /* ... */ }
+export function attachGlobalControlEvents(uiCache) { /* ... (implementation unchanged) ... */ }
+function calculateScheduleEndTime(tracks, currentPlayheadPosition) { /* ... (implementation unchanged) ... */ }
+function updateUndoRedoButtons() { /* ... (implementation unchanged) ... */ }
+function audioContextInitialized() { /* ... (implementation unchanged) ... */ }
+function toggleFullScreen() { /* ... (implementation unchanged) ... */ }
 
 // --- MIDI Handling ---
-export function setupMIDI() { /* ... */ }
-function onMIDISuccess(midiAccess) { /* ... */ }
-function onMIDIFailure(msg) { /* ... */ }
-function populateMIDIInputSelector() { /* ... */ }
-export function selectMIDIInput(event) { /* ... */ }
-function onMIDIMessage(message) { /* ... */ }
+export function setupMIDI() { /* ... (implementation unchanged) ... */ }
+function onMIDISuccess(midiAccess) { /* ... (implementation unchanged) ... */ }
+function onMIDIFailure(msg) { /* ... (implementation unchanged) ... */ }
+function populateMIDIInputSelector() { /* ... (implementation unchanged) ... */ }
+export function selectMIDIInput(event) { /* ... (implementation unchanged) ... */ }
+function onMIDIMessage(message) { /* ... (implementation unchanged) ... */ }
 
 // --- Track Context Menu and Actions ---
-export function handleTrackMute(trackId) { /* ... */ }
-export function handleTrackSolo(trackId) { /* ... */ }
-export function handleTrackArm(trackId) { /* ... */ }
-export function handleRemoveTrack(trackId) { /* ... */ }
-export function handleOpenTrackInspector(trackId) { /* ... */ }
-export function handleOpenEffectsRack(trackId) { /* ... */ }
+export function handleTrackMute(trackId) { /* ... (implementation unchanged) ... */ }
+export function handleTrackSolo(trackId) { /* ... (implementation unchanged) ... */ }
+export function handleTrackArm(trackId) { /* ... (implementation unchanged) ... */ }
+export function handleRemoveTrack(trackId) { /* ... (implementation unchanged) ... */ }
+export function handleOpenTrackInspector(trackId) { /* ... (implementation unchanged) ... */ }
+export function handleOpenEffectsRack(trackId) { /* ... (implementation unchanged) ... */ }
 
-// MODIFIED: Renamed from handleOpenSequencer to handleOpenPianoRoll
 export function handleOpenPianoRoll(trackId) {
     if (localAppServices.openPianoRollWindow) { // Call the new function name in appServices
         localAppServices.openPianoRollWindow(trackId);
@@ -213,7 +207,7 @@ export function handleOpenPianoRoll(trackId) {
 
 
 // --- Timeline Lane Drop Handling ---
-export async function handleTimelineLaneDrop(event, targetTrackId, startTime, services = localAppServices) { /* ... */ }
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime, services = localAppServices) { /* ... (implementation unchanged) ... */ }
 
 // ADDED: New handler for YouTube Importer
 export function handleOpenYouTubeImporter() {
