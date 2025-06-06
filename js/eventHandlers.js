@@ -9,7 +9,7 @@ import {
     getSoloedTrackIdState as getSoloedTrackId,
     setArmedTrackIdState as setArmedTrackId,
     getArmedTrackIdState as getArmedTrackId,
-    setActiveSequencerTrackIdState as setActiveSequencerTrackId, // Still used for playback highlighting logic
+    setActiveSequencerTrackIdState as setActiveSequencerTrackId,
     setIsRecordingState as setIsRecording,
     isTrackRecordingState as isTrackRecording,
     setRecordingTrackIdState as setRecordingTrackId,
@@ -20,8 +20,8 @@ import {
     setPlaybackModeState,
     getMidiAccessState,
     getActiveMIDIInputState,
-    getUndoStackState, // For updating Undo/Redo buttons
-    getRedoStackState  // For updating Undo/Redo buttons
+    getUndoStackState, 
+    getRedoStackState  
 } from './state.js';
 
 let localAppServices = {};
@@ -103,14 +103,10 @@ export function initializePrimaryEventListeners() {
         if (localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow();
         uiCache.startMenu.classList.add('hidden');
     });
-    // ADDED: YouTube Importer
+    // ADDED: YouTube Importer listener
     const menuOpenYouTubeImporter = document.getElementById('menuOpenYouTubeImporter');
     menuOpenYouTubeImporter?.addEventListener('click', () => {
-        if(localAppServices.openYouTubeImporterWindow) {
-            localAppServices.openYouTubeImporterWindow();
-        } else {
-            console.error("openYouTubeImporterWindow service not available.");
-        }
+        handleOpenYouTubeImporter(); // Call the new handler
         uiCache.startMenu.classList.add('hidden');
     });
 
@@ -175,7 +171,7 @@ export function initializePrimaryEventListeners() {
     }
 }
 
-// ... (attachGlobalControlEvents, calculateScheduleEndTime, updateUndoRedoButtons, audioContextInitialized, toggleFullScreen - UNCHANGED)
+// ... (attachGlobalControlEvents and other functions remain the same)
 export function attachGlobalControlEvents(uiCache) { /* ... */ }
 function calculateScheduleEndTime(tracks, currentPlayheadPosition) { /* ... */ }
 function updateUndoRedoButtons() { /* ... */ }
@@ -183,7 +179,6 @@ function audioContextInitialized() { /* ... */ }
 function toggleFullScreen() { /* ... */ }
 
 // --- MIDI Handling ---
-// ... (setupMIDI, onMIDISuccess, onMIDIFailure, populateMIDIInputSelector, selectMIDIInput, onMIDIMessage - UNCHANGED)
 export function setupMIDI() { /* ... */ }
 function onMIDISuccess(midiAccess) { /* ... */ }
 function onMIDIFailure(msg) { /* ... */ }
@@ -198,15 +193,16 @@ export function handleTrackArm(trackId) { /* ... */ }
 export function handleRemoveTrack(trackId) { /* ... */ }
 export function handleOpenTrackInspector(trackId) { /* ... */ }
 export function handleOpenEffectsRack(trackId) { /* ... */ }
+export function handleOpenPianoRoll(trackId) { /* ... */ }
 
-// MODIFIED: Renamed from handleOpenSequencer to handleOpenPianoRoll
-export function handleOpenPianoRoll(trackId) {
-    if (localAppServices.openPianoRollWindow) { // Call the new function name in appServices
-        localAppServices.openPianoRollWindow(trackId);
+// ADDED: New handler for YouTube Importer
+export function handleOpenYouTubeImporter() {
+    if (localAppServices.openYouTubeImporterWindow) {
+        localAppServices.openYouTubeImporterWindow();
     } else {
-        console.error("openPianoRollWindow service not available in appServices.");
+        console.error("openYouTubeImporterWindow service not available.");
         if (localAppServices.showNotification) {
-            localAppServices.showNotification("Piano Roll UI is currently unavailable.", 3000);
+            localAppServices.showNotification("YouTube Importer UI is currently unavailable.", 3000);
         }
     }
 }
@@ -214,3 +210,4 @@ export function handleOpenPianoRoll(trackId) {
 
 // --- Timeline Lane Drop Handling ---
 export async function handleTimelineLaneDrop(event, targetTrackId, startTime, services = localAppServices) { /* ... */ }
+
