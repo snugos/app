@@ -105,7 +105,11 @@ function attachImporterEventListeners(windowElement) {
                 setStatus('Download link received. Fetching audio...');
                 const audioUrl = result.url;
                 
-                const audioResponse = await fetch(audioUrl);
+                // We need to use a CORS proxy for the download because the Cobalt download URL is on a different domain.
+                // Note: Using a public CORS proxy is not suitable for production but is fine for this demonstration.
+                const proxyUrl = `https://cors-anywhere.herokuapp.com/${audioUrl}`;
+                
+                const audioResponse = await fetch(proxyUrl);
                 if (!audioResponse.ok) {
                     throw new Error(`Failed to download the audio file: ${audioResponse.status} ${audioResponse.statusText}`);
                 }
@@ -115,10 +119,8 @@ function attachImporterEventListeners(windowElement) {
                 
                 setStatus('Audio downloaded. Adding to a new track...');
 
-                // Add to a new Audio track.
                 let newTrack = localAppServices.addTrack('Audio');
                 if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
-                    // Attempt to generate a more descriptive name
                     let clipName = `YT Import - ${new URL(youtubeUrl).searchParams.get('v') || youtubeUrl.split('/').pop()}`;
                     await newTrack.addExternalAudioFileAsClip(audioBlob, 0, clipName);
                     
@@ -142,7 +144,7 @@ function attachImporterEventListeners(windowElement) {
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
-            setStatus(`Error: ${error.message}`, true);
+            setStatus(`Error: ${error.message}. A CORS proxy might be needed to fetch the audio.`, true);
             importBtn.disabled = false;
             urlInput.disabled = false;
             importBtn.textContent = 'Import';
