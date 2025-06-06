@@ -1,5 +1,5 @@
 // js/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
-import * as Constants from '../constants.js'; // Adjust path if needed
+import * as Constants from '../constants.js';
 
 let localAppServices = {};
 
@@ -8,27 +8,66 @@ export function initializePianoRollUI(appServicesFromMain) {
     console.log("[PianoRollUI] Initialized.");
     if (typeof Konva === 'undefined') {
         console.error("[PianoRollUI] CRITICAL: Konva is not loaded. Piano Roll will not function.");
-        if (localAppServices.showNotification) {
-            localAppServices.showNotification("Error: Piano Roll library (Konva) not loaded!", 5000);
+    }
+}
+
+export function openPianoRollWindow(trackId, forceRedraw = false, savedState = null) {
+    const track = localAppServices.getTrackById?.(trackId);
+    if (!track || track.type === 'Audio') {
+        console.warn(`[PianoRollUI] Cannot open Piano Roll for track type: ${track?.type}`);
+        return;
+    }
+
+    const windowId = `pianoRollWin-${trackId}`;
+    if (localAppServices.getOpenWindows?.().has(windowId) && !savedState) {
+        localAppServices.getOpenWindows().get(windowId).restore();
+        return;
+    }
+
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) {
+        localAppServices.showNotification?.(`Track "${track.name}" has no active sequence.`, 3500);
+        return;
+    }
+
+    const konvaContainer = document.createElement('div');
+    konvaContainer.id = `pianoRollKonvaContainer-${trackId}`;
+    konvaContainer.className = 'w-full h-full overflow-hidden bg-slate-800 dark:bg-slate-900';
+
+    const pianoRollOptions = { 
+        width: 800, height: 500, minWidth: 500, minHeight: 300, 
+        initialContentKey: windowId, 
+        onCloseCallback: () => {
+             const win = localAppServices.getWindowById?.(windowId);
+             if (win && win.konvaStage) {
+                 win.konvaStage.destroy();
+             }
         }
+    };
+
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, konvaContainer, pianoRollOptions);
+
+    if (pianoRollWindow?.element) {
+        setTimeout(() => {
+            if (konvaContainer.offsetWidth > 0 && konvaContainer.offsetHeight > 0) {
+                 pianoRollWindow.konvaStage = createPianoRollStage(konvaContainer, track);
+            }
+        }, 150);
+        localAppServices.setActiveSequencerTrackId?.(trackId);
     }
 }
 
 export function createPianoRollStage(containerElement, track) {
     if (typeof Konva === 'undefined') {
-        console.error("[PianoRollUI createPianoRollStage] Konva is not defined.");
         containerElement.innerHTML = '<p class="p-4 text-red-500">Error: Piano Roll library failed to load.</p>';
         return null;
     }
     if (!containerElement || !containerElement.offsetWidth || !containerElement.offsetHeight) {
-        console.error("[PianoRollUI createPianoRollStage] Container element is invalid or has no dimensions:", containerElement);
         return null;
     }
 
     const stageWidth = containerElement.offsetWidth;
     const stageHeight = containerElement.offsetHeight;
-
-    console.log(`[PianoRollUI createPianoRollStage] Creating Konva Stage. Width: ${stageWidth}, Height: ${stageHeight}`);
 
     const stage = new Konva.Stage({
         container: containerElement,
@@ -38,28 +77,18 @@ export function createPianoRollStage(containerElement, track) {
 
     const layer = new Konva.Layer();
     stage.add(layer);
-
-    // --- Start of Corrected Code ---
-    // Use the theme's background color for consistency
+    
     const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-window-content').trim() || '#181818';
     const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#b0b0b0';
-    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-primary').trim() || '#383838';
 
     const background = new Konva.Rect({
-        x: 0,
-        y: 0,
-        width: stageWidth,
-        height: stageHeight,
-        fill: bgColor,
+        x: 0, y: 0, width: stageWidth, height: stageHeight, fill: bgColor,
     });
     layer.add(background);
 
     const placeholderText = new Konva.Text({
-        x: 0,
-        y: 0,
-        width: stageWidth,
-        height: stageHeight,
-        text: `Piano Roll for "${track.name}"\n\n(Feature Under Construction)\n\nGrid and note rendering logic to be implemented here.`,
+        x: 0, y: 0, width: stageWidth, height: stageHeight,
+        text: `Piano Roll for "${track.name}"\n\n(Feature Under Construction)`,
         fontSize: 16,
         fontFamily: "'VT323', monospace",
         fill: textColor,
@@ -69,17 +98,7 @@ export function createPianoRollStage(containerElement, track) {
         lineHeight: 1.5,
     });
     layer.add(placeholderText);
-    // --- End of Corrected Code ---
 
     layer.draw();
-
-    console.log(`[PianoRollUI createPianoRollStage] Konva Stage for track ${track.id} created.`);
-    return stage; // Return the stage so it can be managed (e.g., destroyed on window close)
+    return stage;
 }
-
-// Future functions:
-// - drawPianoRollGrid(layer, track, viewPort)
-// - drawNotes(layer, track, viewPort)
-// - handlePianoRollClick(stage, track, event)
-// - handleNoteDrag(noteShape, track, event)
-// - updatePianoRollDisplay(stage, track)
