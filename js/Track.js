@@ -144,7 +144,7 @@ export class Track {
                 this.sequences = []; 
             }
             if (this.sequences.length === 0 || !this.activeSequenceId) {
-                console.log(`[Track ${this.id} Constructor] No valid sequences from initialData or activeSequenceId missing. Creating new default sequence.`);
+                console.log(`[Track ${this.id} Constructor] No valid sequences found. Creating new default sequence.`);
                 this.createNewSequence("Sequence 1", Constants.DEFAULT_STEPS_PER_BAR || 16, true); 
             }
         } else { 
@@ -229,7 +229,7 @@ export class Track {
         const numDrumPadsConst = (typeof Constants.numDrumSamplerPads === 'number' && Constants.numDrumSamplerPads > 0) ? Constants.numDrumSamplerPads : 16; 
 
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
-            numRowsForGrid = synthPitchesLength > 0 ? synthPitchesLength : 48; 
+            numRowsForGrid = synthPitchesLength > 0 ? synthPitchesLength : 48; // Fallback to 48 (4 octaves) if constant is not ready
             if (synthPitchesLength === 0) console.warn(`[Track ${this.id} createNewSequence] Constants.SYNTH_PITCHES was empty or invalid, defaulting to 48 rows.`);
         } else if (this.type === 'Sampler') {
             numRowsForGrid = (this.slices && this.slices.length > 0) ? this.slices.length : numSlicesConst;
