@@ -115,18 +115,20 @@ export function initializePrimaryEventListeners() {
         uiCache.startMenu.classList.add('hidden');
     });
     
-    // Corrected for Piano Roll - Get element by its new ID
+    // --- Start of Corrected Code ---
     const menuOpenPianoRollItem = document.getElementById('menuOpenPianoRoll');
     menuOpenPianoRollItem?.addEventListener('click', () => {
-        const currentTracks = getTracks(); 
-        const firstInstrumentTrack = currentTracks.find(t => t.type !== 'Audio' && t.type !== 'Master'); 
+        const currentTracks = getTracks();
+        // Correctly find a track that is suitable for a piano roll
+        const firstInstrumentTrack = currentTracks.find(t => t.type === 'Synth' || t.type === 'InstrumentSampler');
         if (firstInstrumentTrack) {
-            handleOpenPianoRoll(firstInstrumentTrack.id); // Use the exported handler
+            handleOpenPianoRoll(firstInstrumentTrack.id);
         } else {
-            showNotification("Add an instrument track first to open Piano Roll.", 2000);
+            showNotification("Add a Synth or Instrument Sampler track first.", 3000);
         }
         if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
     });
+    // --- End of Corrected Code ---
 
 
     uiCache.menuOpenMixer?.addEventListener('click', () => {
