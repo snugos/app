@@ -25,17 +25,19 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+    <!-- MODIFIED: Changed font to VT323 -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/style.css"> 
     
     <script src="https://cdn.tailwindcss.com"></script> <!-- Development only -->
     <script>
+        // MODIFIED: Set VT323 as the default sans-serif font for Tailwind CSS
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Pixelify Sans', 'sans-serif'],
+                        sans: ['VT323', 'monospace'],
                     },
                 }
             }
@@ -51,13 +53,13 @@
         <!-- Play, Stop, Record -->
         <div id="transportControlsTop">
             <button id="playBtnGlobalTop" title="Play/Pause (Spacebar)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             </button>
             <button id="stopBtnGlobalTop" title="Stop (Spacebar again, or Esc)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-square"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
             </button>
             <button id="recordBtnGlobalTop" title="Record (R)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="red" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-circle"><circle cx="12" cy="12" r="10"></circle></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="red" stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-circle"><circle cx="12" cy="12" r="10"></circle></svg>
             </button>
         </div>
 
@@ -121,7 +123,7 @@
             <li id="menuAddAudioTrack">Add Audio Track</li>
             <li><hr></li>
             <li id="menuOpenSoundBrowser">Sound Browser</li>
-            <li id="menuOpenYouTubeImporter">Import from YouTube</li> <!-- ADDED -->
+            <li id="menuOpenYouTubeImporter">Import from URL</li>
             <li><hr></li>
             <li id="menuOpenTimeline">Timeline</li>
             <li id="menuOpenPianoRoll">Open Piano Roll</li> 
