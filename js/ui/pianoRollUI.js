@@ -39,27 +39,37 @@ export function createPianoRollStage(containerElement, track) {
     const layer = new Konva.Layer();
     stage.add(layer);
 
-    // Placeholder background
+    // --- Start of Corrected Code ---
+    // Use the theme's background color for consistency
+    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-window-content').trim() || '#181818';
+    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#b0b0b0';
+    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-primary').trim() || '#383838';
+
     const background = new Konva.Rect({
         x: 0,
         y: 0,
         width: stageWidth,
         height: stageHeight,
-        fill: 'rgba(40, 40, 40, 0.5)', // A slightly different dark color for testing
-        stroke: '#555',
-        strokeWidth: 1,
+        fill: bgColor,
     });
     layer.add(background);
 
     const placeholderText = new Konva.Text({
-        x: 20,
-        y: 20,
-        text: `Piano Roll for ${track.name}\n(Konva Stage Initialized)`,
-        fontSize: 14,
-        fontFamily: 'Inter, sans-serif',
-        fill: '#ccc',
+        x: 0,
+        y: 0,
+        width: stageWidth,
+        height: stageHeight,
+        text: `Piano Roll for "${track.name}"\n\n(Feature Under Construction)\n\nGrid and note rendering logic to be implemented here.`,
+        fontSize: 16,
+        fontFamily: "'VT323', monospace",
+        fill: textColor,
+        align: 'center',
+        verticalAlign: 'middle',
+        padding: 20,
+        lineHeight: 1.5,
     });
     layer.add(placeholderText);
+    // --- End of Corrected Code ---
 
     layer.draw();
 
