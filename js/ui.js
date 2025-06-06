@@ -12,7 +12,7 @@ import { initializeYouTubeImporterUI } from './ui/youtubeImporterUI.js';
 // Import all exported functions from the sub-modules
 import { createKnob } from './ui/knobUI.js';
 import { openTrackInspectorWindow, drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from './ui/inspectorUI.js';
-import { openMixerWindow, updateMixerWindow, renderMixer } from './ui/mixerUI.js';
+import { openMixerWindow, updateMixerWindow } from './ui/mixerUI.js';
 import { openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './ui/effectsRackUI.js';
 import { openTimelineWindow, renderTimeline, updatePlayheadPosition } from './ui/timelineUI.js';
 import { openSoundBrowserWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory } from './ui/soundBrowserUI.js';
@@ -37,7 +37,6 @@ export {
     openTrackInspectorWindow,
     openMixerWindow,
     updateMixerWindow,
-    renderMixer,
     openTrackEffectsRackWindow,
     openMasterEffectsRackWindow,
     renderEffectsList,
