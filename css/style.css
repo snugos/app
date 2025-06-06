@@ -242,8 +242,8 @@
 
 /* --- SnugOS General & Desktop Styling --- */
 body {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-family: 'Pixelify Sans', sans-serif;
+    font-size: 16px; /* Increased base font size for better readability */
     margin: 0;
     overflow: hidden;
     background-color: var(--bg-primary);
@@ -287,12 +287,15 @@ body {
     background-color: var(--bg-button);
     border: 1px solid var(--border-button);
     color: var(--text-button);
-    padding: 5px 10px;
+    padding: 5px 8px; /* Adjusted padding for icons */
     font-size: 0.8rem;
     font-weight: 500;
     border-radius: 3px;
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
+    display: flex; /* Center the icon */
+    align-items: center;
+    justify-content: center;
 }
 #topTaskbar button:hover {
     background-color: var(--bg-button-hover);
@@ -302,11 +305,11 @@ body {
     background-color: var(--bg-button-active);
 }
 
-#topTaskbar button.recording {
-    background-color: var(--accent-armed) !important; /* Ensure it overrides */
-    color: var(--accent-armed-text) !important;
-    border-color: var(--accent-armed-border-dark) !important;
+#topTaskbar button.recording svg {
+    fill: white;
+    stroke: white;
 }
+
 #topTaskbar button#playbackModeToggleBtnGlobalTop.active {
     background-color: var(--accent-active) !important;
     color: var(--accent-active-text) !important;
@@ -319,7 +322,6 @@ body {
     color: var(--text-primary);
     border: 1px solid var(--border-input);
     padding: 5px 6px;
-    font-size: 0.8rem;
     border-radius: 3px;
 }
 #topTaskbar input[type="number"] {
@@ -331,7 +333,6 @@ body {
 }
 
 #topTaskbar label {
-    font-size: 0.8rem;
     margin-right: 4px;
     color: var(--text-secondary);
 }
@@ -354,7 +355,7 @@ body {
 }
 
 #activityIndicatorsTop span {
-    font-size: 0.75rem;
+    font-size: 0.9rem; /* Slightly larger for pixel font */
     padding: 3px 6px;
     border-radius: 3px;
     background-color: var(--bg-button);
@@ -400,17 +401,17 @@ body {
     height: 18px;
 }
 
-/* Default icon visibility (assuming body starts with .theme-dark or no theme class) */
-#themeIconSun { display: inline-block; } /* Show Sun by default */
-#themeIconMoon { display: none; }      /* Hide Moon by default */
+/* Default icon visibility (e.g. when body.theme-dark or no theme class yet) */
+#themeToggleBtn #themeIconMoon { display: none; }
+#themeToggleBtn #themeIconSun { display: inline-block; }
 
 /* When light theme is active on body */
-body.theme-light #themeIconSun { display: none; }
-body.theme-light #themeIconMoon { display: inline-block; }
+body.theme-light #themeToggleBtn #themeIconSun { display: none; }
+body.theme-light #themeToggleBtn #themeIconMoon { display: inline-block; }
 
-/* When dark theme is active on body (explicitly set by JS, reinforces default) */
-body.theme-dark #themeIconSun { display: inline-block; }
-body.theme-dark #themeIconMoon { display: none; }
+/* Explicitly for dark theme (if body class .theme-dark is present) */
+body.theme-dark #themeToggleBtn #themeIconMoon { display: none; }
+body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 
 
 /* --- Window Styling --- */
@@ -429,7 +430,7 @@ body.theme-dark #themeIconMoon { display: none; }
 }
 
 .window.minimized { display: none !important; }
-.window-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 5px 8px; cursor: grab; display: flex; justify-content: space-between; align-items: center; height: 28px; flex-shrink: 0; font-size: 0.9rem; font-weight: 600; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 2px; border-top-right-radius: 2px;}
+.window-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 5px 8px; cursor: grab; display: flex; justify-content: space-between; align-items: center; height: 28px; flex-shrink: 0; font-weight: 600; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 2px; border-top-right-radius: 2px;}
 .window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;}
 .window-title-buttons { display: flex;}
 .window-title-buttons button { background: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button); width: 20px; height: 20px; line-height: 18px; text-align: center; font-size: 11px; font-weight: bold; margin-left: 4px; padding: 0; cursor: default; flex-shrink: 0; border-radius: 3px; transition: background-color 0.15s ease;}
@@ -442,19 +443,19 @@ body.theme-dark #themeIconMoon { display: none; }
 #startButton { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 12px; font-weight: 600; margin-right: 6px; color: var(--text-button); border-radius: 3px; transition: background-color 0.15s ease;}
 #startButton:hover { background-color: var(--bg-button-hover);}
 #startButton:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
-#taskbarButtons .taskbar-button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 10px; margin: 0 3px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.8rem; flex-shrink: 0; color: var(--text-secondary); border-radius: 3px; transition: background-color 0.15s ease, color 0.15s ease;}
+#taskbarButtons .taskbar-button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 10px; margin: 0 3px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; color: var(--text-secondary); border-radius: 3px; transition: background-color 0.15s ease, color 0.15s ease;}
 #taskbarButtons .taskbar-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover);}
 #taskbarButtons .taskbar-button.active,
 #taskbarButtons .taskbar-button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active); color: var(--text-button-hover);}
 #taskbarButtons .taskbar-button.minimized-on-taskbar { background-color: var(--bg-button); opacity: 0.65;}
-#taskbarTempoDisplay { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; font-size: 0.8rem; background-color: var(--bg-button); cursor: pointer; color: var(--text-secondary); border-radius: 3px;}
+#taskbarTempoDisplay { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button); cursor: pointer; color: var(--text-secondary); border-radius: 3px;}
 #taskbarTempoDisplay:hover { background-color: var(--bg-button-hover);}
 
 /* --- Start Menu Styling --- */
 #startMenu { position: absolute; bottom: 32px; left: 0; background: var(--bg-start-menu); border: 1px solid var(--border-start-menu); border-color: var(--border-start-menu-shadow); box-shadow: var(--shadow-start-menu); z-index: 10001; padding: 4px; min-width: 220px; color: var(--text-primary); border-radius: 3px;}
 #startMenu.hidden { display: none; }
 #startMenu ul { list-style: none; padding: 0; margin: 0; }
-#startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; font-size: 0.9rem; white-space: nowrap; color: var(--text-primary); border-radius: 2px; transition: background-color 0.1s ease;}
+#startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; white-space: nowrap; color: var(--text-primary); border-radius: 2px; transition: background-color 0.1s ease;}
 #startMenu li:hover, #startMenu li.disabled:hover { background: var(--accent-focus); color: white; }
 #startMenu li.disabled { color: var(--text-start-menu-disabled); cursor: default; }
 #startMenu hr { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
@@ -464,20 +465,20 @@ body.theme-dark #themeIconMoon { display: none; }
 .pad-button:hover { background-color: var(--bg-button-hover);}
 .pad-button:active, .pad-button.selected-for-edit { background-color: var(--bg-button-active); box-shadow: inset 1px 1px 1px var(--shadow-pad-inset-main), inset -1px -1px 1px var(--shadow-pad-inset-secondary); border-color: var(--border-pad-active);}
 .pad-button.selected-for-edit { border-color: var(--border-pad-selected); border-width: 2px; padding: 7px;}
-.pad-label { font-size: 0.65rem; color: var(--text-secondary); display: block; margin-top: 5px; word-break: break-all; line-height: 1.2; max-height: 2.4em; overflow: hidden; text-overflow: ellipsis;}
+.pad-label { font-size: 0.8em; color: var(--text-secondary); display: block; margin-top: 5px; word-break: break-all; line-height: 1.2; max-height: 2.4em; overflow: hidden; text-overflow: ellipsis;}
 
 /* --- General Drop Zone Styling --- */
-.drop-zone { border: 2px dashed var(--border-dropzone); padding: 10px; text-align: center; background-color: var(--bg-dropzone); color: var(--text-dropzone); font-size: 0.8em; border-radius: 4px; margin-bottom: 5px; transition: background-color 0.2s ease, border-color 0.2s ease;}
+.drop-zone { border: 2px dashed var(--border-dropzone); padding: 10px; text-align: center; background-color: var(--bg-dropzone); color: var(--text-dropzone); font-size: 0.9em; border-radius: 4px; margin-bottom: 5px; transition: background-color 0.2s ease, border-color 0.2s ease;}
 .drop-zone.dragover { background-color: var(--bg-dropzone-dragover); border-color: var(--border-dropzone-dragover); color: var(--text-dropzone-dragover);}
 .drop-zone label { color: var(--text-dropzone-label); text-decoration: underline; cursor: pointer; }
 .drop-zone label:hover { color: var(--text-dropzone-label-hover); }
 
 /* --- Knob Styling --- */
 .knob-container { display: flex; flex-direction: column; align-items: center; margin: 5px; min-width: 60px;}
-.knob-label { font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center;}
+.knob-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center;}
 .knob { width: 36px; height: 36px; background-color: var(--bg-button); border-radius: 50%; position: relative; border: 1px solid var(--border-knob); box-shadow: var(--shadow-knob); cursor: ns-resize;}
 .knob-handle { width: 4px; height: 10px; background-color: var(--text-secondary); position: absolute; top: 3px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; border-radius: 2px;}
-.knob-value { font-size: 0.65rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
+.knob-value { font-size: 0.75rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
 
 /* --- General Button Active States --- */
 button.muted { background-color: var(--accent-muted) !important; color: var(--accent-muted-text) !important; border-color: var(--accent-muted-border-dark) var(--accent-muted) var(--accent-muted) var(--accent-muted-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-muted-border-dark), inset -1px -1px 0 var(--accent-muted-border-light) !important;}
@@ -485,12 +486,11 @@ button.soloed { background-color: var(--accent-soloed) !important; color: var(--
 button.armed, button.recording { background-color: var(--accent-armed) !important; color: var(--accent-armed-text) !important; border-color: var(--accent-armed-border-dark) var(--accent-armed) var(--accent-armed) var(--accent-armed-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-armed-border-dark), inset -1px -1px 0 var(--accent-armed-border-light) !important;}
 button.active { background-color: var(--accent-active) !important; color: var(--accent-active-text) !important; border-color: var(--accent-active-border-dark) var(--accent-active) var(--accent-active) var(--accent-active-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-active-border-dark), inset -1px -1px 0 var(--accent-active-border-light) !important;}
 
-/* --- Sequencer Grid Styling --- */
+/* --- Piano Roll / Sequencer Styling --- */
 .sequencer-container .controls { position: sticky; top: 0; left: 0; background-color: var(--bg-title-bar); z-index: 30; border-bottom: 1px solid var(--border-primary); padding: 0.25rem; color: var(--text-title-bar);}
 .sequencer-container .controls input, .sequencer-container .controls label { color: var(--text-primary);}
 .sequencer-container .controls input { background-color: var(--bg-input); border-color: var(--border-input);}
-.sequencer-grid-layout { background-color: var(--bg-primary);}
-.sequencer-grid-layout > div { box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.65rem; border: 1px solid var(--border-sequencer);}
+.sequencer-grid-layout > div { box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; border: 1px solid var(--border-sequencer);}
 .sequencer-grid-layout .sequencer-header-cell { position: sticky; top: 0; background-color: var(--bg-sequencer-header); font-weight: 500; color: var(--text-sequencer-header); z-index: 20;}
 .sequencer-grid-layout .sequencer-header-cell:first-child { z-index: 25; left: 0;}
 .sequencer-grid-layout .sequencer-label-cell { position: sticky; left: 0; background-color: var(--bg-sequencer-label); justify-content: flex-end; padding-right: 0.25rem; font-weight: 500; color: var(--text-sequencer-header); z-index: 10;}
@@ -503,13 +503,13 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 
 /* --- Notification Area --- */
 #notification-area { position: fixed; bottom: 40px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
-.notification-message { background-color: rgba(0,0,0,0.8); color: white; padding: 10px 15px; margin-top: 5px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; font-size: 0.85rem; max-width: 300px; }
+.notification-message { background-color: rgba(0,0,0,0.8); color: white; padding: 10px 15px; margin-top: 5px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; max-width: 300px; }
 .notification-message.show { opacity: 1; transform: translateY(0); }
 .theme-light .notification-message { background-color: rgba(50,50,50,0.9); color: #f0f0f0; }
 
 /* --- Panel and Control Group --- */
 .panel { border: 1px solid var(--border-primary); padding: 8px; margin-bottom: 8px; border-radius: 3px; background-color: var(--bg-window); }
-.control-group { margin-bottom: 6px; } .control-group label { display: block; margin-bottom: 2px; font-size: 0.75rem; color: var(--text-secondary); }
+.control-group { margin-bottom: 6px; } .control-group label { display: block; margin-bottom: 2px; font-size: 0.9rem; color: var(--text-secondary); }
 .single-control-container { display: inline-block; vertical-align: top; margin-right: 8px; margin-bottom: 4px; }
 
 /* --- Waveform Canvas --- */
@@ -526,12 +526,12 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 /* Modal Styling */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-modal-overlay); display: flex; justify-content: center; align-items: center; z-index: 15000;}
 .modal-dialog { background-color: var(--bg-modal-dialog); border: 1px solid var(--border-modal); box-shadow: var(--shadow-modal); min-width: 300px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column; color: var(--text-primary); border-radius: 4px;}
-.modal-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 6px 10px; font-weight: bold; font-size: 0.9rem; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 3px; border-top-right-radius: 3px;}
+.modal-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 6px 10px; font-weight: bold; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 3px; border-top-right-radius: 3px;}
 .modal-content { padding: 15px; overflow-y: auto; flex-grow: 1; background-color: var(--bg-window-content); color: var(--text-primary);}
 .modal-content p { margin-bottom: 10px; }
 .modal-content p:last-child { margin-bottom: 0; }
 .modal-buttons { padding: 10px 15px; text-align: right; border-top: 1px solid var(--border-primary); background-color: var(--bg-window); border-bottom-left-radius: 3px; border-bottom-right-radius: 3px;}
-.modal-buttons button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; color: var(--text-button); padding: 6px 15px; margin-left: 10px; cursor: pointer; font-size: 0.85rem; border-radius: 3px; transition: background-color 0.15s ease;}
+.modal-buttons button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; color: var(--text-button); padding: 6px 15px; margin-left: 10px; cursor: pointer; border-radius: 3px; transition: background-color 0.15s ease;}
 .modal-buttons button:hover { background-color: var(--bg-button-hover);}
 .modal-buttons button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
 
@@ -542,7 +542,7 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 .effect-item.dragging { opacity: 0.5; background-color: var(--bg-button-hover); }
 .effect-item.dragover-target { border-top: 2px solid var(--accent-focus); }
 .drop-zone-relink-container { margin-top: 5px; }
-.drop-zone-relink-button { font-size: 0.75em; padding: 2px 5px; margin-top: 3px; background-color: var(--bg-button); border: 1px solid var(--border-button); cursor: pointer; }
+.drop-zone-relink-button { font-size: 0.8em; padding: 2px 5px; margin-top: 3px; background-color: var(--bg-button); border: 1px solid var(--border-button); cursor: pointer; }
 .drop-zone-missing, .drop-zone-error { border-color: var(--accent-meter-clip); background-color: var(--accent-muted); color: var(--accent-muted-text); }
 .drop-zone-loading { border-color: var(--accent-active); background-color: var(--accent-active); color: var(--accent-active-text); }
 
@@ -550,7 +550,7 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 select, input[type="text"], input[type="number"],
 .window-content select, .modal-content select,
 .window-content input[type="text"], .window-content input[type="number"],
-.modal-content input[type="text"], .modal-content input[type="number"] { background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input); padding: 5px 8px; border-radius: 3px; font-size: 0.85rem;}
+.modal-content input[type="text"], .modal-content input[type="number"] { background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input); padding: 5px 8px; border-radius: 3px;}
 input::placeholder,
 .window-content input::placeholder, .modal-content input::placeholder { color: var(--text-placeholder);}
 
@@ -565,7 +565,7 @@ input::placeholder,
 /* --- Context Menu Styling --- */
 .context-menu { background-color: var(--bg-context-menu); border: 1px solid var(--border-context-menu); box-shadow: var(--shadow-context-menu); padding: 4px 0; min-width: 180px; border-radius: 3px; color: var(--text-primary); position: absolute;}
 .context-menu ul { list-style: none; padding: 0; margin: 0; }
-.context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
+.context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
 .context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: white; }
 .context-menu-item.disabled { color: var(--text-start-menu-disabled); cursor: default; }
 .context-menu-separator { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
@@ -579,9 +579,8 @@ input::placeholder,
 #timeline-tracks-area { position: relative; height:100%; overflow-y: auto; display: flex; flex-direction: column;}
 .timeline-track-lane { min-height: 50px; background-color: var(--bg-timeline-track-lane); border-bottom: 1px solid var(--border-timeline-track-lane); box-sizing: border-box; position: relative; overflow: hidden; display: flex; width: 4000px;}
 .timeline-track-lane:nth-child(even) { background-color: var(--bg-timeline-track-lane-even);}
-.timeline-track-lane-name { position: sticky; left: 0; z-index: 10; background-color: var(--bg-timeline-track-name); padding: 0 8px; height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-timeline-track-name); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.8rem; font-weight: 500; color: var(--text-primary); width: var(--timeline-track-name-width, 120px); flex-shrink: 0;}
+.timeline-track-lane-name { position: sticky; left: 0; z-index: 10; background-color: var(--bg-timeline-track-name); padding: 0 8px; height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-timeline-track-name); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--text-primary); width: var(--timeline-track-name-width, 120px); flex-shrink: 0;}
 .timeline-clips-area { position: relative; height: 100%; flex-grow: 1;}
-.audio-clip { position: absolute; height: 80%; top: 10%; background-color: var(--accent-clip-bg); border: 1px solid var(--accent-clip-border); border-radius: 3px; box-sizing: border-box; overflow: hidden; color: white; font-size: 11px; padding: 2px 4px; white-space: nowrap; text-overflow: ellipsis; cursor: grab;}
+.audio-clip { position: absolute; height: 80%; top: 10%; background-color: var(--accent-clip-bg); border: 1px solid var(--accent-clip-border); border-radius: 3px; box-sizing: border-box; overflow: hidden; color: white; padding: 2px 4px; white-space: nowrap; text-overflow: ellipsis; cursor: grab;}
 .audio-clip.selected { outline: 2px solid gold; z-index: 5;}
 .dragover-timeline-lane { background-color: var(--bg-dropzone-dragover) !important;}
-
