@@ -180,6 +180,31 @@ export class Track {
         this.clipPlayers = new Map(); // For timeline clip playback
     }
 
+    // --- Start of Corrected/Added Code ---
+    
+    /**
+     * A getter to reliably determine the number of rows a sequencer grid should have for this track type.
+     * @returns {number} The number of rows for the sequencer.
+     */
+    get requiredSequenceRows() {
+        switch (this.type) {
+            case 'Synth':
+            case 'InstrumentSampler':
+                // Use a fallback of 48 rows (4 octaves) if the constant isn't ready.
+                return (Constants.SYNTH_PITCHES && Constants.SYNTH_PITCHES.length > 0) ? Constants.SYNTH_PITCHES.length : 48;
+            case 'Sampler':
+                // Use the number of defined slices, or the default number of slices as a fallback.
+                return (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
+            case 'DrumSampler':
+                return Constants.numDrumSamplerPads;
+            default:
+                // Should not happen for sequenceable tracks, but a safe fallback.
+                return 1;
+        }
+    }
+    
+    // --- End of Corrected/Added Code ---
+
     setName(newName, skipUndo = false) { /* ... (implementation unchanged) ... */ }
     getActiveSequence() { /* ... (implementation unchanged) ... */ }
     getActiveSequenceData() { /* ... (implementation unchanged) ... */ }
@@ -221,28 +246,14 @@ export class Track {
     createNewSequence(name = `Sequence ${this.sequences.length + 1}`, initialLengthSteps = Constants.DEFAULT_STEPS_PER_BAR || 16, skipUndoAndUI = false) {
         if (this.type === 'Audio') return null;
         const newSeqId = `seq_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-        let numRowsForGrid;
-
-        // Defensive checks for constants
-        const synthPitchesLength = (Constants.SYNTH_PITCHES && Array.isArray(Constants.SYNTH_PITCHES)) ? Constants.SYNTH_PITCHES.length : 0;
-        const numSlicesConst = (typeof Constants.numSlices === 'number' && Constants.numSlices > 0) ? Constants.numSlices : 16; 
-        const numDrumPadsConst = (typeof Constants.numDrumSamplerPads === 'number' && Constants.numDrumSamplerPads > 0) ? Constants.numDrumSamplerPads : 16; 
-
-        if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
-            numRowsForGrid = synthPitchesLength > 0 ? synthPitchesLength : 48; // Fallback to 48 (4 octaves) if constant is not ready
-            if (synthPitchesLength === 0) console.warn(`[Track ${this.id} createNewSequence] Constants.SYNTH_PITCHES was empty or invalid, defaulting to 48 rows.`);
-        } else if (this.type === 'Sampler') {
-            numRowsForGrid = (this.slices && this.slices.length > 0) ? this.slices.length : numSlicesConst;
-        } else if (this.type === 'DrumSampler') {
-            numRowsForGrid = numDrumPadsConst;
-        } else {
-            numRowsForGrid = 1; 
-        }
-
+        
+        // --- Start of Corrected/Added Code ---
+        const numRowsForGrid = this.requiredSequenceRows;
         if (numRowsForGrid <= 0) {
              console.warn(`[Track ${this.id} createNewSequence] numRowsForGrid calculated as <= 0 for type ${this.type} (calculated ${numRowsForGrid}), defaulting to 16.`);
              numRowsForGrid = 16; 
         }
+        // --- End of Corrected/Added Code ---
         
         const actualLength = Math.max(Constants.STEPS_PER_BAR || 16, initialLengthSteps);
 
