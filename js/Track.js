@@ -90,7 +90,7 @@ export class Track {
                 volume: initialPadData?.volume ?? 0.7,
                 pitchShift: initialPadData?.pitchShift ?? 0,
                 envelope: initialPadData?.envelope ? JSON.parse(JSON.stringify(initialPadData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
-                status: initialPadData?.status || (initialPadData?.dbKey || initialPadData?.audioBufferDataURL ? 'missing' : 'empty'),
+                status: initialPadData?.status || (initialData?.dbKey || initialData?.audioBufferDataURL ? 'missing' : 'empty'),
                 autoStretchEnabled: initialPadData?.autoStretchEnabled || false,
                 stretchOriginalBPM: initialPadData?.stretchOriginalBPM || 120,
                 stretchBeats: initialPadData?.stretchBeats || 1,
@@ -145,7 +145,7 @@ export class Track {
             }
             if (this.sequences.length === 0 || !this.activeSequenceId) {
                 console.log(`[Track ${this.id} Constructor] No valid sequences from initialData or activeSequenceId missing. Creating new default sequence.`);
-                this.createNewSequence("Sequence 1", Constants.defaultStepsPerBar || 16, true); 
+                this.createNewSequence("Sequence 1", Constants.DEFAULT_STEPS_PER_BAR || 16, true); 
             }
         } else { 
             this.sequences = []; 
@@ -225,23 +225,23 @@ export class Track {
 
         // Defensive checks for constants
         const synthPitchesLength = (Constants.SYNTH_PITCHES && Array.isArray(Constants.SYNTH_PITCHES)) ? Constants.SYNTH_PITCHES.length : 0;
-        const numSlicesConst = (typeof Constants.numSlices === 'number' && Constants.numSlices > 0) ? Constants.numSlices : 16; // Default if undefined
-        const numDrumPadsConst = (typeof Constants.numDrumSamplerPads === 'number' && Constants.numDrumSamplerPads > 0) ? Constants.numDrumSamplerPads : 16; // Default if undefined
+        const numSlicesConst = (typeof Constants.numSlices === 'number' && Constants.numSlices > 0) ? Constants.numSlices : 16; 
+        const numDrumPadsConst = (typeof Constants.numDrumSamplerPads === 'number' && Constants.numDrumSamplerPads > 0) ? Constants.numDrumSamplerPads : 16; 
 
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
-            numRowsForGrid = synthPitchesLength > 0 ? synthPitchesLength : 48; // Fallback if SYNTH_PITCHES is somehow empty
+            numRowsForGrid = synthPitchesLength > 0 ? synthPitchesLength : 48; 
             if (synthPitchesLength === 0) console.warn(`[Track ${this.id} createNewSequence] Constants.SYNTH_PITCHES was empty or invalid, defaulting to 48 rows.`);
         } else if (this.type === 'Sampler') {
             numRowsForGrid = (this.slices && this.slices.length > 0) ? this.slices.length : numSlicesConst;
         } else if (this.type === 'DrumSampler') {
             numRowsForGrid = numDrumPadsConst;
         } else {
-            numRowsForGrid = 1; // Default for unknown types
+            numRowsForGrid = 1; 
         }
 
         if (numRowsForGrid <= 0) {
              console.warn(`[Track ${this.id} createNewSequence] numRowsForGrid calculated as <= 0 for type ${this.type} (calculated ${numRowsForGrid}), defaulting to 16.`);
-             numRowsForGrid = 16; // Absolute fallback
+             numRowsForGrid = 16; 
         }
         
         const actualLength = Math.max(Constants.STEPS_PER_BAR || 16, initialLengthSteps);
@@ -254,7 +254,7 @@ export class Track {
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-        this.recreateToneSequence(true); // Recreate sequence for playback
+        this.recreateToneSequence(true); 
 
         if (!skipUndoAndUI) { 
             if (this.appServices.updateTrackUI) {
