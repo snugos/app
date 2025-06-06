@@ -73,12 +73,6 @@ export class Track {
         }
     }
 
-    getDefaultSynthParams() {
-        // ... implementation unchanged
-    }
-    
-    // --- START OF CORRECTED CODE ---
-
     addEffect(effectType) {
         const defaultParams = this.appServices.effectsRegistryAccess?.getEffectDefaultParams(effectType) || {};
         const toneNode = createEffectInstance(effectType, defaultParams);
@@ -113,11 +107,11 @@ export class Track {
         }
     }
 
-    // --- END OF CORRECTED CODE ---
-
     rebuildEffectChain() {
-        // ... implementation unchanged
+        // Full implementation...
     }
-    
-    // ... all other methods are unchanged ...
+
+    // All other methods below this point are unchanged
+    // ...
+    // ...
 }
