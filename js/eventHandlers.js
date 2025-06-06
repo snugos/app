@@ -103,6 +103,17 @@ export function initializePrimaryEventListeners() {
         if (localAppServices.openSoundBrowserWindow) localAppServices.openSoundBrowserWindow();
         uiCache.startMenu.classList.add('hidden');
     });
+    // ADDED: YouTube Importer
+    const menuOpenYouTubeImporter = document.getElementById('menuOpenYouTubeImporter');
+    menuOpenYouTubeImporter?.addEventListener('click', () => {
+        if(localAppServices.openYouTubeImporterWindow) {
+            localAppServices.openYouTubeImporterWindow();
+        } else {
+            console.error("openYouTubeImporterWindow service not available.");
+        }
+        uiCache.startMenu.classList.add('hidden');
+    });
+
     uiCache.menuOpenTimeline?.addEventListener('click', () => {
         if (localAppServices.openTimelineWindow) localAppServices.openTimelineWindow();
         uiCache.startMenu.classList.add('hidden');
@@ -112,7 +123,7 @@ export function initializePrimaryEventListeners() {
     const menuOpenPianoRollItem = document.getElementById('menuOpenPianoRoll');
     menuOpenPianoRollItem?.addEventListener('click', () => {
         const currentTracks = getTracks(); 
-        const firstInstrumentTrack = currentTracks.find(t => t.type !== 'Audio' && t.type !== 'Master');
+        const firstInstrumentTrack = currentTracks.find(t => t.type !== 'Audio' && t.type !== 'Master'); 
         if (firstInstrumentTrack) {
             handleOpenPianoRoll(firstInstrumentTrack.id); // Use the exported handler
         } else {
@@ -172,6 +183,7 @@ function audioContextInitialized() { /* ... */ }
 function toggleFullScreen() { /* ... */ }
 
 // --- MIDI Handling ---
+// ... (setupMIDI, onMIDISuccess, onMIDIFailure, populateMIDIInputSelector, selectMIDIInput, onMIDIMessage - UNCHANGED)
 export function setupMIDI() { /* ... */ }
 function onMIDISuccess(midiAccess) { /* ... */ }
 function onMIDIFailure(msg) { /* ... */ }
@@ -193,7 +205,9 @@ export function handleOpenPianoRoll(trackId) {
         localAppServices.openPianoRollWindow(trackId);
     } else {
         console.error("openPianoRollWindow service not available in appServices.");
-        showNotification("Piano Roll UI is currently unavailable.", 3000);
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification("Piano Roll UI is currently unavailable.", 3000);
+        }
     }
 }
 
