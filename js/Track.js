@@ -90,7 +90,7 @@ export class Track {
                 volume: initialPadData?.volume ?? 0.7,
                 pitchShift: initialPadData?.pitchShift ?? 0,
                 envelope: initialPadData?.envelope ? JSON.parse(JSON.stringify(initialData.envelope)) : { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 },
-                status: initialPadData?.status || (initialData?.dbKey || initialData?.audioBufferDataURL ? 'missing' : 'empty'),
+                status: initialData?.status || (initialData?.dbKey || initialData?.audioBufferDataURL ? 'missing' : 'empty'),
                 autoStretchEnabled: initialPadData?.autoStretchEnabled || false,
                 stretchOriginalBPM: initialPadData?.stretchOriginalBPM || 120,
                 stretchBeats: initialPadData?.stretchBeats || 1,
