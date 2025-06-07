@@ -232,9 +232,7 @@ export function attachGlobalControlEvents(uiCache) {
         tempoInput?.select();
     });
 
-    // --- Start of Corrected Code ---
     midiSelect?.addEventListener('change', selectMIDIInput);
-    // --- End of Corrected Code ---
     
     playbackModeToggle?.addEventListener('click', () => {
         const currentMode = getPlaybackModeState();
@@ -401,6 +399,9 @@ export function handleTrackSolo(trackId) {
 }
 
 export function handleTrackArm(trackId) {
+    // --- Start of Corrected Code ---
+    console.log(`[handleTrackArm] Called for trackId: ${trackId}`);
+    // --- End of Corrected Code ---
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
     setArmedTrackId(newArmedId);
