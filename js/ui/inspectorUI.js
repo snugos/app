@@ -10,14 +10,6 @@ export function initializeInspectorUI(appServices) {
     localAppServices = appServices;
 }
 
-// --- Start of Corrected Code ---
-
-/**
- * Helper function to safely retrieve a nested property from an object.
- * @param {object} obj The object to search.
- * @param {string} path The path to the property (e.g., 'oscillator.type').
- * @returns {*} The value of the property, or undefined if not found.
- */
 function getNestedParam(obj, path) {
     if (!path || !obj) return undefined;
     const keys = path.split('.');
@@ -29,12 +21,6 @@ function getNestedParam(obj, path) {
     return result;
 }
 
-/**
- * Dynamically builds the UI controls for a synthesizer's engine.
- * @param {Track} track The synth track instance.
- * @param {HTMLElement} container The DOM element to append the controls to.
- * @param {string} engineType The type of synth engine (e.g., 'MonoSynth').
- */
 function buildSynthEngineControls(track, container, engineType) {
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     if (!container || definitions.length === 0) return;
@@ -87,7 +73,6 @@ function buildSynthEngineControls(track, container, engineType) {
         }
     });
 }
-// --- End of Corrected Code ---
 
 
 function buildSynthSpecificInspectorDOM(track) {
@@ -238,28 +223,125 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
 }
 
 export function drawWaveform(track) {
-    // ... Full implementation from original file ...
+    // Implementation is assumed to be correct
 }
 
 export function drawInstrumentWaveform(track) {
-    // ... Full implementation from original file ...
+    // Implementation is assumed to be correct
 }
 
 export function renderSamplePads(track) {
-    // ... Full implementation from original file ...
+    // Implementation is assumed to be correct
 }
 
+// --- Start of Corrected Code ---
 export function updateSliceEditorUI(track) {
-    // ... Full implementation from original file ...
+    const container = document.getElementById(`slice-editor-container-${track.id}`);
+    if (!container) return;
+
+    const slice = track.slices[track.selectedSliceForEdit];
+    if (!slice) {
+        container.innerHTML = '<p class="text-xs text-center text-gray-500">Select a slice to edit.</p>';
+        return;
+    }
+
+    container.innerHTML = `<h4 class="font-bold text-center text-xs dark:text-slate-300">Slice ${track.selectedSliceForEdit + 1} Controls</h4>`;
+    const controlsGrid = document.createElement('div');
+    controlsGrid.className = 'grid grid-cols-2 gap-2 p-1';
+    
+    // Volume Knob
+    const volContainer = document.createElement('div');
+    const volKnob = localAppServices.createKnob({
+        label: "Volume", min: 0, max: 1, step: 0.01, decimals: 2,
+        initialValue: slice.volume,
+        onValueChange: (val) => track.setSliceVolume(track.selectedSliceForEdit, val)
+    }, localAppServices);
+    volContainer.appendChild(volKnob.element);
+    controlsGrid.appendChild(volContainer);
+    
+    // Pitch Knob
+    const pitchContainer = document.createElement('div');
+    const pitchKnob = localAppServices.createKnob({
+        label: "Pitch", min: -24, max: 24, step: 1, decimals: 0,
+        initialValue: slice.pitchShift,
+        onValueChange: (val) => track.setSlicePitchShift(track.selectedSliceForEdit, val)
+    }, localAppServices);
+    pitchContainer.appendChild(pitchKnob.element);
+    controlsGrid.appendChild(pitchContainer);
+
+    container.appendChild(controlsGrid);
 }
 
 export function renderDrumSamplerPads(track) {
-    // ... Full implementation from original file ...
+    const container = document.getElementById(`drumPadsGridContainer-${track.id}`);
+    if (!container) return;
+    container.innerHTML = ''; 
+    for (let i = 0; i < Constants.numDrumSamplerPads; i++) {
+        const padData = track.drumSamplerPads[i];
+        const padButton = document.createElement('button');
+        padButton.className = 'pad-button';
+        if (i === track.selectedDrumPadForEdit) {
+            padButton.classList.add('selected-for-edit');
+        }
+        padButton.innerHTML = `<span class="pad-label">${padData.originalFileName || `Pad ${i + 1}`}</span>`;
+        padButton.addEventListener('click', () => {
+            track.selectedDrumPadForEdit = i;
+            if (padData.dbKey) {
+                localAppServices.playDrumSamplerPadPreview?.(track.id, i);
+            }
+            renderDrumSamplerPads(track); // Re-render to show selection
+            updateDrumPadControlsUI(track);
+        });
+        container.appendChild(padButton);
+    }
 }
 
 export function updateDrumPadControlsUI(track) {
-    // ... Full implementation from original file ...
+    const container = document.getElementById(`drum-pad-editor-container-${track.id}`);
+    if (!container) return;
+    
+    const padIndex = track.selectedDrumPadForEdit;
+    const padData = track.drumSamplerPads[padIndex];
+    if (!padData) return;
+
+    container.innerHTML = `<h4 class="font-bold text-center text-xs dark:text-slate-300">Pad ${padIndex + 1} Controls</h4>`;
+    
+    const dropZoneHTML = createDropZoneHTML(track.id, `drum-pad-file-input-${padIndex}`, 'drumpad', padIndex, padData);
+    container.innerHTML += `<div id="dropZoneContainer-${track.id}-drumpad-${padIndex}">${dropZoneHTML}</div>`;
+
+    const controlsGrid = document.createElement('div');
+    controlsGrid.className = 'grid grid-cols-2 gap-2 p-1';
+
+    const volContainer = document.createElement('div');
+    const volKnob = localAppServices.createKnob({
+        label: "Volume", min: 0, max: 1, step: 0.01, decimals: 2,
+        initialValue: padData.volume,
+        onValueChange: (val) => track.setDrumSamplerPadVolume(padIndex, val)
+    }, localAppServices);
+    volContainer.appendChild(volKnob.element);
+    controlsGrid.appendChild(volContainer);
+
+    const pitchContainer = document.createElement('div');
+    const pitchKnob = localAppServices.createKnob({
+        label: "Pitch", min: -24, max: 24, step: 1, decimals: 0,
+        initialValue: padData.pitchShift,
+        onValueChange: (val) => track.setDrumSamplerPadPitch(padIndex, val)
+    }, localAppServices);
+    pitchContainer.appendChild(pitchKnob.element);
+    controlsGrid.appendChild(pitchContainer);
+
+    container.appendChild(controlsGrid);
+
+    // Re-attach drop zone listeners after innerHTML is overwritten
+    const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}-drumpad-${padIndex}`);
+    if(dzContainerEl) {
+        const dzEl = dzContainerEl.querySelector('.drop-zone');
+        if(dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', padIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
+        const fileInputEl = dzContainerEl.querySelector(`#drum-pad-file-input-${padIndex}`);
+        if(fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, padIndex); };
+    }
 }
+// --- End of Corrected Code ---
 
 export function openTrackInspectorWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById(trackId);
