@@ -121,23 +121,9 @@ export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
 export function setClipboardDataState(data) { clipboardDataGlobal = data || { type: null, data: null, sourceTrackType: null, sequenceLength: null }; }
 
 export function setArmedTrackIdState(trackId) {
-    const oldArmedId = armedTrackId;
+    // This function now ONLY updates the state variable.
+    // The UI update is now triggered by the event handler that calls this.
     armedTrackId = trackId;
-
-    // --- Start of Corrected Code (Debug Logs) ---
-    console.log(`[State] setArmedTrackIdState. New armed ID: ${armedTrackId}. Old armed ID: ${oldArmedId}`);
-    if (appServices.updateTrackUI) {
-        console.log(`[State] appServices.updateTrackUI found. Proceeding to call it.`);
-        if (oldArmedId !== null) {
-            appServices.updateTrackUI(oldArmedId, 'armChanged');
-        }
-        if (armedTrackId !== null) {
-            appServices.updateTrackUI(armedTrackId, 'armChanged');
-        }
-    } else {
-         console.error(`[State] CRITICAL: appServices.updateTrackUI is NOT defined.`);
-    }
-    // --- End of Corrected Code (Debug Logs) ---
 }
 
 export function setSoloedTrackIdState(trackId) {
