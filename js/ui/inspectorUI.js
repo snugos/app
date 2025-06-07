@@ -10,6 +10,86 @@ export function initializeInspectorUI(appServices) {
     localAppServices = appServices;
 }
 
+// --- Start of Corrected Code ---
+
+/**
+ * Helper function to safely retrieve a nested property from an object.
+ * @param {object} obj The object to search.
+ * @param {string} path The path to the property (e.g., 'oscillator.type').
+ * @returns {*} The value of the property, or undefined if not found.
+ */
+function getNestedParam(obj, path) {
+    if (!path || !obj) return undefined;
+    const keys = path.split('.');
+    let result = obj;
+    for (const key of keys) {
+        if (result === undefined || result === null) return undefined;
+        result = result[key];
+    }
+    return result;
+}
+
+/**
+ * Dynamically builds the UI controls for a synthesizer's engine.
+ * @param {Track} track The synth track instance.
+ * @param {HTMLElement} container The DOM element to append the controls to.
+ * @param {string} engineType The type of synth engine (e.g., 'MonoSynth').
+ */
+function buildSynthEngineControls(track, container, engineType) {
+    const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
+    if (!container || definitions.length === 0) return;
+
+    definitions.forEach(def => {
+        const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
+        if (!placeholder) return;
+
+        let control;
+        const initialValue = getNestedParam(track.synthParams, def.path);
+
+        if (def.type === 'knob') {
+            control = localAppServices.createKnob({
+                label: def.label,
+                min: def.min,
+                max: def.max,
+                step: def.step,
+                initialValue: initialValue,
+                decimals: def.decimals,
+                displaySuffix: def.displaySuffix || '',
+                onValueChange: (val) => track.setSynthParam(def.path, val)
+            }, localAppServices);
+            placeholder.appendChild(control.element);
+        } else if (def.type === 'select') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex flex-col items-center';
+            const label = document.createElement('div');
+            label.textContent = def.label;
+            label.className = 'knob-label';
+            
+            const select = document.createElement('select');
+            select.className = 'w-full p-1 text-xs border rounded bg-white dark:bg-slate-700 dark:border-slate-600';
+            def.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+            select.value = initialValue;
+            select.addEventListener('change', (e) => track.setSynthParam(def.path, e.target.value));
+            
+            wrapper.appendChild(label);
+            wrapper.appendChild(select);
+            placeholder.appendChild(wrapper);
+            control = select;
+        }
+        
+        if (control) {
+            track.inspectorControls[def.idPrefix] = control;
+        }
+    });
+}
+// --- End of Corrected Code ---
+
+
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
