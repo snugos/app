@@ -399,12 +399,23 @@ export function handleTrackSolo(trackId) {
 }
 
 export function handleTrackArm(trackId) {
-    // --- Start of Corrected Code ---
-    console.log(`[handleTrackArm] Called for trackId: ${trackId}`);
-    // --- End of Corrected Code ---
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
+    
+    // Set the state first
     setArmedTrackId(newArmedId);
+
+    // --- Start of Corrected Code ---
+    // Directly trigger the UI update from the handler
+    if (localAppServices.updateTrackUI) {
+        // Update the track that was just clicked
+        localAppServices.updateTrackUI(trackId, 'armChanged');
+        // If a different track was armed before, we need to update it too
+        if (currentArmedId !== null && currentArmedId !== trackId) {
+            localAppServices.updateTrackUI(currentArmedId, 'armChanged');
+        }
+    }
+    // --- End of Corrected Code ---
 }
 
 export function handleRemoveTrack(trackId) {
