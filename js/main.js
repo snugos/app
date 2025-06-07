@@ -85,6 +85,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         if (reason === 'soloChanged' || reason === 'muteChanged') {
             const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
             if (muteBtn) {
+                // Use the calculated effective mute state
                 muteBtn.classList.toggle('muted', isEffectivelyMuted);
                 muteBtn.textContent = track.isMuted ? 'Unmute' : 'Mute';
             }
