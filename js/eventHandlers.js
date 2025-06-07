@@ -252,7 +252,7 @@ export function attachGlobalControlEvents(uiCache) {
                 kbIndicator.classList.toggle('active', isComputerKeyboardPianoActive);
             }
             showNotification(`Computer Keyboard Piano ${isComputerKeyboardPianoActive ? 'Enabled' : 'Disabled'}`, 1500);
-            return; // Prevent further processing for the CapsLock key itself
+            return; 
         }
         
         // Handle global shortcuts if keyboard piano is not active
@@ -265,11 +265,11 @@ export function attachGlobalControlEvents(uiCache) {
             } else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
                 handleRecord();
             }
-            return; // Stop here if not in keyboard piano mode
+            return; 
         }
 
         // Handle computer keyboard piano notes if active
-        if (e.repeat || !isComputerKeyboardPianoActive) return;
+        if (e.repeat) return;
         
         const key = e.key.toLowerCase();
         if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
@@ -444,8 +444,6 @@ export function handleTrackSolo(trackId) {
     }
 }
 
-// --- Start of Corrected Code ---
-// This version is more direct to ensure the UI updates.
 export function handleTrackArm(trackId) {
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
@@ -471,7 +469,6 @@ export function handleTrackArm(trackId) {
     // Finally, update the central state
     setArmedTrackId(newArmedId);
 }
-// --- End of Corrected Code ---
 
 export function handleRemoveTrack(trackId) {
     const track = getTrackById(trackId);
