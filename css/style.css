@@ -1,243 +1,224 @@
 /* js/style.css - SnugOS Stylesheet */
 
+/* --- Start of Corrected Code --- */
 :root {
-    /* Dark Theme Variables (default) */
-    --bg-primary: #101010;
-    --bg-window: #1e1e1e;
-    --bg-window-content: #181818;
-    --bg-title-bar: #2a2a2a;
-    --bg-taskbar: #1a1a1a; /* Used for both top and bottom taskbars */
-    --bg-start-menu: #1e1e1e;
-    --bg-button: #2c2c2c;
-    --bg-button-hover: #3a3a3a;
-    --bg-button-active: #202020;
-    --bg-input: #282828;
-    --bg-dropzone: #1c1c1c;
-    --bg-dropzone-dragover: #2a2a2a;
-    --bg-sequencer-header: #1c1c1c;
-    --bg-sequencer-label: #1c1c1c;
-    --bg-sequencer-step-even: #161616;
-    --bg-sequencer-step-odd: #1e1e1e;
-    --bg-sequencer-step-hover: #2c2c2c;
-    --bg-meter-track: #101010;
-    --bg-meter-bar-container: #101010;
+    /* Black & White Theme (Dark Mode Default) */
+    --bg-primary: #000000;
+    --bg-window: #000000;
+    --bg-window-content: #000000;
+    --bg-title-bar: #000000;
+    --bg-taskbar: #000000;
+    --bg-start-menu: #000000;
+    --bg-button: #000000;
+    --bg-button-hover: #FFFFFF;
+    --bg-button-active: #FFFFFF;
+    --bg-input: #000000;
+    --bg-dropzone: #000000;
+    --bg-dropzone-dragover: #FFFFFF;
+    --bg-sequencer-header: #000000;
+    --bg-sequencer-label: #000000;
+    --bg-sequencer-step-even: #000000;
+    --bg-sequencer-step-odd: #000000;
+    --bg-sequencer-step-hover: #FFFFFF;
+    --bg-meter-track: #000000;
+    --bg-meter-bar-container: #000000;
     --bg-modal-overlay: rgba(0,0,0,0.75);
-    --bg-modal-dialog: #1e1e1e;
-    --bg-context-menu: #2a2a2a;
-    --bg-timeline-container: #1c1c1c;
-    --bg-timeline-header: #2a2a2a;
-    --bg-timeline-track-lane: #1e1e1e;
-    --bg-timeline-track-lane-even: #1a1a1a;
-    --bg-timeline-track-name: #2f2f2f;
-    --bg-theme-toggle-button-hover: #4a4a4a;
+    --bg-modal-dialog: #000000;
+    --bg-context-menu: #000000;
+    --bg-timeline-container: #000000;
+    --bg-timeline-header: #000000;
+    --bg-timeline-track-lane: #000000;
+    --bg-timeline-track-lane-even: #000000;
+    --bg-timeline-track-name: #000000;
+    --bg-theme-toggle-button-hover: #FFFFFF;
 
+    --text-primary: #FFFFFF;
+    --text-secondary: #FFFFFF;
+    --text-placeholder: #FFFFFF;
+    --text-title-bar: #FFFFFF;
+    --text-button: #FFFFFF;
+    --text-button-hover: #000000;
+    --text-start-menu-disabled: #FFFFFF;
+    --text-dropzone: #FFFFFF;
+    --text-dropzone-dragover: #000000;
+    --text-dropzone-label: #FFFFFF;
+    --text-dropzone-label-hover: #FFFFFF;
+    --text-knob: #FFFFFF;
+    --text-sequencer-header: #FFFFFF;
+    --text-sequencer-step: #FFFFFF;
+    --text-theme-toggle-icon: #FFFFFF;
 
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-placeholder: #777777;
-    --text-title-bar: #f0f0f0;
-    --text-button: #e0e0e0;
-    --text-button-hover: #ffffff;
-    --text-start-menu-disabled: #555555;
-    --text-dropzone: #888888;
-    --text-dropzone-dragover: #cccccc;
-    --text-dropzone-label: #7dd3fc;
-    --text-dropzone-label-hover: #38bdf8;
-    --text-knob: #a0a0a0;
-    --text-sequencer-header: #b0b0b0;
-    --text-sequencer-step: #777777;
-    --text-theme-toggle-icon: #e0e0e0;
+    --border-primary: #FFFFFF;
+    --border-secondary: #FFFFFF;
+    --border-window-title-bottom: #FFFFFF;
+    --border-button: #FFFFFF;
+    --border-button-hover: #FFFFFF;
+    --border-button-active-outer: #FFFFFF;
+    --border-button-active-inner: #FFFFFF;
+    --border-start-menu: #FFFFFF;
+    --border-start-menu-shadow: #FFFFFF #FFFFFF #FFFFFF #FFFFFF;
+    --border-pad: #FFFFFF;
+    --border-pad-active: #FFFFFF;
+    --border-pad-selected: #FFFFFF;
+    --border-dropzone: #FFFFFF;
+    --border-dropzone-dragover: #FFFFFF;
+    --border-knob: #FFFFFF;
+    --border-input: #FFFFFF;
+    --border-sequencer: #FFFFFF;
+    --border-waveform: #FFFFFF;
+    --border-meter-bar-container: #FFFFFF;
+    --border-modal: #FFFFFF;
+    --border-context-menu: #FFFFFF;
+    --border-timeline-header: #FFFFFF;
+    --border-timeline-track-lane: #FFFFFF;
+    --border-timeline-track-name: #FFFFFF;
+    --border-theme-toggle-button: #000000;
 
-    --border-primary: #383838;
-    --border-secondary: #303030;
-    --border-window-title-bottom: #121212;
-    --border-button: #121212;
-    --border-button-hover: #3c3c3c;
-    --border-button-active-outer: #181818;
-    --border-button-active-inner: #3c3c3c;
-    --border-start-menu: #3a3a3a;
-    --border-start-menu-shadow: #484848 #2a2a2a #2a2a2a #484848;
-    --border-pad: #404040;
-    --border-pad-active: #505050;
-    --border-pad-selected: #60a5fa;
-    --border-dropzone: #4a4a4a;
-    --border-dropzone-dragover: #5a5a5a;
-    --border-knob: #1e1e1e;
-    --border-input: #4a4a4a;
-    --border-sequencer: #2a2a2a;
-    --border-waveform: #3a3a3a;
-    --border-meter-bar-container: #3a3a3a;
-    --border-modal: #3a3a3a;
-    --border-context-menu: #484848;
-    --border-timeline-header: #3a3a3a;
-    --border-timeline-track-lane: #2a2a2a;
-    --border-timeline-track-name: #3a3a3a;
-    --border-theme-toggle-button: #303030;
+    --shadow-window: none;
+    --shadow-start-menu: none;
+    --shadow-button-inset-main: #000000;
+    --shadow-button-inset-secondary: #000000;
+    --shadow-pad-inset-main: #000000;
+    --shadow-pad-inset-secondary: #000000;
+    --shadow-knob: none;
+    --shadow-modal: none;
+    --shadow-context-menu: none;
 
+    --accent-focus: #FFFFFF;
+    --accent-muted-text: #000000;
+    --accent-muted: #FFFFFF;
+    --accent-soloed-text: #000000;
+    --accent-soloed: #FFFFFF;
+    --accent-armed-text: #000000;
+    --accent-armed: #FFFFFF;
+    --accent-active-text: #000000;
+    --accent-active: #FFFFFF;
+    --accent-sequencer-step-border: #000000;
+    --accent-sequencer-step: #FFFFFF;
+    --accent-sequencer-playing-outline: #FFFFFF;
+    --accent-meter: #FFFFFF;
+    --accent-meter-clip: #FFFFFF;
+    --accent-playhead: #FFFFFF;
+    --accent-clip-bg: #FFFFFF;
+    --accent-clip-border: #000000;
 
-    --shadow-window: 0px 0px 15px rgba(0,0,0,0.5);
-    --shadow-start-menu: 2px 2px 8px rgba(0,0,0,0.6);
-    --shadow-button-inset-main: #3c3c3c;
-    --shadow-button-inset-secondary: #181818;
-    --shadow-pad-inset-main: #1a1a1a;
-    --shadow-pad-inset-secondary: #3a3a3a;
-    --shadow-knob: 0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-    --shadow-modal: 2px 2px 10px rgba(0,0,0,0.7);
-    --shadow-context-menu: 2px 2px 8px rgba(0,0,0,0.6);
-
-    --accent-focus: #0060c0;
-    --accent-muted: #991b1b;
-    --accent-muted-text: #fecaca;
-    --accent-muted-border-dark: #7f1d1d;
-    --accent-muted-border-light: #ef4444;
-    --accent-soloed: #b45309;
-    --accent-soloed-text: #1c1917;
-    --accent-soloed-border-dark: #92400e;
-    --accent-soloed-border-light: #fde68a;
-    --accent-armed: #c2410c;
-    --accent-armed-text: #fff7ed;
-    --accent-armed-border-dark: #9a3412;
-    --accent-armed-border-light: #fed7aa;
-    --accent-active: #1d4ed8;
-    --accent-active-text: #dbeafe;
-    --accent-active-border-dark: #1e40af;
-    --accent-active-border-light: #93c5fd;
-    --accent-sequencer-step: #008080;
-    --accent-sequencer-step-border: #009090;
-    --accent-sequencer-playing-outline: #00ffff;
-    --accent-meter: #00b0b0;
-    --accent-meter-clip: #e04040;
-    --accent-playhead: #00ffff;
-    --accent-clip-bg: #008080;
-    --accent-clip-border: #009090;
-
-
-    --scrollbar-track: #1e1e1e;
-    --scrollbar-thumb: #4a4a4a;
-    --scrollbar-thumb-hover: #5a5a5a;
-    --scrollbar-thumb-border: #5a5a5a;
-    --scrollbar-corner: #1e1e1e;
+    --scrollbar-track: #000000;
+    --scrollbar-thumb: #FFFFFF;
+    --scrollbar-thumb-hover: #FFFFFF;
+    --scrollbar-thumb-border: #000000;
+    --scrollbar-corner: #000000;
 
     --timeline-track-name-width: 120px;
 }
 
 .theme-light {
-    --bg-primary: #f4f4f4;
-    --bg-window: #ffffff;
-    --bg-window-content: #fdfdfd;
-    --bg-title-bar: #e8e8e8;
-    --bg-taskbar: #e0e0e0;
-    --bg-start-menu: #f8f8f8;
-    --bg-button: #efefef;
-    --bg-button-hover: #e0e0e0;
-    --bg-button-active: #dcdcdc;
-    --bg-input: #ffffff;
-    --bg-dropzone: #f0f0f0;
-    --bg-dropzone-dragover: #e0e0e0;
-    --bg-sequencer-header: #f0f0f0;
-    --bg-sequencer-label: #f0f0f0;
-    --bg-sequencer-step-even: #fafafa;
-    --bg-sequencer-step-odd: #fdfdfd;
-    --bg-sequencer-step-hover: #e8e8e8;
-    --bg-meter-track: #dddddd;
-    --bg-meter-bar-container: #dddddd;
-    --bg-modal-overlay: rgba(50,50,50,0.6);
-    --bg-modal-dialog: #ffffff;
-    --bg-context-menu: #f8f8f8;
-    --bg-timeline-container: #ececec;
-    --bg-timeline-header: #e0e0e0;
-    --bg-timeline-track-lane: #fdfdfd;
-    --bg-timeline-track-lane-even: #f4f4f4;
-    --bg-timeline-track-name: #e7e7e7;
-    --bg-theme-toggle-button-hover: #d0d0d0;
+    /* Black & White Theme (Light Mode) */
+    --bg-primary: #FFFFFF;
+    --bg-window: #FFFFFF;
+    --bg-window-content: #FFFFFF;
+    --bg-title-bar: #FFFFFF;
+    --bg-taskbar: #FFFFFF;
+    --bg-start-menu: #FFFFFF;
+    --bg-button: #FFFFFF;
+    --bg-button-hover: #000000;
+    --bg-button-active: #000000;
+    --bg-input: #FFFFFF;
+    --bg-dropzone: #FFFFFF;
+    --bg-dropzone-dragover: #000000;
+    --bg-sequencer-header: #FFFFFF;
+    --bg-sequencer-label: #FFFFFF;
+    --bg-sequencer-step-even: #FFFFFF;
+    --bg-sequencer-step-odd: #FFFFFF;
+    --bg-sequencer-step-hover: #000000;
+    --bg-meter-track: #FFFFFF;
+    --bg-meter-bar-container: #FFFFFF;
+    --bg-modal-overlay: rgba(255,255,255,0.75);
+    --bg-modal-dialog: #FFFFFF;
+    --bg-context-menu: #FFFFFF;
+    --bg-timeline-container: #FFFFFF;
+    --bg-timeline-header: #FFFFFF;
+    --bg-timeline-track-lane: #FFFFFF;
+    --bg-timeline-track-lane-even: #FFFFFF;
+    --bg-timeline-track-name: #FFFFFF;
+    --bg-theme-toggle-button-hover: #000000;
 
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --text-placeholder: #000000;
+    --text-title-bar: #000000;
+    --text-button: #000000;
+    --text-button-hover: #FFFFFF;
+    --text-start-menu-disabled: #000000;
+    --text-dropzone: #000000;
+    --text-dropzone-dragover: #FFFFFF;
+    --text-dropzone-label: #000000;
+    --text-dropzone-label-hover: #000000;
+    --text-knob: #000000;
+    --text-sequencer-header: #000000;
+    --text-sequencer-step: #000000;
+    --text-theme-toggle-icon: #000000;
 
-    --text-primary: #333333;
-    --text-secondary: #555555;
-    --text-placeholder: #aaaaaa;
-    --text-title-bar: #111111;
-    --text-button: #333333;
-    --text-button-hover: #000000;
-    --text-start-menu-disabled: #aaaaaa;
-    --text-dropzone: #777777;
-    --text-dropzone-dragover: #444444;
-    --text-dropzone-label: #007acc;
-    --text-dropzone-label-hover: #005c99;
-    --text-knob: #666666;
-    --text-sequencer-header: #555555;
-    --text-sequencer-step: #999999;
-    --text-theme-toggle-icon: #333333;
+    --border-primary: #000000;
+    --border-secondary: #000000;
+    --border-window-title-bottom: #000000;
+    --border-button: #000000;
+    --border-button-hover: #000000;
+    --border-button-active-outer: #000000;
+    --border-button-active-inner: #000000;
+    --border-start-menu: #000000;
+    --border-start-menu-shadow: #000000 #000000 #000000 #000000;
+    --border-pad: #000000;
+    --border-pad-active: #000000;
+    --border-pad-selected: #000000;
+    --border-dropzone: #000000;
+    --border-dropzone-dragover: #000000;
+    --border-knob: #000000;
+    --border-input: #000000;
+    --border-sequencer: #000000;
+    --border-waveform: #000000;
+    --border-meter-bar-container: #000000;
+    --border-modal: #000000;
+    --border-context-menu: #000000;
+    --border-timeline-header: #000000;
+    --border-timeline-track-lane: #000000;
+    --border-timeline-track-name: #000000;
+    --border-theme-toggle-button: #FFFFFF;
 
-    --border-primary: #cccccc;
-    --border-secondary: #d0d0d0;
-    --border-window-title-bottom: #d0d0d0;
-    --border-button: #cccccc;
-    --border-button-hover: #b0b0b0;
-    --border-button-active-outer: #b0b0b0;
-    --border-button-active-inner: #d0d0d0;
-    --border-start-menu: #bbbbbb;
-    --border-start-menu-shadow: #cccccc #aaaaaa #aaaaaa #cccccc;
-    --border-pad: #b0b0b0;
-    --border-pad-active: #a0a0a0;
-    --border-pad-selected: #007acc;
-    --border-dropzone: #bbbbbb;
-    --border-dropzone-dragover: #aaaaaa;
-    --border-knob: #dddddd;
-    --border-input: #bbbbbb;
-    --border-sequencer: #d0d0d0;
-    --border-waveform: #cccccc;
-    --border-meter-bar-container: #cccccc;
-    --border-modal: #bbbbbb;
-    --border-context-menu: #aaaaaa;
-    --border-timeline-header: #cccccc;
-    --border-timeline-track-lane: #d0d0d0;
-    --border-timeline-track-name: #cccccc;
-    --border-theme-toggle-button: #d0d0d0;
+    --shadow-window: none;
+    --shadow-start-menu: none;
+    --shadow-button-inset-main: #FFFFFF;
+    --shadow-button-inset-secondary: #FFFFFF;
+    --shadow-pad-inset-main: #FFFFFF;
+    --shadow-pad-inset-secondary: #FFFFFF;
+    --shadow-knob: none;
+    --shadow-modal: none;
+    --shadow-context-menu: none;
+    
+    --accent-focus: #000000;
+    --accent-muted-text: #FFFFFF;
+    --accent-muted: #000000;
+    --accent-soloed-text: #FFFFFF;
+    --accent-soloed: #000000;
+    --accent-armed-text: #FFFFFF;
+    --accent-armed: #000000;
+    --accent-active-text: #FFFFFF;
+    --accent-active: #000000;
+    --accent-sequencer-step-border: #FFFFFF;
+    --accent-sequencer-step: #000000;
+    --accent-sequencer-playing-outline: #000000;
+    --accent-meter: #000000;
+    --accent-meter-clip: #000000;
+    --accent-playhead: #000000;
+    --accent-clip-bg: #000000;
+    --accent-clip-border: #FFFFFF;
 
-
-    --shadow-window: 0px 0px 15px rgba(0,0,0,0.15);
-    --shadow-start-menu: 2px 2px 8px rgba(0,0,0,0.2);
-    --shadow-button-inset-main: #d0d0d0;
-    --shadow-button-inset-secondary: #f0f0f0;
-    --shadow-pad-inset-main: #d0d0d0;
-    --shadow-pad-inset-secondary: #f0f0f0;
-    --shadow-knob: 0 1px 2px rgba(0,0,0,0.15), inset 0 1px 0 rgba(0,0,0,0.02);
-    --shadow-modal: 2px 2px 10px rgba(0,0,0,0.25);
-    --shadow-context-menu: 2px 2px 8px rgba(0,0,0,0.2);
-
-
-    --accent-focus: #007bff;
-    --accent-muted: #dc3545;
-    --accent-muted-text: #ffffff;
-    --accent-muted-border-dark: #c82333;
-    --accent-muted-border-light: #f5c6cb;
-    --accent-soloed: #ffc107;
-    --accent-soloed-text: #212529;
-    --accent-soloed-border-dark: #e0a800;
-    --accent-soloed-border-light: #ffeeba;
-    --accent-armed: #fd7e14;
-    --accent-armed-text: #ffffff;
-    --accent-armed-border-dark: #e66a0a;
-    --accent-armed-border-light: #ffc99c;
-    --accent-active: #007bff;
-    --accent-active-text: #ffffff;
-    --accent-active-border-dark: #0069d9;
-    --accent-active-border-light: #b8daff;
-    --accent-sequencer-step: #17a2b8;
-    --accent-sequencer-step-border: #138496;
-    --accent-sequencer-playing-outline: #00aeff;
-    --accent-meter: #28a745;
-    --accent-meter-clip: #dc3545;
-    --accent-playhead: #007bff;
-    --accent-clip-bg: #17a2b8;
-    --accent-clip-border: #138496;
-
-    --scrollbar-track: #f0f0f0;
-    --scrollbar-thumb: #c1c1c1;
-    --scrollbar-thumb-hover: #a8a8a8;
-    --scrollbar-thumb-border: #a8a8a8;
-    --scrollbar-corner: #f0f0f0;
+    --scrollbar-track: #FFFFFF;
+    --scrollbar-thumb: #000000;
+    --scrollbar-thumb-hover: #000000;
+    --scrollbar-thumb-border: #FFFFFF;
+    --scrollbar-corner: #FFFFFF;
 }
+/* --- End of Corrected Code --- */
 
 
 /* --- SnugOS General & Desktop Styling --- */
@@ -300,14 +281,15 @@ body {
 #topTaskbar button:hover {
     background-color: var(--bg-button-hover);
     border-color: var(--border-button-hover);
+    color: var(--text-button-hover);
 }
 #topTaskbar button:active {
     background-color: var(--bg-button-active);
 }
 
 #topTaskbar button.recording svg {
-    fill: white;
-    stroke: white;
+    fill: var(--accent-armed-text);
+    stroke: var(--accent-armed-text);
 }
 
 #topTaskbar button#playbackModeToggleBtnGlobalTop.active {
@@ -441,7 +423,7 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 /* --- Taskbar Styling (Bottom Taskbar) --- */
 #taskbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 32px; background-color: var(--bg-taskbar); border-top: 1px solid var(--border-secondary); z-index: 10000; display: flex; align-items: center; padding: 0 6px; box-sizing: border-box; color: var(--text-secondary);}
 #startButton { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 12px; font-weight: 600; margin-right: 6px; color: var(--text-button); border-radius: 3px; transition: background-color 0.15s ease;}
-#startButton:hover { background-color: var(--bg-button-hover);}
+#startButton:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
 #startButton:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
 #taskbarButtons .taskbar-button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 10px; margin: 0 3px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; color: var(--text-secondary); border-radius: 3px; transition: background-color 0.15s ease, color 0.15s ease;}
 #taskbarButtons .taskbar-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover);}
@@ -449,20 +431,20 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 #taskbarButtons .taskbar-button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active); color: var(--text-button-hover);}
 #taskbarButtons .taskbar-button.minimized-on-taskbar { background-color: var(--bg-button); opacity: 0.65;}
 #taskbarTempoDisplay { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button); cursor: pointer; color: var(--text-secondary); border-radius: 3px;}
-#taskbarTempoDisplay:hover { background-color: var(--bg-button-hover);}
+#taskbarTempoDisplay:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
 
 /* --- Start Menu Styling --- */
 #startMenu { position: absolute; bottom: 32px; left: 0; background: var(--bg-start-menu); border: 1px solid var(--border-start-menu); border-color: var(--border-start-menu-shadow); box-shadow: var(--shadow-start-menu); z-index: 10001; padding: 4px; min-width: 220px; color: var(--text-primary); border-radius: 3px;}
 #startMenu.hidden { display: none; }
 #startMenu ul { list-style: none; padding: 0; margin: 0; }
 #startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; white-space: nowrap; color: var(--text-primary); border-radius: 2px; transition: background-color 0.1s ease;}
-#startMenu li:hover, #startMenu li.disabled:hover { background: var(--accent-focus); color: white; }
+#startMenu li:hover, #startMenu li.disabled:hover { background: var(--accent-focus); color: #000000; }
 #startMenu li.disabled { color: var(--text-start-menu-disabled); cursor: default; }
 #startMenu hr { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
 
 /* --- Pad Button Styling --- */
 .pad-button { padding: 8px; border: 1px solid var(--border-pad); background-color: var(--bg-button); color: var(--text-secondary); cursor: pointer; text-align: center; min-width: 70px; min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset -1px -1px 1px var(--shadow-pad-inset-main), inset 1px 1px 1px var(--shadow-pad-inset-secondary); transition: background-color 0.15s ease, box-shadow 0.15s ease; overflow: hidden; position: relative; border-radius: 3px;}
-.pad-button:hover { background-color: var(--bg-button-hover);}
+.pad-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
 .pad-button:active, .pad-button.selected-for-edit { background-color: var(--bg-button-active); box-shadow: inset 1px 1px 1px var(--shadow-pad-inset-main), inset -1px -1px 1px var(--shadow-pad-inset-secondary); border-color: var(--border-pad-active);}
 .pad-button.selected-for-edit { border-color: var(--border-pad-selected); border-width: 2px; padding: 7px;}
 .pad-label { font-size: 0.8em; color: var(--text-secondary); display: block; margin-top: 5px; word-break: break-all; line-height: 1.2; max-height: 2.4em; overflow: hidden; text-overflow: ellipsis;}
@@ -481,10 +463,10 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 .knob-value { font-size: 0.75rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
 
 /* --- General Button Active States --- */
-button.muted { background-color: var(--accent-muted) !important; color: var(--accent-muted-text) !important; border-color: var(--accent-muted-border-dark) var(--accent-muted) var(--accent-muted) var(--accent-muted-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-muted-border-dark), inset -1px -1px 0 var(--accent-muted-border-light) !important;}
-button.soloed { background-color: var(--accent-soloed) !important; color: var(--accent-soloed-text) !important; border-color: var(--accent-soloed-border-dark) var(--accent-soloed) var(--accent-soloed) var(--accent-soloed-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-soloed-border-dark), inset -1px -1px 0 var(--accent-soloed-border-light) !important;}
-button.armed, button.recording { background-color: var(--accent-armed) !important; color: var(--accent-armed-text) !important; border-color: var(--accent-armed-border-dark) var(--accent-armed) var(--accent-armed) var(--accent-armed-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-armed-border-dark), inset -1px -1px 0 var(--accent-armed-border-light) !important;}
-button.active { background-color: var(--accent-active) !important; color: var(--accent-active-text) !important; border-color: var(--accent-active-border-dark) var(--accent-active) var(--accent-active) var(--accent-active-border-dark) !important; box-shadow: inset 1px 1px 0 var(--accent-active-border-dark), inset -1px -1px 0 var(--accent-active-border-light) !important;}
+button.muted { background-color: var(--accent-muted) !important; color: var(--accent-muted-text) !important; }
+button.soloed { background-color: var(--accent-soloed) !important; color: var(--accent-soloed-text) !important; }
+button.armed, button.recording { background-color: var(--accent-armed) !important; color: var(--accent-armed-text) !important; }
+button.active { background-color: var(--accent-active) !important; color: var(--accent-active-text) !important; }
 
 /* --- Piano Roll / Sequencer Styling --- */
 .sequencer-container .controls { position: sticky; top: 0; left: 0; background-color: var(--bg-title-bar); z-index: 30; border-bottom: 1px solid var(--border-primary); padding: 0.25rem; color: var(--text-title-bar);}
@@ -497,15 +479,15 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 .sequencer-grid-layout .sequencer-step-cell { cursor: pointer; transition: background-color 0.1s ease; color: var(--text-sequencer-step);}
 .sequencer-step-cell.bg-gray-50 { background-color: var(--bg-sequencer-step-even); }
 .sequencer-step-cell.bg-white { background-color: var(--bg-sequencer-step-odd); }
-.sequencer-step-cell:hover { background-color: var(--bg-sequencer-step-hover) !important;}
-.sequencer-step-cell.active-synth, .sequencer-step-cell.active-sampler, .sequencer-step-cell.active-drum-sampler, .sequencer-step-cell.active-instrument-sampler { background-color: var(--accent-sequencer-step) !important; color: white !important; border-color: var(--accent-sequencer-step-border) !important;}
+.sequencer-step-cell:hover { background-color: var(--bg-sequencer-step-hover) !important; color: var(--text-button-hover) !important }
+.sequencer-step-cell.active-synth, .sequencer-step-cell.active-sampler, .sequencer-step-cell.active-drum-sampler, .sequencer-step-cell.active-instrument-sampler { background-color: var(--accent-sequencer-step) !important; color: var(--bg-sequencer-step-even) !important; border-color: var(--accent-sequencer-step-border) !important;}
 .sequencer-step-cell.playing { outline: 2px solid var(--accent-sequencer-playing-outline); outline-offset: -2px; z-index: 5;}
 
 /* --- Notification Area --- */
 #notification-area { position: fixed; bottom: 40px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
 .notification-message { background-color: rgba(0,0,0,0.8); color: white; padding: 10px 15px; margin-top: 5px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; max-width: 300px; }
 .notification-message.show { opacity: 1; transform: translateY(0); }
-.theme-light .notification-message { background-color: rgba(50,50,50,0.9); color: #f0f0f0; }
+.theme-light .notification-message { background-color: rgba(255,255,255,0.9); color: #000000; border: 1px solid #000000; }
 
 /* --- Panel and Control Group --- */
 .panel { border: 1px solid var(--border-primary); padding: 8px; margin-bottom: 8px; border-radius: 3px; background-color: var(--bg-window); }
@@ -531,9 +513,9 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 .modal-content p { margin-bottom: 10px; }
 .modal-content p:last-child { margin-bottom: 0; }
 .modal-buttons { padding: 10px 15px; text-align: right; border-top: 1px solid var(--border-primary); background-color: var(--bg-window); border-bottom-left-radius: 3px; border-bottom-right-radius: 3px;}
-.modal-buttons button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; color: var(--text-button); padding: 6px 15px; margin-left: 10px; cursor: pointer; border-radius: 3px; transition: background-color 0.15s ease;}
-.modal-buttons button:hover { background-color: var(--bg-button-hover);}
-.modal-buttons button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
+.modal-buttons button { background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button); padding: 6px 15px; margin-left: 10px; cursor: pointer; border-radius: 3px; transition: background-color 0.15s ease;}
+.modal-buttons button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
+.modal-buttons button:active { background-color: var(--bg-button-active);}
 
 .window-resizer { position: absolute; width: 10px; height: 10px; right: 0; bottom: 0; cursor: nwse-resize; }
 .modular-effects-rack {}
@@ -566,7 +548,7 @@ input::placeholder,
 .context-menu { background-color: var(--bg-context-menu); border: 1px solid var(--border-context-menu); box-shadow: var(--shadow-context-menu); padding: 4px 0; min-width: 180px; border-radius: 3px; color: var(--text-primary); position: absolute;}
 .context-menu ul { list-style: none; padding: 0; margin: 0; }
 .context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
-.context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: white; }
+.context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: #000000; }
 .context-menu-item.disabled { color: var(--text-start-menu-disabled); cursor: default; }
 .context-menu-separator { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
 
@@ -581,6 +563,6 @@ input::placeholder,
 .timeline-track-lane:nth-child(even) { background-color: var(--bg-timeline-track-lane-even);}
 .timeline-track-lane-name { position: sticky; left: 0; z-index: 10; background-color: var(--bg-timeline-track-name); padding: 0 8px; height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-timeline-track-name); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--text-primary); width: var(--timeline-track-name-width, 120px); flex-shrink: 0;}
 .timeline-clips-area { position: relative; height: 100%; flex-grow: 1;}
-.audio-clip { position: absolute; height: 80%; top: 10%; background-color: var(--accent-clip-bg); border: 1px solid var(--accent-clip-border); border-radius: 3px; box-sizing: border-box; overflow: hidden; color: white; padding: 2px 4px; white-space: nowrap; text-overflow: ellipsis; cursor: grab;}
-.audio-clip.selected { outline: 2px solid gold; z-index: 5;}
+.audio-clip { position: absolute; height: 80%; top: 10%; background-color: var(--accent-clip-bg); border: 1px solid var(--accent-clip-border); border-radius: 3px; box-sizing: border-box; overflow: hidden; color: var(--bg-primary); padding: 2px 4px; white-space: nowrap; text-overflow: ellipsis; cursor: grab;}
+.audio-clip.selected { outline: 2px solid var(--text-primary); z-index: 5;}
 .dragover-timeline-lane { background-color: var(--bg-dropzone-dragover) !important;}
