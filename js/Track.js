@@ -1,9 +1,8 @@
 // js/Track.js - Track Class Module
 
 import * as Constants from './constants.js';
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js';
+import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
-
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
@@ -25,7 +24,6 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
-        // --- Audio Nodes ---
         this.input = new Tone.Gain();
         this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute).toDestination();
         this.trackMeter = new Tone.Meter();
@@ -33,14 +31,11 @@ export class Track {
         this.outputNode = this.gainNode;
         
         this.instrument = null;
-
-        // --- Effects ---
         this.activeEffects = [];
         if (initialData?.activeEffects) {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
 
-        // --- Initialize All Properties to Defaults ---
         this.synthEngineType = null;
         this.synthParams = {};
         this.samplerAudioData = {};
@@ -58,7 +53,6 @@ export class Track {
         this.inspectorControls = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
-        // --- Apply Type-Specific Properties ---
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -72,7 +66,6 @@ export class Track {
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
             this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
-            this.toneSampler = null;
         }
 
         if (this.type !== 'Audio' && (!initialData?.sequences || initialData.sequences.length === 0)) {
@@ -87,7 +80,7 @@ export class Track {
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
         } else if (this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
-            this.instrument = new Tone.Sampler(); // Basic sampler for MIDI triggering
+            this.instrument = new Tone.Sampler();
         } else {
             this.instrument = null;
         }
@@ -157,11 +150,20 @@ export class Track {
     
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
-        let param = this.instrument;
+        
         try {
+            let target = this.instrument;
             const keys = paramPath.split('.');
             const finalKey = keys.pop();
-            const target = keys.reduce((o, k) => o[k], param);
+            
+            for (const key of keys) {
+                if (target[key] === undefined) {
+                    console.error(`Invalid path in setSynthParam: ${key} does not exist.`);
+                    return;
+                }
+                target = target[key];
+            }
+            
             if (target && typeof target[finalKey] !== 'undefined') {
                 if (target[finalKey]?.value !== undefined) {
                     target[finalKey].value = value;
