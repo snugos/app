@@ -161,9 +161,8 @@ export function attachGlobalControlEvents(uiCache) {
     const tempoInput = document.getElementById('tempoGlobalInputTop');
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
-    const kbIndicator = document.getElementById('keyboardIndicatorGlobalTop');
-    if(kbIndicator) kbIndicator.classList.add('active'); 
-
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    
     const handlePlayStop = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
@@ -238,6 +237,13 @@ export function attachGlobalControlEvents(uiCache) {
         const newMode = currentMode === 'sequencer' ? 'song' : 'sequencer';
         setPlaybackModeState(newMode);
     });
+    
+    // --- Start of Corrected Code ---
+    themeToggleBtn?.addEventListener('click', () => {
+        const isLightTheme = document.body.classList.contains('theme-light');
+        const newTheme = isLightTheme ? 'dark' : 'light';
+        localAppServices.setCurrentUserThemePreference?.(newTheme);
+    });
 
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
@@ -282,6 +288,7 @@ export function attachGlobalControlEvents(uiCache) {
             }
         }
     });
+    // --- End of Corrected Code ---
 }
 
 function updateUndoRedoButtons() {
@@ -428,36 +435,25 @@ export function handleTrackSolo(trackId) {
 }
 
 export function handleTrackArm(trackId) {
-    console.log(`[ARM DEBUG 1] handleTrackArm called for trackId: ${trackId}`);
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
-    console.log(`[ARM DEBUG 2] Current armed ID is ${currentArmedId}. New armed ID will be ${newArmedId}.`);
 
-    // --- Turn off the old button ---
     if (currentArmedId !== null) {
-        console.log(`[ARM DEBUG 3] Trying to find and disable old arm button for track ${currentArmedId}.`);
-        const oldArmBtn = document.querySelector(`#armInputBtn-${currentArmedId}`);
-        if (oldArmBtn) {
-            console.log(`[ARM DEBUG 4] Found old button. Removing 'armed' class.`);
-            oldArmBtn.classList.remove('armed');
-        } else {
-            console.warn(`[ARM DEBUG 4] Could not find old arm button with selector #armInputBtn-${currentArmedId}.`);
+        const oldInspector = localAppServices.getWindowById?.(`trackInspector-${currentArmedId}`);
+        if (oldInspector?.element) {
+            const oldArmBtn = oldInspector.element.querySelector(`#armInputBtn-${currentArmedId}`);
+            if (oldArmBtn) oldArmBtn.classList.remove('armed');
         }
     }
 
-    // --- Turn on the new button ---
     if (newArmedId !== null) {
-        console.log(`[ARM DEBUG 5] Trying to find and enable new arm button for track ${newArmedId}.`);
-        const newArmBtn = document.querySelector(`#armInputBtn-${newArmedId}`);
-        if (newArmBtn) {
-            console.log(`[ARM DEBUG 6] Found new button. Adding 'armed' class.`);
-            newArmBtn.classList.add('armed');
-        } else {
-            console.warn(`[ARM DEBUG 6] Could not find new arm button with selector #armInputBtn-${newArmedId}.`);
+        const newInspector = localAppServices.getWindowById?.(`trackInspector-${newArmedId}`);
+        if (newInspector?.element) {
+            const newArmBtn = newInspector.element.querySelector(`#armInputBtn-${newArmedId}`);
+            if (newArmBtn) newArmBtn.classList.add('armed');
         }
     }
 
-    console.log(`[ARM DEBUG 7] Updating state.`);
     setArmedTrackId(newArmedId);
 }
 
