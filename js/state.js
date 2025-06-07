@@ -99,7 +99,7 @@ export function setHighestZState(zIndex) { highestZ = zIndex; }
 export function incrementHighestZState() { highestZ++; return highestZ; }
 export function setIsReconstructingDAWState(state) { isReconstructingDAW = !!state; }
 
-export function setMasterEffectsState(effectsArray) { masterEffectsChainState = effectsArray || []; if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI(); }
+export function setMasterEffectsState(effectsArray) { masterEffectsChainState = effectsArray || []; if (appServices.updateTrackUI) appServices.updateTrackUI(); }
 export function setMasterGainValueState(gainValue) { masterGainValueState = gainValue; }
 
 export function setMidiAccessState(midi) { midiAccessGlobal = midi; }
@@ -124,14 +124,20 @@ export function setArmedTrackIdState(trackId) {
     const oldArmedId = armedTrackId;
     armedTrackId = trackId;
 
+    // --- Start of Corrected Code (Debug Logs) ---
+    console.log(`[State] setArmedTrackIdState. New armed ID: ${armedTrackId}. Old armed ID: ${oldArmedId}`);
     if (appServices.updateTrackUI) {
+        console.log(`[State] appServices.updateTrackUI found. Proceeding to call it.`);
         if (oldArmedId !== null) {
             appServices.updateTrackUI(oldArmedId, 'armChanged');
         }
         if (armedTrackId !== null) {
             appServices.updateTrackUI(armedTrackId, 'armChanged');
         }
+    } else {
+         console.error(`[State] CRITICAL: appServices.updateTrackUI is NOT defined.`);
     }
+    // --- End of Corrected Code (Debug Logs) ---
 }
 
 export function setSoloedTrackIdState(trackId) {
@@ -144,7 +150,7 @@ export function setSoloedTrackIdState(trackId) {
             appServices.updateTrackUI(oldSoloId, 'soloChanged');
         }
         if (soloedTrackId !== null) {
-            appServices.updateTrackUI(soloedTrackId, 'soloChanged');
+            appServices.updateTrackUI(soloedTrackId, 'soloedChanged');
         }
         tracks.forEach(t => {
             if (t.id !== oldSoloId && t.id !== soloedTrackId) {
