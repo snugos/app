@@ -25,10 +25,8 @@ import {
 } from './state.js';
 
 let localAppServices = {};
-// --- Start of Corrected Code ---
 let isComputerKeyboardPianoActive = false;
 const currentlyPressedKeys = new Set();
-// --- End of Corrected Code ---
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
@@ -240,7 +238,6 @@ export function attachGlobalControlEvents(uiCache) {
         setPlaybackModeState(newMode);
     });
 
-    // --- Start of Corrected Code ---
     // Keyboard shortcuts and Computer Keyboard Piano logic
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
@@ -302,7 +299,6 @@ export function attachGlobalControlEvents(uiCache) {
             }
         }
     });
-    // --- End of Corrected Code ---
 }
 
 function updateUndoRedoButtons() {
@@ -448,19 +444,34 @@ export function handleTrackSolo(trackId) {
     }
 }
 
+// --- Start of Corrected Code ---
+// This version is more direct to ensure the UI updates.
 export function handleTrackArm(trackId) {
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
-    
-    setArmedTrackId(newArmedId);
 
-    if (localAppServices.updateTrackUI) {
-        localAppServices.updateTrackUI(trackId, 'armChanged');
-        if (currentArmedId !== null && currentArmedId !== trackId) {
-            localAppServices.updateTrackUI(currentArmedId, 'armChanged');
+    // Manually find and turn off the old button's UI
+    if (currentArmedId !== null) {
+        const oldInspector = localAppServices.getWindowById?.(`trackInspector-${currentArmedId}`);
+        if (oldInspector?.element) {
+            const oldArmBtn = oldInspector.element.querySelector(`#armInputBtn-${currentArmedId}`);
+            if (oldArmBtn) oldArmBtn.classList.remove('armed');
         }
     }
+
+    // Manually find and turn on the new button's UI
+    if (newArmedId !== null) {
+        const newInspector = localAppServices.getWindowById?.(`trackInspector-${newArmedId}`);
+        if (newInspector?.element) {
+            const newArmBtn = newInspector.element.querySelector(`#armInputBtn-${newArmedId}`);
+            if (newArmBtn) newArmBtn.classList.add('armed');
+        }
+    }
+
+    // Finally, update the central state
+    setArmedTrackId(newArmedId);
 }
+// --- End of Corrected Code ---
 
 export function handleRemoveTrack(trackId) {
     const track = getTrackById(trackId);
