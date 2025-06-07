@@ -1,6 +1,5 @@
 /* js/style.css - SnugOS Stylesheet */
 
-/* --- Start of Corrected Code --- */
 :root {
     /* Black & White Theme (Dark Mode Default) */
     --bg-primary: #000000;
@@ -218,7 +217,6 @@
     --scrollbar-thumb-border: #FFFFFF;
     --scrollbar-corner: #FFFFFF;
 }
-/* --- End of Corrected Code --- */
 
 
 /* --- SnugOS General & Desktop Styling --- */
@@ -357,10 +355,11 @@ body {
     margin-left: 10px;
 }
 
+/* --- Start of Corrected Code --- */
 #themeToggleBtn { /* Single button container for icons */
     background-color: transparent;
     border: 1px solid transparent;
-    padding: 4px;
+    padding: 0; /* REMOVED padding */
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -374,14 +373,16 @@ body {
 
 #themeToggleBtn:hover {
     background-color: var(--bg-theme-toggle-button-hover);
+    color: var(--text-button-hover);
     border-color: var(--border-theme-toggle-button);
 }
 
 #themeToggleBtn svg {
     stroke: currentColor;
-    width: 18px;
-    height: 18px;
+    width: 80%; /* CHANGED to percentage */
+    height: 80%; /* CHANGED to percentage */
 }
+/* --- End of Corrected Code --- */
 
 /* Default icon visibility (e.g. when body.theme-dark or no theme class yet) */
 #themeToggleBtn #themeIconMoon { display: none; }
