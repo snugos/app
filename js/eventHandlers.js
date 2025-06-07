@@ -25,8 +25,10 @@ import {
 } from './state.js';
 
 let localAppServices = {};
-let transportKeepAliveBufferSource = null;
-let silentKeepAliveBuffer = null;
+// --- Start of Corrected Code ---
+let isComputerKeyboardPianoActive = false;
+const currentlyPressedKeys = new Set();
+// --- End of Corrected Code ---
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
@@ -161,8 +163,6 @@ export function attachGlobalControlEvents(uiCache) {
     const recordBtn = document.getElementById('recordBtnGlobalTop');
     const tempoInput = document.getElementById('tempoGlobalInputTop');
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    const taskbarTempoDisplay = document.getElementById('taskbarTempoDisplay');
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
 
     const handlePlayStop = async () => {
@@ -228,7 +228,7 @@ export function attachGlobalControlEvents(uiCache) {
         }
     });
 
-    taskbarTempoDisplay?.addEventListener('click', () => {
+    document.getElementById('taskbarTempoDisplay')?.addEventListener('click', () => {
         tempoInput?.select();
     });
 
@@ -240,19 +240,69 @@ export function attachGlobalControlEvents(uiCache) {
         setPlaybackModeState(newMode);
     });
 
-    // Keyboard shortcuts
+    // --- Start of Corrected Code ---
+    // Keyboard shortcuts and Computer Keyboard Piano logic
     document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+            return;
+        }
+
+        // Toggle computer keyboard piano with Caps Lock
+        if (e.key === 'CapsLock') {
+            isComputerKeyboardPianoActive = !isComputerKeyboardPianoActive;
+            const kbIndicator = document.getElementById('keyboardIndicatorGlobalTop');
+            if (kbIndicator) {
+                kbIndicator.classList.toggle('active', isComputerKeyboardPianoActive);
+            }
+            showNotification(`Computer Keyboard Piano ${isComputerKeyboardPianoActive ? 'Enabled' : 'Disabled'}`, 1500);
+            return; // Prevent further processing for the CapsLock key itself
+        }
         
-        if (e.code === 'Space') {
+        // Handle global shortcuts if keyboard piano is not active
+        if (!isComputerKeyboardPianoActive) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                handlePlayStop();
+            } else if (e.key === 'Escape') {
+                handleStop();
+            } else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
+                handleRecord();
+            }
+            return; // Stop here if not in keyboard piano mode
+        }
+
+        // Handle computer keyboard piano notes if active
+        if (e.repeat || !isComputerKeyboardPianoActive) return;
+        
+        const key = e.key.toLowerCase();
+        if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
             e.preventDefault();
-            handlePlayStop();
-        } else if (e.key === 'Escape') {
-            handleStop();
-        } else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
-            handleRecord();
+            const armedTrackId = getArmedTrackId();
+            const armedTrack = getTrackById(armedTrackId);
+            
+            if (armedTrack && armedTrack.instrument) {
+                const note = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                armedTrack.instrument.triggerAttack(note, Tone.now(), 0.75);
+                currentlyPressedKeys.add(key);
+            }
         }
     });
+
+    document.addEventListener('keyup', (e) => {
+        const key = e.key.toLowerCase();
+        if (isComputerKeyboardPianoActive && Constants.computerKeySynthMap[key]) {
+            e.preventDefault();
+            const armedTrackId = getArmedTrackId();
+            const armedTrack = getTrackById(armedTrackId);
+
+            if (armedTrack && armedTrack.instrument) {
+                const note = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                armedTrack.instrument.triggerRelease(note, Tone.now());
+                currentlyPressedKeys.delete(key);
+            }
+        }
+    });
+    // --- End of Corrected Code ---
 }
 
 function updateUndoRedoButtons() {
@@ -402,20 +452,14 @@ export function handleTrackArm(trackId) {
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
     
-    // Set the state first
     setArmedTrackId(newArmedId);
 
-    // --- Start of Corrected Code ---
-    // Directly trigger the UI update from the handler
     if (localAppServices.updateTrackUI) {
-        // Update the track that was just clicked
         localAppServices.updateTrackUI(trackId, 'armChanged');
-        // If a different track was armed before, we need to update it too
         if (currentArmedId !== null && currentArmedId !== trackId) {
             localAppServices.updateTrackUI(currentArmedId, 'armChanged');
         }
     }
-    // --- End of Corrected Code ---
 }
 
 export function handleRemoveTrack(trackId) {
