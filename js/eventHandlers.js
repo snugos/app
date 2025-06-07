@@ -11,7 +11,7 @@ import {
     getArmedTrackIdState as getArmedTrackId,
     setActiveSequencerTrackIdState as setActiveSequencerTrackId,
     setIsRecordingState as setIsRecording,
-    isTrackRecordingState as isTrackRecording,
+    isTrackRecordingState,
     setRecordingTrackIdState as setRecordingTrackId,
     getRecordingTrackIdState as getRecordingTrackId,
     setRecordingStartTimeState as setRecordingStartTime,
@@ -189,7 +189,7 @@ export function attachGlobalControlEvents(uiCache) {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
 
-        const currentlyRecording = isTrackRecording();
+        const currentlyRecording = isTrackRecordingState();
         const armedTrackId = getArmedTrackId();
         const armedTrack = getTrackById(armedTrackId);
         
@@ -232,7 +232,9 @@ export function attachGlobalControlEvents(uiCache) {
         tempoInput?.select();
     });
 
-    midiSelect?.addEventListener('change', eventSelectMIDIInput);
+    // --- Start of Corrected Code ---
+    midiSelect?.addEventListener('change', selectMIDIInput);
+    // --- End of Corrected Code ---
     
     playbackModeToggle?.addEventListener('click', () => {
         const currentMode = getPlaybackModeState();
