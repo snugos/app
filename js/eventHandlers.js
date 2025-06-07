@@ -162,7 +162,7 @@ export function attachGlobalControlEvents(uiCache) {
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     const kbIndicator = document.getElementById('keyboardIndicatorGlobalTop');
-    if(kbIndicator) kbIndicator.classList.add('active'); // Set KB indicator to always on
+    if(kbIndicator) kbIndicator.classList.add('active'); 
 
     const handlePlayStop = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
@@ -192,13 +192,13 @@ export function attachGlobalControlEvents(uiCache) {
         const armedTrackId = getArmedTrackId();
         const armedTrack = getTrackById(armedTrackId);
         
-        if (currentlyRecording) { // Stop recording
+        if (currentlyRecording) {
             setIsRecording(false);
             recordBtn.classList.remove('recording');
             if (localAppServices.stopAudioRecording) {
                 await localAppServices.stopAudioRecording();
             }
-        } else if (armedTrack && armedTrack.type === 'Audio') { // Start recording
+        } else if (armedTrack && armedTrack.type === 'Audio') {
             const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
             if (success) {
                 setIsRecording(true);
@@ -239,7 +239,6 @@ export function attachGlobalControlEvents(uiCache) {
         setPlaybackModeState(newMode);
     });
 
-    // Keyboard shortcuts and Computer Keyboard Piano logic
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
             return;
@@ -247,7 +246,6 @@ export function attachGlobalControlEvents(uiCache) {
         if (e.repeat) return;
         const key = e.key.toLowerCase();
 
-        // First, check if the key is a piano key
         if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
@@ -259,7 +257,6 @@ export function attachGlobalControlEvents(uiCache) {
                 currentlyPressedKeys.add(key);
             }
         } else {
-            // If it's not a piano key, check for global shortcuts
             if (e.code === 'Space') {
                 e.preventDefault();
                 handlePlayStop();
@@ -431,28 +428,36 @@ export function handleTrackSolo(trackId) {
 }
 
 export function handleTrackArm(trackId) {
+    console.log(`[ARM DEBUG 1] handleTrackArm called for trackId: ${trackId}`);
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
+    console.log(`[ARM DEBUG 2] Current armed ID is ${currentArmedId}. New armed ID will be ${newArmedId}.`);
 
-    // Manually find and turn off the old button's UI
+    // --- Turn off the old button ---
     if (currentArmedId !== null) {
-        const oldInspector = localAppServices.getWindowById?.(`trackInspector-${currentArmedId}`);
-        if (oldInspector?.element) {
-            const oldArmBtn = oldInspector.element.querySelector(`#armInputBtn-${currentArmedId}`);
-            if (oldArmBtn) oldArmBtn.classList.remove('armed');
+        console.log(`[ARM DEBUG 3] Trying to find and disable old arm button for track ${currentArmedId}.`);
+        const oldArmBtn = document.querySelector(`#armInputBtn-${currentArmedId}`);
+        if (oldArmBtn) {
+            console.log(`[ARM DEBUG 4] Found old button. Removing 'armed' class.`);
+            oldArmBtn.classList.remove('armed');
+        } else {
+            console.warn(`[ARM DEBUG 4] Could not find old arm button with selector #armInputBtn-${currentArmedId}.`);
         }
     }
 
-    // Manually find and turn on the new button's UI
+    // --- Turn on the new button ---
     if (newArmedId !== null) {
-        const newInspector = localAppServices.getWindowById?.(`trackInspector-${newArmedId}`);
-        if (newInspector?.element) {
-            const newArmBtn = newInspector.element.querySelector(`#armInputBtn-${newArmedId}`);
-            if (newArmBtn) newArmBtn.classList.add('armed');
+        console.log(`[ARM DEBUG 5] Trying to find and enable new arm button for track ${newArmedId}.`);
+        const newArmBtn = document.querySelector(`#armInputBtn-${newArmedId}`);
+        if (newArmBtn) {
+            console.log(`[ARM DEBUG 6] Found new button. Adding 'armed' class.`);
+            newArmBtn.classList.add('armed');
+        } else {
+            console.warn(`[ARM DEBUG 6] Could not find new arm button with selector #armInputBtn-${newArmedId}.`);
         }
     }
 
-    // Finally, update the central state
+    console.log(`[ARM DEBUG 7] Updating state.`);
     setArmedTrackId(newArmedId);
 }
 
