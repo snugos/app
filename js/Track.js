@@ -1,8 +1,9 @@
 // js/Track.js - Track Class Module
 
 import * as Constants from './constants.js';
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
+import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
+
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
@@ -20,18 +21,18 @@ export class Track {
         }
 
         this.isMuted = initialData?.isMuted || false;
-        this.isSoloed = false; // This will be set by the solo manager
+        this.isSoloed = false;
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
         // --- Audio Nodes ---
-        this.input = new Tone.Gain(); // Entry point for the track's internal chain
+        this.input = new Tone.Gain();
         this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute).toDestination();
         this.trackMeter = new Tone.Meter();
         this.gainNode.connect(this.trackMeter);
-        this.outputNode = this.gainNode; // Final output of the track
+        this.outputNode = this.gainNode;
         
-        this.instrument = null; // The Tone.js instrument
+        this.instrument = null;
 
         // --- Effects ---
         this.activeEffects = [];
@@ -39,56 +40,57 @@ export class Track {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
 
-        // --- Type-Specific Properties ---
+        // --- Initialize All Properties to Defaults ---
+        this.synthEngineType = null;
+        this.synthParams = {};
+        this.samplerAudioData = {};
+        this.audioBuffer = null;
+        this.slices = [];
+        this.selectedSliceForEdit = 0;
+        this.drumSamplerPads = [];
+        this.drumPadPlayers = [];
+        this.selectedDrumPadForEdit = 0;
+        this.instrumentSamplerSettings = {};
+        this.toneSampler = null;
         this.sequences = [];
         this.activeSequenceId = null;
         this.timelineClips = initialData?.timelineClips || [];
+        this.inspectorControls = {};
+        this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
+        // --- Apply Type-Specific Properties ---
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
         } else if (this.type === 'Sampler') {
-            // Sampler (Slicer) specific properties...
+            this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
+            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
+            this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
         } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { volume: 0.7, pitchShift: 0 });
+            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0 });
             this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
-            // Instrument Sampler specific properties...
+            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
+            this.toneSampler = null;
         }
 
         if (this.type !== 'Audio' && (!initialData?.sequences || initialData.sequences.length === 0)) {
             this.createNewSequence("Sequence 1", Constants.DEFAULT_STEPS_PER_BAR || 16, true);
         }
-
-        this.inspectorControls = {};
-        this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
     }
 
-    // --- Core Methods ---
     async initializeInstrument() {
         if (this.instrument) {
             this.instrument.dispose();
-            this.instrument = null;
         }
-
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
-        } else if (this.type === 'InstrumentSampler') {
-            // Placeholder for instrument sampler initialization
-            this.instrument = new Tone.Sampler();
-        } else if (this.type === 'DrumSampler') {
-            const urls = {};
-            this.drumSamplerPads.forEach((pad, i) => {
-                if (pad.dbKey) {
-                    urls[Constants.DRUM_MIDI_START_NOTE + i] = `/path/to/db/${pad.dbKey}`; // This needs a real path or blob URL
-                }
-            });
-            this.instrument = new Tone.Sampler({ urls });
+        } else if (this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
+            this.instrument = new Tone.Sampler(); // Basic sampler for MIDI triggering
         } else {
-            this.instrument = null; // Sampler and Audio tracks don't use a single MIDI instrument
+            this.instrument = null;
         }
-
         this.rebuildEffectChain();
     }
 
@@ -101,8 +103,12 @@ export class Track {
 
         this.activeEffects.forEach(effect => {
             if (currentNode && effect.toneNode) {
-                currentNode.connect(effect.toneNode);
-                currentNode = effect.toneNode;
+                try {
+                    currentNode.connect(effect.toneNode);
+                    currentNode = effect.toneNode;
+                } catch (e) {
+                    console.error(`Failed to connect effect ${effect.type}`, e);
+                }
             }
         });
 
@@ -111,7 +117,6 @@ export class Track {
         }
     }
     
-    // --- State & UI Methods ---
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) {
@@ -147,59 +152,48 @@ export class Track {
         this.applySoloState(isAnotherTrackSoloed);
         if (this.appServices.updateTrackUI) {
             this.appServices.updateTrackUI(this.id, 'soloChanged');
-            this.appServices.updateTrackUI(this.id, 'muteChanged');
         }
     }
     
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
-        
         let param = this.instrument;
-        const keys = paramPath.split('.');
-        const finalKey = keys.pop();
-        
-        for (const key of keys) {
-            if (param[key]) {
-                param = param[key];
+        try {
+            const keys = paramPath.split('.');
+            const finalKey = keys.pop();
+            const target = keys.reduce((o, k) => o[k], param);
+            if (target && typeof target[finalKey] !== 'undefined') {
+                if (target[finalKey]?.value !== undefined) {
+                    target[finalKey].value = value;
+                } else {
+                    target[finalKey] = value;
+                }
+                this.synthParams = this.instrument.get();
             }
+        } catch (e) {
+            console.error(`Could not set synth param: ${paramPath}`, e);
         }
-        
-        if (param && param[finalKey]) {
-            if (param[finalKey].value !== undefined) {
-                param[finalKey].value = value;
-            } else {
-                param[finalKey] = value;
-            }
-        }
-        this.synthParams = this.instrument.get();
     }
     
-    // --- Other Methods ---
+    setSliceVolume(index, value) { if(this.slices[index]) this.slices[index].volume = value; }
+    setSlicePitchShift(index, value) { if(this.slices[index]) this.slices[index].pitchShift = value; }
+    setDrumSamplerPadVolume(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].volume = value; }
+    setDrumSamplerPadPitch(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].pitchShift = value; }
+
     addEffect(effectType, params, isInitialLoad = false) {
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
         if (!effectDef) return;
-
         const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
         const toneNode = createEffectInstance(effectType, initialParams);
-
         if (toneNode) {
-            const effectData = {
-                id: `effect-${this.id}-${Date.now()}`,
-                type: effectType,
-                toneNode: toneNode,
-                params: JSON.parse(JSON.stringify(initialParams))
-            };
+            const effectData = { id: `effect-${this.id}-${Date.now()}`, type: effectType, toneNode, params: JSON.parse(JSON.stringify(initialParams)) };
             this.activeEffects.push(effectData);
             this.rebuildEffectChain();
-            if (!isInitialLoad && this.appServices.updateTrackUI) {
-                this.appServices.updateTrackUI(this.id, 'effectsChanged');
-            }
+            if (!isInitialLoad) this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
         }
     }
-    
-    createNewSequence(name, length, skipUndo = false) {
-        // Implementation for creating a new sequence...
-    }
+
+    createNewSequence(name, length, skipUndo) { /* ... implementation ... */ }
     
     getDefaultSynthParams() {
         return {
@@ -213,9 +207,9 @@ export class Track {
 
     dispose() {
         this.instrument?.dispose();
-        this.input.dispose();
-        this.outputNode.dispose();
-        this.trackMeter.dispose();
+        this.input?.dispose();
+        this.outputNode?.dispose();
+        this.trackMeter?.dispose();
         this.activeEffects.forEach(e => e.toneNode.dispose());
     }
 }
