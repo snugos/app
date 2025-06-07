@@ -120,22 +120,29 @@ export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
 
 export function setClipboardDataState(data) { clipboardDataGlobal = data || { type: null, data: null, sourceTrackType: null, sequenceLength: null }; }
 
+// --- Start of Corrected Code ---
+// This function now ONLY updates the state variable.
+// The UI update is now triggered by the event handler that calls this.
 export function setArmedTrackIdState(trackId) {
     armedTrackId = trackId;
 }
 
+// This function now correctly updates all tracks when solo state changes.
 export function setSoloedTrackIdState(trackId) {
     const tracks = getTracksState();
     const oldSoloId = soloedTrackId;
     soloedTrackId = trackId;
 
     if (appServices.updateTrackUI) {
+        // Update the track that was previously soloed (to turn it off)
         if (oldSoloId !== null) {
             appServices.updateTrackUI(oldSoloId, 'soloChanged');
         }
+        // Update the track that is now soloed (to turn it on)
         if (soloedTrackId !== null) {
-            appServices.updateTrackUI(soloedTrackId, 'soloedChanged');
+            appServices.updateTrackUI(soloedTrackId, 'soloChanged');
         }
+        // Update all other tracks to reflect the new solo state (they become muted/unmuted)
         tracks.forEach(t => {
             if (t.id !== oldSoloId && t.id !== soloedTrackId) {
                 appServices.updateTrackUI(t.id, 'soloChanged');
@@ -143,6 +150,7 @@ export function setSoloedTrackIdState(trackId) {
         });
     }
 }
+// --- End of Corrected Code ---
 
 export function setIsRecordingState(isRec) { isRecordingGlobal = !!isRec; if (appServices.updateRecordButtonUI) appServices.updateRecordButtonUI(isRecordingGlobal); }
 export function setRecordingTrackIdState(trackId) { recordingTrackIdGlobal = trackId; }
@@ -192,12 +200,10 @@ export function addTrackToStateInternal(type, initialData = null, isUserAction =
 
         tracks.push(newTrack);
 
-        // --- Start of Corrected Code ---
         // Initialize the track's underlying Tone.js instrument after creation.
         if (typeof newTrack.initializeInstrument === 'function') {
             newTrack.initializeInstrument();
         }
-        // --- End of Corrected Code ---
 
         if (isUserAction && appServices.captureStateForUndo) {
             appServices.captureStateForUndo(`Add Track: ${newTrack.name}`);
