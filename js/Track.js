@@ -211,6 +211,27 @@ export class Track {
             this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
         }
     }
+    
+    /**
+     * Updates the track's mute and solo properties based on the global solo state.
+     * @param {string | null} soloedTrackId - The ID of the currently soloed track, or null if none.
+     */
+    updateSoloMuteState(soloedTrackId) {
+        const isThisTrackSoloed = this.id === soloedTrackId;
+        const isAnotherTrackSoloed = soloedTrackId !== null && this.id !== soloedTrackId;
+
+        // Update the track's internal solo status property
+        this.isSoloed = isThisTrackSoloed;
+
+        // Apply the audio change (mute the gain if another track is soloed)
+        this.applySoloState(isAnotherTrackSoloed);
+
+        // Notify the UI to update itself for both solo and mute states
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'soloChanged');
+            this.appServices.updateTrackUI(this.id, 'muteChanged');
+        }
+    }
 
     // --- All other methods are unchanged below this line ---
 
@@ -271,9 +292,24 @@ export class Track {
     applyMuteState() {
         // ... (implementation is unchanged)
     }
-    applySoloState() {
-        // ... (implementation is unchanged)
+    
+    /**
+     * Applies the solo state to the track's gain node.
+     * A track is audibly muted if another track is soloed.
+     * @param {boolean} isAnotherTrackSoloed
+     */
+    applySoloState(isAnotherTrackSoloed) {
+        if (!this.gainNode) return;
+
+        // If another track is soloed, silence this track's output.
+        if (isAnotherTrackSoloed) {
+            this.gainNode.gain.rampTo(0, 0.02);
+        } else {
+            // If no other track is soloed, return to the volume determined by its own mute state.
+            this.applyMuteState();
+        }
     }
+    
     setSynthParam(paramPath, value) {
         // ... (implementation is unchanged)
     }
