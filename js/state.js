@@ -107,11 +107,9 @@ export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; 
 
 export function setLoadedZipFilesState(libraryName, zipInstance, status = 'loaded') {
     loadedZipFilesGlobal[libraryName] = { zip: zipInstance, status: status, lastAccessed: Date.now() };
-    console.log(`[State setLoadedZipFilesState] Library "${libraryName}" status set to "${status}". Total loaded: ${Object.keys(loadedZipFilesGlobal).length}`);
 }
 export function setSoundLibraryFileTreesState(libraryName, tree) {
     soundLibraryFileTreesGlobal[libraryName] = tree;
-    console.log(`[State setSoundLibraryFileTreesState] File tree for "${libraryName}" stored.`);
 }
 export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; if(appServices.updateSoundBrowserDisplayForLibrary) appServices.updateSoundBrowserDisplayForLibrary(name); }
 export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
@@ -121,8 +119,6 @@ export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
 export function setClipboardDataState(data) { clipboardDataGlobal = data || { type: null, data: null, sourceTrackType: null, sequenceLength: null }; }
 
 export function setArmedTrackIdState(trackId) {
-    // This function now ONLY updates the state variable.
-    // The UI update is now triggered by the event handler that calls this.
     armedTrackId = trackId;
 }
 
@@ -176,7 +172,7 @@ export function setSelectedTimelineClipInfoState(info) { selectedTimelineClipInf
 export function setCurrentUserThemePreferenceState(preference) {
     if (['light', 'dark', 'system'].includes(preference)) {
         currentUserThemePreference = preference;
-        localStorage.setItem(Constants.THEME_STORAGE_KEY, preference);
+        localStorage.setItem('snugos-theme', preference);
         if (appServices.applyUserThemePreference) appServices.applyUserThemePreference();
     }
 }
@@ -191,11 +187,10 @@ export function addTrackToStateInternal(type, initialData = null, isUserAction =
         if (newTrackId >= trackIdCounter) {
             trackIdCounter = newTrackId + 1;
         }
-
         tracks.push(newTrack);
 
         // --- Start of Corrected Code ---
-        // Initialize the track's underlying Tone.js instrument after creation.
+        // This ensures the track's internal audio instrument is created.
         if (typeof newTrack.initializeInstrument === 'function') {
             newTrack.initializeInstrument();
         }
@@ -210,9 +205,9 @@ export function addTrackToStateInternal(type, initialData = null, isUserAction =
         return newTrack;
 
     } catch (error) {
-        console.error(`[State addTrackToStateInternal] Error adding ${type} track:`, error);
+        console.error(`[State] CRITICAL ERROR while adding ${type} track:`, error);
         if (appServices.showNotification) {
-            appServices.showNotification(`Failed to add ${type} track. Check console for details.`, 4000);
+            appServices.showNotification(`Failed to add ${type} track. See console for details.`, 5000);
         }
         return null; 
     }
@@ -238,15 +233,10 @@ export function removeTrackFromStateInternal(trackId, isUserAction = true) {
 
 export async function reconstructDAWInternal(projectData) {
     setIsReconstructingDAWState(true);
-    console.log("Reconstructing DAW from project data...");
     try {
-        // The rest of the project loading logic would go here.
-        // For now, it mainly serves to set the flag.
+        // Main reconstruction logic would go here
     } catch (error) {
         console.error("Error during DAW reconstruction:", error);
-        if (appServices.showNotification) {
-            appServices.showNotification("Failed to load project. See console for details.", 5000);
-        }
     } finally {
         setIsReconstructingDAWState(false);
     }
