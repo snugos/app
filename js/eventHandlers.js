@@ -25,7 +25,6 @@ import {
 } from './state.js';
 
 let localAppServices = {};
-let isComputerKeyboardPianoActive = false;
 const currentlyPressedKeys = new Set();
 
 export function initializeEventHandlersModule(appServicesFromMain) {
@@ -162,6 +161,8 @@ export function attachGlobalControlEvents(uiCache) {
     const tempoInput = document.getElementById('tempoGlobalInputTop');
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
+    const kbIndicator = document.getElementById('keyboardIndicatorGlobalTop');
+    if(kbIndicator) kbIndicator.classList.add('active'); // Set KB indicator to always on
 
     const handlePlayStop = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
@@ -243,35 +244,10 @@ export function attachGlobalControlEvents(uiCache) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
             return;
         }
-
-        // Toggle computer keyboard piano with Caps Lock
-        if (e.key === 'CapsLock') {
-            isComputerKeyboardPianoActive = !isComputerKeyboardPianoActive;
-            const kbIndicator = document.getElementById('keyboardIndicatorGlobalTop');
-            if (kbIndicator) {
-                kbIndicator.classList.toggle('active', isComputerKeyboardPianoActive);
-            }
-            showNotification(`Computer Keyboard Piano ${isComputerKeyboardPianoActive ? 'Enabled' : 'Disabled'}`, 1500);
-            return; 
-        }
-        
-        // Handle global shortcuts if keyboard piano is not active
-        if (!isComputerKeyboardPianoActive) {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                handlePlayStop();
-            } else if (e.key === 'Escape') {
-                handleStop();
-            } else if (e.key.toLowerCase() === 'r' && !e.ctrlKey && !e.metaKey) {
-                handleRecord();
-            }
-            return; 
-        }
-
-        // Handle computer keyboard piano notes if active
         if (e.repeat) return;
-        
         const key = e.key.toLowerCase();
+
+        // First, check if the key is a piano key
         if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
@@ -282,12 +258,22 @@ export function attachGlobalControlEvents(uiCache) {
                 armedTrack.instrument.triggerAttack(note, Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
             }
+        } else {
+            // If it's not a piano key, check for global shortcuts
+            if (e.code === 'Space') {
+                e.preventDefault();
+                handlePlayStop();
+            } else if (e.key === 'Escape') {
+                handleStop();
+            } else if (key === 'r' && !e.ctrlKey && !e.metaKey) {
+                handleRecord();
+            }
         }
     });
 
     document.addEventListener('keyup', (e) => {
         const key = e.key.toLowerCase();
-        if (isComputerKeyboardPianoActive && Constants.computerKeySynthMap[key]) {
+        if (Constants.computerKeySynthMap[key]) {
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
