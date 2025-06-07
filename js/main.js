@@ -73,9 +73,7 @@ import {
     // Component creators
     createKnob
 } from './ui.js';
-// --- Start of Corrected Code ---
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions } from './effectsRegistry.js';
-// --- End of Corrected Code ---
 
 // --- App Services Object (Dependency Injection) ---
 let appServices = {};
@@ -85,12 +83,19 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     const track = getTrackByIdState(trackId);
     if (!track) return;
 
+    // --- Start of Corrected Code (Bug Fix) ---
+    // This now correctly uses getSoloedTrackIdState, not getArmedTrackIdState
     const soloedTrackId = getSoloedTrackIdState();
+    // --- End of Corrected Code (Bug Fix) ---
+
     const isEffectivelyMuted = track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id);
 
     const inspectorWindow = getWindowByIdState(`trackInspector-${trackId}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         if (reason === 'armChanged') {
+            // --- Start of Corrected Code (Debug Log) ---
+            console.log(`[handleTrackUIUpdate] Received 'armChanged' for track ${trackId}.`);
+            // --- End of Corrected Code (Debug Log) ---
             const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
             if (armBtn) armBtn.classList.toggle('armed', getArmedTrackIdState() === track.id);
         }
@@ -261,9 +266,7 @@ async function initializeSnugOS() {
         handleTimelineLaneDrop, handleOpenYouTubeImporter,
 
         // Registries
-        // --- Start of Corrected Code ---
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions },
-        // --- End of Corrected Code ---
         uiElementsCache: {}
     };
 
