@@ -48,6 +48,21 @@ export function getActualMasterGainNode() {
     return masterGainNodeActual;
 }
 
+// --- Start of Corrected Code ---
+/**
+ * Sets the master volume level.
+ * @param {number} gainValue - The gain value to set (0 to 1.2).
+ * @param {number} [rampTime=0.05] - The time to ramp to the new value.
+ */
+export function setActualMasterVolume(gainValue, rampTime = 0.05) {
+    if (masterGainNodeActual && !masterGainNodeActual.disposed && masterGainNodeActual.gain) {
+        masterGainNodeActual.gain.rampTo(gainValue, rampTime);
+    } else {
+        console.warn("[Audio] Could not set master volume: masterGainNodeActual is not available.");
+    }
+}
+// --- End of Corrected Code ---
+
 
 export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
     if (audioContextInitialized && Tone.context && Tone.context.state === 'running') {
@@ -184,7 +199,7 @@ export function rebuildMasterEffectChain() {
         // Connect current end of chain to this effect
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
             try {
-                console.log(`[Audio rebuildMasterEffectChain] Connecting ${currentAudioPathEnd.toString()} to ${effectNode.toString()} (${effectState.type})`);
+                console.log(`[Audio rebuildMasterEffectChain] Connecting ${currentAudioPathEnd.toString()} to <span class="math-inline">\{effectNode\.toString\(\)\} \(</span>{effectState.type})`);
                 currentAudioPathEnd.connect(effectNode);
                 currentAudioPathEnd = effectNode; // This effect is now the end of the chain
             } catch (e) {
@@ -592,9 +607,9 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
         objectURLForTone = URL.createObjectURL(fileObject);
 
         const dbKeySuffix = trackTypeHint === 'DrumSampler' && padIndex !== null ?
-            `drumPad-${padIndex}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}` :
-            `${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}`;
-        const dbKey = `track-${track.id}-${dbKeySuffix}-${fileObject.size}-${fileObject.lastModified}`;
+            `drumPad-<span class="math-inline">\{padIndex\}\-</span>{sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}` :
+            `<span class="math-inline">\{trackTypeHint\}\-</span>{sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}`;
+        const dbKey = `track-<span class="math-inline">\{track\.id\}\-</span>{dbKeySuffix}-<span class="math-inline">\{fileObject\.size\}\-</span>{fileObject.lastModified}`;
         await storeAudio(dbKey, fileObject);
         console.log(`[Audio commonLoadSampleLogic] Stored in DB with key: ${dbKey}`);
 
@@ -649,11 +664,11 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
 
         track.rebuildEffectChain();
         if (localAppServices.showNotification) {
-            localAppServices.showNotification(`Sample "${sourceName}" loaded for ${track.name}${trackTypeHint === 'DrumSampler' && padIndex !== null ? ` (Pad ${padIndex+1})` : ''}.`, 2000);
+            localAppServices.showNotification(`Sample "${sourceName}" loaded for <span class="math-inline">\{track\.name\}</span>{trackTypeHint === 'DrumSampler' && padIndex !== null ? ` (Pad ${padIndex+1})` : ''}.`, 2000);
         }
 
     } catch (error) {
-        console.error(`[Audio commonLoadSampleLogic] Error loading sample "${sourceName}" for track ${track.id} (${trackTypeHint}):`, error);
+        console.error(`[Audio commonLoadSampleLogic] Error loading sample "${sourceName}" for track <span class="math-inline">\{track\.id\} \(</span>{trackTypeHint}):`, error);
         if (localAppServices.showNotification) {
             localAppServices.showNotification(`Error loading sample "${sourceName.substring(0,30)}": ${error.message || 'Unknown error.'}`, 4000);
         }
@@ -692,7 +707,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || "loaded_sample_from_url";
         try {
             const response = await fetch(eventOrUrl);
-            if (!response.ok) throw new Error(`Fetch failed: ${response.status} for "${sourceName}"`);
+            if (!response.ok) throw new Error(`Fetch failed: <span class="math-inline">\{response\.status\} for "</span>{sourceName}"`);
             providedBlob = await response.blob();
         } catch (e) {
             console.error(`[Audio loadSampleFile] Error fetching sample from URL "${eventOrUrl}":`, e);
@@ -730,7 +745,7 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         if (localAppServices.showNotification) localAppServices.showNotification(`Audio file "${sourceName}" is empty.`, 3000);
         return;
     }
-    console.log(`[Audio loadSampleFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track ${trackId} (${trackTypeHint})`);
+    console.log(`[Audio loadSampleFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track <span class="math-inline">\{trackId\} \(</span>{trackTypeHint})`);
     await commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint);
 }
 
@@ -761,7 +776,7 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         sourceName = fileNameForUrl || eventOrUrl.split('/').pop().split('?')[0] || `pad_${padIndex}_sample_from_url`;
         try {
             const response = await fetch(eventOrUrl);
-            if (!response.ok) throw new Error(`Fetch failed: ${response.status} for "${sourceName}"`);
+            if (!response.ok) throw new Error(`Fetch failed: <span class="math-inline">\{response\.status\} for "</span>{sourceName}"`);
             providedBlob = await response.blob();
         } catch (e) {
             console.error(`[Audio loadDrumSamplerPadFile] Error fetching drum sample from URL "${eventOrUrl}":`, e);
@@ -796,452 +811,4 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         return;
     }
     if (fileObject.size === 0) {
-        if (localAppServices.showNotification) localAppServices.showNotification(`Drum sample "${sourceName}" is empty.`, 3000);
-        return;
-    }
-    console.log(`[Audio loadDrumSamplerPadFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track ${trackId}, pad ${padIndex}`);
-    await commonLoadSampleLogic(fileObject, sourceName, track, 'DrumSampler', padIndex);
-}
-
-export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetTrackTypeIgnored, targetPadOrSliceIndex = null) {
-    const trackIdNum = parseInt(targetTrackId);
-    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackIdNum) : null;
-
-    if (!track) {
-        if (localAppServices.showNotification) localAppServices.showNotification(`Target track (ID: ${targetTrackId}) not found.`, 3000);
-        return;
-    }
-
-    const { fullPath, libraryName, fileName } = soundData;
-    const isTargetSamplerType = ['Sampler', 'InstrumentSampler', 'DrumSampler'].includes(track.type);
-
-    if (!isTargetSamplerType) {
-        if (localAppServices.showNotification) localAppServices.showNotification(`Cannot load sample from browser to a ${track.type} track. Target must be a sampler type.`, 3000);
-        return;
-    }
-
-    const audioReady = await initAudioContextAndMasterMeter(true);
-    if (!audioReady) {
-        if (localAppServices.showNotification) localAppServices.showNotification("Audio system not ready. Please interact with the page.", 3000);
-        return;
-    }
-
-    if (localAppServices.showNotification) localAppServices.showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
-    console.log(`[Audio loadSoundFromBrowserToTarget] Attempting to load: ${fileName} from lib: ${libraryName} (Path: ${fullPath}) to Track ID: ${track.id} (${track.type}), Pad/Slice Index: ${targetPadOrSliceIndex}`);
-
-    try {
-        const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
-        if (!loadedZips[libraryName] || loadedZips[libraryName].status === "loading") {
-            throw new Error(`Library "${libraryName}" not loaded or is still loading.`);
-        }
-        const zipFile = loadedZips[libraryName].zip;
-        if (!zipFile) {
-             throw new Error(`JSZip instance for "${libraryName}" is missing.`);
-        }
-        const zipEntry = zipFile.file(fullPath);
-        if (!zipEntry) {
-            throw new Error(`File "${fullPath}" not found in library "${libraryName}". Check path case and existence.`);
-        }
-
-        const fileBlobFromZip = await zipEntry.async("blob");
-        const inferredMimeType = getMimeTypeFromFilename(fileName);
-        const finalMimeType = fileBlobFromZip.type && fileBlobFromZip.type !== "application/octet-stream" ? fileBlobFromZip.type : inferredMimeType;
-        const blobToLoad = new File([fileBlobFromZip], fileName, { type: finalMimeType });
-        console.log(`[Audio loadSoundFromBrowserToTarget] Blob created from ZIP: ${fileName}, Type: ${blobToLoad.type}, Size: ${blobToLoad.size}`);
-
-
-        if (track.type === 'DrumSampler') {
-            let actualPadIndex = targetPadOrSliceIndex;
-            if (typeof actualPadIndex !== 'number' || isNaN(actualPadIndex) || actualPadIndex < 0 || actualPadIndex >= Constants.numDrumSamplerPads) {
-                actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.originalFileName);
-                if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit;
-                if (typeof actualPadIndex !== 'number' || actualPadIndex < 0) actualPadIndex = 0;
-                console.log(`[Audio loadSoundFromBrowserToTarget] Adjusted pad index for DrumSampler to: ${actualPadIndex}`);
-            }
-            await commonLoadSampleLogic(blobToLoad, fileName, track, 'DrumSampler', actualPadIndex);
-        } else {
-            await commonLoadSampleLogic(blobToLoad, fileName, track, track.type, null);
-        }
-    } catch (error) {
-        console.error(`[Audio loadSoundFromBrowserToTarget] Error loading sound "${fileName}" from browser:`, error);
-        if (localAppServices.showNotification) {
-            localAppServices.showNotification(`Error loading "${fileName.substring(0,30)}": ${error.message}`, 4000);
-        }
-        if (localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sampleLoadError', targetPadOrSliceIndex);
-    }
-}
-
-export async function getAudioBlobFromSoundBrowserItem(soundData) {
-    if (!soundData || !soundData.libraryName || !soundData.fullPath) {
-        console.error("[getAudioBlobFromSoundBrowserItem] Invalid soundData provided.", soundData);
-        return null;
-    }
-
-    try {
-        const { libraryName, fullPath, fileName } = soundData;
-        const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
-
-        if (!loadedZips[libraryName] || loadedZips[libraryName].status !== 'loaded') {
-            throw new Error(`Library "${libraryName}" is not ready.`);
-        }
-        const zipFile = loadedZips[libraryName].zip;
-        if (!zipFile) {
-            throw new Error(`JSZip instance for "${libraryName}" is missing.`);
-        }
-        const zipEntry = zipFile.file(fullPath);
-        if (!zipEntry) {
-            throw new Error(`File "${fullPath}" not found in library "${libraryName}".`);
-        }
-
-        const fileBlob = await zipEntry.async("blob");
-        return fileBlob;
-
-    } catch (error) {
-        console.error(`[getAudioBlobFromSoundBrowserItem] Error getting blob for ${soundData.fileName}:`, error);
-        if (localAppServices.showNotification) {
-            localAppServices.showNotification(`Error loading preview data for ${soundData.fileName}.`, 3000);
-        }
-        return null;
-    }
-}
-
-export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
-    const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
-    
-    if (loadedZips[libraryName] && loadedZips[libraryName].status !== 'loading') {
-        console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} already processed. Status: ${loadedZips[libraryName].status}`);
-        if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
-            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
-        }
-        return;
-    }
-    if (loadedZips[libraryName] && loadedZips[libraryName].status === "loading") {
-        console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} is currently being loaded by another call. Skipping.`);
-        return;
-    }
-
-    if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
-        localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, true, false);
-    }
-
-    try {
-        console.log(`[Audio fetchSoundLibrary SET_LOADING_STATE] Setting ${libraryName} to "loading" state.`);
-        // ** CORRECTED STATE CALL **
-        if (localAppServices.setLoadedZipFilesState) {
-            localAppServices.setLoadedZipFilesState(libraryName, null, "loading");
-        }
-
-        console.log(`[Audio fetchSoundLibrary HTTP_REQUEST] Fetching ${zipUrl} for ${libraryName}`);
-        const response = await fetch(zipUrl);
-        if (!response.ok) {
-            throw new Error(`HTTP error ${response.status} fetching ZIP for ${libraryName}`);
-        }
-        const zipData = await response.arrayBuffer();
-        console.log(`[Audio fetchSoundLibrary ZIP_DATA_RECEIVED] Received arrayBuffer for ${libraryName}, length: ${zipData.byteLength}`);
-
-        if (typeof JSZip === 'undefined') {
-            throw new Error("JSZip library not available for processing sound libraries.");
-        }
-
-        const jszip = new JSZip();
-        const loadedZipInstance = await jszip.loadAsync(zipData);
-        console.log(`[Audio fetchSoundLibrary JSZIP_LOAD_ASYNC_SUCCESS] JSZip loaded ${libraryName}. Files: ${Object.keys(loadedZipInstance.files).length}`);
-
-        // ** CORRECTED STATE CALL **
-        if (localAppServices.setLoadedZipFilesState) {
-            localAppServices.setLoadedZipFilesState(libraryName, loadedZipInstance, 'loaded');
-        }
-
-        const fileTree = {};
-        let audioFileCount = 0;
-        loadedZipInstance.forEach((relativePath, zipEntry) => {
-            if (zipEntry.dir || relativePath.startsWith("__MACOSX") || relativePath.includes("/.") || relativePath.startsWith(".")) {
-                return;
-            }
-            const pathParts = relativePath.split('/').filter(p => p);
-            if (pathParts.length === 0) return;
-
-            let currentLevel = fileTree;
-            for (let i = 0; i < pathParts.length; i++) {
-                const part = pathParts[i];
-                if (i === pathParts.length - 1) {
-                    if (part.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) {
-                        currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
-                        audioFileCount++;
-                    }
-                } else {
-                    if (!currentLevel[part] || currentLevel[part].type !== 'folder') {
-                        currentLevel[part] = { type: 'folder', children: {} };
-                    }
-                    currentLevel = currentLevel[part].children;
-                }
-            }
-        });
-        console.log(`[Audio fetchSoundLibrary PARSE_ZIP_COMPLETE] Parsed ${audioFileCount} files for ${libraryName}.`);
-
-        // ** CORRECTED STATE CALL **
-        if (localAppServices.setSoundLibraryFileTreesState) {
-            localAppServices.setSoundLibraryFileTreesState(libraryName, fileTree);
-        }
-
-        console.log(`[Audio fetchSoundLibrary SUCCESS] Successfully loaded and processed library: ${libraryName}.`);
-        if (localAppServices.updateSoundBrowserDisplayForLibrary) {
-            localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
-        }
-
-    } catch (error) {
-        console.error(`[Audio fetchSoundLibrary CATCH_ERROR] Error with library ${libraryName}:`, error);
-        
-        // ** CORRECTED STATE CALL for error handling **
-        if (localAppServices.setLoadedZipFilesState) {
-            localAppServices.setLoadedZipFilesState(libraryName, null, 'error');
-        }
-        
-        console.warn(`[Audio fetchSoundLibrary ERROR_STATE_CLEARED] State for ${libraryName} set to 'error'.`);
-        if (!isAutofetch && localAppServices.showNotification) {
-            localAppServices.showNotification(`Error loading library ${libraryName}: ${error.message}`, 4000);
-        }
-        if (localAppServices.updateSoundBrowserDisplayForLibrary) {
-             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, true);
-        }
-    }
-}
-
-
-export function autoSliceSample(trackId, numSlicesToCreate = Constants.numSlices) {
-    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
-    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded) {
-        if (localAppServices.showNotification) localAppServices.showNotification("Cannot auto-slice: Load sample first or ensure sample is valid.", 3000);
-        return;
-    }
-    const duration = track.audioBuffer.duration;
-    if (duration <= 0) {
-        if (localAppServices.showNotification) localAppServices.showNotification("Cannot auto-slice: Sample has no duration.", 3000);
-        return;
-    }
-
-    track.slices = []; // Reset slices
-    const sliceDuration = duration / numSlicesToCreate;
-    for (let i = 0; i < numSlicesToCreate; i++) {
-        track.slices.push({
-            offset: i * sliceDuration,
-            duration: sliceDuration,
-            userDefined: false,
-            volume: 0.7,
-            pitchShift: 0,
-            loop: false,
-            reverse: false,
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 }
-        });
-    }
-    track.selectedSliceForEdit = 0;
-    track.recreateToneSequence(true);
-
-    if (localAppServices.updateTrackUI) {
-        localAppServices.updateTrackUI(track.id, 'sampleSliced');
-    }
-    if (localAppServices.showNotification) localAppServices.showNotification(`Sample auto-sliced into ${numSlicesToCreate} parts.`, 2000);
-}
-
-export function clearAllMasterEffectNodes() {
-    activeMasterEffectNodes.forEach((node, id) => {
-        if (node && !node.disposed) {
-            try {
-                node.dispose();
-            } catch (e) {
-                console.warn(`[Audio clearAllMasterEffectNodes] Error disposing master effect node ID ${id}:`, e.message);
-            }
-        }
-    });
-    activeMasterEffectNodes.clear();
-    console.log("[Audio clearAllMasterEffectNodes] All active master effect nodes cleared and disposed.");
-    rebuildMasterEffectChain();
-}
-
-
-// --- Audio Recording Functions ---
-export async function startAudioRecording(track, isMonitoringEnabled) {
-    console.log("[Audio startAudioRecording] Called for track:", track?.name, "Monitoring:", isMonitoringEnabled);
-
-    if (mic) {
-        console.log("[Audio startAudioRecording] Existing mic instance found. State:", mic.state);
-        if (mic.state === "started") {
-            try { mic.close(); console.log("[Audio startAudioRecording] Existing mic closed."); }
-            catch (e) { console.warn("[Audio startAudioRecording] Error closing existing mic:", e.message); }
-        }
-        mic = null;
-        console.log("[Audio startAudioRecording] Previous mic instance nullified.");
-    }
-
-    if (recorder) {
-        console.log("[Audio startAudioRecording] Existing recorder instance found. State:", recorder.state, "Disposed:", recorder.disposed);
-        if (recorder.state === "started") {
-            try { await recorder.stop(); console.log("[Audio startAudioRecording] Existing recorder stopped."); }
-            catch (e) { console.warn("[Audio startAudioRecording] Error stopping existing recorder:", e.message); }
-        }
-        if (!recorder.disposed) {
-            try { recorder.dispose(); console.log("[Audio startAudioRecording] Existing recorder disposed."); }
-            catch (e) { console.warn("[Audio startAudioRecording] Error disposing existing recorder:", e.message); }
-        }
-        recorder = null;
-        console.log("[Audio startAudioRecording] Previous recorder instance nullified.");
-    }
-
-    mic = new Tone.UserMedia({
-        audio: {
-            echoCancellation: false, autoGainControl: false, noiseSuppression: false, latency: 0.01
-        }
-    });
-    console.log("[Audio startAudioRecording] New Tone.UserMedia instance created.");
-    recorder = new Tone.Recorder();
-    console.log("[Audio startAudioRecording] New Tone.Recorder instance created.");
-
-    if (!track || track.type !== 'Audio' || !track.inputChannel || track.inputChannel.disposed) {
-        const errorMsg = `Recording failed: Track (ID: ${track?.id}) is not a valid audio track or its input channel is missing/disposed. Type: ${track?.type}. Input channel valid: ${!!(track?.inputChannel && !track.inputChannel.disposed)}`;
-        console.error(`[Audio startAudioRecording] ${errorMsg}`);
-        if (localAppServices.showNotification) localAppServices.showNotification(errorMsg, 4000);
-        return false;
-    }
-    console.log(`[Audio startAudioRecording] Attempting to record on track: ${track.name} (ID: ${track.id})`);
-
-    try {
-        if (Tone.UserMedia.enumerateDevices && typeof Tone.UserMedia.enumerateDevices === 'function') {
-            try {
-                const devices = await Tone.UserMedia.enumerateDevices();
-                const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
-                console.log("[Audio startAudioRecording] Available audio input devices:", audioInputDevices.map(d => ({ label: d.label, deviceId: d.deviceId, groupId: d.groupId })));
-                if (audioInputDevices.length === 0) console.warn("[Audio startAudioRecording] No audio input devices found by enumerateDevices.");
-            } catch (enumError) {
-                console.error("[Audio startAudioRecording] Error enumerating devices:", enumError);
-            }
-        } else {
-            console.warn("[Audio startAudioRecording] Tone.UserMedia.enumerateDevices is not available or not a function.");
-        }
-
-        console.log("[Audio startAudioRecording] Opening microphone (mic.open())...");
-        await mic.open();
-        console.log("[Audio startAudioRecording] Microphone opened successfully. State:", mic.state, "Selected device label (mic.label):", mic.label || "N/A");
-
-        try { mic.disconnect(); } catch (e) { /* ignore */ }
-
-        if (isMonitoringEnabled) {
-            console.log("[Audio startAudioRecording] Monitoring is ON. Connecting mic to track inputChannel.");
-            mic.connect(track.inputChannel);
-        } else {
-            console.log("[Audio startAudioRecording] Monitoring is OFF.");
-        }
-        mic.connect(recorder);
-        console.log("[Audio startAudioRecording] Mic connected to recorder.");
-
-        console.log("[Audio startAudioRecording] Starting recorder...");
-        await recorder.start();
-        console.log("[Audio startAudioRecording] Recorder started. State:", recorder.state);
-        return true;
-
-    } catch (error) {
-        console.error("[Audio startAudioRecording] Error starting microphone/recorder:", error);
-        let userMessage = "Could not start recording. Check microphone permissions and ensure a microphone is connected.";
-        if (error.name === "NotAllowedError" || error.message.toLowerCase().includes("permission denied")) {
-            userMessage = "Microphone permission denied. Please allow microphone access in browser/system settings.";
-        } else if (error.name === "NotFoundError" || error.message.toLowerCase().includes("no device") || error.message.toLowerCase().includes("device not found")) {
-            userMessage = "No microphone found. Please connect a microphone and ensure it's selected by the browser/OS.";
-        } else if (error.name === "AbortError" || error.message.toLowerCase().includes("starting audio input failed")) {
-            userMessage = "Failed to start audio input. The microphone might be in use by another application or a hardware issue.";
-        }
-        if (localAppServices.showNotification) localAppServices.showNotification(userMessage, 6000);
-
-        if (mic) {
-            if (mic.state === "started") try { mic.close(); } catch(e) { console.warn("Cleanup error closing mic:", e.message); }
-            mic = null;
-        }
-        if (recorder) {
-            if (!recorder.disposed) try { recorder.dispose(); } catch(e) { console.warn("Cleanup error disposing recorder:", e.message); }
-            recorder = null;
-        }
-        return false;
-    }
-}
-
-export async function stopAudioRecording() {
-    console.log("[Audio stopAudioRecording] Called.");
-    let blob = null;
-
-    if (!recorder) {
-        console.warn("[Audio stopAudioRecording] Recorder not initialized. Cannot stop recording.");
-        if (mic && mic.state === "started") {
-            console.log("[Audio stopAudioRecording] Mic was started, closing it (recorder was null).");
-            try { mic.close(); } catch(e) { console.warn("[Audio stopAudioRecording] Error closing mic (recorder null):", e.message); }
-        }
-        mic = null;
-        return;
-    }
-
-    if (recorder.state === "started") {
-        try {
-            console.log("[Audio stopAudioRecording] Stopping recorder...");
-            blob = await recorder.stop();
-            console.log("[Audio stopAudioRecording] Recorder stopped. Blob received, size:", blob?.size, "type:", blob?.type);
-        } catch (e) {
-            console.error("[Audio stopAudioRecording] Error stopping recorder:", e);
-            if (localAppServices.showNotification) localAppServices.showNotification("Error stopping recorder. Recording may be lost.", 3000);
-        }
-    } else {
-        console.warn("[Audio stopAudioRecording] Recorder was not in 'started' state. Current state:", recorder.state);
-    }
-
-    if (mic) {
-        if (mic.state === "started") {
-            console.log("[Audio stopAudioRecording] Closing microphone.");
-            try {
-                mic.disconnect(recorder);
-                if (localAppServices.getRecordingTrackId) {
-                    const recTrack = localAppServices.getTrackById(localAppServices.getRecordingTrackId());
-                    if (recTrack && recTrack.inputChannel && !recTrack.inputChannel.disposed) {
-                       try { mic.disconnect(recTrack.inputChannel); } catch(e) { /* ignore */ }
-                    }
-                }
-                mic.close();
-                console.log("[Audio stopAudioRecording] Microphone closed and disconnected.");
-            } catch (e) {
-                console.warn("[Audio stopAudioRecording] Error closing/disconnecting mic:", e.message);
-            }
-        }
-        mic = null;
-        console.log("[Audio stopAudioRecording] Mic instance nullified.");
-    }
-
-    if (recorder && !recorder.disposed) {
-        console.log("[Audio stopAudioRecording] Disposing recorder instance.");
-        try {
-            recorder.dispose();
-        } catch(e) {
-            console.warn("[Audio stopAudioRecording] Error disposing recorder:", e.message);
-        }
-    }
-    recorder = null;
-    console.log("[Audio stopAudioRecording] Recorder instance nullified and disposed.");
-
-    if (blob && blob.size > 0) {
-        const recordingTrackId = localAppServices.getRecordingTrackId ? localAppServices.getRecordingTrackId() : null;
-        const startTime = getRecordingStartTimeState();
-        const track = recordingTrackId !== null && localAppServices.getTrackById ? localAppServices.getTrackById(recordingTrackId) : null;
-
-        if (track) {
-            console.log(`[Audio stopAudioRecording] Processing recorded blob for track ${track.name} (ID: ${track.id}), original startTime: ${startTime}`);
-            if (typeof track.addAudioClip === 'function') {
-                await track.addAudioClip(blob, startTime);
-            } else {
-                console.error("[Audio stopAudioRecording] Track object does not have addAudioClip method.");
-                if (localAppServices.showNotification) localAppServices.showNotification("Error: Could not process recorded audio (internal error).", 3000);
-            }
-        } else {
-            console.error(`[Audio stopAudioRecording] Recorded track (ID: ${recordingTrackId}) not found after stopping recorder.`);
-            if (localAppServices.showNotification) localAppServices.showNotification("Error: Recorded track not found. Audio might be lost.", 3000);
-        }
-    } else if (blob && blob.size === 0) {
-        console.warn("[Audio stopAudioRecording] Recording was empty.");
-        if (localAppServices.showNotification) localAppServices.showNotification("Recording was empty. No clip created.", 2000);
-    } else if (!blob && recorder?.state === "started") {
-        console.warn("[Audio stopAudioRecording] Recorder was in 'started' state but stop() did not yield a blob.");
-    }
-}
+        if (localAppServices.showNotification)
