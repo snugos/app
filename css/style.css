@@ -242,9 +242,7 @@
 
 /* --- SnugOS General & Desktop Styling --- */
 body {
-    /* --- Start of Corrected Code --- */
     font-family: 'VT323', monospace;
-    /* --- End of Corrected Code --- */
     font-size: 16px; /* Increased base font size for better readability */
     margin: 0;
     overflow: hidden;
