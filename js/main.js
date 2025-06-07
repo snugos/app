@@ -28,7 +28,7 @@ import {
     getPreviewPlayerState, setPreviewPlayerState,
     setSelectedTimelineClipInfoState,
     setPlaybackModeState, getPlaybackModeState,
-    setIsRecordingState, isTrackRecording, setRecordingTrackIdState, getRecordingTrackIdState, setRecordingStartTimeState
+    setIsRecordingState, isTrackRecordingState, setRecordingTrackIdState, getRecordingTrackIdState, setRecordingStartTimeState
 } from './state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
@@ -174,11 +174,11 @@ async function initializeSnugOS() {
         setMasterGainValue: setMasterGainValueState,
         getPlaybackMode: getPlaybackModeState,
         setPlaybackMode: setPlaybackModeState,
-        setIsRecording: setIsRecording,
-        isTrackRecording: isTrackRecording,
-        setRecordingTrackId: setRecordingTrackId,
-        getRecordingTrackId: getRecordingTrackId,
-        setRecordingStartTime: setRecordingStartTime,
+        setIsRecording: setIsRecordingState,
+        isTrackRecording: isTrackRecordingState,
+        setRecordingTrackId: setRecordingTrackIdState,
+        getRecordingTrackId: getRecordingTrackIdState,
+        setRecordingStartTime: setRecordingStartTimeState,
         
         // Project, Undo/Redo, I/O
         getIsReconstructingDAW: getIsReconstructingDAWState,
@@ -262,11 +262,13 @@ async function initializeSnugOS() {
         uiElementsCache: {}
     };
 
+    // --- Module Initializations ---
     initializeStateModule(appServices);
     initializeAudioModule(appServices);
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
 
+    // Cache DOM elements
     const a = appServices.uiElementsCache;
     a.desktop = document.getElementById('desktop');
     a.taskbar = document.getElementById('taskbar');
@@ -291,6 +293,7 @@ async function initializeSnugOS() {
     a.menuExportWav = document.getElementById('menuExportWav');
     a.menuToggleFullScreen = document.getElementById('menuToggleFullScreen');
 
+    // Attach all event listeners
     initializePrimaryEventListeners();
     attachGlobalControlEvents(a);
     setupMIDI();
