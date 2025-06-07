@@ -15,7 +15,9 @@ import { openTrackInspectorWindow, drawWaveform, renderSamplePads, updateSliceEd
 import { openMixerWindow, updateMixerWindow } from './ui/mixerUI.js';
 import { openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './ui/effectsRackUI.js';
 import { openTimelineWindow, renderTimeline, updatePlayheadPosition } from './ui/timelineUI.js';
-import { openSoundBrowserWindow, updateSoundBrowserDisplayForLibrary, renderSoundBrowserDirectory } from './ui/soundBrowserUI.js';
+// --- Start of Corrected Code ---
+import { openSoundBrowserWindow, renderSoundBrowserDirectory } from './ui/soundBrowserUI.js';
+// --- End of Corrected Code ---
 import { openPianoRollWindow } from './ui/pianoRollUI.js';
 import { openYouTubeImporterWindow } from './ui/youtubeImporterUI.js';
 
@@ -53,7 +55,6 @@ export {
     renderTimeline,
     updatePlayheadPosition,
     openSoundBrowserWindow,
-    updateSoundBrowserDisplayForLibrary,
     renderSoundBrowserDirectory,
     openPianoRollWindow,
     openYouTubeImporterWindow,
@@ -63,6 +64,4 @@ export {
     updateSliceEditorUI,
     renderDrumSamplerPads,
     updateDrumPadControlsUI,
-    // Note: highlightPlayingStep and updateSequencerCellUI are now obsolete with the Piano Roll refactor
-    // and can be removed from main.js imports if they are still there.
 };
