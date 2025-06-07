@@ -2,10 +2,10 @@
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
-import { showNotification as utilShowNotification, createContextMenu } from './utils.js';
+import { showNotification as utilShowNotification, createContextMenu, showCustomModal } from './utils.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    selectMIDIInput as eventSelectMIDIInput,
+    selectMIDIInput,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
@@ -73,7 +73,9 @@ import {
     // Component creators
     createKnob
 } from './ui.js';
-import { AVAILABLE_EFFECTS, getEffectDefaultParams } from './effectsRegistry.js';
+// --- Start of Corrected Code ---
+import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions } from './effectsRegistry.js';
+// --- End of Corrected Code ---
 
 // --- App Services Object (Dependency Injection) ---
 let appServices = {};
@@ -148,6 +150,7 @@ async function initializeSnugOS() {
         showNotification: utilShowNotification,
         createContextMenu,
         updateTrackUI: handleTrackUIUpdate,
+        showCustomModal,
 
         // State Access & Actions
         getTracks: getTracksState,
@@ -258,7 +261,9 @@ async function initializeSnugOS() {
         handleTimelineLaneDrop, handleOpenYouTubeImporter,
 
         // Registries
-        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams },
+        // --- Start of Corrected Code ---
+        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions },
+        // --- End of Corrected Code ---
         uiElementsCache: {}
     };
 
