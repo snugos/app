@@ -121,8 +121,6 @@ export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
 export function setClipboardDataState(data) { clipboardDataGlobal = data || { type: null, data: null, sourceTrackType: null, sequenceLength: null }; }
 
 export function setArmedTrackIdState(trackId) {
-    // This function now ONLY updates the state variable.
-    // The UI update is now triggered by the event handler that calls this.
     armedTrackId = trackId;
 }
 
@@ -193,6 +191,13 @@ export function addTrackToStateInternal(type, initialData = null, isUserAction =
         }
 
         tracks.push(newTrack);
+
+        // --- Start of Corrected Code ---
+        // Initialize the track's underlying Tone.js instrument after creation.
+        if (typeof newTrack.initializeInstrument === 'function') {
+            newTrack.initializeInstrument();
+        }
+        // --- End of Corrected Code ---
 
         if (isUserAction && appServices.captureStateForUndo) {
             appServices.captureStateForUndo(`Add Track: ${newTrack.name}`);
