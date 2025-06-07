@@ -871,6 +871,40 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     }
 }
 
+export async function getAudioBlobFromSoundBrowserItem(soundData) {
+    if (!soundData || !soundData.libraryName || !soundData.fullPath) {
+        console.error("[getAudioBlobFromSoundBrowserItem] Invalid soundData provided.", soundData);
+        return null;
+    }
+
+    try {
+        const { libraryName, fullPath, fileName } = soundData;
+        const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
+
+        if (!loadedZips[libraryName] || loadedZips[libraryName].status !== 'loaded') {
+            throw new Error(`Library "${libraryName}" is not ready.`);
+        }
+        const zipFile = loadedZips[libraryName].zip;
+        if (!zipFile) {
+            throw new Error(`JSZip instance for "${libraryName}" is missing.`);
+        }
+        const zipEntry = zipFile.file(fullPath);
+        if (!zipEntry) {
+            throw new Error(`File "${fullPath}" not found in library "${libraryName}".`);
+        }
+
+        const fileBlob = await zipEntry.async("blob");
+        return fileBlob;
+
+    } catch (error) {
+        console.error(`[getAudioBlobFromSoundBrowserItem] Error getting blob for ${soundData.fileName}:`, error);
+        if (localAppServices.showNotification) {
+            localAppServices.showNotification(`Error loading preview data for ${soundData.fileName}.`, 3000);
+        }
+        return null;
+    }
+}
+
 export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false) {
     const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
     
