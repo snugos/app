@@ -38,6 +38,7 @@ let recordingStartTimeGlobal = 0;
 
 let playbackMode = 'sequencer'; 
 
+let isReconstructingDAW = false;
 let undoStack = [];
 let redoStack = [];
 const MAX_UNDO_HISTORY = 50;
@@ -88,6 +89,7 @@ export function getRedoStackState() { return [...redoStack]; }
 export function getPlaybackModeState() { return playbackMode; }
 export function getSelectedTimelineClipInfoState() { return {...selectedTimelineClipInfo}; }
 export function getCurrentUserThemePreferenceState() { return currentUserThemePreference; }
+export function getIsReconstructingDAWState() { return isReconstructingDAW; }
 
 
 // --- Setters ---
@@ -95,6 +97,7 @@ export function addWindowToStoreState(windowInstance) { if (windowInstance) open
 export function removeWindowFromStoreState(windowId) { openWindowsMap.delete(windowId); }
 export function setHighestZState(zIndex) { highestZ = zIndex; }
 export function incrementHighestZState() { highestZ++; return highestZ; }
+export function setIsReconstructingDAWState(state) { isReconstructingDAW = !!state; }
 
 export function setMasterEffectsState(effectsArray) { masterEffectsChainState = effectsArray || []; if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI(); }
 export function setMasterGainValueState(gainValue) { masterGainValueState = gainValue; }
@@ -234,11 +237,26 @@ export function removeTrackFromStateInternal(trackId, isUserAction = true) {
     }
 }
 
+export async function reconstructDAWInternal(projectData) {
+    setIsReconstructingDAWState(true);
+    console.log("Reconstructing DAW from project data...");
+    try {
+        // The rest of the project loading logic would go here.
+        // For now, it mainly serves to set the flag.
+    } catch (error) {
+        console.error("Error during DAW reconstruction:", error);
+        if (appServices.showNotification) {
+            appServices.showNotification("Failed to load project. See console for details.", 5000);
+        }
+    } finally {
+        setIsReconstructingDAWState(false);
+    }
+}
+
 export function captureStateForUndoInternal(actionDescription, customRedo) {}
 export function undoLastActionInternal() {}
 export function redoLastActionInternal() {}
 export function gatherProjectDataInternal(includeEffectsRegistry = false) {}
-export async function reconstructDAWInternal(projectData) {}
 export async function saveProjectInternal() {}
 export async function loadProjectInternal(file) {}
 export async function handleProjectFileLoadInternal(event) {}
