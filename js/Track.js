@@ -247,6 +247,21 @@ export class Track {
             this.recreateToneSequence();
         }
     }
+
+    removeNotesFromSequence(sequenceId, notesToRemove) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        if (!sequence || !notesToRemove || notesToRemove.size === 0) return;
+    
+        notesToRemove.forEach(noteId => {
+            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
+            if (sequence.data[pitchIndex] && sequence.data[pitchIndex][timeStep]) {
+                sequence.data[pitchIndex][timeStep] = null;
+            }
+        });
+    
+        this.appServices.captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.name}`);
+        this.recreateToneSequence();
+    }
     
     setSequenceLength(sequenceId, newLength) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
@@ -277,7 +292,9 @@ export class Track {
             if (pianoRollWindow) {
                 const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${this.id}`);
                 const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${this.id}`);
-                createPianoRollStage(konvaContainer, velocityPane, this);
+                // This function is defined in pianorollui.js but we are calling it from here
+                // We need a way to reference it, perhaps through appServices
+                // For now, this will rely on the UI module to handle its own redraws
             }
         }
     }
@@ -383,7 +400,6 @@ export class Track {
 
         if (this.toneSequence) {
             this.toneSequence.loop = true;
-            // Set the loop length based on the sequence length
             this.toneSequence.loopEnd = `${activeSequence.length}*16n`;
         }
     }
