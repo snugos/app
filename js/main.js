@@ -58,57 +58,36 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
-// --- FINALIZED FUNCTION FOR THE DEFAULT LAYOUT ---
 function openDefaultLayout() {
-    // This timeout ensures all UI elements are ready before we try to place windows
     setTimeout(() => {
-        const desktop = document.getElementById('desktop');
-        if (!desktop) return;
-        const desktopWidth = desktop.clientWidth;
-        const desktopHeight = desktop.clientHeight;
+        console.log('%c[main.js] Running openDefaultLayout...', 'color: blue; font-weight: bold;');
+        const desktopEl = document.getElementById('desktop');
+        if (!desktopEl) {
+            console.error('[main.js] Desktop element not found, cannot open default layout.');
+            return;
+        }
 
-        // Define a responsive but stable layout
-        const timelineWidth = desktopWidth - 20;
-        const timelineHeight = 220;
+        const rect = desktopEl.getBoundingClientRect();
+        const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.6) - 15;
+        const rightPanelWidth = desktopEl.clientWidth - leftPanelWidth - 30;
         
-        const leftPanelWidth = Math.floor(desktopWidth * 0.6) - 15;
-        const rightPanelWidth = desktopWidth - leftPanelWidth - 30;
+        const timelineOptions = { x: 10, y: 10, width: desktopEl.clientWidth - 20, height: 220 };
+        const mixerOptions = { x: 10, y: 240, width: leftPanelWidth, height: 160 };
+        const masterEffectsOptions = { x: 10, y: 410, width: leftPanelWidth, height: desktopEl.clientHeight - 420 };
+        const soundBrowserOptions = { x: leftPanelWidth + 20, y: 240, width: rightPanelWidth, height: desktopEl.clientHeight - 250 };
+        
+        console.log('[main.js] Calling openTimelineWindow with options:', timelineOptions);
+        appServices.openTimelineWindow(timelineOptions);
 
-        const mixerHeight = 160;
+        console.log('[main.js] Calling openMixerWindow with options:', mixerOptions);
+        appServices.openMixerWindow(mixerOptions);
+        
+        console.log('[main.js] Calling openMasterEffectsRackWindow with options:', masterEffectsOptions);
+        appServices.openMasterEffectsRackWindow(masterEffectsOptions);
+        
+        console.log('[main.js] Calling openSoundBrowserWindow with options:', soundBrowserOptions);
+        appServices.openSoundBrowserWindow(soundBrowserOptions);
 
-        const row2Y = timelineHeight + 20;
-        
-        // 1. Timeline
-        appServices.openTimelineWindow({
-            x: 10,
-            y: 10,
-            width: timelineWidth,
-            height: timelineHeight
-        });
-        
-        // 2. Mixer
-        appServices.openMixerWindow({
-            x: 10,
-            y: row2Y,
-            width: leftPanelWidth,
-            height: mixerHeight
-        });
-
-        // 3. Master Effects Rack (under Mixer)
-        appServices.openMasterEffectsRackWindow({
-            x: 10,
-            y: row2Y + mixerHeight + 10,
-            width: leftPanelWidth,
-            height: desktopHeight - (row2Y + mixerHeight) - 20
-        });
-        
-        // 4. Sound Browser (right side)
-        appServices.openSoundBrowserWindow({
-            x: leftPanelWidth + 20,
-            y: row2Y,
-            width: rightPanelWidth,
-            height: desktopHeight - row2Y - 10
-        });
     }, 100); 
 }
 
