@@ -35,6 +35,8 @@ export class Track {
         if (initialData?.activeEffects) {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
+        
+        this.tonePart = null;
 
         this.synthEngineType = null;
         this.synthParams = {};
@@ -52,10 +54,6 @@ export class Track {
         this.timelineClips = initialData?.timelineClips || [];
         this.inspectorControls = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
-        
-        // --- Start of Corrected Code ---
-        this.tonePart = null; // To hold the Tone.js playback object
-        // --- End of Corrected Code ---
 
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
@@ -83,15 +81,15 @@ export class Track {
         }
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
+            // --- SnugOS DIAGNOSTIC ---
+            console.log(`[DIAGNOSTIC] Track ${this.id}: MonoSynth instrument created.`, this.instrument);
         } else if (this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
             this.instrument = new Tone.Sampler();
         } else {
             this.instrument = null;
         }
         this.rebuildEffectChain();
-        // --- Start of Corrected Code ---
         this.recreateToneSequence();
-        // --- End of Corrected Code ---
     }
 
     rebuildEffectChain() {
@@ -117,6 +115,8 @@ export class Track {
             if (masterBusInput) {
                 currentNode.connect(this.outputNode);
                 this.outputNode.connect(masterBusInput);
+                 // --- SnugOS DIAGNOSTIC ---
+                console.log(`[DIAGNOSTIC] Track ${this.id}: Effect chain output connected to master bus.`);
             } else {
                 console.error(`[Track ${this.id}] Could not get master bus input node. Connecting directly to destination as a fallback.`);
                 currentNode.connect(this.outputNode);
@@ -303,8 +303,10 @@ export class Track {
         }
     }
     
-    // --- Start of Corrected Code ---
     recreateToneSequence() {
+        // --- SnugOS DIAGNOSTIC ---
+        console.log(`[DIAGNOSTIC] Track ${this.id}: Recreating Tone.Part.`);
+
         if (this.tonePart) {
             this.tonePart.dispose();
             this.tonePart = null;
@@ -331,8 +333,13 @@ export class Track {
             });
         });
 
+        // --- SnugOS DIAGNOSTIC ---
+        console.log(`[DIAGNOSTIC] Track ${this.id}: Found ${events.length} notes to schedule.`);
+
         if (events.length > 0) {
             this.tonePart = new Tone.Part((time, value) => {
+                // --- SnugOS DIAGNOSTIC ---
+                console.log(`%c[AUDIO PLAYBACK] Firing Note: ${value.note} @ ${time}`, 'color: lightblue; font-size: 14px;');
                 this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
             }, events);
             
@@ -341,7 +348,6 @@ export class Track {
             this.tonePart.start(0);
         }
     }
-    // --- End of Corrected Code ---
     
     getDefaultSynthParams() {
         return {
@@ -354,9 +360,7 @@ export class Track {
     }
 
     dispose() {
-        // --- Start of Corrected Code ---
         this.tonePart?.dispose();
-        // --- End of Corrected Code ---
         this.instrument?.dispose();
         this.input?.dispose();
         this.outputNode?.dispose();
