@@ -48,9 +48,10 @@ export function initializePrimaryEventListeners() {
         }
     });
 
-    const addTrackHandler = (type) => {
-        localAppServices.initAudioContextAndMasterMeter?.(true);
-        const newTrack = localAppServices.addTrack(type);
+    // --- FIX: Make this handler async to wait for track initialization ---
+    const addTrackHandler = async (type) => {
+        await localAppServices.initAudioContextAndMasterMeter?.(true);
+        const newTrack = await localAppServices.addTrack(type);
         if (newTrack) {
             localAppServices.openTrackInspectorWindow?.(newTrack.id);
         }
