@@ -77,7 +77,6 @@ function handleMasterEffectsUIUpdate() {
     }
 }
 
-// --- Start of Corrected Code ---
 function handleTrackUIUpdate(trackId, reason, detail) {
     const track = getTrackByIdState(trackId);
     if (!track) return;
@@ -132,12 +131,14 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         renderTimeline();
     }
 }
-// --- End of Corrected Code ---
 
 async function initializeSnugOS() {
     
     function drawLoop() {
         if (typeof Tone !== 'undefined') {
+            // --- SnugOS DIAGNOSTIC ---
+            console.log(`[DIAGNOSTIC LOOP] Transport State: ${Tone.Transport.state}, Master Gain: ${appServices.getMasterGainValue()?.toFixed(2)}`);
+
             const transportTime = Tone.Transport.seconds;
             updatePlayheadPosition(transportTime);
             updatePianoRollPlayhead(transportTime);
