@@ -8,7 +8,8 @@ export function initializePlayback(appServices) {
     localAppServices = appServices;
 }
 
-export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0) {
+// --- FIX: Added optional 'time' parameter for scheduled playback from the sequencer ---
+export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
         localAppServices.showNotification?.("Audio not ready for preview.", 2000);
@@ -24,8 +25,10 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     if (!sliceData || sliceData.duration <= 0) {
         return;
     }
-
-    const time = Tone.now();
+    
+    // Use the provided time for scheduling, or play immediately if no time is given
+    const scheduledTime = time !== undefined ? time : Tone.now();
+    
     const totalPitchShift = (sliceData.pitchShift || 0) + additionalPitchShiftInSemitones;
     const playbackRate = Math.pow(2, totalPitchShift / 12);
     let playDuration = sliceData.duration / playbackRate;
@@ -39,14 +42,16 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     
     const tempPlayer = new Tone.Player(track.audioBuffer).connect(masterBusInput);
     tempPlayer.playbackRate = playbackRate;
-    tempPlayer.start(time, sliceData.offset, playDuration);
+    tempPlayer.start(scheduledTime, sliceData.offset, playDuration);
 
+    // Schedule the disposal of the temporary player
     Tone.Transport.scheduleOnce(() => {
         tempPlayer.dispose();
-    }, time + playDuration + 0.5);
+    }, scheduledTime + playDuration + 0.5);
 }
 
-export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0) {
+// --- FIX: Added optional 'time' parameter for scheduled playback from the sequencer ---
+export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
         localAppServices.showNotification?.("Audio not ready for preview.", 2000);
@@ -67,6 +72,9 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
         console.error("Master Bus not available for preview.");
         return;
     }
+    
+    // Use the provided time for scheduling, or play immediately if no time is given
+    const scheduledTime = time !== undefined ? time : Tone.now();
 
     player.disconnect();
     player.connect(masterBusInput);
@@ -75,5 +83,5 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
     player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
     
-    player.start(Tone.now());
+    player.start(scheduledTime);
 }
