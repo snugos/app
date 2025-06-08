@@ -23,20 +23,21 @@ export function openYouTubeImporterWindow(savedState = null) {
         return;
     }
 
+    // --- Start of Corrected Code ---
     const contentHTML = `
-        <div class="p-4 flex flex-col h-full bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200">
+        <div class="p-4 flex flex-col h-full bg-white dark:bg-black text-black dark:text-white">
             <h3 class="text-lg font-bold mb-2">Import Audio from URL</h3>
-            <p class="text-xs mb-2 text-gray-600 dark:text-slate-400">
-                Enter a YouTube URL to download its audio as an MP3. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-blue-500 hover:underline">Cobalt</a> API.
+            <p class="text-xs mb-2 text-black dark:text-white">
+                Enter a YouTube URL to download its audio as an MP3. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-black dark:text-white hover:underline">Cobalt</a> API.
             </p>
 
-            <div class="p-2 mb-4 text-xs bg-yellow-100 border border-yellow-300 rounded-md text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700" role="alert">
+            <div class="p-2 mb-4 text-xs bg-white border border-black rounded-md text-black dark:bg-black dark:text-white dark:border-white" role="alert">
                 <b>Note:</b> This is an experimental feature. It may be slow, rate-limited, or fail due to browser security (CORS) policies. A server-side helper is required for this to work reliably.
             </div>
             
             <div class="flex items-center space-x-2">
-                <input type="text" id="youtubeUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="flex-grow p-2 border rounded bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <button id="youtubeImportBtn" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                <input type="text" id="youtubeUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
+                <button id="youtubeImportBtn" class="px-4 py-2 bg-black text-white font-semibold rounded border border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
                     Import
                 </button>
             </div>
@@ -44,6 +45,7 @@ export function openYouTubeImporterWindow(savedState = null) {
             <div id="youtubeImportStatus" class="mt-4 text-sm h-12"></div>
         </div>
     `;
+    // --- End of Corrected Code ---
 
     const importerWindow = localAppServices.createWindow(
         windowId, 
@@ -69,7 +71,8 @@ function attachImporterEventListeners(windowElement) {
 
     const setStatus = (message, isError = false) => {
         statusDiv.textContent = message;
-        statusDiv.className = `mt-4 text-sm h-12 ${isError ? 'text-red-500' : 'text-gray-500 dark:text-slate-300'}`;
+        // In a pure B&W theme, color cues are less effective. We can rely on text.
+        statusDiv.className = `mt-4 text-sm h-12 ${isError ? 'text-black dark:text-white font-bold' : 'text-black dark:text-white'}`;
     };
 
     const handleImport = async () => {
@@ -103,7 +106,6 @@ function attachImporterEventListeners(windowElement) {
             }
 
             const result = await response.json();
-            console.log("[YouTubeImporter] Cobalt API Response:", result);
 
             if (result.status === 'stream' || result.status === 'redirect') {
                 setStatus('Download link received. Fetching audio...');
@@ -115,7 +117,6 @@ function attachImporterEventListeners(windowElement) {
                 }
                 
                 const audioBlob = await audioResponse.blob();
-                console.log(`[YouTubeImporter] Downloaded audio blob. Size: ${audioBlob.size} bytes, Type: ${audioBlob.type}`);
                 
                 setStatus('Audio downloaded. Adding to a new track...');
 
@@ -145,7 +146,7 @@ function attachImporterEventListeners(windowElement) {
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
             let userMessage = `Error: ${error.message}`;
-            if (error instanceof TypeError) { // This is often a CORS error
+            if (error instanceof TypeError) { 
                 userMessage = "Error: Could not fetch audio due to browser security (CORS). This feature requires a server-side proxy to work reliably.";
             }
             setStatus(userMessage, true);
