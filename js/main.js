@@ -88,7 +88,6 @@ function applyUserTheme() {
     }
 }
 
-// --- Start of Corrected Code ---
 function handleMasterEffectsUIUpdate() {
     const rackWindow = getWindowByIdState('masterEffectsRack');
     if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
@@ -98,7 +97,6 @@ function handleMasterEffectsUIUpdate() {
         renderEffectsList(masterEffects, 'master', listDiv, controlsContainer);
     }
 }
-// --- End of Corrected Code ---
 
 function handleTrackUIUpdate(trackId, reason, detail) {
     const track = getTrackByIdState(trackId);
@@ -145,14 +143,19 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         }
     }
 
+    // --- Start of Corrected Code ---
     if (reason === 'effectsChanged') {
+        console.log(`[EFFECTS_DEBUG_6] handleTrackUIUpdate received 'effectsChanged' for track ${trackId}.`);
         const rackWindow = getWindowByIdState(`effectsRack-${trackId}`);
         if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
             const listDiv = rackWindow.element.querySelector(`#effectsList-${trackId}`);
             const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-${trackId}`);
             renderEffectsList(track, 'track', listDiv, controlsContainer);
+        } else {
+            console.warn(`[EFFECTS_DEBUG_6] Could not find or update effects rack window for track ${trackId}.`);
         }
     }
+    // --- End of Corrected Code ---
     
     if (reason === 'nameChanged' || reason === 'clipsChanged') {
         renderTimeline();
