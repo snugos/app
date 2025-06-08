@@ -11,7 +11,9 @@ export class Track {
         this.appServices = appServices || {}; 
 
         this.name = initialData?.name || `${type} Track ${this.id}`;
-        if (type === 'Synth') {
+        if (type === 'DrumSampler') {
+            this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
+        } else if (type === 'Synth') {
             this.name = initialData?.name || `MonoSynth ${this.id}`;
         } else if (type === 'Audio') {
             this.name = initialData?.name || `Audio ${this.id}`;
@@ -19,6 +21,7 @@ export class Track {
 
         this.isMuted = initialData?.isMuted || false;
         this.isSoloed = false;
+        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
         this.input = new Tone.Gain();
@@ -38,16 +41,38 @@ export class Track {
         this.sequences = [];
         this.activeSequenceId = null;
         this.inspectorControls = {};
-        
         this.timelineClips = initialData?.timelineClips || [];
-        
+
+        this.samplerAudioData = {};
+        this.audioBuffer = null;
+        this.slices = [];
+        this.selectedSliceForEdit = 0;
+        this.drumSamplerPads = [];
+        this.drumPadPlayers = [];
+        this.selectedDrumPadForEdit = 0;
+        this.instrumentSamplerSettings = {};
+        this.toneSampler = null;
+        this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
+
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
+        } else if (this.type === 'Sampler') {
+            this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
+            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
+            this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
+        } else if (this.type === 'DrumSampler') {
+            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0 });
+            this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
+            this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
+        } else if (this.type === 'InstrumentSampler') {
+            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
         }
 
         if (this.type !== 'Audio' && (!initialData?.sequences || initialData.sequences.length === 0)) {
-            this.createNewSequence("Sequence 1", 64, true);
+            if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
+                 this.createNewSequence("Sequence 1", 64, true);
+            }
         }
     }
 
@@ -57,6 +82,10 @@ export class Track {
         }
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
+        } else if (this.type === 'Sampler' || this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
+            this.instrument = new Tone.Sampler();
+        } else {
+            this.instrument = null;
         }
         this.rebuildEffectChain();
         this.recreateToneSequence();
@@ -184,14 +213,10 @@ export class Track {
             this.recreateToneSequence();
         }
     }
-
-    // --- Start of Corrected Code ---
+    
     getActiveSequence() {
-        // A track may have multiple sequences in the future.
-        // For now, robustly return the first one.
         return this.sequences[0];
     }
-    // --- End of Corrected Code ---
 
     createNewSequence(name, length, skipUndo) {
         if (this.type === 'Audio') return;
@@ -243,7 +268,7 @@ export class Track {
         this.toneSequence = null;
 
         const activeSequence = this.getActiveSequence();
-        if (!this.instrument || !activeSequence) {
+        if (!this.instrument || !activeSequence || this.type === 'Sampler' || this.type === 'DrumSampler') {
             return;
         }
         
