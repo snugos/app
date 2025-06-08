@@ -179,20 +179,16 @@ export class Track {
     setDrumSamplerPadPitch(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].pitchShift = value; }
 
     addEffect(effectType, params, isInitialLoad = false) {
-        // --- Start of Corrected Code ---
-        console.log(`[EFFECTS_DEBUG_2] track.addEffect called with type: ${effectType}`);
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
         if (!effectDef) {
-            console.error(`[EFFECTS_DEBUG_3] FAILED: Effect definition for "${effectType}" not found.`);
+            console.error(`Effect definition for "${effectType}" not found.`);
             return;
         }
-        console.log(`[EFFECTS_DEBUG_3] Found effect definition.`);
 
         const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
         const toneNode = createEffectInstance(effectType, initialParams);
 
         if (toneNode) {
-            console.log(`[EFFECTS_DEBUG_4] Successfully created Tone.js node.`);
             const effectData = { 
                 id: `effect-${this.id}-${Date.now()}`, 
                 type: effectType, 
@@ -201,14 +197,11 @@ export class Track {
             };
             this.activeEffects.push(effectData);
             this.rebuildEffectChain();
-            console.log(`[EFFECTS_DEBUG_5] Effect added to state. activeEffects length is now: ${this.activeEffects.length}. Triggering UI update.`);
-            if (!isInitialLoad && this.appServices.updateTrackUI) {
-                this.appServices.updateTrackUI(this.id, 'effectsChanged');
+            if (!isInitialLoad) {
+                this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+                this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.name}`);
             }
-        } else {
-            console.error(`[EFFECTS_DEBUG_4] FAILED: createEffectInstance returned null.`);
         }
-        // --- End of Corrected Code ---
     }
 
     removeEffect(effectId) {
