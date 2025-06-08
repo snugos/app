@@ -1,6 +1,6 @@
 // js/audio/sampleManager.js
 
-import { storeAudio } from '../db.js';
+import { storeAudio, getAudio } from '../db.js';
 import * as Constants from '../constants.js';
 
 let localAppServices = {};
@@ -87,28 +87,33 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     if (!track) return;
 
     try {
-        const fileBlob = await getAudioBlobFromSoundBrowserItem(soundData);
+        // This now works generically because both zip entries and our custom entries have an .async('blob') method
+        const fileBlob = await soundData.entry.async("blob");
         if (!fileBlob) throw new Error("Could not retrieve sample from library.");
-        const fileObject = new File([fileBlob], soundData.fileName, { type: getMimeTypeFromFilename(soundData.fileName) });
-        await commonLoadSampleLogic(fileObject, fileObject.name, track, track.type, targetIndex);
+
+        const finalMimeType = getMimeTypeFromFilename(soundData.fileName);
+        const blobToLoad = new File([fileBlob], soundData.fileName, { type: finalMimeType });
+        await commonLoadSampleLogic(blobToLoad, soundData.fileName, track, track.type, targetIndex);
     } catch (error) {
         console.error("Error loading from sound browser:", error);
         localAppServices.showNotification?.(`Error loading ${soundData.fileName}: ${error.message}`, 4000);
+        localAppServices.updateTrackUI?.(track.id, 'sampleLoadError', targetIndex);
     }
 }
 
 export async function getAudioBlobFromSoundBrowserItem(soundData) {
-    const loadedZips = localAppServices.getLoadedZipFiles?.() || {};
-    const { libraryName, fullPath } = soundData;
-    if (!loadedZips[libraryName] || loadedZips[libraryName].status !== 'loaded') {
-        throw new Error(`Library "${libraryName}" is not ready.`);
+    if (!soundData || !soundData.entry || typeof soundData.entry.async !== 'function') {
+        console.error("[getAudioBlobFromSoundBrowserItem] Invalid soundData provided.", soundData);
+        return null;
     }
-    const zipFile = loadedZips[libraryName].zip;
-    const zipEntry = zipFile.file(fullPath);
-    if (!zipEntry) {
-        throw new Error(`File "${fullPath}" not found in library "${libraryName}".`);
+
+    try {
+        return await soundData.entry.async("blob");
+    } catch (error) {
+        console.error(`[getAudioBlobFromSoundBrowserItem] Error getting blob for ${soundData.fileName}:`, error);
+        localAppServices.showNotification?.(`Error loading preview data for ${soundData.fileName}.`, 3000);
+        return null;
     }
-    return await zipEntry.async("blob");
 }
 
 export async function fetchSoundLibrary(libraryName, zipUrl) {
