@@ -7,6 +7,9 @@ export function initializeMixerUI(appServices) {
 }
 
 export function openMixerWindow(savedState = null) {
+    // --- DEBUGGING LOG ---
+    console.log(`%c[mixerUI.js] openMixerWindow received savedState:`, 'color: #f39c12;', savedState);
+
     const windowId = 'mixer';
     const openWindows = localAppServices.getOpenWindows();
     if (openWindows.has(windowId) && !savedState) {
@@ -16,9 +19,7 @@ export function openMixerWindow(savedState = null) {
 
     const contentContainer = document.createElement('div');
     contentContainer.id = 'mixerContentContainer';
-    // --- Start of Corrected Code ---
     contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-white dark:bg-black';
-    // --- End of Corrected Code ---
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const mixerOptions = { 
@@ -49,14 +50,12 @@ export function updateMixerWindow() {
     container.innerHTML = '';
 
     const masterTrackDiv = document.createElement('div');
-    // --- Start of Corrected Code ---
     masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border-2 border-black dark:border-white bg-white dark:bg-black shadow w-28 mr-2 text-xs';
     masterTrackDiv.innerHTML = `<div class="track-name font-bold truncate mb-1 text-black dark:text-white" title="Master">MASTER</div>
         <div id="volumeKnob-mixer-master-placeholder" class="h-16 mx-auto mb-1"></div>
         <div id="mixerMasterMeterContainer" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
             <div id="mixerMasterMeterBar" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
         </div>`;
-    // --- End of Corrected Code ---
     container.appendChild(masterTrackDiv);
 
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
@@ -74,14 +73,12 @@ export function updateMixerWindow() {
 
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        // --- Start of Corrected Code ---
         trackDiv.className = 'mixer-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
         trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
             <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
                 <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>`;
-        // --- End of Corrected Code ---
         container.appendChild(trackDiv);
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
