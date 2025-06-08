@@ -325,12 +325,10 @@ function toggleFullScreen() {
 
 export function setupMIDI() {
     if (!navigator.requestMIDIAccess) {
-        console.warn("Web MIDI API is not supported in this browser.");
         showNotification("Web MIDI is not supported in this browser.", 4000);
         return;
     }
     if (!window.isSecureContext) {
-        console.warn("MIDI access is blocked: Page is not in a secure context (HTTPS or localhost).");
         showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
         return;
     }
@@ -341,18 +339,12 @@ export function setupMIDI() {
 }
 
 function onMIDISuccess(midiAccess) {
-    console.log("MIDI ready!", midiAccess);
     if (localAppServices.setMidiAccess) {
         localAppServices.setMidiAccess(midiAccess);
-    }
-    console.log(`Found ${midiAccess.inputs.size} MIDI input(s).`);
-    if (midiAccess.inputs.size === 0) {
-        showNotification("No MIDI input devices found.", 3000);
     }
     
     populateMIDIInputSelector();
     midiAccess.onstatechange = (event) => {
-        console.log("MIDI state changed:", event.port);
         populateMIDIInputSelector();
     };
 }
@@ -362,30 +354,38 @@ function onMIDIFailure(error) {
     showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
 }
 
+// --- FIX: Simplified and more direct UI update function ---
 function populateMIDIInputSelector() {
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
     const midiAccess = getMidiAccessState();
     if (!midiSelect || !midiAccess) return;
 
-    const previouslySelectedId = midiSelect.value;
+    const currentInputs = new Set();
+    midiSelect.innerHTML = ''; // Clear existing options
+
+    // Add the default "None" option
+    const noneOption = document.createElement('option');
+    noneOption.value = "";
+    noneOption.textContent = "None";
+    midiSelect.appendChild(noneOption);
     
-    midiSelect.innerHTML = '<option value="">None</option>';
-    
+    // Add all detected MIDI inputs
     if (midiAccess.inputs.size > 0) {
         midiAccess.inputs.forEach(input => {
+            currentInputs.add(input.id);
             const option = document.createElement('option');
             option.value = input.id;
             option.textContent = input.name;
             midiSelect.appendChild(option);
         });
     }
-    
+
+    // Restore previous selection if it still exists
     const activeInput = getActiveMIDIInputState();
-    const targetId = activeInput ? activeInput.id : previouslySelectedId;
-    
-    if (targetId && midiSelect.querySelector(`option[value="${targetId}"]`)) {
-        midiSelect.value = targetId;
+    if (activeInput && currentInputs.has(activeInput.id)) {
+        midiSelect.value = activeInput.id;
     } else {
+        // If the previously active input is gone, reset the state
         setActiveMIDIInputState(null);
     }
 }
@@ -403,10 +403,8 @@ export function selectMIDIInput(event) {
         const newActiveInput = midiAccess.inputs.get(selectedId);
         newActiveInput.onmidimessage = onMIDIMessage;
         setActiveMIDIInputState(newActiveInput);
-        console.log(`MIDI Input changed to: ${newActiveInput.name}`);
     } else {
         setActiveMIDIInputState(null);
-        console.log("MIDI Input disconnected.");
     }
 }
 
@@ -416,12 +414,11 @@ function onMIDIMessage(message) {
     const armedTrack = getTrackById(armedTrackId);
     
     if (armedTrack && armedTrack.instrument) {
-        // --- FIX: ALWAYS convert MIDI number to a frequency for pitched instruments ---
         const frequency = Tone.Midi(noteNumber).toFrequency();
 
-        if (command === 144 && velocity > 0) { // Note On
+        if (command === 144 && velocity > 0) {
             armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
-        } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
+        } else if (command === 128 || (command === 144 && velocity === 0)) {
             armedTrack.instrument.triggerRelease(frequency, Tone.now());
         }
     }
