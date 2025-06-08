@@ -160,14 +160,6 @@ export function attachGlobalControlEvents(uiCache) {
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
     const handlePlayStop = async () => {
-        // When play is hit, schedule whatever the current mode requires
-        if (getPlaybackModeState() === 'timeline') {
-            localAppServices.scheduleTimelinePlayback?.();
-        } else {
-            const tracks = getTracks();
-            tracks.forEach(track => track.startSequence?.());
-        }
-
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             showNotification("Audio context not running. Please interact with the page.", 3000);
@@ -177,15 +169,16 @@ export function attachGlobalControlEvents(uiCache) {
         if (Tone.Transport.state === 'started') {
             Tone.Transport.pause();
         } else {
+            // Re-schedule based on current mode just in case something cleared the transport
+            localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             Tone.Transport.start();
         }
     };
     
     const handleStop = () => {
         if (Tone.Transport.state !== 'stopped') {
-            Tone.Transport.stop();
-            // After stopping, clear all scheduled events to prevent them from firing on the next start
-            Tone.Transport.cancel(0);
+            Tone.Transport.pause();
+            Tone.Transport.position = 0; // Rewind to the beginning
         }
     };
 
