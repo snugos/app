@@ -438,6 +438,8 @@ function onMIDIMessage(message) {
     } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
         console.log(`[MIDI] Calling triggerRelease with frequency: ${frequency}`);
         armedTrack.instrument.triggerRelease(frequency, Tone.now());
+    } else {
+        console.log(`[MIDI] Ignoring unknown MIDI command: ${command}`);
     }
 }
 
