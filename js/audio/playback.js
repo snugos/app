@@ -15,27 +15,37 @@ export function scheduleTimelinePlayback() {
     const tracks = localAppServices.getTracks?.() || [];
 
     tracks.forEach(track => {
-        // Only schedule clips for Audio tracks in Timeline mode
-        if (track.type === 'Audio' && track.timelineClips) {
-            track.timelineClips.forEach(clip => {
-                if (clip.audioBuffer) {
-                    // Create a temporary player for this clip
-                    const player = new Tone.Player(clip.audioBuffer).connect(track.input);
-                    
-                    // Schedule it to play at its start time, and dispose of it after
-                    Tone.Transport.scheduleOnce((time) => {
-                        player.start(time);
-                        // Schedule disposal to free up memory after the clip has played
-                        Tone.Transport.scheduleOnce(() => {
-                            player.dispose();
-                        }, time + clip.duration + 0.5);
-                    }, clip.startTime);
-                }
-            });
-        }
+        // Schedule all clips for this track
+        track.timelineClips?.forEach(clip => {
+            if (clip.type === 'audio' && clip.audioBuffer) {
+                // --- Audio Clip Scheduling ---
+                const player = new Tone.Player(clip.audioBuffer).connect(track.input);
+                Tone.Transport.scheduleOnce((time) => {
+                    // Start the player at the precise time, with offset and duration
+                    player.start(time, clip.offset || 0, clip.duration);
+                    // Schedule disposal to free up memory
+                    Tone.Transport.scheduleOnce(() => player.dispose(), time + clip.duration + 0.5);
+                }, clip.startTime);
+
+            } else if (clip.type === 'midi') {
+                // --- MIDI Clip Scheduling ---
+                // This schedules the track's main Tone.Sequence to start and stop
+                // Note: This is a simple implementation. For multiple, overlapping MIDI clips on one track,
+                // a more advanced system using Tone.Part would be needed.
+                Tone.Transport.scheduleOnce((time) => {
+                    track.startSequence?.();
+                }, clip.startTime);
+
+                Tone.Transport.scheduleOnce((time) => {
+                    track.stopSequence?.();
+                }, clip.startTime + clip.duration);
+            }
+        });
     });
 }
 
+
+// --- Preview functions remain the same ---
 export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
