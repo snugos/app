@@ -18,6 +18,11 @@ export const PIANO_ROLL_OCTAVES = 4;
 export const PIANO_ROLL_START_MIDI_NOTE = 36; // C2
 export const PIANO_ROLL_END_MIDI_NOTE = PIANO_ROLL_START_MIDI_NOTE + (PIANO_ROLL_OCTAVES * 12) - 1; // B5 (MIDI 83)
 
+// --- NEW: Constants for mapping samplers to the Piano Roll ---
+export const SAMPLER_PIANO_ROLL_START_NOTE = 36; // C2 is the first key for Pad 1 / Slice 1
+export const NUM_SAMPLER_NOTES = 16; // 16 pads/slices
+
+
 // SYNTH_PITCHES: Array of note names (e.g., "C4", "F#3") for UI display, typically high to low.
 // This array is crucial for determining the number of rows in the piano roll/sequencer for synths.
 export const SYNTH_PITCHES = (() => {
@@ -25,14 +30,11 @@ export const SYNTH_PITCHES = (() => {
     if (Array.isArray(MIDI_NOTE_NAMES) && MIDI_NOTE_NAMES.length === 12) {
         for (let midiNote = PIANO_ROLL_END_MIDI_NOTE; midiNote >= PIANO_ROLL_START_MIDI_NOTE; midiNote--) {
             const noteIndexInOctave = midiNote % 12;
-            // MIDI octave convention: C4 is MIDI note 60. Octave number for MIDI note X is floor(X/12) - 1.
-            // Tone.js convention: "C4" implies octave 4.
             const octave = Math.floor(midiNote / 12) -1; 
             pitches.push(`${MIDI_NOTE_NAMES[noteIndexInOctave]}${octave}`);
         }
     } else {
         console.error("[Constants] MIDI_NOTE_NAMES is not correctly defined. SYNTH_PITCHES will be empty. Using fallback.");
-        // Fallback to a generic list if MIDI_NOTE_NAMES is broken
         for (let i = 83; i >= 36; i--) { pitches.push(`N${i}`);} 
     }
     if (pitches.length === 0) { // Additional fallback if loop didn't run
