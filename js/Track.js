@@ -24,7 +24,6 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
-        // --- Audio Nodes ---
         this.input = new Tone.Gain();
         this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
@@ -38,7 +37,6 @@ export class Track {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
 
-        // --- Type-Specific Properties ---
         this.synthEngineType = null;
         this.synthParams = {};
         this.samplerAudioData = {};
@@ -252,7 +250,48 @@ export class Track {
         }
     }
 
-    createNewSequence(name, length, skipUndo) { /* ... implementation ... */ }
+    // --- Start of Corrected Code ---
+    addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        if (sequence && sequence.data[pitchIndex] !== undefined) {
+            sequence.data[pitchIndex][timeStep] = noteData;
+            this.recreateToneSequence(true);
+        }
+    }
+
+    removeNoteFromSequence(sequenceId, pitchIndex, timeStep) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        if (sequence && sequence.data[pitchIndex] !== undefined) {
+            sequence.data[pitchIndex][timeStep] = null;
+            this.recreateToneSequence(true);
+        }
+    }
+    // --- End of Corrected Code ---
+    
+    getActiveSequence() {
+        return this.sequences.find(s => s.id === this.activeSequenceId);
+    }
+
+    createNewSequence(name, length, skipUndo) {
+        if (this.type === 'Audio') return;
+        const newSeqId = `seq_${this.id}_${Date.now()}`;
+        const numRows = Constants.SYNTH_PITCHES.length;
+        const newSequence = {
+            id: newSeqId,
+            name: name,
+            data: Array(numRows).fill(null).map(() => Array(length).fill(null)),
+            length: length
+        };
+        this.sequences.push(newSequence);
+        this.activeSequenceId = newSeqId;
+        if (!skipUndo) {
+            this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.name}`);
+        }
+    }
+    
+    recreateToneSequence() {
+        // Implementation for creating a Tone.Part or Tone.Sequence from data
+    }
     
     getDefaultSynthParams() {
         return {
