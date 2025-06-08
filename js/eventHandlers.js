@@ -405,14 +405,13 @@ export function selectMIDIInput(event) {
     }
 }
 
-// --- DEBUGGING LOGS ADDED ---
 function onMIDIMessage(message) {
-    console.log('[MIDI] Message received:', message.data);
     const [command, noteNumber, velocity] = message.data;
-    
+    console.log(`[MIDI] Message: command=${command}, note=${noteNumber}, velocity=${velocity}`);
+
     const armedTrackId = getArmedTrackId();
-    if (!armedTrackId) {
-        console.log('[MIDI] No track armed. Ignoring message.');
+    if (armedTrackId === null) {
+        // No track is armed, so we can ignore the message.
         return;
     }
 
@@ -422,24 +421,48 @@ function onMIDIMessage(message) {
         return;
     }
 
-    console.log(`[MIDI] Armed track is: "${armedTrack.name}" (Type: ${armedTrack.type})`);
+    // FIX 1: Check for Note On/Off on ANY channel, not just channel 1.
+    const noteOn = (command & 0xF0) === 0x90 && velocity > 0;
+    const noteOff = (command & 0xF0) === 0x80 || ((command & 0xF0) === 0x90 && velocity === 0);
 
-    if (!armedTrack.instrument) {
-        console.log('[MIDI] Armed track has no instrument. Ignoring message.');
+    if (!noteOn && !noteOff) {
+        // Not a note on/off message, ignore.
+        return;
+    }
+    
+    // FIX 3: Add specific handling for Pad and Slice samplers.
+    if (armedTrack.type === 'Sampler' || armedTrack.type === 'DrumSampler') {
+        const startIndex = armedTrack.type === 'DrumSampler' ? Constants.DRUM_MIDI_START_NOTE : Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+        const numSamples = armedTrack.type === 'DrumSampler' ? Constants.numDrumSamplerPads : Constants.numSlices;
+        const sampleIndex = noteNumber - startIndex;
+
+        if (sampleIndex >= 0 && sampleIndex < numSamples) {
+            if (noteOn) {
+                console.log(`[MIDI] Triggering ${armedTrack.type}, index ${sampleIndex}`);
+                const playbackFn = armedTrack.type === 'DrumSampler' ? localAppServices.playDrumSamplerPadPreview : localAppServices.playSlicePreview;
+                playbackFn?.(armedTrack.id, sampleIndex, velocity / 127);
+            }
+            // Note: Pad/slice samplers often don't need an explicit note-off command.
+        }
         return;
     }
 
-    const frequency = Tone.Midi(noteNumber).toFrequency();
-    console.log(`[MIDI] Converted note ${noteNumber} to frequency ${frequency}`);
+    if (!armedTrack.instrument) {
+        console.log('[MIDI] Armed track has no playable instrument. Ignoring message.');
+        return;
+    }
 
-    if (command === 144 && velocity > 0) { // Note On
-        console.log(`[MIDI] Calling triggerAttack with frequency: ${frequency}`);
-        armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
-    } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
-        console.log(`[MIDI] Calling triggerRelease with frequency: ${frequency}`);
-        armedTrack.instrument.triggerRelease(frequency, Tone.now());
-    } else {
-        console.log(`[MIDI] Ignoring unknown MIDI command: ${command}`);
+    // FIX 2: Use the correct note type (name vs. frequency) for the instrument.
+    const noteValue = armedTrack.type === 'InstrumentSampler' ?
+        Tone.Midi(noteNumber).toNote() :
+        Tone.Midi(noteNumber).toFrequency();
+
+    if (noteOn) {
+        console.log(`[MIDI] Calling triggerAttack on ${armedTrack.name} with note: ${noteValue}`);
+        armedTrack.instrument.triggerAttack(noteValue, Tone.now(), velocity / 127);
+    } else if (noteOff) {
+        console.log(`[MIDI] Calling triggerRelease on ${armedTrack.name} with note: ${noteValue}`);
+        armedTrack.instrument.triggerRelease(noteValue, Tone.now());
     }
 }
 
