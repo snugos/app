@@ -160,6 +160,14 @@ export function attachGlobalControlEvents(uiCache) {
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
     const handlePlayStop = async () => {
+        // When play is hit, schedule whatever the current mode requires
+        if (getPlaybackModeState() === 'timeline') {
+            localAppServices.scheduleTimelinePlayback?.();
+        } else {
+            const tracks = getTracks();
+            tracks.forEach(track => track.startSequence?.());
+        }
+
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             showNotification("Audio context not running. Please interact with the page.", 3000);
@@ -176,6 +184,8 @@ export function attachGlobalControlEvents(uiCache) {
     const handleStop = () => {
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.stop();
+            // After stopping, clear all scheduled events to prevent them from firing on the next start
+            Tone.Transport.cancel(0);
         }
     };
 
