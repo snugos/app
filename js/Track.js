@@ -24,11 +24,13 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
+        // --- Audio Nodes ---
         this.input = new Tone.Gain();
-        this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute).toDestination();
+        this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
-        this.gainNode.connect(this.trackMeter);
         this.outputNode = this.gainNode;
+        this.gainNode.connect(this.trackMeter);
+        this.gainNode.toDestination();
         
         this.instrument = null;
         this.activeEffects = [];
@@ -36,6 +38,7 @@ export class Track {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
 
+        // --- Type-Specific Properties ---
         this.synthEngineType = null;
         this.synthParams = {};
         this.samplerAudioData = {};
@@ -115,8 +118,8 @@ export class Track {
         if (!this.isMuted) {
             this.gainNode.gain.rampTo(volume, 0.02);
         }
-        if (fromInteraction && this.appServices.captureStateForUndo) {
-            this.appServices.captureStateForUndo(`Set Volume for ${this.name} to ${volume.toFixed(2)}`);
+        if (fromInteraction) {
+            this.appServices.captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`);
         }
     }
 
@@ -143,9 +146,7 @@ export class Track {
         const isAnotherTrackSoloed = soloedTrackId !== null && this.id !== soloedTrackId;
         this.isSoloed = isThisTrackSoloed;
         this.applySoloState(isAnotherTrackSoloed);
-        if (this.appServices.updateTrackUI) {
-            this.appServices.updateTrackUI(this.id, 'soloChanged');
-        }
+        this.appServices.updateTrackUI?.(this.id, 'soloChanged');
     }
     
     setSynthParam(paramPath, value) {
@@ -157,10 +158,7 @@ export class Track {
             const finalKey = keys.pop();
             
             for (const key of keys) {
-                if (target[key] === undefined) {
-                    console.error(`Invalid path in setSynthParam: ${key} does not exist.`);
-                    return;
-                }
+                if (target[key] === undefined) return;
                 target = target[key];
             }
             
@@ -184,14 +182,74 @@ export class Track {
 
     addEffect(effectType, params, isInitialLoad = false) {
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
-        if (!effectDef) return;
+        if (!effectDef) {
+            console.error(`Effect definition for "${effectType}" not found.`);
+            return;
+        }
+
         const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
         const toneNode = createEffectInstance(effectType, initialParams);
+
         if (toneNode) {
-            const effectData = { id: `effect-${this.id}-${Date.now()}`, type: effectType, toneNode, params: JSON.parse(JSON.stringify(initialParams)) };
+            const effectData = { 
+                id: `effect-${this.id}-${Date.now()}`, 
+                type: effectType, 
+                toneNode: toneNode, 
+                params: JSON.parse(JSON.stringify(initialParams)) 
+            };
             this.activeEffects.push(effectData);
             this.rebuildEffectChain();
-            if (!isInitialLoad) this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+            if (!isInitialLoad) {
+                this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+                this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.name}`);
+            }
+        }
+    }
+
+    removeEffect(effectId) {
+        const index = this.activeEffects.findIndex(e => e.id === effectId);
+        if (index > -1) {
+            const removedEffect = this.activeEffects.splice(index, 1)[0];
+            if (removedEffect.toneNode) {
+                removedEffect.toneNode.dispose();
+            }
+            this.rebuildEffectChain();
+            this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+            this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
+        }
+    }
+    
+    updateEffectParam(effectId, paramPath, value) {
+        const effect = this.activeEffects.find(e => e.id === effectId);
+        if (!effect?.toneNode) return;
+    
+        try {
+            let target = effect.toneNode;
+            const keys = paramPath.split('.');
+            const finalKey = keys.pop();
+    
+            for (const key of keys) {
+                if (target[key] === undefined) return;
+                target = target[key];
+            }
+    
+            if (target && typeof target[finalKey] !== 'undefined') {
+                if (target[finalKey]?.value !== undefined) {
+                    target[finalKey].value = value;
+                } else {
+                    target[finalKey] = value;
+                }
+                
+                // Update the state object as well
+                let paramState = effect.params;
+                 for (const key of keys) {
+                    paramState[key] = paramState[key] || {};
+                    paramState = paramState[key];
+                }
+                paramState[finalKey] = value;
+            }
+        } catch (e) {
+            console.error(`Could not update effect param: ${paramPath}`, e);
         }
     }
 
