@@ -154,6 +154,7 @@ export function attachGlobalControlEvents(uiCache) {
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
     const handlePlayStop = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
@@ -222,6 +223,11 @@ export function attachGlobalControlEvents(uiCache) {
     playBtn?.addEventListener('click', handlePlayStop);
     stopBtn?.addEventListener('click', handleStop);
     recordBtn?.addEventListener('click', handleRecord);
+    
+    metronomeBtn?.addEventListener('click', () => {
+        const isEnabled = localAppServices.toggleMetronome();
+        metronomeBtn.classList.toggle('active', isEnabled);
+    });
 
     tempoInput?.addEventListener('change', (e) => {
         const newTempo = parseFloat(e.target.value);
