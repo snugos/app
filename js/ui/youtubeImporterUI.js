@@ -8,7 +8,45 @@ export function initializeYouTubeImporterUI(appServicesFromMain) {
 }
 
 export function openYouTubeImporterWindow(savedState = null) {
-    // ... (this function is unchanged)
+    const windowId = 'youtubeImporter';
+    if (localAppServices.getWindowById && localAppServices.getWindowById(windowId)) {
+        localAppServices.getWindowById(windowId).restore();
+        return;
+    }
+
+    const contentHTML = `
+        <div class="p-4 flex flex-col h-full bg-white dark:bg-black text-black dark:text-white">
+            <h3 class="text-lg font-bold mb-2">Import Audio from URL</h3>
+            <p class="text-xs mb-2 text-black dark:text-white">
+                Enter a YouTube URL to download its audio. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-black dark:text-white hover:underline">Cobalt</a> API.
+            </p>
+
+            <div class="p-2 mb-4 text-xs bg-white border border-black rounded-md text-black dark:bg-black dark:text-white dark:border-white" role="alert">
+                <b>Note:</b> This feature requires a public CORS proxy and may be unreliable. The best long-term solution is a dedicated server component.
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <input type="text" id="youtubeUrlInput" placeholder="Enter a YouTube video URL..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
+                <button id="youtubeImportBtn" class="px-4 py-2 bg-black text-white font-semibold rounded border border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                    Import
+                </button>
+            </div>
+
+            <div id="youtubeImportStatus" class="mt-4 text-sm h-12"></div>
+        </div>
+    `;
+
+    const importerWindow = localAppServices.createWindow(
+        windowId, 
+        'URL Importer', 
+        contentHTML, 
+        { width: 450, height: 280, minWidth: 400, minHeight: 280 }
+    );
+
+    if (importerWindow?.element) {
+        attachImporterEventListeners(importerWindow.element);
+    }
+    return importerWindow;
 }
 
 function attachImporterEventListeners(windowElement) {
@@ -41,7 +79,6 @@ function attachImporterEventListeners(windowElement) {
 
             const result = await response.json();
 
-            // --- THIS IS THE CHANGE: Check for detailed error from our function ---
             if (!response.ok) {
                 // If the function returned a detailed error object, use its message
                 if (result && result.message) {
