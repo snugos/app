@@ -56,7 +56,6 @@ import {
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
-// Import the new metronome module
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
 
@@ -271,11 +270,12 @@ async function initializeSnugOS() {
     
     console.log("SnugOS Initialized Successfully.");
 
-    // Latency Optimization
-    localAppServices.context.lookAhead = 0.02;
-    localAppServices.context.updateInterval = 0.01;
-    console.log(`[Latency] lookAhead set to: ${localAppServices.context.lookAhead}`);
-    console.log(`[Latency] updateInterval set to: ${localAppServices.context.updateInterval}`);
+    // --- Latency Optimization ---
+    // Corrected variable name from localAppServices to appServices
+    appServices.context.lookAhead = 0.02;
+    appServices.context.updateInterval = 0.01;
+    console.log(`[Latency] lookAhead set to: ${appServices.context.lookAhead}`);
+    console.log(`[Latency] updateInterval set to: ${appServices.context.updateInterval}`);
     
     drawLoop();
 }
