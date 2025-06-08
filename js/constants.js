@@ -10,21 +10,15 @@ export const MIN_TEMPO = 30;
 export const MAX_TEMPO = 300;
 export const DEFAULT_TEMPO = 120;
 
-// For mapping MIDI note numbers to note names (including sharps)
 export const MIDI_NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
-// Piano Roll / Synth Note Definitions
 export const PIANO_ROLL_OCTAVES = 4;
 export const PIANO_ROLL_START_MIDI_NOTE = 36; // C2
-export const PIANO_ROLL_END_MIDI_NOTE = PIANO_ROLL_START_MIDI_NOTE + (PIANO_ROLL_OCTAVES * 12) - 1; // B5 (MIDI 83)
+export const PIANO_ROLL_END_MIDI_NOTE = PIANO_ROLL_START_MIDI_NOTE + (PIANO_ROLL_OCTAVES * 12) - 1;
 
-// --- NEW: Constants for mapping samplers to the Piano Roll ---
-export const SAMPLER_PIANO_ROLL_START_NOTE = 36; // C2 is the first key for Pad 1 / Slice 1
-export const NUM_SAMPLER_NOTES = 16; // 16 pads/slices
+export const SAMPLER_PIANO_ROLL_START_NOTE = 36;
+export const NUM_SAMPLER_NOTES = 16;
 
-
-// SYNTH_PITCHES: Array of note names (e.g., "C4", "F#3") for UI display, typically high to low.
-// This array is crucial for determining the number of rows in the piano roll/sequencer for synths.
 export const SYNTH_PITCHES = (() => {
     const pitches = [];
     if (Array.isArray(MIDI_NOTE_NAMES) && MIDI_NOTE_NAMES.length === 12) {
@@ -37,15 +31,13 @@ export const SYNTH_PITCHES = (() => {
         console.error("[Constants] MIDI_NOTE_NAMES is not correctly defined. SYNTH_PITCHES will be empty. Using fallback.");
         for (let i = 83; i >= 36; i--) { pitches.push(`N${i}`);} 
     }
-    if (pitches.length === 0) { // Additional fallback if loop didn't run
+    if (pitches.length === 0) {
         console.error("[Constants] SYNTH_PITCHES generation failed, using hardcoded fallback.");
         return ['B5', 'A#5', 'A5', 'G#5', 'G5', 'F#5', 'F5', 'E5', 'D#5', 'D5', 'C#5', 'C5', 'B4', 'A#4', 'A4', 'G#4', 'G4', 'F#4', 'F4', 'E4', 'D#4', 'D4', 'C#4', 'C4', 'B3', 'A#3', 'A3', 'G#3', 'G3', 'F#3', 'F3', 'E3', 'D#3', 'D3', 'C#3', 'C3', 'B2', 'A#2', 'A2', 'G#2', 'G2', 'F#2', 'F2', 'E2', 'D#2', 'D2', 'C#2', 'C2'];
     }
     return pitches; 
 })();
 
-
-// Piano Roll Visuals
 export const PIANO_ROLL_KEY_WIDTH = 60; 
 export const PIANO_ROLL_HEADER_HEIGHT = 25; 
 export const PIANO_ROLL_NOTE_HEIGHT = 20; 
@@ -59,7 +51,6 @@ export const PIANO_ROLL_NOTE_FILL_COLOR = 'skyblue';
 export const PIANO_ROLL_NOTE_STROKE_COLOR = 'blue';
 export const PIANO_ROLL_NOTE_SELECTED_STROKE_COLOR = 'gold';
 
-
 export const soundLibraries = {
     "Drums": "assets/drums.zip",
     "Instruments": "assets/instruments.zip",
@@ -69,11 +60,20 @@ export const soundLibraries = {
 
 export const defaultDesktopBg = '#1e1e1e';
 export const defaultVelocity = 0.7;
-export const numSlices = 16; // For Sampler (Slicer)
-export const numDrumSamplerPads = 16; // For Drum Sampler - Ensure this is a number
-export const DRUM_MIDI_START_NOTE = 36; // C1, common for drum machine mapping
+export const numSlices = 16;
+export const numDrumSamplerPads = 16;
+export const DRUM_MIDI_START_NOTE = 36;
 
-export const COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = 0; 
+// --- FIX: Made octave shift a mutable variable and added modifier functions ---
+export let COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = 0; 
+export function incrementOctaveShift() { 
+    COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.min(3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT + 1);
+}
+export function decrementOctaveShift() { 
+    COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.max(-3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT - 1);
+}
+// --- END FIX ---
+
 export const computerKeySynthMap = {
     // Bottom row (white keys on piano often)
     'a': 48, // C3 (octave shift will modify this)
@@ -88,13 +88,11 @@ export const computerKeySynthMap = {
     // Top row (black keys on piano often)
     'w': 49, // C#3
     'e': 51, // D#3
-    // 'r': // F (no black key)
     't': 54, // F#3
     'y': 56, // G#3
     'u': 58, // A#3
 };
 
-// Safety check log to see what SYNTH_PITCHES resolves to
 console.log('[Constants] Initialized SYNTH_PITCHES count:', SYNTH_PITCHES.length);
 if (SYNTH_PITCHES.length === 0) {
     console.error("[Constants] CRITICAL FAILURE: SYNTH_PITCHES is empty after all fallbacks. Piano roll will likely fail for synth tracks.");
