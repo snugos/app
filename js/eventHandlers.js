@@ -150,6 +150,8 @@ export function attachGlobalControlEvents(uiCache) {
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     
     const handlePlayStop = async () => {
+        // --- SnugOS DIAGNOSTIC ---
+        console.log('[DIAGNOSTIC] handlePlayStop called. Current Transport state:', Tone.Transport.state);
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             showNotification("Audio context not running. Please interact with the page.", 3000);
@@ -161,6 +163,8 @@ export function attachGlobalControlEvents(uiCache) {
         } else {
             Tone.Transport.start();
         }
+        // --- SnugOS DIAGNOSTIC ---
+        console.log('[DIAGNOSTIC] handlePlayStop finished. New Transport state:', Tone.Transport.state);
     };
     
     const handleStop = () => {
@@ -379,9 +383,9 @@ function onMIDIMessage(message) {
     const armedTrack = getTrackById(armedTrackId);
     
     if (armedTrack && armedTrack.instrument) {
-        if (command === 144 && velocity > 0) { // Note On
+        if (command === 144 && velocity > 0) {
             armedTrack.instrument.triggerAttack(note, Tone.now(), velocity / 127);
-        } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
+        } else if (command === 128 || (command === 144 && velocity === 0)) {
             armedTrack.instrument.triggerRelease(note, Tone.now());
         }
     }
