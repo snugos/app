@@ -353,4 +353,306 @@ export function attachGlobalControlEvents(uiCache) {
     });
 }
 
-// ... (rest of file remains the same)
+function updateUndoRedoButtons() {
+    const menuUndo = document.getElementById('menuUndo');
+    const menuRedo = document.getElementById('menuRedo');
+    if (menuUndo) {
+        const undoStack = getUndoStackState();
+        if (undoStack.length > 0) {
+            menuUndo.classList.remove('disabled');
+            menuUndo.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
+        } else {
+            menuUndo.classList.add('disabled');
+            menuUndo.title = 'Undo';
+        }
+    }
+    if (menuRedo) {
+        const redoStack = getRedoStackState();
+        if (redoStack.length > 0) {
+            menuRedo.classList.remove('disabled');
+            menuRedo.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
+        } else {
+            menuRedo.classList.add('disabled');
+            menuRedo.title = 'Redo';
+        }
+    }
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
+
+export function setupMIDI() {
+    if (!navigator.requestMIDIAccess) {
+        showNotification("Web MIDI is not supported in this browser.", 4000);
+        return;
+    }
+    if (!window.isSecureContext) {
+        showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
+        return;
+    }
+
+    navigator.requestMIDIAccess({ sysex: true })
+        .then(onMIDISuccess)
+        .catch(onMIDIFailure);
+}
+
+function onMIDISuccess(midiAccess) {
+    localAppServices.setMidiAccess?.(midiAccess);
+    populateMIDIInputSelector(midiAccess);
+    midiAccess.onstatechange = () => {
+        populateMIDIInputSelector(midiAccess);
+    };
+}
+
+function onMIDIFailure(error) {
+    console.error("Failed to get MIDI access -", error);
+    showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
+}
+
+function populateMIDIInputSelector(midiAccess) {
+    const midiSelect = document.getElementById('midiInputSelectGlobalTop');
+    if (!midiSelect || !midiAccess) {
+        return;
+    }
+
+    const currentInputs = new Set();
+    midiSelect.innerHTML = ''; 
+
+    const noneOption = document.createElement('option');
+    noneOption.value = "";
+    noneOption.textContent = "None";
+    midiSelect.appendChild(noneOption);
+    
+    if (midiAccess.inputs.size > 0) {
+        midiAccess.inputs.forEach(input => {
+            currentInputs.add(input.id);
+            const option = document.createElement('option');
+            option.value = input.id;
+            option.textContent = input.name;
+            midiSelect.appendChild(option);
+        });
+    }
+
+    const activeInput = getActiveMIDIInputState();
+    if (activeInput && currentInputs.has(activeInput.id)) {
+        midiSelect.value = activeInput.id;
+    } else {
+        setActiveMIDIInputState(null);
+    }
+}
+
+export function selectMIDIInput(event) {
+    const midiAccess = localAppServices.getMidiAccess?.();
+    const selectedId = event.target.value;
+    const currentActiveInput = getActiveMIDIInputState();
+
+    if (currentActiveInput) {
+        currentActiveInput.onmidimessage = null;
+    }
+
+    if (selectedId && midiAccess) {
+        const newActiveInput = midiAccess.inputs.get(selectedId);
+        newActiveInput.onmidimessage = onMIDIMessage;
+        setActiveMIDIInputState(newActiveInput);
+    } else {
+        setActiveMIDIInputState(null);
+    }
+}
+
+function onMIDIMessage(message) {
+    const [command, noteNumber, velocity] = message.data;
+    const commandType = command & 0xF0;
+
+    if (commandType === 0xB0 && noteNumber === 64) {
+        const armedTrackId = getArmedTrackId();
+        if (armedTrackId === null) return;
+        const armedTrack = getTrackById(armedTrackId);
+        if (!armedTrack?.instrument) return;
+
+        if (velocity > 63) {
+            isSustainPedalDown = true;
+        } else {
+            isSustainPedalDown = false;
+            sustainedNotes.forEach((noteValue, midiNote) => {
+                armedTrack.instrument.triggerRelease(noteValue, Tone.now());
+            });
+            sustainedNotes.clear();
+        }
+        return;
+    }
+    
+    const noteOn = commandType === 0x90 && velocity > 0;
+    const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
+
+    if (noteOn && isTrackRecordingState()) {
+        const recordingTrackId = getArmedTrackId();
+        const track = getTrackById(recordingTrackId);
+
+        if (track && track.type !== 'Audio') {
+            const activeSequence = track.getActiveSequence();
+            if (activeSequence) {
+                const ticksPerStep = Tone.Transport.PPQ / 4;
+                const currentStep = Math.round(Tone.Transport.ticks / ticksPerStep);
+                const pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber;
+
+                if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
+                    track.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
+                    
+                    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
+                    if (pianoRollWindow && !pianoRollWindow.isMinimized) {
+                       if(localAppServices.openPianoRollWindow) {
+                           pianoRollWindow.close(true);
+                           localAppServices.openPianoRollWindow(track.id);
+                       }
+                    }
+                }
+            }
+        }
+    }
+    
+    const armedTrackId = getArmedTrackId();
+    if (armedTrackId === null) return;
+    const armedTrack = getTrackById(armedTrackId);
+    if (!armedTrack) return;
+
+    if (!noteOn && !noteOff) return;
+
+    if (armedTrack.type === 'Sampler' || armedTrack.type === 'DrumSampler') {
+        const startIndex = armedTrack.type === 'DrumSampler' ? Constants.DRUM_MIDI_START_NOTE : Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+        const numSamples = armedTrack.type === 'DrumSampler' ? Constants.numDrumSamplerPads : Constants.numSlices;
+        const sampleIndex = noteNumber - startIndex;
+        if (sampleIndex >= 0 && sampleIndex < numSamples && noteOn) {
+            const playbackFn = armedTrack.type === 'DrumSampler' ? localAppServices.playDrumSamplerPadPreview : localAppServices.playSlicePreview;
+            playbackFn?.(armedTrack.id, sampleIndex, velocity / 127);
+        }
+        return;
+    }
+
+    if (!armedTrack.instrument) return;
+
+    const noteValue = armedTrack.type === 'InstrumentSampler' ? Tone.Midi(noteNumber).toNote() : Tone.Midi(noteNumber).toFrequency();
+
+    if (noteOn) {
+        if (sustainedNotes.has(noteNumber)) {
+            armedTrack.instrument.triggerRelease(sustainedNotes.get(noteNumber), Tone.now());
+            sustainedNotes.delete(noteNumber);
+        }
+        armedTrack.instrument.triggerAttack(noteValue, Tone.now(), velocity / 127);
+    } else if (noteOff) {
+        if (isSustainPedalDown) {
+            sustainedNotes.set(noteNumber, noteValue);
+        } else {
+            armedTrack.instrument.triggerRelease(noteValue, Tone.now());
+        }
+    }
+}
+
+
+export function handleTrackMute(trackId) {
+    const track = getTrackById(trackId);
+    if (!track) return;
+    captureStateForUndo(`${track.isMuted ? 'Unmute' : 'Mute'} Track: ${track.name}`);
+    track.isMuted = !track.isMuted;
+    track.applyMuteState();
+    if (localAppServices.updateTrackUI) {
+        localAppServices.updateTrackUI(trackId, 'muteChanged');
+    }
+}
+
+export function handleTrackSolo(trackId) {
+    const track = getTrackById(trackId);
+    if (!track) return;
+    captureStateForUndo(`Solo Track: ${track.name}`);
+    const currentSoloId = getSoloedTrackId();
+    const newSoloId = (currentSoloId === trackId) ? null : trackId;
+    setSoloedTrackId(newSoloId);
+    getTracks().forEach(t => {
+        if (t.updateSoloMuteState) {
+            t.updateSoloMuteState(newSoloId);
+        }
+    });
+    if (localAppServices.updateMixerWindow) {
+        localAppServices.updateMixerWindow();
+    }
+}
+
+export function handleTrackArm(trackId) {
+    const currentArmedId = getArmedTrackId();
+    const newArmedId = (currentArmedId === trackId) ? null : trackId;
+    setArmedTrackId(newArmedId);
+    localAppServices.updateTrackUI?.(trackId, 'armChanged');
+    if (currentArmedId !== null) {
+        localAppServices.updateTrackUI?.(currentArmedId, 'armChanged');
+    }
+}
+
+export function handleRemoveTrack(trackId) {
+    const track = getTrackById(trackId);
+    if (!track) return;
+    showConfirmationDialog('Remove Track', `Are you sure you want to remove "${track.name}"? This cannot be undone.`, () => {
+        coreRemoveTrackFromState(trackId);
+    });
+}
+
+export function handleOpenTrackInspector(trackId) {
+    if (localAppServices.openTrackInspectorWindow) {
+        localAppServices.openTrackInspectorWindow(trackId);
+    }
+}
+
+export function handleOpenEffectsRack(trackId) {
+    if (localAppServices.openTrackEffectsRackWindow) {
+        localAppServices.openTrackEffectsRackWindow(trackId);
+    }
+}
+
+export function handleOpenPianoRoll(trackId) {
+    if (localAppServices.openPianoRollWindow) {
+        localAppServices.openPianoRollWindow(trackId);
+    } else {
+        showNotification("Piano Roll UI is currently unavailable.", 3000);
+    }
+}
+
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
+    const files = event.dataTransfer.files;
+    const targetTrack = getTrackById(targetTrackId);
+
+    if (!targetTrack) return;
+    
+    if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('audio/')) {
+            if (targetTrack.type === 'Audio') {
+                targetTrack.addExternalAudioFileAsClip?.(file, startTime, file.name);
+            } else {
+                showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500);
+            }
+        }
+    } else {
+        const jsonDataString = event.dataTransfer.getData("application/json");
+        if (jsonDataString) {
+            const soundData = JSON.parse(jsonDataString);
+            if (soundData.type === 'sound-browser-item') {
+                showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000);
+            }
+        }
+    }
+}
+
+export function handleOpenYouTubeImporter() {
+    if (localAppServices.openYouTubeImporterWindow) {
+        localAppServices.openYouTubeImporterWindow();
+    } else {
+        showNotification("YouTube Importer UI is currently unavailable.", 3000);
+    }
+}
