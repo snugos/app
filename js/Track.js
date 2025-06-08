@@ -31,16 +31,11 @@ export class Track {
         
         this.instrument = null;
         this.activeEffects = [];
-        // --- START MODIFICATION ---
-        // If loading from a saved project, load the saved effects
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         } else if (this.type !== 'Audio') {
-            // For any new, non-audio track, add a default EQ3.
-            // We check the type to avoid adding an EQ to an empty audio track.
             this.addEffect('EQ3', null, true);
         }
-        // --- END MODIFICATION ---
         
         this.toneSequence = null;
         this.synthEngineType = null;
@@ -322,11 +317,17 @@ export class Track {
         }
     }
     
+    // --- UPDATED DEFAULT SYNTH PARAMETERS ---
     getDefaultSynthParams() {
         return {
             portamento: 0,
-            oscillator: { type: 'triangle' },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 1 },
+            oscillator: { type: 'sine' }, // Changed from 'triangle'
+            envelope: { 
+                attack: 0.005, 
+                decay: 2.0,     // Changed from 0.1
+                sustain: 0,     // Changed from 0.9
+                release: 5.0      // Changed from 1
+            },
             filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 10000 },
             filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7 }
         };
