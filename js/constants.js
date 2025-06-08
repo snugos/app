@@ -60,7 +60,7 @@ export const soundLibraries = {
     "Instruments": "assets/instruments.zip",
     "Instruments 2": "assets/instruments2.zip",
     "Instruments 3": "assets/instruments3.zip",
-    "Srna's Piano": "assets/srna's_piano.zip"
+    "Srna's Piano": "assets/srnas_piano.zip"
 };
 
 export const defaultDesktopBg = '#1e1e1e';
