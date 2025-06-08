@@ -99,7 +99,10 @@ export function setHighestZState(zIndex) { highestZ = zIndex; }
 export function incrementHighestZState() { highestZ++; return highestZ; }
 export function setIsReconstructingDAWState(state) { isReconstructingDAW = !!state; }
 
-export function setMasterEffectsState(effectsArray) { masterEffectsChainState = effectsArray || []; if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI(); }
+export function setMasterEffectsState(effectsArray) { 
+    masterEffectsChainState = effectsArray || []; 
+    appServices.updateMasterEffectsUI?.();
+}
 export function setMasterGainValueState(gainValue) { masterGainValueState = gainValue; }
 
 export function setMidiAccessState(midi) { midiAccessGlobal = midi; }
@@ -149,31 +152,26 @@ export function setActiveSequencerTrackIdState(trackId) { activeSequencerTrackId
 
 export function setPlaybackModeState(newMode, skipUIUpdate = false) {
     if (playbackMode === newMode) return;
-    
     const oldMode = playbackMode;
     playbackMode = newMode;
-
     if (appServices.captureStateForUndo) {
         appServices.captureStateForUndo(`Set Playback Mode to ${newMode}`);
     }
-
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop();
     }
     Tone.Transport.cancel(0);
-    
     if (appServices.onPlaybackModeChange && !skipUIUpdate) {
         appServices.onPlaybackModeChange(newMode, oldMode);
     }
 }
-
 
 export function setSelectedTimelineClipInfoState(info) { selectedTimelineClipInfo = info || { clipId: null, trackId: null, originalLeft: 0, originalStartBeat: 0 }; }
 export function setCurrentUserThemePreferenceState(preference) {
     if (['light', 'dark', 'system'].includes(preference)) {
         currentUserThemePreference = preference;
         localStorage.setItem('snugos-theme', preference);
-        if (appServices.applyUserThemePreference) appServices.applyUserThemePreference();
+        appServices.applyUserThemePreference?.();
     }
 }
 
@@ -183,65 +181,97 @@ export function addTrackToStateInternal(type, initialData = null, isUserAction =
     try {
         const newTrackId = initialData?.id ?? trackIdCounter++;
         newTrack = new Track(newTrackId, type, initialData, appServices);
-        
         if (newTrackId >= trackIdCounter) {
             trackIdCounter = newTrackId + 1;
         }
         tracks.push(newTrack);
-
-        // --- Start of Corrected Code ---
-        // This ensures the track's internal audio instrument is created.
         if (typeof newTrack.initializeInstrument === 'function') {
             newTrack.initializeInstrument();
         }
-        // --- End of Corrected Code ---
-
-        if (isUserAction && appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Add Track: ${newTrack.name}`);
+        if (isUserAction) {
+            appServices.captureStateForUndo?.(`Add Track: ${newTrack.name}`);
         }
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.renderTimeline) appServices.renderTimeline();
-
+        appServices.updateMixerWindow?.();
+        appServices.renderTimeline?.();
         return newTrack;
-
     } catch (error) {
         console.error(`[State] CRITICAL ERROR while adding ${type} track:`, error);
-        if (appServices.showNotification) {
-            appServices.showNotification(`Failed to add ${type} track. See console for details.`, 5000);
-        }
+        appServices.showNotification?.(`Failed to add ${type} track. See console for details.`, 5000);
         return null; 
     }
 }
-
 
 export function removeTrackFromStateInternal(trackId, isUserAction = true) {
     const trackIndex = tracks.findIndex(t => t.id === trackId);
     if (trackIndex > -1) {
         const removedTrackData = tracks[trackIndex].serialize(); 
-        if (isUserAction && appServices.captureStateForUndo) {
-            appServices.captureStateForUndo(`Remove Track ${removedTrackData.name}`, {
+        if (isUserAction) {
+            appServices.captureStateForUndo?.(`Remove Track ${removedTrackData.name}`, {
                 undo: () => addTrackToStateInternal(removedTrackData.type, removedTrackData, false),
                 redo: () => removeTrackFromStateInternal(trackId, false)
             });
         }
         tracks[trackIndex].dispose();
         tracks.splice(trackIndex, 1);
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.renderTimeline) appServices.renderTimeline();
+        appServices.updateMixerWindow?.();
+        appServices.renderTimeline?.();
     }
 }
 
-export async function reconstructDAWInternal(projectData) {
-    setIsReconstructingDAWState(true);
-    try {
-        // Main reconstruction logic would go here
-    } catch (error) {
-        console.error("Error during DAW reconstruction:", error);
-    } finally {
-        setIsReconstructingDAWState(false);
+// --- Start of Corrected Code ---
+export function addMasterEffectToState(effectType) {
+    const effectDef = appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
+    if (!effectDef) {
+        console.error(`Master effect definition for "${effectType}" not found.`);
+        return;
+    }
+    const initialParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
+    const effectData = {
+        id: `master-effect-${Date.now()}`,
+        type: effectType,
+        params: JSON.parse(JSON.stringify(initialParams))
+    };
+    masterEffectsChainState.push(effectData);
+    appServices.addMasterEffectToAudio?.(effectData.id, effectData.type, effectData.params);
+    appServices.updateMasterEffectsUI?.();
+    appServices.captureStateForUndo?.(`Add Master Effect: ${effectDef.displayName}`);
+}
+// --- End of Corrected Code ---
+
+export function removeMasterEffectFromState(effectId) {
+    const index = masterEffectsChainState.findIndex(e => e.id === effectId);
+    if (index > -1) {
+        const effect = masterEffectsChainState.splice(index, 1)[0];
+        appServices.removeMasterEffectFromAudio?.(effect.id);
+        appServices.updateMasterEffectsUI?.();
+        appServices.captureStateForUndo?.(`Remove Master Effect: ${effect.type}`);
+    }
+}
+export function updateMasterEffectParamInState(effectId, paramPath, value) {
+    const effect = masterEffectsChainState.find(e => e.id === effectId);
+    if (effect) {
+        let paramState = effect.params;
+        const keys = paramPath.split('.');
+        const finalKey = keys.pop();
+        for (const key of keys) {
+           paramState[key] = paramState[key] || {};
+           paramState = paramState[key];
+        }
+        paramState[finalKey] = value;
+        appServices.updateMasterEffectParamInAudio?.(effectId, paramPath, value);
+    }
+}
+export function reorderMasterEffectInState(effectId, newIndex) {
+    const effectIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
+    if (effectIndex > -1 && newIndex >= 0 && newIndex < masterEffectsChainState.length) {
+        const [effectToMove] = masterEffectsChainState.splice(effectIndex, 1);
+        masterEffectsChainState.splice(newIndex, 0, effectToMove);
+        appServices.reorderMasterEffectInAudio?.();
+        appServices.updateMasterEffectsUI?.();
     }
 }
 
+export async function reconstructDAWInternal(projectData) {}
 export function captureStateForUndoInternal(actionDescription, customRedo) {}
 export function undoLastActionInternal() {}
 export function redoLastActionInternal() {}
@@ -250,9 +280,3 @@ export async function saveProjectInternal() {}
 export async function loadProjectInternal(file) {}
 export async function handleProjectFileLoadInternal(event) {}
 export async function exportToWavInternal() {}
-
-// Master Effects Chain State Management
-export function addMasterEffectToState(effectType) {}
-export function removeMasterEffectFromState(effectId) {}
-export function updateMasterEffectParamInState(effectId, paramPath, value) {}
-export function reorderMasterEffectInState(effectId, newIndex) {}
