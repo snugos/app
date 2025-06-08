@@ -16,8 +16,9 @@ export const PIANO_ROLL_OCTAVES = 4;
 export const PIANO_ROLL_START_MIDI_NOTE = 36; // C2
 export const PIANO_ROLL_END_MIDI_NOTE = PIANO_ROLL_START_MIDI_NOTE + (PIANO_ROLL_OCTAVES * 12) - 1;
 
-export const SAMPLER_PIANO_ROLL_START_NOTE = 36;
-export const NUM_SAMPLER_NOTES = 16;
+export const SAMPLER_PIANO_ROLL_START_NOTE = 36; // C2 is the first key for Pad 1 / Slice 1
+export const NUM_SAMPLER_NOTES = 16; // 16 pads/slices
+
 
 export const SYNTH_PITCHES = (() => {
     const pitches = [];
@@ -38,6 +39,7 @@ export const SYNTH_PITCHES = (() => {
     return pitches; 
 })();
 
+
 export const PIANO_ROLL_KEY_WIDTH = 60; 
 export const PIANO_ROLL_HEADER_HEIGHT = 25; 
 export const PIANO_ROLL_NOTE_HEIGHT = 20; 
@@ -51,20 +53,22 @@ export const PIANO_ROLL_NOTE_FILL_COLOR = 'skyblue';
 export const PIANO_ROLL_NOTE_STROKE_COLOR = 'blue';
 export const PIANO_ROLL_NOTE_SELECTED_STROKE_COLOR = 'gold';
 
+
+// --- FIX: Added the new piano library to the list ---
 export const soundLibraries = {
     "Drums": "assets/drums.zip",
     "Instruments": "assets/instruments.zip",
     "Instruments 2": "assets/instruments2.zip",
-    "Instruments 3": "assets/instruments3.zip"
+    "Instruments 3": "assets/instruments3.zip",
+    "Srna's Piano": "assets/srna's_piano.zip"
 };
 
 export const defaultDesktopBg = '#1e1e1e';
 export const defaultVelocity = 0.7;
 export const numSlices = 16;
 export const numDrumSamplerPads = 16;
-export const DRUM_MIDI_START_NOTE = 36;
+export const DRUM_MIDI_START_NOTE = 36; 
 
-// --- FIX: Made octave shift a mutable variable and added modifier functions ---
 export let COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = 0; 
 export function incrementOctaveShift() { 
     COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.min(3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT + 1);
@@ -72,7 +76,6 @@ export function incrementOctaveShift() {
 export function decrementOctaveShift() { 
     COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.max(-3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT - 1);
 }
-// --- END FIX ---
 
 export const computerKeySynthMap = {
     // Bottom row (white keys on piano often)
