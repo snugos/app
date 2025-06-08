@@ -20,6 +20,9 @@ import {
     getUndoStackState, 
     getRedoStackState  
 } from './state.js';
+// --- FIX: Import octave shift functions ---
+import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
+
 
 let localAppServices = {};
 const currentlyPressedKeys = new Set();
@@ -48,7 +51,6 @@ export function initializePrimaryEventListeners() {
         }
     });
 
-    // --- FIX: Make this handler async to wait for track initialization ---
     const addTrackHandler = async (type) => {
         await localAppServices.initAudioContextAndMasterMeter?.(true);
         const newTrack = await localAppServices.addTrack(type);
@@ -251,6 +253,12 @@ export function attachGlobalControlEvents(uiCache) {
                 handleStop();
             } else if (key === 'r' && !e.ctrlKey && !e.metaKey) {
                 handleRecord();
+            } else if (key === 'z') { // --- FIX: Octave Down ---
+                decrementOctaveShift();
+                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+            } else if (key === 'x') { // --- FIX: Octave Up ---
+                incrementOctaveShift();
+                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             }
         }
     });
@@ -310,7 +318,8 @@ function toggleFullScreen() {
 
 export function setupMIDI() {
     if (navigator.requestMIDIAccess) {
-        navigator.requestMIDIAccess({ sysex: false })
+        // --- FIX: Requesting sysex access often helps detect more devices ---
+        navigator.requestMIDIAccess({ sysex: true })
             .then(onMIDISuccess)
             .catch(onMIDIFailure);
     } else {
