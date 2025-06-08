@@ -24,7 +24,6 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
-        // --- Audio Nodes ---
         this.input = new Tone.Gain();
         this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
@@ -38,7 +37,6 @@ export class Track {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
 
-        // --- Type-Specific Properties ---
         this.synthEngineType = null;
         this.synthParams = {};
         this.samplerAudioData = {};
@@ -180,17 +178,21 @@ export class Track {
     setDrumSamplerPadVolume(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].volume = value; }
     setDrumSamplerPadPitch(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].pitchShift = value; }
 
+    // --- Start of Corrected Code ---
     addEffect(effectType, params, isInitialLoad = false) {
+        console.log(`[EFFECTS_DEBUG_2] track.addEffect called with type: ${effectType}`);
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
         if (!effectDef) {
-            console.error(`Effect definition for "${effectType}" not found.`);
+            console.error(`[EFFECTS_DEBUG_3] FAILED: Effect definition for "${effectType}" not found.`);
             return;
         }
+        console.log(`[EFFECTS_DEBUG_3] Found effect definition.`);
 
         const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
         const toneNode = createEffectInstance(effectType, initialParams);
 
         if (toneNode) {
+            console.log(`[EFFECTS_DEBUG_4] Successfully created Tone.js node.`);
             const effectData = { 
                 id: `effect-${this.id}-${Date.now()}`, 
                 type: effectType, 
@@ -199,12 +201,15 @@ export class Track {
             };
             this.activeEffects.push(effectData);
             this.rebuildEffectChain();
-            if (!isInitialLoad) {
-                this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
-                this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.name}`);
+            console.log(`[EFFECTS_DEBUG_5] Effect added to state. activeEffects length is now: ${this.activeEffects.length}. Triggering UI update.`);
+            if (!isInitialLoad && this.appServices.updateTrackUI) {
+                this.appServices.updateTrackUI(this.id, 'effectsChanged');
             }
+        } else {
+            console.error(`[EFFECTS_DEBUG_4] FAILED: createEffectInstance returned null.`);
         }
     }
+    // --- End of Corrected Code ---
 
     removeEffect(effectId) {
         const index = this.activeEffects.findIndex(e => e.id === effectId);
@@ -240,7 +245,6 @@ export class Track {
                     target[finalKey] = value;
                 }
                 
-                // Update the state object as well
                 let paramState = effect.params;
                  for (const key of keys) {
                     paramState[key] = paramState[key] || {};
