@@ -276,12 +276,11 @@ export class Track {
                     notesInStep.push(Constants.SYNTH_PITCHES[j]);
                 }
             }
-            events.push(notesIn_step);
+            // --- THIS IS THE FIX ---
+            events.push(notesInStep);
         }
 
         this.toneSequence = new Tone.Sequence((time, notes) => {
-            // --- THIS IS THE FIX ---
-            // Check if 'notes' is a valid array with content before trying to use it.
             if (notes && notes.length > 0) {
                 this.instrument.triggerAttackRelease(notes, "16n", time);
             }
