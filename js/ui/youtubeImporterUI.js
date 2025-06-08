@@ -20,10 +20,6 @@ export function openYouTubeImporterWindow(savedState = null) {
             <p class="text-xs mb-2 text-black dark:text-white">
                 Enter a YouTube URL to download its audio. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-black dark:text-white hover:underline">Cobalt</a> API.
             </p>
-
-            <div class="p-2 mb-4 text-xs bg-white border border-black rounded-md text-black dark:bg-black dark:text-white dark:border-white" role="alert">
-                <b>Note:</b> This feature requires a public CORS proxy and may be unreliable. The best long-term solution is a dedicated server component.
-            </div>
             
             <div class="flex items-center space-x-2">
                 <input type="text" id="youtubeUrlInput" placeholder="Enter a YouTube video URL..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
@@ -40,7 +36,7 @@ export function openYouTubeImporterWindow(savedState = null) {
         windowId, 
         'URL Importer', 
         contentHTML, 
-        { width: 450, height: 280, minWidth: 400, minHeight: 280 }
+        { width: 450, height: 240, minWidth: 400, minHeight: 240 }
     );
 
     if (importerWindow?.element) {
@@ -69,28 +65,17 @@ function attachImporterEventListeners(windowElement) {
         importBtn.disabled = true;
         urlInput.disabled = true;
         importBtn.textContent = 'Working...';
-        setStatus('Requesting download link via proxy...');
+        setStatus('Requesting download link from server...');
 
         try {
-            // --- THIS IS THE FIX: Using a different public proxy ---
-            const proxyUrl = 'https://corsproxy.io/?';
-            const apiUrl = 'https://api.cobalt.tools/api/json';
-
-            const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
+            // --- THIS IS THE FIX: Call our own Netlify Function ---
+            const response = await fetch('/.netlify/functions/cobalt', {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    url: youtubeUrl,
-                    aFormat: "mp3",
-                    isAudioOnly: true
-                })
+                body: JSON.stringify({ url: youtubeUrl })
             });
 
             if (!response.ok) {
-                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+                throw new Error(`Request failed: ${response.status} ${response.statusText}`);
             }
 
             const result = await response.json();
