@@ -16,8 +16,8 @@ import {
     setHighestZState, getHighestZState, incrementHighestZState,
     addWindowToStoreState, removeWindowFromStoreState,
     getArmedTrackIdState, setArmedTrackIdState, getSoloedTrackIdState, setSoloedTrackIdState,
-    getMasterEffectsState, removeMasterEffectFromState,
-    addMasterEffectToState, updateMasterEffectParamInState, reorderMasterEffectInState,
+    getMasterEffectsState, addMasterEffectToState, removeMasterEffectFromState,
+    updateMasterEffectParamInState, reorderMasterEffectInState,
     getMasterGainValueState, setMasterGainValueState,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
     gatherProjectDataInternal, reconstructDAWInternal,
@@ -88,6 +88,18 @@ function applyUserTheme() {
     }
 }
 
+// --- Start of Corrected Code ---
+function handleMasterEffectsUIUpdate() {
+    const rackWindow = getWindowByIdState('masterEffectsRack');
+    if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
+        const listDiv = rackWindow.element.querySelector('#effectsList-master');
+        const controlsContainer = rackWindow.element.querySelector('#effectControlsContainer-master');
+        const masterEffects = getMasterEffectsState();
+        renderEffectsList(masterEffects, 'master', listDiv, controlsContainer);
+    }
+}
+// --- End of Corrected Code ---
+
 function handleTrackUIUpdate(trackId, reason, detail) {
     const track = getTrackByIdState(trackId);
     if (!track) return;
@@ -133,17 +145,14 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         }
     }
 
-    // --- Start of Corrected Code ---
     if (reason === 'effectsChanged') {
-        // This new logic directly finds the effects list on the page, bypassing the window lookup.
-        const listDiv = document.querySelector(`#effectsList-${trackId}`);
-        if (listDiv) {
-            const rackWindow = listDiv.closest('.window');
-            const controlsContainer = rackWindow?.querySelector(`#effectControlsContainer-${trackId}`);
+        const rackWindow = getWindowByIdState(`effectsRack-${trackId}`);
+        if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
+            const listDiv = rackWindow.element.querySelector(`#effectsList-${trackId}`);
+            const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-${trackId}`);
             renderEffectsList(track, 'track', listDiv, controlsContainer);
         }
     }
-    // --- End of Corrected Code ---
     
     if (reason === 'nameChanged' || reason === 'clipsChanged') {
         renderTimeline();
@@ -160,6 +169,7 @@ async function initializeSnugOS() {
         updateTrackUI: handleTrackUIUpdate,
         showCustomModal,
         applyUserThemePreference: applyUserTheme,
+        updateMasterEffectsUI: handleMasterEffectsUIUpdate,
 
         // State Access & Actions
         getTracks: getTracksState,
