@@ -284,6 +284,53 @@ export class Track {
         this.recreateToneSequence();
     }
 
+    moveSelectedNotes(sequenceId, selectedNotes, pitchOffset = 0, timeOffset = 0) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        if (!sequence || !selectedNotes || selectedNotes.size === 0) return null;
+    
+        const notesToMove = [];
+        const newPositions = [];
+        const newSelectedNoteIds = new Set();
+    
+        // First, validate that all moves are possible before making any changes
+        for (const noteId of selectedNotes) {
+            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
+            
+            const newPitchIndex = pitchIndex + pitchOffset;
+            const newTimeStep = timeStep + timeOffset;
+    
+            // Boundary checks
+            if (
+                newPitchIndex < 0 || newPitchIndex >= sequence.data.length ||
+                newTimeStep < 0 || newTimeStep >= sequence.length
+            ) {
+                this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000);
+                return null; // Abort the entire move operation
+            }
+            
+            const noteData = sequence.data[pitchIndex][timeStep];
+            notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, data: noteData });
+            newPositions.push({ newPitch: newPitchIndex, newTime: newTimeStep, data: noteData });
+        }
+        
+        // If validation passed, perform the move operation
+        // First, clear all the old note positions
+        notesToMove.forEach(note => {
+            sequence.data[note.oldPitch][note.oldTime] = null;
+        });
+    
+        // Then, place all notes in their new positions
+        newPositions.forEach(note => {
+            sequence.data[note.newPitch][note.newTime] = note.data;
+            newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`);
+        });
+    
+        this.appServices.captureStateForUndo?.('Move notes');
+        this.recreateToneSequence();
+    
+        return newSelectedNoteIds;
+    }
+
     updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex]?.[timeStep]) {
@@ -292,9 +339,6 @@ export class Track {
             if (pianoRollWindow) {
                 const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${this.id}`);
                 const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${this.id}`);
-                // This function is defined in pianorollui.js but we are calling it from here
-                // We need a way to reference it, perhaps through appServices
-                // For now, this will rely on the UI module to handle its own redraws
             }
         }
     }
