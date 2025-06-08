@@ -2,20 +2,11 @@
 
 let localAppServices = {};
 
-/**
- * Initializes the YouTube Importer UI module with a reference to app services.
- * @param {object} appServicesFromMain - A reference to the main appServices object.
- */
 export function initializeYouTubeImporterUI(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
     console.log("[YouTubeImporterUI] Initialized.");
 }
 
-/**
- * Opens a window for importing audio from a YouTube URL.
- * @param {object} savedState - Optional saved state for restoring window position/size.
- * @returns {SnugWindow|null} The created window instance or null if it fails.
- */
 export function openYouTubeImporterWindow(savedState = null) {
     const windowId = 'youtubeImporter';
     if (localAppServices.getWindowById && localAppServices.getWindowById(windowId)) {
@@ -23,7 +14,6 @@ export function openYouTubeImporterWindow(savedState = null) {
         return;
     }
 
-    // --- Start of Corrected Code ---
     const contentHTML = `
         <div class="p-4 flex flex-col h-full bg-white dark:bg-black text-black dark:text-white">
             <h3 class="text-lg font-bold mb-2">Import Audio from URL</h3>
@@ -32,7 +22,7 @@ export function openYouTubeImporterWindow(savedState = null) {
             </p>
 
             <div class="p-2 mb-4 text-xs bg-white border border-black rounded-md text-black dark:bg-black dark:text-white dark:border-white" role="alert">
-                <b>Note:</b> This is an experimental feature. It may be slow, rate-limited, or fail due to browser security (CORS) policies. A server-side helper is required for this to work reliably.
+                <b>Note:</b> This is an experimental feature. Public APIs can be unreliable or change without notice.
             </div>
             
             <div class="flex items-center space-x-2">
@@ -45,13 +35,12 @@ export function openYouTubeImporterWindow(savedState = null) {
             <div id="youtubeImportStatus" class="mt-4 text-sm h-12"></div>
         </div>
     `;
-    // --- End of Corrected Code ---
 
     const importerWindow = localAppServices.createWindow(
         windowId, 
         'URL Importer', 
         contentHTML, 
-        { width: 450, height: 250, minWidth: 400, minHeight: 250 }
+        { width: 450, height: 280, minWidth: 400, minHeight: 280 }
     );
 
     if (importerWindow?.element) {
@@ -60,10 +49,6 @@ export function openYouTubeImporterWindow(savedState = null) {
     return importerWindow;
 }
 
-/**
- * Attaches event listeners to the controls within the YouTube Importer window.
- * @param {HTMLElement} windowElement - The root element of the importer window.
- */
 function attachImporterEventListeners(windowElement) {
     const urlInput = windowElement.querySelector('#youtubeUrlInput');
     const importBtn = windowElement.querySelector('#youtubeImportBtn');
@@ -71,8 +56,7 @@ function attachImporterEventListeners(windowElement) {
 
     const setStatus = (message, isError = false) => {
         statusDiv.textContent = message;
-        // In a pure B&W theme, color cues are less effective. We can rely on text.
-        statusDiv.className = `mt-4 text-sm h-12 ${isError ? 'text-black dark:text-white font-bold' : 'text-black dark:text-white'}`;
+        statusDiv.className = `mt-4 text-sm h-12 ${isError ? 'text-red-500 font-bold' : 'text-black dark:text-white'}`;
     };
 
     const handleImport = async () => {
@@ -88,7 +72,8 @@ function attachImporterEventListeners(windowElement) {
         setStatus('Requesting download link from Cobalt API...');
 
         try {
-            const response = await fetch('https://co.wuk.sh/api/json', {
+            // --- THIS IS THE FIX ---
+            const response = await fetch('https://api.cobalt.tools/api/json', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -111,7 +96,10 @@ function attachImporterEventListeners(windowElement) {
                 setStatus('Download link received. Fetching audio...');
                 const audioUrl = result.url;
                 
-                const audioResponse = await fetch(audioUrl);
+                // Using a proxy to bypass potential CORS issues
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+                const audioResponse = await fetch(proxyUrl + audioUrl);
+                
                 if (!audioResponse.ok) {
                     throw new Error(`Failed to download audio file: ${audioResponse.status} ${audioResponse.statusText}`);
                 }
@@ -147,7 +135,7 @@ function attachImporterEventListeners(windowElement) {
             console.error('[YouTubeImporter] Import failed:', error);
             let userMessage = `Error: ${error.message}`;
             if (error instanceof TypeError) { 
-                userMessage = "Error: Could not fetch audio due to browser security (CORS). This feature requires a server-side proxy to work reliably.";
+                userMessage = "A network error occurred. This may be due to browser security (CORS).";
             }
             setStatus(userMessage, true);
         } finally {
