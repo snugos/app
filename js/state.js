@@ -71,22 +71,19 @@ export async function addFileToSoundLibraryInternal(fileName, audioBlob) {
     }
 
     try {
-        // --- FIX: Use a predictable key for IndexedDB ---
         const dbKey = `imports/${fileName}`;
         await appServices.dbStoreAudio(dbKey, audioBlob);
 
         if (!soundLibraryFileTreesGlobal['Imports']) {
             soundLibraryFileTreesGlobal['Imports'] = {};
         }
-
-        // --- FIX: Store simple data, not a complex object with functions ---
+        
         soundLibraryFileTreesGlobal['Imports'][fileName] = { 
             type: 'file', 
-            fullPath: dbKey, // The key is now the full path for retrieval
+            fullPath: dbKey, 
             fileName: fileName 
         };
         
-        // Refresh the sound browser if it's open
         appServices.renderSoundBrowser?.();
 
     } catch (error) {
@@ -210,7 +207,8 @@ export function setCurrentUserThemePreferenceState(preference) {
 }
 
 // --- Core State Actions ---
-export function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
+// --- FIX: Make this function async to handle instrument initialization ---
+export async function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
     let newTrack = null;
     try {
         const newTrackId = initialData?.id ?? trackIdCounter++;
@@ -221,7 +219,8 @@ export function addTrackToStateInternal(type, initialData = null, isUserAction =
         tracks.push(newTrack);
         
         if (typeof newTrack.initializeInstrument === 'function') {
-            newTrack.initializeInstrument();
+            // --- FIX: Await the instrument initialization to ensure audio path is complete ---
+            await newTrack.initializeInstrument();
         }
 
         if (isUserAction) {
