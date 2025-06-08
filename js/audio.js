@@ -52,7 +52,7 @@ function setupMasterBus() {
     masterGainNodeActual?.dispose();
     masterMeterNode?.dispose();
 
-    masterEffectsBusInputNode = new Tone.Gain().toDestination(); // Default connection
+    masterEffectsBusInputNode = new Tone.Gain();
     masterGainNodeActual = new Tone.Gain(localAppServices.getMasterGainValue?.() ?? 1);
     masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
     
@@ -66,8 +66,13 @@ export function rebuildMasterEffectChain() {
         return;
     }
 
+    // --- Start of Corrected Code ---
+    // Disconnect everything to ensure a clean slate
     masterEffectsBusInputNode.disconnect();
-    let lastNode = masterEffectsBusInputNode;
+    activeMasterEffectNodes.forEach(node => node.disconnect());
+    masterGainNodeActual.disconnect();
+
+    let lastNodeInChain = masterEffectsBusInputNode;
     
     const masterEffects = localAppServices.getMasterEffects?.() || [];
     masterEffects.forEach(effectState => {
@@ -76,13 +81,19 @@ export function rebuildMasterEffectChain() {
             effectNode = createEffectInstance(effectState.type, effectState.params);
             activeMasterEffectNodes.set(effectState.id, effectNode);
         }
-        lastNode.connect(effectNode);
-        lastNode = effectNode;
+        // Connect the last node to the current effect, then update the last node
+        lastNodeInChain.connect(effectNode);
+        lastNodeInChain = effectNode;
     });
 
-    lastNode.connect(masterGainNodeActual);
+    // Connect the end of the effects chain to the master gain
+    lastNodeInChain.connect(masterGainNodeActual);
+    
+    // Connect the master gain to the final destination and the meter
     masterGainNodeActual.fan(Tone.Destination, masterMeterNode);
+    // --- End of Corrected Code ---
 }
+
 
 export function addMasterEffectToAudio(effectId, effectType, params) {
     const toneNode = createEffectInstance(effectType, params);
@@ -101,11 +112,12 @@ export function removeMasterEffectFromAudio(effectId) {
 export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
     const effectNode = activeMasterEffectNodes.get(effectId);
     if (!effectNode) return;
-    const param = effectNode.get(paramPath);
-    if (param && 'value' in param) {
-        param.value = value;
-    } else {
+
+    // Use Tone.js's 'set' method for robust parameter setting
+    try {
         effectNode.set({ [paramPath]: value });
+    } catch (e) {
+        console.warn(`Could not set param ${paramPath} on effect`, e);
     }
 }
 
@@ -115,15 +127,18 @@ export function reorderMasterEffectInAudio() {
 
 export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) {
     if (masterMeterNode && !masterMeterNode.disposed) {
-        const masterLevel = Tone.dbToGain(masterMeterNode.getValue());
+        const masterLevelDb = masterMeterNode.getValue();
+        const masterLevelGain = isFinite(masterLevelDb) ? Tone.dbToGain(masterLevelDb) : 0;
         if (globalMasterMeterBar) {
-            globalMasterMeterBar.style.width = `${Math.min(100, masterLevel * 100)}%`;
+            globalMasterMeterBar.style.width = `${Math.min(100, masterLevelGain * 100)}%`;
         }
     }
     tracks.forEach(track => {
         if (track.trackMeter && !track.trackMeter.disposed) {
-            const trackLevel = Tone.dbToGain(track.trackMeter.getValue());
-            localAppServices.updateTrackUI?.(track.id, 'meterUpdate', trackLevel);
+            const trackLevelDb = track.trackMeter.getValue();
+            const trackLevelGain = isFinite(trackLevelDb) ? Tone.dbToGain(trackLevelDb) : 0;
+            // Assuming you'll want to update track meters in the UI eventually
+            // localAppServices.updateTrackUI?.(track.id, 'meterUpdate', trackLevelGain);
         }
     });
 }
