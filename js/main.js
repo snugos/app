@@ -58,7 +58,6 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
-// --- REVISED FUNCTION TO OPEN AND ARRANGE DEFAULT WINDOWS ---
 function openDefaultLayout() {
     // Defer execution to ensure the DOM has been painted and has its final dimensions.
     setTimeout(() => {
@@ -76,8 +75,6 @@ function openDefaultLayout() {
         // Define Y positions
         const timelineY = margin;
         const bottomRowY = timelineY + timelineHeight + gap;
-
-        // --- FIX: This is the corrected height calculation for the bottom row ---
         const bottomRowHeight = rect.height - bottomRowY - margin;
 
         // 1. Timeline
@@ -108,13 +105,14 @@ function openDefaultLayout() {
 
         // 4. Mixer (fills remaining space on the left)
         const mixerWidth = masterEffectsX - margin - gap;
+        // --- FIX: Set a fixed, shorter height for the mixer window ---
         appServices.openMixerWindow({
             x: margin,
             y: bottomRowY,
             width: mixerWidth,
-            height: bottomRowHeight
+            height: 160 // A shorter height that fits the content
         });
-    }, 100); // Increased timeout slightly for more reliability on slower systems
+    }, 100); 
 }
 
 
@@ -273,7 +271,6 @@ async function initializeSnugOS() {
     }
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyUserTheme);
     
-    // --- CALL THE NEW LAYOUT FUNCTION ON STARTUP ---
     openDefaultLayout();
     
     console.log("SnugOS Initialized Successfully.");
