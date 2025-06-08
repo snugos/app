@@ -16,7 +16,6 @@ import {
     addWindowToStoreState, removeWindowFromStoreState,
     getArmedTrackIdState, setArmedTrackIdState, getSoloedTrackIdState, setSoloedTrackIdState,
     getMasterEffectsState, addMasterEffectToState, removeMasterEffectFromState,
-
     updateMasterEffectParamInState, reorderMasterEffectInState,
     getMasterGainValueState, setMasterGainValueState,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -59,57 +58,62 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
-// --- NEW FUNCTION TO OPEN AND ARRANGE DEFAULT WINDOWS ---
+// --- CORRECTED FUNCTION TO OPEN AND ARRANGE DEFAULT WINDOWS ---
 function openDefaultLayout() {
-    const desktopEl = document.getElementById('desktop');
-    if (!desktopEl) return;
+    // Defer execution to ensure the DOM has been painted and has its final dimensions.
+    setTimeout(() => {
+        const desktopEl = document.getElementById('desktop');
+        if (!desktopEl) return;
 
-    const rect = desktopEl.getBoundingClientRect();
-    const margin = 10;
-    const gap = 10;
-    const topBarHeight = 40;
+        const rect = desktopEl.getBoundingClientRect();
+        const margin = 10;
+        const gap = 10;
 
-    // Define dimensions based on the screenshot
-    const timelineHeight = 220;
-    const sidePanelWidth = 350;
-    const bottomRowY = topBarHeight + timelineHeight + gap;
-    const bottomRowHeight = rect.height - timelineHeight - (gap * 2);
+        // Define dimensions based on the screenshot
+        const timelineHeight = 220;
+        const sidePanelWidth = 350;
 
-    // Timeline
-    appServices.openTimelineWindow({
-        x: margin,
-        y: topBarHeight,
-        width: rect.width - (margin * 2),
-        height: timelineHeight
-    });
-    
-    // Sound Browser (Right)
-    const soundBrowserX = rect.width - sidePanelWidth - margin;
-    appServices.openSoundBrowserWindow({
-        x: soundBrowserX,
-        y: bottomRowY,
-        width: sidePanelWidth,
-        height: bottomRowHeight
-    });
+        const timelineY = margin;
+        const bottomRowY = timelineY + timelineHeight + gap;
+        const bottomRowHeight = rect.height - timelineHeight - gap - (margin * 2);
 
-    // Master Effects Rack (Middle)
-    const masterEffectsX = soundBrowserX - sidePanelWidth - gap;
-    appServices.openMasterEffectsRackWindow({
-        x: masterEffectsX,
-        y: bottomRowY,
-        width: sidePanelWidth,
-        height: bottomRowHeight
-    });
+        // 1. Timeline
+        appServices.openTimelineWindow({
+            x: margin,
+            y: timelineY,
+            width: rect.width - (margin * 2),
+            height: timelineHeight
+        });
+        
+        // 2. Sound Browser (Right)
+        const soundBrowserX = rect.width - sidePanelWidth - margin;
+        appServices.openSoundBrowserWindow({
+            x: soundBrowserX,
+            y: bottomRowY,
+            width: sidePanelWidth,
+            height: bottomRowHeight
+        });
 
-    // Mixer (Left)
-    const mixerWidth = masterEffectsX - margin - gap;
-    appServices.openMixerWindow({
-        x: margin,
-        y: bottomRowY,
-        width: mixerWidth,
-        height: bottomRowHeight
-    });
+        // 3. Master Effects Rack (to the left of Sound Browser)
+        const masterEffectsX = soundBrowserX - sidePanelWidth - gap;
+        appServices.openMasterEffectsRackWindow({
+            x: masterEffectsX,
+            y: bottomRowY,
+            width: sidePanelWidth,
+            height: bottomRowHeight
+        });
+
+        // 4. Mixer (fills remaining space on the left)
+        const mixerWidth = masterEffectsX - margin - gap;
+        appServices.openMixerWindow({
+            x: margin,
+            y: bottomRowY,
+            width: mixerWidth,
+            height: bottomRowHeight
+        });
+    }, 0); // Using a 0ms timeout defers this until after the initial render.
 }
+
 
 function applyUserTheme() {
     const preference = getCurrentUserThemePreferenceState();
