@@ -16,6 +16,7 @@ import {
     addWindowToStoreState, removeWindowFromStoreState,
     getArmedTrackIdState, setArmedTrackIdState, getSoloedTrackIdState, setSoloedTrackIdState,
     getMasterEffectsState, addMasterEffectToState, removeMasterEffectFromState,
+
     updateMasterEffectParamInState, reorderMasterEffectInState,
     getMasterGainValueState, setMasterGainValueState,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -57,6 +58,58 @@ import {
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
 
 let appServices = {};
+
+// --- NEW FUNCTION TO OPEN AND ARRANGE DEFAULT WINDOWS ---
+function openDefaultLayout() {
+    const desktopEl = document.getElementById('desktop');
+    if (!desktopEl) return;
+
+    const rect = desktopEl.getBoundingClientRect();
+    const margin = 10;
+    const gap = 10;
+    const topBarHeight = 40;
+
+    // Define dimensions based on the screenshot
+    const timelineHeight = 220;
+    const sidePanelWidth = 350;
+    const bottomRowY = topBarHeight + timelineHeight + gap;
+    const bottomRowHeight = rect.height - timelineHeight - (gap * 2);
+
+    // Timeline
+    appServices.openTimelineWindow({
+        x: margin,
+        y: topBarHeight,
+        width: rect.width - (margin * 2),
+        height: timelineHeight
+    });
+    
+    // Sound Browser (Right)
+    const soundBrowserX = rect.width - sidePanelWidth - margin;
+    appServices.openSoundBrowserWindow({
+        x: soundBrowserX,
+        y: bottomRowY,
+        width: sidePanelWidth,
+        height: bottomRowHeight
+    });
+
+    // Master Effects Rack (Middle)
+    const masterEffectsX = soundBrowserX - sidePanelWidth - gap;
+    appServices.openMasterEffectsRackWindow({
+        x: masterEffectsX,
+        y: bottomRowY,
+        width: sidePanelWidth,
+        height: bottomRowHeight
+    });
+
+    // Mixer (Left)
+    const mixerWidth = masterEffectsX - margin - gap;
+    appServices.openMixerWindow({
+        x: margin,
+        y: bottomRowY,
+        width: mixerWidth,
+        height: bottomRowHeight
+    });
+}
 
 function applyUserTheme() {
     const preference = getCurrentUserThemePreferenceState();
@@ -212,6 +265,9 @@ async function initializeSnugOS() {
         applyUserTheme();
     }
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyUserTheme);
+    
+    // --- CALL THE NEW LAYOUT FUNCTION ON STARTUP ---
+    openDefaultLayout();
     
     console.log("SnugOS Initialized Successfully.");
     
