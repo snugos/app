@@ -5,7 +5,6 @@ import * as Constants from './constants.js';
 import { showNotification as utilShowNotification, createContextMenu, showCustomModal } from './utils.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    selectMIDIInput,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
@@ -48,7 +47,10 @@ import {
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
-    renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead, renderSoundBrowserDirectory,
+    renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
+    // --- Start of Corrected Code ---
+    renderDirectoryView,
+    // --- End of Corrected Code ---
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui.js';
@@ -136,9 +138,6 @@ async function initializeSnugOS() {
     
     function drawLoop() {
         if (typeof Tone !== 'undefined') {
-            // --- SnugOS DIAGNOSTIC ---
-            console.log(`[DIAGNOSTIC LOOP] Transport State: ${Tone.Transport.state}, Master Gain: ${appServices.getMasterGainValue()?.toFixed(2)}`);
-
             const transportTime = Tone.Transport.seconds;
             updatePlayheadPosition(transportTime);
             updatePianoRollPlayhead(transportTime);
@@ -194,7 +193,11 @@ async function initializeSnugOS() {
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
         openTimelineWindow, renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
-        openSoundBrowserWindow, renderSoundBrowserDirectory, openPianoRollWindow, openYouTubeImporterWindow,
+        openSoundBrowserWindow, 
+        // --- Start of Corrected Code ---
+        renderDirectoryView,
+        // --- End of Corrected Code ---
+        openPianoRollWindow, openYouTubeImporterWindow,
         drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
 
