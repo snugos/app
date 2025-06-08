@@ -16,7 +16,9 @@ export function openMixerWindow(savedState = null) {
 
     const contentContainer = document.createElement('div');
     contentContainer.id = 'mixerContentContainer';
-    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-gray-100 dark:bg-slate-800';
+    // --- Start of Corrected Code ---
+    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-white dark:bg-black';
+    // --- End of Corrected Code ---
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const mixerOptions = { 
@@ -38,33 +40,33 @@ export function openMixerWindow(savedState = null) {
 export function updateMixerWindow() {
     const mixerWindow = localAppServices.getWindowById('mixer');
     if (!mixerWindow?.element || mixerWindow.isMinimized) return;
-    const container = mixerWindow.element.querySelector('#mixerContentContainer');
-    if (container) {
-        renderMixer(container);
-    }
-}
 
-function renderMixer(container) {
+    const container = mixerWindow.element.querySelector('#mixerContentContainer');
+    if (!container) return;
+
     const tracks = localAppServices.getTracks();
+    const masterGainValue = localAppServices.getMasterGainValue();
     container.innerHTML = '';
-    
+
     const masterTrackDiv = document.createElement('div');
-    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
-    masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="Master">Master</div>
-        <div id="masterVolumeKnob-mixer-placeholder" class="h-16 mx-auto mb-1"></div>
-        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden mt-1">
-            <div id="mixerMasterMeterBar" class="h-full bg-blue-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
+    // --- Start of Corrected Code ---
+    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border-2 border-black dark:border-white bg-white dark:bg-black shadow w-28 mr-2 text-xs';
+    masterTrackDiv.innerHTML = `<div class="track-name font-bold truncate mb-1 text-black dark:text-white" title="Master">MASTER</div>
+        <div id="volumeKnob-mixer-master-placeholder" class="h-16 mx-auto mb-1"></div>
+        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
+            <div id="mixerMasterMeterBar" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
         </div>`;
+    // --- End of Corrected Code ---
     container.appendChild(masterTrackDiv);
 
-    const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#masterVolumeKnob-mixer-placeholder');
+    const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
     if (masterVolKnobPlaceholder) {
-        const masterGain = localAppServices.getMasterGainValue();
         const masterVolKnob = localAppServices.createKnob({
-            label: 'Master Vol', min: 0, max: 1.2, step: 0.01, initialValue: masterGain, decimals: 2,
+            label: 'Master Vol', min: 0, max: 1.2, step: 0.01,
+            initialValue: masterGainValue,
             onValueChange: (val) => {
-                localAppServices.setActualMasterVolume(val);
-                localAppServices.setMasterGainValue(val);
+                if (localAppServices.setActualMasterVolume) localAppServices.setActualMasterVolume(val);
+                if (localAppServices.setMasterGainValue) localAppServices.setMasterGainValue(val);
             }
         }, localAppServices);
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
@@ -72,19 +74,21 @@ function renderMixer(container) {
 
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
-        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div>
+        // --- Start of Corrected Code ---
+        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
+        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
-            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5">
-                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-green-500 transition-all duration-50 ease-linear" style="width: 0%;"></div>
+            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
+                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>`;
+        // --- End of Corrected Code ---
         container.appendChild(trackDiv);
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
             const volKnob = localAppServices.createKnob({
                 label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01,
-                initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track,
+                initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
             }, localAppServices);
             volKnobPlaceholder.appendChild(volKnob.element);
