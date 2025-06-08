@@ -28,7 +28,8 @@ import {
     setSelectedTimelineClipInfoState,
     setPlaybackModeState, getPlaybackModeState,
     setIsRecordingState, isTrackRecordingState, setRecordingTrackIdState, getRecordingTrackIdState, setRecordingStartTimeState,
-    getCurrentUserThemePreferenceState, setCurrentUserThemePreferenceState
+    getCurrentUserThemePreferenceState, setCurrentUserThemePreferenceState,
+    addFileToSoundLibraryInternal
 } from './state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
@@ -49,6 +50,7 @@ import {
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
     renderDirectoryView,
+    renderSoundBrowser,
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui.js';
@@ -170,6 +172,7 @@ async function initializeSnugOS() {
         initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
         addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio,
         reorderMasterEffectInAudio, setActualMasterVolume, startAudioRecording, stopAudioRecording,
+        addFileToSoundLibrary: addFileToSoundLibraryInternal,
         fetchSoundLibrary, getLoadedZipFiles: getLoadedZipFilesState, setLoadedZipFiles: setLoadedZipFilesState,
         getSoundLibraryFileTrees: getSoundLibraryFileTreesState, setSoundLibraryFileTrees: setSoundLibraryFileTreesState,
         setCurrentLibraryName: setCurrentLibraryNameState, getCurrentLibraryName: getCurrentLibraryNameState,
@@ -180,7 +183,7 @@ async function initializeSnugOS() {
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
         openTimelineWindow, renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
-        openSoundBrowserWindow, renderDirectoryView, openPianoRollWindow, openYouTubeImporterWindow,
+        openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView, openPianoRollWindow, openYouTubeImporterWindow,
         drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
