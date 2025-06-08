@@ -81,8 +81,17 @@ export class Track {
             this.instrument.dispose();
         }
 
-        if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
+        if (this.type === 'Synth') {
             this.instrument = new Tone.PolySynth(Tone.Synth);
+        // --- FIX: Add dedicated logic for InstrumentSampler to use Tone.Sampler ---
+        } else if (this.type === 'InstrumentSampler') {
+            const buffer = this.instrumentSamplerSettings.audioBuffer;
+            const urls = {};
+            if (buffer && buffer.loaded) {
+                const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
+                urls[rootNote] = buffer;
+            }
+            this.instrument = new Tone.Sampler({ urls }).connect(this.input);
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
             this.instrument = null; 
         } else {
@@ -294,13 +303,10 @@ export class Track {
             }, events, "16n").start(0);
 
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-            
-            // --- FIX: Check if the 'value' from the sequence is valid and normalize it to an array ---
             this.toneSequence = new Tone.Sequence((time, value) => {
                 if (!value) {
-                    return; // Skip empty steps
+                    return;
                 }
-                // If Tone.Sequence passes a single value, convert it to an array
                 const notes = Array.isArray(value) ? value : [value];
 
                 notes.forEach(note => {
