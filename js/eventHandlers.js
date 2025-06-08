@@ -17,6 +17,7 @@ import {
     setPlaybackModeState,
     getMidiAccessState,
     setActiveMIDIInputState,
+    getActiveMIDIInputState, // --- FIX: Added the missing import ---
     getUndoStackState, 
     getRedoStackState  
 } from './state.js';
@@ -342,8 +343,6 @@ function onMIDISuccess(midiAccess) {
     if (localAppServices.setMidiAccess) {
         localAppServices.setMidiAccess(midiAccess);
     }
-    
-    // --- FIX: Pass the midiAccess object directly to avoid race conditions ---
     populateMIDIInputSelector(midiAccess);
 
     midiAccess.onstatechange = () => {
@@ -356,7 +355,6 @@ function onMIDIFailure(error) {
     showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
 }
 
-// --- FIX: This function now accepts the midiAccess object as a parameter ---
 function populateMIDIInputSelector(midiAccess) {
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
     if (!midiSelect || !midiAccess) {
@@ -415,9 +413,9 @@ function onMIDIMessage(message) {
     if (armedTrack && armedTrack.instrument) {
         const frequency = Tone.Midi(noteNumber).toFrequency();
 
-        if (command === 144 && velocity > 0) { // Note On
+        if (command === 144 && velocity > 0) { 
             armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
-        } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
+        } else if (command === 128 || (command === 144 && velocity === 0)) { 
             armedTrack.instrument.triggerRelease(frequency, Tone.now());
         }
     }
