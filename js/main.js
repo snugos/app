@@ -48,9 +48,7 @@ import {
     openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
-    // --- Start of Corrected Code ---
     renderDirectoryView,
-    // --- End of Corrected Code ---
     drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui.js';
@@ -147,12 +145,9 @@ async function initializeSnugOS() {
     }
     
     appServices = {
-        // Core
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
         showNotification: utilShowNotification, createContextMenu, updateTrackUI: handleTrackUIUpdate,
         showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
-
-        // State Access & Actions
         getTracks: getTracksState, getTrackById: getTrackByIdState, addTrack: addTrackToStateInternal,
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
         addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
@@ -167,20 +162,14 @@ async function initializeSnugOS() {
         isTrackRecording: isTrackRecordingState, setRecordingTrackId: setRecordingTrackIdState,
         getRecordingTrackId: getRecordingTrackIdState, setRecordingStartTime: setRecordingStartTimeState,
         setCurrentUserThemePreference: setCurrentUserThemePreferenceState,
-
-        // Project, Undo/Redo, I/O
         getIsReconstructingDAW: getIsReconstructingDAWState, setIsReconstructingDAW: setIsReconstructingDAWState,
         captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
         redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal,
         reconstructDAW: reconstructDAWInternal, saveProject: saveProjectInternal, loadProject: loadProjectInternal,
         handleProjectFileLoad: handleProjectFileLoadInternal, exportToWav: exportToWavInternal,
-
-        // Audio Engine
         initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
         addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio,
         reorderMasterEffectInAudio, setActualMasterVolume, startAudioRecording, stopAudioRecording,
-
-        // Sample & Library Management
         fetchSoundLibrary, getLoadedZipFiles: getLoadedZipFilesState, setLoadedZipFiles: setLoadedZipFilesState,
         getSoundLibraryFileTrees: getSoundLibraryFileTreesState, setSoundLibraryFileTrees: setSoundLibraryFileTreesState,
         setCurrentLibraryName: setCurrentLibraryNameState, getCurrentLibraryName: getCurrentLibraryNameState,
@@ -188,25 +177,15 @@ async function initializeSnugOS() {
         setPreviewPlayer: setPreviewPlayerState, loadSampleFile, loadDrumSamplerPadFile,
         loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
         playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio, dbGetAudio, dbDeleteAudio,
-
-        // UI Modules
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
         openTimelineWindow, renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
-        openSoundBrowserWindow, 
-        // --- Start of Corrected Code ---
-        renderDirectoryView,
-        // --- End of Corrected Code ---
-        openPianoRollWindow, openYouTubeImporterWindow,
+        openSoundBrowserWindow, renderDirectoryView, openPianoRollWindow, openYouTubeImporterWindow,
         drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
-
-        // Event Handlers
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, handleOpenSequencer: handleOpenPianoRoll,
         handleTimelineLaneDrop, handleOpenYouTubeImporter,
-
-        // Registries
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
         uiElementsCache: {}
     };
