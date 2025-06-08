@@ -249,13 +249,14 @@ export class Track {
             console.error(`Could not update effect param: ${paramPath}`, e);
         }
     }
-
+    
     // --- Start of Corrected Code ---
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined) {
             sequence.data[pitchIndex][timeStep] = noteData;
-            this.recreateToneSequence(true);
+            this.appServices.captureStateForUndo?.(`Add note to ${this.name}`);
+            // The piano roll UI will handle its own redraw
         }
     }
 
@@ -263,7 +264,8 @@ export class Track {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined) {
             sequence.data[pitchIndex][timeStep] = null;
-            this.recreateToneSequence(true);
+            this.appServices.captureStateForUndo?.(`Remove note from ${this.name}`);
+            // The piano roll UI will handle its own redraw
         }
     }
     // --- End of Corrected Code ---
