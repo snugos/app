@@ -292,20 +292,18 @@ export class Track {
         const newPositions = [];
         const newSelectedNoteIds = new Set();
     
-        // First, validate that all moves are possible before making any changes
         for (const noteId of selectedNotes) {
             const [pitchIndex, timeStep] = noteId.split('-').map(Number);
             
             const newPitchIndex = pitchIndex + pitchOffset;
             const newTimeStep = timeStep + timeOffset;
     
-            // Boundary checks
             if (
                 newPitchIndex < 0 || newPitchIndex >= sequence.data.length ||
                 newTimeStep < 0 || newTimeStep >= sequence.length
             ) {
                 this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000);
-                return null; // Abort the entire move operation
+                return null;
             }
             
             const noteData = sequence.data[pitchIndex][timeStep];
@@ -313,13 +311,10 @@ export class Track {
             newPositions.push({ newPitch: newPitchIndex, newTime: newTimeStep, data: noteData });
         }
         
-        // If validation passed, perform the move operation
-        // First, clear all the old note positions
         notesToMove.forEach(note => {
             sequence.data[note.oldPitch][note.oldTime] = null;
         });
     
-        // Then, place all notes in their new positions
         newPositions.forEach(note => {
             sequence.data[note.newPitch][note.newTime] = note.data;
             newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`);
@@ -335,11 +330,6 @@ export class Track {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex]?.[timeStep]) {
             sequence.data[pitchIndex][timeStep].velocity = Math.max(0.01, Math.min(1, newVelocity));
-            const pianoRollWindow = this.appServices.getWindowById?.(`pianoRollWin-${this.id}`);
-            if (pianoRollWindow) {
-                const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${this.id}`);
-                const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${this.id}`);
-            }
         }
     }
 
@@ -445,6 +435,12 @@ export class Track {
         if (this.toneSequence) {
             this.toneSequence.loop = true;
             this.toneSequence.loopEnd = `${activeSequence.length}*16n`;
+        }
+    }
+
+    stopSequence() {
+        if (this.toneSequence) {
+            this.toneSequence.stop(0);
         }
     }
     
