@@ -16,8 +16,8 @@
     --bg-dropzone-dragover: #FFFFFF;
     --bg-sequencer-header: #000000;
     --bg-sequencer-label: #000000;
-    --bg-sequencer-step-even: #000000;
-    --bg-sequencer-step-odd: #000000;
+    --bg-sequencer-step-even: #1e1e1e;
+    --bg-sequencer-step-odd: #2a2a2a;
     --bg-sequencer-step-hover: #FFFFFF;
     --bg-meter-track: #000000;
     --bg-meter-bar-container: #000000;
@@ -97,7 +97,7 @@
     --accent-sequencer-playing-outline: #FFFFFF;
     --accent-meter: #FFFFFF;
     --accent-meter-clip: #FFFFFF;
-    --accent-playhead: #FFFFFF;
+    --accent-playhead: #ff4d4d;
     --accent-clip-bg: #FFFFFF;
     --accent-clip-border: #000000;
 
@@ -126,7 +126,7 @@
     --bg-dropzone-dragover: #000000;
     --bg-sequencer-header: #FFFFFF;
     --bg-sequencer-label: #FFFFFF;
-    --bg-sequencer-step-even: #FFFFFF;
+    --bg-sequencer-step-even: #f0f0f0;
     --bg-sequencer-step-odd: #FFFFFF;
     --bg-sequencer-step-hover: #000000;
     --bg-meter-track: #FFFFFF;
@@ -207,7 +207,7 @@
     --accent-sequencer-playing-outline: #000000;
     --accent-meter: #000000;
     --accent-meter-clip: #000000;
-    --accent-playhead: #000000;
+    --accent-playhead: #ff0000;
     --accent-clip-bg: #000000;
     --accent-clip-border: #FFFFFF;
 
