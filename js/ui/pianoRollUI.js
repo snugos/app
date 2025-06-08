@@ -126,7 +126,7 @@ function renderVelocityPane(velocityPane, track) {
         row.forEach((note, timeStep) => {
             if (note) {
                 const velocityBar = document.createElement('div');
-                velocityBar.className = 'absolute bottom-0 bg-blue-500 hover:bg-blue-400 cursor-n-resize';
+                velocityBar.className = 'velocity-bar absolute bottom-0 cursor-n-resize';
                 velocityBar.style.left = `${timeStep * noteWidth}px`;
                 velocityBar.style.width = `${noteWidth - 1}px`;
                 velocityBar.style.height = `${(note.velocity || 0.75) * 100}%`;
