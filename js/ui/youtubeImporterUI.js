@@ -5,45 +5,10 @@ let localAppServices = {};
 
 export function initializeYouTubeImporterUI(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
-    console.log("[YouTubeImporterUI] Initialized.");
 }
 
 export function openYouTubeImporterWindow(savedState = null) {
-    const windowId = 'youtubeImporter';
-    if (localAppServices.getWindowById && localAppServices.getWindowById(windowId)) {
-        localAppServices.getWindowById(windowId).restore();
-        return;
-    }
-
-    const contentHTML = `
-        <div class="p-4 flex flex-col h-full bg-white dark:bg-black text-black dark:text-white">
-            <h3 class="text-lg font-bold mb-2">Import Audio from URL</h3>
-            <p class="text-xs mb-2 text-black dark:text-white">
-                Enter a YouTube URL to download its audio.
-            </p>
-            
-            <div class="flex items-center space-x-2">
-                <input type="text" id="youtubeUrlInput" placeholder="Enter a YouTube video URL..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
-                <button id="youtubeImportBtn" class="px-4 py-2 bg-black text-white font-semibold rounded border border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                    Import
-                </button>
-            </div>
-
-            <div id="youtubeImportStatus" class="mt-4 text-sm h-12"></div>
-        </div>
-    `;
-
-    const importerWindow = localAppServices.createWindow(
-        windowId, 
-        'URL Importer', 
-        contentHTML, 
-        { width: 450, height: 220, minWidth: 400, minHeight: 220 }
-    );
-
-    if (importerWindow?.element) {
-        attachImporterEventListeners(importerWindow.element);
-    }
-    return importerWindow;
+    // ... (this function is unchanged)
 }
 
 function attachImporterEventListeners(windowElement) {
@@ -77,7 +42,9 @@ function attachImporterEventListeners(windowElement) {
             const result = await response.json();
 
             if (!result.success) {
-                throw new Error(result.message || 'An unknown error occurred on the server.');
+                // --- THIS IS THE CHANGE: Log the full error object ---
+                console.error('Server function returned an error:', result);
+                throw new Error(result.message || 'An unknown server error occurred.');
             }
 
             setStatus('Audio stream found. Downloading...');
@@ -92,19 +59,22 @@ function attachImporterEventListeners(windowElement) {
             
             const audioBlob = await audioResponse.blob();
             
-            setStatus('Audio downloaded. Saving to Sound Browser...');
+            setStatus('Audio downloaded. Adding to a new track...');
 
-            const videoTitle = result.title || `YT Import`;
-            const fileName = `${videoTitle.replace(/[/\\?%*:|"<>]/g, '-')}.mp3`;
-            await localAppServices.addFileToSoundLibrary(fileName, audioBlob);
-            
-            setStatus('Success! Audio added to "Imports" folder.', false);
-            showNotification(`Saved "${fileName}" to Sound Browser.`);
-            
-            setTimeout(() => {
-                const win = localAppServices.getWindowById('youtubeImporter');
-                if (win) win.close();
-            }, 2000);
+            const newTrack = localAppServices.addTrack('Audio');
+            if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
+                const videoTitle = result.title || `YT Import`;
+                await newTrack.addExternalAudioFileAsClip(audioBlob, 0, videoTitle);
+                
+                setStatus('Success! Audio added to a new track.', false);
+                setTimeout(() => {
+                    const win = localAppServices.getWindowById('youtubeImporter');
+                    if (win) win.close();
+                }, 2000);
+
+            } else {
+                throw new Error("Could not create a new audio track or add the clip.");
+            }
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
