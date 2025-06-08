@@ -1,7 +1,7 @@
 // js/ui/timelineUI.js - Timeline UI Management
-import { SnugWindow } from '../SnugWindow.js'; // Adjust path if SnugWindow is not in ../js/
-import { showNotification, createContextMenu } from '../utils.js'; // Adjust path if utils.js is not in ../js/
-import * as Constants from '../constants.js'; // Adjust path if constants.js is not in ../js/
+import { SnugWindow } from '../SnugWindow.js';
+import { showNotification, createContextMenu } from '../utils.js';
+import * as Constants from '../constants.js';
 
 let localAppServices = {};
 
@@ -12,8 +12,7 @@ export function initializeTimelineUI(appServicesFromMain) {
 
 export function openTimelineWindow(savedState = null) {
     const windowId = 'timeline';
-    // Ensure getOpenWindows service is available and correctly referenced
-    const getOpenWindows = localAppServices.getOpenWindows || localAppServices.getOpenWindowsState || (() => new Map());
+    const getOpenWindows = localAppServices.getOpenWindows || (() => new Map());
     const openWindows = getOpenWindows();
 
     if (openWindows.has(windowId) && !savedState) {
@@ -24,253 +23,126 @@ export function openTimelineWindow(savedState = null) {
         return winInstance;
     }
 
+    // --- Start of Corrected Code ---
     const contentHTML = `
-        <div id="timeline-container" class="h-full w-full overflow-hidden relative flex flex-col">
-            <div id="timeline-header" class="h-5 bg-gray-200 dark:bg-slate-700 border-b border-gray-300 dark:border-slate-600 relative overflow-hidden flex-shrink-0">
-                <div id="timeline-ruler" style="position: absolute; left: 0; top: 0; width: 4000px; height: 100%;"></div>
+        <div id="timeline-container" class="h-full w-full overflow-hidden relative flex flex-col bg-white dark:bg-black">
+            <div id="timeline-header" class="h-5 bg-white dark:bg-black border-b border-black dark:border-white relative overflow-hidden flex-shrink-0">
+                <div id="timeline-ruler" class="absolute top-0 left-0 h-full" style="width: 4000px;"></div>
             </div>
-            <div id="timeline-tracks-and-playhead-container" class="flex-grow relative overflow-x-auto">
-                 <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-cyan-400 z-20 pointer-events-none" style="left: var(--timeline-track-name-width, 120px);"></div>
-                 <div id="timeline-tracks-area" style="position: relative; width: 4000px; height:100%; overflow-y: auto; ">
-                    </div>
+            <div id="timeline-tracks-and-playhead-container" class="relative flex-grow overflow-auto">
+                <div id="timeline-playhead" class="absolute top-0 w-0.5 bg-black dark:bg-white z-20" style="left: 120px; height: 100%;"></div>
+                <div id="timeline-tracks-area" class="relative h-full"></div>
             </div>
-        </div>
-    `;
+        </div>`;
+    // --- End of Corrected Code ---
 
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
-    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024;
-    const timelineOptions = {
-        width: Math.max(600, Math.min(1200, safeDesktopWidth - 60)),
-        height: 250,
-        x: 30,
-        y: 50,
-        minWidth: 400,
-        minHeight: 150,
-        initialContentKey: windowId,
-        onCloseCallback: () => {}
+    const timelineOptions = { 
+        width: Math.min(1200, (desktopEl?.offsetWidth || 1200) - 40), 
+        height: 250, 
+        x: 30, y: 50,
+        minWidth: 400, minHeight: 150,
+        initialContentKey: windowId 
     };
-
-     if (savedState) {
-        Object.assign(timelineOptions, {
-            x: Number.isFinite(parseInt(savedState.left, 10)) ? parseInt(savedState.left, 10) : timelineOptions.x,
-            y: Number.isFinite(parseInt(savedState.top, 10)) ? parseInt(savedState.top, 10) : timelineOptions.y,
-            width: Number.isFinite(parseInt(savedState.width, 10)) && parseInt(savedState.width, 10) >= timelineOptions.minWidth ? parseInt(savedState.width, 10) : timelineOptions.width,
-            height: Number.isFinite(parseInt(savedState.height, 10)) && parseInt(savedState.height, 10) >= timelineOptions.minHeight ? parseInt(savedState.height, 10) : timelineOptions.height,
-            zIndex: savedState.zIndex,
-            isMinimized: savedState.isMinimized
-        });
-    }
+    if (savedState) Object.assign(timelineOptions, savedState);
 
     const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
 
     if (timelineWindow?.element) {
-        const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
         const ruler = timelineWindow.element.querySelector('#timeline-ruler');
+        const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
         
-        if (tracksAndPlayheadContainer && ruler) {
-            // --- Start of Corrected Code ---
-            tracksAndPlayheadContainer.addEventListener('scroll', () => {
-                const scrollLeft = tracksAndPlayheadContainer.scrollLeft;
-                // The ruler is transformed by the scroll amount.
+        // --- Start of Corrected Code ---
+        // This scroll synchronization logic is correct and remains.
+        tracksAndPlayheadContainer?.addEventListener('scroll', () => {
+            const scrollLeft = tracksAndPlayheadContainer.scrollLeft;
+            if (ruler) {
                 ruler.style.transform = `translateX(-${scrollLeft}px)`;
-                // The playhead position is now handled entirely by the updatePlayheadPosition function
-                // to ensure it is always correct relative to the audio playback time and scroll position.
-            });
-            // --- End of Corrected Code ---
-        }
-        
-        if(localAppServices.renderTimeline) localAppServices.renderTimeline();
+            }
+        });
+        // --- End of Corrected Code ---
+
+        renderTimeline();
     }
-    return timelineWindow;
 }
 
 export function renderTimeline() {
-    const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
-    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) {
-        return;
-    }
+    const timelineWindow = localAppServices.getWindowById('timeline');
+    if (!timelineWindow?.element) return;
 
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
-    if (!tracksArea) {
-        console.error("[TimelineUI renderTimeline] #timeline-tracks-area not found.");
-        return;
-    }
+    if (!tracksArea) return;
 
-    tracksArea.innerHTML = ''; // Clear previous track lanes
-    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
-    const trackNameWidthValue = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim() || '120px';
-    const trackNameWidth = parseFloat(trackNameWidthValue); // Use parsed float value for calculations
+    const tracks = localAppServices.getTracks();
+    tracksArea.innerHTML = ''; // Clear existing tracks
 
-    if (tracks.length === 0) {
-        tracksArea.innerHTML = '<div class="p-4 text-center text-sm text-gray-500 dark:text-slate-400">No tracks yet. Add a track from the Start menu.</div>';
-    }
+    tracks.forEach(track => {
+        if (track.type !== 'Audio') return; // For now, only show Audio tracks
 
-    tracks.forEach((track) => {
         const lane = document.createElement('div');
-        lane.className = 'timeline-track-lane relative border-b dark:border-slate-700 flex'; // Use flex for name and clips area
-        lane.dataset.trackId = track.id;
-        lane.style.height = '50px';
+        // --- Start of Corrected Code ---
+        lane.className = 'timeline-track-lane relative flex items-center border-b border-black dark:border-white';
+        
+        const laneName = document.createElement('div');
+        laneName.className = 'timeline-track-lane-name sticky left-0 h-full flex items-center px-2 border-r border-black dark:border-white bg-white dark:bg-black';
+        // --- End of Corrected Code ---
+        laneName.textContent = track.name;
+        
+        const clipsArea = document.createElement('div');
+        clipsArea.className = 'timeline-clips-area h-full flex-grow relative';
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'timeline-track-lane-name sticky left-0 top-0 h-full flex items-center px-2 border-r dark:border-slate-600 bg-gray-100 dark:bg-slate-700 z-10 flex-shrink-0';
-        nameEl.style.width = trackNameWidthValue; // Use the CSS variable value
-        nameEl.textContent = track.name;
-        nameEl.title = track.name;
-        lane.appendChild(nameEl);
-
-        const clipsContainer = document.createElement('div');
-        clipsContainer.className = 'timeline-clips-area relative h-full flex-grow'; // flex-grow to take remaining space
-        clipsContainer.style.minWidth = '3000px'; // Ensure it's wide enough to scroll within its parent if tracksArea is wider
-
-        if (track.timelineClips && Array.isArray(track.timelineClips)) {
-            track.timelineClips.forEach(clip => {
-                if (!clip || typeof clip.startTime !== 'number' || typeof clip.duration !== 'number') return;
-
-                const pixelsPerSecond = 60; // This should ideally be a dynamic or configurable value
-                const clipEl = document.createElement('div');
-                clipEl.className = `audio-clip absolute rounded text-white text-[10px] p-1 overflow-hidden whitespace-nowrap ${clip.type === 'audio' ? 'bg-teal-600 border-teal-700' : 'bg-sky-600 border-sky-700'} hover:opacity-80 cursor-grab`;
-                clipEl.style.left = `${clip.startTime * pixelsPerSecond}px`;
-                clipEl.style.width = `${Math.max(10, clip.duration * pixelsPerSecond)}px`; // Minimum width for visibility
-                clipEl.style.height = '80%';
-                clipEl.style.top = '10%';
-                clipEl.textContent = clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence');
-                clipEl.title = `${clip.name || (clip.type === 'audio' ? 'Audio Clip' : 'Sequence')} (Start: ${clip.startTime.toFixed(2)}s, Dur: ${clip.duration.toFixed(2)}s)`;
-                clipEl.dataset.clipId = clip.id;
-                clipEl.dataset.trackId = track.id;
-                clipEl.draggable = true;
-
-                clipEl.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('application/json', JSON.stringify({
-                        type: 'timeline-clip-drag',
-                        clipId: clip.id,
-                        sourceTrackId: track.id,
-                        originalStartTime: clip.startTime,
-                        clipDuration: clip.duration,
-                        clipType: clip.type,
-                        sourceSequenceId: clip.type === 'sequence' ? clip.sourceSequenceId : null
-                    }));
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.target.style.opacity = '0.5';
-                });
-                clipEl.addEventListener('dragend', (e) => { e.target.style.opacity = '1'; });
-
-                clipEl.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (localAppServices.setSelectedTimelineClipInfo) {
-                        localAppServices.setSelectedTimelineClipInfo(track.id, clip.id);
-                    }
-                    timelineWindow.element.querySelectorAll('.audio-clip.selected').forEach(c => c.classList.remove('selected', 'ring-2', 'ring-yellow-400', 'dark:ring-yellow-500'));
-                    clipEl.classList.add('selected', 'ring-2', 'ring-yellow-400', 'dark:ring-yellow-500');
-                });
-                clipsContainer.appendChild(clipEl);
-            });
-        }
-        lane.appendChild(clipsContainer);
-
-        lane.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy'; // Or 'move' if dragging existing clips
-            lane.classList.add('dragover-timeline-lane', 'bg-blue-100', 'dark:bg-blue-900');
-        });
-        lane.addEventListener('dragleave', (e) => { lane.classList.remove('dragover-timeline-lane', 'bg-blue-100', 'dark:bg-blue-900'); });
-        lane.addEventListener('drop', (e) => {
-            e.preventDefault();
-            lane.classList.remove('dragover-timeline-lane', 'bg-blue-100', 'dark:bg-blue-900');
-            const pixelsPerSecond = 60;
-            const laneRect = clipsContainer.getBoundingClientRect(); // Relative to viewport
-            const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
-            const containerScrollLeft = tracksAndPlayheadContainer ? tracksAndPlayheadContainer.scrollLeft : 0;
-
-            // Calculate dropX relative to the start of the clipsContainer content (not viewport)
-            const dropX = e.clientX - laneRect.left + containerScrollLeft;
-            const dropTime = Math.max(0, dropX / pixelsPerSecond);
-
-            console.log(`[TimelineUI Drop] Lane Drop on track ${track.id}. ClientX: ${e.clientX}, LaneLeft: ${laneRect.left}, ScrollLeft: ${containerScrollLeft}, DropX: ${dropX.toFixed(1)}, DropTime: ${dropTime.toFixed(2)}s`);
-
-            const droppedDataString = e.dataTransfer.getData('application/json');
-            if (droppedDataString) {
-                try {
-                    const droppedData = JSON.parse(droppedDataString);
-                    if (droppedData.type === 'timeline-clip-drag') {
-                        if (localAppServices.getTrackById && localAppServices.captureStateForUndo && typeof track.moveClipToTrack === 'function') {
-                            const sourceTrack = localAppServices.getTrackById(droppedData.sourceTrackId);
-                            const targetTrack = localAppServices.getTrackById(track.id);
-                            if (sourceTrack && targetTrack) {
-                                // Check if clip types are compatible or if it's an audio clip moving to an audio track
-                                const canDrop = (targetTrack.type === 'Audio' && droppedData.clipType === 'audio') ||
-                                                (targetTrack.type !== 'Audio' && droppedData.clipType === 'sequence');
-
-                                if (canDrop || (droppedData.clipType === 'audio' && targetTrack.type === 'Audio') || (droppedData.clipType === 'sequence' && targetTrack.type !== 'Audio') ) {
-                                     if (droppedData.sourceTrackId === targetTrack.id) { // Moving within the same track
-                                        localAppServices.captureStateForUndo(`Move Clip on ${targetTrack.name}`);
-                                        sourceTrack.updateAudioClipPosition(droppedData.clipId, dropTime); // Use existing method for same-track moves
-                                     } else { // Moving to a different (compatible) track
-                                        localAppServices.captureStateForUndo(`Move Clip to ${targetTrack.name}`);
-                                        sourceTrack.moveClipToTrack(droppedData.clipId, targetTrack, dropTime);
-                                     }
-                                } else {
-                                     showNotification(`Cannot move ${droppedData.clipType} clip to a ${targetTrack.type} track.`, 3000);
-                                }
-                            }
-                        }
-                    } else if (localAppServices.handleTimelineLaneDrop) {
-                        localAppServices.handleTimelineLaneDrop(e, track.id, dropTime);
-                    }
-                } catch (parseError) {
-                     console.warn("[TimelineUI Drop] Could not parse dropped JSON data:", parseError);
-                     if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && localAppServices.handleTimelineLaneDrop) {
-                        localAppServices.handleTimelineLaneDrop(e, track.id, dropTime);
-                    }
-                }
-            } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0 && localAppServices.handleTimelineLaneDrop) {
-                 localAppServices.handleTimelineLaneDrop(e, track.id, dropTime);
-            }
-        });
+        lane.appendChild(laneName);
+        lane.appendChild(clipsArea);
         tracksArea.appendChild(lane);
+
+        track.timelineClips.forEach(clip => {
+            const clipDiv = document.createElement('div');
+            // --- Start of Corrected Code ---
+            clipDiv.className = 'audio-clip absolute h-4/5 top-[10%] rounded-sm overflow-hidden whitespace-nowrap px-2 flex items-center cursor-grab bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white focus:ring-2 ring-black dark:ring-white';
+            // --- End of Corrected Code ---
+            clipDiv.textContent = clip.name;
+            clipDiv.setAttribute('data-clip-id', clip.id);
+            clipDiv.setAttribute('data-track-id', track.id);
+
+            const pixelsPerSecond = (60 / Tone.Transport.bpm.value) * 60; 
+            clipDiv.style.left = `${clip.startTime * pixelsPerSecond}px`;
+            clipDiv.style.width = `${clip.duration * pixelsPerSecond}px`;
+            
+            clipsArea.appendChild(clipDiv);
+        });
     });
-    updatePlayheadPosition(); // Update playhead position after rendering tracks
 }
 
-export function updatePlayheadPosition() {
-    const timelineWindow = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
-    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized || document.hidden) {
-        return;
-    }
+
+export function updatePlayheadPosition(transportTime) {
+    const timelineWindow = localAppServices.getWindowById('timeline');
+    if (!timelineWindow?.element || timelineWindow.isMinimized) return;
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
     const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
+
     if (!playhead || !tracksAndPlayheadContainer) return;
 
-    // --- Start of Corrected Code ---
-
-    const pixelsPerSecond = 60;
-    const transportTime = typeof Tone !== 'undefined' ? Tone.Transport.seconds : 0;
-    const trackNameWidthValue = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width').trim() || '120px';
-    const trackNameWidth = parseFloat(trackNameWidthValue);
-
-    // The playhead's `left` position is its absolute position within the 4000px wide timeline-tracks-area.
-    // This value grows as playback continues. The browser's native scrolling handles visibility.
-    const playheadAbsoluteLeft = (transportTime * pixelsPerSecond) + trackNameWidth;
-    playhead.style.left = `${playheadAbsoluteLeft}px`;
+    const pixelsPerSecond = (60 / Tone.Transport.bpm.value) * 60;
+    const trackNameWidthValue = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width');
+    const trackNameWidth = parseInt(trackNameWidthValue, 10) || 120;
     
-    // Auto-scroll logic to keep the playhead in view during playback
+    const playheadAbsoluteLeft = (transportTime * pixelsPerSecond);
+    playhead.style.transform = `translateX(${playheadAbsoluteLeft}px)`;
+
     if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
         const containerScrollLeft = tracksAndPlayheadContainer.scrollLeft;
         const containerWidth = tracksAndPlayheadContainer.clientWidth;
         
         const playheadVisibleStart = containerScrollLeft;
         const playheadVisibleEnd = containerScrollLeft + containerWidth;
-        const scrollBuffer = 50; // pixels
+        const scrollBuffer = 50; 
 
-        // If playhead is approaching the right edge of the visible area
-        if (playheadAbsoluteLeft > playheadVisibleEnd - scrollBuffer) {
-            // Scroll to keep the playhead on the screen
-            tracksAndPlayheadContainer.scrollLeft = playheadAbsoluteLeft - containerWidth + scrollBuffer;
+        if (playhead.offsetLeft > playheadVisibleEnd - scrollBuffer) {
+            tracksAndPlayheadContainer.scrollLeft = playhead.offsetLeft - containerWidth + scrollBuffer;
         }
-        // If playhead is approaching the left edge (e.g., during reverse playback or seeking)
-        else if (playheadAbsoluteLeft < playheadVisibleStart + scrollBuffer) {
-             tracksAndPlayheadContainer.scrollLeft = Math.max(0, playheadAbsoluteLeft - scrollBuffer);
+        else if (playhead.offsetLeft < playheadVisibleStart + scrollBuffer) {
+             tracksAndPlayheadContainer.scrollLeft = Math.max(0, playhead.offsetLeft - scrollBuffer);
         }
     }
-    // --- End of Corrected Code ---
 }
