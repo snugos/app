@@ -182,7 +182,7 @@ export class Track {
             console.error(`Could not set synth param: ${paramPath}`, e);
         }
     }
-    
+
     addEffect(effectType, params, isInitialLoad = false) {
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
         if (!effectDef) return;
@@ -219,7 +219,22 @@ export class Track {
     }
     
     updateEffectParam(effectId, paramPath, value) {
-        // ... (implementation is correct, removed for brevity)
+        const effect = this.activeEffects.find(e => e.id === effectId);
+        if (effect?.toneNode) {
+            try {
+                effect.toneNode.set({ [paramPath]: value });
+                let paramState = effect.params;
+                const keys = paramPath.split('.');
+                const finalKey = keys.pop();
+                for (const key of keys) {
+                    paramState[key] = paramState[key] || {};
+                    paramState = paramState[key];
+                }
+                paramState[finalKey] = value;
+            } catch (e) {
+                console.error(`Could not update effect param: ${paramPath}`, e);
+            }
+        }
     }
 
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
@@ -272,7 +287,6 @@ export class Track {
             return;
         }
 
-        // Create a list of notes present at each time step
         const events = [];
         for (let i = 0; i < activeSequence.length; i++) {
             const notesInStep = [];
@@ -285,9 +299,13 @@ export class Track {
         }
 
         this.toneSequence = new Tone.Sequence((time, notes) => {
+            // --- THIS IS THE FIX ---
+            // The synth can only play one note at a time, so we iterate
+            // if there happen to be multiple notes in a step (for future polyphony).
             if (notes && notes.length > 0) {
-                // Using triggerAttack instead of triggerAttackRelease is more robust for step sequencers
-                this.instrument.triggerAttackRelease(notes, "16n", time);
+                notes.forEach(note => {
+                    this.instrument.triggerAttackRelease(note, "16n", time);
+                });
             }
         }, events, "16n");
 
