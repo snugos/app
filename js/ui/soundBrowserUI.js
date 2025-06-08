@@ -15,11 +15,9 @@ export function renderSoundBrowser() {
 
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
-    // Create a virtual root containing all libraries as top-level folders
     const virtualRoot = {};
     const libraryNames = Object.keys(Constants.soundLibraries);
     
-    // Always add the Imports folder first
     virtualRoot['Imports'] = {
         type: 'folder',
         children: allFileTrees['Imports'] || {}
@@ -62,7 +60,6 @@ function getLibraryNameFromPath(pathArray) {
         if (pathArray[0] === 'Imports') {
             return 'Imports';
         }
-        // Check against the known library names
         const libName = Object.keys(Constants.soundLibraries).find(lib => pathArray[0] === lib);
         return libName || null;
     }
@@ -71,8 +68,7 @@ function getLibraryNameFromPath(pathArray) {
 
 export function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
-    const getOpenWindows = localAppServices.getOpenWindows || (() => new Map());
-    const openWindows = getOpenWindows();
+    const openWindows = localAppServices.getOpenWindows?.() || new Map();
 
     if (openWindows.has(windowId) && !savedState) {
         openWindows.get(windowId).restore();
@@ -91,12 +87,7 @@ export function openSoundBrowserWindow(savedState = null) {
             </div>
         </div>`;
 
-    const browserOptions = { width: 350, height: 500, minWidth: 250, minHeight: 300, initialContentKey: windowId };
-    if (savedState) {
-        Object.assign(browserOptions, savedState);
-    }
-
-    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions);
+    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, { width: 350, height: 500 });
 
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
