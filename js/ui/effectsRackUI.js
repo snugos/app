@@ -7,7 +7,6 @@ export function initializeEffectsRackUI(appServices) {
     localAppServices = appServices;
 }
 
-// --- Start of Corrected Code ---
 function refreshEffectsRack(windowInstance) {
     if (!windowInstance?.element) return;
     const ownerId = windowInstance.id.includes('master') ? 'master' : windowInstance.id.split('-')[1];
@@ -26,7 +25,6 @@ function refreshEffectsRack(windowInstance) {
     const controlsContainer = windowInstance.element.querySelector(`#effectControlsContainer-${ownerId}`);
     renderEffectsList(owner, ownerType, listDiv, controlsContainer);
 }
-// --- End of Corrected Code ---
 
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
@@ -48,12 +46,10 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         return;
     }
     const content = buildModularEffectsRackDOM(track, 'track');
-    // --- Start of Corrected Code ---
     const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, { 
         width: 350, height: 400, minWidth: 300, minHeight: 250,
         onRefresh: refreshEffectsRack 
     });
-    // --- End of Corrected Code ---
     attachEffectsRackListeners(track, 'track', rackWindow.element);
 }
 
@@ -65,12 +61,10 @@ export function openMasterEffectsRackWindow(savedState = null) {
     }
     const masterEffects = localAppServices.getMasterEffects();
     const content = buildModularEffectsRackDOM(masterEffects, 'master');
-    // --- Start of Corrected Code ---
     const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, { 
         width: 350, height: 400, minWidth: 300, minHeight: 250,
         onRefresh: refreshEffectsRack
     });
-    // --- End of Corrected Code ---
     attachEffectsRackListeners(masterEffects, 'master', rackWindow.element);
 }
 
