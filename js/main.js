@@ -29,7 +29,8 @@ import {
     setPlaybackModeState, getPlaybackModeState,
     setIsRecordingState, isTrackRecordingState, setRecordingTrackIdState, getRecordingTrackIdState, setRecordingStartTimeState,
     getCurrentUserThemePreferenceState, setCurrentUserThemePreferenceState,
-    addFileToSoundLibraryInternal
+    addFileToSoundLibraryInternal,
+    setMidiAccessState, getMidiAccessState
 } from './state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
@@ -200,6 +201,7 @@ async function initializeSnugOS() {
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
         addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
         getHighestZ: getHighestZState, setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
+        getMidiAccess: getMidiAccessState, setMidiAccess: setMidiAccessState,
         getArmedTrackId: getArmedTrackIdState, setArmedTrackId: setArmedTrackIdState,
         getSoloedTrackId: getSoloedTrackIdState, setSoloedTrackId: setSoloedTrackIdState,
         getMasterEffects: getMasterEffectsState, addMasterEffect: addMasterEffectToState,
@@ -249,7 +251,6 @@ async function initializeSnugOS() {
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
-    // --- FIX: Ensure setupMIDI() is called on startup ---
     setupMIDI();
     
     const savedTheme = localStorage.getItem('snugos-theme');
