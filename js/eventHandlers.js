@@ -324,14 +324,11 @@ function toggleFullScreen() {
 }
 
 export function setupMIDI() {
-    console.log("[MIDI Debug] Running setupMIDI()...");
     if (!navigator.requestMIDIAccess) {
-        console.error("[MIDI Debug] Web MIDI API is not supported in this browser.");
         showNotification("Web MIDI is not supported in this browser.", 4000);
         return;
     }
     if (!window.isSecureContext) {
-        console.error("[MIDI Debug] MIDI access is blocked: Page is not in a secure context (HTTPS or localhost).");
         showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
         return;
     }
@@ -342,40 +339,30 @@ export function setupMIDI() {
 }
 
 function onMIDISuccess(midiAccess) {
-    console.log("[MIDI Debug] onMIDISuccess called. MIDI ready!", midiAccess);
     if (localAppServices.setMidiAccess) {
         localAppServices.setMidiAccess(midiAccess);
     }
     
-    populateMIDIInputSelector();
-    midiAccess.onstatechange = (event) => {
-        console.log("[MIDI Debug] MIDI state changed:", event.port);
-        populateMIDIInputSelector();
+    // --- FIX: Pass the midiAccess object directly to avoid race conditions ---
+    populateMIDIInputSelector(midiAccess);
+
+    midiAccess.onstatechange = () => {
+        populateMIDIInputSelector(midiAccess);
     };
 }
 
 function onMIDIFailure(error) {
-    console.error("[MIDI Debug] Failed to get MIDI access -", error);
+    console.error("Failed to get MIDI access -", error);
     showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
 }
 
-function populateMIDIInputSelector() {
-    console.log("[MIDI Debug] Attempting to populate dropdown...");
+// --- FIX: This function now accepts the midiAccess object as a parameter ---
+function populateMIDIInputSelector(midiAccess) {
     const midiSelect = document.getElementById('midiInputSelectGlobalTop');
-    
-    if (!midiSelect) {
-        console.error('[MIDI Debug] CRITICAL: Could not find the dropdown element with ID "midiInputSelectGlobalTop". Aborting population.');
+    if (!midiSelect || !midiAccess) {
         return;
     }
-    console.log("[MIDI Debug] Found dropdown element:", midiSelect);
 
-    const midiAccess = getMidiAccessState();
-    if (!midiAccess) {
-        console.error('[MIDI Debug] CRITICAL: midiAccess object is not available from state.');
-        return;
-    }
-    console.log(`[MIDI Debug] midiAccess object is available. Found ${midiAccess.inputs.size} inputs.`);
-    
     const currentInputs = new Set();
     midiSelect.innerHTML = ''; 
 
@@ -386,15 +373,12 @@ function populateMIDIInputSelector() {
     
     if (midiAccess.inputs.size > 0) {
         midiAccess.inputs.forEach(input => {
-            console.log(`[MIDI Debug] Adding device to dropdown: ${input.name} (ID: ${input.id})`);
             currentInputs.add(input.id);
             const option = document.createElement('option');
             option.value = input.id;
             option.textContent = input.name;
             midiSelect.appendChild(option);
         });
-    } else {
-        console.log('[MIDI Debug] No MIDI inputs found to add.');
     }
 
     const activeInput = getActiveMIDIInputState();
@@ -403,7 +387,6 @@ function populateMIDIInputSelector() {
     } else {
         setActiveMIDIInputState(null);
     }
-    console.log("[MIDI Debug] Finished populating dropdown.");
 }
 
 export function selectMIDIInput(event) {
@@ -432,9 +415,9 @@ function onMIDIMessage(message) {
     if (armedTrack && armedTrack.instrument) {
         const frequency = Tone.Midi(noteNumber).toFrequency();
 
-        if (command === 144 && velocity > 0) {
+        if (command === 144 && velocity > 0) { // Note On
             armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
-        } else if (command === 128 || (command === 144 && velocity === 0)) {
+        } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
             armedTrack.instrument.triggerRelease(frequency, Tone.now());
         }
     }
