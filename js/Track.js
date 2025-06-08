@@ -6,7 +6,6 @@ import { storeAudio, getAudio } from './db.js';
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
-        // ... constructor code remains the same
         this.id = initialData?.id || id;
         this.type = type;
         this.appServices = appServices || {}; 
@@ -231,11 +230,9 @@ export class Track {
         }
     }
 
-    // --- NEW METHOD TO FIX THE BUG ---
     updateEffectParam(effectId, paramPath, value) {
         const effect = this.activeEffects.find(e => e.id === effectId);
         if (effect && effect.toneNode) {
-            // Update the state
             let paramState = effect.params;
             const keys = paramPath.split('.');
             const finalKey = keys.pop();
@@ -245,7 +242,6 @@ export class Track {
             }
             paramState[finalKey] = value;
             
-            // Update the audio node
             try {
                 effect.toneNode.set({ [paramPath]: value });
             } catch (e) {
@@ -380,6 +376,13 @@ export class Track {
             this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.name}`);
         }
     }
+
+    addClip(clipData) {
+        if (!clipData.type || !clipData.id) return;
+        this.timelineClips.push(clipData);
+        this.appServices.captureStateForUndo?.(`Add ${clipData.name} clip`);
+        this.appServices.renderTimeline?.();
+    }
     
     async addAudioClip(audioBlob, startTime, clipName) {
         if (this.type !== 'Audio') {
@@ -394,6 +397,7 @@ export class Track {
 
             const newClip = {
                 id: `clip-${this.id}-${Date.now()}`,
+                type: 'audio',
                 name: clipName,
                 dbKey: dbKey,
                 startTime: startTime,
@@ -401,8 +405,7 @@ export class Track {
                 audioBuffer: audioBuffer,
             };
 
-            this.timelineClips.push(newClip);
-            this.appServices.renderTimeline?.();
+            this.addClip(newClip);
         } catch (error) {
             console.error("Error adding audio clip:", error);
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
@@ -432,28 +435,21 @@ export class Track {
             if (!this.instrument) return;
             this.toneSequence = new Tone.Sequence((time, note) => {
                 this.instrument.triggerAttackRelease(note, "16n", time);
-            }, events, "16n").start(0);
+            }, events, "16n"); // Note: .start(0) is removed
 
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
             this.toneSequence = new Tone.Sequence((time, value) => {
-                if (!value) {
-                    return;
-                }
+                if (!value) return;
                 const notes = Array.isArray(value) ? value : [value];
-
                 notes.forEach(note => {
                     const midi = Tone.Midi(note).toMidi();
                     const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-
                     if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                        if (this.type === 'Sampler') {
-                            this.appServices.playSlicePreview?.(this.id, sampleIndex, 1.0, 0, time);
-                        } else {
-                            this.appServices.playDrumSamplerPadPreview?.(this.id, sampleIndex, 1.0, 0, time);
-                        }
+                        const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
+                        playbackFn?.(this.id, sampleIndex, 1.0, 0, time);
                     }
                 });
-            }, events, "16n").start(0);
+            }, events, "16n"); // Note: .start(0) is removed
         }
 
         if (this.toneSequence) {
@@ -462,8 +458,12 @@ export class Track {
         }
     }
 
+    startSequence() {
+        this.toneSequence?.start(0);
+    }
+    
     stopSequence() {
-        if (this.toneSequence) {
+        if (this.toneSequence && this.toneSequence.state === 'started') {
             this.toneSequence.stop(0);
         }
     }
