@@ -15,15 +15,14 @@ export function renderSoundBrowser() {
 
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
+    // Create a virtual root directory to hold all libraries
     const virtualRoot = {};
-    const libraryNames = Object.keys(Constants.soundLibraries);
-    
     virtualRoot['Imports'] = {
         type: 'folder',
         children: allFileTrees['Imports'] || {}
     };
 
-    libraryNames.forEach(libName => {
+    Object.keys(Constants.soundLibraries).forEach(libName => {
         if (allFileTrees[libName]) {
             virtualRoot[libName] = { 
                 type: 'folder', 
@@ -34,21 +33,22 @@ export function renderSoundBrowser() {
             const libStatus = loadedZips[libName]?.status;
             let status_text = '(loading...)';
             if (libStatus === 'error') status_text = '(error)';
-
             virtualRoot[`${libName} ${status_text}`] = { type: 'placeholder' };
         }
     });
 
     const currentPath = localAppServices.getCurrentSoundBrowserPath?.() || [];
     
-    // --- Start of Corrected Code ---
-    // This logic correctly traverses the virtual file tree to find the current directory's contents.
+    // --- FIX: This is the updated, more robust navigation logic ---
     let currentTreeNode = virtualRoot;
     try {
         for (const part of currentPath) {
+            // Check if the next part of the path exists and is a folder
             if (currentTreeNode[part] && currentTreeNode[part].type === 'folder') {
+                // Move into the children of that folder
                 currentTreeNode = currentTreeNode[part].children;
             } else {
+                // If path is invalid, reset to the root
                 throw new Error(`Invalid path segment: ${part}`);
             }
         }
@@ -57,7 +57,6 @@ export function renderSoundBrowser() {
         localAppServices.setCurrentSoundBrowserPath?.([]);
         currentTreeNode = virtualRoot;
     }
-    // --- End of Corrected Code ---
     
     renderDirectoryView(currentPath, currentTreeNode);
 }
@@ -67,8 +66,7 @@ function getLibraryNameFromPath(pathArray) {
         if (pathArray[0] === 'Imports') {
             return 'Imports';
         }
-        const libName = Object.keys(Constants.soundLibraries).find(lib => pathArray[0] === lib);
-        return libName || null;
+        return Object.keys(Constants.soundLibraries).find(lib => pathArray[0] === lib) || null;
     }
     return null;
 }
@@ -99,8 +97,8 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
         
-        const librarySources = Constants.soundLibraries || {};
-        Object.entries(librarySources).forEach(([name, url]) => {
+        // Fetch all libraries from constants
+        Object.entries(Constants.soundLibraries || {}).forEach(([name, url]) => {
             localAppServices.fetchSoundLibrary?.(name, url).then(() => {
                 renderSoundBrowser();
             });
@@ -108,18 +106,25 @@ export function openSoundBrowserWindow(savedState = null) {
 
         renderSoundBrowser();
         
-        previewBtn?.addEventListener('click', () => {
-            if (selectedSoundForPreviewData && localAppServices.playPreview) {
-                // To play the preview, we first need to get the audio blob
-                localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData).then(blob => {
+        // --- FIX: Corrected and robust preview button logic ---
+        previewBtn?.addEventListener('click', async () => {
+            if (selectedSoundForPreviewData) {
+                try {
+                    const blob = await localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData);
                     if (blob) {
+                        let previewPlayer = localAppServices.getPreviewPlayer();
+                        if (!previewPlayer) {
+                            previewPlayer = new Tone.Player().toDestination();
+                            localAppServices.setPreviewPlayer(previewPlayer);
+                        }
                         const objectURL = URL.createObjectURL(blob);
-                        const previewPlayer = localAppServices.getPreviewPlayer();
-                        previewPlayer.load(objectURL).then(() => {
-                            previewPlayer.start();
-                        });
+                        await previewPlayer.load(objectURL);
+                        previewPlayer.start();
                     }
-                });
+                } catch (err) {
+                    showNotification("Error playing preview.", "error");
+                    console.error("Preview Error:", err);
+                }
             }
         });
     }
@@ -141,10 +146,12 @@ export function renderDirectoryView(pathArray, treeNode) {
     selectedSoundForPreviewData = null;
     if (previewBtn) previewBtn.disabled = true;
 
+    // Add ".." (parent directory) link if not at the root
     if (pathArray.length > 0) {
         const parentDiv = document.createElement('div');
         parentDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
-        parentDiv.innerHTML = `<span class="mr-2 text-lg">&#8617;</span> .. (Parent Directory)`;
+        // --- CHANGE: Updated icon for parent directory ---
+        parentDiv.innerHTML = `<span class="mr-2 text-lg font-bold text-black dark:text-white">↩</span> .. (Parent)`;
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
             localAppServices.setCurrentSoundBrowserPath?.(newPath);
@@ -153,6 +160,7 @@ export function renderDirectoryView(pathArray, treeNode) {
         dirView.appendChild(parentDiv);
     }
 
+    // Sort folders before files
     const entries = Object.entries(treeNode || {}).sort((a, b) => {
         const aIsDir = a[1].type === 'folder';
         const bIsDir = b[1].type === 'folder';
@@ -167,8 +175,9 @@ export function renderDirectoryView(pathArray, treeNode) {
         itemDiv.title = name;
 
         const icon = document.createElement('span');
-        icon.className = 'mr-2 text-lg';
-        icon.innerHTML = item.type === 'folder' ? '&#128193;' : '&#127925;';
+        // --- CHANGE: Use theme-aware, black & white unicode characters for icons ---
+        icon.className = 'mr-2 text-lg text-black dark:text-white';
+        icon.innerHTML = item.type === 'folder' ? '▸' : '♪';
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'truncate';
@@ -204,10 +213,9 @@ export function renderDirectoryView(pathArray, treeNode) {
             itemDiv.addEventListener('dblclick', () => {
                 const armedTrackId = localAppServices.getArmedTrackId?.();
                 const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
-                const libraryName = getLibraryNameFromPath(pathArray);
 
                 if (armedTrack) {
-                    const soundData = { libraryName, fullPath: item.fullPath, fileName: name, entry: item.entry };
+                    const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name, entry: item.entry };
                     let targetIndex = null;
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
                     localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex);
