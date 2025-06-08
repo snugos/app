@@ -83,28 +83,17 @@ export async function loadDrumSamplerPadFile(event, trackId, padIndex) {
 }
 
 export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetType, targetIndex) {
-    // --- START DEBUGGING LOGS ---
-    console.log('%c--- Loading from Sound Browser ---', 'color: #8e44ad; font-weight: bold;');
-    console.log('Received soundData:', soundData);
-    if (soundData && soundData.entry) {
-        console.log("The 'entry' object is:", soundData.entry);
-        console.log("Does it have an 'async' method? The type is:", typeof soundData.entry.async);
-    } else {
-        console.error("soundData or soundData.entry is missing!");
-    }
-    // --- END DEBUGGING LOGS ---
-
     const track = localAppServices.getTrackById?.(targetTrackId);
     if (!track) return;
 
     try {
-        // This now works generically because both zip entries and our custom entries have an .async('blob') method
-        const fileBlob = await soundData.entry.async("blob");
+        const fileBlob = await getAudioBlobFromSoundBrowserItem(soundData);
         if (!fileBlob) throw new Error("Could not retrieve sample from library.");
 
         const finalMimeType = getMimeTypeFromFilename(soundData.fileName);
         const blobToLoad = new File([fileBlob], soundData.fileName, { type: finalMimeType });
         await commonLoadSampleLogic(blobToLoad, soundData.fileName, track, track.type, targetIndex);
+
     } catch (error) {
         console.error("Error loading from sound browser:", error);
         localAppServices.showNotification?.(`Error loading ${soundData.fileName}: ${error.message}`, 4000);
@@ -113,16 +102,33 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
 }
 
 export async function getAudioBlobFromSoundBrowserItem(soundData) {
-    if (!soundData || !soundData.entry || typeof soundData.entry.async !== 'function') {
+    if (!soundData || !soundData.libraryName || !soundData.fullPath) {
         console.error("[getAudioBlobFromSoundBrowserItem] Invalid soundData provided.", soundData);
         return null;
     }
 
     try {
-        return await soundData.entry.async("blob");
+        if (soundData.libraryName === 'Imports') {
+            // Get user-imported files from the database
+            return await localAppServices.dbGetAudio(soundData.fullPath);
+        } else {
+            // Get library files from the loaded JSZip instance
+            const loadedZips = localAppServices.getLoadedZipFiles?.();
+            const zipInstance = loadedZips?.[soundData.libraryName]?.zip;
+            if (!zipInstance) {
+                throw new Error(`Library "${soundData.libraryName}" is not loaded.`);
+            }
+            
+            const zipEntry = zipInstance.file(soundData.fullPath);
+            if (!zipEntry) {
+                throw new Error(`File "${soundData.fullPath}" not found in library.`);
+            }
+
+            return await zipEntry.async("blob");
+        }
     } catch (error) {
-        console.error(`[getAudioBlobFromSoundBrowserItem] Error getting blob for ${soundData.fileName}:`, error);
-        localAppServices.showNotification?.(`Error loading preview data for ${soundData.fileName}.`, 3000);
+        console.error(`[getAudioBlob] Error getting blob for ${soundData.fileName}:`, error);
+        localAppServices.showNotification?.(`Error loading data for ${soundData.fileName}.`, 3000);
         return null;
     }
 }
@@ -146,7 +152,8 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
             let currentLevel = fileTree;
             relativePath.split('/').forEach((part, index, arr) => {
                 if (index === arr.length - 1) {
-                    currentLevel[part] = { type: 'file', entry: zipEntry, fullPath: relativePath };
+                    // --- FIX: Store simple data, not the live zipEntry object ---
+                    currentLevel[part] = { type: 'file', fullPath: relativePath, fileName: part };
                 } else {
                     currentLevel[part] = currentLevel[part] || { type: 'folder', children: {} };
                     currentLevel = currentLevel[part].children;
