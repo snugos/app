@@ -56,6 +56,9 @@ import {
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
+// Import the new metronome module
+import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
+
 
 let appServices = {};
 
@@ -237,8 +240,10 @@ async function initializeSnugOS() {
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, handleOpenSequencer: handleOpenPianoRoll,
         handleTimelineLaneDrop, handleOpenYouTubeImporter,
+        toggleMetronome: toggleMetronome, // Add new metronome service
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
-        uiElementsCache: {}
+        uiElementsCache: {},
+        context: Tone.context // Expose Tone.context for optimizations
     };
 
     initializeStateModule(appServices);
@@ -248,6 +253,7 @@ async function initializeSnugOS() {
     initializeSampleManager(appServices);
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
+    initializeMetronome(appServices); // Initialize the metronome
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
@@ -264,6 +270,12 @@ async function initializeSnugOS() {
     openDefaultLayout();
     
     console.log("SnugOS Initialized Successfully.");
+
+    // Latency Optimization
+    localAppServices.context.lookAhead = 0.02;
+    localAppServices.context.updateInterval = 0.01;
+    console.log(`[Latency] lookAhead set to: ${localAppServices.context.lookAhead}`);
+    console.log(`[Latency] updateInterval set to: ${localAppServices.context.updateInterval}`);
     
     drawLoop();
 }
