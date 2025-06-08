@@ -89,9 +89,13 @@ function drawGrid(layer, stageWidth, stageHeight) {
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
 
     const numPitches = Constants.SYNTH_PITCHES.length;
-    const numSteps = 64; // 4 bars
+    const numSteps = 64;
 
-    // Draw horizontal lines
+    // Background for the grid area to capture clicks
+    gridLayer.add(new Konva.Rect({
+        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: '#282828'
+    }));
+
     for (let i = 0; i <= numPitches; i++) {
         const isBlackKey = Constants.SYNTH_PITCHES[i-1]?.includes('#') || false;
         gridLayer.add(new Konva.Line({
@@ -101,7 +105,6 @@ function drawGrid(layer, stageWidth, stageHeight) {
         }));
     }
 
-    // Draw vertical lines
     for (let i = 0; i <= numSteps; i++) {
         const isBarLine = i % 16 === 0;
         const isBeatLine = i % 4 === 0;
@@ -116,7 +119,6 @@ function drawGrid(layer, stageWidth, stageHeight) {
     return gridLayer;
 }
 
-// --- Start of New Code ---
 function renderNotes(track) {
     const noteLayer = new Konva.Layer();
     const activeSequence = track.getActiveSequence();
@@ -129,16 +131,16 @@ function renderNotes(track) {
     
     sequenceData.forEach((pitchRow, pitchIndex) => {
         pitchRow.forEach((note, timeStep) => {
-            if (note) { // If a note exists at this step
+            if (note) {
                 const noteRect = new Konva.Rect({
                     x: timeStep * noteWidth + keyWidth,
                     y: pitchIndex * noteHeight,
-                    width: noteWidth * (note.duration || 1), // Use note duration, default to 1 step
+                    width: noteWidth * (note.duration || 1),
                     height: noteHeight,
-                    fill: '#0000FF', // Blue fill for notes
-                    stroke: '#FFFFFF', // White border
+                    fill: '#0000FF',
+                    stroke: '#FFFFFF',
                     strokeWidth: 1,
-                    opacity: note.velocity ? (0.5 + note.velocity * 0.5) : 1, // Opacity based on velocity
+                    opacity: note.velocity ? (0.5 + note.velocity * 0.5) : 1,
                 });
                 noteLayer.add(noteRect);
             }
@@ -147,7 +149,6 @@ function renderNotes(track) {
 
     return noteLayer;
 }
-// --- End of New Code ---
 
 function createPianoRollStage(containerElement, track) {
     if (typeof Konva === 'undefined') {
@@ -171,20 +172,53 @@ function createPianoRollStage(containerElement, track) {
         height: stageHeight,
     });
 
-    // --- Start of Modified Code ---
-    // Create and add layers in order
     const gridLayer = drawGrid(null, stageWidth, stageHeight);
     stage.add(gridLayer);
 
-    const noteLayer = renderNotes(track);
+    let noteLayer = renderNotes(track);
     stage.add(noteLayer);
 
     const keyLayer = drawPianoKeys(null, stageHeight);
     stage.add(keyLayer);
     
-    // Bring keys to the top to ensure they are not covered by the grid
     keyLayer.moveToTop();
-    // --- End of Modified Code ---
+
+    // --- Start of New Code ---
+    stage.on('click tap', function (e) {
+        // Ignore clicks on the piano keys
+        if (e.target.getLayer() === keyLayer) {
+            return;
+        }
+
+        const pos = stage.getPointerPosition();
+        const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+        
+        // Ensure click is within the grid area
+        if (pos.x < keyWidth) return;
+
+        const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+        const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+
+        const activeSequence = track.getActiveSequence();
+        if (!activeSequence || !activeSequence.data[pitchIndex]) return;
+
+        const noteExists = activeSequence.data[pitchIndex][timeStep];
+
+        if (noteExists) {
+            track.removeNoteFromSequence(activeSequence.id, pitchIndex, timeStep);
+        } else {
+            track.addNoteToSequence(activeSequence.id, pitchIndex, timeStep, { velocity: 0.75, duration: 1 });
+        }
+
+        // Redraw the notes layer
+        noteLayer.destroy();
+        noteLayer = renderNotes(track);
+        stage.add(noteLayer);
+        noteLayer.moveToBottom();
+        gridLayer.moveToBottom();
+        stage.draw();
+    });
+    // --- End of New Code ---
 
     stage.draw();
 
