@@ -1,6 +1,7 @@
 // js/ui/effectsRackUI.js
 
 let localAppServices = {};
+let selectedEffectId = {}; // Keyed by ownerId
 
 export function initializeEffectsRackUI(appServices) {
     localAppServices = appServices;
@@ -9,12 +10,14 @@ export function initializeEffectsRackUI(appServices) {
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
-    return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full">
-        <h3 class="text-sm font-semibold dark:text-slate-200">Effects Rack: ${ownerName}</h3>
-        <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-gray-100 dark:bg-slate-700 dark:border-slate-600"></div>
-        <button id="addEffectBtn-${ownerId}" class="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Add Effect</button>
-        <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2"></div>
+    // --- Start of Corrected Code ---
+    return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full text-black dark:text-white">
+        <h3 class="text-sm font-semibold">${ownerName}</h3>
+        <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-white dark:bg-black border-black dark:border-white"></div>
+        <button id="addEffectBtn-${ownerId}" class="w-full text-xs px-2 py-1 border rounded bg-black text-white border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white">+ Add Effect</button>
+        <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2 border-t border-black dark:border-white pt-2"></div>
     </div>`;
+    // --- End of Corrected Code ---
 }
 
 export function openTrackEffectsRackWindow(trackId, savedState = null) {
@@ -25,17 +28,9 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         localAppServices.getOpenWindows().get(windowId).restore();
         return;
     }
-    const contentDOM = buildModularEffectsRackDOM(track, 'track');
-    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, contentDOM, {
-        width: 350, height: 400, minWidth: 300, minHeight: 250, initialContentKey: windowId
-    });
-    if (rackWindow?.element) {
-        const listDiv = rackWindow.element.querySelector(`#effectsList-${trackId}`);
-        const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-${trackId}`);
-        renderEffectsList(track, 'track', listDiv, controlsContainer);
-        rackWindow.element.querySelector(`#addEffectBtn-${track.id}`)?.addEventListener('click', () => showAddEffectModal(track, 'track'));
-    }
-    return rackWindow;
+    const content = buildModularEffectsRackDOM(track, 'track');
+    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, { width: 350, height: 400, minWidth: 300, minHeight: 250 });
+    attachEffectsRackListeners(track, 'track', rackWindow.element);
 }
 
 export function openMasterEffectsRackWindow(savedState = null) {
@@ -44,83 +39,97 @@ export function openMasterEffectsRackWindow(savedState = null) {
         localAppServices.getOpenWindows().get(windowId).restore();
         return;
     }
-    const contentDOM = buildModularEffectsRackDOM(null, 'master');
-    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', contentDOM, {
-        width: 350, height: 400, minWidth: 300, minHeight: 250, initialContentKey: windowId
-    });
-    if (rackWindow?.element) {
-        const listDiv = rackWindow.element.querySelector('#effectsList-master');
-        const controlsContainer = rackWindow.element.querySelector('#effectControlsContainer-master');
-        renderEffectsList(null, 'master', listDiv, controlsContainer);
-        rackWindow.element.querySelector('#addEffectBtn-master')?.addEventListener('click', () => showAddEffectModal(null, 'master'));
-    }
-    return rackWindow;
+    const masterEffects = localAppServices.getMasterEffects();
+    const content = buildModularEffectsRackDOM(masterEffects, 'master');
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, { width: 350, height: 400, minWidth: 300, minHeight: 250 });
+    attachEffectsRackListeners(masterEffects, 'master', rackWindow.element);
+}
+
+function attachEffectsRackListeners(owner, ownerType, rackEl) {
+    if (!rackEl) return;
+    const ownerId = (ownerType === 'track') ? owner.id : 'master';
+    const addEffectBtn = rackEl.querySelector(`#addEffectBtn-${ownerId}`);
+    addEffectBtn?.addEventListener('click', () => showAddEffectModal(owner, ownerType));
+    const listDiv = rackEl.querySelector(`#effectsList-${ownerId}`);
+    const controlsContainer = rackEl.querySelector(`#effectControlsContainer-${ownerId}`);
+    renderEffectsList(owner, ownerType, listDiv, controlsContainer);
 }
 
 export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     if (!listDiv) return;
+    const ownerId = (ownerType === 'track') ? owner.id : 'master';
+    const effects = (ownerType === 'track') ? owner.activeEffects : localAppServices.getMasterEffects();
     listDiv.innerHTML = '';
-    const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : localAppServices.getMasterEffects();
-    if (!effectsArray || effectsArray.length === 0) {
-        listDiv.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">No effects added.</p>';
-        if (controlsContainer) controlsContainer.innerHTML = '';
-        return;
+
+    if (effects.length === 0) {
+        // --- Start of Corrected Code ---
+        listDiv.innerHTML = '<p class="text-xs text-center text-black dark:text-white italic">No effects added.</p>';
+        // --- End of Corrected Code ---
+    } else {
+        effects.forEach((effect, index) => {
+            const effectDiv = document.createElement('div');
+            // --- Start of Corrected Code ---
+            effectDiv.className = 'effect-item p-1 border rounded cursor-pointer flex justify-between items-center bg-white dark:bg-black border-black dark:border-white';
+            const effectName = localAppServices.effectsRegistryAccess.AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type;
+            effectDiv.innerHTML = `<span>${index + 1}. ${effectName}</span><button class="text-xs text-black dark:text-white hover:font-bold" title="Remove Effect">X</button>`;
+            // --- End of Corrected Code ---
+            
+            if (selectedEffectId[ownerId] === effect.id) {
+                // --- Start of Corrected Code ---
+                effectDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
+                // --- End of Corrected Code ---
+            }
+
+            effectDiv.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    if (ownerType === 'track') owner.removeEffect(effect.id);
+                    else localAppServices.removeMasterEffect(effect.id);
+                } else {
+                    selectedEffectId[ownerId] = effect.id;
+                    renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render to show selection
+                    renderEffectControls(owner, ownerType, effect.id, controlsContainer);
+                }
+            });
+            listDiv.appendChild(effectDiv);
+        });
     }
-    const AVAILABLE_EFFECTS = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
-    effectsArray.forEach((effect, index) => {
-        const displayName = AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type;
-        const item = document.createElement('div');
-        item.className = 'effect-item flex justify-between items-center p-1 border-b bg-white dark:bg-slate-800 dark:border-slate-700 rounded-sm shadow-xs text-xs';
-        item.innerHTML = `
-            <span class="effect-name flex-grow cursor-pointer hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" title="Edit ${displayName}">${displayName}</span>
-            <div class="effect-actions">
-                <button class="remove-btn text-xs px-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" title="Remove Effect">✕</button>
-            </div>`;
-        item.querySelector('.effect-name').addEventListener('click', () => {
-            renderEffectControls(owner, ownerType, effect.id, controlsContainer);
-            listDiv.querySelectorAll('.bg-blue-100,.dark\\:bg-blue-700').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500'));
-            item.classList.add('bg-blue-100', 'dark:bg-blue-700', 'border-blue-300', 'dark:border-blue-500');
-        });
-        item.querySelector('.remove-btn').addEventListener('click', () => {
-            if (ownerType === 'track') owner.removeEffect(effect.id);
-            else localAppServices.removeMasterEffect(effect.id);
-        });
-        listDiv.appendChild(item);
-    });
+
+    if (selectedEffectId[ownerId]) {
+        renderEffectControls(owner, ownerType, selectedEffectId[ownerId], controlsContainer);
+    } else {
+        controlsContainer.innerHTML = '';
+    }
 }
 
 export function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
     if (!controlsContainer) return;
-    controlsContainer.innerHTML = '';
-    const effectsArray = (ownerType === 'track' && owner) ? owner.activeEffects : localAppServices.getMasterEffects();
-    const effectWrapper = effectsArray.find(e => e.id === effectId);
-    if (!effectWrapper) {
-        controlsContainer.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic">Select an effect to see its controls.</p>';
+    const effects = (ownerType === 'track') ? owner.activeEffects : localAppServices.getMasterEffects();
+    const effect = effects.find(e => e.id === effectId);
+    
+    if (!effect) {
+        controlsContainer.innerHTML = '';
         return;
     }
-    const effectDef = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectWrapper.type];
-    if (!effectDef) {
-        controlsContainer.innerHTML = `<p class="text-xs text-red-500">Error: Definition for "${effectWrapper.type}" not found.</p>`;
-        return;
-    }
-    const titleEl = document.createElement('h4');
-    titleEl.className = 'text-xs font-semibold mb-1 dark:text-slate-200';
-    titleEl.textContent = `Controls: ${effectDef.displayName}`;
-    controlsContainer.appendChild(titleEl);
+
+    const paramDefinitions = localAppServices.effectsRegistryAccess?.getEffectParamDefinitions(effect.type) || [];
+    const effectName = localAppServices.effectsRegistryAccess.AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type;
+    controlsContainer.innerHTML = `<h4 class="text-xs font-bold border-b border-black dark:border-white mb-2 pb-1">${effectName} Controls</h4>`;
+    
     const gridContainer = document.createElement('div');
-    gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 border rounded bg-gray-50 dark:bg-slate-700 dark:border-slate-600 text-xs';
-    if (!effectDef.params || effectDef.params.length === 0) {
-        gridContainer.innerHTML = '<p class="text-xs text-gray-500 dark:text-slate-400 italic col-span-full">No adjustable parameters.</p>';
-    } else {
-        effectDef.params.forEach(paramDef => {
+    gridContainer.className = 'grid grid-cols-2 md:grid-cols-3 gap-2';
+
+    if (paramDefinitions.length > 0) {
+        paramDefinitions.forEach(paramDef => {
             const controlWrapper = document.createElement('div');
-            let currentValue = effectWrapper.params[paramDef.key];
+            let currentValue = effect.params;
+            paramDef.key.split('.').forEach(k => { currentValue = currentValue?.[k]; });
+
             if (paramDef.type === 'knob') {
                 const knob = localAppServices.createKnob({
                     label: paramDef.label,
-                    min: paramDef.min,
-                    max: paramDef.max,
-                    step: paramDef.step,
+                    min: paramDef.min, max: paramDef.max, step: paramDef.step,
+                    decimals: paramDef.decimals,
+                    displaySuffix: paramDef.displaySuffix || '',
                     initialValue: currentValue,
                     onValueChange: (val) => {
                         if (ownerType === 'track') owner.updateEffectParam(effectId, paramDef.key, val);
@@ -140,7 +149,9 @@ function showAddEffectModal(owner, ownerType) {
     let content = '<ul class="list-none p-0 m-0">';
     const AVAILABLE_EFFECTS = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
     for (const key in AVAILABLE_EFFECTS) {
-        content += `<li class="p-2 hover:bg-blue-600 cursor-pointer" data-effect="${key}">${AVAILABLE_EFFECTS[key].displayName}</li>`;
+        // --- Start of Corrected Code ---
+        content += `<li class="p-2 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black cursor-pointer" data-effect="${key}">${AVAILABLE_EFFECTS[key].displayName}</li>`;
+        // --- End of Corrected Code ---
     }
     content += '</ul>';
     
