@@ -39,7 +39,8 @@ import {
     getAudioBlobFromSoundBrowserItem,
     autoSliceSample, setActualMasterVolume,
     playSlicePreview, playDrumSamplerPadPreview,
-    startAudioRecording, stopAudioRecording
+    startAudioRecording, stopAudioRecording,
+    getMasterBusInputNode
 } from './audio.js';
 import {
     storeAudio as dbStoreAudio,
@@ -152,9 +153,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 }
 
 async function initializeSnugOS() {
-
-    // --- Start of Corrected Code ---
-    // Main animation loop
+    
     function drawLoop() {
         if (typeof Tone !== 'undefined') {
             const transportTime = Tone.Transport.seconds;
@@ -167,7 +166,6 @@ async function initializeSnugOS() {
         requestAnimationFrame(drawLoop);
     }
     
-    // Step 1: Define the appServices object completely.
     appServices = {
         // Core
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
@@ -225,6 +223,7 @@ async function initializeSnugOS() {
 
         // Audio Engine
         initAudioContextAndMasterMeter,
+        getMasterBusInputNode,
         updateMeters,
         rebuildMasterEffectChain,
         addMasterEffectToAudio,
@@ -292,12 +291,10 @@ async function initializeSnugOS() {
         uiElementsCache: {}
     };
 
-    // Step 2: Now that appServices is complete, initialize all modules with it.
     initializeStateModule(appServices);
     initializeAudioModule(appServices);
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
-    // --- End of Corrected Code ---
 
     const a = appServices.uiElementsCache;
     // ... cache elements ...
@@ -317,7 +314,6 @@ async function initializeSnugOS() {
     
     console.log("SnugOS Initialized Successfully.");
     
-    // Start the animation loop
     drawLoop();
 }
 
