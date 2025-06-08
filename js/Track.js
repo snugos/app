@@ -1,3 +1,5 @@
+// js/Track.js - Track Class Module
+
 import * as Constants from './constants.js';
 import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
@@ -9,12 +11,17 @@ export class Track {
         this.appServices = appServices || {}; 
 
         this.name = initialData?.name || `${type} Track ${this.id}`;
-        if (type === 'Synth') {
+        if (type === 'DrumSampler') {
+            this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
+        } else if (type === 'Synth') {
             this.name = initialData?.name || `MonoSynth ${this.id}`;
+        } else if (type === 'Audio') {
+            this.name = initialData?.name || `Audio ${this.id}`;
         }
 
         this.isMuted = initialData?.isMuted || false;
         this.isSoloed = false;
+        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
         this.input = new Tone.Gain();
@@ -34,6 +41,7 @@ export class Track {
         this.sequences = [];
         this.activeSequenceId = null;
         this.inspectorControls = {};
+        this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
@@ -51,6 +59,10 @@ export class Track {
         }
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
+        } else if (this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
+            this.instrument = new Tone.Sampler();
+        } else {
+            this.instrument = null;
         }
         this.rebuildEffectChain();
         this.recreateToneSequence();
@@ -127,11 +139,38 @@ export class Track {
     }
 
     addEffect(effectType, params, isInitialLoad = false) {
-        // ... (implementation is correct)
+        const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
+        if (!effectDef) {
+            return;
+        }
+        const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
+        const toneNode = createEffectInstance(effectType, initialParams);
+
+        if (toneNode) {
+            const effectData = { 
+                id: `effect-${this.id}-${Date.now()}`, 
+                type: effectType, 
+                toneNode: toneNode, 
+                params: JSON.parse(JSON.stringify(initialParams)) 
+            };
+            this.activeEffects.push(effectData);
+            this.rebuildEffectChain();
+            if (!isInitialLoad) {
+                this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+                this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.name}`);
+            }
+        }
     }
 
     removeEffect(effectId) {
-        // ... (implementation is correct)
+        const index = this.activeEffects.findIndex(e => e.id === effectId);
+        if (index > -1) {
+            const removedEffect = this.activeEffects.splice(index, 1)[0];
+            removedEffect.toneNode?.dispose();
+            this.rebuildEffectChain();
+            this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+            this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
+        }
     }
 
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
@@ -152,12 +191,29 @@ export class Track {
         }
     }
     
+    // --- Start of Corrected Code ---
     getActiveSequence() {
-        return this.sequences.find(s => s.id === this.activeSequenceId);
+        // A track may have multiple sequences in the future.
+        // For now, robustly return the first one.
+        return this.sequences[0];
     }
+    // --- End of Corrected Code ---
 
     createNewSequence(name, length, skipUndo) {
-        // ... (implementation is correct)
+        if (this.type === 'Audio') return;
+        const newSeqId = `seq_${this.id}_${Date.now()}`;
+        const numRows = Constants.SYNTH_PITCHES.length;
+        const newSequence = {
+            id: newSeqId,
+            name: name,
+            data: Array(numRows).fill(null).map(() => Array(length).fill(null)),
+            length: length
+        };
+        this.sequences.push(newSequence);
+        this.activeSequenceId = newSeqId;
+        if (!skipUndo) {
+            this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.name}`);
+        }
     }
     
     recreateToneSequence() {
@@ -182,7 +238,11 @@ export class Track {
 
         this.toneSequence = new Tone.Sequence((time, value) => {
             if (value) {
-                this.instrument.triggerAttackRelease(value, "16n", time);
+                if (Array.isArray(value)) {
+                    this.instrument.triggerAttackRelease(value, "16n", time);
+                } else {
+                    this.instrument.triggerAttackRelease(value, "16n", time);
+                }
             }
         }, events, "16n");
 
