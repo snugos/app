@@ -2,9 +2,7 @@
 import * as Constants from '../constants.js';
 
 let localAppServices = {};
-// --- Start of New Code ---
-const openPianoRolls = new Map(); // Keep track of open stages and playheads
-// --- End of New Code ---
+const openPianoRolls = new Map();
 
 export function initializePianoRollUI(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
@@ -43,11 +41,9 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
         konvaContainer,
         { 
             width: 800, height: 500, minWidth: 500, minHeight: 300, initialContentKey: windowId,
-            // --- Start of New Code ---
             onCloseCallback: () => {
                 openPianoRolls.delete(trackId);
             }
-            // --- End of New Code ---
         }
     );
 
@@ -56,7 +52,6 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
     }
 }
 
-// --- Start of New Code ---
 export function updatePianoRollPlayhead(transportTime) {
     if (openPianoRolls.size === 0) return;
 
@@ -71,7 +66,6 @@ export function updatePianoRollPlayhead(transportTime) {
         }
     });
 }
-// --- End of New Code ---
 
 
 function drawPianoKeys(layer, stageHeight) {
@@ -84,12 +78,16 @@ function drawPianoKeys(layer, stageHeight) {
         const y = index * noteHeight;
         const keyRect = new Konva.Rect({
             x: 0, y: y, width: keyWidth, height: noteHeight,
-            fill: isBlackKey ? '#333' : '#FFF', stroke: '#000', strokeWidth: 1,
+            fill: isBlackKey ? getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() : getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim(),
+            stroke: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(),
+            strokeWidth: 1,
         });
         keyLayer.add(keyRect);
         const keyText = new Konva.Text({
             x: isBlackKey ? 15 : 5, y: y + noteHeight / 2 - 7, text: noteName,
-            fontSize: 10, fontFamily: "'VT323', monospace", fill: isBlackKey ? '#FFF' : '#000', listening: false,
+            fontSize: 10, fontFamily: "'VT323', monospace", 
+            fill: isBlackKey ? getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() : getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(),
+            listening: false,
         });
         keyLayer.add(keyText);
     });
@@ -103,25 +101,46 @@ function drawGrid(layer, stageWidth, stageHeight) {
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     const numPitches = Constants.SYNTH_PITCHES.length;
     const numSteps = 64;
-
+    
+    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+    const blackKeyColor = getComputedStyle(document.documentElement).getPropertyValue('--border-primary').trim();
+    const lineSubdivisionColor = getComputedStyle(document.documentElement).getPropertyValue('--border-sequencer').trim();
+    const lineBeatColor = getComputedStyle(document.documentElement).getPropertyValue('--border-secondary').trim();
+    
     gridLayer.add(new Konva.Rect({
-        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: '#282828'
+        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: gridColor,
     }));
-    for (let i = 0; i <= numPitches; i++) {
-        const isBlackKey = Constants.SYNTH_PITCHES[i-1]?.includes('#') || false;
+
+    // Draw horizontal lines and black key shading
+    for (let i = 0; i < numPitches; i++) {
+        const isBlackKey = Constants.SYNTH_PITCHES[i]?.includes('#') || false;
+        if (isBlackKey) {
+            gridLayer.add(new Konva.Rect({
+                x: keyWidth, y: i * noteHeight,
+                width: stageWidth - keyWidth, height: noteHeight,
+                fill: blackKeyColor,
+                opacity: 0.2
+            }));
+        }
         gridLayer.add(new Konva.Line({
-            points: [keyWidth, i * noteHeight, noteWidth * numSteps + keyWidth, i * noteHeight],
-            stroke: isBlackKey ? '#505050' : '#404040', strokeWidth: 1,
+            points: [keyWidth, (i + 1) * noteHeight, noteWidth * numSteps + keyWidth, (i + 1) * noteHeight],
+            stroke: lineSubdivisionColor,
+            strokeWidth: 0.5,
         }));
     }
+
+    // Draw vertical lines
     for (let i = 0; i <= numSteps; i++) {
         const isBarLine = i % 16 === 0;
         const isBeatLine = i % 4 === 0;
+
         gridLayer.add(new Konva.Line({
             points: [i * noteWidth + keyWidth, 0, i * noteWidth + keyWidth, stageHeight],
-            stroke: isBarLine ? '#6c757d' : '#505050', strokeWidth: isBarLine || isBeatLine ? 1 : 0.5,
+            stroke: isBarLine ? lineBeatColor : lineSubdivisionColor,
+            strokeWidth: isBarLine || isBeatLine ? 1 : 0.5,
         }));
     }
+    
     return gridLayer;
 }
 
@@ -135,21 +154,32 @@ function renderNotes(track) {
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     
+    // --- Start of Corrected Code ---
+    const noteFillColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+    const noteStrokeColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+    // --- End of Corrected Code ---
+    
     sequenceData.forEach((pitchRow, pitchIndex) => {
         pitchRow.forEach((note, timeStep) => {
             if (note) {
                 const noteRect = new Konva.Rect({
-                    x: timeStep * noteWidth + keyWidth,
-                    y: pitchIndex * noteHeight,
-                    width: noteWidth * (note.duration || 1),
-                    height: noteHeight,
-                    fill: '#0000FF', stroke: '#FFFFFF', strokeWidth: 1,
-                    opacity: note.velocity ? (0.5 + note.velocity * 0.5) : 1,
+                    x: timeStep * noteWidth + keyWidth + 1,
+                    y: pitchIndex * noteHeight + 1,
+                    width: noteWidth * (note.duration || 1) - 2,
+                    height: noteHeight - 2,
+                    // --- Start of Corrected Code ---
+                    fill: noteFillColor,
+                    stroke: noteStrokeColor,
+                    // --- End of Corrected Code ---
+                    strokeWidth: 1,
+                    opacity: note.velocity ? (0.6 + note.velocity * 0.4) : 1,
+                    cornerRadius: 1
                 });
                 noteLayer.add(noteRect);
             }
         });
     });
+
     return noteLayer;
 }
 
@@ -179,19 +209,17 @@ function createPianoRollStage(containerElement, track) {
     let noteLayer = renderNotes(track);
     stage.add(noteLayer);
     
-    // --- Start of New Code ---
     const playheadLayer = new Konva.Layer();
     const playhead = new Konva.Line({
         points: [0, 0, 0, stageHeight],
-        stroke: '#FF0000',
-        strokeWidth: 2,
+        stroke: '#F00', // Red
+        strokeWidth: 1.5,
         listening: false,
     });
     playheadLayer.add(playhead);
     stage.add(playheadLayer);
     
     openPianoRolls.set(track.id, { stage, playhead, layer: playheadLayer });
-    // --- End of New Code ---
 
     const keyLayer = drawPianoKeys(null, stageHeight);
     stage.add(keyLayer);
@@ -201,13 +229,17 @@ function createPianoRollStage(containerElement, track) {
 
     stage.on('click tap', function (e) {
         if (e.target.getLayer() === keyLayer) return;
+        
         const pos = stage.getPointerPosition();
         const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
         if (pos.x < keyWidth) return;
+
         const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
         const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+
         const activeSequence = track.getActiveSequence();
         if (!activeSequence || !activeSequence.data[pitchIndex]) return;
+
         const noteExists = activeSequence.data[pitchIndex][timeStep];
 
         if (noteExists) {
