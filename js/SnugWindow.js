@@ -4,15 +4,16 @@ import { createContextMenu } from './utils.js';
 
 export class SnugWindow {
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
+        // --- DEBUGGING LOG ---
+        console.log(`%c[SnugWindow.js] Constructor for window "${id}" received options:`, 'color: #9b59b6; font-weight: bold;', JSON.parse(JSON.stringify(options)));
+
         this.id = id;
         this.title = title;
         this.isMinimized = false;
         this.initialContentKey = options.initialContentKey || id;
         this.taskbarButton = null;
         this.onCloseCallback = options.onCloseCallback || (() => {});
-        // --- Start of Corrected Code ---
         this.onRefreshCallback = options.onRefresh || null;
-        // --- End of Corrected Code ---
         this.isMaximized = false;
         this.restoreState = {};
         this.appServices = appServices || {}; 
@@ -69,13 +70,11 @@ export class SnugWindow {
         this.focus();
     }
     
-    // --- Start of Corrected Code ---
     refresh() {
         if (typeof this.onRefreshCallback === 'function') {
             this.onRefreshCallback(this);
         }
     }
-    // --- End of Corrected Code ---
 
     createTitleBar(title) {
         const titleBar = document.createElement('div');
