@@ -24,6 +24,7 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
+        // --- Audio Nodes ---
         this.input = new Tone.Gain();
         this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
@@ -37,6 +38,7 @@ export class Track {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         }
 
+        // --- Type-Specific Properties ---
         this.synthEngineType = null;
         this.synthParams = {};
         this.samplerAudioData = {};
