@@ -36,37 +36,15 @@ export class Track {
         }
         
         this.toneSequence = null;
-
         this.synthEngineType = null;
         this.synthParams = {};
-        this.samplerAudioData = {};
-        this.audioBuffer = null;
-        this.slices = [];
-        this.selectedSliceForEdit = 0;
-        this.drumSamplerPads = [];
-        this.drumPadPlayers = [];
-        this.selectedDrumPadForEdit = 0;
-        this.instrumentSamplerSettings = {};
-        this.toneSampler = null;
         this.sequences = [];
         this.activeSequenceId = null;
-        this.timelineClips = initialData?.timelineClips || [];
-        this.inspectorControls = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
-        } else if (this.type === 'Sampler') {
-            this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
-            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
-            this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
-        } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0 });
-            this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
-            this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
-        } else if (this.type === 'InstrumentSampler') {
-            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
         }
 
         if (this.type !== 'Audio' && (!initialData?.sequences || initialData.sequences.length === 0)) {
@@ -91,7 +69,6 @@ export class Track {
     
     rebuildEffectChain() {
         this.input.disconnect();
-        this.activeEffects.forEach(effect => effect.toneNode?.dispose());
         this.instrument?.disconnect();
 
         if (this.instrument) {
@@ -112,7 +89,6 @@ export class Track {
         if (masterBusInput) {
             this.outputNode.connect(masterBusInput);
         } else {
-            console.error(`[Track ${this.id}] Master bus not available. Connecting to destination as fallback.`);
             this.outputNode.toDestination();
         }
     }
@@ -155,7 +131,6 @@ export class Track {
     
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
-        
         try {
             this.instrument.set({ [paramPath]: value });
             this.synthParams = this.instrument.get();
@@ -197,25 +172,6 @@ export class Track {
         }
     }
     
-    updateEffectParam(effectId, paramPath, value) {
-        const effect = this.activeEffects.find(e => e.id === effectId);
-        if (effect?.toneNode) {
-            try {
-                effect.toneNode.set({ [paramPath]: value });
-                let paramState = effect.params;
-                const keys = paramPath.split('.');
-                const finalKey = keys.pop();
-                for (const key of keys) {
-                    paramState[key] = paramState[key] || {};
-                    paramState = paramState[key];
-                }
-                paramState[finalKey] = value;
-            } catch (e) {
-                console.error(`Could not update effect param: ${paramPath}`, e);
-            }
-        }
-    }
-
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined) {
@@ -272,20 +228,15 @@ export class Track {
                     notesInStep.push(Constants.SYNTH_PITCHES[j]);
                 }
             }
-            // Use the array of notes for the event. If it's empty, Tone.Sequence will treat it as a rest.
-            // If it has one item, the callback will receive a string.
-            // If it has multiple, the callback will receive an array.
             events.push(notesInStep);
         }
 
         this.toneSequence = new Tone.Sequence((time, value) => {
-            // --- THIS IS THE CORRECTED LOGIC ---
-            // It now handles both single notes (string) and chords (array)
             if (Array.isArray(value)) {
-                value.forEach(note => {
-                    this.instrument.triggerAttackRelease(note, "16n", time);
-                });
-            } else if (value) { // This handles the single note (string) case
+                if (value.length > 0) {
+                    this.instrument.triggerAttackRelease(value, "16n", time);
+                }
+            } else if (value) {
                 this.instrument.triggerAttackRelease(value, "16n", time);
             }
         }, events, "16n");
