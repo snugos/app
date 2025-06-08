@@ -68,7 +68,6 @@ export class Track {
             this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
-            // --- FIX: Updated the default envelope parameters as requested ---
             this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { 
                 originalFileName: null, 
                 dbKey: null, 
@@ -101,7 +100,6 @@ export class Track {
                 const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
                 urls[rootNote] = buffer;
             }
-            // --- FIX: Pass all instrument settings to the Tone.Sampler constructor ---
             this.instrument = new Tone.Sampler({ 
                 urls,
                 attack: this.instrumentSamplerSettings.envelope.attack,
@@ -250,6 +248,40 @@ export class Track {
         }
     }
     
+    setSequenceLength(sequenceId, newLength) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        if (!sequence) return;
+
+        const validatedLength = Math.max(1, Math.floor(newLength));
+        const oldLength = sequence.length;
+        sequence.length = validatedLength;
+
+        sequence.data.forEach(pitchRow => {
+            if (validatedLength < oldLength) {
+                pitchRow.length = validatedLength;
+            } else {
+                for (let i = oldLength; i < validatedLength; i++) {
+                    pitchRow.push(null);
+                }
+            }
+        });
+
+        this.recreateToneSequence();
+    }
+
+    updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        if (sequence && sequence.data[pitchIndex]?.[timeStep]) {
+            sequence.data[pitchIndex][timeStep].velocity = Math.max(0.01, Math.min(1, newVelocity));
+            const pianoRollWindow = this.appServices.getWindowById?.(`pianoRollWin-${this.id}`);
+            if (pianoRollWindow) {
+                const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${this.id}`);
+                const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${this.id}`);
+                createPianoRollStage(konvaContainer, velocityPane, this);
+            }
+        }
+    }
+
     getActiveSequence() {
         if (!this.activeSequenceId && this.sequences.length > 0) {
             this.activeSequenceId = this.sequences[0].id;
@@ -274,7 +306,7 @@ export class Track {
         }
     }
     
-    async addExternalAudioFileAsClip(audioBlob, startTime, clipName) {
+    async addAudioClip(audioBlob, startTime, clipName) {
         if (this.type !== 'Audio') {
             console.error("Cannot add audio clip to non-audio track.");
             return;
@@ -351,6 +383,8 @@ export class Track {
 
         if (this.toneSequence) {
             this.toneSequence.loop = true;
+            // Set the loop length based on the sequence length
+            this.toneSequence.loopEnd = `${activeSequence.length}*16n`;
         }
     }
     
