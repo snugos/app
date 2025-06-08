@@ -71,7 +71,7 @@ export class Track {
         }
 
         if (this.type !== 'Audio' && (!initialData?.sequences || initialData.sequences.length === 0)) {
-            this.createNewSequence("Sequence 1", 64, true); // Default to 4 bars
+            this.createNewSequence("Sequence 1", 64, true);
         }
     }
 
@@ -161,23 +161,8 @@ export class Track {
         if (!this.instrument || this.type !== 'Synth') return;
         
         try {
-            let target = this.instrument;
-            const keys = paramPath.split('.');
-            const finalKey = keys.pop();
-            
-            for (const key of keys) {
-                if (target[key] === undefined) return;
-                target = target[key];
-            }
-            
-            if (target && typeof target[finalKey] !== 'undefined') {
-                if (target[finalKey]?.value !== undefined) {
-                    target[finalKey].value = value;
-                } else {
-                    target[finalKey] = value;
-                }
-                this.synthParams = this.instrument.get();
-            }
+            this.instrument.set({ [paramPath]: value });
+            this.synthParams = this.instrument.get();
         } catch (e) {
             console.error(`Could not set synth param: ${paramPath}`, e);
         }
@@ -209,9 +194,7 @@ export class Track {
         const index = this.activeEffects.findIndex(e => e.id === effectId);
         if (index > -1) {
             const removedEffect = this.activeEffects.splice(index, 1)[0];
-            if (removedEffect.toneNode) {
-                removedEffect.toneNode.dispose();
-            }
+            removedEffect.toneNode?.dispose();
             this.rebuildEffectChain();
             this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
             this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
@@ -277,10 +260,8 @@ export class Track {
     }
     
     recreateToneSequence() {
-        if (this.toneSequence) {
-            this.toneSequence.dispose();
-            this.toneSequence = null;
-        }
+        this.toneSequence?.dispose();
+        this.toneSequence = null;
 
         const activeSequence = this.getActiveSequence();
         if (!this.instrument || !activeSequence) {
@@ -295,17 +276,14 @@ export class Track {
                     notesInStep.push(Constants.SYNTH_PITCHES[j]);
                 }
             }
-            events.push(notesInStep);
+            events.push(notesIn_step);
         }
 
         this.toneSequence = new Tone.Sequence((time, notes) => {
             // --- THIS IS THE FIX ---
-            // The synth can only play one note at a time, so we iterate
-            // if there happen to be multiple notes in a step (for future polyphony).
+            // Check if 'notes' is a valid array with content before trying to use it.
             if (notes && notes.length > 0) {
-                notes.forEach(note => {
-                    this.instrument.triggerAttackRelease(note, "16n", time);
-                });
+                this.instrument.triggerAttackRelease(notes, "16n", time);
             }
         }, events, "16n");
 
