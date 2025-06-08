@@ -252,7 +252,7 @@ export class Track {
 
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (sequence && sequence.data[pitchIndex] !== undefined) {
+        if (sequence && sequence.data[pitchIndex] !== undefined && timeStep < sequence.length) {
             sequence.data[pitchIndex][timeStep] = noteData;
             this.appServices.captureStateForUndo?.(`Add note to ${this.name}`);
             this.recreateToneSequence();
@@ -261,7 +261,7 @@ export class Track {
 
     removeNoteFromSequence(sequenceId, pitchIndex, timeStep) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (sequence && sequence.data[pitchIndex] !== undefined) {
+        if (sequence && sequence.data[pitchIndex]?.[timeStep]) {
             sequence.data[pitchIndex][timeStep] = null;
             this.appServices.captureStateForUndo?.(`Remove note from ${this.name}`);
             this.recreateToneSequence();
@@ -346,6 +346,18 @@ export class Track {
         return newSelectedNoteIds;
     }
 
+    setNoteDuration(sequenceId, pitchIndex, timeStep, newDuration) {
+        const sequence = this.sequences.find(s => s.id === sequenceId);
+        const note = sequence?.data?.[pitchIndex]?.[timeStep];
+
+        if (note) {
+            note.duration = Math.max(1, Math.floor(newDuration));
+            // No need to recreate the sequence for a visual-only change,
+            // but might be needed if audio playback depends on it.
+            // For now, we assume UI will handle the redraw.
+        }
+    }
+
     updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex]?.[timeStep]) {
@@ -419,37 +431,34 @@ export class Track {
         const activeSequence = this.getActiveSequence();
         if (!activeSequence) return;
         
+        // This creates a simplified array of events for Tone.Sequence
         const events = [];
         for (let step = 0; step < activeSequence.length; step++) {
-            const notesInStep = [];
             for (let row = 0; row < activeSequence.data.length; row++) {
                 if (activeSequence.data[row]?.[step]) {
                     const pitch = Constants.SYNTH_PITCHES[row];
-                    notesInStep.push(pitch);
+                    // Using "16n" as the time for each step
+                    events.push([`${step}*16n`, pitch]);
                 }
             }
-            events.push(notesInStep);
         }
 
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
             if (!this.instrument) return;
             this.toneSequence = new Tone.Sequence((time, note) => {
                 this.instrument.triggerAttackRelease(note, "16n", time);
-            }, events, "16n"); // Note: .start(0) is removed
+            }, events, "16n");
 
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-            this.toneSequence = new Tone.Sequence((time, value) => {
-                if (!value) return;
-                const notes = Array.isArray(value) ? value : [value];
-                notes.forEach(note => {
-                    const midi = Tone.Midi(note).toMidi();
-                    const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                    if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                        const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
-                        playbackFn?.(this.id, sampleIndex, 1.0, 0, time);
-                    }
-                });
-            }, events, "16n"); // Note: .start(0) is removed
+            this.toneSequence = new Tone.Sequence((time, note) => {
+                const midi = Tone.Midi(note).toMidi();
+                const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+
+                if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
+                    const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
+                    playbackFn?.(this.id, sampleIndex, 1.0, 0, time);
+                }
+            }, events, "16n");
         }
 
         if (this.toneSequence) {
@@ -459,7 +468,9 @@ export class Track {
     }
 
     startSequence() {
-        this.toneSequence?.start(0);
+        if (this.toneSequence?.state !== 'started') {
+            this.toneSequence?.start(0);
+        }
     }
     
     stopSequence() {
