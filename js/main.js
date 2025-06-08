@@ -88,14 +88,12 @@ function applyUserTheme() {
     }
 }
 
-// --- Start of Corrected Code ---
 function handleMasterEffectsUIUpdate() {
     const rackWindow = getWindowByIdState('masterEffectsRack');
     if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
         rackWindow.refresh();
     }
 }
-// --- End of Corrected Code ---
 
 function handleTrackUIUpdate(trackId, reason, detail) {
     const track = getTrackByIdState(trackId);
