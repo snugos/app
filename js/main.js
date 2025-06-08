@@ -72,10 +72,7 @@ import {
 } from './ui.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions } from './effectsRegistry.js';
 
-// --- App Services Object (Dependency Injection) ---
 let appServices = {};
-
-// --- Core Application Functions ---
 
 function applyUserTheme() {
     const preference = getCurrentUserThemePreferenceState();
@@ -138,14 +135,12 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 
     // --- Start of Corrected Code ---
     if (reason === 'effectsChanged') {
-        console.log(`[EFFECTS_DEBUG_6] handleTrackUIUpdate received 'effectsChanged' for track ${trackId}.`);
-        const rackWindow = getWindowByIdState(`effectsRack-${trackId}`);
-        if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
-            const listDiv = rackWindow.element.querySelector(`#effectsList-${trackId}`);
-            const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-${trackId}`);
+        // This new logic directly finds the effects list on the page, bypassing the window lookup.
+        const listDiv = document.querySelector(`#effectsList-${trackId}`);
+        if (listDiv) {
+            const rackWindow = listDiv.closest('.window');
+            const controlsContainer = rackWindow?.querySelector(`#effectControlsContainer-${trackId}`);
             renderEffectsList(track, 'track', listDiv, controlsContainer);
-        } else {
-            console.warn(`[EFFECTS_DEBUG_6] Could not find or update effects rack window for track ${trackId}.`);
         }
     }
     // --- End of Corrected Code ---
@@ -285,8 +280,7 @@ async function initializeSnugOS() {
     initializeEventHandlersModule(appServices);
 
     const a = appServices.uiElementsCache;
-    a.desktop = document.getElementById('desktop');
-    // ... cache other elements ...
+    // ... cache elements ...
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents(a);
