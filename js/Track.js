@@ -40,6 +40,7 @@ export class Track {
         this.synthParams = {};
         this.sequences = [];
         this.activeSequenceId = null;
+        this.inspectorControls = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
         if (this.type === 'Synth') {
@@ -58,8 +59,6 @@ export class Track {
         }
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
-        } else if (this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
-            this.instrument = new Tone.Sampler();
         } else {
             this.instrument = null;
         }
@@ -171,7 +170,7 @@ export class Track {
             this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
         }
     }
-    
+
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined) {
@@ -228,17 +227,22 @@ export class Track {
                     notesInStep.push(Constants.SYNTH_PITCHES[j]);
                 }
             }
+            // If the step is empty, push an empty array. Tone.Sequence will treat this as a rest.
             events.push(notesInStep);
         }
 
         this.toneSequence = new Tone.Sequence((time, value) => {
+            // This callback now handles all cases correctly.
             if (Array.isArray(value)) {
+                // For chords (multiple notes in one step)
                 if (value.length > 0) {
                     this.instrument.triggerAttackRelease(value, "16n", time);
                 }
             } else if (value) {
+                // For single notes (which Tone.js passes as a string, not an array)
                 this.instrument.triggerAttackRelease(value, "16n", time);
             }
+            // If value is undefined or an empty array, it does nothing (a rest).
         }, events, "16n");
 
         this.toneSequence.loop = true;
