@@ -1,4 +1,4 @@
-// js/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube via Cobalt API
+// js/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
 
 let localAppServices = {};
 
@@ -18,12 +18,8 @@ export function openYouTubeImporterWindow(savedState = null) {
         <div class="p-4 flex flex-col h-full bg-white dark:bg-black text-black dark:text-white">
             <h3 class="text-lg font-bold mb-2">Import Audio from URL</h3>
             <p class="text-xs mb-2 text-black dark:text-white">
-                Enter a YouTube URL to download its audio. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-black dark:text-white hover:underline">Cobalt</a> API.
+                Enter a YouTube URL to download its audio.
             </p>
-
-            <div class="p-2 mb-4 text-xs bg-white border border-black rounded-md text-black dark:bg-black dark:text-white dark:border-white" role="alert">
-                <b>Note:</b> This feature requires a public CORS proxy and may be unreliable. The best long-term solution is a dedicated server component.
-            </div>
             
             <div class="flex items-center space-x-2">
                 <input type="text" id="youtubeUrlInput" placeholder="Enter a YouTube video URL..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
@@ -40,7 +36,7 @@ export function openYouTubeImporterWindow(savedState = null) {
         windowId, 
         'URL Importer', 
         contentHTML, 
-        { width: 450, height: 280, minWidth: 400, minHeight: 280 }
+        { width: 450, height: 220, minWidth: 400, minHeight: 220 }
     );
 
     if (importerWindow?.element) {
@@ -69,60 +65,55 @@ function attachImporterEventListeners(windowElement) {
         importBtn.disabled = true;
         urlInput.disabled = true;
         importBtn.textContent = 'Working...';
-        setStatus('Requesting download link from server...');
+        setStatus('Requesting stream from server...');
 
         try {
-            const response = await fetch('/.netlify/functions/cobalt', {
+            // Call our new Netlify function
+            const response = await fetch('/.netlify/functions/youtube', {
                 method: 'POST',
                 body: JSON.stringify({ url: youtubeUrl })
             });
 
             const result = await response.json();
 
-            if (!response.ok) {
-                // If the function returned a detailed error object, use its message
-                if (result && result.message) {
-                    throw new Error(`Server Function Error: ${result.message}`);
-                }
-                throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+            if (!result.success) {
+                throw new Error(result.message || 'An unknown error occurred on the server.');
             }
 
-            if (result.status === 'stream' || result.status === 'redirect') {
-                setStatus('Download link received. Fetching audio...');
-                const audioUrl = result.url;
-                
-                const audioResponse = await fetch(audioUrl);
-                
-                if (!audioResponse.ok) {
-                    throw new Error(`Failed to download audio file: ${audioResponse.status} ${audioResponse.statusText}`);
-                }
-                
-                const audioBlob = await audioResponse.blob();
-                
-                setStatus('Audio downloaded. Adding to a new track...');
+            setStatus('Audio stream found. Downloading...');
+            const audioUrl = result.url;
+            
+            // The audio URL from ytdl-core can sometimes be blocked by CORS itself.
+            // We use a proxy for the final download to be safe.
+            const proxyUrl = 'https://corsproxy.io/?';
+            const audioResponse = await fetch(proxyUrl + encodeURIComponent(audioUrl));
+            
+            if (!audioResponse.ok) {
+                throw new Error(`Failed to download audio file: ${audioResponse.status} ${audioResponse.statusText}`);
+            }
+            
+            const audioBlob = await audioResponse.blob();
+            
+            setStatus('Audio downloaded. Adding to a new track...');
 
-                const newTrack = localAppServices.addTrack('Audio');
-                if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
-                    const videoTitle = result.text || `YT Import`;
-                    await newTrack.addExternalAudioFileAsClip(audioBlob, 0, videoTitle);
-                    
-                    setStatus('Success! Audio added to a new track.', false);
-                    setTimeout(() => {
-                        const win = localAppServices.getWindowById('youtubeImporter');
-                        if (win) win.close();
-                    }, 2000);
-
-                } else {
-                    throw new Error("Could not create a new audio track or add the clip.");
-                }
+            const newTrack = localAppServices.addTrack('Audio');
+            if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
+                const videoTitle = result.title || `YT Import`;
+                await newTrack.addExternalAudioFileAsClip(audioBlob, 0, videoTitle);
+                
+                setStatus('Success! Audio added to a new track.', false);
+                setTimeout(() => {
+                    const win = localAppServices.getWindowById('youtubeImporter');
+                    if (win) win.close();
+                }, 2000);
 
             } else {
-                 throw new Error(`API Error: ${result.text || 'Unknown issue.'}`);
+                throw new Error("Could not create a new audio track or add the clip.");
             }
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
-            setStatus(`${error.message}`, true);
+            setStatus(`Error: ${error.message}`, true);
         } finally {
             importBtn.disabled = false;
             urlInput.disabled = false;
