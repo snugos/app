@@ -340,11 +340,8 @@ export function setupMIDI() {
 }
 
 function onMIDISuccess(midiAccess) {
-    if (localAppServices.setMidiAccess) {
-        localAppServices.setMidiAccess(midiAccess);
-    }
+    localAppServices.setMidiAccess?.(midiAccess);
     populateMIDIInputSelector(midiAccess);
-
     midiAccess.onstatechange = () => {
         populateMIDIInputSelector(midiAccess);
     };
@@ -388,7 +385,7 @@ function populateMIDIInputSelector(midiAccess) {
 }
 
 export function selectMIDIInput(event) {
-    const midiAccess = getMidiAccessState();
+    const midiAccess = localAppServices.getMidiAccess?.();
     const selectedId = event.target.value;
     const currentActiveInput = getActiveMIDIInputState();
 
