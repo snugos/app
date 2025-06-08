@@ -106,4 +106,177 @@ export function setMasterEffectsState(effectsArray) {
 export function setMasterGainValueState(gainValue) { masterGainValueState = gainValue; }
 
 export function setMidiAccessState(midi) { midiAccessGlobal = midi; }
-export function setActiveMIDIInputState(
+export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
+
+export function setLoadedZipFilesState(libraryName, zipInstance, status = 'loaded') {
+    loadedZipFilesGlobal[libraryName] = { zip: zipInstance, status: status, lastAccessed: Date.now() };
+}
+export function setSoundLibraryFileTreesState(libraryName, tree) {
+    soundLibraryFileTreesGlobal[libraryName] = tree;
+}
+export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
+export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
+export function setCurrentSoundBrowserPathState(pathArray) { currentSoundBrowserPathGlobal = pathArray || []; }
+export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
+
+export function setClipboardDataState(data) { clipboardDataGlobal = data || { type: null, data: null, sourceTrackType: null, sequenceLength: null }; }
+
+export function setArmedTrackIdState(trackId) {
+    armedTrackId = trackId;
+}
+
+export function setSoloedTrackIdState(trackId) {
+    const tracks = getTracksState();
+    const oldSoloId = soloedTrackId;
+    soloedTrackId = trackId;
+
+    if (appServices.updateTrackUI) {
+        if (oldSoloId !== null) {
+            appServices.updateTrackUI(oldSoloId, 'soloChanged');
+        }
+        if (soloedTrackId !== null) {
+            appServices.updateTrackUI(soloedTrackId, 'soloChanged');
+        }
+        tracks.forEach(t => {
+            if (t.id !== oldSoloId && t.id !== soloedTrackId) {
+                appServices.updateTrackUI(t.id, 'soloChanged');
+            }
+        });
+    }
+}
+
+export function setIsRecordingState(isRec) { isRecordingGlobal = !!isRec; }
+export function setRecordingTrackIdState(trackId) { recordingTrackIdGlobal = trackId; }
+export function setRecordingStartTimeState(time) { recordingStartTimeGlobal = time; }
+export function setActiveSequencerTrackIdState(trackId) { activeSequencerTrackId = trackId; }
+
+export function setPlaybackModeState(newMode, skipUIUpdate = false) {
+    if (playbackMode === newMode) return;
+    const oldMode = playbackMode;
+    playbackMode = newMode;
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Playback Mode to ${newMode}`);
+    }
+    if (Tone.Transport.state === 'started') {
+        Tone.Transport.stop();
+    }
+    Tone.Transport.cancel(0);
+    if (appServices.onPlaybackModeChange && !skipUIUpdate) {
+        appServices.onPlaybackModeChange(newMode, oldMode);
+    }
+}
+
+export function setSelectedTimelineClipInfoState(info) { selectedTimelineClipInfo = info || { clipId: null, trackId: null, originalLeft: 0, originalStartBeat: 0 }; }
+export function setCurrentUserThemePreferenceState(preference) {
+    if (['light', 'dark', 'system'].includes(preference)) {
+        currentUserThemePreference = preference;
+        localStorage.setItem('snugos-theme', preference);
+        appServices.applyUserThemePreference?.();
+    }
+}
+
+// --- Core State Actions ---
+export function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
+    let newTrack = null;
+    try {
+        const newTrackId = initialData?.id ?? trackIdCounter++;
+        newTrack = new Track(newTrackId, type, initialData, appServices);
+        if (newTrackId >= trackIdCounter) {
+            trackIdCounter = newTrackId + 1;
+        }
+        tracks.push(newTrack);
+        
+        if (typeof newTrack.initializeInstrument === 'function') {
+            newTrack.initializeInstrument();
+        }
+
+        if (isUserAction) {
+            appServices.captureStateForUndo?.(`Add Track: ${newTrack.name}`);
+        }
+        appServices.updateMixerWindow?.();
+        appServices.renderTimeline?.();
+        return newTrack;
+    } catch (error) {
+        console.error(`[State] CRITICAL ERROR while adding ${type} track:`, error);
+        appServices.showNotification?.(`Failed to add ${type} track. See console for details.`, 5000);
+        return null; 
+    }
+}
+
+export function removeTrackFromStateInternal(trackId, isUserAction = true) {
+    const trackIndex = tracks.findIndex(t => t.id === trackId);
+    if (trackIndex > -1) {
+        const removedTrackData = tracks[trackIndex].serialize(); 
+        if (isUserAction) {
+            appServices.captureStateForUndo?.(`Remove Track ${removedTrackData.name}`, {
+                undo: () => addTrackToStateInternal(removedTrackData.type, removedTrackData, false),
+                redo: () => removeTrackFromStateInternal(trackId, false)
+            });
+        }
+        tracks[trackIndex].dispose();
+        tracks.splice(trackIndex, 1);
+        appServices.updateMixerWindow?.();
+        appServices.renderTimeline?.();
+    }
+}
+
+export function addMasterEffectToState(effectType) {
+    const effectDef = appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
+    if (!effectDef) {
+        console.error(`Master effect definition for "${effectType}" not found.`);
+        return;
+    }
+    const initialParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
+    const effectData = {
+        id: `master-effect-${Date.now()}`,
+        type: effectType,
+        params: JSON.parse(JSON.stringify(initialParams))
+    };
+    masterEffectsChainState.push(effectData);
+    appServices.addMasterEffectToAudio?.(effectData.id, effectData.type, effectData.params);
+    appServices.updateMasterEffectsUI?.();
+    appServices.captureStateForUndo?.(`Add Master Effect: ${effectDef.displayName}`);
+}
+
+export function removeMasterEffectFromState(effectId) {
+    const index = masterEffectsChainState.findIndex(e => e.id === effectId);
+    if (index > -1) {
+        const effect = masterEffectsChainState.splice(index, 1)[0];
+        appServices.removeMasterEffectFromAudio?.(effect.id);
+        appServices.updateMasterEffectsUI?.();
+        appServices.captureStateForUndo?.(`Remove Master Effect: ${effect.type}`);
+    }
+}
+export function updateMasterEffectParamInState(effectId, paramPath, value) {
+    const effect = masterEffectsChainState.find(e => e.id === effectId);
+    if (effect) {
+        let paramState = effect.params;
+        const keys = paramPath.split('.');
+        const finalKey = keys.pop();
+        for (const key of keys) {
+           paramState[key] = paramState[key] || {};
+           paramState = paramState[key];
+        }
+        paramState[finalKey] = value;
+        appServices.updateMasterEffectParamInAudio?.(effectId, paramPath, value);
+    }
+}
+export function reorderMasterEffectInState(effectId, newIndex) {
+    const effectIndex = masterEffectsChainState.findIndex(e => e.id === effectId);
+    if (effectIndex > -1 && newIndex >= 0 && newIndex < masterEffectsChainState.length) {
+        const [effectToMove] = masterEffectsChainState.splice(effectIndex, 1);
+        masterEffectsChainState.splice(newIndex, 0, effectToMove);
+        appServices.reorderMasterEffectInAudio?.();
+        appServices.updateMasterEffectsUI?.();
+    }
+}
+
+export async function reconstructDAWInternal(projectData) {}
+export function captureStateForUndoInternal(actionDescription, customRedo) {}
+export function undoLastActionInternal() {}
+export function redoLastActionInternal() {}
+export function gatherProjectDataInternal(includeEffectsRegistry = false) {}
+export async function saveProjectInternal() {}
+export async function loadProjectInternal(file) {}
+export async function handleProjectFileLoadInternal(event) {}
+export async function exportToWavInternal() {}
