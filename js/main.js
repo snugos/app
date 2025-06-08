@@ -141,15 +141,8 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
 
     if (reason === 'effectsChanged') {
-        console.log(`[EFFECTS_DEBUG_6] handleTrackUIUpdate received 'effectsChanged' for track ${trackId}.`);
         const rackWindow = getWindowByIdState(`effectsRack-${trackId}`);
-        if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
-            const listDiv = rackWindow.element.querySelector(`#effectsList-${trackId}`);
-            const controlsContainer = rackWindow.element.querySelector(`#effectControlsContainer-${trackId}`);
-            renderEffectsList(track, 'track', listDiv, controlsContainer);
-        } else {
-            console.warn(`[EFFECTS_DEBUG_6] Could not find or update effects rack window for track ${trackId}.`);
-        }
+        rackWindow?.refresh();
     }
     
     if (reason === 'nameChanged' || reason === 'clipsChanged') {
