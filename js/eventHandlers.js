@@ -178,28 +178,42 @@ export function attachGlobalControlEvents(uiCache) {
     const handleRecord = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
-
+    
         const currentlyRecording = isTrackRecordingState();
         const armedTrackId = getArmedTrackId();
         const armedTrack = getTrackById(armedTrackId);
         
+        const recordBtn = document.getElementById('recordBtnGlobalTop');
+
         if (currentlyRecording) {
+            // This part is for stopping any type of recording
             setIsRecording(false);
             recordBtn.classList.remove('recording');
-            if (localAppServices.stopAudioRecording) {
+            if (armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
                 await localAppServices.stopAudioRecording();
             }
-        } else if (armedTrack && armedTrack.type === 'Audio') {
-            const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
-            if (success) {
-                setIsRecording(true);
-                setRecordingTrackId(armedTrackId);
-                if (Tone.Transport.state !== 'started') {
-                    Tone.Transport.start();
+            // For MIDI, stopping is just changing the state. The notes are already captured.
+        } else if (armedTrack) {
+            setRecordingTrackId(armedTrackId);
+            setIsRecording(true);
+            recordBtn.classList.add('recording');
+    
+            // Differentiate between Audio and MIDI recording start
+            if (armedTrack.type === 'Audio') {
+                const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
+                if (!success) {
+                    // If audio recording failed to start, reset the state
+                    setIsRecording(false);
+                    recordBtn.classList.remove('recording');
+                    return;
                 }
             }
-        } else if (armedTrack) {
-            showNotification(`Cannot record on a ${armedTrack.type} track. Arm an Audio track.`, 3000);
+            // For MIDI tracks, we just set the state and start the transport.
+            // The onMIDIMessage handler will now capture the notes.
+    
+            if (Tone.Transport.state !== 'started') {
+                Tone.Transport.start();
+            }
         } else {
             showNotification("No track armed for recording.", 2500);
         }
@@ -404,64 +418,69 @@ export function selectMIDIInput(event) {
 
 function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
-    console.log(`[MIDI] Message: command=${command}, note=${noteNumber}, velocity=${velocity}`);
-
-    const armedTrackId = getArmedTrackId();
-    if (armedTrackId === null) {
-        // No track is armed, so we can ignore the message.
-        return;
-    }
-
-    const armedTrack = getTrackById(armedTrackId);
-    if (!armedTrack) {
-        console.error('[MIDI] Armed track not found in state!');
-        return;
-    }
-
-    // FIX 1: Check for Note On/Off on ANY channel, not just channel 1.
     const noteOn = (command & 0xF0) === 0x90 && velocity > 0;
     const noteOff = (command & 0xF0) === 0x80 || ((command & 0xF0) === 0x90 && velocity === 0);
 
-    if (!noteOn && !noteOff) {
-        // Not a note on/off message, ignore.
-        return;
+    // MIDI Recording Logic
+    if (noteOn && isTrackRecordingState()) {
+        const recordingTrackId = getArmedTrackId();
+        const track = getTrackById(recordingTrackId);
+
+        if (track && track.type !== 'Audio') {
+            const activeSequence = track.getActiveSequence();
+            if (activeSequence) {
+                const ticksPerStep = Tone.Transport.PPQ / 4;
+                const currentStep = Math.round(Tone.Transport.ticks / ticksPerStep);
+                const pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber;
+
+                if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
+                    track.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
+                    
+                    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
+                    if (pianoRollWindow && !pianoRollWindow.isMinimized) {
+                       const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${track.id}`);
+                       const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${track.id}`);
+                       if(localAppServices.openPianoRollWindow) {
+                           pianoRollWindow.close(true);
+                           localAppServices.openPianoRollWindow(track.id);
+                       }
+                    }
+                }
+            }
+            return; 
+        }
     }
     
-    // FIX 3: Add specific handling for Pad and Slice samplers.
+    // Live MIDI Playback Logic
+    const armedTrackId = getArmedTrackId();
+    if (armedTrackId === null) return;
+    const armedTrack = getTrackById(armedTrackId);
+    if (!armedTrack) return;
+
+    if (!noteOn && !noteOff) return;
+
     if (armedTrack.type === 'Sampler' || armedTrack.type === 'DrumSampler') {
         const startIndex = armedTrack.type === 'DrumSampler' ? Constants.DRUM_MIDI_START_NOTE : Constants.SAMPLER_PIANO_ROLL_START_NOTE;
         const numSamples = armedTrack.type === 'DrumSampler' ? Constants.numDrumSamplerPads : Constants.numSlices;
         const sampleIndex = noteNumber - startIndex;
-
-        if (sampleIndex >= 0 && sampleIndex < numSamples) {
-            if (noteOn) {
-                console.log(`[MIDI] Triggering ${armedTrack.type}, index ${sampleIndex}`);
-                const playbackFn = armedTrack.type === 'DrumSampler' ? localAppServices.playDrumSamplerPadPreview : localAppServices.playSlicePreview;
-                playbackFn?.(armedTrack.id, sampleIndex, velocity / 127);
-            }
-            // Note: Pad/slice samplers often don't need an explicit note-off command.
+        if (sampleIndex >= 0 && sampleIndex < numSamples && noteOn) {
+            const playbackFn = armedTrack.type === 'DrumSampler' ? localAppServices.playDrumSamplerPadPreview : localAppServices.playSlicePreview;
+            playbackFn?.(armedTrack.id, sampleIndex, velocity / 127);
         }
         return;
     }
 
-    if (!armedTrack.instrument) {
-        console.log('[MIDI] Armed track has no playable instrument. Ignoring message.');
-        return;
-    }
+    if (!armedTrack.instrument) return;
 
-    // FIX 2: Use the correct note type (name vs. frequency) for the instrument.
-    const noteValue = armedTrack.type === 'InstrumentSampler' ?
-        Tone.Midi(noteNumber).toNote() :
-        Tone.Midi(noteNumber).toFrequency();
+    const noteValue = armedTrack.type === 'InstrumentSampler' ? Tone.Midi(noteNumber).toNote() : Tone.Midi(noteNumber).toFrequency();
 
     if (noteOn) {
-        console.log(`[MIDI] Calling triggerAttack on ${armedTrack.name} with note: ${noteValue}`);
         armedTrack.instrument.triggerAttack(noteValue, Tone.now(), velocity / 127);
     } else if (noteOff) {
-        console.log(`[MIDI] Calling triggerRelease on ${armedTrack.name} with note: ${noteValue}`);
         armedTrack.instrument.triggerRelease(noteValue, Tone.now());
     }
 }
+
 
 export function handleTrackMute(trackId) {
     const track = getTrackById(trackId);
