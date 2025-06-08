@@ -20,7 +20,6 @@ import {
     getUndoStackState, 
     getRedoStackState  
 } from './state.js';
-// --- FIX: Import octave shift functions ---
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
 
 
@@ -126,6 +125,13 @@ export function initializePrimaryEventListeners() {
 
     document.getElementById('menuExportWav')?.addEventListener('click', () => {
         localAppServices.exportToWav?.();
+        startMenu?.classList.add('hidden');
+    });
+
+    // --- FIX: Add listener for the new refresh button ---
+    document.getElementById('menuRefreshMidi')?.addEventListener('click', () => {
+        showNotification('Refreshing MIDI devices...', 1500);
+        setupMIDI();
         startMenu?.classList.add('hidden');
     });
 
@@ -253,10 +259,10 @@ export function attachGlobalControlEvents(uiCache) {
                 handleStop();
             } else if (key === 'r' && !e.ctrlKey && !e.metaKey) {
                 handleRecord();
-            } else if (key === 'z') { // --- FIX: Octave Down ---
+            } else if (key === 'z') {
                 decrementOctaveShift();
                 localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
-            } else if (key === 'x') { // --- FIX: Octave Up ---
+            } else if (key === 'x') {
                 incrementOctaveShift();
                 localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             }
@@ -316,27 +322,48 @@ function toggleFullScreen() {
     }
 }
 
+// --- FIX: Rewritten MIDI setup with better error checking and logging ---
 export function setupMIDI() {
-    if (navigator.requestMIDIAccess) {
-        // --- FIX: Requesting sysex access often helps detect more devices ---
-        navigator.requestMIDIAccess({ sysex: true })
-            .then(onMIDISuccess)
-            .catch(onMIDIFailure);
-    } else {
+    // 1. Check for browser support
+    if (!navigator.requestMIDIAccess) {
         console.warn("Web MIDI API is not supported in this browser.");
+        showNotification("Web MIDI is not supported in this browser.", 4000);
+        return;
     }
+    // 2. Check for secure context (required by modern browsers)
+    if (!window.isSecureContext) {
+        console.warn("MIDI access is blocked: Page is not in a secure context (HTTPS or localhost).");
+        showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
+        return;
+    }
+
+    navigator.requestMIDIAccess({ sysex: true })
+        .then(onMIDISuccess)
+        .catch(onMIDIFailure);
 }
 
 function onMIDISuccess(midiAccess) {
+    console.log("MIDI ready!", midiAccess);
     if (localAppServices.setMidiAccess) {
         localAppServices.setMidiAccess(midiAccess);
     }
+    // Add logging to see how many devices are found
+    console.log(`Found ${midiAccess.inputs.size} MIDI input(s).`);
+    if (midiAccess.inputs.size === 0) {
+        showNotification("No MIDI input devices found.", 3000);
+    }
+    
     populateMIDIInputSelector();
-    midiAccess.onstatechange = populateMIDIInputSelector;
+    // This listener will automatically re-populate the list if a device is plugged in or unplugged
+    midiAccess.onstatechange = (event) => {
+        console.log("MIDI state changed:", event.port);
+        populateMIDIInputSelector();
+    };
 }
 
-function onMIDIFailure(msg) {
-    showNotification(`Failed to get MIDI access - ${msg}`, 4000);
+function onMIDIFailure(error) {
+    console.error("Failed to get MIDI access -", error);
+    showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
 }
 
 function populateMIDIInputSelector() {
@@ -344,7 +371,12 @@ function populateMIDIInputSelector() {
     const midiAccess = getMidiAccessState();
     if (!midiSelect || !midiAccess) return;
 
+    // Preserve the currently selected value
+    const previouslySelectedId = midiSelect.value;
+    
+    // Clear the list
     midiSelect.innerHTML = '<option value="">None</option>';
+    
     if (midiAccess.inputs.size > 0) {
         midiAccess.inputs.forEach(input => {
             const option = document.createElement('option');
@@ -354,9 +386,16 @@ function populateMIDIInputSelector() {
         });
     }
     
+    // Try to re-select the previous device
     const activeInput = getActiveMIDIInputState();
-    if (activeInput) {
-        midiSelect.value = activeInput.id;
+    const targetId = activeInput ? activeInput.id : previouslySelectedId;
+    
+    // Check if the target device still exists in the dropdown
+    if (targetId && midiSelect.querySelector(`option[value="${targetId}"]`)) {
+        midiSelect.value = targetId;
+    } else {
+        // If the old device is gone, reset the state
+        setActiveMIDIInputState(null);
     }
 }
 
@@ -373,8 +412,10 @@ export function selectMIDIInput(event) {
         const newActiveInput = midiAccess.inputs.get(selectedId);
         newActiveInput.onmidimessage = onMIDIMessage;
         setActiveMIDIInputState(newActiveInput);
+        console.log(`MIDI Input changed to: ${newActiveInput.name}`);
     } else {
         setActiveMIDIInputState(null);
+        console.log("MIDI Input disconnected.");
     }
 }
 
