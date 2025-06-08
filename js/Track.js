@@ -31,9 +31,16 @@ export class Track {
         
         this.instrument = null;
         this.activeEffects = [];
-        if (initialData?.activeEffects) {
+        // --- START MODIFICATION ---
+        // If loading from a saved project, load the saved effects
+        if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
+        } else if (this.type !== 'Audio') {
+            // For any new, non-audio track, add a default EQ3.
+            // We check the type to avoid adding an EQ to an empty audio track.
+            this.addEffect('EQ3', null, true);
         }
+        // --- END MODIFICATION ---
         
         this.toneSequence = null;
         this.synthEngineType = null;
@@ -69,7 +76,6 @@ export class Track {
             this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
         }
 
-        // --- FIX: Create a default sequence for all sequence-able track types ---
         if (this.type !== 'Audio' && this.sequences.length === 0) {
             this.createNewSequence("Sequence 1", 64, true);
         }
@@ -83,8 +89,6 @@ export class Track {
         if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
             this.instrument = new Tone.PolySynth(Tone.Synth);
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-            // Samplers don't need a default instrument for sequencing, 
-            // the sequence will trigger the playback service directly.
             this.instrument = null; 
         } else {
             this.instrument = null;
@@ -130,12 +134,74 @@ export class Track {
         }
     }
 
-    applyMuteState() { /* ... (no changes) ... */ }
-    applySoloState(isAnotherTrackSoloed) { /* ... (no changes) ... */ }
-    updateSoloMuteState(soloedTrackId) { /* ... (no changes) ... */ }
-    setSynthParam(paramPath, value) { /* ... (no changes) ... */ }
-    addEffect(effectType, params, isInitialLoad = false) { /* ... (no changes) ... */ }
-    removeEffect(effectId) { /* ... (no changes) ... */ }
+    applyMuteState() {
+        if (!this.outputNode) return;
+        if (this.isMuted) {
+            this.outputNode.gain.rampTo(0, 0.02);
+        } else {
+            this.outputNode.gain.rampTo(this.previousVolumeBeforeMute, 0.02);
+        }
+    }
+
+    applySoloState(isAnotherTrackSoloed) {
+        if (!this.outputNode) return;
+        if (isAnotherTrackSoloed) {
+            this.outputNode.gain.rampTo(0, 0.02);
+        } else {
+            this.applyMuteState();
+        }
+    }
+    
+    updateSoloMuteState(soloedTrackId) {
+        this.isSoloed = this.id === soloedTrackId;
+        this.applySoloState(soloedTrackId !== null && !this.isSoloed);
+        this.appServices.updateTrackUI?.(this.id, 'soloChanged');
+    }
+    
+    setSynthParam(paramPath, value) {
+        if (!this.instrument || this.type !== 'Synth') return;
+        try {
+            this.instrument.set({ [paramPath]: value });
+            this.synthParams = this.instrument.get();
+        } catch (e) {
+            console.error(`Could not set synth param: ${paramPath}`, e);
+        }
+    }
+
+    addEffect(effectType, params, isInitialLoad = false) {
+        const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
+        if (!effectDef) {
+            return;
+        }
+        const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
+        const toneNode = createEffectInstance(effectType, initialParams);
+
+        if (toneNode) {
+            const effectData = { 
+                id: `effect-${this.id}-${Date.now()}`, 
+                type: effectType, 
+                toneNode: toneNode, 
+                params: JSON.parse(JSON.stringify(initialParams)) 
+            };
+            this.activeEffects.push(effectData);
+            this.rebuildEffectChain();
+            if (!isInitialLoad) {
+                this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+                this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.name}`);
+            }
+        }
+    }
+
+    removeEffect(effectId) {
+        const index = this.activeEffects.findIndex(e => e.id === effectId);
+        if (index > -1) {
+            const removedEffect = this.activeEffects.splice(index, 1)[0];
+            removedEffect.toneNode?.dispose();
+            this.rebuildEffectChain();
+            this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
+            this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
+        }
+    }
 
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
@@ -179,9 +245,34 @@ export class Track {
         }
     }
     
-    async addExternalAudioFileAsClip(audioBlob, startTime, clipName) { /* ... (no changes) ... */ }
+    async addExternalAudioFileAsClip(audioBlob, startTime, clipName) {
+        if (this.type !== 'Audio') {
+            console.error("Cannot add audio clip to non-audio track.");
+            return;
+        }
+        try {
+            const dbKey = `clip-${this.id}-${Date.now()}-${clipName}`;
+            await this.appServices.dbStoreAudio(dbKey, audioBlob);
+            
+            const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
+
+            const newClip = {
+                id: `clip-${this.id}-${Date.now()}`,
+                name: clipName,
+                dbKey: dbKey,
+                startTime: startTime,
+                duration: audioBuffer.duration,
+                audioBuffer: audioBuffer,
+            };
+
+            this.timelineClips.push(newClip);
+            this.appServices.renderTimeline?.();
+        } catch (error) {
+            console.error("Error adding audio clip:", error);
+            this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
+        }
+    }
     
-    // --- FIX: Major overhaul to handle all sequence-able track types ---
     recreateToneSequence() {
         this.toneSequence?.dispose();
         this.toneSequence = null;
@@ -190,7 +281,6 @@ export class Track {
         if (!activeSequence) return;
         
         const events = [];
-        // Convert the 2D grid data into a format Tone.Sequence understands
         for (let step = 0; step < activeSequence.length; step++) {
             const notesInStep = [];
             for (let row = 0; row < activeSequence.data.length; row++) {
@@ -232,6 +322,22 @@ export class Track {
         }
     }
     
-    getDefaultSynthParams() { /* ... (no changes) ... */ }
-    dispose() { /* ... (no changes) ... */ }
+    getDefaultSynthParams() {
+        return {
+            portamento: 0,
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 1 },
+            filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 10000 },
+            filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7 }
+        };
+    }
+
+    dispose() {
+        this.toneSequence?.dispose();
+        this.instrument?.dispose();
+        this.input?.dispose();
+        this.outputNode?.dispose();
+        this.trackMeter?.dispose();
+        this.activeEffects.forEach(e => e.toneNode.dispose());
+    }
 }
