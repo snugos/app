@@ -5,7 +5,6 @@ import { showNotification } from '../utils.js';
 let localAppServices = {};
 let selectedSoundForPreviewData = null; 
 
-// SVG icon definitions for a clean, theme-aware look
 const FOLDER_ICON_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
   <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
@@ -90,7 +89,11 @@ export function openSoundBrowserWindow(savedState = null) {
             </div>
         </div>`;
 
-    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, { width: 350, height: 500 });
+    // --- FIX: Apply savedState to options object ---
+    const browserOptions = { width: 350, height: 500 };
+    if (savedState) Object.assign(browserOptions, savedState);
+
+    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions);
 
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
@@ -186,7 +189,6 @@ export function renderDirectoryView(pathArray, treeNode) {
             itemDiv.addEventListener('dragstart', (e) => {
                 const libraryName = getLibraryNameFromPath(pathArray);
                 if (!libraryName) { e.preventDefault(); return; }
-                // --- FIX: Pass simple data, NOT the 'entry' object ---
                 const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.fullPath, fileName: name };
                 e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                 e.dataTransfer.effectAllowed = 'copy';
@@ -197,7 +199,6 @@ export function renderDirectoryView(pathArray, treeNode) {
                 });
                 itemDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
                 const libraryName = getLibraryNameFromPath(pathArray);
-                // --- FIX: Store simple data for the previewer ---
                 selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name };
                 if (previewBtn) previewBtn.disabled = false;
             });
@@ -206,7 +207,6 @@ export function renderDirectoryView(pathArray, treeNode) {
                 const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
 
                 if (armedTrack) {
-                    // --- FIX: Pass simple data to the loading function ---
                     const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name };
                     let targetIndex = null;
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
