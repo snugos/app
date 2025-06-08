@@ -23,6 +23,9 @@ exports.handler = async function(event) {
         throw new Error('RapidAPI key is not configured in environment variables.');
     }
 
+    // Note: Netlify's environment requires 'node-fetch' for fetch to work in functions
+    const fetch = require('node-fetch');
+
     const response = await fetch(rapidApiUrl, {
       method: 'GET',
       headers: {
@@ -33,15 +36,9 @@ exports.handler = async function(event) {
 
     const data = await response.json();
 
-    // --- Start of Corrected Code: More detailed logging ---
-    // Log the entire response from RapidAPI to the Netlify function logs
-    console.log('Full response from RapidAPI:', JSON.stringify(data, null, 2));
-
-    if (response.status !== 200 || data.status !== 'ok' || !data.link) {
-      // Throw a more descriptive error message back to the browser
+    if (response.status !== 200 || !data.link) {
       throw new Error(`RapidAPI returned an error: ${data.msg || 'No download link found.'}`);
     }
-    // --- End of Corrected Code ---
 
     return {
       statusCode: 200,
@@ -55,11 +52,13 @@ exports.handler = async function(event) {
 
   } catch (error) {
     console.error("Netlify Function Error:", error);
+    // --- THIS IS THE CHANGE: Return a more detailed error object ---
     return {
       statusCode: 500,
       body: JSON.stringify({ 
         success: false,
-        message: error.message 
+        message: `Server function failed: ${error.message}`,
+        stack: error.stack 
       })
     };
   }
