@@ -6,17 +6,15 @@ let localAppServices = {};
 let selectedSoundForPreviewData = null; 
 
 export function initializeSoundBrowserUI(appServicesFromMain) {
-    localAppServices = appServicesFromMain || {};
+    localAppServices = appServicesFromMain;
 }
 
-// --- Start of Corrected Code ---
 function renderSoundBrowser() {
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element || browserWindow.isMinimized) return;
 
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
-    // Create a virtual root containing all libraries as top-level folders
     const virtualRoot = {};
     Object.keys(Constants.soundLibraries).forEach(libName => {
         if (allFileTrees[libName]) {
@@ -25,7 +23,6 @@ function renderSoundBrowser() {
                 children: allFileTrees[libName] 
             };
         } else {
-            // Show a placeholder if the library is loading or failed
             const loadedZips = localAppServices.getLoadedZipFiles?.() || {};
             const libStatus = loadedZips[libName]?.status;
             let status_text = '(loading...)';
@@ -38,7 +35,6 @@ function renderSoundBrowser() {
     const currentPath = localAppServices.getCurrentSoundBrowserPath?.() || [];
     let currentTree = virtualRoot;
     
-    // Navigate to the current path within the virtual root
     try {
         for (const part of currentPath) {
             currentTree = currentTree[part]?.children;
@@ -52,7 +48,6 @@ function renderSoundBrowser() {
     
     renderDirectoryView(currentPath, currentTree);
 }
-// --- End of Corrected Code ---
 
 export function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
@@ -86,17 +81,14 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
         
-        // --- Start of Corrected Code: Simplified library loading ---
         const librarySources = Constants.soundLibraries || {};
         Object.entries(librarySources).forEach(([name, url]) => {
             localAppServices.fetchSoundLibrary?.(name, url).then(() => {
-                // Re-render whenever a library is done loading
                 renderSoundBrowser();
             });
         });
 
-        renderSoundBrowser(); // Initial render
-        // --- End of Corrected Code ---
+        renderSoundBrowser();
         
         previewBtn?.addEventListener('click', () => {
             if (selectedSoundForPreviewData) {
@@ -108,8 +100,7 @@ export function openSoundBrowserWindow(savedState = null) {
 }
 
 // --- Start of Corrected Code ---
-// Renamed from renderSoundBrowserDirectory to renderDirectoryView
-function renderDirectoryView(pathArray, treeNode) {
+export function renderDirectoryView(pathArray, treeNode) {
 // --- End of Corrected Code ---
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element) return;
@@ -125,7 +116,6 @@ function renderDirectoryView(pathArray, treeNode) {
     selectedSoundForPreviewData = null;
     if (previewBtn) previewBtn.disabled = true;
 
-    // "Up" directory button
     if (pathArray.length > 0) {
         const parentDiv = document.createElement('div');
         parentDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
