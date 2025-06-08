@@ -38,7 +38,7 @@ import {
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode
 } from './audio.js';
-import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview } from './audio/playback.js';
+import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js';
 import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js';
 import { 
     initializeSampleManager, loadSampleFile, loadDrumSamplerPadFile, loadSoundFromBrowserToTarget,
@@ -183,6 +183,29 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
 }
 
+function onPlaybackModeChange(newMode, oldMode) {
+    console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
+    const tracks = getTracksState();
+
+    if (newMode === 'timeline') {
+        // Stop all piano roll sequences
+        tracks.forEach(track => track.stopSequence?.());
+        // Schedule all timeline clips
+        scheduleTimelinePlayback();
+    } else { // newMode is 'piano-roll'
+        // Clear all scheduled timeline events
+        Tone.Transport.cancel(0);
+        // Re-enable all piano roll sequences
+        tracks.forEach(track => track.recreateToneSequence?.());
+    }
+
+    // Update the button text
+    const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
+    if (playbackModeToggle) {
+        playbackModeToggle.textContent = `Mode: ${newMode.charAt(0).toUpperCase() + newMode.slice(1)}`;
+    }
+}
+
 async function initializeSnugOS() {
     
     function drawLoop() {
@@ -237,12 +260,15 @@ async function initializeSnugOS() {
         drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
-        handleOpenEffectsRack, handleOpenSequencer: handleOpenPianoRoll,
-        handleTimelineLaneDrop, handleOpenYouTubeImporter,
-        toggleMetronome: toggleMetronome, // Add new metronome service
+        handleOpenEffectsRack, 
+        handleOpenPianoRoll: handleOpenPianoRoll,
+        onPlaybackModeChange: onPlaybackModeChange,
+        handleTimelineLaneDrop, 
+        handleOpenYouTubeImporter,
+        toggleMetronome: toggleMetronome,
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
         uiElementsCache: {},
-        context: Tone.context // Expose Tone.context for optimizations
+        context: Tone.context
     };
 
     initializeStateModule(appServices);
@@ -252,7 +278,7 @@ async function initializeSnugOS() {
     initializeSampleManager(appServices);
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
-    initializeMetronome(appServices); // Initialize the metronome
+    initializeMetronome(appServices);
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
@@ -270,8 +296,6 @@ async function initializeSnugOS() {
     
     console.log("SnugOS Initialized Successfully.");
 
-    // --- Latency Optimization ---
-    // Corrected variable name from localAppServices to appServices
     appServices.context.lookAhead = 0.02;
     appServices.context.updateInterval = 0.01;
     console.log(`[Latency] lookAhead set to: ${appServices.context.lookAhead}`);
