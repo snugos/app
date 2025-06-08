@@ -32,9 +32,7 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
 
     const konvaContainer = document.createElement('div');
     konvaContainer.id = `pianoRollKonvaContainer-${trackId}`;
-    // --- Start of Corrected Code ---
-    konvaContainer.className = 'w-full h-full overflow-hidden bg-white dark:bg-black';
-    // --- End of Corrected Code ---
+    konvaContainer.className = 'w-full h-full overflow-auto bg-white dark:bg-black'; // Changed to allow scrolling
 
     const pianoRollWindow = localAppServices.createWindow(
         windowId,
@@ -44,54 +42,112 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
     );
 
     if (pianoRollWindow && pianoRollWindow.element) {
+        // Use a timeout to ensure the container has been added to the DOM and has dimensions
         setTimeout(() => createPianoRollStage(konvaContainer, track), 50);
     }
 }
 
+function drawPianoKeys(layer, stageHeight) {
+    const keyLayer = new Konva.Layer();
+
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+
+    Constants.SYNTH_PITCHES.forEach((noteName, index) => {
+        const isBlackKey = noteName.includes('#') || noteName.includes('b');
+        const y = index * noteHeight;
+
+        const keyRect = new Konva.Rect({
+            x: 0,
+            y: y,
+            width: keyWidth,
+            height: noteHeight,
+            fill: isBlackKey ? '#333' : '#FFF',
+            stroke: '#000',
+            strokeWidth: 1,
+        });
+        keyLayer.add(keyRect);
+
+        const keyText = new Konva.Text({
+            x: isBlackKey ? 15 : 5,
+            y: y + noteHeight / 2 - 7,
+            text: noteName,
+            fontSize: 10,
+            fontFamily: "'VT323', monospace",
+            fill: isBlackKey ? '#FFF' : '#000',
+            listening: false, // Don't listen for events on the text
+        });
+        keyLayer.add(keyText);
+    });
+
+    return keyLayer;
+}
+
+function drawGrid(layer, stageWidth, stageHeight) {
+    const gridLayer = new Konva.Layer();
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+
+    const numPitches = Constants.SYNTH_PITCHES.length;
+    const numSteps = 64; // For now, let's draw 4 bars (16 steps/bar * 4 bars)
+
+    // Draw horizontal lines
+    for (let i = 0; i <= numPitches; i++) {
+        const isBlackKey = Constants.SYNTH_PITCHES[i-1]?.includes('#') || false;
+        gridLayer.add(new Konva.Line({
+            points: [keyWidth, i * noteHeight, noteWidth * numSteps + keyWidth, i * noteHeight],
+            stroke: isBlackKey ? '#505050' : '#404040', // Use subdivision color for black keys
+            strokeWidth: 1,
+        }));
+    }
+
+    // Draw vertical lines
+    for (let i = 0; i <= numSteps; i++) {
+        const isBarLine = i % 16 === 0;
+        const isBeatLine = i % 4 === 0;
+
+        gridLayer.add(new Konva.Line({
+            points: [i * noteWidth + keyWidth, 0, i * noteWidth + keyWidth, stageHeight],
+            stroke: isBarLine ? '#6c757d' : '#505050',
+            strokeWidth: isBarLine || isBeatLine ? 1 : 0.5,
+        }));
+    }
+    
+    return gridLayer;
+}
+
+
 function createPianoRollStage(containerElement, track) {
     if (typeof Konva === 'undefined') {
-        // --- Start of Corrected Code ---
         containerElement.innerHTML = '<p class="p-4 text-black dark:text-white">Error: Piano Roll library failed to load.</p>';
-        // --- End of Corrected Code ---
         return null;
     }
-    if (!containerElement || !containerElement.offsetWidth || !containerElement.offsetHeight) {
-        return null;
+    if (!containerElement.parentElement || containerElement.parentElement.offsetWidth <= 0) {
+         setTimeout(() => createPianoRollStage(containerElement, track), 100);
+        return;
     }
-
-    const stageWidth = containerElement.offsetWidth;
-    const stageHeight = containerElement.offsetHeight;
-
+    
+    // Calculate dimensions
+    const numSteps = 64; // 4 bars
+    const totalGridWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps;
+    const totalGridHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * Constants.SYNTH_PITCHES.length;
+    const stageWidth = totalGridWidth + Constants.PIANO_ROLL_KEY_WIDTH;
+    const stageHeight = totalGridHeight;
+    
     const stage = new Konva.Stage({
         container: containerElement,
         width: stageWidth,
         height: stageHeight,
     });
 
-    const layer = new Konva.Layer();
-    stage.add(layer);
-    
-    // These now correctly pull the black/white colors from the CSS variables
-    const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-window-content').trim() || '#FFFFFF';
-    const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#000000';
+    const gridLayer = drawGrid(null, stageWidth, stageHeight);
+    stage.add(gridLayer);
 
-    const background = new Konva.Rect({
-        x: 0, y: 0, width: stageWidth, height: stageHeight, fill: bgColor,
-    });
-    layer.add(background);
+    const keyLayer = drawPianoKeys(null, stageHeight);
+    stage.add(keyLayer);
 
-    const placeholderText = new Konva.Text({
-        x: 0, y: 0, width: stageWidth, height: stageHeight,
-        text: `Piano Roll for "${track.name}"\n\n(Feature Under Construction)`,
-        fontSize: 16,
-        fontFamily: "'VT323', monospace",
-        fill: textColor,
-        align: 'center',
-        verticalAlign: 'middle',
-        padding: 20,
-    });
-    layer.add(placeholderText);
-
+    // Initial draw
     stage.draw();
 
     return stage;
