@@ -7,6 +7,27 @@ export function initializeEffectsRackUI(appServices) {
     localAppServices = appServices;
 }
 
+// --- Start of Corrected Code ---
+function refreshEffectsRack(windowInstance) {
+    if (!windowInstance?.element) return;
+    const ownerId = windowInstance.id.includes('master') ? 'master' : windowInstance.id.split('-')[1];
+    const ownerType = ownerId === 'master' ? 'master' : 'track';
+    
+    let owner;
+    if (ownerType === 'track') {
+        owner = localAppServices.getTrackById(parseInt(ownerId));
+    } else {
+        owner = localAppServices.getMasterEffects();
+    }
+
+    if (!owner) return;
+    
+    const listDiv = windowInstance.element.querySelector(`#effectsList-${ownerId}`);
+    const controlsContainer = windowInstance.element.querySelector(`#effectControlsContainer-${ownerId}`);
+    renderEffectsList(owner, ownerType, listDiv, controlsContainer);
+}
+// --- End of Corrected Code ---
+
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
@@ -27,7 +48,12 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         return;
     }
     const content = buildModularEffectsRackDOM(track, 'track');
-    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, { width: 350, height: 400, minWidth: 300, minHeight: 250 });
+    // --- Start of Corrected Code ---
+    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, { 
+        width: 350, height: 400, minWidth: 300, minHeight: 250,
+        onRefresh: refreshEffectsRack 
+    });
+    // --- End of Corrected Code ---
     attachEffectsRackListeners(track, 'track', rackWindow.element);
 }
 
@@ -39,7 +65,12 @@ export function openMasterEffectsRackWindow(savedState = null) {
     }
     const masterEffects = localAppServices.getMasterEffects();
     const content = buildModularEffectsRackDOM(masterEffects, 'master');
-    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, { width: 350, height: 400, minWidth: 300, minHeight: 250 });
+    // --- Start of Corrected Code ---
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, { 
+        width: 350, height: 400, minWidth: 300, minHeight: 250,
+        onRefresh: refreshEffectsRack
+    });
+    // --- End of Corrected Code ---
     attachEffectsRackListeners(masterEffects, 'master', rackWindow.element);
 }
 
@@ -78,7 +109,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
                     else localAppServices.removeMasterEffect(effect.id);
                 } else {
                     selectedEffectId[ownerId] = effect.id;
-                    renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render to show selection
+                    renderEffectsList(owner, ownerType, listDiv, controlsContainer);
                     renderEffectControls(owner, ownerType, effect.id, controlsContainer);
                 }
             });
@@ -149,7 +180,6 @@ function showAddEffectModal(owner, ownerType) {
     modal.contentDiv.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', () => {
             const effectType = li.dataset.effect;
-            console.log(`[EFFECTS_DEBUG_1] Clicked effect: ${effectType}. Owner is a ${ownerType}.`);
             if (ownerType === 'track') {
                 owner.addEffect(effectType);
             } else {
