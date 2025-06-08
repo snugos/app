@@ -284,7 +284,6 @@ body {
     background-color: var(--bg-button-active);
 }
 
-/* --- Start of Corrected Code --- */
 #topTaskbar button#recordBtnGlobalTop svg {
     fill: var(--text-button);
     stroke: var(--text-button);
@@ -310,7 +309,6 @@ body {
 @keyframes blink {
     50% { opacity: 0.5; }
 }
-/* --- End of Corrected Code --- */
 
 #topTaskbar button#playbackModeToggleBtnGlobalTop.active {
     background-color: var(--accent-active) !important;
@@ -385,8 +383,10 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 3px;
-    width: 28px;
-    height: 28px;
+    /* --- Start of Corrected Code --- */
+    width: 32px; /* Increased from 28px */
+    height: 32px; /* Increased from 28px */
+    /* --- End of Corrected Code --- */
     color: var(--text-theme-toggle-icon);
     line-height: 0;
 }
@@ -399,8 +399,10 @@ body {
 
 #themeToggleBtn svg {
     stroke: currentColor;
-    width: 80%;
-    height: 80%;
+    /* --- Start of Corrected Code --- */
+    width: 85%; /* Increased from 80% */
+    height: 85%; /* Increased from 80% */
+    /* --- End of Corrected Code --- */
 }
 
 #themeToggleBtn #themeIconMoon { display: none; }
