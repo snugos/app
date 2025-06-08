@@ -15,10 +15,10 @@ import { openTrackInspectorWindow, drawWaveform, renderSamplePads, updateSliceEd
 import { openMixerWindow, updateMixerWindow } from './ui/mixerUI.js';
 import { openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './ui/effectsRackUI.js';
 import { openTimelineWindow, renderTimeline, updatePlayheadPosition } from './ui/timelineUI.js';
-import { openSoundBrowserWindow, renderSoundBrowserDirectory } from './ui/soundBrowserUI.js';
-// --- Start of New Code ---
+// --- Start of Corrected Code ---
+import { openSoundBrowserWindow, renderDirectoryView } from './ui/soundBrowserUI.js';
+// --- End of Corrected Code ---
 import { openPianoRollWindow, updatePianoRollPlayhead } from './ui/pianoRollUI.js';
-// --- End of New Code ---
 import { openYouTubeImporterWindow } from './ui/youtubeImporterUI.js';
 
 /**
@@ -55,11 +55,11 @@ export {
     renderTimeline,
     updatePlayheadPosition,
     openSoundBrowserWindow,
-    renderSoundBrowserDirectory,
+    // --- Start of Corrected Code ---
+    renderDirectoryView,
+    // --- End of Corrected Code ---
     openPianoRollWindow,
-    // --- Start of New Code ---
     updatePianoRollPlayhead,
-    // --- End of New Code ---
     openYouTubeImporterWindow,
     drawWaveform,
     drawInstrumentWaveform,
