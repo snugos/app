@@ -29,7 +29,6 @@ export class Track {
         this.trackMeter = new Tone.Meter();
         this.outputNode = this.gainNode;
         this.gainNode.connect(this.trackMeter);
-        this.gainNode.toDestination();
         
         this.instrument = null;
         this.activeEffects = [];
@@ -107,7 +106,16 @@ export class Track {
         });
 
         if (currentNode) {
-            currentNode.connect(this.outputNode);
+            // Connect the end of the track's chain to the master bus input
+            const masterBusInput = this.appServices.getMasterBusInputNode?.();
+            if (masterBusInput) {
+                currentNode.connect(this.outputNode); // Connect to the track's final gain/output node
+                this.outputNode.connect(masterBusInput); // Then connect the track's output to the master bus
+            } else {
+                console.error(`[Track ${this.id}] Could not get master bus input node. Connecting directly to destination as a fallback.`);
+                currentNode.connect(this.outputNode);
+                this.outputNode.toDestination();
+            }
         }
     }
     
@@ -249,14 +257,12 @@ export class Track {
             console.error(`Could not update effect param: ${paramPath}`, e);
         }
     }
-    
-    // --- Start of Corrected Code ---
+
     addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined) {
             sequence.data[pitchIndex][timeStep] = noteData;
             this.appServices.captureStateForUndo?.(`Add note to ${this.name}`);
-            // The piano roll UI will handle its own redraw
         }
     }
 
@@ -265,10 +271,8 @@ export class Track {
         if (sequence && sequence.data[pitchIndex] !== undefined) {
             sequence.data[pitchIndex][timeStep] = null;
             this.appServices.captureStateForUndo?.(`Remove note from ${this.name}`);
-            // The piano roll UI will handle its own redraw
         }
     }
-    // --- End of Corrected Code ---
     
     getActiveSequence() {
         return this.sequences.find(s => s.id === this.activeSequenceId);
