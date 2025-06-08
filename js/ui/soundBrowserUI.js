@@ -23,15 +23,12 @@ export function initializeSoundBrowserUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
-// --- FIX: The render function now accepts an optional path to render ---
-// This ensures that when a folder is clicked, the new path is used immediately.
 export function renderSoundBrowser(pathToRender) {
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element || browserWindow.isMinimized) {
         return;
     }
 
-    // If a path is passed directly, use it. Otherwise, get it from the state (for initial load).
     const currentPath = pathToRender !== undefined ? pathToRender : (localAppServices.getCurrentSoundBrowserPath?.() || []);
     
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
@@ -149,7 +146,6 @@ export function renderDirectoryView(pathArray, treeNode) {
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
             localAppServices.setCurrentSoundBrowserPath?.(newPath);
-            // --- FIX: Pass the new path directly ---
             renderSoundBrowser(newPath);
         });
         dirView.appendChild(parentDiv);
@@ -183,7 +179,6 @@ export function renderDirectoryView(pathArray, treeNode) {
             itemDiv.addEventListener('click', () => {
                 const newPath = [...pathArray, name];
                 localAppServices.setCurrentSoundBrowserPath?.(newPath);
-                // --- FIX: Pass the new path directly ---
                 renderSoundBrowser(newPath);
             });
         } else if (item.type === 'file') {
@@ -191,7 +186,8 @@ export function renderDirectoryView(pathArray, treeNode) {
             itemDiv.addEventListener('dragstart', (e) => {
                 const libraryName = getLibraryNameFromPath(pathArray);
                 if (!libraryName) { e.preventDefault(); return; }
-                const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.fullPath, fileName: name, entry: item.entry };
+                // --- FIX: Pass simple data, NOT the 'entry' object ---
+                const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.fullPath, fileName: name };
                 e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                 e.dataTransfer.effectAllowed = 'copy';
             });
@@ -201,7 +197,8 @@ export function renderDirectoryView(pathArray, treeNode) {
                 });
                 itemDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
                 const libraryName = getLibraryNameFromPath(pathArray);
-                selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name, entry: item.entry };
+                // --- FIX: Store simple data for the previewer ---
+                selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name };
                 if (previewBtn) previewBtn.disabled = false;
             });
             itemDiv.addEventListener('dblclick', () => {
@@ -209,7 +206,8 @@ export function renderDirectoryView(pathArray, treeNode) {
                 const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
 
                 if (armedTrack) {
-                    const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name, entry: item.entry };
+                    // --- FIX: Pass simple data to the loading function ---
+                    const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name };
                     let targetIndex = null;
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
                     localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex);
