@@ -11,9 +11,7 @@ export class Track {
         this.appServices = appServices || {}; 
 
         this.name = initialData?.name || `${type} Track ${this.id}`;
-        if (type === 'DrumSampler') {
-            this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
-        } else if (type === 'Synth') {
+        if (type === 'Synth') {
             this.name = initialData?.name || `MonoSynth ${this.id}`;
         } else if (type === 'Audio') {
             this.name = initialData?.name || `Audio ${this.id}`;
@@ -21,7 +19,6 @@ export class Track {
 
         this.isMuted = initialData?.isMuted || false;
         this.isSoloed = false;
-        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
         this.input = new Tone.Gain();
@@ -41,8 +38,9 @@ export class Track {
         this.sequences = [];
         this.activeSequenceId = null;
         this.inspectorControls = {};
-        this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
-
+        
+        this.timelineClips = initialData?.timelineClips || [];
+        
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -59,10 +57,6 @@ export class Track {
         }
         if (this.type === 'Synth') {
             this.instrument = new Tone.MonoSynth(this.synthParams);
-        } else if (this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
-            this.instrument = new Tone.Sampler();
-        } else {
-            this.instrument = null;
         }
         this.rebuildEffectChain();
         this.recreateToneSequence();
@@ -191,13 +185,9 @@ export class Track {
         }
     }
     
-    // --- Start of Corrected Code ---
     getActiveSequence() {
-        // A track may have multiple sequences in the future.
-        // For now, robustly return the first one.
         return this.sequences[0];
     }
-    // --- End of Corrected Code ---
 
     createNewSequence(name, length, skipUndo) {
         if (this.type === 'Audio') return;
@@ -213,6 +203,34 @@ export class Track {
         this.activeSequenceId = newSeqId;
         if (!skipUndo) {
             this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.name}`);
+        }
+    }
+    
+    async addExternalAudioFileAsClip(audioBlob, startTime, clipName) {
+        if (this.type !== 'Audio') {
+            console.error("Cannot add audio clip to non-audio track.");
+            return;
+        }
+        try {
+            const dbKey = `clip-${this.id}-${Date.now()}-${clipName}`;
+            await this.appServices.dbStoreAudio(dbKey, audioBlob);
+            
+            const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
+
+            const newClip = {
+                id: `clip-${this.id}-${Date.now()}`,
+                name: clipName,
+                dbKey: dbKey,
+                startTime: startTime,
+                duration: audioBuffer.duration,
+                audioBuffer: audioBuffer,
+            };
+
+            this.timelineClips.push(newClip);
+            this.appServices.renderTimeline?.();
+        } catch (error) {
+            console.error("Error adding audio clip:", error);
+            this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
         }
     }
     
@@ -238,11 +256,7 @@ export class Track {
 
         this.toneSequence = new Tone.Sequence((time, value) => {
             if (value) {
-                if (Array.isArray(value)) {
-                    this.instrument.triggerAttackRelease(value, "16n", time);
-                } else {
-                    this.instrument.triggerAttackRelease(value, "16n", time);
-                }
+                this.instrument.triggerAttackRelease(value, "16n", time);
             }
         }, events, "16n");
 
