@@ -1,7 +1,7 @@
-// This function no longer needs ytdl-core, so you could remove it from package.json later.
-// const ytdl = require('ytdl-core');
+// This function calls the RapidAPI service to get a YouTube download link.
 
 exports.handler = async function(event) {
+  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
@@ -19,9 +19,9 @@ exports.handler = async function(event) {
     }
     const videoId = videoIdMatch[1];
     
-    // Define the RapidAPI endpoint and host
-    const rapidApiUrl = `https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`;
-    const rapidApiHost = 'youtube-mp36.p.rapidapi.com';
+    // Define the new RapidAPI endpoint and host you provided
+    const rapidApiUrl = `https://super-fast-youtube-to-mp3-and-mp4-converter.p.rapidapi.com/dl?id=${videoId}`;
+    const rapidApiHost = 'super-fast-youtube-to-mp3-and-mp4-converter.p.rapidapi.com';
     
     // Access the API key from the environment variables you set in Netlify
     const rapidApiKey = process.env.RAPIDAPI_KEY;
@@ -40,8 +40,10 @@ exports.handler = async function(event) {
 
     const data = await response.json();
 
-    if (data.status !== 'ok') {
-      throw new Error(data.msg || 'RapidAPI returned an error.');
+    // Check for a successful response, which may vary between APIs.
+    // We'll assume a response with a "link" property is successful.
+    if (!response.ok || !data.link) {
+      throw new Error(data.msg || 'RapidAPI returned an error or an invalid response.');
     }
 
     return {
