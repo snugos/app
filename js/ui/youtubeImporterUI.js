@@ -18,15 +18,15 @@ export function openYouTubeImporterWindow(savedState = null) {
         <div class="p-4 flex flex-col h-full bg-white dark:bg-black text-black dark:text-white">
             <h3 class="text-lg font-bold mb-2">Import Audio from URL</h3>
             <p class="text-xs mb-2 text-black dark:text-white">
-                Enter a YouTube URL to download its audio as an MP3. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-black dark:text-white hover:underline">Cobalt</a> API.
+                Enter a YouTube URL to download its audio. This feature uses the public <a href="https://cobalt.tools/" target="_blank" class="text-black dark:text-white hover:underline">Cobalt</a> API.
             </p>
 
             <div class="p-2 mb-4 text-xs bg-white border border-black rounded-md text-black dark:bg-black dark:text-white dark:border-white" role="alert">
-                <b>Note:</b> This is an experimental feature. Public APIs can be unreliable or change without notice.
+                <b>Note:</b> This feature requires a public CORS proxy and may be unreliable. The best long-term solution is a dedicated server component.
             </div>
             
             <div class="flex items-center space-x-2">
-                <input type="text" id="youtubeUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
+                <input type="text" id="youtubeUrlInput" placeholder="Enter a YouTube video URL..." class="flex-grow p-2 border rounded bg-white dark:bg-black border-black dark:border-white focus:ring-2 focus:ring-black dark:focus:ring-white focus:outline-none">
                 <button id="youtubeImportBtn" class="px-4 py-2 bg-black text-white font-semibold rounded border border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
                     Import
                 </button>
@@ -69,11 +69,15 @@ function attachImporterEventListeners(windowElement) {
         importBtn.disabled = true;
         urlInput.disabled = true;
         importBtn.textContent = 'Working...';
-        setStatus('Requesting download link from Cobalt API...');
+        setStatus('Requesting download link via proxy...');
 
         try {
             // --- THIS IS THE FIX ---
-            const response = await fetch('https://api.cobalt.tools/api/json', {
+            // We prepend a CORS proxy to the API request URL.
+            const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
+            const apiUrl = 'https://api.cobalt.tools/api/json';
+
+            const response = await fetch(proxyUrl + apiUrl, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -87,7 +91,7 @@ function attachImporterEventListeners(windowElement) {
             });
 
             if (!response.ok) {
-                throw new Error(`Cobalt API returned an error: ${response.status} ${response.statusText}`);
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
             }
 
             const result = await response.json();
@@ -96,9 +100,8 @@ function attachImporterEventListeners(windowElement) {
                 setStatus('Download link received. Fetching audio...');
                 const audioUrl = result.url;
                 
-                // Using a proxy to bypass potential CORS issues
-                const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-                const audioResponse = await fetch(proxyUrl + audioUrl);
+                // The audio URL from Cobalt usually has correct CORS headers, so we don't need to proxy it.
+                const audioResponse = await fetch(audioUrl);
                 
                 if (!audioResponse.ok) {
                     throw new Error(`Failed to download audio file: ${audioResponse.status} ${audioResponse.statusText}`);
@@ -110,7 +113,7 @@ function attachImporterEventListeners(windowElement) {
 
                 const newTrack = localAppServices.addTrack('Audio');
                 if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
-                    const videoTitle = result.text || `YT Import ${new URL(youtubeUrl).searchParams.get('v') || ''}`;
+                    const videoTitle = result.text || `YT Import`;
                     await newTrack.addExternalAudioFileAsClip(audioBlob, 0, videoTitle);
                     
                     setStatus('Success! Audio added to a new track.', false);
@@ -123,21 +126,13 @@ function attachImporterEventListeners(windowElement) {
                     throw new Error("Could not create a new audio track or add the clip.");
                 }
 
-            } else if (result.status === 'error') {
-                throw new Error(result.text || 'Cobalt API returned an unknown error.');
-            } else if (result.status === 'rate-limit') {
-                throw new Error('You are being rate-limited by the API. Please try again later.');
             } else {
-                 throw new Error(`Unsupported API status: ${result.status}`);
+                 throw new Error(`API Error: ${result.text || 'Unknown issue.'}`);
             }
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
-            let userMessage = `Error: ${error.message}`;
-            if (error instanceof TypeError) { 
-                userMessage = "A network error occurred. This may be due to browser security (CORS).";
-            }
-            setStatus(userMessage, true);
+            setStatus(`Error: ${error.message}`, true);
         } finally {
             importBtn.disabled = false;
             urlInput.disabled = false;
