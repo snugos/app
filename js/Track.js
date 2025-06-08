@@ -276,10 +276,11 @@ export class Track {
         }
 
         this.toneSequence = new Tone.Sequence((time, notes) => {
-            // --- THIS IS THE FIX ---
-            // The synth can only play one note at a time, so we iterate
-            // if there happen to be multiple notes in a step (for future polyphony).
+            // --- THIS IS THE CORRECTED LOGIC ---
+            // Check if 'notes' exists and has content before trying to use it.
             if (notes && notes.length > 0) {
+                // The synth can only play one note at a time, so we iterate
+                // if there happen to be multiple notes in a step (for future polyphony).
                 notes.forEach(note => {
                     this.instrument.triggerAttackRelease(note, "16n", time);
                 });
