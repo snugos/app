@@ -68,7 +68,8 @@ export class Track {
             this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
-            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
+            // --- FIX: Added pitchShift to the default settings ---
+            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { originalFileName: null, dbKey: null, rootNote: 'C4', pitchShift: 0, loop: false, loopStart: 0, loopEnd: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 }, status: 'empty' };
         }
 
         if (this.type !== 'Audio' && this.sequences.length === 0) {
@@ -83,7 +84,6 @@ export class Track {
 
         if (this.type === 'Synth') {
             this.instrument = new Tone.PolySynth(Tone.Synth);
-        // --- FIX: Add dedicated logic for InstrumentSampler to use Tone.Sampler ---
         } else if (this.type === 'InstrumentSampler') {
             const buffer = this.instrumentSamplerSettings.audioBuffer;
             const urls = {};
@@ -91,7 +91,11 @@ export class Track {
                 const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
                 urls[rootNote] = buffer;
             }
-            this.instrument = new Tone.Sampler({ urls }).connect(this.input);
+            // --- FIX: Pass the detune setting (pitch shift in cents) during initialization ---
+            this.instrument = new Tone.Sampler({ 
+                urls,
+                detune: (this.instrumentSamplerSettings.pitchShift || 0) * 100
+            }).connect(this.input);
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
             this.instrument = null; 
         } else {
@@ -169,6 +173,15 @@ export class Track {
             this.synthParams = this.instrument.get();
         } catch (e) {
             console.error(`Could not set synth param: ${paramPath}`, e);
+        }
+    }
+    
+    // --- NEW METHOD: To control the pitch of the instrument sampler ---
+    setInstrumentSamplerPitch(semitones) {
+        if (this.type === 'InstrumentSampler' && this.instrument) {
+            this.instrumentSamplerSettings.pitchShift = semitones;
+            // Detune is measured in cents, so we multiply by 100
+            this.instrument.set({ detune: semitones * 100 });
         }
     }
 
