@@ -1,4 +1,4 @@
-// js/eventHandlers.js - Global Event Listeners and Input Handling Module
+// js/eventhandlers.js - Global Event Listeners and Input Handling Module
 import * as Constants from './constants.js';
 import { showNotification, showConfirmationDialog, createContextMenu } from './utils.js';
 import {
@@ -9,12 +9,9 @@ import {
     getSoloedTrackIdState as getSoloedTrackId,
     setArmedTrackIdState as setArmedTrackId,
     getArmedTrackIdState as getArmedTrackId,
-    setActiveSequencerTrackIdState as setActiveSequencerTrackId,
     setIsRecordingState as setIsRecording,
     isTrackRecordingState,
     setRecordingTrackIdState as setRecordingTrackId,
-    getRecordingTrackIdState as getRecordingTrackId,
-    setRecordingStartTimeState as setRecordingStartTime,
     removeTrackFromStateInternal as coreRemoveTrackFromState,
     getPlaybackModeState,
     setPlaybackModeState,
@@ -150,8 +147,6 @@ export function attachGlobalControlEvents(uiCache) {
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     
     const handlePlayStop = async () => {
-        // --- SnugOS DIAGNOSTIC ---
-        console.log('[DIAGNOSTIC] handlePlayStop called. Current Transport state:', Tone.Transport.state);
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             showNotification("Audio context not running. Please interact with the page.", 3000);
@@ -163,8 +158,6 @@ export function attachGlobalControlEvents(uiCache) {
         } else {
             Tone.Transport.start();
         }
-        // --- SnugOS DIAGNOSTIC ---
-        console.log('[DIAGNOSTIC] handlePlayStop finished. New Transport state:', Tone.Transport.state);
     };
     
     const handleStop = () => {
@@ -192,8 +185,6 @@ export function attachGlobalControlEvents(uiCache) {
             if (success) {
                 setIsRecording(true);
                 setRecordingTrackId(armedTrackId);
-                setRecordingStartTime(Tone.Transport.seconds);
-                recordBtn.classList.add('recording');
                 if (Tone.Transport.state !== 'started') {
                     Tone.Transport.start();
                 }
@@ -422,18 +413,11 @@ export function handleTrackSolo(trackId) {
 export function handleTrackArm(trackId) {
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
-
-    if (currentArmedId !== null) {
-        const oldArmBtn = document.querySelector(`#armInputBtn-${currentArmedId}`);
-        if (oldArmBtn) oldArmBtn.classList.remove('armed');
-    }
-
-    if (newArmedId !== null) {
-        const newArmBtn = document.querySelector(`#armInputBtn-${newArmedId}`);
-        if (newArmBtn) newArmBtn.classList.add('armed');
-    }
-
     setArmedTrackId(newArmedId);
+    localAppServices.updateTrackUI?.(trackId, 'armChanged');
+    if (currentArmedId !== null) {
+        localAppServices.updateTrackUI?.(currentArmedId, 'armChanged');
+    }
 }
 
 export function handleRemoveTrack(trackId) {
