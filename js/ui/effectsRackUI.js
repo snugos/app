@@ -46,10 +46,15 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
         return;
     }
     const content = buildModularEffectsRackDOM(track, 'track');
-    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, { 
+    
+    // --- FIX: Apply savedState to options object ---
+    const rackOptions = { 
         width: 350, height: 400, minWidth: 300, minHeight: 250,
         onRefresh: refreshEffectsRack 
-    });
+    };
+    if (savedState) Object.assign(rackOptions, savedState);
+
+    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, rackOptions);
     attachEffectsRackListeners(track, 'track', rackWindow.element);
 }
 
@@ -61,10 +66,15 @@ export function openMasterEffectsRackWindow(savedState = null) {
     }
     const masterEffects = localAppServices.getMasterEffects();
     const content = buildModularEffectsRackDOM(masterEffects, 'master');
-    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, { 
+    
+    // --- FIX: Apply savedState to options object ---
+    const rackOptions = { 
         width: 350, height: 400, minWidth: 300, minHeight: 250,
         onRefresh: refreshEffectsRack
-    });
+    };
+    if (savedState) Object.assign(rackOptions, savedState);
+
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, rackOptions);
     attachEffectsRackListeners(masterEffects, 'master', rackWindow.element);
 }
 
