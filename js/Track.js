@@ -24,11 +24,13 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
+        // --- Start of Corrected Code ---
+        // Simplified and clarified input/output nodes
         this.input = new Tone.Gain();
-        this.gainNode = new Tone.Gain(this.previousVolumeBeforeMute);
+        this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute).connect(this.input);
         this.trackMeter = new Tone.Meter();
-        this.outputNode = this.gainNode;
-        this.gainNode.connect(this.trackMeter);
+        this.outputNode.connect(this.trackMeter); // Meter the final track output
+        // --- End of Corrected Code ---
         
         this.instrument = null;
         this.activeEffects = [];
@@ -89,42 +91,47 @@ export class Track {
         this.rebuildEffectChain();
         this.recreateToneSequence();
     }
-
+    
+    // --- Start of Corrected Code ---
+    // This function is now more robust and explicit.
     rebuildEffectChain() {
+        // Disconnect all internal nodes to start fresh
         this.input.disconnect();
+        this.activeEffects.forEach(effect => effect.toneNode?.dispose());
         this.instrument?.disconnect();
 
-        let sourceNode = this.instrument || this.input;
-        let currentNode = sourceNode;
+        // The instrument is the primary source for the track, connect it to the track's input node.
+        if (this.instrument) {
+            this.instrument.connect(this.input);
+        }
 
+        // Chain all active effects, starting from the input node
+        let currentNode = this.input;
         this.activeEffects.forEach(effect => {
-            if (currentNode && effect.toneNode) {
-                try {
-                    currentNode.connect(effect.toneNode);
-                    currentNode = effect.toneNode;
-                } catch (e) {
-                    console.error(`Failed to connect effect ${effect.type}`, e);
-                }
+            if (effect.toneNode) {
+                currentNode.connect(effect.toneNode);
+                currentNode = effect.toneNode;
             }
         });
 
-        if (currentNode) {
-            const masterBusInput = this.appServices.getMasterBusInputNode?.();
-            if (masterBusInput) {
-                currentNode.connect(this.outputNode);
-                this.outputNode.connect(masterBusInput);
-            } else {
-                console.error(`[Track ${this.id}] Could not get master bus input node. Connecting directly to destination as a fallback.`);
-                currentNode.connect(this.outputNode);
-                this.outputNode.toDestination();
-            }
+        // The final node in the effects chain connects to the track's main output/volume node
+        currentNode.connect(this.outputNode);
+        
+        // Finally, connect the track's output to the master bus
+        const masterBusInput = this.appServices.getMasterBusInputNode?.();
+        if (masterBusInput) {
+            this.outputNode.connect(masterBusInput);
+        } else {
+            console.error(`[Track ${this.id}] Master bus not available. Connecting to destination as fallback.`);
+            this.outputNode.toDestination();
         }
     }
+    // --- End of Corrected Code ---
     
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) {
-            this.gainNode.gain.rampTo(volume, 0.02);
+            this.outputNode.gain.rampTo(volume, 0.02);
         }
         if (fromInteraction) {
             this.appServices.captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`);
@@ -132,18 +139,18 @@ export class Track {
     }
 
     applyMuteState() {
-        if (!this.gainNode) return;
+        if (!this.outputNode) return;
         if (this.isMuted) {
-            this.gainNode.gain.rampTo(0, 0.02);
+            this.outputNode.gain.rampTo(0, 0.02);
         } else {
-            this.gainNode.gain.rampTo(this.previousVolumeBeforeMute, 0.02);
+            this.outputNode.gain.rampTo(this.previousVolumeBeforeMute, 0.02);
         }
     }
 
     applySoloState(isAnotherTrackSoloed) {
-        if (!this.gainNode) return;
+        if (!this.outputNode) return;
         if (isAnotherTrackSoloed) {
-            this.gainNode.gain.rampTo(0, 0.02);
+            this.outputNode.gain.rampTo(0, 0.02);
         } else {
             this.applyMuteState();
         }
@@ -276,7 +283,6 @@ export class Track {
                     notesInStep.push(Constants.SYNTH_PITCHES[j]);
                 }
             }
-            // --- THIS IS THE FIX ---
             events.push(notesInStep);
         }
 
