@@ -25,9 +25,9 @@ export class Track {
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
         // --- Start of Corrected Code ---
-        // Simplified and clarified input/output nodes
+        // Create input and output nodes independently to prevent a feedback loop.
         this.input = new Tone.Gain();
-        this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute).connect(this.input);
+        this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
         this.outputNode.connect(this.trackMeter); // Meter the final track output
         // --- End of Corrected Code ---
@@ -92,20 +92,15 @@ export class Track {
         this.recreateToneSequence();
     }
     
-    // --- Start of Corrected Code ---
-    // This function is now more robust and explicit.
     rebuildEffectChain() {
-        // Disconnect all internal nodes to start fresh
         this.input.disconnect();
-        this.activeEffects.forEach(effect => effect.toneNode?.dispose());
+        this.activeEffects.forEach(effect => effect.toneNode?.dispose()); // Dispose and remove old effects
         this.instrument?.disconnect();
 
-        // The instrument is the primary source for the track, connect it to the track's input node.
         if (this.instrument) {
             this.instrument.connect(this.input);
         }
 
-        // Chain all active effects, starting from the input node
         let currentNode = this.input;
         this.activeEffects.forEach(effect => {
             if (effect.toneNode) {
@@ -114,10 +109,8 @@ export class Track {
             }
         });
 
-        // The final node in the effects chain connects to the track's main output/volume node
         currentNode.connect(this.outputNode);
         
-        // Finally, connect the track's output to the master bus
         const masterBusInput = this.appServices.getMasterBusInputNode?.();
         if (masterBusInput) {
             this.outputNode.connect(masterBusInput);
@@ -126,7 +119,6 @@ export class Track {
             this.outputNode.toDestination();
         }
     }
-    // --- End of Corrected Code ---
     
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
