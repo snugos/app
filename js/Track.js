@@ -24,13 +24,10 @@ export class Track {
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
         
-        // --- Start of Corrected Code ---
-        // Create input and output nodes independently to prevent a feedback loop.
         this.input = new Tone.Gain();
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
-        this.outputNode.connect(this.trackMeter); // Meter the final track output
-        // --- End of Corrected Code ---
+        this.outputNode.connect(this.trackMeter);
         
         this.instrument = null;
         this.activeEffects = [];
@@ -94,7 +91,7 @@ export class Track {
     
     rebuildEffectChain() {
         this.input.disconnect();
-        this.activeEffects.forEach(effect => effect.toneNode?.dispose()); // Dispose and remove old effects
+        this.activeEffects.forEach(effect => effect.toneNode?.dispose());
         this.instrument?.disconnect();
 
         if (this.instrument) {
@@ -279,8 +276,13 @@ export class Track {
         }
 
         this.toneSequence = new Tone.Sequence((time, notes) => {
+            // --- THIS IS THE FIX ---
+            // The synth can only play one note at a time, so we iterate
+            // if there happen to be multiple notes in a step (for future polyphony).
             if (notes && notes.length > 0) {
-                this.instrument.triggerAttackRelease(notes, "16n", time);
+                notes.forEach(note => {
+                    this.instrument.triggerAttackRelease(note, "16n", time);
+                });
             }
         }, events, "16n");
 
