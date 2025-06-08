@@ -187,22 +187,24 @@ function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
     const tracks = getTracksState();
 
+    // Clear everything from the transport to ensure a clean slate
+    Tone.Transport.cancel(0);
+    // Stop all instrument sequences
+    tracks.forEach(track => track.stopSequence?.());
+
     if (newMode === 'timeline') {
-        // Stop all piano roll sequences
-        tracks.forEach(track => track.stopSequence?.());
         // Schedule all timeline clips
         scheduleTimelinePlayback();
     } else { // newMode is 'piano-roll'
-        // Clear all scheduled timeline events
-        Tone.Transport.cancel(0);
         // Re-enable all piano roll sequences
-        tracks.forEach(track => track.recreateToneSequence?.());
+        tracks.forEach(track => track.startSequence?.());
     }
 
     // Update the button text
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     if (playbackModeToggle) {
-        playbackModeToggle.textContent = `Mode: ${newMode.charAt(0).toUpperCase() + newMode.slice(1)}`;
+        const modeText = newMode.charAt(0).toUpperCase() + newMode.slice(1);
+        playbackModeToggle.textContent = `Mode: ${modeText}`;
     }
 }
 
