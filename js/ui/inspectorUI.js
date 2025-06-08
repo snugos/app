@@ -2,7 +2,6 @@
 
 import { createDropZoneHTML, setupGenericDropZoneListeners } from '../utils.js';
 import * as Constants from '../constants.js';
-// REMOVED: The direct import from eventHandlers.js that was causing the error.
 
 let localAppServices = {};
 
@@ -130,7 +129,7 @@ function buildTrackInspectorContentDOM(track) {
     const armedTrackId = localAppServices.getArmedTrackId();
     let sequencerButtonHTML = '';
     if (track.type !== 'Audio') {
-        sequencerButtonHTML = `<button id="openSequencerBtn-${track.id}" class="px-1 py-0.5 border rounded">Sequencer</button>`;
+        sequencerButtonHTML = `<button id="openPianoRollBtn-${track.id}" class="px-1 py-0.5 border rounded">Piano Roll</button>`;
     }
 
     return `
@@ -151,13 +150,12 @@ function buildTrackInspectorContentDOM(track) {
 }
 
 function initializeCommonInspectorControls(track, winEl) {
-    // UPDATED to use localAppServices
     winEl.querySelector(`#muteBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
     winEl.querySelector(`#soloBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
     winEl.querySelector(`#armInputBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackArm(track.id));
     winEl.querySelector(`#removeTrackBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleRemoveTrack(track.id));
     winEl.querySelector(`#openEffectsBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleOpenEffectsRack(track.id));
-    winEl.querySelector(`#openSequencerBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleOpenSequencer(track.id));
+    winEl.querySelector(`#openPianoRollBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleOpenPianoRoll(track.id));
 
     const volumeKnobPlaceholder = winEl.querySelector(`#volumeKnob-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
