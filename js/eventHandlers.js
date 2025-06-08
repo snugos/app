@@ -22,7 +22,7 @@ import {
     getRedoStackState  
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
-import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
+import { lastActivePianoRollTrackId, openPianoRolls } from '../ui/pianoRollUI.js';
 
 
 let localAppServices = {};
@@ -86,11 +86,11 @@ export function initializePrimaryEventListeners() {
     
     document.getElementById('menuOpenPianoRoll')?.addEventListener('click', () => {
         const currentTracks = getTracks();
-        const firstInstrumentTrack = currentTracks.find(t => t.type === 'Synth' || t.type === 'InstrumentSampler');
+        const firstInstrumentTrack = currentTracks.find(t => t.type === 'Synth' || t.type === 'InstrumentSampler' || t.type === 'Sampler' || t.type === 'DrumSampler');
         if (firstInstrumentTrack) {
             handleOpenPianoRoll(firstInstrumentTrack.id);
         } else {
-            showNotification("Add a Synth or Instrument Sampler track first.", 3000);
+            showNotification("Add an instrument or sampler track first.", 3000);
         }
         startMenu?.classList.add('hidden');
     });
@@ -241,7 +241,7 @@ export function attachGlobalControlEvents(uiCache) {
     
     playbackModeToggle?.addEventListener('click', () => {
         const currentMode = getPlaybackModeState();
-        const newMode = currentMode === 'sequencer' ? 'song' : 'sequencer';
+        const newMode = currentMode === 'piano-roll' ? 'timeline' : 'piano-roll';
         setPlaybackModeState(newMode);
     });
     
@@ -633,7 +633,7 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
         const file = files[0];
         if (file.type.startsWith('audio/')) {
             if (targetTrack.type === 'Audio') {
-                targetTrack.addExternalAudioFileAsClip?.(file, startTime, file.name);
+                track.addAudioClip(file, startTime, file.name);
             } else {
                 showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500);
             }
