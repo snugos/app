@@ -246,14 +246,9 @@ export function attachGlobalControlEvents(uiCache) {
             const armedTrack = getTrackById(armedTrackId);
             
             if (armedTrack && armedTrack.instrument) {
-                const note = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                
-                // --- FIX: Convert MIDI number to frequency for samplers ---
-                if (armedTrack.type === 'InstrumentSampler') {
-                    armedTrack.instrument.triggerAttack(Tone.Midi(note).toFrequency(), Tone.now(), 0.75);
-                } else {
-                    armedTrack.instrument.triggerAttack(note, Tone.now(), 0.75);
-                }
+                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const frequency = Tone.Midi(noteNumber).toFrequency();
+                armedTrack.instrument.triggerAttack(frequency, Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
             }
         } else {
@@ -282,14 +277,9 @@ export function attachGlobalControlEvents(uiCache) {
             const armedTrack = getTrackById(armedTrackId);
 
             if (armedTrack && armedTrack.instrument) {
-                const note = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                
-                // --- FIX: Convert MIDI number to frequency for samplers ---
-                if (armedTrack.type === 'InstrumentSampler') {
-                    armedTrack.instrument.triggerRelease(Tone.Midi(note).toFrequency(), Tone.now());
-                } else {
-                    armedTrack.instrument.triggerRelease(note, Tone.now());
-                }
+                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const frequency = Tone.Midi(noteNumber).toFrequency();
+                armedTrack.instrument.triggerRelease(frequency, Tone.now());
                 currentlyPressedKeys.delete(key);
             }
         }
@@ -421,25 +411,18 @@ export function selectMIDIInput(event) {
 }
 
 function onMIDIMessage(message) {
-    const [command, note, velocity] = message.data;
+    const [command, noteNumber, velocity] = message.data;
     const armedTrackId = getArmedTrackId();
     const armedTrack = getTrackById(armedTrackId);
     
     if (armedTrack && armedTrack.instrument) {
-        if (command === 144 && velocity > 0) {
-            // --- FIX: Convert MIDI number to frequency for samplers ---
-            if (armedTrack.type === 'InstrumentSampler') {
-                armedTrack.instrument.triggerAttack(Tone.Midi(note).toFrequency(), Tone.now(), velocity / 127);
-            } else {
-                armedTrack.instrument.triggerAttack(note, Tone.now(), velocity / 127);
-            }
-        } else if (command === 128 || (command === 144 && velocity === 0)) {
-            // --- FIX: Convert MIDI number to frequency for samplers ---
-            if (armedTrack.type === 'InstrumentSampler') {
-                armedTrack.instrument.triggerRelease(Tone.Midi(note).toFrequency(), Tone.now());
-            } else {
-                armedTrack.instrument.triggerRelease(note, Tone.now());
-            }
+        // --- FIX: ALWAYS convert MIDI number to a frequency for pitched instruments ---
+        const frequency = Tone.Midi(noteNumber).toFrequency();
+
+        if (command === 144 && velocity > 0) { // Note On
+            armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
+        } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
+            armedTrack.instrument.triggerRelease(frequency, Tone.now());
         }
     }
 }
