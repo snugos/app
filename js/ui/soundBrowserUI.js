@@ -5,6 +5,20 @@ import { showNotification } from '../utils.js';
 let localAppServices = {};
 let selectedSoundForPreviewData = null; 
 
+// --- NEW: SVG icon definitions for a clean, theme-aware look ---
+const FOLDER_ICON_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+</svg>`;
+
+const FILE_ICON_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+  <path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" />
+  <path d="M5.5 9.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v2a.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5v-2zM12.5 9.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v2a.5.5 0 01-.5.5h-2a.5.5 0 01-.5-.5v-2z" />
+  <path d="M5 10a1 1 0 00-1 1v1a1 1 0 001 1h1.5a.5.5 0 010 1H5a2 2 0 01-2-2v-1a2 2 0 012-2h1.5a.5.5 0 010 1H5zM15 10a1 1 0 011 1v1a1 1 0 01-1 1h-1.5a.5.5 0 000 1H15a2 2 0 002-2v-1a2 2 0 00-2-2h-1.5a.5.5 0 000 1H15z" />
+</svg>`;
+
+
 export function initializeSoundBrowserUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
@@ -15,7 +29,6 @@ export function renderSoundBrowser() {
 
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
-    // Create a virtual root directory to hold all libraries
     const virtualRoot = {};
     virtualRoot['Imports'] = {
         type: 'folder',
@@ -39,16 +52,13 @@ export function renderSoundBrowser() {
 
     const currentPath = localAppServices.getCurrentSoundBrowserPath?.() || [];
     
-    // --- FIX: This is the updated, more robust navigation logic ---
+    // --- FIX: This robust navigation logic should resolve the clicking issue ---
     let currentTreeNode = virtualRoot;
     try {
         for (const part of currentPath) {
-            // Check if the next part of the path exists and is a folder
             if (currentTreeNode[part] && currentTreeNode[part].type === 'folder') {
-                // Move into the children of that folder
                 currentTreeNode = currentTreeNode[part].children;
             } else {
-                // If path is invalid, reset to the root
                 throw new Error(`Invalid path segment: ${part}`);
             }
         }
@@ -97,7 +107,6 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
         
-        // Fetch all libraries from constants
         Object.entries(Constants.soundLibraries || {}).forEach(([name, url]) => {
             localAppServices.fetchSoundLibrary?.(name, url).then(() => {
                 renderSoundBrowser();
@@ -106,7 +115,6 @@ export function openSoundBrowserWindow(savedState = null) {
 
         renderSoundBrowser();
         
-        // --- FIX: Corrected and robust preview button logic ---
         previewBtn?.addEventListener('click', async () => {
             if (selectedSoundForPreviewData) {
                 try {
@@ -146,11 +154,9 @@ export function renderDirectoryView(pathArray, treeNode) {
     selectedSoundForPreviewData = null;
     if (previewBtn) previewBtn.disabled = true;
 
-    // Add ".." (parent directory) link if not at the root
     if (pathArray.length > 0) {
         const parentDiv = document.createElement('div');
         parentDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
-        // --- CHANGE: Updated icon for parent directory ---
         parentDiv.innerHTML = `<span class="mr-2 text-lg font-bold text-black dark:text-white">↩</span> .. (Parent)`;
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
@@ -160,7 +166,6 @@ export function renderDirectoryView(pathArray, treeNode) {
         dirView.appendChild(parentDiv);
     }
 
-    // Sort folders before files
     const entries = Object.entries(treeNode || {}).sort((a, b) => {
         const aIsDir = a[1].type === 'folder';
         const bIsDir = b[1].type === 'folder';
@@ -175,9 +180,9 @@ export function renderDirectoryView(pathArray, treeNode) {
         itemDiv.title = name;
 
         const icon = document.createElement('span');
-        // --- CHANGE: Use theme-aware, black & white unicode characters for icons ---
-        icon.className = 'mr-2 text-lg text-black dark:text-white';
-        icon.innerHTML = item.type === 'folder' ? '▸' : '♪';
+        // --- CHANGE: Use SVG strings for icons ---
+        icon.className = 'mr-2 flex-shrink-0 text-black dark:text-white';
+        icon.innerHTML = item.type === 'folder' ? FOLDER_ICON_SVG : FILE_ICON_SVG;
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'truncate';
