@@ -40,21 +40,12 @@ export const SYNTH_PITCHES = (() => {
 })();
 
 
+// --- FIX: Removed hardcoded color constants. The new colors will be read from CSS variables. ---
 export const PIANO_ROLL_KEY_WIDTH = 60; 
 export const PIANO_ROLL_HEADER_HEIGHT = 25; 
 export const PIANO_ROLL_NOTE_HEIGHT = 20; 
 export const PIANO_ROLL_SIXTEENTH_NOTE_WIDTH = 25; 
-export const PIANO_ROLL_WHITE_KEY_COLOR = '#FFFFFF';
-export const PIANO_ROLL_BLACK_KEY_COLOR = '#333333';
-export const PIANO_ROLL_GRID_LINE_COLOR = '#404040'; 
-export const PIANO_ROLL_BAR_LINE_COLOR = '#6c757d';  
-export const PIANO_ROLL_SUBDIVISION_LINE_COLOR = '#505050'; 
-export const PIANO_ROLL_NOTE_FILL_COLOR = 'skyblue';
-export const PIANO_ROLL_NOTE_STROKE_COLOR = 'blue';
-export const PIANO_ROLL_NOTE_SELECTED_STROKE_COLOR = 'gold';
 
-
-// --- FIX: Added the new piano library to the list ---
 export const soundLibraries = {
     "Drums": "assets/drums.zip",
     "Instruments": "assets/instruments.zip",
@@ -78,22 +69,19 @@ export function decrementOctaveShift() {
 }
 
 export const computerKeySynthMap = {
-    // Bottom row (white keys on piano often)
-    'a': 48, // C3 (octave shift will modify this)
-    's': 50, // D3
-    'd': 52, // E3
-    'f': 53, // F3
-    'g': 55, // G3
-    'h': 57, // A3
-    'j': 59, // B3
-    'k': 60, // C4
-
-    // Top row (black keys on piano often)
-    'w': 49, // C#3
-    'e': 51, // D#3
-    't': 54, // F#3
-    'y': 56, // G#3
-    'u': 58, // A#3
+    'a': 48, 
+    's': 50,
+    'd': 52,
+    'f': 53,
+    'g': 55,
+    'h': 57,
+    'j': 59,
+    'k': 60,
+    'w': 49,
+    'e': 51,
+    't': 54,
+    'y': 56,
+    'u': 58,
 };
 
 console.log('[Constants] Initialized SYNTH_PITCHES count:', SYNTH_PITCHES.length);
