@@ -71,7 +71,7 @@ export async function addFileToSoundLibraryInternal(fileName, audioBlob) {
     }
 
     try {
-        const dbKey = `user-import-<span class="math-inline">\{Date\.now\(\)\}\-</span>{fileName}`;
+        const dbKey = `user-import-${Date.now()}-${fileName}`;
         await appServices.dbStoreAudio(dbKey, audioBlob);
 
         // Create a file entry that mimics a JSZip entry for compatibility
@@ -114,7 +114,6 @@ export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
 export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
 export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
 export function getCurrentSoundFileTreeState() { return currentSoundFileTreeGlobal; }
-export function getCurrentSoundBrowserPathState() { return [...currentSoundBrowserPathGlobal]; }
 export function getPreviewPlayerState() { return previewPlayerGlobal; }
 export function getClipboardDataState() { return { ...clipboardDataGlobal }; }
 export function getArmedTrackIdState() { return armedTrackId; }
@@ -129,6 +128,12 @@ export function getPlaybackModeState() { return playbackMode; }
 export function getSelectedTimelineClipInfoState() { return {...selectedTimelineClipInfo}; }
 export function getCurrentUserThemePreferenceState() { return currentUserThemePreference; }
 export function getIsReconstructingDAWState() { return isReconstructingDAW; }
+// --- START DEBUGGING ---
+export function getCurrentSoundBrowserPathState() {
+    console.log('%c[State] Getting sound browser path. Current value is:', 'color: green;', currentSoundBrowserPathGlobal);
+    return [...currentSoundBrowserPathGlobal];
+}
+// --- END DEBUGGING ---
 
 
 // --- Setters ---
@@ -155,8 +160,13 @@ export function setSoundLibraryFileTreesState(libraryName, tree) {
 }
 export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
 export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
-export function setCurrentSoundBrowserPathState(pathArray) { currentSoundBrowserPathGlobal = pathArray || []; }
 export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
+// --- START DEBUGGING ---
+export function setCurrentSoundBrowserPathState(pathArray) {
+    console.log('%c[State] Setting sound browser path to:', 'color: green; font-weight: bold;', pathArray);
+    currentSoundBrowserPathGlobal = pathArray || [];
+}
+// --- END DEBUGGING ---
 
 export function setClipboardDataState(data) { clipboardDataGlobal = data || { type: null, data: null, sourceTrackType: null, sequenceLength: null }; }
 
