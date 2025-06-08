@@ -212,7 +212,6 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     if (dzContainerEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
         if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
-        // --- FIX: Correct the ID selector to match the one in createDropZoneHTML ---
         const fileInputEl = dzContainerEl.querySelector(`#inst-sampler-file-input-${track.id}`);
         if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler'); };
     }
@@ -221,6 +220,52 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         track.instrumentWaveformCanvasCtx = canvas.getContext('2d');
         if(track.instrumentSamplerSettings?.audioBuffer?.loaded) drawInstrumentWaveform(track);
     }
+    // --- FIX: Call the new function to render the controls ---
+    updateInstrumentSamplerControlsUI(track);
+}
+
+// --- NEW FUNCTION: To create and render controls for the Instrument Sampler ---
+export function updateInstrumentSamplerControlsUI(track) {
+    const container = document.getElementById(`inst-sampler-controls-container-${track.id}`);
+    if (!container) return;
+
+    container.innerHTML = '';
+    const settings = track.instrumentSamplerSettings || {};
+
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-4 gap-2';
+
+    const envelope = settings.envelope || { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 };
+    
+    const attackKnob = localAppServices.createKnob({
+        label: "Attack", min: 0.001, max: 2, step: 0.001, decimals: 3,
+        initialValue: envelope.attack,
+        onValueChange: (val) => { track.instrument.set({ attack: val }); }
+    }, localAppServices);
+    grid.appendChild(attackKnob.element);
+    
+    const decayKnob = localAppServices.createKnob({
+        label: "Decay", min: 0.001, max: 2, step: 0.001, decimals: 3,
+        initialValue: envelope.decay,
+        onValueChange: (val) => { track.instrument.set({ decay: val }); }
+    }, localAppServices);
+    grid.appendChild(decayKnob.element);
+
+    const sustainKnob = localAppServices.createKnob({
+        label: "Sustain", min: 0, max: 1, step: 0.01, decimals: 2,
+        initialValue: envelope.sustain,
+        onValueChange: (val) => { track.instrument.set({ sustain: val }); }
+    }, localAppServices);
+    grid.appendChild(sustainKnob.element);
+
+    const releaseKnob = localAppServices.createKnob({
+        label: "Release", min: 0.001, max: 5, step: 0.001, decimals: 3,
+        initialValue: envelope.release,
+        onValueChange: (val) => { track.instrument.set({ release: val }); }
+    }, localAppServices);
+    grid.appendChild(releaseKnob.element);
+    
+    container.appendChild(grid);
 }
 
 export function drawWaveform(track) {
