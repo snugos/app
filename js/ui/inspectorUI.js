@@ -212,7 +212,8 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
     if (dzContainerEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
         if (dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
-        const fileInputEl = dzContainerEl.querySelector(`#instrumentFileInput-${track.id}`);
+        // --- FIX: Correct the ID selector to match the one in createDropZoneHTML ---
+        const fileInputEl = dzContainerEl.querySelector(`#inst-sampler-file-input-${track.id}`);
         if (fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler'); };
     }
     const canvas = winEl.querySelector(`#instrumentWaveformCanvas-${track.id}`);
@@ -297,15 +298,13 @@ export function renderDrumSamplerPads(track) {
         if (!padData) continue;
         const padButton = document.createElement('button');
         padButton.className = 'pad-button';
-        padButton.setAttribute('data-pad-index', i); // Store the index
+        padButton.setAttribute('data-pad-index', i);
 
         if (i === track.selectedDrumPadForEdit) {
             padButton.classList.add('selected-for-edit');
         }
-
         padButton.innerHTML = `<span class="pad-label">${padData.originalFileName || `Pad ${i + 1}`}</span>`;
         
-        // Click handler remains the same
         padButton.addEventListener('click', () => {
             track.selectedDrumPadForEdit = i;
             if (padData.dbKey) {
@@ -315,22 +314,17 @@ export function renderDrumSamplerPads(track) {
             updateDrumPadControlsUI(track);
         });
 
-        // *** NEW: Add drag and drop event listeners to each pad ***
-
-        // 1. Drag Over: Indicate this is a valid drop target
         padButton.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
             padButton.classList.add('bg-blue-300', 'dark:bg-blue-800', 'border-blue-500');
         });
 
-        // 2. Drag Leave: Remove the visual indicator
         padButton.addEventListener('dragleave', (e) => {
             e.preventDefault();
             padButton.classList.remove('bg-blue-300', 'dark:bg-blue-800', 'border-blue-500');
         });
 
-        // 3. Drop: Handle the dropped data
         padButton.addEventListener('drop', (e) => {
             e.preventDefault();
             padButton.classList.remove('bg-blue-300', 'dark:bg-blue-800', 'border-blue-500');
@@ -340,10 +334,8 @@ export function renderDrumSamplerPads(track) {
 
             try {
                 const soundData = JSON.parse(soundDataString);
-                // The target index is this pad's index
                 const padIndex = parseInt(padButton.getAttribute('data-pad-index'), 10);
                 
-                // Use the existing service to load the sound to the specific pad
                 if (soundData.type === 'sound-browser-item' && !isNaN(padIndex)) {
                     localAppServices.loadSoundFromBrowserToTarget?.(soundData, track.id, 'DrumSampler', padIndex);
                 }
