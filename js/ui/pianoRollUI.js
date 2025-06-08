@@ -32,7 +32,7 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
 
     const konvaContainer = document.createElement('div');
     konvaContainer.id = `pianoRollKonvaContainer-${trackId}`;
-    konvaContainer.className = 'w-full h-full overflow-auto bg-white dark:bg-black'; // Changed to allow scrolling
+    konvaContainer.className = 'w-full h-full overflow-auto bg-white dark:bg-black';
 
     const pianoRollWindow = localAppServices.createWindow(
         windowId,
@@ -42,7 +42,6 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
     );
 
     if (pianoRollWindow && pianoRollWindow.element) {
-        // Use a timeout to ensure the container has been added to the DOM and has dimensions
         setTimeout(() => createPianoRollStage(konvaContainer, track), 50);
     }
 }
@@ -75,7 +74,7 @@ function drawPianoKeys(layer, stageHeight) {
             fontSize: 10,
             fontFamily: "'VT323', monospace",
             fill: isBlackKey ? '#FFF' : '#000',
-            listening: false, // Don't listen for events on the text
+            listening: false,
         });
         keyLayer.add(keyText);
     });
@@ -90,14 +89,14 @@ function drawGrid(layer, stageWidth, stageHeight) {
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
 
     const numPitches = Constants.SYNTH_PITCHES.length;
-    const numSteps = 64; // For now, let's draw 4 bars (16 steps/bar * 4 bars)
+    const numSteps = 64; // 4 bars
 
     // Draw horizontal lines
     for (let i = 0; i <= numPitches; i++) {
         const isBlackKey = Constants.SYNTH_PITCHES[i-1]?.includes('#') || false;
         gridLayer.add(new Konva.Line({
             points: [keyWidth, i * noteHeight, noteWidth * numSteps + keyWidth, i * noteHeight],
-            stroke: isBlackKey ? '#505050' : '#404040', // Use subdivision color for black keys
+            stroke: isBlackKey ? '#505050' : '#404040',
             strokeWidth: 1,
         }));
     }
@@ -117,19 +116,50 @@ function drawGrid(layer, stageWidth, stageHeight) {
     return gridLayer;
 }
 
+// --- Start of New Code ---
+function renderNotes(track) {
+    const noteLayer = new Konva.Layer();
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) return noteLayer;
+
+    const sequenceData = activeSequence.data;
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+    
+    sequenceData.forEach((pitchRow, pitchIndex) => {
+        pitchRow.forEach((note, timeStep) => {
+            if (note) { // If a note exists at this step
+                const noteRect = new Konva.Rect({
+                    x: timeStep * noteWidth + keyWidth,
+                    y: pitchIndex * noteHeight,
+                    width: noteWidth * (note.duration || 1), // Use note duration, default to 1 step
+                    height: noteHeight,
+                    fill: '#0000FF', // Blue fill for notes
+                    stroke: '#FFFFFF', // White border
+                    strokeWidth: 1,
+                    opacity: note.velocity ? (0.5 + note.velocity * 0.5) : 1, // Opacity based on velocity
+                });
+                noteLayer.add(noteRect);
+            }
+        });
+    });
+
+    return noteLayer;
+}
+// --- End of New Code ---
 
 function createPianoRollStage(containerElement, track) {
     if (typeof Konva === 'undefined') {
         containerElement.innerHTML = '<p class="p-4 text-black dark:text-white">Error: Piano Roll library failed to load.</p>';
         return null;
     }
-    if (!containerElement.parentElement || containerElement.parentElement.offsetWidth <= 0) {
-         setTimeout(() => createPianoRollStage(containerElement, track), 100);
+    if (!containerElement || !containerElement.parentElement || containerElement.parentElement.offsetWidth <= 0) {
+        setTimeout(() => createPianoRollStage(containerElement, track), 100);
         return;
     }
     
-    // Calculate dimensions
-    const numSteps = 64; // 4 bars
+    const numSteps = 64;
     const totalGridWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps;
     const totalGridHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * Constants.SYNTH_PITCHES.length;
     const stageWidth = totalGridWidth + Constants.PIANO_ROLL_KEY_WIDTH;
@@ -141,13 +171,21 @@ function createPianoRollStage(containerElement, track) {
         height: stageHeight,
     });
 
+    // --- Start of Modified Code ---
+    // Create and add layers in order
     const gridLayer = drawGrid(null, stageWidth, stageHeight);
     stage.add(gridLayer);
 
+    const noteLayer = renderNotes(track);
+    stage.add(noteLayer);
+
     const keyLayer = drawPianoKeys(null, stageHeight);
     stage.add(keyLayer);
+    
+    // Bring keys to the top to ensure they are not covered by the grid
+    keyLayer.moveToTop();
+    // --- End of Modified Code ---
 
-    // Initial draw
     stage.draw();
 
     return stage;
