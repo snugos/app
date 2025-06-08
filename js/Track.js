@@ -263,7 +263,7 @@ export class Track {
         if (!this.instrument || !activeSequence) {
             return;
         }
-
+        
         const events = [];
         for (let i = 0; i < activeSequence.length; i++) {
             const notesInStep = [];
@@ -272,18 +272,21 @@ export class Track {
                     notesInStep.push(Constants.SYNTH_PITCHES[j]);
                 }
             }
+            // Use the array of notes for the event. If it's empty, Tone.Sequence will treat it as a rest.
+            // If it has one item, the callback will receive a string.
+            // If it has multiple, the callback will receive an array.
             events.push(notesInStep);
         }
 
-        this.toneSequence = new Tone.Sequence((time, notes) => {
+        this.toneSequence = new Tone.Sequence((time, value) => {
             // --- THIS IS THE CORRECTED LOGIC ---
-            // Check if 'notes' exists and has content before trying to use it.
-            if (notes && notes.length > 0) {
-                // The synth can only play one note at a time, so we iterate
-                // if there happen to be multiple notes in a step (for future polyphony).
-                notes.forEach(note => {
+            // It now handles both single notes (string) and chords (array)
+            if (Array.isArray(value)) {
+                value.forEach(note => {
                     this.instrument.triggerAttackRelease(note, "16n", time);
                 });
+            } else if (value) { // This handles the single note (string) case
+                this.instrument.triggerAttackRelease(value, "16n", time);
             }
         }, events, "16n");
 
