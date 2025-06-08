@@ -58,8 +58,8 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
+// --- REVISED FUNCTION FOR THE NEW DEFAULT LAYOUT ---
 function openDefaultLayout() {
-    // Defer execution to ensure the DOM has been painted and has its final dimensions.
     setTimeout(() => {
         const desktopEl = document.getElementById('desktop');
         if (!desktopEl) return;
@@ -68,16 +68,18 @@ function openDefaultLayout() {
         const margin = 10;
         const gap = 10;
 
-        // Define layout constants
+        // Layout constants
         const timelineHeight = 220;
+        const mixerHeight = 160;
         const sidePanelWidth = 350;
+        const leftPanelWidth = (rect.width / 2) - margin - (gap / 2);
 
         // Define Y positions
         const timelineY = margin;
-        const bottomRowY = timelineY + timelineHeight + gap;
-        const bottomRowHeight = rect.height - bottomRowY - margin;
+        const row2Y = timelineY + timelineHeight + gap;
+        const row3Y = row2Y + mixerHeight + gap;
 
-        // 1. Timeline
+        // 1. Timeline (top)
         appServices.openTimelineWindow({
             x: margin,
             y: timelineY,
@@ -85,32 +87,29 @@ function openDefaultLayout() {
             height: timelineHeight
         });
         
-        // 2. Sound Browser (Right)
+        // 2. Mixer (middle-left)
+        appServices.openMixerWindow({
+            x: margin,
+            y: row2Y,
+            width: leftPanelWidth,
+            height: mixerHeight
+        });
+
+        // 3. Master Effects Rack (bottom-left, under Mixer)
+        appServices.openMasterEffectsRackWindow({
+            x: margin,
+            y: row3Y,
+            width: leftPanelWidth,
+            height: rect.height - row3Y - margin
+        });
+        
+        // 4. Sound Browser (right side, under Timeline)
         const soundBrowserX = rect.width - sidePanelWidth - margin;
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
-            y: bottomRowY,
+            y: row2Y,
             width: sidePanelWidth,
-            height: bottomRowHeight
-        });
-
-        // 3. Master Effects Rack (to the left of Sound Browser)
-        const masterEffectsX = soundBrowserX - sidePanelWidth - gap;
-        appServices.openMasterEffectsRackWindow({
-            x: masterEffectsX,
-            y: bottomRowY,
-            width: sidePanelWidth,
-            height: bottomRowHeight
-        });
-
-        // 4. Mixer (fills remaining space on the left)
-        const mixerWidth = masterEffectsX - margin - gap;
-        // --- FIX: Set a fixed, shorter height for the mixer window ---
-        appServices.openMixerWindow({
-            x: margin,
-            y: bottomRowY,
-            width: mixerWidth,
-            height: 160 // A shorter height that fits the content
+            height: rect.height - row2Y - margin
         });
     }, 100); 
 }
