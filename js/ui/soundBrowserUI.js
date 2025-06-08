@@ -9,14 +9,23 @@ export function initializeSoundBrowserUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
-function renderSoundBrowser() {
+export function renderSoundBrowser() {
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element || browserWindow.isMinimized) return;
 
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
+    // Create a virtual root containing all libraries as top-level folders
     const virtualRoot = {};
-    Object.keys(Constants.soundLibraries).forEach(libName => {
+    const libraryNames = Object.keys(Constants.soundLibraries);
+    
+    // Always add the Imports folder first
+    virtualRoot['Imports'] = {
+        type: 'folder',
+        children: allFileTrees['Imports'] || {}
+    };
+
+    libraryNames.forEach(libName => {
         if (allFileTrees[libName]) {
             virtualRoot[libName] = { 
                 type: 'folder', 
@@ -41,12 +50,23 @@ function renderSoundBrowser() {
             if (!currentTree) throw new Error("Path not found");
         }
     } catch (e) {
-        console.warn("Error navigating sound browser path, resetting to root.", e);
         localAppServices.setCurrentSoundBrowserPath?.([]);
         currentTree = virtualRoot;
     }
     
     renderDirectoryView(currentPath, currentTree);
+}
+
+function getLibraryNameFromPath(pathArray) {
+    if (pathArray.length > 0) {
+        if (pathArray[0] === 'Imports') {
+            return 'Imports';
+        }
+        // Check against the known library names
+        const libName = Object.keys(Constants.soundLibraries).find(lib => pathArray[0] === lib);
+        return libName || null;
+    }
+    return null;
 }
 
 export function openSoundBrowserWindow(savedState = null) {
@@ -99,9 +119,7 @@ export function openSoundBrowserWindow(savedState = null) {
     return browserWindow;
 }
 
-// --- Start of Corrected Code ---
 export function renderDirectoryView(pathArray, treeNode) {
-// --- End of Corrected Code ---
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element) return;
 
@@ -161,9 +179,9 @@ export function renderDirectoryView(pathArray, treeNode) {
         } else if (item.type === 'file') {
             itemDiv.draggable = true;
             itemDiv.addEventListener('dragstart', (e) => {
-                const libraryName = pathArray[0];
+                const libraryName = getLibraryNameFromPath(pathArray);
                 if (!libraryName) { e.preventDefault(); return; }
-                const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.entry.name, fileName: name };
+                const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.fullPath, fileName: name, entry: item.entry };
                 e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                 e.dataTransfer.effectAllowed = 'copy';
             });
@@ -172,17 +190,17 @@ export function renderDirectoryView(pathArray, treeNode) {
                     el.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
                 });
                 itemDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
-                const libraryName = pathArray[0];
-                selectedSoundForPreviewData = { libraryName, fullPath: item.entry.name, fileName: name };
+                const libraryName = getLibraryNameFromPath(pathArray);
+                selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name, entry: item.entry };
                 if (previewBtn) previewBtn.disabled = false;
             });
             itemDiv.addEventListener('dblclick', () => {
                 const armedTrackId = localAppServices.getArmedTrackId?.();
                 const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
-                const libraryName = pathArray[0];
+                const libraryName = getLibraryNameFromPath(pathArray);
 
                 if (armedTrack) {
-                    const soundData = { libraryName, fullPath: item.entry.name, fileName: name };
+                    const soundData = { libraryName, fullPath: item.fullPath, fileName: name, entry: item.entry };
                     let targetIndex = null;
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
                     localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex);
