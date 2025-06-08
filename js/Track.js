@@ -294,15 +294,21 @@ export class Track {
             }, events, "16n").start(0);
 
         } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-            const isSlicer = this.type === 'Sampler';
             
-            this.toneSequence = new Tone.Sequence((time, notes) => {
+            // --- FIX: Check if the 'value' from the sequence is valid and normalize it to an array ---
+            this.toneSequence = new Tone.Sequence((time, value) => {
+                if (!value) {
+                    return; // Skip empty steps
+                }
+                // If Tone.Sequence passes a single value, convert it to an array
+                const notes = Array.isArray(value) ? value : [value];
+
                 notes.forEach(note => {
                     const midi = Tone.Midi(note).toMidi();
                     const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
 
                     if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                        if (isSlicer) {
+                        if (this.type === 'Sampler') {
                             this.appServices.playSlicePreview?.(this.id, sampleIndex, 1.0, 0, time);
                         } else {
                             this.appServices.playDrumSamplerPadPreview?.(this.id, sampleIndex, 1.0, 0, time);
@@ -317,16 +323,15 @@ export class Track {
         }
     }
     
-    // --- UPDATED DEFAULT SYNTH PARAMETERS ---
     getDefaultSynthParams() {
         return {
             portamento: 0,
-            oscillator: { type: 'sine' }, // Changed from 'triangle'
+            oscillator: { type: 'sine' },
             envelope: { 
                 attack: 0.005, 
-                decay: 2.0,     // Changed from 0.1
-                sustain: 0,     // Changed from 0.9
-                release: 5.0      // Changed from 1
+                decay: 2.0,
+                sustain: 0,
+                release: 5.0
             },
             filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 10000 },
             filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7 }
