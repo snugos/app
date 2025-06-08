@@ -60,7 +60,6 @@ export function initializeStateModule(appServicesFromMain) {
     if (!soundLibraryFileTreesGlobal['Imports']) {
         soundLibraryFileTreesGlobal['Imports'] = {};
     }
-    console.log("[State] State module initialized. AppServices keys:", Object.keys(appServices));
 }
 
 export async function addFileToSoundLibraryInternal(fileName, audioBlob) {
@@ -192,7 +191,6 @@ export function setPlaybackModeState(newMode, skipUIUpdate = false) {
         Tone.Transport.stop();
     }
     
-    // Defer scheduling logic to a dedicated controller function
     if (appServices.onPlaybackModeChange && !skipUIUpdate) {
         appServices.onPlaybackModeChange(newMode, oldMode);
     }
@@ -252,7 +250,13 @@ export function removeTrackFromStateInternal(trackId, isUserAction = true) {
     }
 }
 
-export function addMasterEffectToState(effectType) {
+export async function addMasterEffectToState(effectType) {
+    const audioReady = await appServices.initAudioContextAndMasterMeter?.();
+    if (!audioReady) {
+        appServices.showNotification?.("Audio engine not ready. Please interact with the page first.", 3000);
+        return;
+    }
+
     const effectDef = appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
     if (!effectDef) {
         console.error(`Master effect definition for "${effectType}" not found.`);
@@ -279,6 +283,7 @@ export function removeMasterEffectFromState(effectId) {
         appServices.captureStateForUndo?.(`Remove Master Effect: ${effect.type}`);
     }
 }
+
 export function updateMasterEffectParamInState(effectId, paramPath, value) {
     const effect = masterEffectsChainState.find(e => e.id === effectId);
     if (effect) {
