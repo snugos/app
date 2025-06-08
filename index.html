@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SnugOS</title>
-    <!-- Favicon Links -->
     <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="apple-icon-72x72.png">
@@ -25,32 +24,28 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- MODIFIED: Changed font to VT323 -->
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css"> 
     
-    <script src="https://cdn.tailwindcss.com"></script> <!-- Development only -->
-    <script>
-        // MODIFIED: Set VT323 as the default sans-serif font for Tailwind CSS
+    <script src="https://cdn.tailwindcss.com"></script> <script>
+        // --- Start of Corrected Code ---
+        // Set Roboto as the default sans-serif font for Tailwind CSS
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['VT323', 'monospace'],
+                        sans: ['Roboto', 'sans-serif'],
                     },
                 }
             }
         }
+        // --- End of Corrected Code ---
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <script src="https://unpkg.com/konva@9.3.6/konva.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
-<body class="theme-dark"> <!-- Default theme -->
-
-    <div id="topTaskbar" class="select-none">
-        <!-- Play, Stop, Record -->
+<body class="theme-dark"> <div id="topTaskbar" class="select-none">
         <div id="transportControlsTop">
             <button id="playBtnGlobalTop" title="Play/Pause (Spacebar)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -63,14 +58,12 @@
             </button>
         </div>
 
-        <!-- Tempo -->
         <div id="tempoControlTop">
             <label for="tempoGlobalInputTop">Tempo:</label>
             <input type="number" id="tempoGlobalInputTop" value="120" min="30" max="300" step="0.1">
             <span>BPM</span>
         </div>
 
-        <!-- MIDI Input -->
         <div id="midiControlsTop">
             <label for="midiInputSelectGlobalTop">MIDI In:</label>
             <select id="midiInputSelectGlobalTop">
@@ -78,22 +71,18 @@
             </select>
         </div>
         
-        <!-- Master Meter -->
         <div id="masterMeterContainerGlobalTop" class="master-meter-top" title="Master Output Level">
             <div id="masterMeterBarGlobalTop" style="width: 0%;"></div>
         </div>
 
-        <!-- Spacer -->
         <div style="flex-grow: 1;"></div>
 
-        <!-- Activity Indicators & Playback Mode -->
-         <div id="activityIndicatorsTop">
+        <div id="activityIndicatorsTop">
             <span id="playbackModeToggleBtnGlobalTop" title="Toggle Playback Mode (Song/Pattern)" class="cursor-pointer">Mode: Sequencer</span>
             <span id="midiIndicatorGlobalTop" title="MIDI Activity">MIDI</span>
             <span id="keyboardIndicatorGlobalTop" title="Computer Keyboard Piano (Caps Lock)">KB</span>
         </div>
         
-        <!-- Theme Toggle Button -->
         <div id="themeToggleContainerTopRight">
             <button id="themeToggleBtn" title="Toggle Theme">
                 <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -103,14 +92,12 @@
     </div>
 
     <div id="desktop">
-        <!-- Windows will be dynamically added here -->
-    </div>
+        </div>
 
     <div id="taskbar" class="select-none">
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
-            <!-- Taskbar buttons for open windows will go here -->
-        </div>
+            </div>
         <div id="taskbarTempoDisplay" title="Click to edit Master Tempo">120.0 BPM</div>
     </div>
 
