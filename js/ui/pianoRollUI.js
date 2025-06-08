@@ -55,10 +55,6 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
 export function updatePianoRollPlayhead(transportTime) {
     if (openPianoRolls.size === 0) return;
 
-    // --- FIX: This formula correctly calculates pixels per second based on BPM ---
-    // (BPM / 60) gives beats per second.
-    // Each beat has 4 sixteenth notes (steps).
-    // Each step has a defined pixel width.
     const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
@@ -73,26 +69,44 @@ export function updatePianoRollPlayhead(transportTime) {
 }
 
 
-function drawPianoKeys(layer, stageHeight) {
+// --- FIX: This function now accepts the track to conditionally render labels ---
+function drawPianoKeys(layer, stageHeight, track) {
     const keyLayer = new Konva.Layer();
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
+    const samplerLabelPrefix = track.type === 'Sampler' ? 'Slice' : 'Pad';
 
     Constants.SYNTH_PITCHES.forEach((noteName, index) => {
+        const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - index;
         const isBlackKey = noteName.includes('#') || noteName.includes('b');
         const y = index * noteHeight;
+        
+        let labelText = noteName;
+        let isSamplerKey = false;
+
+        // Check if the current key falls within the 16 notes we've allocated for samplers
+        if (isSampler && midiNote >= Constants.SAMPLER_PIANO_ROLL_START_NOTE && midiNote < Constants.SAMPLER_PIANO_ROLL_START_NOTE + Constants.NUM_SAMPLER_NOTES) {
+            const sampleIndex = midiNote - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+            labelText = `${samplerLabelPrefix} ${sampleIndex + 1}`;
+            isSamplerKey = true;
+        }
+
         const keyRect = new Konva.Rect({
             x: 0, y: y, width: keyWidth, height: noteHeight,
-            fill: isBlackKey ? getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() : getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim(),
-            stroke: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(),
+            fill: isBlackKey ? '#333' : '#FFF',
+            stroke: '#555',
             strokeWidth: 1,
+            // Dim keys that aren't part of the sampler mapping
+            opacity: isSampler && !isSamplerKey ? 0.3 : 1
         });
         keyLayer.add(keyRect);
+
         const keyText = new Konva.Text({
-            x: isBlackKey ? 15 : 5, y: y + noteHeight / 2 - 7, text: noteName,
-            fontSize: 12,
+            x: isBlackKey ? 15 : 5, y: y + noteHeight / 2 - 7, text: labelText,
+            fontSize: isSamplerKey ? 10 : 12,
             fontFamily: "'Roboto', sans-serif",
-            fill: isBlackKey ? getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() : getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(),
+            fill: isBlackKey ? '#FFF' : '#000',
             listening: false,
         });
         keyLayer.add(keyText);
@@ -108,13 +122,8 @@ function drawGrid(layer, stageWidth, stageHeight) {
     const numPitches = Constants.SYNTH_PITCHES.length;
     const numSteps = 64;
     
-    const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
-    const blackKeyColor = getComputedStyle(document.documentElement).getPropertyValue('--border-primary').trim();
-    const lineSubdivisionColor = getComputedStyle(document.documentElement).getPropertyValue('--border-sequencer').trim();
-    const lineBeatColor = getComputedStyle(document.documentElement).getPropertyValue('--border-secondary').trim();
-    
     gridLayer.add(new Konva.Rect({
-        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: gridColor,
+        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: '#DDD',
     }));
 
     // Draw horizontal lines and black key shading
@@ -124,13 +133,12 @@ function drawGrid(layer, stageWidth, stageHeight) {
             gridLayer.add(new Konva.Rect({
                 x: keyWidth, y: i * noteHeight,
                 width: stageWidth - keyWidth, height: noteHeight,
-                fill: blackKeyColor,
-                opacity: 0.2
+                fill: '#CCC',
             }));
         }
         gridLayer.add(new Konva.Line({
             points: [keyWidth, (i + 1) * noteHeight, noteWidth * numSteps + keyWidth, (i + 1) * noteHeight],
-            stroke: lineSubdivisionColor,
+            stroke: '#BBB',
             strokeWidth: 0.5,
         }));
     }
@@ -142,7 +150,7 @@ function drawGrid(layer, stageWidth, stageHeight) {
 
         gridLayer.add(new Konva.Line({
             points: [i * noteWidth + keyWidth, 0, i * noteWidth + keyWidth, stageHeight],
-            stroke: isBarLine ? lineBeatColor : lineSubdivisionColor,
+            stroke: isBarLine ? '#555' : '#BBB',
             strokeWidth: isBarLine || isBeatLine ? 1 : 0.5,
         }));
     }
@@ -160,8 +168,8 @@ function renderNotes(track) {
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     
-    const noteFillColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
-    const noteStrokeColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+    const noteFillColor = 'skyblue';
+    const noteStrokeColor = 'blue';
     
     sequenceData.forEach((pitchRow, pitchIndex) => {
         pitchRow.forEach((note, timeStep) => {
@@ -222,8 +230,9 @@ function createPianoRollStage(containerElement, track) {
     stage.add(playheadLayer);
     
     openPianoRolls.set(track.id, { stage, playhead, layer: playheadLayer });
-
-    const keyLayer = drawPianoKeys(null, stageHeight);
+    
+    // --- FIX: Pass the track object to drawPianoKeys ---
+    const keyLayer = drawPianoKeys(null, stageHeight, track);
     stage.add(keyLayer);
     
     keyLayer.moveToTop();
