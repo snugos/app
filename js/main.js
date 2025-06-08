@@ -58,7 +58,6 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
-// --- FINALIZED FUNCTION FOR THE CORRECT DEFAULT LAYOUT ---
 function openDefaultLayout() {
     setTimeout(() => {
         const desktopEl = document.getElementById('desktop');
@@ -68,18 +67,15 @@ function openDefaultLayout() {
         const margin = 10;
         const gap = 10;
 
-        // Layout constants
         const timelineHeight = 220;
         const mixerHeight = 160;
-        const sidePanelWidth = 350; // The default width for the sound browser
+        const sidePanelWidth = 350;
         const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
-        // Y positions
         const timelineY = margin;
         const row2Y = timelineY + timelineHeight + gap;
         const row3Y = row2Y + mixerHeight + gap;
         
-        // 1. Timeline (top)
         appServices.openTimelineWindow({
             x: margin,
             y: timelineY,
@@ -87,7 +83,6 @@ function openDefaultLayout() {
             height: timelineHeight
         });
         
-        // 2. Mixer (middle-left)
         appServices.openMixerWindow({
             x: margin,
             y: row2Y,
@@ -95,15 +90,11 @@ function openDefaultLayout() {
             height: mixerHeight
         });
 
-        // 3. Master Effects Rack (bottom-left, under Mixer)
-        // --- FIX: Only set position, allow default size ---
         appServices.openMasterEffectsRackWindow({
             x: margin,
             y: row3Y,
         });
         
-        // 4. Sound Browser (right side, under Timeline)
-        // --- FIX: Only set position, allow default size ---
         const soundBrowserX = rect.width - sidePanelWidth - margin;
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
@@ -258,6 +249,7 @@ async function initializeSnugOS() {
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
+    // --- FIX: Ensure setupMIDI() is called on startup ---
     setupMIDI();
     
     const savedTheme = localStorage.getItem('snugos-theme');
