@@ -26,6 +26,8 @@ import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
 
 let localAppServices = {};
 const currentlyPressedKeys = new Set();
+let isSustainPedalDown = false;
+const sustainedNotes = new Map();
 
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
@@ -424,8 +426,32 @@ export function selectMIDIInput(event) {
 
 function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
-    const noteOn = (command & 0xF0) === 0x90 && velocity > 0;
-    const noteOff = (command & 0xF0) === 0x80 || ((command & 0xF0) === 0x90 && velocity === 0);
+    const commandType = command & 0xF0;
+
+    // Sustain Pedal (CC #64) Logic
+    if (commandType === 0xB0 && noteNumber === 64) {
+        const armedTrackId = getArmedTrackId();
+        if (armedTrackId === null) return;
+        const armedTrack = getTrackById(armedTrackId);
+        if (!armedTrack?.instrument) return;
+
+        if (velocity > 63) {
+            // Pedal is pressed
+            isSustainPedalDown = true;
+        } else {
+            // Pedal is released
+            isSustainPedalDown = false;
+            // Release all sustained notes
+            sustainedNotes.forEach((noteValue, midiNote) => {
+                armedTrack.instrument.triggerRelease(noteValue, Tone.now());
+            });
+            sustainedNotes.clear();
+        }
+        return; // End processing for CC messages
+    }
+    
+    const noteOn = commandType === 0x90 && velocity > 0;
+    const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
 
     // MIDI Recording Logic
     if (noteOn && isTrackRecordingState()) {
@@ -444,8 +470,6 @@ function onMIDIMessage(message) {
                     
                     const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
                     if (pianoRollWindow && !pianoRollWindow.isMinimized) {
-                       const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${track.id}`);
-                       const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${track.id}`);
                        if(localAppServices.openPianoRollWindow) {
                            pianoRollWindow.close(true);
                            localAppServices.openPianoRollWindow(track.id);
@@ -453,7 +477,7 @@ function onMIDIMessage(message) {
                     }
                 }
             }
-            return; 
+            // Do not return here, allow the note to be played live while recording
         }
     }
     
@@ -481,9 +505,17 @@ function onMIDIMessage(message) {
     const noteValue = armedTrack.type === 'InstrumentSampler' ? Tone.Midi(noteNumber).toNote() : Tone.Midi(noteNumber).toFrequency();
 
     if (noteOn) {
+        if (sustainedNotes.has(noteNumber)) {
+            armedTrack.instrument.triggerRelease(sustainedNotes.get(noteNumber), Tone.now());
+            sustainedNotes.delete(noteNumber);
+        }
         armedTrack.instrument.triggerAttack(noteValue, Tone.now(), velocity / 127);
     } else if (noteOff) {
-        armedTrack.instrument.triggerRelease(noteValue, Tone.now());
+        if (isSustainPedalDown) {
+            sustainedNotes.set(noteNumber, noteValue);
+        } else {
+            armedTrack.instrument.triggerRelease(noteValue, Tone.now());
+        }
     }
 }
 
