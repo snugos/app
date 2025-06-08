@@ -8,7 +8,34 @@ export function initializePlayback(appServices) {
     localAppServices = appServices;
 }
 
-// --- FIX: Added optional 'time' parameter for scheduled playback from the sequencer ---
+export function scheduleTimelinePlayback() {
+    // First, clear any existing scheduled events from the transport
+    Tone.Transport.cancel(0);
+
+    const tracks = localAppServices.getTracks?.() || [];
+
+    tracks.forEach(track => {
+        // Only schedule clips for Audio tracks in Timeline mode
+        if (track.type === 'Audio' && track.timelineClips) {
+            track.timelineClips.forEach(clip => {
+                if (clip.audioBuffer) {
+                    // Create a temporary player for this clip
+                    const player = new Tone.Player(clip.audioBuffer).connect(track.input);
+                    
+                    // Schedule it to play at its start time, and dispose of it after
+                    Tone.Transport.scheduleOnce((time) => {
+                        player.start(time);
+                        // Schedule disposal to free up memory after the clip has played
+                        Tone.Transport.scheduleOnce(() => {
+                            player.dispose();
+                        }, time + clip.duration + 0.5);
+                    }, clip.startTime);
+                }
+            });
+        }
+    });
+}
+
 export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
@@ -26,7 +53,6 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         return;
     }
     
-    // Use the provided time for scheduling, or play immediately if no time is given
     const scheduledTime = time !== undefined ? time : Tone.now();
     
     const totalPitchShift = (sliceData.pitchShift || 0) + additionalPitchShiftInSemitones;
@@ -44,13 +70,11 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     tempPlayer.playbackRate = playbackRate;
     tempPlayer.start(scheduledTime, sliceData.offset, playDuration);
 
-    // Schedule the disposal of the temporary player
     Tone.Transport.scheduleOnce(() => {
         tempPlayer.dispose();
     }, scheduledTime + playDuration + 0.5);
 }
 
-// --- FIX: Added optional 'time' parameter for scheduled playback from the sequencer ---
 export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
@@ -73,7 +97,6 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
         return;
     }
     
-    // Use the provided time for scheduling, or play immediately if no time is given
     const scheduledTime = time !== undefined ? time : Tone.now();
 
     player.disconnect();
