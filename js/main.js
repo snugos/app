@@ -58,58 +58,56 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
-// --- REVISED FUNCTION FOR THE NEW DEFAULT LAYOUT ---
+// --- FINALIZED FUNCTION FOR THE DEFAULT LAYOUT ---
 function openDefaultLayout() {
+    // This timeout ensures all UI elements are ready before we try to place windows
     setTimeout(() => {
-        const desktopEl = document.getElementById('desktop');
-        if (!desktopEl) return;
+        const desktop = document.getElementById('desktop');
+        if (!desktop) return;
+        const desktopWidth = desktop.clientWidth;
+        const desktopHeight = desktop.clientHeight;
 
-        const rect = desktopEl.getBoundingClientRect();
-        const margin = 10;
-        const gap = 10;
-
-        // Layout constants
+        // Define a responsive but stable layout
+        const timelineWidth = desktopWidth - 20;
         const timelineHeight = 220;
+        
+        const leftPanelWidth = Math.floor(desktopWidth * 0.6) - 15;
+        const rightPanelWidth = desktopWidth - leftPanelWidth - 30;
+
         const mixerHeight = 160;
-        const sidePanelWidth = 350;
-        const leftPanelWidth = (rect.width / 2) - margin - (gap / 2);
 
-        // Define Y positions
-        const timelineY = margin;
-        const row2Y = timelineY + timelineHeight + gap;
-        const row3Y = row2Y + mixerHeight + gap;
-
-        // 1. Timeline (top)
+        const row2Y = timelineHeight + 20;
+        
+        // 1. Timeline
         appServices.openTimelineWindow({
-            x: margin,
-            y: timelineY,
-            width: rect.width - (margin * 2),
+            x: 10,
+            y: 10,
+            width: timelineWidth,
             height: timelineHeight
         });
         
-        // 2. Mixer (middle-left)
+        // 2. Mixer
         appServices.openMixerWindow({
-            x: margin,
+            x: 10,
             y: row2Y,
             width: leftPanelWidth,
             height: mixerHeight
         });
 
-        // 3. Master Effects Rack (bottom-left, under Mixer)
+        // 3. Master Effects Rack (under Mixer)
         appServices.openMasterEffectsRackWindow({
-            x: margin,
-            y: row3Y,
+            x: 10,
+            y: row2Y + mixerHeight + 10,
             width: leftPanelWidth,
-            height: rect.height - row3Y - margin
+            height: desktopHeight - (row2Y + mixerHeight) - 20
         });
         
-        // 4. Sound Browser (right side, under Timeline)
-        const soundBrowserX = rect.width - sidePanelWidth - margin;
+        // 4. Sound Browser (right side)
         appServices.openSoundBrowserWindow({
-            x: soundBrowserX,
+            x: leftPanelWidth + 20,
             y: row2Y,
-            width: sidePanelWidth,
-            height: rect.height - row2Y - margin
+            width: rightPanelWidth,
+            height: desktopHeight - row2Y - 10
         });
     }, 100); 
 }
