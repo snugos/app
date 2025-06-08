@@ -58,36 +58,57 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
+// --- FINALIZED FUNCTION FOR THE CORRECT DEFAULT LAYOUT ---
 function openDefaultLayout() {
     setTimeout(() => {
-        console.log('%c[main.js] Running openDefaultLayout...', 'color: blue; font-weight: bold;');
         const desktopEl = document.getElementById('desktop');
-        if (!desktopEl) {
-            console.error('[main.js] Desktop element not found, cannot open default layout.');
-            return;
-        }
+        if (!desktopEl) return;
 
         const rect = desktopEl.getBoundingClientRect();
-        const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.6) - 15;
-        const rightPanelWidth = desktopEl.clientWidth - leftPanelWidth - 30;
-        
-        const timelineOptions = { x: 10, y: 10, width: desktopEl.clientWidth - 20, height: 220 };
-        const mixerOptions = { x: 10, y: 240, width: leftPanelWidth, height: 160 };
-        const masterEffectsOptions = { x: 10, y: 410, width: leftPanelWidth, height: desktopEl.clientHeight - 420 };
-        const soundBrowserOptions = { x: leftPanelWidth + 20, y: 240, width: rightPanelWidth, height: desktopEl.clientHeight - 250 };
-        
-        console.log('[main.js] Calling openTimelineWindow with options:', timelineOptions);
-        appServices.openTimelineWindow(timelineOptions);
+        const margin = 10;
+        const gap = 10;
 
-        console.log('[main.js] Calling openMixerWindow with options:', mixerOptions);
-        appServices.openMixerWindow(mixerOptions);
-        
-        console.log('[main.js] Calling openMasterEffectsRackWindow with options:', masterEffectsOptions);
-        appServices.openMasterEffectsRackWindow(masterEffectsOptions);
-        
-        console.log('[main.js] Calling openSoundBrowserWindow with options:', soundBrowserOptions);
-        appServices.openSoundBrowserWindow(soundBrowserOptions);
+        // Layout constants
+        const timelineHeight = 220;
+        const mixerHeight = 160;
+        const sidePanelWidth = 350; // The default width for the sound browser
+        const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
+        // Y positions
+        const timelineY = margin;
+        const row2Y = timelineY + timelineHeight + gap;
+        const row3Y = row2Y + mixerHeight + gap;
+        
+        // 1. Timeline (top)
+        appServices.openTimelineWindow({
+            x: margin,
+            y: timelineY,
+            width: rect.width - (margin * 2),
+            height: timelineHeight
+        });
+        
+        // 2. Mixer (middle-left)
+        appServices.openMixerWindow({
+            x: margin,
+            y: row2Y,
+            width: leftPanelWidth,
+            height: mixerHeight
+        });
+
+        // 3. Master Effects Rack (bottom-left, under Mixer)
+        // --- FIX: Only set position, allow default size ---
+        appServices.openMasterEffectsRackWindow({
+            x: margin,
+            y: row3Y,
+        });
+        
+        // 4. Sound Browser (right side, under Timeline)
+        // --- FIX: Only set position, allow default size ---
+        const soundBrowserX = rect.width - sidePanelWidth - margin;
+        appServices.openSoundBrowserWindow({
+            x: soundBrowserX,
+            y: row2Y,
+        });
     }, 100); 
 }
 
