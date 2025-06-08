@@ -70,7 +70,9 @@ import {
     updateDrumPadControlsUI,
     createKnob
 } from './ui.js';
-import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions } from './effectsRegistry.js';
+// --- Start of Corrected Code ---
+import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
+// --- End of Corrected Code ---
 
 let appServices = {};
 
@@ -271,7 +273,9 @@ async function initializeSnugOS() {
         handleTimelineLaneDrop, handleOpenYouTubeImporter,
 
         // Registries
-        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions },
+        // --- Start of Corrected Code ---
+        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
+        // --- End of Corrected Code ---
         uiElementsCache: {}
     };
 
