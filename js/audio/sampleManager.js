@@ -83,6 +83,17 @@ export async function loadDrumSamplerPadFile(event, trackId, padIndex) {
 }
 
 export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetType, targetIndex) {
+    // --- START DEBUGGING LOGS ---
+    console.log('%c--- Loading from Sound Browser ---', 'color: #8e44ad; font-weight: bold;');
+    console.log('Received soundData:', soundData);
+    if (soundData && soundData.entry) {
+        console.log("The 'entry' object is:", soundData.entry);
+        console.log("Does it have an 'async' method? The type is:", typeof soundData.entry.async);
+    } else {
+        console.error("soundData or soundData.entry is missing!");
+    }
+    // --- END DEBUGGING LOGS ---
+
     const track = localAppServices.getTrackById?.(targetTrackId);
     if (!track) return;
 
