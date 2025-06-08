@@ -130,4 +130,18 @@ function attachImporterEventListeners(windowElement) {
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
-            setStatus
+            setStatus(`Error: ${error.message}`, true);
+        } finally {
+            importBtn.disabled = false;
+            urlInput.disabled = false;
+            importBtn.textContent = 'Import';
+        }
+    };
+
+    importBtn.addEventListener('click', handleImport);
+    urlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleImport();
+        }
+    });
+}
