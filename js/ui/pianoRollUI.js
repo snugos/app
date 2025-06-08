@@ -5,7 +5,7 @@ let localAppServices = {};
 const openPianoRolls = new Map();
 
 export function initializePianoRollUI(appServicesFromMain) {
-    localAppServices = appServicesFromMain || {};
+    localAppServices = appServicesFromMain;
     console.log("[PianoRollUI] Initialized.");
     if (typeof Konva === 'undefined') {
         console.error("[PianoRollUI] CRITICAL: Konva is not loaded. Piano Roll will not function.");
@@ -55,7 +55,12 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
 export function updatePianoRollPlayhead(transportTime) {
     if (openPianoRolls.size === 0) return;
 
-    const pixelsPerSecond = (60 / Tone.Transport.bpm.value) * Constants.STEPS_PER_BAR * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH / 4;
+    // --- FIX: This formula correctly calculates pixels per second based on BPM ---
+    // (BPM / 60) gives beats per second.
+    // Each beat has 4 sixteenth notes (steps).
+    // Each step has a defined pixel width.
+    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+    
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const newX = transportTime * pixelsPerSecond + keyWidth;
 
