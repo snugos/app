@@ -10,14 +10,12 @@ export function initializeEffectsRackUI(appServices) {
 function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     const ownerId = (ownerType === 'track' && owner) ? owner.id : 'master';
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master Bus';
-    // --- Start of Corrected Code ---
     return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full text-black dark:text-white">
         <h3 class="text-sm font-semibold">${ownerName}</h3>
         <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-white dark:bg-black border-black dark:border-white"></div>
         <button id="addEffectBtn-${ownerId}" class="w-full text-xs px-2 py-1 border rounded bg-black text-white border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white">+ Add Effect</button>
         <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2 border-t border-black dark:border-white pt-2"></div>
     </div>`;
-    // --- End of Corrected Code ---
 }
 
 export function openTrackEffectsRackWindow(trackId, savedState = null) {
@@ -62,22 +60,16 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
     listDiv.innerHTML = '';
 
     if (effects.length === 0) {
-        // --- Start of Corrected Code ---
         listDiv.innerHTML = '<p class="text-xs text-center text-black dark:text-white italic">No effects added.</p>';
-        // --- End of Corrected Code ---
     } else {
         effects.forEach((effect, index) => {
             const effectDiv = document.createElement('div');
-            // --- Start of Corrected Code ---
             effectDiv.className = 'effect-item p-1 border rounded cursor-pointer flex justify-between items-center bg-white dark:bg-black border-black dark:border-white';
             const effectName = localAppServices.effectsRegistryAccess.AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type;
             effectDiv.innerHTML = `<span>${index + 1}. ${effectName}</span><button class="text-xs text-black dark:text-white hover:font-bold" title="Remove Effect">X</button>`;
-            // --- End of Corrected Code ---
             
             if (selectedEffectId[ownerId] === effect.id) {
-                // --- Start of Corrected Code ---
                 effectDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
-                // --- End of Corrected Code ---
             }
 
             effectDiv.addEventListener('click', (e) => {
@@ -86,7 +78,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
                     else localAppServices.removeMasterEffect(effect.id);
                 } else {
                     selectedEffectId[ownerId] = effect.id;
-                    renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render to show selection
+                    renderEffectsList(owner, ownerType, listDiv, controlsContainer);
                     renderEffectControls(owner, ownerType, effect.id, controlsContainer);
                 }
             });
@@ -149,19 +141,24 @@ function showAddEffectModal(owner, ownerType) {
     let content = '<ul class="list-none p-0 m-0">';
     const AVAILABLE_EFFECTS = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
     for (const key in AVAILABLE_EFFECTS) {
-        // --- Start of Corrected Code ---
         content += `<li class="p-2 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black cursor-pointer" data-effect="${key}">${AVAILABLE_EFFECTS[key].displayName}</li>`;
-        // --- End of Corrected Code ---
     }
     content += '</ul>';
     
     const modal = localAppServices.showCustomModal(`Add Effect to ${ownerName}`, content, []);
+
+    // --- Start of Corrected Code ---
     modal.contentDiv.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', () => {
             const effectType = li.dataset.effect;
-            if (ownerType === 'track') owner.addEffect(effectType);
-            else localAppServices.addMasterEffect(effectType);
+            console.log(`[EFFECTS_DEBUG_1] Clicked effect: ${effectType}. Owner is a ${ownerType}.`);
+            if (ownerType === 'track') {
+                owner.addEffect(effectType);
+            } else {
+                localAppServices.addMasterEffect(effectType);
+            }
             modal.overlay.remove();
         });
     });
+    // --- End of Corrected Code ---
 }
