@@ -128,7 +128,6 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
 
-    // --- FIX: Add listener for the new refresh button ---
     document.getElementById('menuRefreshMidi')?.addEventListener('click', () => {
         showNotification('Refreshing MIDI devices...', 1500);
         setupMIDI();
@@ -248,7 +247,13 @@ export function attachGlobalControlEvents(uiCache) {
             
             if (armedTrack && armedTrack.instrument) {
                 const note = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                armedTrack.instrument.triggerAttack(note, Tone.now(), 0.75);
+                
+                // --- FIX: Convert MIDI number to frequency for samplers ---
+                if (armedTrack.type === 'InstrumentSampler') {
+                    armedTrack.instrument.triggerAttack(Tone.Midi(note).toFrequency(), Tone.now(), 0.75);
+                } else {
+                    armedTrack.instrument.triggerAttack(note, Tone.now(), 0.75);
+                }
                 currentlyPressedKeys.add(key);
             }
         } else {
@@ -278,7 +283,13 @@ export function attachGlobalControlEvents(uiCache) {
 
             if (armedTrack && armedTrack.instrument) {
                 const note = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                armedTrack.instrument.triggerRelease(note, Tone.now());
+                
+                // --- FIX: Convert MIDI number to frequency for samplers ---
+                if (armedTrack.type === 'InstrumentSampler') {
+                    armedTrack.instrument.triggerRelease(Tone.Midi(note).toFrequency(), Tone.now());
+                } else {
+                    armedTrack.instrument.triggerRelease(note, Tone.now());
+                }
                 currentlyPressedKeys.delete(key);
             }
         }
@@ -322,15 +333,12 @@ function toggleFullScreen() {
     }
 }
 
-// --- FIX: Rewritten MIDI setup with better error checking and logging ---
 export function setupMIDI() {
-    // 1. Check for browser support
     if (!navigator.requestMIDIAccess) {
         console.warn("Web MIDI API is not supported in this browser.");
         showNotification("Web MIDI is not supported in this browser.", 4000);
         return;
     }
-    // 2. Check for secure context (required by modern browsers)
     if (!window.isSecureContext) {
         console.warn("MIDI access is blocked: Page is not in a secure context (HTTPS or localhost).");
         showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
@@ -347,14 +355,12 @@ function onMIDISuccess(midiAccess) {
     if (localAppServices.setMidiAccess) {
         localAppServices.setMidiAccess(midiAccess);
     }
-    // Add logging to see how many devices are found
     console.log(`Found ${midiAccess.inputs.size} MIDI input(s).`);
     if (midiAccess.inputs.size === 0) {
         showNotification("No MIDI input devices found.", 3000);
     }
     
     populateMIDIInputSelector();
-    // This listener will automatically re-populate the list if a device is plugged in or unplugged
     midiAccess.onstatechange = (event) => {
         console.log("MIDI state changed:", event.port);
         populateMIDIInputSelector();
@@ -371,10 +377,8 @@ function populateMIDIInputSelector() {
     const midiAccess = getMidiAccessState();
     if (!midiSelect || !midiAccess) return;
 
-    // Preserve the currently selected value
     const previouslySelectedId = midiSelect.value;
     
-    // Clear the list
     midiSelect.innerHTML = '<option value="">None</option>';
     
     if (midiAccess.inputs.size > 0) {
@@ -386,15 +390,12 @@ function populateMIDIInputSelector() {
         });
     }
     
-    // Try to re-select the previous device
     const activeInput = getActiveMIDIInputState();
     const targetId = activeInput ? activeInput.id : previouslySelectedId;
     
-    // Check if the target device still exists in the dropdown
     if (targetId && midiSelect.querySelector(`option[value="${targetId}"]`)) {
         midiSelect.value = targetId;
     } else {
-        // If the old device is gone, reset the state
         setActiveMIDIInputState(null);
     }
 }
@@ -426,9 +427,19 @@ function onMIDIMessage(message) {
     
     if (armedTrack && armedTrack.instrument) {
         if (command === 144 && velocity > 0) {
-            armedTrack.instrument.triggerAttack(note, Tone.now(), velocity / 127);
+            // --- FIX: Convert MIDI number to frequency for samplers ---
+            if (armedTrack.type === 'InstrumentSampler') {
+                armedTrack.instrument.triggerAttack(Tone.Midi(note).toFrequency(), Tone.now(), velocity / 127);
+            } else {
+                armedTrack.instrument.triggerAttack(note, Tone.now(), velocity / 127);
+            }
         } else if (command === 128 || (command === 144 && velocity === 0)) {
-            armedTrack.instrument.triggerRelease(note, Tone.now());
+            // --- FIX: Convert MIDI number to frequency for samplers ---
+            if (armedTrack.type === 'InstrumentSampler') {
+                armedTrack.instrument.triggerRelease(Tone.Midi(note).toFrequency(), Tone.now());
+            } else {
+                armedTrack.instrument.triggerRelease(note, Tone.now());
+            }
         }
     }
 }
