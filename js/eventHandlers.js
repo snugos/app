@@ -22,7 +22,7 @@ import {
     getRedoStackState  
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
-import { lastActivePianoRollTrackId, openPianoRolls } from '../ui/pianoRollUI.js';
+import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
 
 
 let localAppServices = {};
