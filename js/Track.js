@@ -52,6 +52,10 @@ export class Track {
         this.timelineClips = initialData?.timelineClips || [];
         this.inspectorControls = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
+        
+        // --- Start of Corrected Code ---
+        this.tonePart = null; // To hold the Tone.js playback object
+        // --- End of Corrected Code ---
 
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
@@ -85,6 +89,9 @@ export class Track {
             this.instrument = null;
         }
         this.rebuildEffectChain();
+        // --- Start of Corrected Code ---
+        this.recreateToneSequence();
+        // --- End of Corrected Code ---
     }
 
     rebuildEffectChain() {
@@ -106,11 +113,10 @@ export class Track {
         });
 
         if (currentNode) {
-            // Connect the end of the track's chain to the master bus input
             const masterBusInput = this.appServices.getMasterBusInputNode?.();
             if (masterBusInput) {
-                currentNode.connect(this.outputNode); // Connect to the track's final gain/output node
-                this.outputNode.connect(masterBusInput); // Then connect the track's output to the master bus
+                currentNode.connect(this.outputNode);
+                this.outputNode.connect(masterBusInput);
             } else {
                 console.error(`[Track ${this.id}] Could not get master bus input node. Connecting directly to destination as a fallback.`);
                 currentNode.connect(this.outputNode);
@@ -263,6 +269,7 @@ export class Track {
         if (sequence && sequence.data[pitchIndex] !== undefined) {
             sequence.data[pitchIndex][timeStep] = noteData;
             this.appServices.captureStateForUndo?.(`Add note to ${this.name}`);
+            this.recreateToneSequence();
         }
     }
 
@@ -271,6 +278,7 @@ export class Track {
         if (sequence && sequence.data[pitchIndex] !== undefined) {
             sequence.data[pitchIndex][timeStep] = null;
             this.appServices.captureStateForUndo?.(`Remove note from ${this.name}`);
+            this.recreateToneSequence();
         }
     }
     
@@ -295,9 +303,45 @@ export class Track {
         }
     }
     
+    // --- Start of Corrected Code ---
     recreateToneSequence() {
-        // Implementation for creating a Tone.Part or Tone.Sequence from data
+        if (this.tonePart) {
+            this.tonePart.dispose();
+            this.tonePart = null;
+        }
+
+        const activeSequence = this.getActiveSequence();
+        if (!this.instrument || !activeSequence) {
+            return;
+        }
+
+        const events = [];
+        activeSequence.data.forEach((pitchRow, pitchIndex) => {
+            pitchRow.forEach((note, timeStep) => {
+                if (note) {
+                    const noteTime = `0:0:${timeStep}`; // Using 16th note quantization
+                    const noteName = Constants.SYNTH_PITCHES[pitchIndex];
+                    events.push({
+                        time: noteTime,
+                        note: noteName,
+                        duration: `${note.duration || 1}n`, // Use 16th note duration by default
+                        velocity: note.velocity || 0.75
+                    });
+                }
+            });
+        });
+
+        if (events.length > 0) {
+            this.tonePart = new Tone.Part((time, value) => {
+                this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
+            }, events);
+            
+            this.tonePart.loop = true;
+            this.tonePart.loopEnd = '1m'; // Loop every measure
+            this.tonePart.start(0);
+        }
     }
+    // --- End of Corrected Code ---
     
     getDefaultSynthParams() {
         return {
@@ -310,6 +354,9 @@ export class Track {
     }
 
     dispose() {
+        // --- Start of Corrected Code ---
+        this.tonePart?.dispose();
+        // --- End of Corrected Code ---
         this.instrument?.dispose();
         this.input?.dispose();
         this.outputNode?.dispose();
