@@ -31,8 +31,6 @@ export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
 }
 
-// --- Start of Corrected Code ---
-// This function now finds elements directly instead of relying on a cache.
 export function initializePrimaryEventListeners() {
     const startButton = document.getElementById('startButton');
     const startMenu = document.getElementById('startMenu');
@@ -141,7 +139,6 @@ export function initializePrimaryEventListeners() {
         loadProjectInput.addEventListener('change', localAppServices.handleProjectFileLoad);
     }
 }
-// --- End of Corrected Code ---
 
 export function attachGlobalControlEvents(uiCache) {
     const playBtn = document.getElementById('playBtnGlobalTop');
@@ -315,7 +312,6 @@ function toggleFullScreen() {
     }
 }
 
-// --- MIDI Handling ---
 export function setupMIDI() {
     if (navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess({ sysex: false })
@@ -391,7 +387,6 @@ function onMIDIMessage(message) {
     }
 }
 
-// --- Track Context Menu and Actions ---
 export function handleTrackMute(trackId) {
     const track = getTrackById(trackId);
     if (!track) return;
