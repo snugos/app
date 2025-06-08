@@ -22,6 +22,7 @@ import {
     getRedoStackState  
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
+import { lastActivePianoRollTrackId, openPianoRolls } from '../ui/pianoRollUI.js';
 
 
 let localAppServices = {};
@@ -195,24 +196,19 @@ export function attachGlobalControlEvents(uiCache) {
             if (armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
                 await localAppServices.stopAudioRecording();
             }
-            // For MIDI, stopping is just changing the state. The notes are already captured.
         } else if (armedTrack) {
             setRecordingTrackId(armedTrackId);
             setIsRecording(true);
             recordBtn.classList.add('recording');
     
-            // Differentiate between Audio and MIDI recording start
             if (armedTrack.type === 'Audio') {
                 const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
                 if (!success) {
-                    // If audio recording failed to start, reset the state
                     setIsRecording(false);
                     recordBtn.classList.remove('recording');
                     return;
                 }
             }
-            // For MIDI tracks, we just set the state and start the transport.
-            // The onMIDIMessage handler will now capture the notes.
     
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.start();
@@ -288,6 +284,22 @@ export function attachGlobalControlEvents(uiCache) {
             } else if (key === 'x') {
                 incrementOctaveShift();
                 localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+            } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (lastActivePianoRollTrackId !== null) {
+                    const pianoRoll = openPianoRolls.get(lastActivePianoRollTrackId);
+                    if (pianoRoll && pianoRoll.selectedNotes.size > 0) {
+                        e.preventDefault();
+                        const track = pianoRoll.track;
+                        const activeSequence = track.getActiveSequence();
+                        track.removeNotesFromSequence(activeSequence.id, pianoRoll.selectedNotes);
+                        
+                        const win = localAppServices.getWindowById(`pianoRollWin-${track.id}`);
+                        if (win) {
+                            win.close(true);
+                            localAppServices.openPianoRollWindow(track.id);
+                        }
+                    }
+                }
             }
         }
     });
@@ -428,7 +440,6 @@ function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
     const commandType = command & 0xF0;
 
-    // Sustain Pedal (CC #64) Logic
     if (commandType === 0xB0 && noteNumber === 64) {
         const armedTrackId = getArmedTrackId();
         if (armedTrackId === null) return;
@@ -436,24 +447,20 @@ function onMIDIMessage(message) {
         if (!armedTrack?.instrument) return;
 
         if (velocity > 63) {
-            // Pedal is pressed
             isSustainPedalDown = true;
         } else {
-            // Pedal is released
             isSustainPedalDown = false;
-            // Release all sustained notes
             sustainedNotes.forEach((noteValue, midiNote) => {
                 armedTrack.instrument.triggerRelease(noteValue, Tone.now());
             });
             sustainedNotes.clear();
         }
-        return; // End processing for CC messages
+        return;
     }
     
     const noteOn = commandType === 0x90 && velocity > 0;
     const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
 
-    // MIDI Recording Logic
     if (noteOn && isTrackRecordingState()) {
         const recordingTrackId = getArmedTrackId();
         const track = getTrackById(recordingTrackId);
@@ -480,7 +487,6 @@ function onMIDIMessage(message) {
         }
     }
     
-    // Live MIDI Playback Logic
     const armedTrackId = getArmedTrackId();
     if (armedTrackId === null) return;
     const armedTrack = getTrackById(armedTrackId);
