@@ -58,7 +58,7 @@ import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinition
 
 let appServices = {};
 
-// --- CORRECTED FUNCTION TO OPEN AND ARRANGE DEFAULT WINDOWS ---
+// --- REVISED FUNCTION TO OPEN AND ARRANGE DEFAULT WINDOWS ---
 function openDefaultLayout() {
     // Defer execution to ensure the DOM has been painted and has its final dimensions.
     setTimeout(() => {
@@ -69,13 +69,16 @@ function openDefaultLayout() {
         const margin = 10;
         const gap = 10;
 
-        // Define dimensions based on the screenshot
+        // Define layout constants
         const timelineHeight = 220;
         const sidePanelWidth = 350;
 
+        // Define Y positions
         const timelineY = margin;
         const bottomRowY = timelineY + timelineHeight + gap;
-        const bottomRowHeight = rect.height - timelineHeight - gap - (margin * 2);
+
+        // --- FIX: This is the corrected height calculation for the bottom row ---
+        const bottomRowHeight = rect.height - bottomRowY - margin;
 
         // 1. Timeline
         appServices.openTimelineWindow({
@@ -111,7 +114,7 @@ function openDefaultLayout() {
             width: mixerWidth,
             height: bottomRowHeight
         });
-    }, 0); // Using a 0ms timeout defers this until after the initial render.
+    }, 100); // Increased timeout slightly for more reliability on slower systems
 }
 
 
