@@ -72,12 +72,11 @@ function attachImporterEventListeners(windowElement) {
         setStatus('Requesting download link via proxy...');
 
         try {
-            // --- THIS IS THE FIX ---
-            // We prepend a CORS proxy to the API request URL.
-            const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
+            // --- THIS IS THE FIX: Using a different public proxy ---
+            const proxyUrl = 'https://corsproxy.io/?';
             const apiUrl = 'https://api.cobalt.tools/api/json';
 
-            const response = await fetch(proxyUrl + apiUrl, {
+            const response = await fetch(proxyUrl + encodeURIComponent(apiUrl), {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -100,7 +99,6 @@ function attachImporterEventListeners(windowElement) {
                 setStatus('Download link received. Fetching audio...');
                 const audioUrl = result.url;
                 
-                // The audio URL from Cobalt usually has correct CORS headers, so we don't need to proxy it.
                 const audioResponse = await fetch(audioUrl);
                 
                 if (!audioResponse.ok) {
@@ -132,18 +130,4 @@ function attachImporterEventListeners(windowElement) {
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
-            setStatus(`Error: ${error.message}`, true);
-        } finally {
-            importBtn.disabled = false;
-            urlInput.disabled = false;
-            importBtn.textContent = 'Import';
-        }
-    };
-
-    importBtn.addEventListener('click', handleImport);
-    urlInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            handleImport();
-        }
-    });
-}
+            setStatus
