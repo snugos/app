@@ -2,7 +2,7 @@
 
 import { createDropZoneHTML, setupGenericDropZoneListeners } from '../utils.js';
 import * as Constants from '../constants.js';
-import { handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack, handleOpenEffectsRack, handleOpenPianoRoll as handleOpenSequencer } from '../eventHandlers.js';
+// REMOVED: The direct import from eventHandlers.js that was causing the error.
 
 let localAppServices = {};
 
@@ -151,12 +151,13 @@ function buildTrackInspectorContentDOM(track) {
 }
 
 function initializeCommonInspectorControls(track, winEl) {
-    winEl.querySelector(`#muteBtn-${track.id}`)?.addEventListener('click', () => handleTrackMute(track.id));
-    winEl.querySelector(`#soloBtn-${track.id}`)?.addEventListener('click', () => handleTrackSolo(track.id));
-    winEl.querySelector(`#armInputBtn-${track.id}`)?.addEventListener('click', () => handleTrackArm(track.id));
-    winEl.querySelector(`#removeTrackBtn-${track.id}`)?.addEventListener('click', () => handleRemoveTrack(track.id));
-    winEl.querySelector(`#openEffectsBtn-${track.id}`)?.addEventListener('click', () => handleOpenEffectsRack(track.id));
-    winEl.querySelector(`#openSequencerBtn-${track.id}`)?.addEventListener('click', () => handleOpenSequencer(track.id));
+    // UPDATED to use localAppServices
+    winEl.querySelector(`#muteBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
+    winEl.querySelector(`#soloBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
+    winEl.querySelector(`#armInputBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleTrackArm(track.id));
+    winEl.querySelector(`#removeTrackBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleRemoveTrack(track.id));
+    winEl.querySelector(`#openEffectsBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleOpenEffectsRack(track.id));
+    winEl.querySelector(`#openSequencerBtn-${track.id}`)?.addEventListener('click', () => localAppServices.handleOpenSequencer(track.id));
 
     const volumeKnobPlaceholder = winEl.querySelector(`#volumeKnob-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
@@ -231,12 +232,10 @@ export function updateInstrumentSamplerControlsUI(track) {
     const settings = track.instrumentSamplerSettings || {};
 
     const grid = document.createElement('div');
-    // --- FIX: Changed grid to 3 columns to better accommodate the new Pitch knob ---
     grid.className = 'grid grid-cols-3 gap-x-2 gap-y-4';
 
     const envelope = settings.envelope || { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 };
     
-    // --- NEW: Add the Pitch Knob ---
     const pitchKnob = localAppServices.createKnob({
         label: "Pitch",
         min: -24,
