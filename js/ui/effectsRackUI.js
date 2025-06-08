@@ -78,7 +78,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
                     else localAppServices.removeMasterEffect(effect.id);
                 } else {
                     selectedEffectId[ownerId] = effect.id;
-                    renderEffectsList(owner, ownerType, listDiv, controlsContainer);
+                    renderEffectsList(owner, ownerType, listDiv, controlsContainer); // Re-render to show selection
                     renderEffectControls(owner, ownerType, effect.id, controlsContainer);
                 }
             });
@@ -146,8 +146,6 @@ function showAddEffectModal(owner, ownerType) {
     content += '</ul>';
     
     const modal = localAppServices.showCustomModal(`Add Effect to ${ownerName}`, content, []);
-
-    // --- Start of Corrected Code ---
     modal.contentDiv.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', () => {
             const effectType = li.dataset.effect;
@@ -160,5 +158,4 @@ function showAddEffectModal(owner, ownerType) {
             modal.overlay.remove();
         });
     });
-    // --- End of Corrected Code ---
 }
