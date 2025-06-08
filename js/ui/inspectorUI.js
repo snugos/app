@@ -220,11 +220,9 @@ function initializeInstrumentSamplerSpecificControls(track, winEl) {
         track.instrumentWaveformCanvasCtx = canvas.getContext('2d');
         if(track.instrumentSamplerSettings?.audioBuffer?.loaded) drawInstrumentWaveform(track);
     }
-    // --- FIX: Call the new function to render the controls ---
     updateInstrumentSamplerControlsUI(track);
 }
 
-// --- NEW FUNCTION: To create and render controls for the Instrument Sampler ---
 export function updateInstrumentSamplerControlsUI(track) {
     const container = document.getElementById(`inst-sampler-controls-container-${track.id}`);
     if (!container) return;
@@ -233,10 +231,28 @@ export function updateInstrumentSamplerControlsUI(track) {
     const settings = track.instrumentSamplerSettings || {};
 
     const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-4 gap-2';
+    // --- FIX: Changed grid to 3 columns to better accommodate the new Pitch knob ---
+    grid.className = 'grid grid-cols-3 gap-x-2 gap-y-4';
 
     const envelope = settings.envelope || { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.5 };
     
+    // --- NEW: Add the Pitch Knob ---
+    const pitchKnob = localAppServices.createKnob({
+        label: "Pitch",
+        min: -24,
+        max: 24,
+        step: 1,
+        decimals: 0,
+        displaySuffix: " st",
+        initialValue: settings.pitchShift || 0,
+        onValueChange: (val) => {
+            if (track.setInstrumentSamplerPitch) {
+                track.setInstrumentSamplerPitch(val);
+            }
+        }
+    }, localAppServices);
+    grid.appendChild(pitchKnob.element);
+
     const attackKnob = localAppServices.createKnob({
         label: "Attack", min: 0.001, max: 2, step: 0.001, decimals: 3,
         initialValue: envelope.attack,
@@ -269,11 +285,61 @@ export function updateInstrumentSamplerControlsUI(track) {
 }
 
 export function drawWaveform(track) {
-    // Implementation is assumed to be correct
+    if (!track || !track.audioBuffer || !track.waveformCanvasCtx) return;
+    const ctx = track.waveformCanvasCtx;
+    const canvas = ctx.canvas;
+    const channelData = track.audioBuffer.getChannelData(0);
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+    ctx.beginPath();
+
+    const sliceLength = Math.floor(channelData.length / canvas.width);
+    for (let i = 0; i < canvas.width; i++) {
+        const x = i;
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < sliceLength; j++) {
+            const datum = channelData[(i * sliceLength) + j];
+            if (datum < min) min = datum;
+            if (datum > max) max = datum;
+        }
+        const y_max = (1 - max) * canvas.height / 2;
+        const y_min = (1 - min) * canvas.height / 2;
+        ctx.moveTo(x, y_max);
+        ctx.lineTo(x, y_min);
+    }
+    ctx.stroke();
 }
 
 export function drawInstrumentWaveform(track) {
-    // Implementation is assumed to be correct
+    if (!track || !track.instrumentSamplerSettings?.audioBuffer || !track.instrumentWaveformCanvasCtx) return;
+    const ctx = track.instrumentWaveformCanvasCtx;
+    const canvas = ctx.canvas;
+    const channelData = track.instrumentSamplerSettings.audioBuffer.getChannelData(0);
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+    ctx.beginPath();
+    
+    const sliceLength = Math.floor(channelData.length / canvas.width);
+    for (let i = 0; i < canvas.width; i++) {
+        const x = i;
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < sliceLength; j++) {
+            const datum = channelData[(i * sliceLength) + j];
+            if (datum < min) min = datum;
+            if (datum > max) max = datum;
+        }
+        const y_max = (1 - max) * canvas.height / 2;
+        const y_min = (1 - min) * canvas.height / 2;
+        ctx.moveTo(x, y_max);
+        ctx.lineTo(x, y_min);
+    }
+    ctx.stroke();
 }
 
 export function renderSamplePads(track) {
