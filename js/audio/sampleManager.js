@@ -56,8 +56,25 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
                 track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer);
             }
             localAppServices.updateTrackUI?.(track.id, 'drumPadLoaded', padIndex);
+        // --- FIX: Add logic to handle loading for InstrumentSampler ---
+        } else if (trackTypeHint === 'InstrumentSampler') {
+            if (track.instrumentSamplerSettings.audioBuffer) {
+                track.instrumentSamplerSettings.audioBuffer.dispose();
+            }
+            track.instrumentSamplerSettings.audioBuffer = newAudioBuffer;
+            track.instrumentSamplerSettings.originalFileName = sourceName;
+            track.instrumentSamplerSettings.dbKey = dbKey;
+            track.instrumentSamplerSettings.status = 'loaded';
+            
+            // Re-initialize the Tone.Sampler with the new buffer
+            if (typeof track.initializeInstrument === 'function') {
+                await track.initializeInstrument();
+            }
+            localAppServices.updateTrackUI?.(track.id, 'instrumentSamplerLoaded');
         }
+        
         track.rebuildEffectChain();
+
     } catch (error) {
         console.error(`Error loading sample "${sourceName}":`, error);
         localAppServices.showNotification?.(`Error loading sample: ${error.message}`, 4000);
@@ -93,7 +110,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         const finalMimeType = getMimeTypeFromFilename(soundData.fileName);
         const blobToLoad = new File([fileBlob], soundData.fileName, { type: finalMimeType });
         await commonLoadSampleLogic(blobToLoad, soundData.fileName, track, track.type, targetIndex);
-
     } catch (error) {
         console.error("Error loading from sound browser:", error);
         localAppServices.showNotification?.(`Error loading ${soundData.fileName}: ${error.message}`, 4000);
@@ -109,10 +125,8 @@ export async function getAudioBlobFromSoundBrowserItem(soundData) {
 
     try {
         if (soundData.libraryName === 'Imports') {
-            // Get user-imported files from the database
             return await localAppServices.dbGetAudio(soundData.fullPath);
         } else {
-            // Get library files from the loaded JSZip instance
             const loadedZips = localAppServices.getLoadedZipFiles?.();
             const zipInstance = loadedZips?.[soundData.libraryName]?.zip;
             if (!zipInstance) {
@@ -152,7 +166,6 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
             let currentLevel = fileTree;
             relativePath.split('/').forEach((part, index, arr) => {
                 if (index === arr.length - 1) {
-                    // --- FIX: Store simple data, not the live zipEntry object ---
                     currentLevel[part] = { type: 'file', fullPath: relativePath, fileName: part };
                 } else {
                     currentLevel[part] = currentLevel[part] || { type: 'folder', children: {} };
