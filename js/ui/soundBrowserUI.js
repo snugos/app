@@ -5,7 +5,7 @@ import { showNotification } from '../utils.js';
 let localAppServices = {};
 let selectedSoundForPreviewData = null; 
 
-// --- NEW: SVG icon definitions for a clean, theme-aware look ---
+// SVG icon definitions for a clean, theme-aware look
 const FOLDER_ICON_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
   <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
@@ -23,16 +23,16 @@ export function initializeSoundBrowserUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
-export function renderSoundBrowser() {
-    console.log('%c---[ renderSoundBrowser called ]---', 'color: orange');
+// --- FIX: The render function now accepts an optional path to render ---
+// This ensures that when a folder is clicked, the new path is used immediately.
+export function renderSoundBrowser(pathToRender) {
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element || browserWindow.isMinimized) {
-        console.log('Browser window not found or minimized. Aborting render.');
         return;
     }
 
-    const currentPath = localAppServices.getCurrentSoundBrowserPath?.() || [];
-    console.log('Path at start of render:', currentPath);
+    // If a path is passed directly, use it. Otherwise, get it from the state (for initial load).
+    const currentPath = pathToRender !== undefined ? pathToRender : (localAppServices.getCurrentSoundBrowserPath?.() || []);
     
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
@@ -57,12 +57,10 @@ export function renderSoundBrowser() {
             }
         }
     } catch (e) {
-        console.warn(`[SoundBrowser] Path error: ${e.message}. Resetting to root.`);
         localAppServices.setCurrentSoundBrowserPath?.([]);
         currentTreeNode = virtualRoot;
     }
     
-    console.log('Rendering directory view with path:', currentPath);
     renderDirectoryView(currentPath, currentTreeNode);
 }
 
@@ -131,7 +129,6 @@ export function openSoundBrowserWindow(savedState = null) {
 }
 
 export function renderDirectoryView(pathArray, treeNode) {
-    console.log(`Rendering directory for path: /${pathArray.join('/')}`);
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element) return;
 
@@ -152,7 +149,8 @@ export function renderDirectoryView(pathArray, treeNode) {
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
             localAppServices.setCurrentSoundBrowserPath?.(newPath);
-            renderSoundBrowser();
+            // --- FIX: Pass the new path directly ---
+            renderSoundBrowser(newPath);
         });
         dirView.appendChild(parentDiv);
     }
@@ -183,10 +181,10 @@ export function renderDirectoryView(pathArray, treeNode) {
 
         if (item.type === 'folder') {
             itemDiv.addEventListener('click', () => {
-                console.log(`%cFolder clicked: "${name}"`, 'color: #3498db; font-weight: bold;');
                 const newPath = [...pathArray, name];
                 localAppServices.setCurrentSoundBrowserPath?.(newPath);
-                renderSoundBrowser();
+                // --- FIX: Pass the new path directly ---
+                renderSoundBrowser(newPath);
             });
         } else if (item.type === 'file') {
             itemDiv.draggable = true;
