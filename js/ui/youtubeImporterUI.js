@@ -1,4 +1,5 @@
 // js/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
+import { showNotification } from '../utils.js';
 
 let localAppServices = {};
 
@@ -68,7 +69,6 @@ function attachImporterEventListeners(windowElement) {
         setStatus('Requesting stream from server...');
 
         try {
-            // Call our new Netlify function
             const response = await fetch('/.netlify/functions/youtube', {
                 method: 'POST',
                 body: JSON.stringify({ url: youtubeUrl })
@@ -83,8 +83,6 @@ function attachImporterEventListeners(windowElement) {
             setStatus('Audio stream found. Downloading...');
             const audioUrl = result.url;
             
-            // The audio URL from ytdl-core can sometimes be blocked by CORS itself.
-            // We use a proxy for the final download to be safe.
             const proxyUrl = 'https://corsproxy.io/?';
             const audioResponse = await fetch(proxyUrl + encodeURIComponent(audioUrl));
             
@@ -94,22 +92,19 @@ function attachImporterEventListeners(windowElement) {
             
             const audioBlob = await audioResponse.blob();
             
-            setStatus('Audio downloaded. Adding to a new track...');
+            setStatus('Audio downloaded. Saving to Sound Browser...');
 
-            const newTrack = localAppServices.addTrack('Audio');
-            if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
-                const videoTitle = result.title || `YT Import`;
-                await newTrack.addExternalAudioFileAsClip(audioBlob, 0, videoTitle);
-                
-                setStatus('Success! Audio added to a new track.', false);
-                setTimeout(() => {
-                    const win = localAppServices.getWindowById('youtubeImporter');
-                    if (win) win.close();
-                }, 2000);
-
-            } else {
-                throw new Error("Could not create a new audio track or add the clip.");
-            }
+            const videoTitle = result.title || `YT Import`;
+            const fileName = `${videoTitle.replace(/[/\\?%*:|"<>]/g, '-')}.mp3`;
+            await localAppServices.addFileToSoundLibrary(fileName, audioBlob);
+            
+            setStatus('Success! Audio added to "Imports" folder.', false);
+            showNotification(`Saved "${fileName}" to Sound Browser.`);
+            
+            setTimeout(() => {
+                const win = localAppServices.getWindowById('youtubeImporter');
+                if (win) win.close();
+            }, 2000);
 
         } catch (error) {
             console.error('[YouTubeImporter] Import failed:', error);
