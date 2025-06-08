@@ -178,8 +178,8 @@ export class Track {
     setDrumSamplerPadVolume(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].volume = value; }
     setDrumSamplerPadPitch(index, value) { if(this.drumSamplerPads[index]) this.drumSamplerPads[index].pitchShift = value; }
 
-    // --- Start of Corrected Code ---
     addEffect(effectType, params, isInitialLoad = false) {
+        // --- Start of Corrected Code ---
         console.log(`[EFFECTS_DEBUG_2] track.addEffect called with type: ${effectType}`);
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
         if (!effectDef) {
@@ -208,8 +208,8 @@ export class Track {
         } else {
             console.error(`[EFFECTS_DEBUG_4] FAILED: createEffectInstance returned null.`);
         }
+        // --- End of Corrected Code ---
     }
-    // --- End of Corrected Code ---
 
     removeEffect(effectId) {
         const index = this.activeEffects.findIndex(e => e.id === effectId);
