@@ -4,7 +4,7 @@ import { showNotification, createContextMenu } from '../utils.js';
 import * as Constants from '../constants.js';
 
 let localAppServices = {};
-let selectedSoundForPreviewData = null;
+let selectedSoundForPreviewData = null; 
 
 export function initializeSoundBrowserUI(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
@@ -17,7 +17,6 @@ function renderCombinedLibraryView() {
     const dirView = browserWindow.element.querySelector('#soundBrowserDirectoryView');
     const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
     
-    // Create a new root tree where each library is a top-level folder
     const combinedViewTree = {};
     Object.keys(Constants.soundLibraries).forEach(libName => {
         if (allFileTrees[libName]) {
@@ -26,10 +25,9 @@ function renderCombinedLibraryView() {
     });
 
     if (Object.keys(combinedViewTree).length > 0) {
-        // Render the new combined root directory
         renderSoundBrowserDirectory([], combinedViewTree);
     } else {
-        dirView.innerHTML = '<p class="text-slate-500 italic">Loading sound libraries...</p>';
+        dirView.innerHTML = '<p class="text-black dark:text-white italic">Loading sound libraries...</p>';
     }
 }
 
@@ -43,20 +41,17 @@ export function openSoundBrowserWindow(savedState = null) {
         return openWindows.get(windowId);
     }
     
-    // --- Start of Corrected Code ---
-    // Removed the <select> dropdown and replaced with a static header
     const contentHTML = `
-        <div class="flex flex-col h-full text-xs bg-gray-50 dark:bg-slate-800 dark:text-slate-300">
-            <div class="p-1 border-b dark:border-slate-700 flex items-center space-x-2">
+        <div class="flex flex-col h-full text-xs bg-white dark:bg-black text-black dark:text-white">
+            <div class="p-1 border-b border-black dark:border-white flex items-center space-x-2">
                 <h3 class="font-bold text-sm px-2 flex-grow">Sound Library</h3>
-                <button id="soundBrowserPreviewBtn" class="px-2 py-1 text-xs border rounded bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700 dark:border-blue-500 disabled:opacity-50" disabled>Preview</button>
+                <button id="soundBrowserPreviewBtn" class="px-2 py-1 text-xs border rounded bg-black text-white border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white disabled:opacity-50" disabled>Preview</button>
             </div>
-            <div id="soundBrowserPathDisplay" class="p-1 text-xs bg-gray-100 dark:bg-slate-700 border-b dark:border-slate-600 truncate">/</div>
+            <div id="soundBrowserPathDisplay" class="p-1 text-xs bg-white dark:bg-black border-b border-black dark:border-white truncate">/</div>
             <div id="soundBrowserDirectoryView" class="flex-grow overflow-auto p-1">
-                <p class="text-slate-500 italic">Loading sound libraries...</p>
+                <p class="text-black dark:text-white italic">Loading libraries...</p>
             </div>
         </div>`;
-    // --- End of Corrected Code ---
 
     const browserOptions = { width: 350, height: 500, minWidth: 250, minHeight: 300, initialContentKey: windowId };
     if (savedState) {
@@ -68,8 +63,6 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
 
-        // --- Start of Corrected Code ---
-        // Automatically fetch all libraries when the window is opened
         const librarySources = Constants.soundLibraries || {};
         const libraryNames = Object.keys(librarySources);
         let loadedCount = 0;
@@ -84,7 +77,6 @@ export function openSoundBrowserWindow(savedState = null) {
             }
         });
         
-        // Periodically check if libraries are loaded and update the view
         const checkLoadingStatus = setInterval(() => {
             const loadedZips = localAppServices.getLoadedZipFiles?.() || {};
             const currentLoaded = libraryNames.filter(name => loadedZips[name]?.status === 'loaded').length;
@@ -96,19 +88,35 @@ export function openSoundBrowserWindow(savedState = null) {
                 clearInterval(checkLoadingStatus);
             }
         }, 500);
-        // Initial render
+        
         renderCombinedLibraryView();
-        // --- End of Corrected Code ---
         
         previewBtn?.addEventListener('click', () => {
-            // ... (preview logic remains the same)
+            const soundData = selectedSoundForPreviewData;
+            if (soundData && localAppServices.getPreviewPlayer && localAppServices.getAudioBlobFromSoundBrowserItem) {
+                 localAppServices.getAudioBlobFromSoundBrowserItem(soundData).then(blob => {
+                    if (blob) {
+                        const previewPlayer = localAppServices.getPreviewPlayer();
+                        if (previewPlayer && !previewPlayer.disposed) {
+                            if (previewPlayer.state === 'started') previewPlayer.stop();
+                            const url = URL.createObjectURL(blob);
+                            previewPlayer.load(url).then(() => {
+                                previewPlayer.start();
+                                URL.revokeObjectURL(url);
+                            }).catch(err => {
+                                console.error("Error loading preview sound:", err);
+                                URL.revokeObjectURL(url);
+                            });
+                        }
+                    }
+                 }).catch(err => {
+                    console.error("Error getting blob for preview:", err);
+                 });
+            }
         });
     }
     return browserWindow;
 }
-
-// This function is no longer needed as we now have a combined view
-// export function updateSoundBrowserDisplayForLibrary(...) {}
 
 export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
@@ -125,23 +133,22 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
 
     if (pathArray.length > 0) {
         const parentDiv = document.createElement('div');
-        parentDiv.className = 'p-1 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer rounded flex items-center';
-        parentDiv.innerHTML = `<span class="mr-2 text-yellow-500 text-sm">&#8617;</span> .. (Parent Directory)`;
+        parentDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
+        parentDiv.innerHTML = `<span class="mr-2 text-sm">&#8617;</span> .. (Parent Directory)`;
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
             let currentTree = {};
             const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {};
 
             if (newPath.length === 0) {
-                // If we are at the root, reconstruct the combined view
                 Object.keys(Constants.soundLibraries).forEach(libName => {
                     if (allFileTrees[libName]) {
                         currentTree[libName] = { type: 'folder', children: allFileTrees[libName] };
                     }
                 });
             } else {
-                // Navigate within the tree
-                currentTree = allFileTrees[newPath[0]];
+                let rootTree = allFileTrees[newPath[0]];
+                currentTree = rootTree;
                 for (let i = 1; i < newPath.length; i++) {
                     currentTree = currentTree?.[newPath[i]]?.children;
                 }
@@ -161,7 +168,7 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
 
     entries.forEach(([name, item]) => {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'p-1 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer rounded flex items-center';
+        itemDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
         itemDiv.title = name;
 
         const icon = document.createElement('span');
@@ -183,24 +190,37 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
         } else {
             itemDiv.draggable = true;
             itemDiv.addEventListener('dragstart', (e) => {
-                // --- Start of Corrected Code ---
-                // The library name is the first element in the path
                 const libraryName = pathArray[0];
                 if (!libraryName) { e.preventDefault(); return; }
                 const dragData = { type: 'sound-browser-item', libraryName: libraryName, fullPath: item.entry.name, fileName: name };
-                // --- End of Corrected Code ---
                 e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                 e.dataTransfer.effectAllowed = 'copy';
             });
             itemDiv.addEventListener('click', () => {
-                dirView.querySelectorAll('.bg-blue-200').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-blue-700'));
-                itemDiv.classList.add('bg-blue-200', 'dark:bg-blue-700');
+                dirView.querySelectorAll('.bg-black.text-white, .dark\\:bg-white.dark\\:text-black').forEach(el => {
+                    el.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
+                });
+                itemDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
                 const libraryName = pathArray[0];
                 if (localAppServices.setSelectedSoundForPreview && libraryName) {
                     localAppServices.setSelectedSoundForPreview({ libraryName: libraryName, fullPath: item.entry.name, fileName: name });
                 }
             });
-            // dblclick logic remains the same
+            itemDiv.addEventListener('dblclick', () => {
+                const armedTrackId = localAppServices.getArmedTrackId?.();
+                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
+                const libraryName = pathArray[0];
+
+                if (armedTrack && localAppServices.loadSoundFromBrowserToTarget && libraryName) {
+                    const soundData = { libraryName: libraryName, fullPath: item.entry.name, fileName: name };
+                    let targetIndex = null;
+                    if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
+                    else if (armedTrack.type === 'Sampler') targetIndex = armedTrack.selectedSliceForEdit;
+                    localAppServices.loadSoundFromBrowserToTarget(soundData, armedTrack.id, armedTrack.type, targetIndex);
+                } else {
+                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500);
+                }
+            });
         }
         dirView.appendChild(itemDiv);
     });
