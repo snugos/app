@@ -40,19 +40,26 @@ export function renderSoundBrowser() {
     });
 
     const currentPath = localAppServices.getCurrentSoundBrowserPath?.() || [];
-    let currentTree = virtualRoot;
     
+    // --- Start of Corrected Code ---
+    // This logic correctly traverses the virtual file tree to find the current directory's contents.
+    let currentTreeNode = virtualRoot;
     try {
         for (const part of currentPath) {
-            currentTree = currentTree[part]?.children;
-            if (!currentTree) throw new Error("Path not found");
+            if (currentTreeNode[part] && currentTreeNode[part].type === 'folder') {
+                currentTreeNode = currentTreeNode[part].children;
+            } else {
+                throw new Error(`Invalid path segment: ${part}`);
+            }
         }
     } catch (e) {
+        console.warn(`[SoundBrowser] Path error: ${e.message}. Resetting to root.`);
         localAppServices.setCurrentSoundBrowserPath?.([]);
-        currentTree = virtualRoot;
+        currentTreeNode = virtualRoot;
     }
+    // --- End of Corrected Code ---
     
-    renderDirectoryView(currentPath, currentTree);
+    renderDirectoryView(currentPath, currentTreeNode);
 }
 
 function getLibraryNameFromPath(pathArray) {
@@ -102,8 +109,17 @@ export function openSoundBrowserWindow(savedState = null) {
         renderSoundBrowser();
         
         previewBtn?.addEventListener('click', () => {
-            if (selectedSoundForPreviewData) {
-                localAppServices.playPreview?.(selectedSoundForPreviewData);
+            if (selectedSoundForPreviewData && localAppServices.playPreview) {
+                // To play the preview, we first need to get the audio blob
+                localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData).then(blob => {
+                    if (blob) {
+                        const objectURL = URL.createObjectURL(blob);
+                        const previewPlayer = localAppServices.getPreviewPlayer();
+                        previewPlayer.load(objectURL).then(() => {
+                            previewPlayer.start();
+                        });
+                    }
+                });
             }
         });
     }
