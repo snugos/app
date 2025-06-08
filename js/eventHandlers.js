@@ -477,7 +477,6 @@ function onMIDIMessage(message) {
                     }
                 }
             }
-            // Do not return here, allow the note to be played live while recording
         }
     }
     
