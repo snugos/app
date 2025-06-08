@@ -20,26 +20,29 @@ exports.handler = async function(event, context) {
         isAudioOnly: true
       })
     });
-
-    if (!response.ok) {
-      throw new Error(`Cobalt API error: ${response.statusText}`);
-    }
-
+    
     const data = await response.json();
+
+    if (!response.ok || data.status === 'error') {
+      throw new Error(data.text || `Cobalt API returned status: ${data.status}`);
+    }
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*' // Allow requests from any origin
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     };
 
   } catch (error) {
+    console.error("Netlify Function Error:", error);
+    // --- THIS IS THE CHANGE: Return a more detailed error object ---
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ 
+        error: 'The serverless function encountered an error.', 
+        message: error.message,
+        stack: error.stack,
+      })
     };
   }
 };
