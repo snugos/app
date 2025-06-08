@@ -36,7 +36,7 @@ let isRecordingGlobal = false;
 let recordingTrackIdGlobal = null;
 let recordingStartTimeGlobal = 0; 
 
-let playbackMode = 'sequencer'; 
+let playbackMode = 'piano-roll'; 
 
 let isReconstructingDAW = false;
 let undoStack = [];
@@ -191,7 +191,8 @@ export function setPlaybackModeState(newMode, skipUIUpdate = false) {
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop();
     }
-    Tone.Transport.cancel(0);
+    
+    // Defer scheduling logic to a dedicated controller function
     if (appServices.onPlaybackModeChange && !skipUIUpdate) {
         appServices.onPlaybackModeChange(newMode, oldMode);
     }
@@ -207,7 +208,6 @@ export function setCurrentUserThemePreferenceState(preference) {
 }
 
 // --- Core State Actions ---
-// --- FIX: Make this function async to handle instrument initialization ---
 export async function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
     let newTrack = null;
     try {
@@ -219,7 +219,6 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
         tracks.push(newTrack);
         
         if (typeof newTrack.initializeInstrument === 'function') {
-            // --- FIX: Await the instrument initialization to ensure audio path is complete ---
             await newTrack.initializeInstrument();
         }
 
