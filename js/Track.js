@@ -6,6 +6,7 @@ import { storeAudio, getAudio } from './db.js';
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
+        // ... constructor code remains the same
         this.id = initialData?.id || id;
         this.type = type;
         this.appServices = appServices || {}; 
@@ -227,6 +228,29 @@ export class Track {
             this.rebuildEffectChain();
             this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
             this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
+        }
+    }
+
+    // --- NEW METHOD TO FIX THE BUG ---
+    updateEffectParam(effectId, paramPath, value) {
+        const effect = this.activeEffects.find(e => e.id === effectId);
+        if (effect && effect.toneNode) {
+            // Update the state
+            let paramState = effect.params;
+            const keys = paramPath.split('.');
+            const finalKey = keys.pop();
+            for (const key of keys) {
+                paramState[key] = paramState[key] || {};
+                paramState = paramState[key];
+            }
+            paramState[finalKey] = value;
+            
+            // Update the audio node
+            try {
+                effect.toneNode.set({ [paramPath]: value });
+            } catch (e) {
+                console.warn(`Could not set param ${paramPath} on effect ${effect.type}`, e);
+            }
         }
     }
 
