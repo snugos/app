@@ -85,7 +85,8 @@ function drawPianoKeys(layer, stageHeight) {
         keyLayer.add(keyRect);
         const keyText = new Konva.Text({
             x: isBlackKey ? 15 : 5, y: y + noteHeight / 2 - 7, text: noteName,
-            fontSize: 10, fontFamily: "'VT323', monospace", 
+            fontSize: 12,
+            fontFamily: "'Roboto', sans-serif",
             fill: isBlackKey ? getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() : getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(),
             listening: false,
         });
@@ -154,10 +155,8 @@ function renderNotes(track) {
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     
-    // --- Start of Corrected Code ---
     const noteFillColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
     const noteStrokeColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
-    // --- End of Corrected Code ---
     
     sequenceData.forEach((pitchRow, pitchIndex) => {
         pitchRow.forEach((note, timeStep) => {
@@ -167,10 +166,8 @@ function renderNotes(track) {
                     y: pitchIndex * noteHeight + 1,
                     width: noteWidth * (note.duration || 1) - 2,
                     height: noteHeight - 2,
-                    // --- Start of Corrected Code ---
                     fill: noteFillColor,
                     stroke: noteStrokeColor,
-                    // --- End of Corrected Code ---
                     strokeWidth: 1,
                     opacity: note.velocity ? (0.6 + note.velocity * 0.4) : 1,
                     cornerRadius: 1
