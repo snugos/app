@@ -17,7 +17,7 @@ import {
     setPlaybackModeState,
     getMidiAccessState,
     setActiveMIDIInputState,
-    getActiveMIDIInputState, // --- FIX: Added the missing import ---
+    getActiveMIDIInputState,
     getUndoStackState, 
     getRedoStackState  
 } from './state.js';
@@ -405,19 +405,39 @@ export function selectMIDIInput(event) {
     }
 }
 
+// --- DEBUGGING LOGS ADDED ---
 function onMIDIMessage(message) {
+    console.log('[MIDI] Message received:', message.data);
     const [command, noteNumber, velocity] = message.data;
-    const armedTrackId = getArmedTrackId();
-    const armedTrack = getTrackById(armedTrackId);
     
-    if (armedTrack && armedTrack.instrument) {
-        const frequency = Tone.Midi(noteNumber).toFrequency();
+    const armedTrackId = getArmedTrackId();
+    if (!armedTrackId) {
+        console.log('[MIDI] No track armed. Ignoring message.');
+        return;
+    }
 
-        if (command === 144 && velocity > 0) { 
-            armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
-        } else if (command === 128 || (command === 144 && velocity === 0)) { 
-            armedTrack.instrument.triggerRelease(frequency, Tone.now());
-        }
+    const armedTrack = getTrackById(armedTrackId);
+    if (!armedTrack) {
+        console.error('[MIDI] Armed track not found in state!');
+        return;
+    }
+
+    console.log(`[MIDI] Armed track is: "${armedTrack.name}" (Type: ${armedTrack.type})`);
+
+    if (!armedTrack.instrument) {
+        console.log('[MIDI] Armed track has no instrument. Ignoring message.');
+        return;
+    }
+
+    const frequency = Tone.Midi(noteNumber).toFrequency();
+    console.log(`[MIDI] Converted note ${noteNumber} to frequency ${frequency}`);
+
+    if (command === 144 && velocity > 0) { // Note On
+        console.log(`[MIDI] Calling triggerAttack with frequency: ${frequency}`);
+        armedTrack.instrument.triggerAttack(frequency, Tone.now(), velocity / 127);
+    } else if (command === 128 || (command === 144 && velocity === 0)) { // Note Off
+        console.log(`[MIDI] Calling triggerRelease with frequency: ${frequency}`);
+        armedTrack.instrument.triggerRelease(frequency, Tone.now());
     }
 }
 
