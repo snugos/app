@@ -44,12 +44,15 @@ export function openPianoRollWindow(trackId, forceRedraw = false, savedState = n
         return;
     }
     
+    // UPDATED: Calculate length in bars for the input field's initial value
+    const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
+
     const contentContainer = document.createElement('div');
     contentContainer.className = 'w-full h-full flex flex-col bg-white dark:bg-black text-black dark:text-white';
     contentContainer.innerHTML = `
         <div class="flex-shrink-0 p-1 border-b border-gray-400 dark:border-gray-600 flex items-center space-x-2 text-xs">
-            <label for="sequenceLengthInput-${trackId}">Length (steps):</label>
-            <input type="number" id="sequenceLengthInput-${trackId}" value="${activeSequence.length}" min="1" max="${Constants.MAX_BARS * Constants.STEPS_PER_BAR}" class="w-20 p-0.5 border rounded bg-white dark:bg-black border-black dark:border-white text-black dark:text-white">
+            <label for="sequenceLengthInput-${trackId}">Length (bars):</label>
+            <input type="text" id="sequenceLengthInput-${trackId}" value="${lengthInBars}" class="w-20 p-0.5 border rounded bg-white dark:bg-black border-black dark:border-white text-black dark:text-white">
         </div>
         <div id="pianoRollKonvaContainer-${trackId}" class="flex-grow w-full h-full overflow-auto"></div>
         <div id="velocityPaneContainer-${trackId}" class="flex-shrink-0 w-full h-1/5 bg-gray-200 dark:bg-gray-800 border-t-2 border-gray-400 dark:border-gray-600 overflow-x-auto overflow-y-hidden"></div>
@@ -226,7 +229,7 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
     if (!activeSequence) {
         noteLayer.batchDraw();
         return;
-    }
+    };
     const sequenceData = activeSequence.data;
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
@@ -335,7 +338,7 @@ function createPianoRollStage(containerElement, velocityPane, track) {
                 action: () => {
                     const notesToDelete = new Set([noteId]);
                     track.removeNotesFromSequence(activeSequence.id, notesToDelete);
-                    selectedNotes.delete(noteId); // Also remove from selection
+                    selectedNotes.delete(noteId);
                     redrawNotes(noteLayer, track, colors, selectedNotes);
                     renderVelocityPane(velocityPane, track);
                 }
@@ -370,19 +373,24 @@ function createPianoRollStage(containerElement, velocityPane, track) {
         }
         redrawNotes(noteLayer, track, colors, selectedNotes);
     });
-
+    
+    // UPDATED: Event listener with new parsing logic
     const lengthInput = document.getElementById(`sequenceLengthInput-${track.id}`);
     if (lengthInput) {
         lengthInput.addEventListener('change', (e) => {
-            const newLength = parseInt(e.target.value, 10);
-            const maxLen = Constants.MAX_BARS * Constants.STEPS_PER_BAR;
-            if (!isNaN(newLength) && newLength > 0 && newLength <= maxLen) {
-                track.setSequenceLength(activeSequence.id, newLength);
-                createPianoRollStage(containerElement, velocityPane, track);
-            } else {
-                e.target.value = activeSequence.length;
-                localAppServices.showNotification?.(`Length must be between 1 and ${maxLen}.`, 3000);
+            const barValue = parseFloat(e.target.value);
+            const maxBars = Constants.MAX_BARS;
+
+            if (isNaN(barValue) || barValue <= 0 || barValue > maxBars) {
+                localAppServices.showNotification?.(`Length must be a number between 0 and ${maxBars}.`, 3000);
+                e.target.value = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
+                return;
             }
+
+            const newLengthInSteps = Math.round(barValue * Constants.STEPS_PER_BAR);
+            
+            track.setSequenceLength(activeSequence.id, newLengthInSteps);
+            createPianoRollStage(containerElement, velocityPane, track);
         });
     }
     renderVelocityPane(velocityPane, track);
