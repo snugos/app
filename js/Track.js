@@ -80,15 +80,24 @@ export class Track {
         if (this.instrument) {
             this.instrument.dispose();
         }
-        if (this.type === 'Synth') {
-            this.instrument = new Tone.MonoSynth(this.synthParams);
-        } else if (this.type === 'Sampler' || this.type === 'DrumSampler' || this.type === 'InstrumentSampler') {
-            this.instrument = new Tone.Sampler();
-        } else {
-            this.instrument = null;
+
+        // *** FIX: Moved recreateToneSequence() inside the 'Synth' case ***
+        switch (this.type) {
+            case 'Synth':
+                this.instrument = new Tone.MonoSynth(this.synthParams);
+                this.recreateToneSequence(); // Only for synths
+                break;
+            case 'Sampler':
+            case 'DrumSampler':
+            case 'InstrumentSampler':
+                this.instrument = new Tone.Sampler();
+                break;
+            default:
+                this.instrument = null;
+                break;
         }
+        
         this.rebuildEffectChain();
-        this.recreateToneSequence();
     }
     
     rebuildEffectChain() {
@@ -215,7 +224,7 @@ export class Track {
     }
     
     getActiveSequence() {
-        return this.sequences[0];
+        return this.sequences.find(s => s.id === this.activeSequenceId);
     }
 
     createNewSequence(name, length, skipUndo) {
@@ -268,7 +277,7 @@ export class Track {
         this.toneSequence = null;
 
         const activeSequence = this.getActiveSequence();
-        if (!this.instrument || !activeSequence || this.type === 'Sampler' || this.type === 'DrumSampler') {
+        if (!this.instrument || !activeSequence || this.type !== 'Synth') {
             return;
         }
         
