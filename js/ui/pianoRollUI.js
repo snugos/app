@@ -285,7 +285,7 @@ function renderNotes(track, colors, selectedNotes) {
                     strokeWidth: isSelected ? 2 : 1,
                     opacity: note.velocity ? (0.5 + note.velocity * 0.5) : 1,
                     cornerRadius: 2,
-                    id: noteId, // Assign an ID for easy lookup
+                    id: noteId,
                 });
                 noteLayer.add(noteRect);
             }
@@ -356,9 +356,9 @@ function createPianoRollStage(containerElement, velocityPane, track) {
 
     let x1, y1;
     stage.on('mousedown.selection', (e) => {
-        if (e.target.nodeType === 'Shape' && e.target.getParent() === noteLayer) return;
-        if (e.target.getParent() === keyLayer) return;
-
+        if (e.target.getParent() === noteLayer || e.target.getParent() === keyLayer) {
+            return;
+        }
         lastActivePianoRollTrackId = track.id;
         x1 = stage.getPointerPosition().x;
         y1 = stage.getPointerPosition().y;
@@ -392,7 +392,12 @@ function createPianoRollStage(containerElement, velocityPane, track) {
         const box = selectionRect.getClientRect();
         noteLayer.children.forEach(noteShape => {
             if (Konva.Util.haveIntersection(box, noteShape.getClientRect())) {
-                selectedNotes.add(noteShape.id());
+                const noteId = noteShape.id();
+                if (selectedNotes.has(noteId)) {
+                    if (e.evt.shiftKey) selectedNotes.delete(noteId);
+                } else {
+                    selectedNotes.add(noteId);
+                }
             }
         });
         
@@ -427,47 +432,48 @@ function createPianoRollStage(containerElement, velocityPane, track) {
 
     stage.on('click tap', function (e) {
         lastActivePianoRollTrackId = track.id;
-        if (e.target.getParent() === keyLayer) return;
+        const clickedOnNote = e.target.getParent() === noteLayer;
 
-        if (e.target.nodeType === 'Shape' && e.target.getParent() === noteLayer) {
-            // Clicked on a note
+        if (clickedOnNote) {
+            const noteId = e.target.id();
+            const shiftPressed = e.evt.shiftKey;
+
+            if (!shiftPressed) {
+                selectedNotes.clear();
+                selectedNotes.add(noteId);
+            } else {
+                if (selectedNotes.has(noteId)) {
+                    selectedNotes.delete(noteId);
+                } else {
+                    selectedNotes.add(noteId);
+                }
+            }
         } else {
-            // Clicked on the grid
             if (!e.evt.shiftKey) {
                 selectedNotes.clear();
-                noteLayer.destroy();
-                noteLayer = renderNotes(track, colors, selectedNotes);
-                stage.add(noteLayer);
-                noteLayer.moveToBottom();
-                gridLayer.moveToBottom();
             }
 
-            const pos = stage.getPointerPosition();
-            const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
-            if (pos.x < keyWidth) return;
+            if (e.target.getParent() !== keyLayer) {
+                const pos = stage.getPointerPosition();
+                const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+                if (pos.x < keyWidth) return;
 
-            const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
-            const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+                const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+                const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
 
-            const currentActiveSequence = track.getActiveSequence();
-            if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) return;
-
-            const noteExists = currentActiveSequence.data[pitchIndex][timeStep];
-
-            if (noteExists) {
-                track.removeNoteFromSequence(currentActiveSequence.id, pitchIndex, timeStep);
-            } else {
+                const currentActiveSequence = track.getActiveSequence();
+                if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) return;
+                
                 track.addNoteToSequence(currentActiveSequence.id, pitchIndex, timeStep, { velocity: 0.75, duration: 1 });
+                renderVelocityPane(velocityPane, track);
             }
-
-            noteLayer.destroy();
-            noteLayer = renderNotes(track, colors, selectedNotes);
-            stage.add(noteLayer);
-            noteLayer.moveToBottom();
-            gridLayer.moveToBottom();
-            stage.draw();
-            renderVelocityPane(velocityPane, track);
         }
+        
+        noteLayer.destroy();
+        noteLayer = renderNotes(track, colors, selectedNotes);
+        stage.add(noteLayer);
+        noteLayer.moveToBottom();
+        gridLayer.moveToBottom();
     });
 
     const lengthInput = document.getElementById(`sequenceLengthInput-${track.id}`);
