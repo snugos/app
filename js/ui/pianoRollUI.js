@@ -26,6 +26,52 @@ function getThemeColors() {
 
 export function initializePianoRollUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
+    // Expose a new service for editing clips
+    appServices.openPianoRollForClip = openPianoRollForClip;
+}
+
+export function openPianoRollForClip(trackId, clipId) {
+    const track = localAppServices.getTrackById?.(trackId);
+    const clip = track?.timelineClips.find(c => c.id === clipId);
+
+    if (!track || !clip || clip.type !== 'midi') {
+        localAppServices.showNotification?.("Could not find a valid MIDI clip to edit.", 3000);
+        return;
+    }
+
+    // Create a temporary, unique sequence from the clip's data
+    const tempSequenceName = `Editing: ${clip.name}`;
+    const sequenceLength = clip.sequenceData[0].length;
+    const tempSequence = track.createNewSequence(tempSequenceName, sequenceLength, true); // true to skip undo
+    tempSequence.data = JSON.parse(JSON.stringify(clip.sequenceData));
+
+    // Open the piano roll for this temporary sequence
+    openPianoRollWindow(track.id, tempSequence.id);
+
+    // Get the window instance we just created
+    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${trackId}`);
+    if (pianoRollWindow) {
+        // Hijack the close callback to save the data back to the clip
+        const originalOnClose = pianoRollWindow.onCloseCallback;
+        pianoRollWindow.onCloseCallback = () => {
+            const editedSequence = track.sequences.find(s => s.id === tempSequence.id);
+            if (editedSequence) {
+                // Copy data back to the original clip
+                clip.sequenceData = JSON.parse(JSON.stringify(editedSequence.data));
+                localAppServices.renderTimeline?.(); // Re-render timeline to show any changes
+
+                // Clean up the temporary sequence from the track
+                const seqIndex = track.sequences.findIndex(s => s.id === tempSequence.id);
+                if (seqIndex > -1) {
+                    track.sequences.splice(seqIndex, 1);
+                }
+            }
+            // Call the original close handler from the SnugWindow
+            if (typeof originalOnClose === 'function') {
+                originalOnClose();
+            }
+        };
+    }
 }
 
 export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) {
