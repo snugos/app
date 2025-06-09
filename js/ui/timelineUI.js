@@ -106,6 +106,7 @@ export function renderTimeline() {
 }
 
 function attachClipEventListeners(clipDiv, track, clip) {
+    // MOVING CLIPS
     clipDiv.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
@@ -136,6 +137,7 @@ function attachClipEventListeners(clipDiv, track, clip) {
         document.addEventListener('mouseup', onMouseUp);
     });
 
+    // DELETING CLIPS
     clipDiv.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -145,6 +147,7 @@ function attachClipEventListeners(clipDiv, track, clip) {
         localAppServices.createContextMenu(e, menuItems, localAppServices);
     });
 
+    // EDITING MIDI CLIPS
     if (clip.type === 'midi') {
         clipDiv.addEventListener('dblclick', (e) => {
             e.stopPropagation();
