@@ -160,6 +160,13 @@ export function attachGlobalControlEvents(uiCache) {
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
     const handlePlayStop = async () => {
+        if (getPlaybackModeState() === 'timeline') {
+            localAppServices.scheduleTimelinePlayback?.();
+        } else {
+            const tracks = getTracks();
+            tracks.forEach(track => track.startSequence?.());
+        }
+
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             showNotification("Audio context not running. Please interact with the page.", 3000);
@@ -169,8 +176,6 @@ export function attachGlobalControlEvents(uiCache) {
         if (Tone.Transport.state === 'started') {
             Tone.Transport.pause();
         } else {
-            // Re-schedule based on current mode just in case something cleared the transport
-            localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             Tone.Transport.start();
         }
     };
@@ -178,7 +183,7 @@ export function attachGlobalControlEvents(uiCache) {
     const handleStop = () => {
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.pause();
-            Tone.Transport.position = 0; // Rewind to the beginning
+            Tone.Transport.position = 0;
         }
     };
 
@@ -298,7 +303,7 @@ export function attachGlobalControlEvents(uiCache) {
                         const win = localAppServices.getWindowById(`pianoRollWin-${track.id}`);
                         if (win) {
                             win.close(true);
-                            localAppServices.openPianoRollWindow(track.id);
+                            localAppServices.openPianoRollWindow(track.id, activeSequence.id);
                         }
                     }
                 }
@@ -330,7 +335,7 @@ export function attachGlobalControlEvents(uiCache) {
                             const win = localAppServices.getWindowById(`pianoRollWin-${track.id}`);
                             if (win) {
                                 win.close(true);
-                                localAppServices.openPianoRollWindow(track.id);
+                                localAppServices.openPianoRollWindow(track.id, activeSequence.id);
                             }
                         }
                     }
@@ -514,7 +519,7 @@ function onMIDIMessage(message) {
                     if (pianoRollWindow && !pianoRollWindow.isMinimized) {
                        if(localAppServices.openPianoRollWindow) {
                            pianoRollWindow.close(true);
-                           localAppServices.openPianoRollWindow(track.id);
+                           localAppServices.openPianoRollWindow(track.id, activeSequence.id);
                        }
                     }
                 }
