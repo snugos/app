@@ -413,57 +413,55 @@ export class Track {
         }
     }
 
+    // *** REFACTORED METHOD USING Tone.Sequence ***
     recreateToneSequence() {
         this.toneSequence?.dispose();
         this.toneSequence = null;
         const activeSequence = this.getActiveSequence();
         if (!activeSequence) return;
-        
-        const events = [];
-        
-        // *** FIX STARTS HERE ***
-        // Pre-calculate the duration of a single 16th note step in seconds.
-        const stepInSeconds = new Tone.Time('16n').toSeconds();
 
-        for (let row = 0; row < activeSequence.data.length; row++) {
-            for (let step = 0; step < activeSequence.length; step++) {
-                if (activeSequence.data[row]?.[step]) {
-                    const pitch = Constants.SYNTH_PITCHES[row];
-                    const noteData = activeSequence.data[row][step];
-                    
-                    // Calculate the event time and duration in seconds.
-                    const eventTime = step * stepInSeconds;
-                    const eventDuration = (noteData.duration || 1) * stepInSeconds;
-                    
-                    events.push({
-                        time: eventTime,
-                        note: pitch,
-                        duration: eventDuration,
-                        velocity: noteData.velocity || 0.75
+        // Transform the grid data into a 1D array for Tone.Sequence
+        // Each element is an array of notes to play at that step, or null if empty.
+        const sequenceEvents = [];
+        for (let step = 0; step < activeSequence.length; step++) {
+            const notesAtStep = [];
+            for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) {
+                const note = activeSequence.data[pitchIndex][step];
+                if (note) {
+                    notesAtStep.push({
+                        pitch: Constants.SYNTH_PITCHES[pitchIndex],
+                        duration: `${note.duration || 1}*16n`,
+                        velocity: note.velocity || 0.75,
                     });
                 }
             }
+            sequenceEvents.push(notesAtStep.length > 0 ? notesAtStep : null);
         }
-        
-        const partEventCallback = (time, value) => {
-            if (this.instrument) {
-                // The 'time' from the callback is already in seconds (the AudioContext time)
-                this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
-            } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-                const midi = Tone.Midi(value.note).toMidi();
-                const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                    const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
-                    playbackFn?.(this.id, sampleIndex, value.velocity, 0, time);
-                }
-            }
-        };
 
-        this.toneSequence = new Tone.Part(partEventCallback, events);
+        // The callback function for the sequence
+        const sequenceCallback = (time, value) => {
+            if (!value) return; // value is null for empty steps
+
+            value.forEach(note => {
+                if (this.instrument) {
+                    this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
+                } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
+                    const midi = Tone.Midi(note.pitch).toMidi();
+                    const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+                    if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
+                        const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
+                        playbackFn?.(this.id, sampleIndex, note.velocity, 0, time);
+                    }
+                }
+            });
+        };
+        
+        // Create the new Tone.Sequence
+        this.toneSequence = new Tone.Sequence(sequenceCallback, sequenceEvents, '16n');
+
+        // Configure looping. For Tone.Sequence, loopEnd is the number of steps.
         this.toneSequence.loop = true;
-        // Set the loop end to the total duration in seconds.
-        this.toneSequence.loopEnd = activeSequence.length * stepInSeconds;
-        // *** FIX ENDS HERE ***
+        this.toneSequence.loopEnd = activeSequence.length;
     }
 
     startSequence() {
