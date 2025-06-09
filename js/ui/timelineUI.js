@@ -94,10 +94,8 @@ export function renderTimeline() {
             e.preventDefault();
             trackLane.classList.remove('dragover-timeline-lane');
             
-            // *** FIX: Calculate start time and call the correct service ***
             const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
-            // The 120px offset is for the track name div
-            const dropX = event.clientX - event.currentTarget.getBoundingClientRect().left - 120 + event.currentTarget.scrollLeft;
+            const dropX = e.clientX - e.currentTarget.getBoundingClientRect().left - 120 + e.currentTarget.scrollLeft;
             const startTime = Math.max(0, dropX / pixelsPerSecond);
             
             localAppServices.handleTimelineLaneDrop(e, track.id, startTime);
