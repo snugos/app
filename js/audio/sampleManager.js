@@ -38,12 +38,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
 
         if (trackTypeHint === 'Sampler') {
             track.audioBuffer?.dispose();
-            track.slicerPlayer?.dispose(); // FIX: Dispose the old player if it exists
             track.audioBuffer = newAudioBuffer;
-            
-            // *** FIX: Create a persistent player and connect it to the track's input ***
-            track.slicerPlayer = new Tone.Player(newAudioBuffer).connect(track.input);
-
             track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
             if (track.audioBuffer.loaded && (!track.slices || track.slices.every(s => s.duration === 0))) {
                 autoSliceSample(track.id, Constants.numSlices);
@@ -54,11 +49,9 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             const padData = track.drumSamplerPads[padIndex];
             if (padData) {
                 padData.audioBuffer?.dispose();
-                track.drumPadPlayers[padIndex]?.dispose();
-                padData.audioBuffer = newAudioBuffer;
 
-                // *** FIX: Create a persistent player for the pad and connect it to the track's input ***
-                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.input);
+                // *** FIX: Store the audio buffer directly on the pad data object ***
+                padData.audioBuffer = newAudioBuffer;
                 
                 padData.originalFileName = sourceName;
                 padData.dbKey = dbKey;
