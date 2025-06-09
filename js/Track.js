@@ -413,15 +413,12 @@ export class Track {
         }
     }
 
-    // *** REFACTORED METHOD USING Tone.Sequence ***
     recreateToneSequence() {
         this.toneSequence?.dispose();
         this.toneSequence = null;
         const activeSequence = this.getActiveSequence();
         if (!activeSequence) return;
 
-        // Transform the grid data into a 1D array for Tone.Sequence
-        // Each element is an array of notes to play at that step, or null if empty.
         const sequenceEvents = [];
         for (let step = 0; step < activeSequence.length; step++) {
             const notesAtStep = [];
@@ -438,28 +435,25 @@ export class Track {
             sequenceEvents.push(notesAtStep.length > 0 ? notesAtStep : null);
         }
 
-        // The callback function for the sequence
         const sequenceCallback = (time, value) => {
-            if (!value) return; // value is null for empty steps
-
-            value.forEach(note => {
-                if (this.instrument) {
-                    this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
-                } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-                    const midi = Tone.Midi(note.pitch).toMidi();
-                    const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                    if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                        const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
-                        playbackFn?.(this.id, sampleIndex, note.velocity, 0, time);
+            // *** FIX: Add a check for null/undefined value ***
+            if (value) {
+                value.forEach(note => {
+                    if (this.instrument) {
+                        this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
+                    } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
+                        const midi = Tone.Midi(note.pitch).toMidi();
+                        const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+                        if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
+                            const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
+                            playbackFn?.(this.id, sampleIndex, note.velocity, 0, time);
+                        }
                     }
-                }
-            });
+                });
+            }
         };
         
-        // Create the new Tone.Sequence
         this.toneSequence = new Tone.Sequence(sequenceCallback, sequenceEvents, '16n');
-
-        // Configure looping. For Tone.Sequence, loopEnd is the number of steps.
         this.toneSequence.loop = true;
         this.toneSequence.loopEnd = activeSequence.length;
     }
