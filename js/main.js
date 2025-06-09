@@ -61,6 +61,41 @@ import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
 let appServices = {};
 
+// *** NEW FEATURE: Function to apply custom backgrounds ***
+function applyCustomBackground(file) {
+    const desktopEl = document.getElementById('desktop');
+    if (!desktopEl) return;
+
+    // Clear previous custom background
+    desktopEl.style.backgroundImage = '';
+    const existingVideo = desktopEl.querySelector('#desktop-video-bg');
+    if (existingVideo) {
+        existingVideo.remove();
+    }
+
+    const url = URL.createObjectURL(file);
+
+    if (file.type.startsWith('image/')) {
+        desktopEl.style.backgroundImage = `url(${url})`;
+    } else if (file.type.startsWith('video/')) {
+        const videoEl = document.createElement('video');
+        videoEl.id = 'desktop-video-bg';
+        videoEl.style.position = 'absolute';
+        videoEl.style.top = '0';
+        videoEl.style.left = '0';
+        videoEl.style.width = '100%';
+        videoEl.style.height = '100%';
+        videoEl.style.objectFit = 'cover';
+        videoEl.style.zIndex = '-1';
+        videoEl.src = url;
+        videoEl.autoplay = true;
+        videoEl.loop = true;
+        videoEl.muted = true; // Ensure no audio plays
+        videoEl.playsInline = true;
+        desktopEl.appendChild(videoEl);
+    }
+}
+
 function openDefaultLayout() {
     setTimeout(() => {
         const desktopEl = document.getElementById('desktop');
@@ -158,7 +193,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             if (titleSpan) titleSpan.textContent = `Inspector: ${track.name}`;
             if (inspectorWindow.taskbarButton) inspectorWindow.taskbarButton.textContent = `Inspector: ${track.name}`;
         }
-        // *** FIX: Add a case to handle drawing the instrument sampler waveform ***
         if (reason === 'instrumentSamplerLoaded') {
             const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
             if (canvas) {
@@ -226,6 +260,7 @@ async function initializeSnugOS() {
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
         showNotification: utilShowNotification, createContextMenu, updateTrackUI: handleTrackUIUpdate,
         showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
+        applyCustomBackground, // Add the new service
         getTracks: getTracksState, getTrackById: getTrackByIdState, addTrack: addTrackToStateInternal,
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
         addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
@@ -259,8 +294,7 @@ async function initializeSnugOS() {
         playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio, dbGetAudio, dbDeleteAudio,
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
-        openTimelineWindow, renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
-        openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView, openPianoRollWindow, openYouTubeImporterWindow,
+        openTimelineWindow, renderTimeline, updatePlayheadPosition, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
         drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
