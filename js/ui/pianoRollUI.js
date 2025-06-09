@@ -1,475 +1,483 @@
-// js/Track.js - Track Class Module
+// js/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
+import * as Constants from '../constants.js';
 
-import * as Constants from './constants.js';
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
-import { storeAudio, getAudio } from './db.js';
+let localAppServices = {};
+export const openPianoRolls = new Map();
+export let lastActivePianoRollTrackId = null; 
 
-export class Track {
-    constructor(id, type, initialData = null, appServices = {}) {
-        this.id = initialData?.id || id;
-        this.type = type;
-        this.appServices = appServices || {}; 
+function getThemeColors() {
+    const rootStyle = getComputedStyle(document.documentElement);
+    return {
+        gridBgLight: rootStyle.getPropertyValue('--bg-sequencer-step-odd').trim() || '#FFFFFF',
+        gridBgDark: rootStyle.getPropertyValue('--bg-sequencer-step-even').trim() || '#EEEEEE',
+        gridLine: rootStyle.getPropertyValue('--border-sequencer').trim() || '#BBBBBB',
+        gridLineBold: rootStyle.getPropertyValue('--border-primary').trim() || '#555555',
+        noteFill: rootStyle.getPropertyValue('--accent-sequencer-step').trim() || '#00BFFF',
+        noteStroke: rootStyle.getPropertyValue('--accent-sequencer-step-border').trim() || '#0000FF',
+        playhead: rootStyle.getPropertyValue('--accent-playhead').trim() || '#FF0000',
+        whiteKeyBg: rootStyle.getPropertyValue('--bg-primary').trim(),
+        blackKeyBg: rootStyle.getPropertyValue('--text-primary').trim(),
+        whiteKeyText: rootStyle.getPropertyValue('--text-primary').trim(),
+        blackKeyText: rootStyle.getPropertyValue('--bg-primary').trim(),
+        keyBorder: rootStyle.getPropertyValue('--border-secondary').trim(),
+    };
+}
 
-        this.name = initialData?.name || `${type} Track ${this.id}`;
-        if (type === 'DrumSampler') {
-            this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
-        } else if (type === 'Synth') {
-            this.name = initialData?.name || `MonoSynth ${this.id}`;
-        } else if (type === 'Audio') {
-            this.name = initialData?.name || `Audio ${this.id}`;
-        }
 
-        this.isMuted = initialData?.isMuted || false;
-        this.isSoloed = false;
-        this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
-        this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
-        
-        this.input = new Tone.Gain();
-        this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
-        this.trackMeter = new Tone.Meter();
-        this.outputNode.connect(this.trackMeter);
-        
-        this.instrument = null;
-        this.activeEffects = [];
-        if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
-            initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
-        } else if (this.type !== 'Audio') {
-            this.addEffect('EQ3', null, true);
-        }
-        
-        this.toneSequence = null;
-        this.synthEngineType = null;
-        this.synthParams = {};
-        this.sequences = initialData?.sequences || [];
-        this.activeSequenceId = initialData?.activeSequenceId || null;
-        this.inspectorControls = {};
-        this.timelineClips = initialData?.timelineClips || [];
+export function initializePianoRollUI(appServicesFromMain) {
+    localAppServices = appServicesFromMain;
+}
 
-        this.samplerAudioData = {};
-        this.audioBuffer = null;
-        this.slices = [];
-        this.selectedSliceForEdit = 0;
-        this.drumSamplerPads = [];
-        this.drumPadPlayers = [];
-        this.selectedDrumPadForEdit = 0;
-        this.instrumentSamplerSettings = {};
-        this.toneSampler = null;
-        this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
+export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) {
+    const track = localAppServices.getTrackById?.(trackId);
+    if (!track || track.type === 'Audio') return;
 
-        if (this.type === 'Synth') {
-            this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
-            this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
-        } else if (this.type === 'Sampler') {
-            this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
-            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
-            this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
-        } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0 });
-            this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
-            this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
-        } else if (this.type === 'InstrumentSampler') {
-            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { 
-                originalFileName: null, 
-                dbKey: null, 
-                rootNote: 'C4', 
-                pitchShift: 0, 
-                loop: false, 
-                loopStart: 0, 
-                loopEnd: 0, 
-                envelope: { attack: 0.003, decay: 2.0, sustain: 1.0, release: 5.0 }, 
-                status: 'empty' 
-            };
-        }
-
-        if (this.type !== 'Audio' && this.sequences.length === 0) {
-            this.createNewSequence("Sequence 1", 64, true);
-        }
+    const windowId = `pianoRollWin-${trackId}`;
+    if (localAppServices.getOpenWindows?.().has(windowId) && !savedState) {
+        localAppServices.getOpenWindows().get(windowId).restore();
+        return;
     }
 
-    async initializeInstrument() {
-        if (this.instrument) this.instrument.dispose();
-        if (this.type === 'Synth') {
-            this.instrument = new Tone.PolySynth(Tone.Synth);
-        } else if (this.type === 'InstrumentSampler') {
-            const buffer = this.instrumentSamplerSettings.audioBuffer;
-            const urls = {};
-            if (buffer && buffer.loaded) {
-                const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
-                urls[rootNote] = buffer;
-            }
-            this.instrument = new Tone.Sampler({ 
-                urls,
-                attack: this.instrumentSamplerSettings.envelope.attack,
-                decay: this.instrumentSamplerSettings.envelope.decay,
-                sustain: this.instrumentSamplerSettings.envelope.sustain,
-                release: this.instrumentSamplerSettings.envelope.release,
-                detune: (this.instrumentSamplerSettings.pitchShift || 0) * 100
-            }).connect(this.input);
-        } else {
-            this.instrument = null;
-        }
-        this.rebuildEffectChain();
-        this.recreateToneSequence();
+    const sequenceId = sequenceIdToEdit || track.getActiveSequence()?.id;
+    const activeSequence = track.sequences.find(s => s.id === sequenceId);
+
+    if (!activeSequence) {
+        localAppServices.showNotification?.(`Track "${track.name}" has no valid sequence to edit.`, 3500);
+        return;
     }
+    track.activeSequenceId = activeSequence.id;
     
-    rebuildEffectChain() {
-        this.input.disconnect();
-        this.instrument?.disconnect();
-        if (this.instrument) this.instrument.connect(this.input);
-        let currentNode = this.input;
-        this.activeEffects.forEach(effect => {
-            if (effect.toneNode) {
-                currentNode.connect(effect.toneNode);
-                currentNode = effect.toneNode;
-            }
-        });
-        currentNode.connect(this.outputNode);
-        const masterBusInput = this.appServices.getMasterBusInputNode?.();
-        if (masterBusInput) this.outputNode.connect(masterBusInput);
-        else this.outputNode.toDestination();
-    }
-    
-    setVolume(volume, fromInteraction = false) {
-        this.previousVolumeBeforeMute = volume;
-        if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
-        if (fromInteraction) this.appServices.captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`);
-    }
+    const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
 
-    applyMuteState() {
-        if (!this.outputNode) return;
-        this.outputNode.gain.rampTo(this.isMuted ? 0 : this.previousVolumeBeforeMute, 0.02);
-    }
+    const contentContainer = document.createElement('div');
+    contentContainer.className = 'w-full h-full flex flex-col bg-white dark:bg-black text-black dark:text-white';
+    contentContainer.innerHTML = `
+        <div class="flex-shrink-0 p-1 border-b border-gray-400 dark:border-gray-600 flex items-center justify-between text-xs">
+            <div class="flex items-center space-x-2">
+                <label for="sequenceLengthInput-${trackId}">Length (bars):</label>
+                <input type="text" id="sequenceLengthInput-${trackId}" value="${lengthInBars}" class="w-20 p-0.5 border rounded bg-white dark:bg-black border-black dark:border-white text-black dark:text-white">
+            </div>
+            <div id="piano-roll-drag-handle-${trackId}" class="cursor-grab" title="Drag to create a clip on the timeline" draggable="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </div>
+        </div>
+        <div id="pianoRollKonvaContainer-${trackId}" class="flex-grow w-full h-full overflow-auto"></div>
+        <div id="velocityPaneContainer-${trackId}" class="flex-shrink-0 w-full h-1/5 bg-gray-200 dark:bg-gray-800 border-t-2 border-gray-400 dark:border-gray-600 overflow-x-auto overflow-y-hidden"></div>
+    `;
 
-    applySoloState(isAnotherTrackSoloed) {
-        if (!this.outputNode) return;
-        if (isAnotherTrackSoloed) this.outputNode.gain.rampTo(0, 0.02);
-        else this.applyMuteState();
-    }
-    
-    updateSoloMuteState(soloedTrackId) {
-        this.isSoloed = this.id === soloedTrackId;
-        this.applySoloState(soloedTrackId !== null && !this.isSoloed);
-        this.appServices.updateTrackUI?.(this.id, 'soloChanged');
-    }
-    
-    setSynthParam(paramPath, value) {
-        if (!this.instrument || this.type !== 'Synth') return;
-        try {
-            this.instrument.set({ [paramPath]: value });
-            this.synthParams = this.instrument.get();
-        } catch (e) {
-            console.error(`Could not set synth param: ${paramPath}`, e);
-        }
-    }
-    
-    setInstrumentSamplerPitch(semitones) {
-        if (this.type === 'InstrumentSampler' && this.instrument) {
-            this.instrumentSamplerSettings.pitchShift = semitones;
-            this.instrument.set({ detune: semitones * 100 });
-        }
-    }
-
-    addEffect(effectType, params, isInitialLoad = false) {
-        const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType];
-        if (!effectDef) return;
-        const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
-        const toneNode = createEffectInstance(effectType, initialParams);
-        if (toneNode) {
-            const effectData = { id: `effect-${this.id}-${Date.now()}`, type: effectType, toneNode, params: JSON.parse(JSON.stringify(initialParams)) };
-            this.activeEffects.push(effectData);
-            this.rebuildEffectChain();
-            if (!isInitialLoad) {
-                this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
-                this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.name}`);
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, { 
+        width: 800, height: 500, minWidth: 500, minHeight: 300, initialContentKey: windowId,
+        onCloseCallback: () => {
+            openPianoRolls.delete(trackId);
+            if (lastActivePianoRollTrackId === trackId) {
+                lastActivePianoRollTrackId = null;
             }
         }
-    }
+    });
 
-    removeEffect(effectId) {
-        const index = this.activeEffects.findIndex(e => e.id === effectId);
-        if (index > -1) {
-            const removedEffect = this.activeEffects.splice(index, 1)[0];
-            removedEffect.toneNode?.dispose();
-            this.rebuildEffectChain();
-            this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
-            this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
+    if (pianoRollWindow && pianoRollWindow.element) {
+        const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${trackId}`);
+        const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${trackId}`);
+        setTimeout(() => createPianoRollStage(konvaContainer, velocityPane, track), 50);
+    }
+}
+
+export function updatePianoRollPlayhead(transportTime) {
+    if (openPianoRolls.size === 0) return;
+    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const newX = transportTime * pixelsPerSecond + keyWidth;
+    openPianoRolls.forEach(({ playhead, playheadLayer }) => {
+        if (playhead && playheadLayer) {
+            playhead.x(newX);
+            playheadLayer.batchDraw();
         }
-    }
+    });
+}
 
-    updateEffectParam(effectId, paramPath, value) {
-        const effect = this.activeEffects.find(e => e.id === effectId);
-        if (effect?.toneNode) {
-            let paramState = effect.params;
-            const keys = paramPath.split('.');
-            const finalKey = keys.pop();
-            for (const key of keys) {
-                paramState = paramState[key] = paramState[key] || {};
-            }
-            paramState[finalKey] = value;
-            try {
-                effect.toneNode.set({ [paramPath]: value });
-            } catch (e) {
-                console.warn(`Could not set param ${paramPath} on effect ${effect.type}`, e);
-            }
-        }
-    }
-
-    addNoteToSequence(sequenceId, pitchIndex, timeStep, noteData = { velocity: 0.75, duration: 1 }) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (sequence && sequence.data[pitchIndex] !== undefined && timeStep < sequence.length) {
-            sequence.data[pitchIndex][timeStep] = noteData;
-            this.appServices.captureStateForUndo?.(`Add note to ${this.name}`);
-            this.recreateToneSequence();
-        }
-    }
-
-    removeNoteFromSequence(sequenceId, pitchIndex, timeStep) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (sequence?.data[pitchIndex]?.[timeStep]) {
-            sequence.data[pitchIndex][timeStep] = null;
-            this.appServices.captureStateForUndo?.(`Remove note from ${this.name}`);
-            this.recreateToneSequence();
-        }
-    }
-
-    removeNotesFromSequence(sequenceId, notesToRemove) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence || !notesToRemove?.size) return;
-        notesToRemove.forEach(noteId => {
-            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
-            if (sequence.data[pitchIndex]?.[timeStep]) {
-                sequence.data[pitchIndex][timeStep] = null;
+function renderVelocityPane(velocityPane, track) {
+    if (!velocityPane) return;
+    velocityPane.innerHTML = '';
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) return;
+    const scrollWrapper = document.createElement('div');
+    scrollWrapper.style.width = `${keyWidth + (noteWidth * activeSequence.length)}px`;
+    scrollWrapper.style.height = '100%';
+    scrollWrapper.className = 'relative';
+    const spacer = document.createElement('div');
+    spacer.style.width = `${keyWidth}px`;
+    spacer.style.display = 'inline-block';
+    scrollWrapper.appendChild(spacer);
+    const notesGrid = document.createElement('div');
+    notesGrid.style.width = `${noteWidth * activeSequence.length}px`;
+    notesGrid.style.height = '100%';
+    notesGrid.style.display = 'inline-block';
+    notesGrid.className = 'relative';
+    activeSequence.data.forEach((row, pitchIndex) => {
+        row.forEach((note, timeStep) => {
+            if (note) {
+                const velocityBar = document.createElement('div');
+                velocityBar.className = 'velocity-bar absolute bottom-0 cursor-n-resize';
+                velocityBar.style.left = `${timeStep * noteWidth}px`;
+                velocityBar.style.width = `${noteWidth - 1}px`;
+                velocityBar.style.height = `${(note.velocity || 0.75) * 100}%`;
+                velocityBar.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const startY = e.clientY;
+                    const startHeight = velocityBar.offsetHeight;
+                    const paneHeight = velocityPane.offsetHeight;
+                    function onMouseMove(moveEvent) {
+                        const dy = startY - moveEvent.clientY;
+                        const newHeight = Math.max(0, Math.min(paneHeight, startHeight + dy));
+                        velocityBar.style.height = `${newHeight}px`;
+                        const newVelocity = newHeight / paneHeight;
+                        track.updateNoteVelocity(activeSequence.id, pitchIndex, timeStep, newVelocity);
+                    }
+                    function onMouseUp() {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+                notesGrid.appendChild(velocityBar);
             }
         });
-        this.appServices.captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.name}`);
-        this.recreateToneSequence();
-    }
-    
-    setSequenceLength(sequenceId, newLength) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence) return;
-        const validatedLength = Math.max(1, Math.floor(newLength));
-        const oldLength = sequence.length;
-        sequence.length = validatedLength;
-        sequence.data.forEach(pitchRow => {
-            pitchRow.length = validatedLength;
-            if (validatedLength > oldLength) {
-                pitchRow.fill(null, oldLength);
-            }
+    });
+    scrollWrapper.appendChild(notesGrid);
+    velocityPane.appendChild(scrollWrapper);
+    const konvaContent = velocityPane.parentElement.querySelector('.konvajs-content');
+    if (konvaContent) {
+        velocityPane.scrollLeft = konvaContent.parentElement.scrollLeft;
+        konvaContent.parentElement.addEventListener('scroll', (e) => {
+            velocityPane.scrollLeft = e.target.scrollLeft;
         });
-        this.recreateToneSequence();
     }
+}
 
-    moveNote(sequenceId, oldPitch, oldTime, newPitch, newTime) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence) return false;
-
-        // Check if the new position is valid and empty
-        if (newPitch < 0 || newPitch >= sequence.data.length || newTime < 0 || newTime >= sequence.length) {
-            return false; // Out of bounds
+function drawPianoKeys(layer, stageHeight, track, colors) {
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
+    const samplerLabelPrefix = track.type === 'Sampler' ? 'Slice' : 'Pad';
+    Constants.SYNTH_PITCHES.forEach((noteName, index) => {
+        const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - index;
+        const isBlackKey = noteName.includes('#') || noteName.includes('b');
+        const y = index * noteHeight;
+        let labelText = noteName;
+        let isSamplerKey = false;
+        if (isSampler && midiNote >= Constants.SAMPLER_PIANO_ROLL_START_NOTE && midiNote < Constants.SAMPLER_PIANO_ROLL_START_NOTE + Constants.NUM_SAMPLER_NOTES) {
+            const sampleIndex = midiNote - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+            labelText = `${samplerLabelPrefix} ${sampleIndex + 1}`;
+            isSamplerKey = true;
         }
-        if (sequence.data[newPitch][newTime] !== null) {
-            return false; // Target position is occupied
-        }
-
-        const noteData = sequence.data[oldPitch][oldTime];
-        if (!noteData) return false;
-
-        sequence.data[oldPitch][oldTime] = null;
-        sequence.data[newPitch][newTime] = noteData;
-
-        this.appServices.captureStateForUndo?.('Move Note');
-        this.recreateToneSequence();
-        return true;
-    }
-
-    moveSelectedNotes(sequenceId, selectedNotes, pitchOffset = 0, timeOffset = 0) {
-        // ... (This function remains unchanged)
-    }
-
-    setNoteDuration(sequenceId, pitchIndex, timeStep, newDuration) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        const note = sequence?.data?.[pitchIndex]?.[timeStep];
-        if (note) {
-            note.duration = Math.max(1, Math.floor(newDuration));
-        }
-    }
-
-    updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (sequence?.data[pitchIndex]?.[timeStep]) {
-            sequence.data[pitchIndex][timeStep].velocity = Math.max(0.01, Math.min(1, newVelocity));
-        }
-    }
-
-    getActiveSequence() {
-        if (!this.activeSequenceId && this.sequences.length > 0) this.activeSequenceId = this.sequences[0].id;
-        return this.sequences.find(s => s.id === this.activeSequenceId);
-    }
-
-    createNewSequence(name, length, skipUndo) {
-        if (this.type === 'Audio') return null;
-        const newSeqId = `seq_${this.id}_${Date.now()}`;
-        const newSequence = {
-            id: newSeqId, name,
-            data: Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(length).fill(null)),
-            length
-        };
-        this.sequences.push(newSequence);
-        this.activeSequenceId = newSeqId;
-        if (!skipUndo) this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.name}`);
-        return newSequence;
-    }
-
-    clearSequence(sequenceId) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence) return;
-        sequence.data = Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(sequence.length).fill(null));
-        this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Clear sequence on ${this.name}`);
-    }
-    
-    duplicateSequence(sequenceId) {
-        const originalSequence = this.sequences.find(s => s.id === sequenceId);
-        if (!originalSequence) return;
-        const newName = `${originalSequence.name} (copy)`;
-        const newSequence = this.createNewSequence(newName, originalSequence.length, true);
-        newSequence.data = JSON.parse(JSON.stringify(originalSequence.data));
-        this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Duplicate sequence on ${this.name}`);
-        return newSequence;
-    }
-    
-    copyNotesToClipboard(sequenceId, notesToCopy) {
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence || !notesToCopy?.size) return;
-    
-        let minPitchIndex = Infinity, minTimeStep = Infinity;
-        const noteDataObjects = [];
-    
-        notesToCopy.forEach(noteId => {
-            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
-            minPitchIndex = Math.min(minPitchIndex, pitchIndex);
-            minTimeStep = Math.min(minTimeStep, timeStep);
-            noteDataObjects.push({ pitchIndex, timeStep, data: sequence.data[pitchIndex][timeStep] });
+        const keyRect = new Konva.Rect({
+            x: 0, y: y, width: keyWidth, height: noteHeight,
+            fill: isBlackKey ? colors.blackKeyBg : colors.whiteKeyBg,
+            stroke: colors.keyBorder,
+            strokeWidth: 1,
+            opacity: isSampler && !isSamplerKey ? 0.3 : 1
         });
-    
-        const relativeNotes = noteDataObjects.map(n => ({
-            pitchOffset: n.pitchIndex - minPitchIndex,
-            timeOffset: n.timeStep - minTimeStep,
-            noteData: n.data
+        layer.add(keyRect);
+        const keyText = new Konva.Text({
+            x: isBlackKey ? 15 : 5, y: y + noteHeight / 2 - 7, text: labelText,
+            fontSize: isSamplerKey ? 10 : 12,
+            fontFamily: "'Roboto', sans-serif",
+            fill: isBlackKey ? colors.blackKeyText : colors.whiteKeyText,
+            listening: false,
+        });
+        layer.add(keyText);
+    });
+}
+
+function drawGrid(layer, stageWidth, stageHeight, numSteps, colors) {
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+    const numPitches = Constants.SYNTH_PITCHES.length;
+    layer.add(new Konva.Rect({
+        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: colors.gridBgLight, name: 'grid-background'
+    }));
+    for (let i = 0; i < numPitches; i++) {
+        const isBlackKey = Constants.SYNTH_PITCHES[i]?.includes('#') || false;
+        if (isBlackKey) {
+            layer.add(new Konva.Rect({
+                x: keyWidth, y: i * noteHeight,
+                width: stageWidth - keyWidth, height: noteHeight,
+                fill: colors.gridBgDark,
+            }));
+        }
+        layer.add(new Konva.Line({
+            points: [keyWidth, (i + 1) * noteHeight, noteWidth * numSteps + keyWidth, (i + 1) * noteHeight],
+            stroke: colors.gridLine,
+            strokeWidth: 0.5,
         }));
-    
-        this.appServices.setClipboardData?.({ type: 'piano-roll-notes', notes: relativeNotes });
-        this.appServices.showNotification?.(`${relativeNotes.length} note(s) copied.`);
     }
-    
-    pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) {
-        const clipboard = this.appServices.getClipboardData?.();
-        if (clipboard?.type !== 'piano-roll-notes' || !clipboard.notes?.length) return;
-    
-        const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence) return;
-    
-        clipboard.notes.forEach(noteToPaste => {
-            const newPitchIndex = pastePitchIndex + noteToPaste.pitchOffset;
-            const newTimeStep = pasteTimeStep + noteToPaste.timeOffset;
-    
-            if (newPitchIndex >= 0 && newPitchIndex < sequence.data.length && newTimeStep >= 0 && newTimeStep < sequence.length) {
-                sequence.data[newPitchIndex][newTimeStep] = JSON.parse(JSON.stringify(noteToPaste.noteData));
+    for (let i = 0; i <= numSteps; i++) {
+        const isBarLine = i % 16 === 0;
+        const isBeatLine = i % 4 === 0;
+        layer.add(new Konva.Line({
+            points: [i * noteWidth + keyWidth, 0, i * noteWidth + keyWidth, stageHeight],
+            stroke: colors.gridLineBold,
+            strokeWidth: isBarLine ? 1.5 : (isBeatLine ? 1 : 0.5),
+        }));
+    }
+}
+
+function redrawNotes(noteLayer, track, colors, selectedNotes) {
+    noteLayer.destroyChildren(); 
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) {
+        noteLayer.batchDraw();
+        return;
+    }
+    const sequenceData = activeSequence.data;
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+    sequenceData.forEach((pitchRow, pitchIndex) => {
+        pitchRow.forEach((note, timeStep) => {
+            if (note) {
+                const noteId = `${pitchIndex}-${timeStep}`;
+                const isSelected = selectedNotes.has(noteId);
+                const noteRect = new Konva.Rect({
+                    x: timeStep * noteWidth + keyWidth + 1,
+                    y: pitchIndex * noteHeight + 1,
+                    width: noteWidth * (note.duration || 1) - 2,
+                    height: noteHeight - 2,
+                    fill: colors.noteFill,
+                    stroke: isSelected ? 'yellow' : colors.noteStroke,
+                    strokeWidth: isSelected ? 2.5 : 1,
+                    opacity: note.velocity ? (0.5 + note.velocity * 0.5) : 1,
+                    cornerRadius: 2,
+                    id: noteId,
+                });
+
+                noteRect.on('mouseenter', (e) => {
+                    const stage = e.target.getStage();
+                    const mousePos = stage.getPointerPosition();
+                    const noteEdge = e.target.x() + e.target.width() - 5;
+                    if(mousePos.x > noteEdge) {
+                        if(stage) stage.container().style.cursor = 'ew-resize';
+                    } else {
+                        if(stage) stage.container().style.cursor = 'pointer';
+                    }
+                });
+                noteRect.on('mouseleave', (e) => {
+                    const stage = e.target.getStage();
+                    if(stage) stage.container().style.cursor = 'default';
+                });
+                noteRect.on('mousedown', (e) => {
+                    if (e.evt.button !== 0) return; 
+                    const stage = e.target.getStage();
+                    const mousePos = stage.getPointerPosition();
+                    const noteEdge = e.target.x() + e.target.width() - 5;
+                    if (mousePos.x > noteEdge) {
+                        e.cancelBubble = true;
+                        const originalWidth = e.target.width();
+                        const startX = mousePos.x;
+                        const originalDuration = note.duration || 1;
+                        function onMouseMove() {
+                            const currentX = stage.getPointerPosition().x;
+                            const dx = currentX - startX;
+                            const newWidth = originalWidth + dx;
+                            const newDuration = Math.max(1, Math.round(newWidth / noteWidth));
+                            e.target.width((newDuration * noteWidth) - 2);
+                            noteLayer.batchDraw();
+                        }
+                        function onMouseUp() {
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                            stage.container().style.cursor = 'default';
+                            const finalDuration = Math.max(1, Math.round(e.target.width() / noteWidth));
+                            if (finalDuration !== originalDuration) {
+                                track.setNoteDuration(activeSequence.id, pitchIndex, timeStep, finalDuration);
+                                localAppServices.captureStateForUndo?.(`Set note duration on ${track.name}`);
+                            }
+                        }
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    }
+                });
+                noteLayer.add(noteRect);
             }
         });
-    
-        this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
-    }
+    });
+    noteLayer.batchDraw();
+}
 
-    addClip(clipData) {
-        if (!clipData.type || !clipData.id) return;
-        this.timelineClips.push(clipData);
-        this.appServices.captureStateForUndo?.(`Add ${clipData.name} clip`);
-        this.appServices.renderTimeline?.();
+function createPianoRollStage(containerElement, velocityPane, track) {
+    if (typeof Konva === 'undefined' || !containerElement.parentElement) {
+        setTimeout(() => createPianoRollStage(containerElement, velocityPane, track), 100);
+        return;
     }
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) return;
+    const colors = getThemeColors();
+    const numSteps = activeSequence.length;
+    const stageWidth = (Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps) + Constants.PIANO_ROLL_KEY_WIDTH;
+    const stageHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * Constants.SYNTH_PITCHES.length;
+    containerElement.innerHTML = '';
+    const stage = new Konva.Stage({ container: containerElement, width: stageWidth, height: stageHeight });
+    const gridLayer = new Konva.Layer();
+    stage.add(gridLayer);
+    const noteLayer = new Konva.Layer();
+    stage.add(noteLayer);
+    const selectionLayer = new Konva.Layer();
+    stage.add(selectionLayer);
+    const playheadLayer = new Konva.Layer();
+    stage.add(playheadLayer);
+    const keyLayer = new Konva.Layer();
+    stage.add(keyLayer);
+    const selectedNotes = new Set();
+    const pianoRoll = { stage, gridLayer, noteLayer, keyLayer, playheadLayer, track, selectedNotes, velocityPane, colors };
+    openPianoRolls.set(track.id, pianoRoll);
+
+    drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors);
+    drawPianoKeys(keyLayer, stageHeight, track, colors);
+    redrawNotes(noteLayer, track, colors, selectedNotes);
     
-    async addAudioClip(audioBlob, startTime, clipName) {
-        if (this.type !== 'Audio') return;
-        try {
-            const dbKey = `clip-${this.id}-${Date.now()}-${clipName}`;
-            await this.appServices.dbStoreAudio(dbKey, audioBlob);
-            const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
-            const newClip = {
-                id: `clip-${this.id}-${Date.now()}`, type: 'audio', name: clipName, dbKey, startTime,
-                duration: audioBuffer.duration,
-                audioBuffer,
-            };
-            this.addClip(newClip);
-        } catch (error) {
-            console.error("Error adding audio clip:", error);
-            this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
-        }
-    }
+    const playhead = new Konva.Line({ points: [0, 0, 0, stageHeight], stroke: colors.playhead, strokeWidth: 1.5, listening: false });
+    playheadLayer.add(playhead);
+    pianoRoll.playhead = playhead;
     
-    recreateToneSequence() {
-        this.toneSequence?.dispose();
-        this.toneSequence = null;
-        const activeSequence = this.getActiveSequence();
-        if (!activeSequence) return;
-        const events = [];
-        for (let row = 0; row < activeSequence.data.length; row++) {
-            for (let step = 0; step < activeSequence.length; step++) {
-                if (activeSequence.data[row]?.[step]) {
-                    const pitch = Constants.SYNTH_PITCHES[row];
-                    const noteData = activeSequence.data[row][step];
-                    events.push({
-                        time: `${step}*16n`,
-                        note: pitch,
-                        duration: `${noteData.duration || 1}*16n`,
-                        velocity: noteData.velocity || 0.75
-                    });
+    keyLayer.moveToTop();
+    playheadLayer.moveToTop();
+    
+    renderVelocityPane(velocityPane, track);
+    stage.batchDraw();
+
+    attachPianoRollListeners(pianoRoll);
+}
+
+function attachPianoRollListeners(pianoRoll) {
+    const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors } = pianoRoll;
+    const activeSequence = track.getActiveSequence();
+    const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false });
+    stage.getLayers().find(l => l !== gridLayer && l !== noteLayer && l !== keyLayer).add(selectionRect);
+
+    let x1, y1;
+    stage.on('mousedown.selection', (e) => {
+        if (e.target.getParent() === noteLayer || e.target.getParent() === keyLayer) return;
+        lastActivePianoRollTrackId = track.id;
+        x1 = stage.getPointerPosition().x;
+        y1 = stage.getPointerPosition().y;
+        selectionRect.visible(true).width(0).height(0);
+    });
+    stage.on('mousemove.selection', () => {
+        if (!selectionRect.visible()) return;
+        const { x: x2, y: y2 } = stage.getPointerPosition();
+        selectionRect.setAttrs({ x: Math.min(x1, x2), y: Math.min(y1, y2), width: Math.abs(x2 - x1), height: Math.abs(y2 - y1) });
+    });
+    stage.on('mouseup.selection', (e) => {
+        if (!selectionRect.visible()) return;
+        selectionRect.visible(false);
+        if (!e.evt.shiftKey) selectedNotes.clear();
+        const box = selectionRect.getClientRect();
+        noteLayer.children.forEach(noteShape => {
+            if (Konva.Util.haveIntersection(box, noteShape.getClientRect())) {
+                const noteId = noteShape.id();
+                if (selectedNotes.has(noteId) && e.evt.shiftKey) {
+                    selectedNotes.delete(noteId);
+                } else {
+                    selectedNotes.add(noteId);
                 }
             }
-        }
-        const partEventCallback = (time, value) => {
-            if (this.instrument) {
-                this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
-            } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
-                const midi = Tone.Midi(value.note).toMidi();
-                const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                    const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
-                    playbackFn?.(this.id, sampleIndex, value.velocity, 0, time);
-                }
+        });
+        redrawNotes(noteLayer, track, colors, selectedNotes);
+    });
+
+    stage.on('contextmenu', (e) => {
+        e.evt.preventDefault();
+        lastActivePianoRollTrackId = track.id;
+        const clickedOnNote = e.target.getParent() === noteLayer;
+
+        if (clickedOnNote) {
+            const noteId = e.target.id();
+            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
+            track.removeNoteFromSequence(activeSequence.id, pitchIndex, timeStep);
+            selectedNotes.delete(noteId);
+            redrawNotes(noteLayer, track, colors, selectedNotes);
+            renderVelocityPane(velocityPane, track);
+        } else {
+            const menuItems = [];
+            if (selectedNotes.size > 0) {
+                menuItems.push({
+                    label: `Copy ${selectedNotes.size} Note(s)`,
+                    action: () => track.copyNotesToClipboard(activeSequence.id, selectedNotes)
+                });
             }
-        };
-        this.toneSequence = new Tone.Part(partEventCallback, events);
-        this.toneSequence.loop = true;
-        this.toneSequence.loopEnd = `${activeSequence.length}*16n`;
-    }
+            const clipboard = localAppServices.getClipboardData?.();
+            if (clipboard?.type === 'piano-roll-notes') {
+                menuItems.push({
+                    label: `Paste ${clipboard.notes.length} Note(s)`,
+                    action: () => {
+                        const pos = stage.getPointerPosition();
+                        const pasteTimeStep = Math.floor((pos.x - Constants.PIANO_ROLL_KEY_WIDTH) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+                        const pastePitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+                        track.pasteNotesFromClipboard(activeSequence.id, pastePitchIndex, pasteTimeStep);
+                        redrawNotes(noteLayer, track, colors, selectedNotes);
+                        renderVelocityPane(velocityPane, track);
+                    }
+                });
+            }
+            if (menuItems.length > 0) menuItems.push({ separator: true });
+            menuItems.push({ label: 'Duplicate Sequence', action: () => track.duplicateSequence(activeSequence.id) });
+            menuItems.push({ label: 'Clear All Notes', action: () => track.clearSequence(activeSequence.id) });
+            
+            if (menuItems.length > 0) {
+                localAppServices.createContextMenu(e.evt, menuItems, localAppServices);
+            }
+        }
+    });
 
-    startSequence() {
-        if (this.toneSequence?.state !== 'started') this.toneSequence?.start(0);
-    }
-    
-    stopSequence() {
-        if (this.toneSequence?.state === 'started') this.toneSequence.stop(0);
-    }
-    
-    getDefaultSynthParams() {
-        return {
-            portamento: 0,
-            oscillator: { type: 'sine' },
-            envelope: { attack: 0.005, decay: 2.0, sustain: 0, release: 5.0 },
-            filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 10000 },
-            filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7 }
-        };
-    }
+    stage.on('click tap', function (e) {
+        if (e.evt.button !== 0) return; 
 
-    dispose() {
-        this.toneSequence?.dispose();
-        this.instrument?.dispose();
-        this.input?.dispose();
-        this.outputNode?.dispose();
-        this.trackMeter?.dispose();
-        this.activeEffects.forEach(e => e.toneNode.dispose());
-    }
+        lastActivePianoRollTrackId = track.id;
+        
+        if (e.target.getParent() === keyLayer) {
+            return;
+        }
+
+        const pos = stage.getPointerPosition();
+        const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+        if (pos.x < keyWidth) return;
+
+        const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+        const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+        
+        const currentActiveSequence = track.getActiveSequence();
+        if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) {
+            return;
+        }
+        
+        const noteExists = currentActiveSequence.data[pitchIndex][timeStep];
+
+        if (noteExists) {
+            track.removeNoteFromSequence(currentActiveSequence.id, pitchIndex, timeStep);
+        } else {
+            track.addNoteToSequence(currentActiveSequence.id, pitchIndex, timeStep);
+        }
+
+        selectedNotes.clear();
+        redrawNotes(noteLayer, track, colors, selectedNotes);
+        renderVelocityPane(velocityPane, track);
+    });
+    
+    const lengthInput = document.getElementById(`sequenceLengthInput-${track.id}`);
+    lengthInput?.addEventListener('change', (e) => {
+        const barValue = parseFloat(e.target.value);
+        if (isNaN(barValue) || barValue <= 0 || barValue > Constants.MAX_BARS) {
+            e.target.value = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
+            return;
+        }
+        const newLengthInSteps = Math.round(barValue * Constants.STEPS_PER_BAR);
+        track.setSequenceLength(activeSequence.id, newLengthInSteps);
+        createPianoRollStage(containerElement, velocityPane, track);
+    });
 }
