@@ -84,6 +84,31 @@ export class Track {
         }
     }
 
+    // *** NEW METHOD to capture track state for saving ***
+    serialize() {
+        return {
+            id: this.id,
+            type: this.type,
+            name: this.name,
+            isMuted: this.isMuted,
+            volume: this.previousVolumeBeforeMute,
+            activeEffects: this.activeEffects.map(e => ({ type: e.type, params: e.params })),
+            sequences: this.sequences,
+            activeSequenceId: this.activeSequenceId,
+            synthEngineType: this.synthEngineType,
+            synthParams: this.synthParams,
+            samplerAudioData: this.samplerAudioData,
+            slices: this.slices,
+            drumSamplerPads: this.drumSamplerPads.map(p => ({
+                originalFileName: p.originalFileName,
+                dbKey: p.dbKey,
+                volume: p.volume,
+                pitchShift: p.pitchShift,
+            })),
+            instrumentSamplerSettings: this.instrumentSamplerSettings,
+        };
+    }
+
     async initializeInstrument() {
         if (this.instrument) this.instrument.dispose();
         
@@ -118,7 +143,7 @@ export class Track {
 
         currentNode.connect(this.outputNode);
     }
-
+    
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
@@ -402,7 +427,7 @@ export class Track {
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
         }
     }
-
+    
     recreateToneSequence() {
         this.stopSequence();
         
