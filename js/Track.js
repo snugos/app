@@ -447,7 +447,6 @@ export class Track {
         }
     }
     
-    // *** NEW METHOD to delete a clip from the timeline ***
     deleteClip(clipId) {
         const index = this.timelineClips.findIndex(c => c.id === clipId);
         if (index > -1) {
