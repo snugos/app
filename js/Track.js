@@ -48,12 +48,8 @@ export class Track {
         this.audioBuffer = null;
         this.slices = [];
         this.selectedSliceForEdit = 0;
-        this.slicerPlayer = null;
         this.drumSamplerPads = [];
-        this.drumPadPlayers = [];
-        this.selectedDrumPadForEdit = 0;
         this.instrumentSamplerSettings = {};
-        this.toneSampler = null;
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
         
         this.input.connect(this.outputNode);
@@ -72,8 +68,7 @@ export class Track {
             this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
             this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
         } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0 });
-            this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
+            this.drumSamplerPads = Array(Constants.numDrumSamplerPads || 16).fill(null).map((_, i) => initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null });
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
             this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || {
@@ -94,11 +89,12 @@ export class Track {
         }
     }
 
+    // This method is now only used for Synth and InstrumentSampler
     async initializeInstrument() {
         if (this.instrument) this.instrument.dispose();
         
         if (this.type === 'Synth') {
-            this.instrument = new Tone.PolySynth(Tone.Synth);
+            this.instrument = new Tone.PolySynth(Tone.Synth, this.synthParams);
         } else if (this.type === 'InstrumentSampler') {
             const buffer = this.instrumentSamplerSettings.audioBuffer;
             const urls = {};
@@ -138,7 +134,8 @@ export class Track {
 
         currentNode.connect(this.outputNode);
     }
-
+    
+    // ... (other methods like setVolume, applyMuteState, etc. remain the same) ...
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
@@ -446,33 +443,44 @@ export class Track {
         }
 
         const sequenceCallback = (time, value) => {
-            // This is the robust check to handle both single notes and chords.
-            const notesToPlay = Array.isArray(value) ? value : (value ? [value] : []);
+            if (value) {
+                const notesToPlay = Array.isArray(value) ? value : [value];
 
-            if (notesToPlay.length > 0) {
                 notesToPlay.forEach(note => {
-                    if (this.instrument) {
-                        this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
+                    // *** FIX: Create a new, temporary sound source on every tick ***
+                    if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
+                        // For synths, create a temporary synth to play the note
+                        const synth = new Tone.PolySynth(Tone.Synth, this.synthParams).connect(this.input);
+                        synth.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
+                        // Clean it up after it's done
+                        Tone.Transport.scheduleOnce(() => {
+                            synth.dispose();
+                        }, time + Tone.Time(note.duration).toSeconds() + 0.1);
+
                     } else if (this.type === 'DrumSampler') {
                         const midi = Tone.Midi(note.pitch).toMidi();
                         const padIndex = midi - Constants.DRUM_MIDI_START_NOTE;
-                        const player = this.drumPadPlayers[padIndex];
-                        if (player && !player.disposed) {
-                            const padData = this.drumSamplerPads[padIndex];
+                        const padData = this.drumSamplerPads[padIndex];
+                        if (padData && padData.audioBuffer) {
+                            const player = new Tone.Player(padData.audioBuffer).connect(this.input);
                             player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
                             player.volume.value = Tone.gainToDb((padData.volume || 0.7) * note.velocity);
                             player.start(time);
+                            // Clean up the player
+                            Tone.Transport.scheduleOnce(() => player.dispose(), time + padData.audioBuffer.duration + 0.1);
                         }
                     } else if (this.type === 'Sampler') {
-                        const player = this.slicerPlayer;
-                        if (player && !player.disposed) {
+                        if (this.audioBuffer) {
                             const midi = Tone.Midi(note.pitch).toMidi();
                             const sliceIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
                             const slice = this.slices[sliceIndex];
                             if (slice && slice.duration > 0) {
+                                const player = new Tone.Player(this.audioBuffer).connect(this.input);
                                 player.playbackRate = Math.pow(2, (slice.pitchShift || 0) / 12);
                                 player.volume.value = Tone.gainToDb((slice.volume || 0.7) * note.velocity);
                                 player.start(time, slice.offset, slice.duration);
+                                // Clean up the player
+                                Tone.Transport.scheduleOnce(() => player.dispose(), time + slice.duration + 0.1);
                             }
                         }
                     }
@@ -511,7 +519,7 @@ export class Track {
         this.outputNode?.dispose();
         this.trackMeter?.dispose();
         this.activeEffects.forEach(e => e.toneNode.dispose());
-        this.slicerPlayer?.dispose();
-        this.drumPadPlayers.forEach(p => p?.dispose());
+        this.drumSamplerPads.forEach(p => p.audioBuffer?.dispose());
+        this.audioBuffer?.dispose();
     }
 }
