@@ -35,8 +35,10 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
+        // Initialize all properties
         this.instrument = null;
         this.activeEffects = [];
+        this.toneSequence = null;
         this.synthEngineType = null;
         this.synthParams = {};
         this.sequences = initialData?.sequences || [];
@@ -60,6 +62,7 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
+        // Type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -82,31 +85,6 @@ export class Track {
         if (this.type !== 'Audio' && this.sequences.length === 0) {
             this.createNewSequence("Sequence 1", 64, true);
         }
-    }
-
-    // *** NEW METHOD to capture track state for saving ***
-    serialize() {
-        return {
-            id: this.id,
-            type: this.type,
-            name: this.name,
-            isMuted: this.isMuted,
-            volume: this.previousVolumeBeforeMute,
-            activeEffects: this.activeEffects.map(e => ({ type: e.type, params: e.params })),
-            sequences: this.sequences,
-            activeSequenceId: this.activeSequenceId,
-            synthEngineType: this.synthEngineType,
-            synthParams: this.synthParams,
-            samplerAudioData: this.samplerAudioData,
-            slices: this.slices,
-            drumSamplerPads: this.drumSamplerPads.map(p => ({
-                originalFileName: p.originalFileName,
-                dbKey: p.dbKey,
-                volume: p.volume,
-                pitchShift: p.pitchShift,
-            })),
-            instrumentSamplerSettings: this.instrumentSamplerSettings,
-        };
     }
 
     async initializeInstrument() {
