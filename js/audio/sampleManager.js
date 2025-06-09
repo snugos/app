@@ -38,25 +38,34 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
 
         if (trackTypeHint === 'Sampler') {
             track.audioBuffer?.dispose();
+            track.slicerPlayer?.dispose(); // FIX: Dispose the old player if it exists
             track.audioBuffer = newAudioBuffer;
+            
+            // *** FIX: Create a persistent player and connect it to the track's input ***
+            track.slicerPlayer = new Tone.Player(newAudioBuffer).connect(track.input);
+
             track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
             if (track.audioBuffer.loaded && (!track.slices || track.slices.every(s => s.duration === 0))) {
                 autoSliceSample(track.id, Constants.numSlices);
             }
             localAppServices.updateTrackUI?.(track.id, 'samplerLoaded');
+
         } else if (trackTypeHint === 'DrumSampler' && padIndex !== null) {
             const padData = track.drumSamplerPads[padIndex];
             if (padData) {
                 padData.audioBuffer?.dispose();
                 track.drumPadPlayers[padIndex]?.dispose();
                 padData.audioBuffer = newAudioBuffer;
+
+                // *** FIX: Create a persistent player for the pad and connect it to the track's input ***
+                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer).connect(track.input);
+                
                 padData.originalFileName = sourceName;
                 padData.dbKey = dbKey;
                 padData.status = 'loaded';
-                track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer);
             }
             localAppServices.updateTrackUI?.(track.id, 'drumPadLoaded', padIndex);
-        // --- FIX: Add logic to handle loading for InstrumentSampler ---
+        
         } else if (trackTypeHint === 'InstrumentSampler') {
             if (track.instrumentSamplerSettings.audioBuffer) {
                 track.instrumentSamplerSettings.audioBuffer.dispose();
@@ -66,7 +75,6 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             track.instrumentSamplerSettings.dbKey = dbKey;
             track.instrumentSamplerSettings.status = 'loaded';
             
-            // Re-initialize the Tone.Sampler with the new buffer
             if (typeof track.initializeInstrument === 'function') {
                 await track.initializeInstrument();
             }
