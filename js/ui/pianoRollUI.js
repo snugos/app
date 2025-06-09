@@ -98,7 +98,6 @@ export function updatePianoRollPlayhead(transportTime) {
 }
 
 function renderVelocityPane(velocityPane, track) {
-    // This function can be further optimized, but is ok for now
     if (!velocityPane) return;
     velocityPane.innerHTML = '';
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
@@ -257,59 +256,6 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
                     cornerRadius: 2,
                     id: noteId,
                 });
-
-                // Add listeners for resizing
-                noteRect.on('mouseenter', (e) => {
-                    const stage = e.target.getStage();
-                    const mousePos = stage.getPointerPosition();
-                    const noteEdge = e.target.x() + e.target.width() - 5; // 5px tolerance
-                    if(mousePos.x > noteEdge) {
-                        if(stage) stage.container().style.cursor = 'ew-resize';
-                    }
-                });
-                noteRect.on('mouseleave', (e) => {
-                    const stage = e.target.getStage();
-                    if(stage) stage.container().style.cursor = 'default';
-                });
-                noteRect.on('mousedown', (e) => {
-                    if (e.evt.button !== 0) return; // Only for left clicks
-                    const stage = e.target.getStage();
-                    const mousePos = stage.getPointerPosition();
-                    const noteEdge = e.target.x() + e.target.width() - 5;
-
-                    // Check if the click is on the resizable edge
-                    if (mousePos.x > noteEdge) {
-                        e.cancelBubble = true;
-                        const originalWidth = e.target.width();
-                        const startX = mousePos.x;
-                        const originalDuration = note.duration || 1;
-
-                        function onMouseMove(moveEvent) {
-                            const currentX = stage.getPointerPosition().x;
-                            const dx = currentX - startX;
-                            const newWidth = originalWidth + dx;
-                            const newDuration = Math.max(1, Math.round(newWidth / noteWidth));
-                            
-                            e.target.width((newDuration * noteWidth) - 2);
-                            noteLayer.batchDraw();
-                        }
-
-                        function onMouseUp() {
-                            document.removeEventListener('mousemove', onMouseMove);
-                            document.removeEventListener('mouseup', onMouseUp);
-                            stage.container().style.cursor = 'default';
-                            
-                            const finalDuration = Math.max(1, Math.round(e.target.width() / noteWidth));
-                            if (finalDuration !== originalDuration) {
-                                track.setNoteDuration(activeSequence.id, pitchIndex, timeStep, finalDuration);
-                                localAppServices.captureStateForUndo?.(`Set note duration on ${track.name}`);
-                            }
-                        }
-                        
-                        document.addEventListener('mousemove', onMouseMove);
-                        document.addEventListener('mouseup', onMouseUp);
-                    }
-                });
                 noteLayer.add(noteRect);
             }
         });
@@ -362,5 +308,123 @@ function createPianoRollStage(containerElement, velocityPane, track) {
 }
 
 function attachPianoRollListeners(pianoRoll) {
-    // ... (This function remains the same as the previous full version)
+    const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors } = pianoRoll;
+    const activeSequence = track.getActiveSequence();
+    const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false });
+    stage.getLayers().find(l => l !== gridLayer && l !== noteLayer && l !== keyLayer).add(selectionRect);
+
+    let x1, y1;
+    stage.on('mousedown.selection', (e) => {
+        if (e.target.getParent() === noteLayer || e.target.getParent() === keyLayer) return;
+        lastActivePianoRollTrackId = track.id;
+        x1 = stage.getPointerPosition().x;
+        y1 = stage.getPointerPosition().y;
+        selectionRect.visible(true).width(0).height(0);
+    });
+    stage.on('mousemove.selection', () => {
+        if (!selectionRect.visible()) return;
+        const { x: x2, y: y2 } = stage.getPointerPosition();
+        selectionRect.setAttrs({ x: Math.min(x1, x2), y: Math.min(y1, y2), width: Math.abs(x2 - x1), height: Math.abs(y2 - y1) });
+    });
+    stage.on('mouseup.selection', (e) => {
+        if (!selectionRect.visible()) return;
+        selectionRect.visible(false);
+        if (!e.evt.shiftKey) selectedNotes.clear();
+        const box = selectionRect.getClientRect();
+        noteLayer.children.forEach(noteShape => {
+            if (Konva.Util.haveIntersection(box, noteShape.getClientRect())) {
+                const noteId = noteShape.id();
+                if (selectedNotes.has(noteId) && e.evt.shiftKey) {
+                    selectedNotes.delete(noteId);
+                } else {
+                    selectedNotes.add(noteId);
+                }
+            }
+        });
+        redrawNotes(noteLayer, track, colors, selectedNotes);
+    });
+
+    stage.on('contextmenu', (e) => {
+        e.evt.preventDefault();
+        lastActivePianoRollTrackId = track.id;
+        const clickedOnNote = e.target.getParent() === noteLayer;
+
+        if (clickedOnNote) {
+            const noteId = e.target.id();
+            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
+            track.removeNoteFromSequence(activeSequence.id, pitchIndex, timeStep);
+            selectedNotes.delete(noteId);
+            redrawNotes(noteLayer, track, colors, selectedNotes);
+            renderVelocityPane(velocityPane, track);
+        } else {
+            const menuItems = [];
+            if (selectedNotes.size > 0) {
+                menuItems.push({
+                    label: `Copy ${selectedNotes.size} Note(s)`,
+                    action: () => track.copyNotesToClipboard(activeSequence.id, selectedNotes)
+                });
+            }
+            const clipboard = localAppServices.getClipboardData?.();
+            if (clipboard?.type === 'piano-roll-notes') {
+                menuItems.push({
+                    label: `Paste ${clipboard.notes.length} Note(s)`,
+                    action: () => {
+                        const pos = stage.getPointerPosition();
+                        const pasteTimeStep = Math.floor((pos.x - Constants.PIANO_ROLL_KEY_WIDTH) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+                        const pastePitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+                        track.pasteNotesFromClipboard(activeSequence.id, pastePitchIndex, pasteTimeStep);
+                        redrawNotes(noteLayer, track, colors, selectedNotes);
+                        renderVelocityPane(velocityPane, track);
+                    }
+                });
+            }
+            if (menuItems.length > 0) menuItems.push({ separator: true });
+            menuItems.push({ label: 'Duplicate Sequence', action: () => track.duplicateSequence(activeSequence.id) });
+            menuItems.push({ label: 'Clear All Notes', action: () => track.clearSequence(activeSequence.id) });
+            
+            if (menuItems.length > 0) {
+                localAppServices.createContextMenu(e.evt, menuItems, localAppServices);
+            }
+        }
+    });
+
+    stage.on('click tap', function (e) {
+        if (e.evt.button !== 0) return; // Only process left-clicks
+
+        lastActivePianoRollTrackId = track.id;
+        const clickedOnNote = e.target.getParent() === noteLayer;
+
+        if (clickedOnNote) {
+            const noteId = e.target.id();
+            if (selectedNotes.has(noteId)) {
+                selectedNotes.delete(noteId);
+            } else {
+                selectedNotes.add(noteId);
+            }
+        } else {
+            selectedNotes.clear();
+            if (e.target.getParent() !== keyLayer) {
+                const pos = stage.getPointerPosition();
+                const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+                if (pos.x < keyWidth) return;
+                const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+                const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+                track.addNoteToSequence(activeSequence.id, pitchIndex, timeStep);
+                renderVelocityPane(velocityPane, track);
+            }
+        }
+        redrawNotes(noteLayer, track, colors, selectedNotes);
+    });
+    
+    const lengthInput = document.getElementById(`sequenceLengthInput-${track.id}`);
+    lengthInput?.addEventListener('change', (e) => {
+        const barValue = parseFloat(e.target.value);
+        if (isNaN(barValue) || barValue <= 0 || barValue > Constants.MAX_BARS) {
+            e.target.value = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
+            return;
+        }
+        const newLengthInSteps = Math.round(barValue * Constants.STEPS_PER_BAR);
+        track.setSequenceLength(activeSequence.id, newLengthInSteps);
+        createPianoRollStage(containerElement, velocityPane, track);
+    });
 }
