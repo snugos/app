@@ -447,8 +447,12 @@ export class Track {
         };
         this.toneSequence = new Tone.Part(partEventCallback, events);
         this.toneSequence.loop = true;
+
         // *** FIX STARTS HERE ***
-        this.toneSequence.loopEnd = `${activeSequence.length / Constants.STEPS_PER_BAR}m`;
+        // Calculate loop end time using ticks for precision.
+        const ticksPerStep = Tone.Transport.PPQ / 4; // A 16th note
+        const totalTicks = activeSequence.length * ticksPerStep;
+        this.toneSequence.loopEnd = `${totalTicks}i`;
         // *** FIX ENDS HERE ***
     }
 
