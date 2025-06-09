@@ -35,7 +35,6 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
-        // Initialize properties
         this.instrument = null;
         this.activeEffects = [];
         this.toneSequence = null;
@@ -61,7 +60,6 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
-        // Type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -128,7 +126,7 @@ export class Track {
 
         currentNode.connect(this.outputNode);
     }
-    
+
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
@@ -440,7 +438,6 @@ export class Track {
 
             if (notesToPlay.length > 0) {
                 notesToPlay.forEach(note => {
-                    // *** FIX: Use persistent instrument for Synths, but temporary players for Samplers ***
                     if (this.instrument) {
                         this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
                     } else if (this.type === 'DrumSampler') {
@@ -475,15 +472,24 @@ export class Track {
         this.toneSequence = new Tone.Sequence(sequenceCallback, sequenceEvents, '16n');
         this.toneSequence.loop = true;
         this.toneSequence.loopEnd = activeSequence.length;
+        
+        // *** FIX: If the transport is running, the new sequence must be started. ***
+        if (Tone.Transport.state === 'started') {
+            this.toneSequence.start(0);
+        }
     }
 
 
     startSequence() {
-        if (this.toneSequence?.state !== 'started') this.toneSequence?.start(0);
+        if (this.toneSequence?.state !== 'started') {
+            this.toneSequence?.start(0);
+        }
     }
 
     stopSequence() {
-        if (this.toneSequence?.state === 'started') this.toneSequence.stop(0);
+        if (this.toneSequence?.state === 'started') {
+            this.toneSequence.stop(0);
+        }
     }
 
     getDefaultSynthParams() {
