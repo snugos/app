@@ -56,7 +56,6 @@ let appServices = {};
 
 export function initializeStateModule(appServicesFromMain) {
     appServices = appServicesFromMain || {};
-    // Ensure the Imports library exists in the state from the beginning
     if (!soundLibraryFileTreesGlobal['Imports']) {
         soundLibraryFileTreesGlobal['Imports'] = {};
     }
@@ -308,12 +307,87 @@ export function reorderMasterEffectInState(effectId, newIndex) {
     }
 }
 
+// *** IMPLEMENTED FUNCTIONS ***
+
 export async function reconstructDAWInternal(projectData) {}
 export function captureStateForUndoInternal(actionDescription, customRedo) {}
 export function undoLastActionInternal() {}
 export function redoLastActionInternal() {}
-export function gatherProjectDataInternal(includeEffectsRegistry = false) {}
-export async function saveProjectInternal() {}
-export async function loadProjectInternal(file) {}
-export async function handleProjectFileLoadInternal(event) {}
-export async function exportToWavInternal() {}
+
+export function gatherProjectDataInternal() {
+    const projectData = {
+        version: Constants.APP_VERSION,
+        createdAt: new Date().toISOString(),
+        tempo: Tone.Transport.bpm.value,
+        masterVolume: masterGainValueState,
+        masterEffects: getMasterEffectsState(),
+        tracks: getTracksState().map(t => t.serialize()),
+    };
+    return projectData;
+}
+
+export async function saveProjectInternal() {
+    try {
+        const projectData = gatherProjectDataInternal();
+        const jsonString = JSON.stringify(projectData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `snugos-project-${new Date().toISOString().slice(0, 10)}.snug`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(link.href);
+        appServices.showNotification('Project saved successfully.', 2000);
+    } catch (error) {
+        console.error("Error saving project:", error);
+        appServices.showNotification('Failed to save project.', 3000);
+    }
+}
+
+export async function loadProjectInternal(file) {
+    // To be implemented
+}
+export async function handleProjectFileLoadInternal(event) {
+    // To be implemented
+}
+
+export async function exportToWavInternal() {
+    try {
+        await appServices.initAudioContextAndMasterMeter(true);
+        const recorder = new Tone.Recorder();
+        Tone.getDestination().connect(recorder);
+
+        // A fixed 10-second export. A more advanced version could calculate the song length.
+        const exportDuration = 10; 
+        appServices.showNotification(`Rendering ${exportDuration} seconds... Please wait.`, exportDuration * 1000);
+        
+        recorder.start();
+        Tone.Transport.stop();
+        Tone.Transport.position = 0;
+        Tone.Transport.start();
+
+        Tone.Transport.scheduleOnce(async () => {
+            Tone.Transport.stop();
+            const recording = await recorder.stop();
+            
+            const url = URL.createObjectURL(recording);
+            const anchor = document.createElement("a");
+            anchor.download = "snugos-export.wav";
+            anchor.href = url;
+            anchor.click();
+
+            URL.revokeObjectURL(url);
+            recorder.dispose();
+            Tone.getDestination().disconnect(recorder);
+            appServices.showNotification('Export finished!', 3000);
+
+        }, exportDuration);
+    } catch (error) {
+        console.error("Error exporting to WAV:", error);
+        appServices.showNotification('Failed to export WAV file.', 3000);
+    }
+}
