@@ -402,13 +402,20 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
     }
 
+    // *** NEW HELPER FUNCTION ***
+    addClip(clipData) {
+        if (!clipData.type || !clipData.id) return;
+        this.timelineClips.push(clipData);
+        this.appServices.renderTimeline?.();
+        this.appServices.captureStateForUndo?.(`Add clip ${clipData.name}`);
+    }
+
+    // *** UPDATED to use the new addClip helper ***
     addMidiClip(sequence, startTime) {
         if (!sequence) return;
-
         const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4);
         const totalBeats = sequence.length * beatsPerStep;
         const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value);
-
         const newClip = {
             id: `clip-${this.id}-${Date.now()}`,
             type: 'midi',
@@ -417,10 +424,7 @@ export class Track {
             duration: clipDuration,
             sequenceData: JSON.parse(JSON.stringify(sequence.data))
         };
-
-        this.timelineClips.push(newClip);
-        this.appServices.renderTimeline?.();
-        this.appServices.captureStateForUndo?.(`Add clip ${newClip.name}`);
+        this.addClip(newClip);
     }
 
     async addAudioClip(audioBlob, startTime, clipName) {
@@ -431,7 +435,10 @@ export class Track {
             const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
             const newClip = {
                 id: `clip-${this.id}-${Date.now()}`,
-                type: 'audio', name: clipName, dbKey, startTime,
+                type: 'audio',
+                name: clipName,
+                dbKey,
+                startTime,
                 duration: audioBuffer.duration,
                 audioBuffer,
             };
@@ -439,16 +446,6 @@ export class Track {
         } catch (error) {
             console.error("Error adding audio clip:", error);
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
-        }
-    }
-    
-    deleteClip(clipId) {
-        const index = this.timelineClips.findIndex(c => c.id === clipId);
-        if (index > -1) {
-            const clipName = this.timelineClips[index].name;
-            this.timelineClips.splice(index, 1);
-            this.appServices.renderTimeline?.();
-            this.appServices.captureStateForUndo?.(`Delete clip ${clipName}`);
         }
     }
     
