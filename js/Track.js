@@ -402,7 +402,6 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
     }
 
-    // *** NEW HELPER FUNCTION ***
     addClip(clipData) {
         if (!clipData.type || !clipData.id) return;
         this.timelineClips.push(clipData);
@@ -410,7 +409,6 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Add clip ${clipData.name}`);
     }
 
-    // *** UPDATED to use the new addClip helper ***
     addMidiClip(sequence, startTime) {
         if (!sequence) return;
         const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4);
@@ -446,6 +444,17 @@ export class Track {
         } catch (error) {
             console.error("Error adding audio clip:", error);
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
+        }
+    }
+    
+    // *** NEW METHOD to delete a clip from the timeline ***
+    deleteClip(clipId) {
+        const index = this.timelineClips.findIndex(c => c.id === clipId);
+        if (index > -1) {
+            const clipName = this.timelineClips[index].name;
+            this.timelineClips.splice(index, 1);
+            this.appServices.renderTimeline?.();
+            this.appServices.captureStateForUndo?.(`Delete clip ${clipName}`);
         }
     }
     
