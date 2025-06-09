@@ -35,7 +35,6 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
-        // *** FIX: Initialize all properties at the top, before any methods are called. ***
         this.instrument = null;
         this.activeEffects = [];
         this.toneSequence = null;
@@ -57,7 +56,6 @@ export class Track {
         this.toneSampler = null;
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
         
-        // Initial connection for an empty effects chain.
         this.input.connect(this.outputNode);
 
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
@@ -66,7 +64,6 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
-        // Continue with type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -447,9 +444,17 @@ export class Track {
             }
             sequenceEvents.push(notesAtStep.length > 0 ? notesAtStep : null);
         }
+        
+        // --- DEBUGGING: Log the generated events array ---
+        console.log(`[Track ${this.id}] Recreating sequence. Events array:`, sequenceEvents.slice(0, 16));
+
 
         const sequenceCallback = (time, value) => {
-            if (value) {
+            // --- DEBUGGING: Log the value received by the callback ---
+            console.log(`[Track ${this.id}] Sequence Tick - Time: ${time}, Value:`, value);
+            
+            // This is the robust check
+            if (Array.isArray(value)) {
                 value.forEach(note => {
                     if (this.instrument) {
                         this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
