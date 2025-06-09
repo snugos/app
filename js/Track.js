@@ -28,7 +28,6 @@ export class Track {
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
         
-        // *** FIX: Establish the main output path once and only once. ***
         const masterBusInput = this.appServices.getMasterBusInputNode?.();
         if (masterBusInput) {
             this.outputNode.fan(this.trackMeter, masterBusInput);
@@ -57,7 +56,6 @@ export class Track {
         this.toneSampler = null;
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
         
-        // Initial connection for an empty effects chain.
         this.input.connect(this.outputNode);
 
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
@@ -120,7 +118,6 @@ export class Track {
             this.instrument = null;
         }
 
-        // *** FIX: Connect the newly created instrument to the track's input ***
         if (this.instrument) {
             this.instrument.connect(this.input);
         }
@@ -128,10 +125,7 @@ export class Track {
         this.recreateToneSequence();
     }
     
-    // *** REFACTORED METHOD ***
     rebuildEffectChain() {
-        // The only job of this method is to chain the effects between input and output.
-        // It no longer manages source or master bus connections.
         this.input.disconnect();
         let currentNode = this.input;
 
