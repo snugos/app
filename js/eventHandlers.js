@@ -18,8 +18,8 @@ import {
     getMidiAccessState,
     setActiveMIDIInputState,
     getActiveMIDIInputState,
-    getUndoStackState, 
-    getRedoStackState  
+    getUndoStackState,
+    getRedoStackState
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
 import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
@@ -62,18 +62,18 @@ export function initializePrimaryEventListeners() {
         }
         startMenu?.classList.add('hidden');
     };
-    
+
     document.getElementById('menuAddSynthTrack')?.addEventListener('click', () => addTrackHandler('Synth'));
     document.getElementById('menuAddSamplerTrack')?.addEventListener('click', () => addTrackHandler('Sampler'));
     document.getElementById('menuAddDrumSamplerTrack')?.addEventListener('click', () => addTrackHandler('DrumSampler'));
     document.getElementById('menuAddInstrumentSamplerTrack')?.addEventListener('click', () => addTrackHandler('InstrumentSampler'));
     document.getElementById('menuAddAudioTrack')?.addEventListener('click', () => addTrackHandler('Audio'));
-    
+
     document.getElementById('menuOpenSoundBrowser')?.addEventListener('click', () => {
         localAppServices.openSoundBrowserWindow?.();
         startMenu?.classList.add('hidden');
     });
-    
+
     document.getElementById('menuOpenYouTubeImporter')?.addEventListener('click', () => {
         handleOpenYouTubeImporter();
         startMenu?.classList.add('hidden');
@@ -83,7 +83,7 @@ export function initializePrimaryEventListeners() {
         localAppServices.openTimelineWindow?.();
         startMenu?.classList.add('hidden');
     });
-    
+
     document.getElementById('menuOpenPianoRoll')?.addEventListener('click', () => {
         const currentTracks = getTracks();
         const firstInstrumentTrack = currentTracks.find(t => t.type === 'Synth' || t.type === 'InstrumentSampler' || t.type === 'Sampler' || t.type === 'DrumSampler');
@@ -107,7 +107,7 @@ export function initializePrimaryEventListeners() {
 
     document.getElementById('menuUndo')?.addEventListener('click', () => {
         localAppServices.undoLastAction?.();
-        updateUndoRedoButtons(); 
+        updateUndoRedoButtons();
         startMenu?.classList.add('hidden');
     });
 
@@ -158,7 +158,7 @@ export function attachGlobalControlEvents(uiCache) {
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
-    
+
     // This function remains for the on-screen Play/Pause button
     const handlePlayPause = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
@@ -193,7 +193,7 @@ export function attachGlobalControlEvents(uiCache) {
             Tone.Transport.start();
         }
     };
-    
+
     const handleStop = () => {
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.pause();
@@ -204,11 +204,11 @@ export function attachGlobalControlEvents(uiCache) {
     const handleRecord = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
-    
+
         const currentlyRecording = isTrackRecordingState();
         const armedTrackId = getArmedTrackId();
         const armedTrack = getTrackById(armedTrackId);
-        
+
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
@@ -221,7 +221,7 @@ export function attachGlobalControlEvents(uiCache) {
             setRecordingTrackId(armedTrackId);
             setIsRecording(true);
             recordBtn.classList.add('recording');
-    
+
             if (armedTrack.type === 'Audio') {
                 const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
                 if (!success) {
@@ -230,7 +230,7 @@ export function attachGlobalControlEvents(uiCache) {
                     return;
                 }
             }
-    
+
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.start();
             }
@@ -242,7 +242,7 @@ export function attachGlobalControlEvents(uiCache) {
     playBtn?.addEventListener('click', handlePlayPause); // On-screen button still uses Play/Pause
     stopBtn?.addEventListener('click', handleStop);
     recordBtn?.addEventListener('click', handleRecord);
-    
+
     metronomeBtn?.addEventListener('click', () => {
         const isEnabled = localAppServices.toggleMetronome();
         metronomeBtn.classList.toggle('active', isEnabled);
@@ -260,13 +260,13 @@ export function attachGlobalControlEvents(uiCache) {
     });
 
     midiSelect?.addEventListener('change', selectMIDIInput);
-    
+
     playbackModeToggle?.addEventListener('click', () => {
         const currentMode = getPlaybackModeState();
         const newMode = currentMode === 'piano-roll' ? 'timeline' : 'piano-roll';
         setPlaybackModeState(newMode);
     });
-    
+
     themeToggleBtn?.addEventListener('click', () => {
         const isLightTheme = document.body.classList.contains('theme-light');
         const newTheme = isLightTheme ? 'dark' : 'light';
@@ -284,7 +284,7 @@ export function attachGlobalControlEvents(uiCache) {
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
-            
+
             if (armedTrack && armedTrack.instrument) {
                 const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
                 const frequency = Tone.Midi(noteNumber).toFrequency();
@@ -314,7 +314,7 @@ export function attachGlobalControlEvents(uiCache) {
                         const track = pianoRoll.track;
                         const activeSequence = track.getActiveSequence();
                         track.removeNotesFromSequence(activeSequence.id, pianoRoll.selectedNotes);
-                        
+
                         const win = localAppServices.getWindowById(`pianoRollWin-${track.id}`);
                         if (win) {
                             win.close(true);
@@ -325,7 +325,7 @@ export function attachGlobalControlEvents(uiCache) {
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 if (lastActivePianoRollTrackId !== null) {
                     e.preventDefault();
-                    
+
                     const pianoRoll = openPianoRolls.get(lastActivePianoRollTrackId);
                     if (pianoRoll && pianoRoll.selectedNotes.size > 0) {
                         const track = pianoRoll.track;
@@ -346,7 +346,7 @@ export function attachGlobalControlEvents(uiCache) {
                         if (newSelection) {
                             pianoRoll.selectedNotes.clear();
                             newSelection.forEach(id => pianoRoll.selectedNotes.add(id));
-                            
+
                             const win = localAppServices.getWindowById(`pianoRollWin-${track.id}`);
                             if (win) {
                                 win.close(true);
@@ -448,13 +448,13 @@ function populateMIDIInputSelector(midiAccess) {
     }
 
     const currentInputs = new Set();
-    midiSelect.innerHTML = ''; 
+    midiSelect.innerHTML = '';
 
     const noneOption = document.createElement('option');
     noneOption.value = "";
     noneOption.textContent = "None";
     midiSelect.appendChild(noneOption);
-    
+
     if (midiAccess.inputs.size > 0) {
         midiAccess.inputs.forEach(input => {
             currentInputs.add(input.id);
@@ -512,7 +512,7 @@ function onMIDIMessage(message) {
         }
         return;
     }
-    
+
     const noteOn = commandType === 0x90 && velocity > 0;
     const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
 
@@ -529,7 +529,7 @@ function onMIDIMessage(message) {
 
                 if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
                     track.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
-                    
+
                     const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
                     if (pianoRollWindow && !pianoRollWindow.isMinimized) {
                        if(localAppServices.openPianoRollWindow) {
@@ -541,7 +541,7 @@ function onMIDIMessage(message) {
             }
         }
     }
-    
+
     const armedTrackId = getArmedTrackId();
     if (armedTrackId === null) return;
     const armedTrack = getTrackById(armedTrackId);
@@ -651,12 +651,14 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
     const targetTrack = getTrackById(targetTrackId);
 
     if (!targetTrack) return;
-    
+
     if (files && files.length > 0) {
         const file = files[0];
         if (file.type.startsWith('audio/')) {
             if (targetTrack.type === 'Audio') {
-                track.addAudioClip(file, startTime, file.name);
+                // *** FIX STARTS HERE ***
+                targetTrack.addAudioClip(file, startTime, file.name);
+                // *** FIX ENDS HERE ***
             } else {
                 showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500);
             }
