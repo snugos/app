@@ -271,7 +271,6 @@ export function attachGlobalControlEvents(uiCache) {
         localAppServices.setCurrentUserThemePreference?.(newTheme);
     });
 
-    // *** REFACTORED to use the unified instrument model ***
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
             return;
@@ -489,7 +488,6 @@ export function selectMIDIInput(event) {
     }
 }
 
-// *** REFACTORED to use the persistent instrument for all track types ***
 function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
     const commandType = command & 0xF0;
@@ -501,7 +499,6 @@ function onMIDIMessage(message) {
     const armedTrack = getTrackById(armedTrackId);
     if (!armedTrack || !armedTrack.instrument) return;
 
-    // Handle Sustain Pedal
     if (commandType === 0xB0 && noteNumber === 64) {
         if (velocity > 63) {
             isSustainPedalDown = true;
@@ -515,7 +512,6 @@ function onMIDIMessage(message) {
         return;
     }
 
-    // Handle Note On/Off for live playing
     if (noteOn || noteOff) {
         const noteName = Tone.Midi(noteNumber).toNote();
         
@@ -525,7 +521,7 @@ function onMIDIMessage(message) {
                 sustainedNotes.delete(noteNumber);
             }
             armedTrack.instrument.triggerAttack(noteName, Tone.now(), velocity / 127);
-        } else { // Note Off
+        } else {
             if (isSustainPedalDown) {
                 sustainedNotes.set(noteNumber, noteName);
             } else {
@@ -533,10 +529,9 @@ function onMIDIMessage(message) {
             }
         }
     }
-
-    // Handle recording MIDI notes to the active sequence
+    
     if (noteOn && isTrackRecordingState()) {
-        const track = armedTrack; // armedTrack is the track we're recording to
+        const track = armedTrack;
         if (track.type !== 'Audio') {
             const activeSequence = track.getActiveSequence();
             if (activeSequence) {
@@ -546,6 +541,7 @@ function onMIDIMessage(message) {
 
                 if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
                     track.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
+                    
                     const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
                     if (pianoRollWindow && !pianoRollWindow.isMinimized) {
                        if(localAppServices.openPianoRollWindow) {
@@ -644,9 +640,19 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
     } else {
         const jsonDataString = event.dataTransfer.getData("application/json");
         if (jsonDataString) {
-            const soundData = JSON.parse(jsonDataString);
-            if (soundData.type === 'sound-browser-item') {
-                showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000);
+            try {
+                const soundData = JSON.parse(jsonDataString);
+                if (soundData.type === 'piano-roll-sequence') {
+                    const sourceTrack = getTrackById(soundData.sourceTrackId);
+                    const sequence = sourceTrack?.sequences.find(s => s.id === soundData.sequenceId);
+                    if (targetTrack && sequence) {
+                        targetTrack.addMidiClip(sequence, startTime);
+                    }
+                } else if (soundData.type === 'sound-browser-item') {
+                    showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000);
+                }
+            } catch(e) {
+                console.error("Error parsing dropped JSON data:", e);
             }
         }
     }
