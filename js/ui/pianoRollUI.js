@@ -256,6 +256,53 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
                     cornerRadius: 2,
                     id: noteId,
                 });
+
+                noteRect.on('mouseenter', (e) => {
+                    const stage = e.target.getStage();
+                    const mousePos = stage.getPointerPosition();
+                    const noteEdge = e.target.x() + e.target.width() - 5;
+                    if(mousePos.x > noteEdge) {
+                        if(stage) stage.container().style.cursor = 'ew-resize';
+                    } else {
+                        if(stage) stage.container().style.cursor = 'pointer';
+                    }
+                });
+                noteRect.on('mouseleave', (e) => {
+                    const stage = e.target.getStage();
+                    if(stage) stage.container().style.cursor = 'default';
+                });
+                noteRect.on('mousedown', (e) => {
+                    if (e.evt.button !== 0) return; 
+                    const stage = e.target.getStage();
+                    const mousePos = stage.getPointerPosition();
+                    const noteEdge = e.target.x() + e.target.width() - 5;
+                    if (mousePos.x > noteEdge) {
+                        e.cancelBubble = true;
+                        const originalWidth = e.target.width();
+                        const startX = mousePos.x;
+                        const originalDuration = note.duration || 1;
+                        function onMouseMove() {
+                            const currentX = stage.getPointerPosition().x;
+                            const dx = currentX - startX;
+                            const newWidth = originalWidth + dx;
+                            const newDuration = Math.max(1, Math.round(newWidth / noteWidth));
+                            e.target.width((newDuration * noteWidth) - 2);
+                            noteLayer.batchDraw();
+                        }
+                        function onMouseUp() {
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                            stage.container().style.cursor = 'default';
+                            const finalDuration = Math.max(1, Math.round(e.target.width() / noteWidth));
+                            if (finalDuration !== originalDuration) {
+                                track.setNoteDuration(activeSequence.id, pitchIndex, timeStep, finalDuration);
+                                localAppServices.captureStateForUndo?.(`Set note duration on ${track.name}`);
+                            }
+                        }
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    }
+                });
                 noteLayer.add(noteRect);
             }
         });
@@ -389,24 +436,34 @@ function attachPianoRollListeners(pianoRoll) {
     });
 
     stage.on('click tap', function (e) {
-        if (e.evt.button !== 0) return;
+        if (e.evt.button !== 0) return; 
 
         lastActivePianoRollTrackId = track.id;
-        const pos = stage.getPointerPosition();
-        const clickedOnNoteShape = e.target;
-        const clickedOnNote = clickedOnNoteShape.getParent() === noteLayer;
-        const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+        
+        if (e.target.getParent() === keyLayer) {
+            return;
+        }
 
-        if (clickedOnNote) {
-            track.removeNoteFromSequence(activeSequence.id, ...clickedOnNoteShape.id().split('-').map(Number));
-        } else {
-            if (pos.x >= keyWidth) {
-                const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
-                const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
-                track.addNoteToSequence(activeSequence.id, pitchIndex, timeStep);
-            }
+        const pos = stage.getPointerPosition();
+        const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+        if (pos.x < keyWidth) return;
+
+        const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+        const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+        
+        const currentActiveSequence = track.getActiveSequence();
+        if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) {
+            return;
         }
         
+        const noteExists = currentActiveSequence.data[pitchIndex][timeStep];
+
+        if (noteExists) {
+            track.removeNoteFromSequence(currentActiveSequence.id, pitchIndex, timeStep);
+        } else {
+            track.addNoteToSequence(currentActiveSequence.id, pitchIndex, timeStep);
+        }
+
         selectedNotes.clear();
         redrawNotes(noteLayer, track, colors, selectedNotes);
         renderVelocityPane(velocityPane, track);
