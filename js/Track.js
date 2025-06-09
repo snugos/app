@@ -35,6 +35,7 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
+        // Initialize properties
         this.instrument = null;
         this.activeEffects = [];
         this.toneSequence = null;
@@ -48,13 +49,11 @@ export class Track {
         this.audioBuffer = null;
         this.slices = [];
         this.selectedSliceForEdit = 0;
-        this.slicerPlayer = null;
         this.drumSamplerPads = [];
-        this.drumPadPlayers = [];
-        this.selectedDrumPadForEdit = 0;
         this.instrumentSamplerSettings = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
         
+        // Initial connection for an empty effects chain.
         this.input.connect(this.outputNode);
 
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
@@ -63,6 +62,7 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
+        // Type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -71,11 +71,9 @@ export class Track {
             this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
             this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
         } else if (this.type === 'DrumSampler') {
-            // *** FIX: Ensure drumSamplerPads is initialized correctly with objects ***
             this.drumSamplerPads = Array.from({ length: Constants.numDrumSamplerPads || 16 }, (_, i) => 
                 initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null }
             );
-            this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
             this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || {
@@ -94,21 +92,11 @@ export class Track {
         
         if (this.type === 'Synth') {
             this.instrument = new Tone.PolySynth(Tone.Synth, this.synthParams);
-        } else if (this.type === 'InstrumentSampler') {
-            const buffer = this.instrumentSamplerSettings.audioBuffer;
-            const urls = {};
-            if (buffer && buffer.loaded) {
-                const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
-                urls[rootNote] = buffer;
-            }
-            this.instrument = new Tone.Sampler({
-                urls,
-                attack: this.instrumentSamplerSettings.envelope.attack,
-                decay: this.instrumentSamplerSettings.envelope.decay,
-                sustain: this.instrumentSamplerSettings.envelope.sustain,
-                release: this.instrumentSamplerSettings.envelope.release,
-                detune: (this.instrumentSamplerSettings.pitchShift || 0) * 100
-            });
+        } else if (this.type === 'InstrumentSampler' || this.type === 'DrumSampler' || this.type === 'Sampler') {
+             this.instrument = new Tone.Sampler({
+                attack: 0.01,
+                release: 0.1,
+             });
         } else {
             this.instrument = null;
         }
@@ -447,30 +435,6 @@ export class Track {
                 notesToPlay.forEach(note => {
                     if (this.instrument) {
                         this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
-                    } else if (this.type === 'DrumSampler') {
-                        const midi = Tone.Midi(note.pitch).toMidi();
-                        const padIndex = midi - Constants.DRUM_MIDI_START_NOTE;
-                        const padData = this.drumSamplerPads[padIndex];
-                        if (padData && padData.audioBuffer) {
-                            const player = new Tone.Player(padData.audioBuffer).connect(this.input);
-                            player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
-                            player.volume.value = Tone.gainToDb((padData.volume || 0.7) * note.velocity);
-                            player.start(time);
-                            Tone.Transport.scheduleOnce(() => player.dispose(), time + padData.audioBuffer.duration + 0.1);
-                        }
-                    } else if (this.type === 'Sampler') {
-                        if (this.audioBuffer) {
-                            const midi = Tone.Midi(note.pitch).toMidi();
-                            const sliceIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                            const slice = this.slices[sliceIndex];
-                            if (slice && slice.duration > 0) {
-                                const player = new Tone.Player(this.audioBuffer).connect(this.input);
-                                player.playbackRate = Math.pow(2, (slice.pitchShift || 0) / 12);
-                                player.volume.value = Tone.gainToDb((slice.volume || 0.7) * note.velocity);
-                                player.start(time, slice.offset, slice.duration);
-                                Tone.Transport.scheduleOnce(() => player.dispose(), time + slice.duration + 0.1);
-                            }
-                        }
                     }
                 });
             }
