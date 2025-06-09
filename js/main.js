@@ -158,6 +158,13 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             if (titleSpan) titleSpan.textContent = `Inspector: ${track.name}`;
             if (inspectorWindow.taskbarButton) inspectorWindow.taskbarButton.textContent = `Inspector: ${track.name}`;
         }
+        // *** FIX: Add a case to handle drawing the instrument sampler waveform ***
+        if (reason === 'instrumentSamplerLoaded') {
+            const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
+            if (canvas) {
+                drawInstrumentWaveform(track, canvas);
+            }
+        }
     }
     
     const mixerWindow = getWindowByIdState('mixer');
@@ -187,20 +194,15 @@ function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
     const tracks = getTracksState();
 
-    // Clear everything from the transport to ensure a clean slate
     Tone.Transport.cancel(0);
-    // Stop all instrument sequences
     tracks.forEach(track => track.stopSequence?.());
 
     if (newMode === 'timeline') {
-        // Schedule all timeline clips
         scheduleTimelinePlayback();
-    } else { // newMode is 'piano-roll'
-        // Re-enable all piano roll sequences
+    } else { 
         tracks.forEach(track => track.startSequence?.());
     }
 
-    // Update the button text
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     if (playbackModeToggle) {
         const modeText = newMode.charAt(0).toUpperCase() + newMode.slice(1);
