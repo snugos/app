@@ -107,6 +107,12 @@
     --scrollbar-thumb-border: #000000;
     --scrollbar-corner: #000000;
 
+    /* FIX: Add dedicated piano key colors */
+    --piano-key-white-bg: #FFFFFF;
+    --piano-key-black-bg: #4a4a4a;
+    --piano-key-white-text: #000000;
+    --piano-key-black-text: #FFFFFF;
+
     --timeline-track-name-width: 120px;
 }
 
@@ -216,6 +222,12 @@
     --scrollbar-thumb-hover: #000000;
     --scrollbar-thumb-border: #FFFFFF;
     --scrollbar-corner: #FFFFFF;
+    
+    /* FIX: Add dedicated piano key colors */
+    --piano-key-white-bg: #FFFFFF;
+    --piano-key-black-bg: #4a4a4a;
+    --piano-key-white-text: #000000;
+    --piano-key-black-text: #FFFFFF;
 }
 
 /* --- SnugOS General & Desktop Styling --- */
