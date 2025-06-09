@@ -42,15 +42,15 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
                 track.audioBuffer = newAudioBuffer;
                 track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
                 
-                // *** FIX: Add each slice to the Tone.Sampler instrument ***
-                autoSliceSample(track.id, Constants.numSlices); // This creates the slice data
+                autoSliceSample(track.id, Constants.numSlices);
                 track.slices.forEach((slice, index) => {
                     const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + index;
                     const noteName = Tone.Midi(midiNote).toNote();
-                    track.instrument.add(noteName, track.audioBuffer, {
-                        offset: slice.offset,
-                        duration: slice.duration
-                    });
+                    const sliceBuffer = new Tone.Buffer().fromArray(track.audioBuffer.getChannelData(0).slice(
+                        slice.offset * track.audioBuffer.sampleRate,
+                        (slice.offset + slice.duration) * track.audioBuffer.sampleRate
+                    ));
+                    track.instrument.add(noteName, sliceBuffer);
                 });
                 localAppServices.updateTrackUI?.(track.id, 'samplerLoaded');
 
@@ -69,17 +69,15 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
                     localAppServices.updateTrackUI?.(track.id, 'drumPadLoaded', padIndex);
                 }
             } else if (trackTypeHint === 'InstrumentSampler') {
-                if (track.instrumentSamplerSettings.audioBuffer) {
-                    track.instrumentSamplerSettings.audioBuffer.dispose();
-                }
+                track.instrumentSamplerSettings.audioBuffer?.dispose();
                 track.instrumentSamplerSettings.audioBuffer = newAudioBuffer;
                 track.instrumentSamplerSettings.originalFileName = sourceName;
                 track.instrumentSamplerSettings.dbKey = dbKey;
                 track.instrumentSamplerSettings.status = 'loaded';
                 
-                if (typeof track.initializeInstrument === 'function') {
-                    await track.initializeInstrument();
-                }
+                const rootNote = track.instrumentSamplerSettings.rootNote || 'C4';
+                track.instrument.add(rootNote, newAudioBuffer);
+
                 localAppServices.updateTrackUI?.(track.id, 'instrumentSamplerLoaded');
             }
         }
