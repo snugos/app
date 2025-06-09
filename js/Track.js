@@ -27,16 +27,11 @@ export class Track {
         this.input = new Tone.Gain();
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
-        this.outputNode.fan(this.trackMeter); // Connect to meter right away
+        this.outputNode.fan(this.trackMeter);
 
+        // *** FIX: Initialize all properties at the top, before any methods are called. ***
         this.instrument = null;
         this.activeEffects = [];
-        if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
-            initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
-        } else if (this.type !== 'Audio') {
-            this.addEffect('EQ3', null, true);
-        }
-
         this.toneSequence = null;
         this.synthEngineType = null;
         this.synthParams = {};
@@ -44,7 +39,6 @@ export class Track {
         this.activeSequenceId = initialData?.activeSequenceId || null;
         this.inspectorControls = {};
         this.timelineClips = initialData?.timelineClips || [];
-
         this.samplerAudioData = {};
         this.audioBuffer = null;
         this.slices = [];
@@ -57,6 +51,14 @@ export class Track {
         this.toneSampler = null;
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
+        // Now that properties are initialized, it's safe to call methods.
+        if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
+            initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
+        } else if (this.type !== 'Audio') {
+            this.addEffect('EQ3', null, true);
+        }
+
+        // Continue with type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -113,14 +115,11 @@ export class Track {
         this.recreateToneSequence();
     }
     
-    // *** REFACTORED METHOD ***
     rebuildEffectChain() {
-        // Disconnect all sources from the track's input node to start fresh
         this.instrument?.disconnect(this.input);
         this.slicerPlayer?.disconnect(this.input);
         this.drumPadPlayers.forEach(p => p?.disconnect(this.input));
         
-        // Reconnect the appropriate source(s) for the current track type
         if (this.instrument) {
             this.instrument.connect(this.input);
         } else if (this.slicerPlayer) {
@@ -129,8 +128,7 @@ export class Track {
             this.drumPadPlayers.forEach(p => p?.connect(this.input));
         }
 
-        // Now, rebuild the effects chain starting from the main input node
-        this.input.disconnect(); // Disconnect outgoing connections from the input node
+        this.input.disconnect();
         let currentNode = this.input;
         this.activeEffects.forEach(effect => {
             if (effect.toneNode) {
@@ -140,12 +138,10 @@ export class Track {
         });
         currentNode.connect(this.outputNode);
 
-        // Finally, ensure the track's output is connected to the master bus
         const masterBusInput = this.appServices.getMasterBusInputNode?.();
         if (masterBusInput) {
             this.outputNode.connect(masterBusInput);
         } else {
-            // Fallback if master bus isn't ready for some reason
             this.outputNode.toDestination();
         }
     }
@@ -209,7 +205,8 @@ export class Track {
     removeEffect(effectId) {
         const index = this.activeEffects.findIndex(e => e.id === effectId);
         if (index > -1) {
-            this.activeEffects.splice(index, 1)[0];
+            const removedEffect = this.activeEffects.splice(index, 1)[0];
+            removedEffect.toneNode?.dispose();
             this.rebuildEffectChain();
             this.appServices.updateTrackUI?.(this.id, 'effectsChanged');
             this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.name}`);
