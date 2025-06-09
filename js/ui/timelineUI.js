@@ -80,7 +80,7 @@ export function renderTimeline() {
 
             clipsArea.appendChild(clipDiv);
             
-            attachClipDragListeners(clipDiv, track, clip);
+            attachClipEventListeners(clipDiv, track, clip);
         });
 
         trackLane.addEventListener('dragover', (e) => {
@@ -105,7 +105,7 @@ export function renderTimeline() {
     });
 }
 
-function attachClipDragListeners(clipDiv, track, clip) {
+function attachClipEventListeners(clipDiv, track, clip) {
     clipDiv.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
@@ -135,6 +135,22 @@ function attachClipDragListeners(clipDiv, track, clip) {
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     });
+
+    clipDiv.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const menuItems = [
+            { label: `Delete Clip "${clip.name}"`, action: () => track.deleteClip(clip.id) }
+        ];
+        localAppServices.createContextMenu(e, menuItems, localAppServices);
+    });
+
+    if (clip.type === 'midi') {
+        clipDiv.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            localAppServices.openPianoRollForClip(track.id, clip.id);
+        });
+    }
 }
 
 export function updatePlayheadPosition(transportTime) {
