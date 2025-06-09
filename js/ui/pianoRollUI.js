@@ -84,27 +84,24 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
     }
 }
 
-// *** REFACTORED FUNCTION TO HANDLE LOOPING ***
 export function updatePianoRollPlayhead(transportTime) {
     if (openPianoRolls.size === 0) return;
 
     openPianoRolls.forEach(({ playhead, playheadLayer, track }) => {
-        if (playhead && playheadLayer && track && track.toneSequence) {
+        if (playhead && playheadLayer && track && track._sequenceEventId !== null) {
             const activeSequence = track.getActiveSequence();
             if (!activeSequence) return;
 
-            // Get the loop duration in 16th note steps
-            const loopEndSteps = track.toneSequence.loopEnd;
+            const loopEndSteps = activeSequence.length;
             if (typeof loopEndSteps !== 'number' || loopEndSteps === 0) return;
 
-            // Calculate the total loop duration in seconds based on the current BPM
             const secondsPer16thNote = Tone.Time('16n').toSeconds();
             const loopDurationInSeconds = loopEndSteps * secondsPer16thNote;
 
-            // Calculate the current time *within* the loop using the modulo operator
+            if (loopDurationInSeconds === 0) return;
+
             const loopTime = transportTime % loopDurationInSeconds;
 
-            // Calculate the visual position based on the looped time
             const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
             const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
             const newX = (loopTime * pixelsPerSecond) + keyWidth;
@@ -135,8 +132,8 @@ function renderVelocityPane(velocityPane, track) {
     notesGrid.style.height = '100%';
     notesGrid.style.display = 'inline-block';
     notesGrid.className = 'relative';
-    activeSequence.data.forEach((row, pitchIndex) => {
-        row.forEach((note, timeStep) => {
+    activeSequence.data.forEach((pitchRow, pitchIndex) => {
+        pitchRow.forEach((note, timeStep) => {
             if (note) {
                 const velocityBar = document.createElement('div');
                 velocityBar.className = 'velocity-bar absolute bottom-0 cursor-n-resize';
@@ -185,7 +182,7 @@ function drawPianoKeys(layer, track, colors, numRows) {
     if (isSampler) {
         for (let i = 0; i < numRows; i++) {
             const y = i * noteHeight;
-            let labelText = `Pad ${i + 1}`; 
+            let labelText = `Pad ${i + 1}`;
             const padIndex = i;
 
             if (track.type === 'DrumSampler') {
@@ -523,4 +520,17 @@ function attachPianoRollListeners(pianoRoll) {
         const velocityPane = document.getElementById(`velocityPaneContainer-${track.id}`);
         createPianoRollStage(containerElement, velocityPane, track);
     });
+
+    const dragHandle = document.getElementById(`piano-roll-drag-handle-${track.id}`);
+    if (dragHandle) {
+        dragHandle.addEventListener('dragstart', (e) => {
+            const dragData = {
+                type: 'piano-roll-sequence',
+                sourceTrackId: track.id,
+                sequenceId: activeSequence.id,
+            };
+            e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+            e.dataTransfer.effectAllowed = 'copy';
+        });
+    }
 }
