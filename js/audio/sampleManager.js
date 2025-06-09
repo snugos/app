@@ -36,46 +36,53 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
         
         const newAudioBuffer = await new Tone.Buffer().load(objectURLForTone);
 
-        if (trackTypeHint === 'Sampler') {
-            track.audioBuffer?.dispose();
-            track.audioBuffer = newAudioBuffer;
-            track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
-            if (track.audioBuffer.loaded && (!track.slices || track.slices.every(s => s.duration === 0))) {
-                autoSliceSample(track.id, Constants.numSlices);
-            }
-            localAppServices.updateTrackUI?.(track.id, 'samplerLoaded');
-
-        } else if (trackTypeHint === 'DrumSampler' && padIndex !== null) {
-            const padData = track.drumSamplerPads[padIndex];
-            if (padData) {
-                padData.audioBuffer?.dispose();
-
-                // *** FIX: Store the audio buffer directly on the pad data object ***
-                padData.audioBuffer = newAudioBuffer;
+        // *** REFACTORED to load all samples into the track's Tone.Sampler instrument ***
+        if (track.instrument && typeof track.instrument.add === 'function') {
+            if (trackTypeHint === 'Sampler') {
+                track.audioBuffer?.dispose();
+                track.audioBuffer = newAudioBuffer;
+                track.samplerAudioData = { fileName: sourceName, dbKey: dbKey, status: 'loaded' };
+                // Add all 16 slices to the sampler instrument
+                for (let i = 0; i < Constants.NUM_SAMPLER_NOTES; i++) {
+                    const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + i;
+                    const noteName = Tone.Midi(midiNote).toNote();
+                    track.instrument.add(noteName, newAudioBuffer, () => {
+                        localAppServices.updateTrackUI?.(track.id, 'samplerLoaded');
+                    });
+                }
+            } else if (trackTypeHint === 'DrumSampler' && padIndex !== null) {
+                const padData = track.drumSamplerPads[padIndex];
+                if (padData) {
+                    padData.audioBuffer?.dispose();
+                    padData.audioBuffer = newAudioBuffer;
+                    padData.originalFileName = sourceName;
+                    padData.dbKey = dbKey;
+                    padData.status = 'loaded';
+                    
+                    const midiNote = Constants.DRUM_MIDI_START_NOTE + padIndex;
+                    const noteName = Tone.Midi(midiNote).toNote();
+                    track.instrument.add(noteName, newAudioBuffer, () => {
+                        localAppServices.updateTrackUI?.(track.id, 'drumPadLoaded', padIndex);
+                    });
+                }
+            } else if (trackTypeHint === 'InstrumentSampler') {
+                // This logic remains the same as it was already using Tone.Sampler correctly
+                if (track.instrumentSamplerSettings.audioBuffer) {
+                    track.instrumentSamplerSettings.audioBuffer.dispose();
+                }
+                track.instrumentSamplerSettings.audioBuffer = newAudioBuffer;
+                track.instrumentSamplerSettings.originalFileName = sourceName;
+                track.instrumentSamplerSettings.dbKey = dbKey;
+                track.instrumentSamplerSettings.status = 'loaded';
                 
-                padData.originalFileName = sourceName;
-                padData.dbKey = dbKey;
-                padData.status = 'loaded';
+                if (typeof track.initializeInstrument === 'function') {
+                    // Re-initialize to load the new buffer into the Sampler
+                    await track.initializeInstrument();
+                }
+                localAppServices.updateTrackUI?.(track.id, 'instrumentSamplerLoaded');
             }
-            localAppServices.updateTrackUI?.(track.id, 'drumPadLoaded', padIndex);
-        
-        } else if (trackTypeHint === 'InstrumentSampler') {
-            if (track.instrumentSamplerSettings.audioBuffer) {
-                track.instrumentSamplerSettings.audioBuffer.dispose();
-            }
-            track.instrumentSamplerSettings.audioBuffer = newAudioBuffer;
-            track.instrumentSamplerSettings.originalFileName = sourceName;
-            track.instrumentSamplerSettings.dbKey = dbKey;
-            track.instrumentSamplerSettings.status = 'loaded';
-            
-            if (typeof track.initializeInstrument === 'function') {
-                await track.initializeInstrument();
-            }
-            localAppServices.updateTrackUI?.(track.id, 'instrumentSamplerLoaded');
         }
         
-        track.rebuildEffectChain();
-
     } catch (error) {
         console.error(`Error loading sample "${sourceName}":`, error);
         localAppServices.showNotification?.(`Error loading sample: ${error.message}`, 4000);
@@ -83,6 +90,8 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
         if (objectURLForTone) URL.revokeObjectURL(objectURLForTone);
     }
 }
+
+// ... (The rest of the file remains the same) ...
 
 export async function loadSampleFile(event, trackId, trackTypeHint) {
     const file = event.target.files[0];
