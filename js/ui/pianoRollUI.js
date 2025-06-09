@@ -84,13 +84,31 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
     }
 }
 
+// *** REFACTORED FUNCTION TO HANDLE LOOPING ***
 export function updatePianoRollPlayhead(transportTime) {
     if (openPianoRolls.size === 0) return;
-    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
-    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
-    const newX = transportTime * pixelsPerSecond + keyWidth;
-    openPianoRolls.forEach(({ playhead, playheadLayer }) => {
-        if (playhead && playheadLayer) {
+
+    openPianoRolls.forEach(({ playhead, playheadLayer, track }) => {
+        if (playhead && playheadLayer && track && track.toneSequence) {
+            const activeSequence = track.getActiveSequence();
+            if (!activeSequence) return;
+
+            // Get the loop duration in 16th note steps
+            const loopEndSteps = track.toneSequence.loopEnd;
+            if (typeof loopEndSteps !== 'number' || loopEndSteps === 0) return;
+
+            // Calculate the total loop duration in seconds based on the current BPM
+            const secondsPer16thNote = Tone.Time('16n').toSeconds();
+            const loopDurationInSeconds = loopEndSteps * secondsPer16thNote;
+
+            // Calculate the current time *within* the loop using the modulo operator
+            const loopTime = transportTime % loopDurationInSeconds;
+
+            // Calculate the visual position based on the looped time
+            const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+            const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+            const newX = (loopTime * pixelsPerSecond) + keyWidth;
+
             playhead.x(newX);
             playheadLayer.batchDraw();
         }
@@ -167,7 +185,7 @@ function drawPianoKeys(layer, track, colors, numRows) {
     if (isSampler) {
         for (let i = 0; i < numRows; i++) {
             const y = i * noteHeight;
-            let labelText = `Pad ${i + 1}`;
+            let labelText = `Pad ${i + 1}`; 
             const padIndex = i;
 
             if (track.type === 'DrumSampler') {
@@ -268,7 +286,6 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
 
     sequenceData.forEach((pitchRow, pitchIndex) => {
-        // *** FIX: Use the correct variable 'pitchRow' ***
         pitchRow.forEach((note, timeStep) => {
             if (note) {
                 let y;
