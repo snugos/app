@@ -15,10 +15,14 @@ function getThemeColors() {
         noteFill: rootStyle.getPropertyValue('--accent-sequencer-step').trim() || '#00BFFF',
         noteStroke: rootStyle.getPropertyValue('--accent-sequencer-step-border').trim() || '#0000FF',
         playhead: rootStyle.getPropertyValue('--accent-playhead').trim() || '#FF0000',
-        whiteKeyBg: rootStyle.getPropertyValue('--bg-primary').trim(),
-        blackKeyBg: rootStyle.getPropertyValue('--text-primary').trim(),
-        whiteKeyText: rootStyle.getPropertyValue('--text-primary').trim(),
-        blackKeyText: rootStyle.getPropertyValue('--bg-primary').trim(),
+        
+        // --- FIX: Use dedicated piano key variables ---
+        whiteKeyBg: rootStyle.getPropertyValue('--piano-key-white-bg').trim() || '#FFFFFF',
+        blackKeyBg: rootStyle.getPropertyValue('--piano-key-black-bg').trim() || '#4a4a4a',
+        whiteKeyText: rootStyle.getPropertyValue('--piano-key-white-text').trim() || '#000000',
+        blackKeyText: rootStyle.getPropertyValue('--piano-key-black-text').trim() || '#FFFFFF',
+        // --- End of FIX ---
+
         keyBorder: rootStyle.getPropertyValue('--border-secondary').trim(),
     };
 }
@@ -46,7 +50,7 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
         return;
     }
     track.activeSequenceId = activeSequence.id;
-
+    
     const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
 
     const contentContainer = document.createElement('div');
@@ -67,7 +71,7 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
         <div id="velocityPaneContainer-${trackId}" class="flex-shrink-0 w-full h-1/5 bg-gray-200 dark:bg-gray-800 border-t-2 border-gray-400 dark:border-gray-600 overflow-x-auto overflow-y-hidden"></div>
     `;
 
-    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, {
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, { 
         width: 800, height: 500, minWidth: 500, minHeight: 300, initialContentKey: windowId,
         onCloseCallback: () => {
             openPianoRolls.delete(trackId);
@@ -229,7 +233,7 @@ function drawGrid(layer, stageWidth, stageHeight, numSteps, colors) {
 }
 
 function redrawNotes(noteLayer, track, colors, selectedNotes) {
-    noteLayer.destroyChildren();
+    noteLayer.destroyChildren(); 
     const activeSequence = track.getActiveSequence();
     if (!activeSequence) {
         noteLayer.batchDraw();
@@ -272,7 +276,7 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
                     if(stage) stage.container().style.cursor = 'default';
                 });
                 noteRect.on('mousedown', (e) => {
-                    if (e.evt.button !== 0) return;
+                    if (e.evt.button !== 0) return; 
                     const stage = e.target.getStage();
                     const mousePos = stage.getPointerPosition();
                     const noteEdge = e.target.x() + e.target.width() - 5;
@@ -340,14 +344,14 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors);
     drawPianoKeys(keyLayer, stageHeight, track, colors);
     redrawNotes(noteLayer, track, colors, selectedNotes);
-
+    
     const playhead = new Konva.Line({ points: [0, 0, 0, stageHeight], stroke: colors.playhead, strokeWidth: 1.5, listening: false });
     playheadLayer.add(playhead);
     pianoRoll.playhead = playhead;
-
+    
     keyLayer.moveToTop();
     playheadLayer.moveToTop();
-
+    
     renderVelocityPane(velocityPane, track);
     stage.batchDraw();
 
@@ -428,7 +432,7 @@ function attachPianoRollListeners(pianoRoll) {
             if (menuItems.length > 0) menuItems.push({ separator: true });
             menuItems.push({ label: 'Duplicate Sequence', action: () => track.duplicateSequence(activeSequence.id) });
             menuItems.push({ label: 'Clear All Notes', action: () => track.clearSequence(activeSequence.id) });
-
+            
             if (menuItems.length > 0) {
                 localAppServices.createContextMenu(e.evt, menuItems, localAppServices);
             }
@@ -436,10 +440,10 @@ function attachPianoRollListeners(pianoRoll) {
     });
 
     stage.on('click tap', function (e) {
-        if (e.evt.button !== 0) return;
+        if (e.evt.button !== 0) return; 
 
         lastActivePianoRollTrackId = track.id;
-
+        
         if (e.target.getParent() === keyLayer) {
             return;
         }
@@ -450,12 +454,12 @@ function attachPianoRollListeners(pianoRoll) {
 
         const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
         const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
-
+        
         const currentActiveSequence = track.getActiveSequence();
         if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) {
             return;
         }
-
+        
         const noteExists = currentActiveSequence.data[pitchIndex][timeStep];
 
         if (noteExists) {
@@ -468,7 +472,7 @@ function attachPianoRollListeners(pianoRoll) {
         redrawNotes(noteLayer, track, colors, selectedNotes);
         renderVelocityPane(velocityPane, track);
     });
-
+    
     const lengthInput = document.getElementById(`sequenceLengthInput-${track.id}`);
     lengthInput?.addEventListener('change', (e) => {
         const barValue = parseFloat(e.target.value);
@@ -478,11 +482,9 @@ function attachPianoRollListeners(pianoRoll) {
         }
         const newLengthInSteps = Math.round(barValue * Constants.STEPS_PER_BAR);
         track.setSequenceLength(activeSequence.id, newLengthInSteps);
-
-        // *** FIX STARTS HERE ***
+        
         const containerElement = document.getElementById(`pianoRollKonvaContainer-${track.id}`);
         const velocityPane = document.getElementById(`velocityPaneContainer-${track.id}`);
         createPianoRollStage(containerElement, velocityPane, track);
-        // *** FIX ENDS HERE ***
     });
 }
