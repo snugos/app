@@ -159,7 +159,6 @@ export function attachGlobalControlEvents(uiCache) {
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
-    // *** REFACTORED FUNCTION to correctly handle pause/resume ***
     const handlePlayPause = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
@@ -170,14 +169,11 @@ export function attachGlobalControlEvents(uiCache) {
         const transportState = Tone.Transport.state;
 
         if (transportState === 'started') {
-            // If it's currently playing, pause it.
             Tone.Transport.pause();
         } else {
-            // If it's starting from a fully stopped state, reschedule events.
             if (transportState === 'stopped') {
                 localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             }
-            // For both 'stopped' and 'paused' states, .start() will correctly begin or resume.
             Tone.Transport.start();
         }
     };
@@ -191,7 +187,6 @@ export function attachGlobalControlEvents(uiCache) {
 
         if (Tone.Transport.state === 'started') {
             Tone.Transport.stop();
-            Tone.Transport.position = 0;
         } else {
             localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             Tone.Transport.start();
@@ -201,7 +196,6 @@ export function attachGlobalControlEvents(uiCache) {
     const handleStop = () => {
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.stop();
-            Tone.Transport.position = 0;
         }
     };
 
@@ -277,6 +271,7 @@ export function attachGlobalControlEvents(uiCache) {
         localAppServices.setCurrentUserThemePreference?.(newTheme);
     });
 
+    // *** REFACTORED to use the unified instrument model ***
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
             return;
@@ -291,8 +286,8 @@ export function attachGlobalControlEvents(uiCache) {
             
             if (armedTrack && armedTrack.instrument) {
                 const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                const frequency = Tone.Midi(noteNumber).toFrequency();
-                armedTrack.instrument.triggerAttack(frequency, Tone.now(), 0.75);
+                const noteName = Tone.Midi(noteNumber).toNote();
+                armedTrack.instrument.triggerAttack(noteName, Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
             }
         } else {
@@ -371,8 +366,8 @@ export function attachGlobalControlEvents(uiCache) {
 
             if (armedTrack && armedTrack.instrument) {
                 const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                const frequency = Tone.Midi(noteNumber).toFrequency();
-                armedTrack.instrument.triggerRelease(frequency, Tone.now());
+                const noteName = Tone.Midi(noteNumber).toNote();
+                armedTrack.instrument.triggerRelease(noteName, Tone.now());
                 currentlyPressedKeys.delete(key);
             }
         }
@@ -494,16 +489,20 @@ export function selectMIDIInput(event) {
     }
 }
 
+// *** REFACTORED to use the persistent instrument for all track types ***
 function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
     const commandType = command & 0xF0;
+    const noteOn = commandType === 0x90 && velocity > 0;
+    const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
 
+    const armedTrackId = getArmedTrackId();
+    if (armedTrackId === null) return;
+    const armedTrack = getTrackById(armedTrackId);
+    if (!armedTrack || !armedTrack.instrument) return;
+
+    // Handle Sustain Pedal
     if (commandType === 0xB0 && noteNumber === 64) {
-        const armedTrackId = getArmedTrackId();
-        if (armedTrackId === null) return;
-        const armedTrack = getTrackById(armedTrackId);
-        if (!armedTrack?.instrument) return;
-
         if (velocity > 63) {
             isSustainPedalDown = true;
         } else {
@@ -515,15 +514,30 @@ function onMIDIMessage(message) {
         }
         return;
     }
-    
-    const noteOn = commandType === 0x90 && velocity > 0;
-    const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
 
+    // Handle Note On/Off for live playing
+    if (noteOn || noteOff) {
+        const noteName = Tone.Midi(noteNumber).toNote();
+        
+        if (noteOn) {
+            if (sustainedNotes.has(noteNumber)) {
+                armedTrack.instrument.triggerRelease(sustainedNotes.get(noteName), Tone.now());
+                sustainedNotes.delete(noteNumber);
+            }
+            armedTrack.instrument.triggerAttack(noteName, Tone.now(), velocity / 127);
+        } else { // Note Off
+            if (isSustainPedalDown) {
+                sustainedNotes.set(noteNumber, noteName);
+            } else {
+                armedTrack.instrument.triggerRelease(noteName, Tone.now());
+            }
+        }
+    }
+
+    // Handle recording MIDI notes to the active sequence
     if (noteOn && isTrackRecordingState()) {
-        const recordingTrackId = getArmedTrackId();
-        const track = getTrackById(recordingTrackId);
-
-        if (track && track.type !== 'Audio') {
+        const track = armedTrack; // armedTrack is the track we're recording to
+        if (track.type !== 'Audio') {
             const activeSequence = track.getActiveSequence();
             if (activeSequence) {
                 const ticksPerStep = Tone.Transport.PPQ / 4;
@@ -532,7 +546,6 @@ function onMIDIMessage(message) {
 
                 if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
                     track.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
-                    
                     const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
                     if (pianoRollWindow && !pianoRollWindow.isMinimized) {
                        if(localAppServices.openPianoRollWindow) {
@@ -542,42 +555,6 @@ function onMIDIMessage(message) {
                     }
                 }
             }
-        }
-    }
-    
-    const armedTrackId = getArmedTrackId();
-    if (armedTrackId === null) return;
-    const armedTrack = getTrackById(armedTrackId);
-    if (!armedTrack) return;
-
-    if (!noteOn && !noteOff) return;
-
-    if (armedTrack.type === 'Sampler' || armedTrack.type === 'DrumSampler') {
-        const startIndex = armedTrack.type === 'DrumSampler' ? Constants.DRUM_MIDI_START_NOTE : Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-        const numSamples = armedTrack.type === 'DrumSampler' ? Constants.numDrumSamplerPads : Constants.numSlices;
-        const sampleIndex = noteNumber - startIndex;
-        if (sampleIndex >= 0 && sampleIndex < numSamples && noteOn) {
-            const playbackFn = armedTrack.type === 'DrumSampler' ? localAppServices.playDrumSamplerPadPreview : localAppServices.playSlicePreview;
-            playbackFn?.(armedTrack.id, sampleIndex, velocity / 127);
-        }
-        return;
-    }
-
-    if (!armedTrack.instrument) return;
-
-    const noteValue = armedTrack.type === 'InstrumentSampler' ? Tone.Midi(noteNumber).toNote() : Tone.Midi(noteNumber).toFrequency();
-
-    if (noteOn) {
-        if (sustainedNotes.has(noteNumber)) {
-            armedTrack.instrument.triggerRelease(sustainedNotes.get(noteNumber), Tone.now());
-            sustainedNotes.delete(noteNumber);
-        }
-        armedTrack.instrument.triggerAttack(noteValue, Tone.now(), velocity / 127);
-    } else if (noteOff) {
-        if (isSustainPedalDown) {
-            sustainedNotes.set(noteNumber, noteValue);
-        } else {
-            armedTrack.instrument.triggerRelease(noteValue, Tone.now());
         }
     }
 }
