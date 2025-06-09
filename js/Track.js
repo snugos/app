@@ -444,18 +444,13 @@ export class Track {
             }
             sequenceEvents.push(notesAtStep.length > 0 ? notesAtStep : null);
         }
-        
-        // --- DEBUGGING: Log the generated events array ---
-        console.log(`[Track ${this.id}] Recreating sequence. Events array:`, sequenceEvents.slice(0, 16));
-
 
         const sequenceCallback = (time, value) => {
-            // --- DEBUGGING: Log the value received by the callback ---
-            console.log(`[Track ${this.id}] Sequence Tick - Time: ${time}, Value:`, value);
-            
-            // This is the robust check
-            if (Array.isArray(value)) {
-                value.forEach(note => {
+            // This is the robust check to handle both single notes and chords.
+            const notesToPlay = Array.isArray(value) ? value : (value ? [value] : []);
+
+            if (notesToPlay.length > 0) {
+                notesToPlay.forEach(note => {
                     if (this.instrument) {
                         this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
                     } else if (this.type === 'DrumSampler') {
