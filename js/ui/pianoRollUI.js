@@ -159,87 +159,89 @@ function renderVelocityPane(velocityPane, track) {
     }
 }
 
-function drawPianoKeys(layer, track, colors) {
+function drawPianoKeys(layer, track, colors, numRows) {
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
 
-    Constants.SYNTH_PITCHES.forEach((noteName, index) => {
-        const y = index * noteHeight;
-        const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - index;
-        const isBlackKey = noteName.includes('#') || noteName.includes('b');
+    if (isSampler) {
+        for (let i = 0; i < numRows; i++) {
+            const y = i * noteHeight;
+            let labelText = `Pad ${i + 1}`;
+            const padIndex = i;
 
-        let keyVisible = true;
-        let labelText = noteName;
-        let isSamplerKey = false;
-        
-        if (isSampler) {
-            const samplerStartNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-            const numSamplerNotes = Constants.NUM_SAMPLER_NOTES;
-            
-            if (midiNote >= samplerStartNote && midiNote < samplerStartNote + numSamplerNotes) {
-                isSamplerKey = true;
-                const padIndex = midiNote - samplerStartNote;
-
-                if (track.type === 'DrumSampler') {
-                    const padData = track.drumSamplerPads?.[padIndex];
-                    labelText = padData?.originalFileName || `Pad ${padIndex + 1}`;
-                } else { // 'Sampler' type (slicer)
-                    labelText = `Slice ${padIndex + 1}`;
+            if (track.type === 'DrumSampler') {
+                const padData = track.drumSamplerPads?.[padIndex];
+                if (padData && padData.originalFileName) {
+                    labelText = padData.originalFileName;
                 }
-            } else {
-                keyVisible = false;
+            } else { 
+                 labelText = `Slice ${padIndex + 1}`;
             }
-        }
-        
-        if (!keyVisible) {
-            return;
-        }
+            
+            const keyRect = new Konva.Rect({
+                x: 0, y, width: keyWidth, height: noteHeight,
+                fill: colors.whiteKeyBg,
+                stroke: colors.keyBorder, strokeWidth: 1,
+            });
+            layer.add(keyRect);
 
-        const keyRect = new Konva.Rect({
-            x: 0, y: y, width: keyWidth, height: noteHeight,
-            fill: isSamplerKey ? colors.whiteKeyBg : (isBlackKey ? colors.blackKeyBg : colors.whiteKeyBg),
-            stroke: colors.keyBorder,
-            strokeWidth: 1,
+            const keyText = new Konva.Text({
+                x: 5, y: y + noteHeight / 2 - 7, text: labelText,
+                fontSize: 9, fontFamily: "'Roboto', sans-serif",
+                fill: colors.whiteKeyText, listening: false,
+                width: keyWidth - 10, ellipsis: true,
+            });
+            layer.add(keyText);
+        }
+    } else {
+        Constants.SYNTH_PITCHES.forEach((noteName, index) => {
+            const isBlackKey = noteName.includes('#') || noteName.includes('b');
+            const y = index * noteHeight;
+            const keyRect = new Konva.Rect({
+                x: 0, y, width: keyWidth, height: noteHeight,
+                fill: isBlackKey ? colors.blackKeyBg : colors.whiteKeyBg,
+                stroke: colors.keyBorder, strokeWidth: 1,
+            });
+            layer.add(keyRect);
+            const keyText = new Konva.Text({
+                x: isBlackKey ? 15 : 5, y: y + noteHeight / 2 - 7, text: noteName,
+                fontSize: 12, fontFamily: "'Roboto', sans-serif",
+                fill: isBlackKey ? colors.blackKeyText : colors.whiteKeyText,
+                listening: false,
+            });
+            layer.add(keyText);
         });
-        layer.add(keyRect);
-
-        const keyText = new Konva.Text({
-            x: 5, y: y + noteHeight / 2 - 7, text: labelText,
-            fontSize: isSamplerKey ? 9 : 12,
-            fontFamily: "'Roboto', sans-serif",
-            fill: isSamplerKey ? colors.whiteKeyText : (isBlackKey ? colors.blackKeyText : colors.whiteKeyText),
-            listening: false,
-            width: keyWidth - 10,
-            ellipsis: true,
-        });
-        layer.add(keyText);
-    });
+    }
 }
 
-function drawGrid(layer, stageWidth, stageHeight, numSteps, colors) {
+function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows) {
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
-    const numPitches = Constants.SYNTH_PITCHES.length;
+    
     layer.add(new Konva.Rect({
-        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight, fill: colors.gridBgLight, name: 'grid-background'
+        x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight,
+        fill: colors.gridBgLight, name: 'grid-background'
     }));
-    for (let i = 0; i < numPitches; i++) {
-        const isBlackKey = Constants.SYNTH_PITCHES[i]?.includes('#') || false;
-        if (isBlackKey) {
-            layer.add(new Konva.Rect({
-                x: keyWidth, y: i * noteHeight,
-                width: stageWidth - keyWidth, height: noteHeight,
-                fill: colors.gridBgDark,
-            }));
+    
+    for (let i = 0; i < numRows; i++) {
+        if (!isSampler) {
+            const isBlackKey = Constants.SYNTH_PITCHES[i]?.includes('#') || false;
+            if (isBlackKey) {
+                layer.add(new Konva.Rect({
+                    x: keyWidth, y: i * noteHeight,
+                    width: stageWidth - keyWidth, height: noteHeight,
+                    fill: colors.gridBgDark,
+                }));
+            }
         }
         layer.add(new Konva.Line({
             points: [keyWidth, (i + 1) * noteHeight, noteWidth * numSteps + keyWidth, (i + 1) * noteHeight],
-            stroke: colors.gridLine,
-            strokeWidth: 0.5,
+            stroke: colors.gridLine, strokeWidth: 0.5,
         }));
     }
+    
     for (let i = 0; i <= numSteps; i++) {
         const isBarLine = i % 16 === 0;
         const isBeatLine = i % 4 === 0;
@@ -258,20 +260,38 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
         noteLayer.batchDraw();
         return;
     }
+    
+    const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
     const sequenceData = activeSequence.data;
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
 
     sequenceData.forEach((pitchRow, pitchIndex) => {
-        // *** FIX: The variable name was 'row' but should be 'pitchRow' ***
+        // *** FIX: Use the correct variable 'pitchRow' ***
         pitchRow.forEach((note, timeStep) => {
             if (note) {
+                let y;
+                let isVisible = true;
+
+                if (isSampler) {
+                    const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - pitchIndex;
+                    const padIndex = midiNote - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+                    if (padIndex < 0 || padIndex >= Constants.NUM_SAMPLER_NOTES) {
+                        isVisible = false;
+                    }
+                    y = padIndex * noteHeight;
+                } else {
+                    y = pitchIndex * noteHeight;
+                }
+
+                if (!isVisible) return;
+
                 const noteId = `${pitchIndex}-${timeStep}`;
                 const isSelected = selectedNotes.has(noteId);
                 const noteRect = new Konva.Rect({
                     x: timeStep * noteWidth + keyWidth + 1,
-                    y: pitchIndex * noteHeight + 1,
+                    y: y + 1,
                     width: noteWidth * (note.duration || 1) - 2,
                     height: noteHeight - 2,
                     fill: colors.noteFill,
@@ -281,55 +301,7 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
                     cornerRadius: 2,
                     id: noteId,
                 });
-
-                noteRect.on('mouseenter', (e) => {
-                    const stage = e.target.getStage();
-                    if (!stage) return;
-                    const mousePos = stage.getPointerPosition();
-                    const noteEdge = e.target.x() + e.target.width() - 5;
-                    if(mousePos.x > noteEdge) {
-                        stage.container().style.cursor = 'ew-resize';
-                    } else {
-                        stage.container().style.cursor = 'pointer';
-                    }
-                });
-                noteRect.on('mouseleave', (e) => {
-                    const stage = e.target.getStage();
-                    if (stage) stage.container().style.cursor = 'default';
-                });
-                noteRect.on('mousedown', (e) => {
-                    if (e.evt.button !== 0) return; 
-                    const stage = e.target.getStage();
-                    if (!stage) return;
-                    const mousePos = stage.getPointerPosition();
-                    const noteEdge = e.target.x() + e.target.width() - 5;
-                    if (mousePos.x > noteEdge) {
-                        e.cancelBubble = true;
-                        const originalWidth = e.target.width();
-                        const startX = mousePos.x;
-                        const originalDuration = note.duration || 1;
-                        function onMouseMove() {
-                            const currentX = stage.getPointerPosition().x;
-                            const dx = currentX - startX;
-                            const newWidth = originalWidth + dx;
-                            const newDuration = Math.max(1, Math.round(newWidth / noteWidth));
-                            e.target.width((newDuration * noteWidth) - 2);
-                            noteLayer.batchDraw();
-                        }
-                        function onMouseUp() {
-                            document.removeEventListener('mousemove', onMouseMove);
-                            document.removeEventListener('mouseup', onMouseUp);
-                            stage.container().style.cursor = 'default';
-                            const finalDuration = Math.max(1, Math.round(e.target.width() / noteWidth));
-                            if (finalDuration !== originalDuration) {
-                                track.setNoteDuration(activeSequence.id, pitchIndex, timeStep, finalDuration);
-                                localAppServices.captureStateForUndo?.(`Set note duration on ${track.name}`);
-                            }
-                        }
-                        document.addEventListener('mousemove', onMouseMove);
-                        document.addEventListener('mouseup', onMouseUp);
-                    }
-                });
+                
                 noteLayer.add(noteRect);
             }
         });
@@ -347,11 +319,15 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     const colors = getThemeColors();
     const numSteps = activeSequence.length;
     
+    const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
+    const numRows = isSampler ? Constants.NUM_SAMPLER_NOTES : Constants.SYNTH_PITCHES.length;
+    
     const stageWidth = (Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps) + Constants.PIANO_ROLL_KEY_WIDTH;
-    const stageHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * Constants.SYNTH_PITCHES.length;
+    const stageHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * numRows;
 
     containerElement.innerHTML = '';
     const stage = new Konva.Stage({ container: containerElement, width: stageWidth, height: stageHeight });
+    
     const gridLayer = new Konva.Layer();
     stage.add(gridLayer);
     const noteLayer = new Konva.Layer();
@@ -362,12 +338,13 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     stage.add(playheadLayer);
     const keyLayer = new Konva.Layer();
     stage.add(keyLayer);
+
     const selectedNotes = new Set();
-    const pianoRoll = { stage, gridLayer, noteLayer, keyLayer, playheadLayer, track, selectedNotes, velocityPane, colors };
+    const pianoRoll = { stage, gridLayer, noteLayer, keyLayer, playheadLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows };
     openPianoRolls.set(track.id, pianoRoll);
 
-    drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors);
-    drawPianoKeys(keyLayer, track, colors);
+    drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows);
+    drawPianoKeys(keyLayer, track, colors, numRows);
     redrawNotes(noteLayer, track, colors, selectedNotes);
     
     const playhead = new Konva.Line({ points: [0, 0, 0, stageHeight], stroke: colors.playhead, strokeWidth: 1.5, listening: false });
@@ -384,7 +361,7 @@ function createPianoRollStage(containerElement, velocityPane, track) {
 }
 
 function attachPianoRollListeners(pianoRoll) {
-    const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors } = pianoRoll;
+    const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors, isSampler } = pianoRoll;
     const activeSequence = track.getActiveSequence();
     const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false });
     stage.getLayers().find(l => l !== gridLayer && l !== noteLayer && l !== keyLayer).add(selectionRect);
@@ -447,7 +424,16 @@ function attachPianoRollListeners(pianoRoll) {
                     action: () => {
                         const pos = stage.getPointerPosition();
                         const pasteTimeStep = Math.floor((pos.x - Constants.PIANO_ROLL_KEY_WIDTH) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
-                        const pastePitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+                        const visualRow = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+                        
+                        let pastePitchIndex;
+                        if (isSampler) {
+                            const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + visualRow;
+                            pastePitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - midiNote;
+                        } else {
+                            pastePitchIndex = visualRow;
+                        }
+
                         track.pasteNotesFromClipboard(activeSequence.id, pastePitchIndex, pasteTimeStep);
                         redrawNotes(noteLayer, track, colors, selectedNotes);
                         renderVelocityPane(velocityPane, track);
@@ -478,8 +464,16 @@ function attachPianoRollListeners(pianoRoll) {
         if (pos.x < keyWidth) return;
 
         const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
-        const pitchIndex = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
+        const visualRow = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
         
+        let pitchIndex;
+        if (isSampler) {
+            const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + visualRow;
+            pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - midiNote;
+        } else {
+            pitchIndex = visualRow;
+        }
+
         const currentActiveSequence = track.getActiveSequence();
         if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) {
             return;
