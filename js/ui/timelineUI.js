@@ -1,145 +1,127 @@
-// js/audio/playback.js - Unified Playback Engine
-
+// js/ui/timelineUI.js - Timeline UI Management
+import { SnugWindow } from '../SnugWindow.js';
+import { showNotification, createContextMenu } from '../utils.js';
 import * as Constants from '../constants.js';
 
 let localAppServices = {};
-let scheduledParts = []; // Keep track of scheduled MIDI parts to dispose of them
 
-export function initializePlayback(appServices) {
-    localAppServices = appServices;
+// ADD the 'export' keyword to this function
+export function initializeTimelineUI(appServicesFromMain) {
+    localAppServices = appServicesFromMain || {};
+    console.log("[TimelineUI] Initialized with appServices keys:", Object.keys(localAppServices));
 }
 
-function clearScheduledParts() {
-    scheduledParts.forEach(part => part.dispose());
-    scheduledParts = [];
+export function openTimelineWindow(savedState = null) {
+    const windowId = 'timeline';
+    const getOpenWindows = localAppServices.getOpenWindows || (() => new Map());
+    const openWindows = getOpenWindows();
+
+    if (openWindows.has(windowId) && !savedState) {
+        const winInstance = openWindows.get(windowId);
+        if (winInstance && typeof winInstance.restore === 'function') {
+            winInstance.restore();
+        }
+        return winInstance;
+    }
+
+    const contentHTML = `
+        <div id="timeline-container" class="h-full w-full overflow-hidden relative flex flex-col bg-white dark:bg-black">
+            <div id="timeline-header" class="h-5 bg-white dark:bg-black border-b border-black dark:border-white relative overflow-hidden flex-shrink-0">
+                <div id="timeline-ruler" class="absolute top-0 left-0 h-full" style="width: 4000px;"></div>
+            </div>
+            <div id="timeline-tracks-and-playhead-container" class="flex-grow relative overflow-auto">
+                <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-red-500 z-20 pointer-events-none"></div>
+                <div id="timeline-tracks-area" class="relative h-full"></div>
+            </div>
+        </div>
+    `;
+    
+    const timelineOptions = { 
+        width: Math.min(1200, (document.getElementById('desktop')?.offsetWidth || 1200) - 40), 
+        height: 250, 
+        minWidth: 400, 
+        minHeight: 150 
+    };
+    if (savedState) Object.assign(timelineOptions, savedState);
+
+    const timelineWindow = localAppServices.createWindow(windowId, 'Timeline', contentHTML, timelineOptions);
+    
+    if (timelineWindow?.element) {
+        renderTimeline();
+    }
 }
 
-// This is our new main playback function
-export function scheduleUnifiedPlayback() {
-    Tone.Transport.cancel(0); 
-    clearScheduledParts();
+export function renderTimeline() {
+    const timelineWindow = localAppServices.getWindowById?.('timeline');
+    if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) return;
 
+    const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
+    if (!tracksArea) return;
+
+    tracksArea.innerHTML = '';
     const tracks = localAppServices.getTracks?.() || [];
 
     tracks.forEach(track => {
-        track.timelineClips?.forEach(clip => {
-            if (clip.type === 'audio' && clip.audioBuffer) {
-                // --- Audio Clip Scheduling ---
-                const player = new Tone.Player(clip.audioBuffer).connect(track.input);
-                Tone.Transport.scheduleOnce((time) => {
-                    player.start(time, clip.offset || 0, clip.duration);
-                    Tone.Transport.scheduleOnce(() => player.dispose(), time + clip.duration + 0.5);
-                }, clip.startTime);
+        const trackLane = document.createElement('div');
+        trackLane.className = 'timeline-track-lane flex';
+        trackLane.setAttribute('data-track-id', track.id);
+        
+        const trackNameWidth = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width');
+        
+        trackLane.innerHTML = `
+            <div class="timeline-track-lane-name" style="width: ${trackNameWidth};">${track.name}</div>
+            <div class="timeline-clips-area flex-grow h-full relative"></div>
+        `;
+        
+        const clipsArea = trackLane.querySelector('.timeline-clips-area');
+        if (clipsArea) {
+            track.timelineClips.forEach(clip => {
+                const clipDiv = document.createElement('div');
+                clipDiv.className = clip.type === 'audio' ? 'audio-clip' : 'midi-clip'; // Style midi-clip later
+                clipDiv.textContent = clip.name;
 
-            } else if (clip.type === 'midi') {
-                // --- MIDI Clip Scheduling ---
-                const sequenceData = track.sequences?.find(s => s.id === clip.sequenceId);
-                if (sequenceData) {
-                    // Convert the grid data to a Tone.Part-compatible array of events
-                    const events = [];
-                    sequenceData.data.forEach((row, pitchIndex) => {
-                        row.forEach((note, timeStep) => {
-                            if (note) {
-                                events.push({
-                                    time: `0:${timeStep / 4}`, // Convert step to "bar:beat" format
-                                    note: Constants.SYNTH_PITCHES[pitchIndex],
-                                    duration: `${note.duration || 1}*16n`,
-                                    velocity: note.velocity || 0.75
-                                });
-                            }
-                        });
-                    });
-                    
-                    const part = new Tone.Part((time, value) => {
-                        track.instrument?.triggerAttackRelease(value.note, value.duration, time, value.velocity);
-                    }, events).start(clip.startTime);
-                    
-                    part.loop = true;
-                    part.loopEnd = clip.duration;
-                    scheduledParts.push(part); // Keep track for disposal
-                }
-            }
-        });
+                const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+                clipDiv.style.left = `${clip.startTime * pixelsPerSecond}px`;
+                clipDiv.style.width = `${clip.duration * pixelsPerSecond}px`;
+
+                clipsArea.appendChild(clipDiv);
+            });
+        }
+        
+        tracksArea.appendChild(trackLane);
     });
 }
 
-// Stop function to clear MIDI parts when transport stops
-export function stopAllPlayback() {
-    clearScheduledParts();
-    // The transport stop will handle the audio players
-}
 
+export function updatePlayheadPosition(transportTime) {
+    const timelineWindow = localAppServices.getWindowById?.('timeline');
+    if (!timelineWindow?.element || timelineWindow.isMinimized) return;
 
-// --- Preview functions remain the same ---
-export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
-    const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
-    if (!audioReady) {
-        localAppServices.showNotification?.("Audio not ready for preview.", 2000);
-        return;
-    }
+    const playhead = timelineWindow.element.querySelector('#timeline-playhead');
+    const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
 
-    const track = localAppServices.getTrackById?.(trackId);
+    if (!playhead || !tracksAndPlayheadContainer) return;
 
-    if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded || !track.slices[sliceIndex]) {
-        return;
-    }
-    const sliceData = track.slices[sliceIndex];
-    if (!sliceData || sliceData.duration <= 0) {
-        return;
-    }
+    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+    const trackNameWidthValue = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width');
+    const trackNameWidth = parseInt(trackNameWidthValue, 10) || 120;
     
-    const scheduledTime = time !== undefined ? time : Tone.now();
-    
-    const totalPitchShift = (sliceData.pitchShift || 0) + additionalPitchShiftInSemitones;
-    const playbackRate = Math.pow(2, totalPitchShift / 12);
-    let playDuration = sliceData.duration / playbackRate;
-    if (sliceData.loop) playDuration = Math.min(playDuration, 2);
+    const playheadAbsoluteLeft = (transportTime * pixelsPerSecond);
+    playhead.style.transform = `translateX(${playheadAbsoluteLeft}px)`;
 
-    const masterBusInput = localAppServices.getMasterBusInputNode?.();
-    if (!masterBusInput) {
-        console.error("Master Bus not available for preview.");
-        return;
+    if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
+        const containerScrollLeft = tracksAndPlayheadContainer.scrollLeft;
+        const containerWidth = tracksAndPlayheadContainer.clientWidth;
+        
+        const playheadVisibleStart = containerScrollLeft;
+        const playheadVisibleEnd = containerScrollLeft + containerWidth;
+        const scrollBuffer = 50; 
+
+        if (playhead.offsetLeft > playheadVisibleEnd - scrollBuffer) {
+            tracksAndPlayheadContainer.scrollLeft = playhead.offsetLeft - containerWidth + scrollBuffer;
+        }
+        else if (playhead.offsetLeft < playheadVisibleStart + scrollBuffer) {
+             tracksAndPlayheadContainer.scrollLeft = Math.max(0, playhead.offsetLeft - scrollBuffer);
+        }
     }
-    
-    const tempPlayer = new Tone.Player(track.audioBuffer).connect(masterBusInput);
-    tempPlayer.playbackRate = playbackRate;
-    tempPlayer.start(scheduledTime, sliceData.offset, playDuration);
-
-    Tone.Transport.scheduleOnce(() => {
-        tempPlayer.dispose();
-    }, scheduledTime + playDuration + 0.5);
-}
-
-export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
-    const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
-    if (!audioReady) {
-        localAppServices.showNotification?.("Audio not ready for preview.", 2000);
-        return;
-    }
-
-    const track = localAppServices.getTrackById?.(trackId);
-    if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || track.drumPadPlayers[padIndex].disposed || !track.drumPadPlayers[padIndex].loaded) {
-        return;
-    }
-    
-    const player = track.drumPadPlayers[padIndex];
-    const padData = track.drumSamplerPads[padIndex];
-    if (!padData) return;
-
-    const masterBusInput = localAppServices.getMasterBusInputNode?.();
-    if (!masterBusInput) {
-        console.error("Master Bus not available for preview.");
-        return;
-    }
-    
-    const scheduledTime = time !== undefined ? time : Tone.now();
-
-    player.disconnect();
-    player.connect(masterBusInput);
-    player.volume.value = Tone.gainToDb(padData.volume * velocity * 0.8);
-    
-    const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
-    player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
-    
-    player.start(scheduledTime);
 }
