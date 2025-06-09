@@ -8,7 +8,7 @@ export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
-        this.appServices = appServices || {}; 
+        this.appServices = appServices || {};
 
         this.name = initialData?.name || `${type} Track ${this.id}`;
         if (type === 'DrumSampler') {
@@ -23,12 +23,12 @@ export class Track {
         this.isSoloed = false;
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
-        
+
         this.input = new Tone.Gain();
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
         this.outputNode.connect(this.trackMeter);
-        
+
         this.instrument = null;
         this.activeEffects = [];
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
@@ -36,7 +36,7 @@ export class Track {
         } else if (this.type !== 'Audio') {
             this.addEffect('EQ3', null, true);
         }
-        
+
         this.toneSequence = null;
         this.synthEngineType = null;
         this.synthParams = {};
@@ -68,16 +68,16 @@ export class Track {
             this.drumPadPlayers = Array(Constants.numDrumSamplerPads || 16).fill(null);
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
         } else if (this.type === 'InstrumentSampler') {
-            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || { 
-                originalFileName: null, 
-                dbKey: null, 
-                rootNote: 'C4', 
-                pitchShift: 0, 
-                loop: false, 
-                loopStart: 0, 
-                loopEnd: 0, 
-                envelope: { attack: 0.003, decay: 2.0, sustain: 1.0, release: 5.0 }, 
-                status: 'empty' 
+            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || {
+                originalFileName: null,
+                dbKey: null,
+                rootNote: 'C4',
+                pitchShift: 0,
+                loop: false,
+                loopStart: 0,
+                loopEnd: 0,
+                envelope: { attack: 0.003, decay: 2.0, sustain: 1.0, release: 5.0 },
+                status: 'empty'
             };
         }
 
@@ -97,7 +97,7 @@ export class Track {
                 const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
                 urls[rootNote] = buffer;
             }
-            this.instrument = new Tone.Sampler({ 
+            this.instrument = new Tone.Sampler({
                 urls,
                 attack: this.instrumentSamplerSettings.envelope.attack,
                 decay: this.instrumentSamplerSettings.envelope.decay,
@@ -111,7 +111,7 @@ export class Track {
         this.rebuildEffectChain();
         this.recreateToneSequence();
     }
-    
+
     rebuildEffectChain() {
         this.input.disconnect();
         this.instrument?.disconnect();
@@ -128,7 +128,7 @@ export class Track {
         if (masterBusInput) this.outputNode.connect(masterBusInput);
         else this.outputNode.toDestination();
     }
-    
+
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
@@ -145,13 +145,13 @@ export class Track {
         if (isAnotherTrackSoloed) this.outputNode.gain.rampTo(0, 0.02);
         else this.applyMuteState();
     }
-    
+
     updateSoloMuteState(soloedTrackId) {
         this.isSoloed = this.id === soloedTrackId;
         this.applySoloState(soloedTrackId !== null && !this.isSoloed);
         this.appServices.updateTrackUI?.(this.id, 'soloChanged');
     }
-    
+
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
         try {
@@ -161,7 +161,7 @@ export class Track {
             console.error(`Could not set synth param: ${paramPath}`, e);
         }
     }
-    
+
     setInstrumentSamplerPitch(semitones) {
         if (this.type === 'InstrumentSampler' && this.instrument) {
             this.instrumentSamplerSettings.pitchShift = semitones;
@@ -244,7 +244,7 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.name}`);
         this.recreateToneSequence();
     }
-    
+
     setSequenceLength(sequenceId, newLength) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (!sequence) return;
@@ -331,7 +331,7 @@ export class Track {
         this.recreateToneSequence();
         this.appServices.captureStateForUndo?.(`Clear sequence on ${this.name}`);
     }
-    
+
     duplicateSequence(sequenceId) {
         const originalSequence = this.sequences.find(s => s.id === sequenceId);
         if (!originalSequence) return;
@@ -342,47 +342,47 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Duplicate sequence on ${this.name}`);
         return newSequence;
     }
-    
+
     copyNotesToClipboard(sequenceId, notesToCopy) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (!sequence || !notesToCopy?.size) return;
-    
+
         let minPitchIndex = Infinity, minTimeStep = Infinity;
         const noteDataObjects = [];
-    
+
         notesToCopy.forEach(noteId => {
             const [pitchIndex, timeStep] = noteId.split('-').map(Number);
             minPitchIndex = Math.min(minPitchIndex, pitchIndex);
             minTimeStep = Math.min(minTimeStep, timeStep);
             noteDataObjects.push({ pitchIndex, timeStep, data: sequence.data[pitchIndex][timeStep] });
         });
-    
+
         const relativeNotes = noteDataObjects.map(n => ({
             pitchOffset: n.pitchIndex - minPitchIndex,
             timeOffset: n.timeStep - minTimeStep,
             noteData: n.data
         }));
-    
+
         this.appServices.setClipboardData?.({ type: 'piano-roll-notes', notes: relativeNotes });
         this.appServices.showNotification?.(`${relativeNotes.length} note(s) copied.`);
     }
-    
+
     pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) {
         const clipboard = this.appServices.getClipboardData?.();
         if (clipboard?.type !== 'piano-roll-notes' || !clipboard.notes?.length) return;
-    
+
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (!sequence) return;
-    
+
         clipboard.notes.forEach(noteToPaste => {
             const newPitchIndex = pastePitchIndex + noteToPaste.pitchOffset;
             const newTimeStep = pasteTimeStep + noteToPaste.timeOffset;
-    
+
             if (newPitchIndex >= 0 && newPitchIndex < sequence.data.length && newTimeStep >= 0 && newTimeStep < sequence.length) {
                 sequence.data[newPitchIndex][newTimeStep] = JSON.parse(JSON.stringify(noteToPaste.noteData));
             }
         });
-    
+
         this.recreateToneSequence();
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
     }
@@ -393,7 +393,7 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Add ${clipData.name} clip`);
         this.appServices.renderTimeline?.();
     }
-    
+
     async addAudioClip(audioBlob, startTime, clipName) {
         if (this.type !== 'Audio') return;
         try {
@@ -412,7 +412,7 @@ export class Track {
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
         }
     }
-    
+
     recreateToneSequence() {
         this.toneSequence?.dispose();
         this.toneSequence = null;
@@ -447,17 +447,19 @@ export class Track {
         };
         this.toneSequence = new Tone.Part(partEventCallback, events);
         this.toneSequence.loop = true;
-        this.toneSequence.loopEnd = `${activeSequence.length}*16n`;
+        // *** FIX STARTS HERE ***
+        this.toneSequence.loopEnd = `${activeSequence.length / Constants.STEPS_PER_BAR}m`;
+        // *** FIX ENDS HERE ***
     }
 
     startSequence() {
         if (this.toneSequence?.state !== 'started') this.toneSequence?.start(0);
     }
-    
+
     stopSequence() {
         if (this.toneSequence?.state === 'started') this.toneSequence.stop(0);
     }
-    
+
     getDefaultSynthParams() {
         return {
             portamento: 0,
