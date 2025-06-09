@@ -418,23 +418,36 @@ export class Track {
         this.toneSequence = null;
         const activeSequence = this.getActiveSequence();
         if (!activeSequence) return;
+        
         const events = [];
+        
+        // *** FIX STARTS HERE ***
+        // Pre-calculate the duration of a single 16th note step in seconds.
+        const stepInSeconds = new Tone.Time('16n').toSeconds();
+
         for (let row = 0; row < activeSequence.data.length; row++) {
             for (let step = 0; step < activeSequence.length; step++) {
                 if (activeSequence.data[row]?.[step]) {
                     const pitch = Constants.SYNTH_PITCHES[row];
                     const noteData = activeSequence.data[row][step];
+                    
+                    // Calculate the event time and duration in seconds.
+                    const eventTime = step * stepInSeconds;
+                    const eventDuration = (noteData.duration || 1) * stepInSeconds;
+                    
                     events.push({
-                        time: `${step}*16n`,
+                        time: eventTime,
                         note: pitch,
-                        duration: `${noteData.duration || 1}*16n`,
+                        duration: eventDuration,
                         velocity: noteData.velocity || 0.75
                     });
                 }
             }
         }
+        
         const partEventCallback = (time, value) => {
             if (this.instrument) {
+                // The 'time' from the callback is already in seconds (the AudioContext time)
                 this.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
             } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
                 const midi = Tone.Midi(value.note).toMidi();
@@ -445,14 +458,11 @@ export class Track {
                 }
             }
         };
+
         this.toneSequence = new Tone.Part(partEventCallback, events);
         this.toneSequence.loop = true;
-
-        // *** FIX STARTS HERE ***
-        // Calculate loop end time using ticks for precision.
-        const ticksPerStep = Tone.Transport.PPQ / 4; // A 16th note
-        const totalTicks = activeSequence.length * ticksPerStep;
-        this.toneSequence.loopEnd = `${totalTicks}i`;
+        // Set the loop end to the total duration in seconds.
+        this.toneSequence.loopEnd = activeSequence.length * stepInSeconds;
         // *** FIX ENDS HERE ***
     }
 
