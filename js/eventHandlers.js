@@ -159,14 +159,8 @@ export function attachGlobalControlEvents(uiCache) {
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
-    const handlePlayStop = async () => {
-        if (getPlaybackModeState() === 'timeline') {
-            localAppServices.scheduleTimelinePlayback?.();
-        } else {
-            const tracks = getTracks();
-            tracks.forEach(track => track.startSequence?.());
-        }
-
+    // This function remains for the on-screen Play/Pause button
+    const handlePlayPause = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
             showNotification("Audio context not running. Please interact with the page.", 3000);
@@ -176,6 +170,26 @@ export function attachGlobalControlEvents(uiCache) {
         if (Tone.Transport.state === 'started') {
             Tone.Transport.pause();
         } else {
+            localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
+            Tone.Transport.start();
+        }
+    };
+
+    // This is the new function for the Spacebar's Play/Stop behavior
+    const handlePlayStop = async () => {
+        const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+        if (!audioReady) {
+            showNotification("Audio context not running. Please interact with the page.", 3000);
+            return;
+        }
+
+        if (Tone.Transport.state === 'started') {
+            // If playing, stop and rewind
+            Tone.Transport.stop();
+            Tone.Transport.position = 0;
+        } else {
+            // If stopped or paused, start playback
+            localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             Tone.Transport.start();
         }
     };
@@ -225,7 +239,7 @@ export function attachGlobalControlEvents(uiCache) {
         }
     };
 
-    playBtn?.addEventListener('click', handlePlayStop);
+    playBtn?.addEventListener('click', handlePlayPause); // On-screen button still uses Play/Pause
     stopBtn?.addEventListener('click', handleStop);
     recordBtn?.addEventListener('click', handleRecord);
     
@@ -278,6 +292,7 @@ export function attachGlobalControlEvents(uiCache) {
                 currentlyPressedKeys.add(key);
             }
         } else {
+            // UPDATED: Spacebar now calls handlePlayStop
             if (e.code === 'Space') {
                 e.preventDefault();
                 handlePlayStop();
