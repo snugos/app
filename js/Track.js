@@ -35,10 +35,8 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
-        // Initialize all properties
         this.instrument = null;
         this.activeEffects = [];
-        this.toneSequence = null;
         this.synthEngineType = null;
         this.synthParams = {};
         this.sequences = initialData?.sequences || [];
@@ -62,7 +60,6 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
-        // Type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -85,6 +82,31 @@ export class Track {
         if (this.type !== 'Audio' && this.sequences.length === 0) {
             this.createNewSequence("Sequence 1", 64, true);
         }
+    }
+
+    serialize() {
+        return {
+            id: this.id,
+            type: this.type,
+            name: this.name,
+            isMuted: this.isMuted,
+            volume: this.previousVolumeBeforeMute,
+            activeEffects: this.activeEffects.map(e => ({ type: e.type, params: e.params })),
+            sequences: this.sequences,
+            activeSequenceId: this.activeSequenceId,
+            timelineClips: this.timelineClips,
+            synthEngineType: this.synthEngineType,
+            synthParams: this.synthParams,
+            samplerAudioData: this.samplerAudioData,
+            slices: this.slices,
+            drumSamplerPads: this.drumSamplerPads.map(p => ({
+                originalFileName: p.originalFileName,
+                dbKey: p.dbKey,
+                volume: p.volume,
+                pitchShift: p.pitchShift,
+            })),
+            instrumentSamplerSettings: this.instrumentSamplerSettings,
+        };
     }
 
     async initializeInstrument() {
@@ -380,11 +402,25 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
     }
 
-    addClip(clipData) {
-        if (!clipData.type || !clipData.id) return;
-        this.timelineClips.push(clipData);
-        this.appServices.captureStateForUndo?.(`Add ${clipData.name} clip`);
+    addMidiClip(sequence, startTime) {
+        if (!sequence) return;
+
+        const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4);
+        const totalBeats = sequence.length * beatsPerStep;
+        const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value);
+
+        const newClip = {
+            id: `clip-${this.id}-${Date.now()}`,
+            type: 'midi',
+            name: sequence.name,
+            startTime: startTime,
+            duration: clipDuration,
+            sequenceData: JSON.parse(JSON.stringify(sequence.data))
+        };
+
+        this.timelineClips.push(newClip);
         this.appServices.renderTimeline?.();
+        this.appServices.captureStateForUndo?.(`Add clip ${newClip.name}`);
     }
 
     async addAudioClip(audioBlob, startTime, clipName) {
