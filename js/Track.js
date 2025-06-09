@@ -27,9 +27,15 @@ export class Track {
         this.input = new Tone.Gain();
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
-        this.outputNode.fan(this.trackMeter);
+        
+        // *** FIX: Establish the main output path once and only once. ***
+        const masterBusInput = this.appServices.getMasterBusInputNode?.();
+        if (masterBusInput) {
+            this.outputNode.fan(this.trackMeter, masterBusInput);
+        } else {
+            this.outputNode.fan(this.trackMeter, Tone.getDestination());
+        }
 
-        // *** FIX: Initialize all properties at the top, before any methods are called. ***
         this.instrument = null;
         this.activeEffects = [];
         this.toneSequence = null;
@@ -50,15 +56,16 @@ export class Track {
         this.instrumentSamplerSettings = {};
         this.toneSampler = null;
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
+        
+        // Initial connection for an empty effects chain.
+        this.input.connect(this.outputNode);
 
-        // Now that properties are initialized, it's safe to call methods.
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
             initialData.activeEffects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
         } else if (this.type !== 'Audio') {
             this.addEffect('EQ3', null, true);
         }
 
-        // Continue with type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -91,6 +98,7 @@ export class Track {
 
     async initializeInstrument() {
         if (this.instrument) this.instrument.dispose();
+        
         if (this.type === 'Synth') {
             this.instrument = new Tone.PolySynth(Tone.Synth);
         } else if (this.type === 'InstrumentSampler') {
@@ -111,39 +119,30 @@ export class Track {
         } else {
             this.instrument = null;
         }
-        this.rebuildEffectChain();
+
+        // *** FIX: Connect the newly created instrument to the track's input ***
+        if (this.instrument) {
+            this.instrument.connect(this.input);
+        }
+        
         this.recreateToneSequence();
     }
     
+    // *** REFACTORED METHOD ***
     rebuildEffectChain() {
-        this.instrument?.disconnect(this.input);
-        this.slicerPlayer?.disconnect(this.input);
-        this.drumPadPlayers.forEach(p => p?.disconnect(this.input));
-        
-        if (this.instrument) {
-            this.instrument.connect(this.input);
-        } else if (this.slicerPlayer) {
-            this.slicerPlayer.connect(this.input);
-        } else if (this.drumPadPlayers.length > 0) {
-            this.drumPadPlayers.forEach(p => p?.connect(this.input));
-        }
-
+        // The only job of this method is to chain the effects between input and output.
+        // It no longer manages source or master bus connections.
         this.input.disconnect();
         let currentNode = this.input;
+
         this.activeEffects.forEach(effect => {
             if (effect.toneNode) {
                 currentNode.connect(effect.toneNode);
                 currentNode = effect.toneNode;
             }
         });
-        currentNode.connect(this.outputNode);
 
-        const masterBusInput = this.appServices.getMasterBusInputNode?.();
-        if (masterBusInput) {
-            this.outputNode.connect(masterBusInput);
-        } else {
-            this.outputNode.toDestination();
-        }
+        currentNode.connect(this.outputNode);
     }
 
     setVolume(volume, fromInteraction = false) {
