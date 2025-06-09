@@ -36,7 +36,8 @@ let isRecordingGlobal = false;
 let recordingTrackIdGlobal = null;
 let recordingStartTimeGlobal = 0; 
 
-let playbackMode = 'piano-roll'; 
+// REMOVED: The old playbackMode variable
+// let playbackMode = 'piano-roll'; 
 
 let isReconstructingDAW = false;
 let undoStack = [];
@@ -56,7 +57,6 @@ let appServices = {};
 
 export function initializeStateModule(appServicesFromMain) {
     appServices = appServicesFromMain || {};
-    // Ensure the Imports library exists in the state from the beginning
     if (!soundLibraryFileTreesGlobal['Imports']) {
         soundLibraryFileTreesGlobal['Imports'] = {};
     }
@@ -116,7 +116,7 @@ export function getRecordingStartTimeState() { return recordingStartTimeGlobal; 
 export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
 export function getUndoStackState() { return [...undoStack]; }
 export function getRedoStackState() { return [...redoStack]; }
-export function getPlaybackModeState() { return playbackMode; }
+// REMOVED: getPlaybackModeState()
 export function getSelectedTimelineClipInfoState() { return {...selectedTimelineClipInfo}; }
 export function getCurrentUserThemePreferenceState() { return currentUserThemePreference; }
 export function getIsReconstructingDAWState() { return isReconstructingDAW; }
@@ -180,21 +180,8 @@ export function setRecordingTrackIdState(trackId) { recordingTrackIdGlobal = tra
 export function setRecordingStartTimeState(time) { recordingStartTimeGlobal = time; }
 export function setActiveSequencerTrackIdState(trackId) { activeSequencerTrackId = trackId; }
 
-export function setPlaybackModeState(newMode, skipUIUpdate = false) {
-    if (playbackMode === newMode) return;
-    const oldMode = playbackMode;
-    playbackMode = newMode;
-    if (appServices.captureStateForUndo) {
-        appServices.captureStateForUndo(`Set Playback Mode to ${newMode}`);
-    }
-    if (Tone.Transport.state === 'started') {
-        Tone.Transport.stop();
-    }
-    
-    if (appServices.onPlaybackModeChange && !skipUIUpdate) {
-        appServices.onPlaybackModeChange(newMode, oldMode);
-    }
-}
+// REMOVED: The old setPlaybackModeState function
+// export function setPlaybackModeState(newMode, skipUIUpdate = false) { ... }
 
 export function setSelectedTimelineClipInfoState(info) { selectedTimelineClipInfo = info || { clipId: null, trackId: null, originalLeft: 0, originalStartBeat: 0 }; }
 export function setCurrentUserThemePreferenceState(preference) {
