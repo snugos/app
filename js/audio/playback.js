@@ -29,9 +29,6 @@ export function scheduleTimelinePlayback() {
 
             } else if (clip.type === 'midi') {
                 // --- MIDI Clip Scheduling ---
-                // This schedules the track's main Tone.Sequence to start and stop
-                // Note: This is a simple implementation. For multiple, overlapping MIDI clips on one track,
-                // a more advanced system using Tone.Part would be needed.
                 Tone.Transport.scheduleOnce((time) => {
                     track.startSequence?.();
                 }, clip.startTime);
@@ -44,8 +41,6 @@ export function scheduleTimelinePlayback() {
     });
 }
 
-
-// --- Preview functions remain the same ---
 export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
@@ -76,6 +71,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         return;
     }
     
+    // For previews, we connect directly to the master output to bypass track effects
     const tempPlayer = new Tone.Player(track.audioBuffer).connect(masterBusInput);
     tempPlayer.playbackRate = playbackRate;
     tempPlayer.start(scheduledTime, sliceData.offset, playDuration);
@@ -85,6 +81,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     }, scheduledTime + playDuration + 0.5);
 }
 
+// *** REFACTORED FUNCTION to work with the new Tone.Sampler architecture ***
 export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
     if (!audioReady) {
@@ -93,14 +90,17 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     }
 
     const track = localAppServices.getTrackById?.(trackId);
-    if (!track || track.type !== 'DrumSampler' || !track.drumPadPlayers[padIndex] || track.drumPadPlayers[padIndex].disposed || !track.drumPadPlayers[padIndex].loaded) {
+    if (!track || track.type !== 'DrumSampler') {
+        return;
+    }
+
+    const padData = track.drumSamplerPads?.[padIndex];
+
+    // Check if the pad has a loaded audio buffer before trying to play it
+    if (!padData || !padData.audioBuffer || !padData.audioBuffer.loaded) {
         return;
     }
     
-    const player = track.drumPadPlayers[padIndex];
-    const padData = track.drumSamplerPads[padIndex];
-    if (!padData) return;
-
     const masterBusInput = localAppServices.getMasterBusInputNode?.();
     if (!masterBusInput) {
         console.error("Master Bus not available for preview.");
@@ -109,12 +109,18 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     
     const scheduledTime = time !== undefined ? time : Tone.now();
 
-    player.disconnect();
-    player.connect(masterBusInput);
-    player.volume.value = Tone.gainToDb(padData.volume * velocity * 0.8);
+    // Create a new temporary player for the preview
+    const tempPlayer = new Tone.Player(padData.audioBuffer).connect(masterBusInput);
     
+    // Apply pad-specific settings
+    tempPlayer.volume.value = Tone.gainToDb(padData.volume * velocity * 0.8);
     const totalPadPitchShift = (padData.pitchShift || 0) + additionalPitchShiftInSemitones;
-    player.playbackRate = Math.pow(2, totalPadPitchShift / 12);
+    tempPlayer.playbackRate = Math.pow(2, totalPadPitchShift / 12);
     
-    player.start(scheduledTime);
+    tempPlayer.start(scheduledTime);
+
+    // Schedule disposal to prevent memory leaks
+    Tone.Transport.scheduleOnce(() => {
+        tempPlayer.dispose();
+    }, scheduledTime + padData.audioBuffer.duration + 0.5);
 }
