@@ -159,7 +159,6 @@ function renderVelocityPane(velocityPane, track) {
     }
 }
 
-// *** REFACTORED FUNCTION ***
 function drawPianoKeys(layer, track, colors) {
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
@@ -174,7 +173,6 @@ function drawPianoKeys(layer, track, colors) {
         let labelText = noteName;
         let isSamplerKey = false;
         
-        // If it's a sampler, check if this key is part of the playable range
         if (isSampler) {
             const samplerStartNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE;
             const numSamplerNotes = Constants.NUM_SAMPLER_NOTES;
@@ -190,11 +188,10 @@ function drawPianoKeys(layer, track, colors) {
                     labelText = `Slice ${padIndex + 1}`;
                 }
             } else {
-                keyVisible = false; // Hide keys outside the sampler's range
+                keyVisible = false;
             }
         }
         
-        // Don't draw hidden keys at all
         if (!keyVisible) {
             return;
         }
@@ -209,12 +206,12 @@ function drawPianoKeys(layer, track, colors) {
 
         const keyText = new Konva.Text({
             x: 5, y: y + noteHeight / 2 - 7, text: labelText,
-            fontSize: isSamplerKey ? 9 : 12, // Use smaller font for potentially long filenames
+            fontSize: isSamplerKey ? 9 : 12,
             fontFamily: "'Roboto', sans-serif",
             fill: isSamplerKey ? colors.whiteKeyText : (isBlackKey ? colors.blackKeyText : colors.whiteKeyText),
             listening: false,
             width: keyWidth - 10,
-            ellipsis: true, // Add ellipsis for long filenames
+            ellipsis: true,
         });
         layer.add(keyText);
     });
@@ -265,8 +262,10 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+
     sequenceData.forEach((pitchRow, pitchIndex) => {
-        row.forEach((note, timeStep) => {
+        // *** FIX: The variable name was 'row' but should be 'pitchRow' ***
+        pitchRow.forEach((note, timeStep) => {
             if (note) {
                 const noteId = `${pitchIndex}-${timeStep}`;
                 const isSelected = selectedNotes.has(noteId);
@@ -285,21 +284,23 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
 
                 noteRect.on('mouseenter', (e) => {
                     const stage = e.target.getStage();
+                    if (!stage) return;
                     const mousePos = stage.getPointerPosition();
                     const noteEdge = e.target.x() + e.target.width() - 5;
                     if(mousePos.x > noteEdge) {
-                        if(stage) stage.container().style.cursor = 'ew-resize';
+                        stage.container().style.cursor = 'ew-resize';
                     } else {
-                        if(stage) stage.container().style.cursor = 'pointer';
+                        stage.container().style.cursor = 'pointer';
                     }
                 });
                 noteRect.on('mouseleave', (e) => {
                     const stage = e.target.getStage();
-                    if(stage) stage.container().style.cursor = 'default';
+                    if (stage) stage.container().style.cursor = 'default';
                 });
                 noteRect.on('mousedown', (e) => {
                     if (e.evt.button !== 0) return; 
                     const stage = e.target.getStage();
+                    if (!stage) return;
                     const mousePos = stage.getPointerPosition();
                     const noteEdge = e.target.x() + e.target.width() - 5;
                     if (mousePos.x > noteEdge) {
@@ -346,7 +347,6 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     const colors = getThemeColors();
     const numSteps = activeSequence.length;
     
-    // The stage height remains constant to keep note data consistent
     const stageWidth = (Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps) + Constants.PIANO_ROLL_KEY_WIDTH;
     const stageHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * Constants.SYNTH_PITCHES.length;
 
@@ -367,7 +367,7 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     openPianoRolls.set(track.id, pianoRoll);
 
     drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors);
-    drawPianoKeys(keyLayer, track, colors); // Pass the track itself
+    drawPianoKeys(keyLayer, track, colors);
     redrawNotes(noteLayer, track, colors, selectedNotes);
     
     const playhead = new Konva.Line({ points: [0, 0, 0, stageHeight], stroke: colors.playhead, strokeWidth: 1.5, listening: false });
