@@ -68,24 +68,23 @@ export function renderTimeline() {
         clipsArea.className = 'timeline-clips-area';
         trackLane.appendChild(clipsArea);
 
-        // *** NEW FEATURE: Render Clips ***
+        // Render Clips
         track.timelineClips?.forEach(clip => {
             const clipDiv = document.createElement('div');
-            clipDiv.className = `midi-clip`; // Add classes for audio-clip later
+            clipDiv.className = clip.type === 'audio' ? 'audio-clip' : 'midi-clip';
             clipDiv.textContent = clip.name;
             clipDiv.dataset.clipId = clip.id;
             
-            const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+            const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
             clipDiv.style.left = `${clip.startTime * pixelsPerSecond}px`;
             clipDiv.style.width = `${clip.duration * pixelsPerSecond}px`;
 
             clipsArea.appendChild(clipDiv);
             
-            // *** NEW FEATURE: Move Clips ***
             attachClipDragListeners(clipDiv, track, clip);
         });
 
-        // *** NEW FEATURE: Handle Drag and Drop to Create Clips ***
+        // Handle Drag and Drop to Create Clips
         trackLane.addEventListener('dragover', (e) => {
             e.preventDefault();
             trackLane.classList.add('dragover-timeline-lane');
@@ -116,8 +115,9 @@ function handleTimelineDrop(event, targetTrackId) {
         const sourceTrack = localAppServices.getTrackById?.(sourceTrackId);
         const sequence = sourceTrack?.sequences.find(s => s.id === sequenceId);
         if (sequence) {
-            const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
-            const dropTimeInSeconds = (event.clientX - event.currentTarget.getBoundingClientRect().left - 120 + event.currentTarget.scrollLeft) / pixelsPerSecond;
+            const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
+            const dropX = event.clientX - event.currentTarget.getBoundingClientRect().left - 120 + event.currentTarget.scrollLeft;
+            const dropTimeInSeconds = Math.max(0, dropX / pixelsPerSecond);
             
             targetTrack.addMidiClip(sequence, dropTimeInSeconds);
         }
@@ -129,7 +129,7 @@ function attachClipDragListeners(clipDiv, track, clip) {
         if (e.button !== 0) return;
         e.stopPropagation();
 
-        const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+        const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
         const startMouseX = e.clientX;
         const startLeft = parseFloat(clipDiv.style.left) || 0;
 
@@ -145,10 +145,8 @@ function attachClipDragListeners(clipDiv, track, clip) {
             const finalLeft = parseFloat(clipDiv.style.left) || 0;
             const newStartTime = Math.max(0, finalLeft / pixelsPerSecond);
             
-            // Update the actual clip data
             clip.startTime = newStartTime;
 
-            // Re-render to snap to grid and persist state
             renderTimeline();
             localAppServices.captureStateForUndo?.(`Move clip ${clip.name}`);
         }
@@ -163,9 +161,26 @@ export function updatePlayheadPosition(transportTime) {
     if (!timelineWindow?.element || timelineWindow.isMinimized) return;
 
     const playhead = timelineWindow.element.querySelector('#timeline-playhead');
-    if (!playhead) return;
-    
-    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+    const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
+
+    if (!playhead || !tracksAndPlayheadContainer) return;
+
+    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
     const playheadAbsoluteLeft = (transportTime * pixelsPerSecond);
     playhead.style.transform = `translateX(${playheadAbsoluteLeft}px)`;
+
+    if (typeof Tone !== 'undefined' && Tone.Transport.state === 'started') {
+        const containerScrollLeft = tracksAndPlayheadContainer.scrollLeft;
+        const containerWidth = tracksAndPlayheadContainer.clientWidth;
+        const playheadOffsetLeft = playhead.offsetLeft + playheadAbsoluteLeft;
+        
+        const scrollBuffer = 50; 
+
+        if (playheadOffsetLeft > containerScrollLeft + containerWidth - scrollBuffer) {
+            tracksAndPlayheadContainer.scrollLeft = playheadOffsetLeft - containerWidth + scrollBuffer;
+        }
+        else if (playheadOffsetLeft < containerScrollLeft + scrollBuffer) {
+             tracksAndPlayheadContainer.scrollLeft = Math.max(0, playheadOffsetLeft - scrollBuffer);
+        }
+    }
 }
