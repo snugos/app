@@ -35,10 +35,8 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
-        // Initialize all properties
         this.instrument = null;
         this.activeEffects = [];
-        this.toneSequence = null;
         this.synthEngineType = null;
         this.synthParams = {};
         this.sequences = initialData?.sequences || [];
@@ -62,7 +60,6 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
-        // Type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -121,7 +118,7 @@ export class Track {
 
         currentNode.connect(this.outputNode);
     }
-    
+
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
@@ -405,7 +402,7 @@ export class Track {
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
         }
     }
-    
+
     recreateToneSequence() {
         this.stopSequence();
         
