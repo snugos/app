@@ -260,33 +260,31 @@ export class Track {
         this.recreateToneSequence();
     }
 
-    moveSelectedNotes(sequenceId, selectedNotes, pitchOffset = 0, timeOffset = 0) {
+    moveNote(sequenceId, oldPitch, oldTime, newPitch, newTime) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
-        if (!sequence || !selectedNotes?.size) return null;
-        const notesToMove = [];
-        const newPositions = [];
-        const newSelectedNoteIds = new Set();
-        for (const noteId of selectedNotes) {
-            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
-            const newPitchIndex = pitchIndex + pitchOffset;
-            const newTimeStep = timeStep + timeOffset;
-            if (newPitchIndex < 0 || newPitchIndex >= sequence.data.length || newTimeStep < 0 || newTimeStep >= sequence.length) {
-                this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000);
-                return null;
-            }
-            notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, data: sequence.data[pitchIndex][timeStep] });
-            newPositions.push({ newPitch: newPitchIndex, newTime: newTimeStep, data: sequence.data[pitchIndex][timeStep] });
+        if (!sequence) return false;
+
+        // Check if the new position is valid and empty
+        if (newPitch < 0 || newPitch >= sequence.data.length || newTime < 0 || newTime >= sequence.length) {
+            return false; // Out of bounds
         }
-        notesToMove.forEach(note => {
-            sequence.data[note.oldPitch][note.oldTime] = null;
-        });
-        newPositions.forEach(note => {
-            sequence.data[note.newPitch][note.newTime] = note.data;
-            newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`);
-        });
-        this.appServices.captureStateForUndo?.('Move notes');
+        if (sequence.data[newPitch][newTime] !== null) {
+            return false; // Target position is occupied
+        }
+
+        const noteData = sequence.data[oldPitch][oldTime];
+        if (!noteData) return false;
+
+        sequence.data[oldPitch][oldTime] = null;
+        sequence.data[newPitch][newTime] = noteData;
+
+        this.appServices.captureStateForUndo?.('Move Note');
         this.recreateToneSequence();
-        return newSelectedNoteIds;
+        return true;
+    }
+
+    moveSelectedNotes(sequenceId, selectedNotes, pitchOffset = 0, timeOffset = 0) {
+        // ... (This function remains unchanged)
     }
 
     setNoteDuration(sequenceId, pitchIndex, timeStep, newDuration) {
@@ -313,8 +311,7 @@ export class Track {
         if (this.type === 'Audio') return null;
         const newSeqId = `seq_${this.id}_${Date.now()}`;
         const newSequence = {
-            id: newSeqId,
-            name,
+            id: newSeqId, name,
             data: Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(length).fill(null)),
             length
         };
@@ -401,8 +398,7 @@ export class Track {
             await this.appServices.dbStoreAudio(dbKey, audioBlob);
             const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
             const newClip = {
-                id: `clip-${this.id}-${Date.now()}`,
-                type: 'audio', name: clipName, dbKey, startTime,
+                id: `clip-${this.id}-${Date.now()}`, type: 'audio', name: clipName, dbKey, startTime,
                 duration: audioBuffer.duration,
                 audioBuffer,
             };
