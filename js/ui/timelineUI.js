@@ -103,8 +103,6 @@ export function updatePlayheadPosition(transportTime) {
     if (!playhead || !tracksAndPlayheadContainer) return;
 
     const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
-    const trackNameWidthValue = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width');
-    const trackNameWidth = parseInt(trackNameWidthValue, 10) || 120;
     
     const playheadAbsoluteLeft = (transportTime * pixelsPerSecond);
     playhead.style.transform = `translateX(${playheadAbsoluteLeft}px)`;
