@@ -37,6 +37,8 @@ export function initializeEventHandlersModule(appServicesFromMain) {
 export function initializePrimaryEventListeners() {
     const startButton = document.getElementById('startButton');
     const startMenu = document.getElementById('startMenu');
+    const desktopEl = document.getElementById('desktop');
+    const customBgInput = document.getElementById('customBgInput');
 
     startButton?.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -53,6 +55,28 @@ export function initializePrimaryEventListeners() {
             }
         }
     });
+    
+    // *** NEW FEATURE: Desktop Context Menu for Background Change ***
+    desktopEl?.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const menuItems = [
+            {
+                label: 'Change Background',
+                action: () => customBgInput?.click()
+            }
+        ];
+        createContextMenu(e, menuItems, localAppServices);
+    });
+    
+    customBgInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            localAppServices.applyCustomBackground(file);
+        }
+        // Reset the input so the same file can be chosen again
+        e.target.value = null; 
+    });
+
 
     const addTrackHandler = async (type) => {
         await localAppServices.initAudioContextAndMasterMeter?.(true);
@@ -499,7 +523,7 @@ function onMIDIMessage(message) {
     const armedTrack = getTrackById(armedTrackId);
     if (!armedTrack || !armedTrack.instrument) return;
 
-    if (commandType === 0xB0 && noteNumber === 64) {
+    if (commandType === 0xB0 && noteNumber === 64) { 
         if (velocity > 63) {
             isSustainPedalDown = true;
         } else {
@@ -511,7 +535,7 @@ function onMIDIMessage(message) {
         }
         return;
     }
-
+    
     if (noteOn || noteOff) {
         const noteName = Tone.Midi(noteNumber).toNote();
         
@@ -521,7 +545,7 @@ function onMIDIMessage(message) {
                 sustainedNotes.delete(noteNumber);
             }
             armedTrack.instrument.triggerAttack(noteName, Tone.now(), velocity / 127);
-        } else {
+        } else { 
             if (isSustainPedalDown) {
                 sustainedNotes.set(noteNumber, noteName);
             } else {
