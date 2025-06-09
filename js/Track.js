@@ -402,13 +402,19 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
     }
 
+    // *** NEW HELPER FUNCTION ***
+    addClip(clipData) {
+        if (!clipData.type || !clipData.id) return;
+        this.timelineClips.push(clipData);
+        this.appServices.captureStateForUndo?.(`Add ${clipData.name} clip`);
+        this.appServices.renderTimeline?.();
+    }
+
     addMidiClip(sequence, startTime) {
         if (!sequence) return;
-
         const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4);
         const totalBeats = sequence.length * beatsPerStep;
         const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value);
-
         const newClip = {
             id: `clip-${this.id}-${Date.now()}`,
             type: 'midi',
@@ -417,10 +423,7 @@ export class Track {
             duration: clipDuration,
             sequenceData: JSON.parse(JSON.stringify(sequence.data))
         };
-
-        this.timelineClips.push(newClip);
-        this.appServices.renderTimeline?.();
-        this.appServices.captureStateForUndo?.(`Add clip ${newClip.name}`);
+        this.addClip(newClip); // Use the helper
     }
 
     async addAudioClip(audioBlob, startTime, clipName) {
@@ -435,7 +438,7 @@ export class Track {
                 duration: audioBuffer.duration,
                 audioBuffer,
             };
-            this.addClip(newClip);
+            this.addClip(newClip); // Use the helper
         } catch (error) {
             console.error("Error adding audio clip:", error);
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
