@@ -17,7 +17,15 @@ export function scheduleTimelinePlayback() {
     tracks.forEach(track => {
         // Schedule all clips for this track
         track.timelineClips?.forEach(clip => {
-            if (clip.type === 'midi' && clip.sequenceData && track.instrument) {
+            if (clip.type === 'audio' && clip.audioBuffer) {
+                // --- Audio Clip Scheduling ---
+                Tone.Transport.scheduleOnce((time) => {
+                    const player = new Tone.Player(clip.audioBuffer).connect(track.input);
+                    player.start(time, clip.offset || 0, clip.duration);
+                    Tone.Transport.scheduleOnce(() => player.dispose(), time + clip.duration + 0.5);
+                }, clip.startTime);
+
+            } else if (clip.type === 'midi' && clip.sequenceData && track.instrument) {
                 // --- MIDI Clip Scheduling ---
                 const events = [];
                 const sequenceLength = clip.sequenceData[0]?.length || 0;
@@ -27,7 +35,7 @@ export function scheduleTimelinePlayback() {
                         const note = clip.sequenceData[pitchIndex][step];
                         if (note) {
                             events.push({
-                                time: `${step}*16n`, // Time is relative to the start of the part
+                                time: `${step}*16n`,
                                 note: Constants.SYNTH_PITCHES[pitchIndex],
                                 duration: `${note.duration || 1}*16n`,
                                 velocity: note.velocity || 0.75
@@ -36,28 +44,15 @@ export function scheduleTimelinePlayback() {
                     }
                 }
                 
-                // Create a new Part for this clip's events
                 const part = new Tone.Part((time, value) => {
                     track.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
                 }, events);
 
-                // Schedule the part to start at the clip's start time
                 part.start(clip.startTime);
                 
-                // Schedule disposal of the part after the clip ends to free memory
                 Tone.Transport.scheduleOnce(() => {
                     part.dispose();
                 }, clip.startTime + clip.duration + 0.1);
-
-            } else if (clip.type === 'audio' && clip.audioBuffer) {
-                // --- Audio Clip Scheduling ---
-                Tone.Transport.scheduleOnce((time) => {
-                    // Create a new player instance for each scheduled playback to ensure it can be re-triggered
-                    const player = new Tone.Player(clip.audioBuffer).connect(track.input);
-                    player.start(time, clip.offset || 0, clip.duration);
-                    // Schedule disposal to free up memory
-                    Tone.Transport.scheduleOnce(() => player.dispose(), time + clip.duration + 0.5);
-                }, clip.startTime);
             }
         });
     });
@@ -93,6 +88,7 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
         return;
     }
     
+    // For previews, we connect directly to the master output to bypass track effects
     const tempPlayer = new Tone.Player(track.audioBuffer).connect(masterBusInput);
     tempPlayer.playbackRate = playbackRate;
     tempPlayer.start(scheduledTime, sliceData.offset, playDuration);
