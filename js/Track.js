@@ -433,6 +433,7 @@ export class Track {
         for (let step = 0; step < activeSequence.length; step++) {
             const notesAtStep = [];
             for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) {
+                // *** THIS IS THE CORRECTED LINE ***
                 const note = activeSequence.data[pitchIndex][step];
                 if (note) {
                     notesAtStep.push({
@@ -446,6 +447,7 @@ export class Track {
         }
 
         const sequenceCallback = (time, value) => {
+            // This guard prevents the error on empty steps
             if (value) {
                 value.forEach(note => {
                     if (this.instrument) {
