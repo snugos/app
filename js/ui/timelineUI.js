@@ -68,7 +68,6 @@ export function renderTimeline() {
         clipsArea.className = 'timeline-clips-area';
         trackLane.appendChild(clipsArea);
 
-        // Render Clips
         track.timelineClips?.forEach(clip => {
             const clipDiv = document.createElement('div');
             clipDiv.className = clip.type === 'audio' ? 'audio-clip' : 'midi-clip';
@@ -84,7 +83,6 @@ export function renderTimeline() {
             attachClipDragListeners(clipDiv, track, clip);
         });
 
-        // Handle Drag and Drop to Create Clips
         trackLane.addEventListener('dragover', (e) => {
             e.preventDefault();
             trackLane.classList.add('dragover-timeline-lane');
@@ -95,33 +93,18 @@ export function renderTimeline() {
         trackLane.addEventListener('drop', (e) => {
             e.preventDefault();
             trackLane.classList.remove('dragover-timeline-lane');
-            handleTimelineDrop(e, track.id);
+            
+            // *** FIX: Calculate start time and call the correct service ***
+            const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
+            // The 120px offset is for the track name div
+            const dropX = event.clientX - event.currentTarget.getBoundingClientRect().left - 120 + event.currentTarget.scrollLeft;
+            const startTime = Math.max(0, dropX / pixelsPerSecond);
+            
+            localAppServices.handleTimelineLaneDrop(e, track.id, startTime);
         });
         
         tracksArea.appendChild(trackLane);
     });
-}
-
-function handleTimelineDrop(event, targetTrackId) {
-    const targetTrack = localAppServices.getTrackById?.(targetTrackId);
-    if (!targetTrack) return;
-
-    const dragData = event.dataTransfer.getData('application/json');
-    if (!dragData) return;
-
-    const { type, sourceTrackId, sequenceId } = JSON.parse(dragData);
-
-    if (type === 'piano-roll-sequence') {
-        const sourceTrack = localAppServices.getTrackById?.(sourceTrackId);
-        const sequence = sourceTrack?.sequences.find(s => s.id === sequenceId);
-        if (sequence) {
-            const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * Constants.STEPS_PER_BAR / 4 * 30;
-            const dropX = event.clientX - event.currentTarget.getBoundingClientRect().left - 120 + event.currentTarget.scrollLeft;
-            const dropTimeInSeconds = Math.max(0, dropX / pixelsPerSecond);
-            
-            targetTrack.addMidiClip(sequence, dropTimeInSeconds);
-        }
-    }
 }
 
 function attachClipDragListeners(clipDiv, track, clip) {
