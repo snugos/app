@@ -6,7 +6,7 @@ import * as Constants from '../constants.js';
 let localAppServices = {};
 
 export function initializeTimelineUI(appServicesFromMain) {
-    localAppServices = appServicesFromMain || {};
+    localAppServices = appServicesFromMain;
 }
 
 export function openTimelineWindow(savedState = null) {
@@ -59,13 +59,13 @@ export function renderTimeline() {
 
     if (!tracksArea || !ruler || !tracksAndPlayheadContainer) return;
     
-    // Sync ruler scroll with track area scroll
     tracksAndPlayheadContainer.addEventListener('scroll', () => {
         ruler.style.left = `-${tracksAndPlayheadContainer.scrollLeft}px`;
     });
 
     tracksArea.innerHTML = '';
     const tracks = localAppServices.getTracks?.() || [];
+    // This is the correct formula, based on 30px per 16th note
     const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
 
     tracks.forEach(track => {
@@ -82,7 +82,6 @@ export function renderTimeline() {
         
         const clipsArea = trackLane.querySelector('.timeline-clips-area');
         if (clipsArea) {
-            // Render both audio and MIDI clips
             track.timelineClips.forEach(clip => {
                 const clipDiv = document.createElement('div');
                 clipDiv.className = clip.type === 'audio' ? 'audio-clip' : 'midi-clip';
@@ -91,7 +90,6 @@ export function renderTimeline() {
                 clipDiv.style.left = `${clip.startTime * pixelsPerSecond}px`;
                 clipDiv.style.width = `${clip.duration * pixelsPerSecond}px`;
 
-                // Add double-click to open editor
                 if (clip.type === 'midi') {
                     clipDiv.addEventListener('dblclick', () => {
                         localAppServices.openPianoRollWindow?.(track.id, clip.sequenceId);
@@ -100,17 +98,12 @@ export function renderTimeline() {
                 clipsArea.appendChild(clipDiv);
             });
 
-            // Add double-click to create new MIDI clip
             if (track.type !== 'Audio') {
                 clipsArea.addEventListener('dblclick', (e) => {
-                    // Prevent creating a clip when double-clicking an existing one
                     if (e.target !== clipsArea) return;
-                    
                     const rect = clipsArea.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
+                    const x = e.clientX - rect.left + clipsArea.parentElement.scrollLeft;
                     const startTime = x / pixelsPerSecond;
-                    
-                    // Create a new 4-bar sequence and a corresponding clip
                     const newSequence = track.createNewSequence(`Clip ${track.timelineClips.length + 1}`, 64);
                     if (newSequence) {
                         const durationInSeconds = (64 / Constants.STEPS_PER_BAR / 4) * (60 / Tone.Transport.bpm.value);
@@ -127,7 +120,6 @@ export function renderTimeline() {
                 });
             }
 
-            // Add drag and drop listeners
             clipsArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 clipsArea.classList.add('dragover-timeline-lane');
@@ -138,7 +130,7 @@ export function renderTimeline() {
             clipsArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 clipsArea.classList.remove('dragover-timeline-lane');
-                const x = e.clientX - clipsArea.getBoundingClientRect().left;
+                const x = e.clientX - clipsArea.getBoundingClientRect().left + clipsArea.parentElement.scrollLeft;
                 const startTime = x / pixelsPerSecond;
                 localAppServices.handleTimelineLaneDrop?.(e, track.id, startTime);
             });
@@ -158,7 +150,9 @@ export function updatePlayheadPosition(transportTime) {
 
     if (!playhead || !tracksAndPlayheadContainer) return;
 
+    // This is the corrected formula
     const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+    
     const playheadAbsoluteLeft = (transportTime * pixelsPerSecond);
     playhead.style.transform = `translateX(${playheadAbsoluteLeft}px)`;
 
