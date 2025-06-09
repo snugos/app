@@ -402,19 +402,13 @@ export class Track {
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
     }
 
-    // *** NEW HELPER FUNCTION ***
-    addClip(clipData) {
-        if (!clipData.type || !clipData.id) return;
-        this.timelineClips.push(clipData);
-        this.appServices.captureStateForUndo?.(`Add ${clipData.name} clip`);
-        this.appServices.renderTimeline?.();
-    }
-
     addMidiClip(sequence, startTime) {
         if (!sequence) return;
+
         const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4);
         const totalBeats = sequence.length * beatsPerStep;
         const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value);
+
         const newClip = {
             id: `clip-${this.id}-${Date.now()}`,
             type: 'midi',
@@ -423,7 +417,10 @@ export class Track {
             duration: clipDuration,
             sequenceData: JSON.parse(JSON.stringify(sequence.data))
         };
-        this.addClip(newClip); // Use the helper
+
+        this.timelineClips.push(newClip);
+        this.appServices.renderTimeline?.();
+        this.appServices.captureStateForUndo?.(`Add clip ${newClip.name}`);
     }
 
     async addAudioClip(audioBlob, startTime, clipName) {
@@ -438,10 +435,20 @@ export class Track {
                 duration: audioBuffer.duration,
                 audioBuffer,
             };
-            this.addClip(newClip); // Use the helper
+            this.addClip(newClip);
         } catch (error) {
             console.error("Error adding audio clip:", error);
             this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
+        }
+    }
+    
+    deleteClip(clipId) {
+        const index = this.timelineClips.findIndex(c => c.id === clipId);
+        if (index > -1) {
+            const clipName = this.timelineClips[index].name;
+            this.timelineClips.splice(index, 1);
+            this.appServices.renderTimeline?.();
+            this.appServices.captureStateForUndo?.(`Delete clip ${clipName}`);
         }
     }
     
