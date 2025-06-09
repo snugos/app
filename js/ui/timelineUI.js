@@ -5,10 +5,8 @@ import * as Constants from '../constants.js';
 
 let localAppServices = {};
 
-// ADD the 'export' keyword to this function
 export function initializeTimelineUI(appServicesFromMain) {
     localAppServices = appServicesFromMain || {};
-    console.log("[TimelineUI] Initialized with appServices keys:", Object.keys(localAppServices));
 }
 
 export function openTimelineWindow(savedState = null) {
@@ -56,14 +54,23 @@ export function renderTimeline() {
     if (!timelineWindow || !timelineWindow.element || timelineWindow.isMinimized) return;
 
     const tracksArea = timelineWindow.element.querySelector('#timeline-tracks-area');
-    if (!tracksArea) return;
+    const ruler = timelineWindow.element.querySelector('#timeline-ruler');
+    const tracksAndPlayheadContainer = timelineWindow.element.querySelector('#timeline-tracks-and-playhead-container');
+
+    if (!tracksArea || !ruler || !tracksAndPlayheadContainer) return;
+    
+    // Sync ruler scroll with track area scroll
+    tracksAndPlayheadContainer.addEventListener('scroll', () => {
+        ruler.style.left = `-${tracksAndPlayheadContainer.scrollLeft}px`;
+    });
 
     tracksArea.innerHTML = '';
     const tracks = localAppServices.getTracks?.() || [];
+    const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
 
     tracks.forEach(track => {
         const trackLane = document.createElement('div');
-        trackLane.className = 'timeline-track-lane flex';
+        trackLane.className = 'timeline-track-lane';
         trackLane.setAttribute('data-track-id', track.id);
         
         const trackNameWidth = getComputedStyle(document.documentElement).getPropertyValue('--timeline-track-name-width');
@@ -75,16 +82,65 @@ export function renderTimeline() {
         
         const clipsArea = trackLane.querySelector('.timeline-clips-area');
         if (clipsArea) {
+            // Render both audio and MIDI clips
             track.timelineClips.forEach(clip => {
                 const clipDiv = document.createElement('div');
-                clipDiv.className = clip.type === 'audio' ? 'audio-clip' : 'midi-clip'; // Style midi-clip later
+                clipDiv.className = clip.type === 'audio' ? 'audio-clip' : 'midi-clip';
                 clipDiv.textContent = clip.name;
-
-                const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
+                clipDiv.setAttribute('data-clip-id', clip.id);
                 clipDiv.style.left = `${clip.startTime * pixelsPerSecond}px`;
                 clipDiv.style.width = `${clip.duration * pixelsPerSecond}px`;
 
+                // Add double-click to open editor
+                if (clip.type === 'midi') {
+                    clipDiv.addEventListener('dblclick', () => {
+                        localAppServices.openPianoRollWindow?.(track.id, clip.sequenceId);
+                    });
+                }
                 clipsArea.appendChild(clipDiv);
+            });
+
+            // Add double-click to create new MIDI clip
+            if (track.type !== 'Audio') {
+                clipsArea.addEventListener('dblclick', (e) => {
+                    // Prevent creating a clip when double-clicking an existing one
+                    if (e.target !== clipsArea) return;
+                    
+                    const rect = clipsArea.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const startTime = x / pixelsPerSecond;
+                    
+                    // Create a new 4-bar sequence and a corresponding clip
+                    const newSequence = track.createNewSequence(`Clip ${track.timelineClips.length + 1}`, 64);
+                    if (newSequence) {
+                        const durationInSeconds = (64 / Constants.STEPS_PER_BAR / 4) * (60 / Tone.Transport.bpm.value);
+                        const newClip = {
+                            id: `midiclip_${track.id}_${Date.now()}`,
+                            type: 'midi',
+                            name: newSequence.name,
+                            startTime: startTime,
+                            duration: durationInSeconds,
+                            sequenceId: newSequence.id,
+                        };
+                        track.addClip(newClip);
+                    }
+                });
+            }
+
+            // Add drag and drop listeners
+            clipsArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                clipsArea.classList.add('dragover-timeline-lane');
+            });
+            clipsArea.addEventListener('dragleave', (e) => {
+                clipsArea.classList.remove('dragover-timeline-lane');
+            });
+            clipsArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                clipsArea.classList.remove('dragover-timeline-lane');
+                const x = e.clientX - clipsArea.getBoundingClientRect().left;
+                const startTime = x / pixelsPerSecond;
+                localAppServices.handleTimelineLaneDrop?.(e, track.id, startTime);
             });
         }
         
@@ -103,7 +159,6 @@ export function updatePlayheadPosition(transportTime) {
     if (!playhead || !tracksAndPlayheadContainer) return;
 
     const pixelsPerSecond = (Tone.Transport.bpm.value / 60) * 4 * 30;
-    
     const playheadAbsoluteLeft = (transportTime * pixelsPerSecond);
     playhead.style.transform = `translateX(${playheadAbsoluteLeft}px)`;
 
@@ -111,14 +166,13 @@ export function updatePlayheadPosition(transportTime) {
         const containerScrollLeft = tracksAndPlayheadContainer.scrollLeft;
         const containerWidth = tracksAndPlayheadContainer.clientWidth;
         
-        const playheadVisibleStart = containerScrollLeft;
         const playheadVisibleEnd = containerScrollLeft + containerWidth;
         const scrollBuffer = 50; 
 
         if (playhead.offsetLeft > playheadVisibleEnd - scrollBuffer) {
             tracksAndPlayheadContainer.scrollLeft = playhead.offsetLeft - containerWidth + scrollBuffer;
         }
-        else if (playhead.offsetLeft < playheadVisibleStart + scrollBuffer) {
+        else if (playhead.offsetLeft < containerScrollLeft + scrollBuffer) {
              tracksAndPlayheadContainer.scrollLeft = Math.max(0, playhead.offsetLeft - scrollBuffer);
         }
     }
