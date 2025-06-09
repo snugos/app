@@ -49,6 +49,7 @@ export class Track {
         this.audioBuffer = null;
         this.slices = [];
         this.selectedSliceForEdit = 0;
+        this.slicerPlayer = null; // *** FIX: Added property for the slicer's persistent player ***
         this.drumSamplerPads = [];
         this.drumPadPlayers = [];
         this.selectedDrumPadForEdit = 0;
@@ -300,7 +301,7 @@ export class Track {
     updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence?.data[pitchIndex]?.[timeStep]) {
-            sequence.data[pitchIndex][timeStep].velocity = Math.max(0.01, Math.min(1, newVelocity));
+            sequence.data[pitchIndex][timeStep] = Math.max(0.01, Math.min(1, newVelocity));
         }
     }
 
@@ -436,19 +437,38 @@ export class Track {
         }
 
         const sequenceCallback = (time, value) => {
-            // *** FIX: Add a check for null/undefined value ***
             if (value) {
                 value.forEach(note => {
+                    // *** FIX STARTS HERE ***
                     if (this.instrument) {
+                        // This handles Synth and InstrumentSampler correctly
                         this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
-                    } else if (this.type === 'Sampler' || this.type === 'DrumSampler') {
+                    } else if (this.type === 'DrumSampler') {
                         const midi = Tone.Midi(note.pitch).toMidi();
-                        const sampleIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                        if (sampleIndex >= 0 && sampleIndex < Constants.NUM_SAMPLER_NOTES) {
-                            const playbackFn = this.type === 'Sampler' ? this.appServices.playSlicePreview : this.appServices.playDrumSamplerPadPreview;
-                            playbackFn?.(this.id, sampleIndex, note.velocity, 0, time);
+                        // Ensure we use the correct start note for drum pads
+                        const padIndex = midi - Constants.DRUM_MIDI_START_NOTE;
+                        if (padIndex >= 0 && padIndex < this.drumPadPlayers.length && this.drumPadPlayers[padIndex] && !this.drumPadPlayers[padIndex].disposed) {
+                            const player = this.drumPadPlayers[padIndex];
+                            const padData = this.drumSamplerPads[padIndex];
+                            // Apply pad-specific volume and pitch
+                            player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
+                            player.volume.value = Tone.gainToDb((padData.volume || 0.7) * note.velocity);
+                            player.start(time);
+                        }
+                    } else if (this.type === 'Sampler') {
+                        if (this.slicerPlayer && !this.slicerPlayer.disposed) {
+                            const midi = Tone.Midi(note.pitch).toMidi();
+                            const sliceIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+                            const slice = this.slices[sliceIndex];
+                            if (slice && slice.duration > 0) {
+                                // Apply slice-specific volume and pitch
+                                this.slicerPlayer.playbackRate = Math.pow(2, (slice.pitchShift || 0) / 12);
+                                this.slicerPlayer.volume.value = Tone.gainToDb((slice.volume || 0.7) * note.velocity);
+                                this.slicerPlayer.start(time, slice.offset, slice.duration);
+                            }
                         }
                     }
+                    // *** FIX ENDS HERE ***
                 });
             }
         };
@@ -457,6 +477,7 @@ export class Track {
         this.toneSequence.loop = true;
         this.toneSequence.loopEnd = activeSequence.length;
     }
+
 
     startSequence() {
         if (this.toneSequence?.state !== 'started') this.toneSequence?.start(0);
@@ -483,5 +504,7 @@ export class Track {
         this.outputNode?.dispose();
         this.trackMeter?.dispose();
         this.activeEffects.forEach(e => e.toneNode.dispose());
+        this.slicerPlayer?.dispose(); // FIX: Dispose the slicer player
+        this.drumPadPlayers.forEach(p => p?.dispose()); // FIX: Dispose all drum pad players
     }
 }
