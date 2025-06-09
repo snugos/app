@@ -35,6 +35,7 @@ export class Track {
             this.outputNode.fan(this.trackMeter, Tone.getDestination());
         }
 
+        // *** FIX: Initialize all properties at the top, before any methods are called. ***
         this.instrument = null;
         this.activeEffects = [];
         this.toneSequence = null;
@@ -56,6 +57,7 @@ export class Track {
         this.toneSampler = null;
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
         
+        // Initial connection for an empty effects chain.
         this.input.connect(this.outputNode);
 
         if (initialData?.activeEffects && initialData.activeEffects.length > 0) {
@@ -64,6 +66,7 @@ export class Track {
             this.addEffect('EQ3', null, true);
         }
 
+        // Continue with type-specific initializations
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
@@ -423,69 +426,66 @@ export class Track {
         }
     }
 
-    
-recreateToneSequence() {
-    this.toneSequence?.dispose();
-    this.toneSequence = null;
-    const activeSequence = this.getActiveSequence();
-    if (!activeSequence) return;
+    recreateToneSequence() {
+        this.toneSequence?.dispose();
+        this.toneSequence = null;
+        const activeSequence = this.getActiveSequence();
+        if (!activeSequence) return;
 
-    const sequenceEvents = [];
-    for (let step = 0; step < activeSequence.length; step++) {
-        const notesAtStep = [];
-        for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) {
-            
-            // *** FIX: Use the correct 'step' variable here ***
-            const note = activeSequence.data[pitchIndex][step];
-            
-            if (note) {
-                notesAtStep.push({
-                    pitch: Constants.SYNTH_PITCHES[pitchIndex],
-                    duration: `${note.duration || 1}*16n`,
-                    velocity: note.velocity || 0.75,
-                });
+        const sequenceEvents = [];
+        for (let step = 0; step < activeSequence.length; step++) {
+            const notesAtStep = [];
+            for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) {
+                const note = activeSequence.data[pitchIndex][step];
+                if (note) {
+                    notesAtStep.push({
+                        pitch: Constants.SYNTH_PITCHES[pitchIndex],
+                        duration: `${note.duration || 1}*16n`,
+                        velocity: note.velocity || 0.75,
+                    });
+                }
             }
+            sequenceEvents.push(notesAtStep.length > 0 ? notesAtStep : null);
         }
-        sequenceEvents.push(notesAtStep.length > 0 ? notesAtStep : null);
-    }
 
-    const sequenceCallback = (time, value) => {
-        if (value) {
-            value.forEach(note => {
-                if (this.instrument) {
-                    this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
-                } else if (this.type === 'DrumSampler') {
-                    const midi = Tone.Midi(note.pitch).toMidi();
-                    const padIndex = midi - Constants.DRUM_MIDI_START_NOTE;
-                    const player = this.drumPadPlayers[padIndex];
-                    if (player && !player.disposed) {
-                        const padData = this.drumSamplerPads[padIndex];
-                        player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
-                        player.volume.value = Tone.gainToDb((padData.volume || 0.7) * note.velocity);
-                        player.start(time);
-                    }
-                } else if (this.type === 'Sampler') {
-                    const player = this.slicerPlayer;
-                    if (player && !player.disposed) {
+        const sequenceCallback = (time, value) => {
+            if (value) {
+                value.forEach(note => {
+                    if (this.instrument) {
+                        this.instrument.triggerAttackRelease(note.pitch, note.duration, time, note.velocity);
+                    } else if (this.type === 'DrumSampler') {
                         const midi = Tone.Midi(note.pitch).toMidi();
-                        const sliceIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
-                        const slice = this.slices[sliceIndex];
-                        if (slice && slice.duration > 0) {
-                            player.playbackRate = Math.pow(2, (slice.pitchShift || 0) / 12);
-                            player.volume.value = Tone.gainToDb((slice.volume || 0.7) * note.velocity);
-                            player.start(time, slice.offset, slice.duration);
+                        const padIndex = midi - Constants.DRUM_MIDI_START_NOTE;
+                        const player = this.drumPadPlayers[padIndex];
+                        if (player && !player.disposed) {
+                            const padData = this.drumSamplerPads[padIndex];
+                            player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
+                            player.volume.value = Tone.gainToDb((padData.volume || 0.7) * note.velocity);
+                            player.start(time);
+                        }
+                    } else if (this.type === 'Sampler') {
+                        const player = this.slicerPlayer;
+                        if (player && !player.disposed) {
+                            const midi = Tone.Midi(note.pitch).toMidi();
+                            const sliceIndex = midi - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+                            const slice = this.slices[sliceIndex];
+                            if (slice && slice.duration > 0) {
+                                player.playbackRate = Math.pow(2, (slice.pitchShift || 0) / 12);
+                                player.volume.value = Tone.gainToDb((slice.volume || 0.7) * note.velocity);
+                                player.start(time, slice.offset, slice.duration);
+                            }
                         }
                     }
-                }
-            });
-        }
-    };
-    
-    this.toneSequence = new Tone.Sequence(sequenceCallback, sequenceEvents, '16n');
-    this.toneSequence.loop = true;
-    this.toneSequence.loopEnd = activeSequence.length;
-}
-    
+                });
+            }
+        };
+        
+        this.toneSequence = new Tone.Sequence(sequenceCallback, sequenceEvents, '16n');
+        this.toneSequence.loop = true;
+        this.toneSequence.loopEnd = activeSequence.length;
+    }
+
+
     startSequence() {
         if (this.toneSequence?.state !== 'started') this.toneSequence?.start(0);
     }
