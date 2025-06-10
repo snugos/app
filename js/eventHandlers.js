@@ -20,6 +20,7 @@ import {
     getActiveMIDIInputState,
     getUndoStackState, 
     getRedoStackState,
+    getRecordingTrackIdState,
     setRecordingStartTimeState
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
