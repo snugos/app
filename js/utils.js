@@ -178,7 +178,58 @@ export function createContextMenu(event, menuItems, appServicesForZIndex) {
     }, 0);
 }
 
-// *** NEW SHARED FUNCTION ***
+export function createDropZoneHTML(inputId, labelText = 'Drop file or click to load') {
+    return `
+        <div class="drop-zone" data-input-id="${inputId}">
+            <p>${labelText}</p>
+            <input type="file" id="${inputId}" class="hidden">
+        </div>
+    `;
+}
+
+export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex, onDropSound, onFileLoad) {
+    if (!dropZoneElement) return;
+
+    dropZoneElement.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZoneElement.classList.add('dragover');
+    });
+
+    dropZoneElement.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZoneElement.classList.remove('dragover');
+    });
+
+    dropZoneElement.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZoneElement.classList.remove('dragover');
+
+        if (e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            const event = { target: { files: [file] } };
+            if (padIndex !== null) {
+                onFileLoad(event, trackId, padIndex);
+            } else {
+                onFileLoad(event, trackId, trackTypeHint);
+            }
+        } else {
+            const jsonDataString = e.dataTransfer.getData("application/json");
+            if (jsonDataString) {
+                const soundData = JSON.parse(jsonDataString);
+                onDropSound(soundData, trackId, trackTypeHint, padIndex);
+            }
+        }
+    });
+
+    dropZoneElement.addEventListener('click', (e) => {
+        const inputId = dropZoneElement.dataset.inputId;
+        document.getElementById(inputId)?.click();
+    });
+}
+
 export function drawWaveform(canvas, audioBuffer, color = '#FFFFFF') {
     if (!canvas || !audioBuffer) return;
     const ctx = canvas.getContext('2d');
@@ -207,7 +258,6 @@ export function drawWaveform(canvas, audioBuffer, color = '#FFFFFF') {
             }
         }
         
-        // Draw a single vertical line for the min/max range
         const rectHeight = Math.max(1, (max - min) * amp);
         const y = (1 + min) * amp;
         ctx.fillRect(i, y, 1, rectHeight);
