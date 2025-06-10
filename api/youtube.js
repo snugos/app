@@ -17,41 +17,45 @@ exports.handler = async function(event) {
         }
         const videoId = videoIdMatch[1]; //
         
-        // === STEP 1: Get the download link from RapidAPI (Your existing logic) ===
-        const getLinkOptions = { //
+        // === STEP 1: Get the download link from the NEW RapidAPI service ===
+        const getLinkOptions = {
             method: 'GET',
-            url: 'https://super-fast-youtube-to-mp3-and-mp4-converter.p.rapidapi.com/dl', //
-            params: { id: videoId }, //
+            // NEW API URL
+            url: 'https://youtube-mp36.p.rapidapi.com/dl',
+            params: { id: videoId },
             headers: {
-                'x-rapidapi-host': 'super-fast-youtube-to-mp3-and-mp4-converter.p.rapidapi.com', //
-                'x-rapidapi-key': process.env.RAPIDAPI_KEY //
+                // NEW HOST
+                'x-rapidapi-host': 'youtube-mp36.p.rapidapi.com',
+                // This will use the new key you set in Vercel's environment variables
+                'x-rapidapi-key': process.env.RAPIDAPI_KEY 
             }
         };
 
-        const linkResponse = await axios.request(getLinkOptions); //
-        const data = linkResponse.data; //
+        const linkResponse = await axios.request(getLinkOptions);
+        const data = linkResponse.data;
 
+        // Check for a successful response from the new API
         if (linkResponse.status !== 200 || !data.link) { //
-            throw new Error(data.msg || 'RapidAPI did not return a valid download link.'); //
+            throw new Error(data.msg || 'The new RapidAPI service did not return a valid download link.'); //
         }
 
-        // === STEP 2: NEW - Download the audio file directly on the server ===
+        // === STEP 2: Download the audio file directly on the server (this logic stays the same) ===
         const downloadResponse = await axios({
             method: 'GET',
-            url: data.link, // Use the link from the previous step
-            responseType: 'arraybuffer' // This is crucial for handling binary file data
+            url: data.link,
+            responseType: 'arraybuffer'
         });
 
-        // === STEP 3: NEW - Convert audio to Base64 and return it in the response ===
+        // === STEP 3: Convert audio to Base64 and return it (this logic stays the same) ===
         const audioBuffer = Buffer.from(downloadResponse.data, 'binary');
 
         return {
-            statusCode: 200,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                success: true,
-                title: data.title,
-                base64: audioBuffer.toString('base64') // Send audio data instead of a link
+            statusCode: 200, //
+            headers: { 'Content-Type': 'application/json' }, //
+            body: JSON.stringify({ //
+                success: true, //
+                title: data.title, //
+                base64: audioBuffer.toString('base64')
             })
         };
 
