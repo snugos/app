@@ -8,7 +8,7 @@ import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
-} from './eventhandlers.js';
+} from './eventHandlers.js';
 import {
     initializeStateModule, getTracksState, getTrackByIdState, getOpenWindowsState,
     getWindowByIdState, addTrackToStateInternal, removeTrackFromStateInternal,
