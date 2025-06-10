@@ -1,5 +1,5 @@
 {
-  "name": "snugos-netlify-functions",
+  "name": "snugos-serverless-functions",
   "version": "1.0.0",
   "description": "Dependencies for SnugOS serverless functions.",
   "main": "index.js",
