@@ -1,6 +1,6 @@
 // js/ui/inspectorUI.js
 
-import { createDropZoneHTML, setupGenericDropZoneListeners, drawInstrumentWaveform } from '../utils.js';
+import { createDropZoneHTML, setupGenericDropZoneListeners, drawWaveform } from '../utils.js';
 import * as Constants from '../constants.js';
 
 let localAppServices = {};
@@ -332,7 +332,7 @@ function buildInstrumentSamplerControls(track, container) {
     
     const canvas = container.querySelector(`#waveform-canvas-instrument-${track.id}`);
     if(track.instrumentSamplerSettings.audioBuffer) {
-        // Use the shared waveform drawing function from utils
-        localAppServices.drawInstrumentWaveform(track, canvas);
+        // *** FIX: Call the generic drawWaveform and pass the correct buffer ***
+        drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
     }
 }
