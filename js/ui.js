@@ -11,7 +11,8 @@ import { initializeYouTubeImporterUI } from './ui/youtubeImporterUI.js';
 
 // Import all exported functions from the sub-modules that main.js needs
 import { createKnob } from './ui/knobUI.js';
-import { openTrackInspectorWindow, drawWaveform, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI, drawInstrumentWaveform } from './ui/inspectorUI.js';
+// *** FIX: Removed drawWaveform and drawInstrumentWaveform from this import, as they are now in utils.js ***
+import { openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from './ui/inspectorUI.js';
 import { openMixerWindow, updateMixerWindow } from './ui/mixerUI.js';
 import { openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './ui/effectsRackUI.js';
 import { openTimelineWindow, renderTimeline, updatePlayheadPosition } from './ui/timelineUI.js';
@@ -52,14 +53,13 @@ export {
     openTimelineWindow,
     renderTimeline,
     updatePlayheadPosition,
-    openSoundBrowserWindow, // *** FIX: This was missing from the export list ***
+    openSoundBrowserWindow,
     renderSoundBrowser,
     renderDirectoryView,
     openPianoRollWindow,
     updatePianoRollPlayhead,
     openYouTubeImporterWindow,
-    drawWaveform,
-    drawInstrumentWaveform,
+    // *** FIX: No longer exporting drawWaveform or drawInstrumentWaveform from here ***
     renderSamplePads,
     updateSliceEditorUI,
     renderDrumSamplerPads,
