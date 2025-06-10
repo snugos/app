@@ -57,7 +57,7 @@ import {
 } from './ui.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
-
+import { initializeAuth } from './auth.js'; // <-- NEW IMPORT FOR AUTH LOGIC
 
 let appServices = {};
 
@@ -232,12 +232,12 @@ function onPlaybackModeChange(newMode, oldMode) {
         Tone.Transport.stop();
     }
     
-    tracks.forEach(track => track.stopSequence?.());
+    tracks.forEach(track => track.sequences.stopSequence?.());
 
     if (newMode === 'timeline') {
         scheduleTimelinePlayback();
     } else { 
-        tracks.forEach(track => track.recreateToneSequence?.());
+        tracks.forEach(track => track.sequences.recreateToneSequence?.());
     }
 
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
@@ -253,7 +253,6 @@ async function initializeSnugOS() {
         if (typeof Tone !== 'undefined') {
             const transportTime = Tone.Transport.seconds;
             
-            // *** FIX: Only update the playhead for the active mode ***
             const mode = appServices.getPlaybackMode();
             if (mode === 'timeline') {
                 updatePlayheadPosition(transportTime);
@@ -330,6 +329,7 @@ async function initializeSnugOS() {
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
     initializeMetronome(appServices);
+    initializeAuth(appServices); // <-- INITIALIZE THE NEW AUTH MODULE
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
