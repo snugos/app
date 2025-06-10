@@ -124,7 +124,7 @@ export function renderDrumSamplerPads(track, container) {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
             updateDrumPadControlsUI(track, container.closest('.window-content'));
-            renderDrumSamplerPads(track, container); // Re-render to update selection
+            renderDrumSamplerPads(track, container);
         });
         grid.appendChild(pad);
     }
@@ -180,7 +180,7 @@ export function updateDrumPadControlsUI(track, container) {
 export function openTrackInspectorWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
-    const windowId = `trackInspector-${trackId}`;
+    const windowId = `trackInspector-${trackId}`
     if (localAppServices.getOpenWindows().has(windowId) && !savedState) {
         localAppServices.getOpenWindows().get(windowId).restore(); return;
     }
@@ -196,10 +196,14 @@ function buildTrackInspectorContentDOM(track) {
     const content = document.createElement('div');
     content.className = 'p-2 space-y-2 overflow-y-auto h-full text-black dark:text-white';
     
-    // *** FIX: Added Piano Roll button logic here ***
-    let pianoRollButtonHTML = '';
+    let editorButtonsHTML = '';
     if (track.type !== 'Audio') {
-        pianoRollButtonHTML = `<button id="openPianoRollBtn-${track.id}" class="w-full p-1 mt-2 border rounded">Open Piano Roll</button>`;
+        editorButtonsHTML = `
+            <div class="flex space-x-2 mt-2">
+                <button id="openPianoRollBtn-${track.id}" class="flex-1 p-1 border rounded">Piano Roll</button>
+                <button id="openEffectsRackBtn-${track.id}" class="flex-1 p-1 border rounded">Effects Rack</button>
+            </div>
+        `;
     }
 
     content.innerHTML = `
@@ -214,7 +218,7 @@ function buildTrackInspectorContentDOM(track) {
                 <label for="trackNameInput-${track.id}" class="text-sm">Track Name:</label>
                 <input type="text" id="trackNameInput-${track.id}" value="${track.name}" class="w-full p-1 border rounded bg-white dark:bg-black border-black dark:border-white">
             </div>
-            ${pianoRollButtonHTML}
+            ${editorButtonsHTML}
         </div>
         <div id="inspector-type-specific-controls-${track.id}"></div>
     `;
@@ -255,10 +259,14 @@ function initializeCommonInspectorControls(track, element) {
         localAppServices.updateTrackUI(track.id, 'nameChanged');
     });
 
-    // *** FIX: Add event listener for the new button ***
     const openPianoRollBtn = element.querySelector(`#openPianoRollBtn-${track.id}`);
     openPianoRollBtn?.addEventListener('click', () => {
         localAppServices.handleOpenPianoRoll?.(track.id);
+    });
+
+    const openEffectsRackBtn = element.querySelector(`#openEffectsRackBtn-${track.id}`);
+    openEffectsRackBtn?.addEventListener('click', () => {
+        localAppServices.handleOpenEffectsRack?.(track.id);
     });
 
     localAppServices.updateTrackUI(track.id, 'soloChanged');
@@ -293,13 +301,11 @@ function buildSlicerSamplerControls(track, container) {
             <div id="dropZoneContainer-${track.id}">
                 ${createDropZoneHTML(`slicer-file-input-${track.id}`)}
             </div>
-            <div id="sample-pads-container-${track.id}" class="mt-2"></div>
+            <canvas id="waveform-canvas-${track.id}" class="waveform-canvas mt-2"></canvas>
         </div>
         <div class="panel">
-            <h3 class="font-bold mb-2">Slice Editor</h3>
-            <div id="slice-editor-controls-${track.id}" class="grid grid-cols-2 gap-2">
-                <div id="slice-pitch-knob-placeholder"></div>
-            </div>
+            <h3 class="font-bold mb-2">Slices</h3>
+            <div id="sample-pads-container-${track.id}" class="mt-2"></div>
         </div>
     `;
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}`);
@@ -310,7 +316,6 @@ function buildSlicerSamplerControls(track, container) {
     fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'Sampler');
     
     renderSamplePads(track, container.querySelector(`#sample-pads-container-${track.id}`));
-    updateSliceEditorUI(track, container);
 }
 
 function buildDrumSamplerControls(track, container) {
