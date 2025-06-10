@@ -93,6 +93,11 @@
             <span id="keyboardIndicatorGlobalTop" title="Computer Keyboard Piano (Caps Lock)">KB</span>
         </div>
         
+        <!-- NEW USER AUTH AREA -->
+        <div id="userAuthContainer" class="flex items-center text-sm ml-4">
+            <button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>
+        </div>
+
         <div id="themeToggleContainerTopRight">
             <button id="themeToggleBtn" title="Toggle Theme">
                 <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -102,12 +107,12 @@
     </div>
 
     <div id="desktop">
-        </div>
+    </div>
 
     <div id="taskbar" class="select-none">
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
-            </div>
+        </div>
         <div id="taskbarTempoDisplay" title="Click to edit Master Tempo">120.0 BPM</div>
     </div>
 
@@ -134,6 +139,10 @@
             <li id="menuLoadProject">Load Project (.snug)</li>
             <li id="menuExportWav">Export to WAV</li>
             <li><hr></li>
+            <!-- NEW MENU ITEMS FOR AUTH -->
+            <li id="menuLogin">Login / Register</li>
+            <li id="menuLogout" class="hidden">Logout</li>
+            <li><hr></li>
             <li id="menuRefreshMidi">Refresh MIDI Devices</li>
             <li id="menuToggleFullScreen">Toggle Full Screen</li>
         </ul>
@@ -147,6 +156,8 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
+    <!-- ADD SCRIPT FOR NEW AUTH MODULE -->
+    <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/main.js?v=1.4"></script>
 
 </body>
