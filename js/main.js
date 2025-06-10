@@ -8,7 +8,7 @@ import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
-} from './eventHandlers.js';
+} from './eventhandlers.js';
 import {
     initializeStateModule, getTracksState, getTrackByIdState, getOpenWindowsState,
     getWindowByIdState, addTrackToStateInternal, removeTrackFromStateInternal,
@@ -36,7 +36,7 @@ import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
-    getMasterBusInputNode
+    getMasterBusInputNode, forceStopAllAudio
 } from './audio.js';
 import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js';
 import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js';
@@ -288,6 +288,7 @@ async function initializeSnugOS() {
         initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
         addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio,
         reorderMasterEffectInAudio, setActualMasterVolume, startAudioRecording, stopAudioRecording,
+        forceStopAllAudio,
         addFileToSoundLibrary: addFileToSoundLibraryInternal,
         fetchSoundLibrary, getLoadedZipFiles: getLoadedZipFilesState, setLoadedZipFiles: setLoadedZipFilesState,
         getSoundLibraryFileTrees: getSoundLibraryFileTreesState, setSoundLibraryFileTrees: setSoundLibraryFileTreesState,
