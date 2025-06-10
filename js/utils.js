@@ -187,7 +187,6 @@ export function createDropZoneHTML(inputId, labelText = 'Drop file or click to l
     `;
 }
 
-// *** UPDATED to be more versatile ***
 export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex, onDropSound, onFileLoad) {
     if (!dropZoneElement) return;
 
@@ -225,7 +224,6 @@ export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTyp
         }
     });
 
-    // Only add a click listener if the element has a data-input-id attribute
     if (dropZoneElement.dataset.inputId) {
         dropZoneElement.addEventListener('click', (e) => {
             document.getElementById(dropZoneElement.dataset.inputId)?.click();
