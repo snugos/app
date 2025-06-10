@@ -56,7 +56,6 @@ export function initializePrimaryEventListeners() {
         }
     });
     
-    // *** NEW FEATURE: Desktop Context Menu for Background Change ***
     desktopEl?.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         const menuItems = [
@@ -73,7 +72,6 @@ export function initializePrimaryEventListeners() {
         if (file) {
             localAppServices.applyCustomBackground(file);
         }
-        // Reset the input so the same file can be chosen again
         e.target.value = null; 
     });
 
@@ -210,17 +208,28 @@ export function attachGlobalControlEvents(uiCache) {
         }
 
         if (Tone.Transport.state === 'started') {
-            Tone.Transport.stop();
+            handleStop(); // Use the robust handleStop function
         } else {
             localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             Tone.Transport.start();
         }
     };
     
+    // *** UPDATED to be more robust ***
     const handleStop = () => {
+        // Release all notes on all instruments first
+        const tracks = localAppServices.getTracks?.() || [];
+        tracks.forEach(track => {
+            if (track.instrument && typeof track.instrument.releaseAll === 'function') {
+                track.instrument.releaseAll();
+            }
+        });
+
+        // Then stop the transport and reset position
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.stop();
         }
+        Tone.Transport.position = 0;
     };
 
     const handleRecord = async () => {
