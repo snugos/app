@@ -14,17 +14,17 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
     if (mic?.state === "started") mic.close();
     if (recorder?.state === "started") await recorder.stop();
 
-    mic = new Tone.UserMedia({
-        audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false }
-    });
-    recorder = new Tone.Recorder();
-
-    if (!track || track.type !== 'Audio' || !track.inputChannel) {
-        localAppServices.showNotification?.('Invalid track for recording.', 3000);
-        return false;
-    }
-
     try {
+        mic = new Tone.UserMedia({
+            audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false }
+        });
+        recorder = new Tone.Recorder();
+
+        if (!track || track.type !== 'Audio' || !track.inputChannel) {
+            localAppServices.showNotification?.('Invalid track for recording.', 3000);
+            return false;
+        }
+
         await mic.open();
         mic.connect(recorder);
         if (isMonitoringEnabled) {
@@ -53,14 +53,13 @@ export async function stopAudioRecording() {
     }
     recorder = null;
 
-    // *** NEW LOGIC: Add the recorded audio as a clip to the timeline ***
     if (blob && blob.size > 0) {
         const recordingTrackId = localAppServices.getRecordingTrackId?.();
         const startTime = getRecordingStartTimeState();
         const track = localAppServices.getTrackById?.(recordingTrackId);
 
         if (track && typeof track.addAudioClip === 'function') {
-            const clipName = `Rec-${new Date().toLocaleTimeString()}`;
+            const clipName = `Recording-${new Date().toLocaleTimeString()}`;
             await track.addAudioClip(blob, startTime, clipName);
         } else {
             console.error("Could not find track to add recorded clip to.");
