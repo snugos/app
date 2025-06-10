@@ -307,7 +307,7 @@ export function attachGlobalControlEvents(uiCache) {
             return;
         }
         if (e.repeat) return;
-        const key = e.key.toLowerCase();
+        const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
         if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
             e.preventDefault();
