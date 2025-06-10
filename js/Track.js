@@ -4,6 +4,18 @@ import * as Constants from './constants.js';
 import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { storeAudio, getAudio } from './db.js';
 
+// *** NEW: Helper function to create nested objects from a string path ***
+function createNestedObject(path, value) {
+    const keys = path.split('.');
+    const result = {};
+    let current = result;
+    for (let i = 0; i < keys.length - 1; i++) {
+        current = current[keys[i]] = {};
+    }
+    current[keys[keys.length - 1]] = value;
+    return result;
+}
+
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
@@ -113,7 +125,11 @@ export class Track {
         if (this.instrument) this.instrument.dispose();
         
         if (this.type === 'Synth') {
-            this.instrument = new Tone.PolySynth(Tone.Synth, this.synthParams);
+            // *** FIX: Explicitly create a PolySynth with options ***
+            this.instrument = new Tone.PolySynth(Tone.Synth, {
+                polyphony: 8, // Set polyphony to 8 voices
+                ...this.synthParams 
+            });
         } else if (this.type === 'InstrumentSampler' || this.type === 'DrumSampler' || this.type === 'Sampler') {
              this.instrument = new Tone.Sampler({
                 attack: 0.01,
@@ -144,6 +160,7 @@ export class Track {
         currentNode.connect(this.outputNode);
     }
     
+    // ... (setVolume, applyMuteState, applySoloState, updateSoloMuteState are unchanged) ...
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
@@ -167,11 +184,21 @@ export class Track {
         this.appServices.updateTrackUI?.(this.id, 'soloChanged');
     }
 
+    // *** FIX: Updated to correctly set parameters on the synth's voices ***
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
         try {
-            this.instrument.set({ [paramPath]: value });
-            this.synthParams = this.instrument.get();
+            const nestedParam = createNestedObject(paramPath, value);
+            this.instrument.set({ voice: nestedParam });
+
+            // Also update our state object for serialization
+            let current = this.synthParams;
+            const keys = paramPath.split('.');
+            for (let i = 0; i < keys.length - 1; i++) {
+                current = current[keys[i]] = current[keys[i]] || {};
+            }
+            current[keys[keys.length - 1]] = value;
+
         } catch (e) {
             console.error(`Could not set synth param: ${paramPath}`, e);
         }
