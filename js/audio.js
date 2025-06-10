@@ -135,7 +135,6 @@ export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) 
     });
 }
 
-// *** NEW FUNCTION to force stop all audio ***
 export function forceStopAllAudio() {
     const tracks = localAppServices.getTracks?.() || [];
     tracks.forEach(track => {
@@ -144,9 +143,7 @@ export function forceStopAllAudio() {
         }
     });
     
-    // This cancels all scheduled events and stops the transport
     Tone.Transport.cancel(0);
     Tone.Transport.stop();
-    // Rewind to the beginning
     Tone.Transport.position = 0;
 }
