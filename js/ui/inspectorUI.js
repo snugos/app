@@ -99,6 +99,7 @@ export function updateSliceEditorUI(track, container) {
     }
 }
 
+// *** UPDATED to make each pad a drop zone ***
 export function renderDrumSamplerPads(track, container) {
     if (!container) return;
     container.innerHTML = '';
@@ -120,12 +121,24 @@ export function renderDrumSamplerPads(track, container) {
             pad.classList.add('selected-for-edit');
         }
 
+        // Handle clicking for selection and preview
         pad.addEventListener('click', () => {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
             updateDrumPadControlsUI(track, container.closest('.window-content'));
-            renderDrumSamplerPads(track, container);
+            renderDrumSamplerPads(track, container); // Re-render to update selection
         });
+
+        // Setup drag and drop listeners for each pad
+        setupGenericDropZoneListeners(
+            pad, 
+            track.id, 
+            'DrumSampler', 
+            i, 
+            localAppServices.loadSoundFromBrowserToTarget, 
+            localAppServices.loadDrumSamplerPadFile
+        );
+
         grid.appendChild(pad);
     }
     container.appendChild(grid);
@@ -180,7 +193,7 @@ export function updateDrumPadControlsUI(track, container) {
 export function openTrackInspectorWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
-    const windowId = `trackInspector-${trackId}`
+    const windowId = `trackInspector-${trackId}`;
     if (localAppServices.getOpenWindows().has(windowId) && !savedState) {
         localAppServices.getOpenWindows().get(windowId).restore(); return;
     }
