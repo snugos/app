@@ -2,7 +2,7 @@
 
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
-import { showNotification as utilShowNotification, createContextMenu, showCustomModal } from './utils.js';
+import { showNotification as utilShowNotification, createContextMenu, showCustomModal, drawWaveform } from './utils.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
@@ -46,14 +46,14 @@ import {
 } from './audio/sampleManager.js';
 import { storeAudio as dbStoreAudio, getAudio as dbGetAudio, deleteAudio as dbDeleteAudio } from './db.js';
 import {
-    // *** FIX: Import the missing function from ui.js ***
+    // *** FIX: Removed drawWaveform and drawInstrumentWaveform from this import list ***
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
     renderDirectoryView,
     renderSoundBrowser,
-    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
+    renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
@@ -193,8 +193,9 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         }
         if (reason === 'instrumentSamplerLoaded') {
             const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
-            if (canvas) {
-                drawInstrumentWaveform(track, canvas);
+            if (canvas && track.instrumentSamplerSettings.audioBuffer) {
+                // Now we call the function directly from appServices, which gets it from utils.js
+                appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
             }
         }
     }
@@ -293,12 +294,14 @@ async function initializeSnugOS() {
         setPreviewPlayer: setPreviewPlayerState, loadSampleFile, loadDrumSamplerPadFile,
         loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
         playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio, dbGetAudio, dbDeleteAudio,
+        // UI functions passed as services
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
         openTimelineWindow, renderTimeline, updatePlayheadPosition, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
-        drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
+        renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView,
+        drawWaveform, // The generic function from utils.js is now a service
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, 
         handleOpenPianoRoll: handleOpenPianoRoll,
