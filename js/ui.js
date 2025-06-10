@@ -52,7 +52,7 @@ export {
     openTimelineWindow,
     renderTimeline,
     updatePlayheadPosition,
-    openSoundBrowserWindow,
+    openSoundBrowserWindow, // *** FIX: This was missing from the export list ***
     renderSoundBrowser,
     renderDirectoryView,
     openPianoRollWindow,
