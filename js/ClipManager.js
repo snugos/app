@@ -1,10 +1,11 @@
 // js/ClipManager.js
+import * as Constants from './constants.js';
 
 export class ClipManager {
     constructor(track, appServices) {
-        this.track = track;
-        this.appServices = appServices;
-        this.timelineClips = [];
+        this.track = track; //
+        this.appServices = appServices; //
+        this.timelineClips = []; //
     }
 
     initialize(clips = []) {
@@ -24,30 +25,30 @@ export class ClipManager {
         const totalBeats = sequence.length * beatsPerStep; //
         const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value); //
         const newClip = { //
-            id: `clip-${this.track.id}-${Date.now()}`, //
-            type: 'midi', //
-            name: sequence.name, //
-            startTime: startTime, //
-            duration: clipDuration, //
-            sequenceData: JSON.parse(JSON.stringify(sequence.data)) //
+            id: `clip-${this.track.id}-${Date.now()}`,
+            type: 'midi',
+            name: sequence.name,
+            startTime: startTime,
+            duration: clipDuration,
+            sequenceData: JSON.parse(JSON.stringify(sequence.data))
         };
         this.addClip(newClip); //
     }
 
     async addAudioClip(audioBlob, startTime, clipName) {
         if (this.track.type !== 'Audio') return; //
-        try {
+        try { //
             const dbKey = `clip-${this.track.id}-${Date.now()}-${clipName}`; //
             await this.appServices.dbStoreAudio(dbKey, audioBlob); //
             const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer()); //
             const newClip = { //
-                id: `clip-${this.track.id}-${Date.now()}`, //
-                type: 'audio', //
-                name: clipName, //
-                dbKey, //
-                startTime, //
-                duration: audioBuffer.duration, //
-                audioBuffer, //
+                id: `clip-${this.track.id}-${Date.now()}`,
+                type: 'audio',
+                name: clipName,
+                dbKey,
+                startTime,
+                duration: audioBuffer.duration,
+                audioBuffer,
             };
             this.addClip(newClip); //
         } catch (error) {
