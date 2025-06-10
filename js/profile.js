@@ -21,6 +21,8 @@ function initProfilePage() {
 
 /**
  * Fetches profile data and follow status from the server.
+ * @param {string} username The username to fetch.
+ * @param {HTMLElement} container The HTML element to render the profile into.
  */
 async function fetchProfileData(username, container) {
     const serverUrl = 'https://snugos-server-api.onrender.com';
@@ -56,9 +58,13 @@ async function fetchProfileData(username, container) {
 
 /**
  * Renders the profile UI, including the dynamic follow/unfollow button.
+ * @param {HTMLElement} container The HTML element to render into.
+ * @param {object} profileData The user's profile data.
+ * @param {Array} projectsData A list of the user's public projects.
+ * @param {boolean} isFollowing The current follow status.
  */
 function renderProfile(container, profileData, projectsData, isFollowing) {
-    container.innerHTML = '';
+    container.innerHTML = ''; // Clear the "Loading..." message
     container.className = 'p-0 overflow-y-auto h-full';
 
     const joinDate = new Date(profileData.memberSince).toLocaleDateString('en-US', {
@@ -78,6 +84,7 @@ function renderProfile(container, profileData, projectsData, isFollowing) {
     const profileHTML = `
         <div class="w-full">
             <header class="relative h-40 md:h-48 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                <!-- Banner Image Placeholder -->
                 <div class="absolute bottom-0 left-6 transform translate-y-1/2">
                     <div class="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-black bg-gray-500 flex items-center justify-center text-white text-5xl font-bold">
                         ${profileData.username.charAt(0).toUpperCase()}
