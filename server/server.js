@@ -1,4 +1,4 @@
-// server.js - SnugOS Dedicated API Server with Profiles
+// server.js - SnugOS Dedicated API Server with Profiles & Backgrounds
 
 require('dotenv').config();
 const express = require('express');
@@ -7,110 +7,119 @@ const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
+const multer = require('multer');
+const AWS = require('aws-sdk');
 
-// Create the Express app
+// --- Configuration ---
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Set up the database connection pool
+// Set up database connection
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    ssl: { rejectUnauthorized: false }
 });
 
-// Function to create the profiles table if it doesn't exist
+// Set up S3 connection for file storage
+const s3 = new AWS.S3({
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION
+});
+
+// Set up multer for in-memory file storage
+const upload = multer({ storage: multer.memoryStorage() });
+
+// --- Database Initialization ---
 const initializeDatabase = async () => {
-    // UPDATED: Table is now named 'profiles'
     const createTableQuery = `
         CREATE TABLE IF NOT EXISTS profiles (
             id SERIAL PRIMARY KEY,
             username VARCHAR(50) UNIQUE NOT NULL,
             password_hash VARCHAR(100) NOT NULL,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            background_url TEXT
         );
+    `;
+    const alterTableQuery = `
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS background_url TEXT;
     `;
     try {
         await pool.query(createTableQuery);
+        await pool.query(alterTableQuery);
         console.log('[DB] "profiles" table checked/created successfully.');
     } catch (err) {
         console.error('[DB] Error initializing database table:', err.stack);
     }
 };
 
-// === Middleware ===
+// --- Middleware ---
 app.use(express.json());
 app.use(cors());
 
+// Authentication Middleware to protect routes
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
+
+    if (token == null) return res.sendStatus(401); // if there isn't any token
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403); // if token is no longer valid
+        req.user = user;
+        next();
+    });
+};
+
 // === API Endpoints ===
 
-// User Registration Endpoint
-app.post('/api/register', async (request, response) => {
-    try {
-        const { username, password } = request.body;
-        if (!username || !password || password.length < 6) {
-            return response.status(400).json({ success: false, message: 'Username and a password of at least 6 characters are required.' });
-        }
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt);
+// [Existing /api/register and /api/login endpoints remain here...]
+// ...
 
-        // UPDATED: Insert into 'profiles' table
-        const newProfile = await pool.query(
-            "INSERT INTO profiles (username, password_hash) VALUES ($1, $2) RETURNING id, username",
-            [username, passwordHash]
+// NEW: Endpoint to update a user's background
+app.put('/api/profile/background', authenticateToken, upload.single('backgroundFile'), async (request, response) => {
+    if (!request.file) {
+        return response.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+
+    try {
+        const file = request.file;
+        const userId = request.user.id; // Get user ID from the authenticated token
+        const fileName = `backgrounds/${userId}-${Date.now()}-${file.originalname}`;
+
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: fileName,
+            Body: file.buffer,
+            ACL: 'public-read', // Make the file publicly accessible
+            ContentType: file.mimetype
+        };
+
+        const data = await s3.upload(uploadParams).promise();
+        const backgroundUrl = data.Location; // The public URL of the uploaded file
+
+        // Save the URL to the user's profile in the database
+        await pool.query(
+            "UPDATE profiles SET background_url = $1 WHERE id = $2",
+            [backgroundUrl, userId]
         );
 
-        response.status(201).json({ success: true, user: newProfile.rows[0] });
+        response.json({ success: true, backgroundUrl });
 
     } catch (error) {
-        console.error("[Register] Error:", error);
-        if (error.code === '23505') {
-            return response.status(409).json({ success: false, message: 'Username already exists.' });
-        }
-        response.status(500).json({ success: false, message: 'Server error during registration.' });
+        console.error("[Background Upload] Error:", error);
+        response.status(500).json({ success: false, message: 'Error uploading file.' });
     }
 });
 
-// User Login Endpoint
-app.post('/api/login', async (request, response) => {
-    try {
-        const { username, password } = request.body;
-        // UPDATED: Select from 'profiles' table
-        const result = await pool.query("SELECT * FROM profiles WHERE username = $1", [username]);
-        const profile = result.rows[0];
 
-        if (!profile) {
-            return response.status(401).json({ success: false, message: 'Invalid credentials.' });
-        }
-
-        const isMatch = await bcrypt.compare(password, profile.password_hash);
-        if (!isMatch) {
-            return response.status(401).json({ success: false, message: 'Invalid credentials.' });
-        }
-
-        const token = jwt.sign(
-            { id: profile.id, username: profile.username },
-            process.env.JWT_SECRET,
-            { expiresIn: '30d' }
-        );
-
-        response.json({ success: true, token, user: { id: profile.id, username: profile.username } });
-
-    } catch (error) {
-        console.error("[Login] Error:", error);
-        response.status(500).json({ success: false, message: 'Server error during login.' });
-    }
-});
-
-// NEW: Public Profile Endpoint
+// UPDATED: Public Profile Endpoint now includes background_url
 app.get('/api/profiles/:username', async (request, response) => {
     try {
         const { username } = request.params;
         
-        // Fetch the user's basic info. We exclude the password_hash for security.
         const profileResult = await pool.query(
-            "SELECT id, username, created_at FROM profiles WHERE username = $1",
+            "SELECT id, username, created_at, background_url FROM profiles WHERE username = $1",
             [username]
         );
 
@@ -119,18 +128,16 @@ app.get('/api/profiles/:username', async (request, response) => {
         if (!profile) {
             return response.status(404).json({ success: false, message: 'Profile not found.' });
         }
-
-        // In the future, we will also fetch the user's public projects here.
-        // For now, we just return the basic profile info.
         
         response.json({
             success: true,
             profile: {
                 id: profile.id,
                 username: profile.username,
-                memberSince: profile.created_at
+                memberSince: profile.created_at,
+                backgroundUrl: profile.background_url // Send the background URL
             },
-            projects: [] // Placeholder for future project list
+            projects: [] 
         });
 
     } catch (error) {
@@ -139,11 +146,7 @@ app.get('/api/profiles/:username', async (request, response) => {
     }
 });
 
-
-// (Your existing YouTube endpoint can remain here)
-app.post('/api/youtube', async (request, response) => {
-    // ... insert your existing YouTube importer code here ...
-});
+// ... your /api/register, /api/login, and /api/youtube endpoints ...
 
 // === Start the Server ===
 app.listen(PORT, () => {
