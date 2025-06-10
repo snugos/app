@@ -15,7 +15,7 @@ export function initializeAuth(appServices) {
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
 
-    // Check if the user is already logged in from a previous session
+    // Check if the user is already logged in on page load
     checkInitialAuthState();
 }
 
@@ -35,7 +35,7 @@ function updateAuthUI(user = null) {
         menuLogout?.classList.remove('hidden');
     } else {
         // User is logged out: Show login button
-        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
+        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1">Login</button>`;
         userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
         menuLogin?.classList.remove('hidden');
         menuLogout?.classList.add('hidden');
@@ -75,30 +75,59 @@ export function showLoginModal() {
     // Hide the start menu if it's open
     document.getElementById('startMenu')?.classList.add('hidden');
 
+    // --- UPDATED HTML WITH SNUGOS STYLING ---
     const modalContent = `
         <div class="space-y-4">
             <div>
                 <h3 class="text-lg font-bold mb-2">Login</h3>
                 <form id="loginForm" class="space-y-3">
-                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white">
-                    <button type="submit" class="w-full px-4 py-2 border rounded">Login</button>
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
+                    <button type="submit" class="w-full">Login</button>
                 </form>
             </div>
             <hr class="border-gray-500">
             <div>
                 <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
                 <form id="registerForm" class="space-y-3">
-                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white">
-                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white">
-                    <button type="submit" class="w-full px-4 py-2 border rounded">Register</button>
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
+                    <button type="submit" class="w-full">Register</button>
                 </form>
             </div>
         </div>
     `;
     
     // Use the utility function to show the modal
-    const { overlay } = localAppServices.showCustomModal('Login or Register', modalContent, []);
+    const { overlay, contentDiv } = localAppServices.showCustomModal('Login or Register', modalContent, []);
+
+    // Apply SnugOS styles to the new form elements
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
 
     // Add submit event listeners to the forms
     overlay.querySelector('#loginForm').addEventListener('submit', (e) => {
