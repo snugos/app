@@ -5,7 +5,6 @@
  */
 function initProfilePage() {
     // Determine which user's profile to load from the URL
-    // e.g., profile.html?user=someusername
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
     
@@ -16,31 +15,38 @@ function initProfilePage() {
         return;
     }
 
-    // Set the page title
     document.title = `${username}'s Profile | SnugOS`;
-
-    // Fetch the profile data from our server
     fetchProfileData(username, profileContainer);
 }
 
 /**
- * Fetches profile data from the server and populates the page.
- * @param {string} username The username to fetch.
- * @param {HTMLElement} container The HTML element to render the profile into.
+ * Fetches profile data and follow status from the server.
  */
 async function fetchProfileData(username, container) {
     const serverUrl = 'https://snugos-server-api.onrender.com';
+    const token = localStorage.getItem('snugos_token');
 
     try {
-        const response = await fetch(`${serverUrl}/api/profiles/${username}`);
-        const data = await response.json();
+        // Fetch profile data and follow status in parallel
+        const [profileRes, followStatusRes] = await Promise.all([
+            fetch(`${serverUrl}/api/profiles/${username}`),
+            token ? fetch(`${serverUrl}/api/profiles/${username}/follow-status`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }) : Promise.resolve(null)
+        ]);
 
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Could not fetch profile.');
+        const profileData = await profileRes.json();
+        if (!profileRes.ok || !profileData.success) {
+            throw new Error(profileData.message || 'Could not fetch profile.');
         }
 
-        // Data fetched successfully, render the profile UI
-        renderProfile(container, data.profile, data.projects);
+        let isFollowing = false;
+        if (followStatusRes && followStatusRes.ok) {
+            const followStatusData = await followStatusRes.json();
+            isFollowing = followStatusData.isFollowing;
+        }
+
+        renderProfile(container, profileData.profile, profileData.projects, isFollowing);
 
     } catch (error) {
         console.error("Failed to load profile:", error);
@@ -49,23 +55,29 @@ async function fetchProfileData(username, container) {
 }
 
 /**
- * Renders the profile information into the main container.
- * @param {HTMLElement} container The HTML element to render into.
- * @param {object} profileData The user's profile data.
- * @param {Array} projectsData A list of the user's public projects.
+ * Renders the profile UI, including the dynamic follow/unfollow button.
  */
-function renderProfile(container, profileData, projectsData) {
-    container.innerHTML = ''; // Clear the "Loading..." message
+function renderProfile(container, profileData, projectsData, isFollowing) {
+    container.innerHTML = '';
+    container.className = 'p-0 overflow-y-auto h-full';
 
     const joinDate = new Date(profileData.memberSince).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
 
+    const followButtonHtml = `
+        <button id="followBtn" class="px-5 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-75 ${
+            isFollowing 
+                ? 'bg-gray-500 hover:bg-gray-600 focus:ring-gray-400' 
+                : 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-400'
+        }">
+            ${isFollowing ? 'Unfollow' : 'Follow'}
+        </button>
+    `;
+
     const profileHTML = `
         <div class="w-full">
-            <!-- Header and Avatar Section -->
             <header class="relative h-40 md:h-48 bg-gray-200 dark:bg-gray-700 rounded-lg">
-                <!-- Banner Image Placeholder -->
                 <div class="absolute bottom-0 left-6 transform translate-y-1/2">
                     <div class="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-black bg-gray-500 flex items-center justify-center text-white text-5xl font-bold">
                         ${profileData.username.charAt(0).toUpperCase()}
@@ -73,28 +85,24 @@ function renderProfile(container, profileData, projectsData) {
                 </div>
             </header>
 
-            <!-- User Info and Actions Section -->
             <section class="mt-20 px-6 pb-4">
                 <div class="flex justify-between items-center">
                     <div>
                         <h1 class="text-3xl font-bold">${profileData.username}</h1>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Member since ${joinDate}</p>
                     </div>
-                    <div>
-                        <button class="px-5 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75">
-                            Follow
-                        </button>
+                    <div id="follow-button-container">
+                        ${followButtonHtml}
                     </div>
                 </div>
             </section>
             
             <hr class="my-6 border-gray-200 dark:border-gray-700">
 
-            <!-- Projects Section -->
             <section class="px-6">
                 <h2 class="text-2xl font-semibold mb-4">Public Projects</h2>
                 <div id="profile-projects-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Projects will be rendered here by JavaScript -->
+                    <p class="text-gray-500 italic">No public projects yet.</p>
                 </div>
             </section>
         </div>
@@ -102,18 +110,49 @@ function renderProfile(container, profileData, projectsData) {
 
     container.innerHTML = profileHTML;
 
-    const projectsList = container.querySelector('#profile-projects-list');
-    if (projectsData && projectsData.length > 0) {
-        // In the future, loop through projectsData and render them
-    } else {
-        projectsList.innerHTML = `<p class="text-gray-500 italic">No public projects yet.</p>`;
+    // Add event listener to the new follow button
+    const followBtn = document.getElementById('followBtn');
+    followBtn?.addEventListener('click', () => {
+        handleFollowToggle(profileData.username, isFollowing);
+    });
+}
+
+/**
+ * Handles the logic for sending follow or unfollow requests to the server.
+ * @param {string} username - The username of the profile to follow/unfollow.
+ * @param {boolean} isCurrentlyFollowing - The current follow state.
+ */
+async function handleFollowToggle(username, isCurrentlyFollowing) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) {
+        alert('You must be logged in to follow users.');
+        return;
+    }
+
+    const serverUrl = 'https://snugos-server-api.onrender.com';
+    const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+
+    try {
+        const response = await fetch(`${serverUrl}/api/profiles/${username}/follow`, {
+            method: method,
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+
+        // Re-fetch profile data to update the UI with the new follow state
+        fetchProfileData(username, document.getElementById('profile-container'));
+
+    } catch (error) {
+        alert(`Error: ${error.message}`);
     }
 }
 
 /**
  * Displays an error message in the main container.
- * @param {HTMLElement} container The HTML element to render the error into.
- * @param {string} message The error message to display.
  */
 function displayError(container, message) {
     container.innerHTML = `
@@ -124,6 +163,4 @@ function displayError(container, message) {
     `;
 }
 
-// Run the initialization function when the page is loaded
 document.addEventListener('DOMContentLoaded', initProfilePage);
-
