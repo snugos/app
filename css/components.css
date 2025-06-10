@@ -1,1 +1,294 @@
-comp
+/* css/components.css - Styles for reusable UI components */
+
+/* --- Top Taskbar Styling --- */
+#topTaskbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background-color: var(--bg-taskbar);
+    border-bottom: 1px solid var(--border-secondary);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    color: var(--text-secondary);
+    gap: 10px;
+}
+
+#topTaskbar > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#topTaskbar button {
+    background-color: var(--bg-button);
+    border: 1px solid var(--border-button);
+    color: var(--text-button);
+    padding: 5px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#topTaskbar button:hover {
+    background-color: var(--bg-button-hover);
+    border-color: var(--border-button-hover);
+    color: var(--text-button-hover);
+}
+#topTaskbar button:active {
+    background-color: var(--bg-button-active);
+}
+
+#topTaskbar button#recordBtnGlobalTop svg {
+    fill: var(--text-button);
+    stroke: var(--text-button);
+}
+
+#topTaskbar button#recordBtnGlobalTop:hover svg {
+    fill: var(--text-button-hover);
+    stroke: var(--text-button-hover);
+}
+
+#topTaskbar button#recordBtnGlobalTop.recording {
+    background-color: #FF0000 !important;
+    border-color: #FF0000 !important;
+    color: var(--text-button-hover) !important;
+}
+
+#topTaskbar button#recordBtnGlobalTop.recording svg {
+    fill: var(--text-button-hover) !important;
+    stroke: var(--text-button-hover) !important;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
+}
+
+#topTaskbar button#playbackModeToggleBtnGlobalTop.active {
+    background-color: var(--accent-active) !important;
+    color: var(--accent-active-text) !important;
+    border-color: var(--accent-active-border-dark) !important;
+}
+
+#topTaskbar input[type="number"],
+#topTaskbar select {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-input);
+    padding: 5px 6px;
+    border-radius: 3px;
+}
+#topTaskbar input[type="number"] {
+    width: 65px;
+}
+#topTaskbar select {
+    min-width: 120px;
+    max-width: 200px;
+}
+
+#topTaskbar label {
+    margin-right: 4px;
+    color: var(--text-secondary);
+}
+
+.master-meter-top {
+    width: 120px;
+    height: 12px;
+    background-color: var(--bg-meter-bar-container);
+    border: 1px solid var(--border-secondary);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.master-meter-top > div {
+    height: 100%;
+    background-color: var(--accent-meter);
+    transition: width 0.05s linear;
+}
+.master-meter-top > div.clipping {
+    background-color: var(--accent-meter-clip);
+}
+
+#activityIndicatorsTop span {
+    padding: 3px 6px;
+    border-radius: 3px;
+    background-color: var(--bg-button);
+    color: var(--text-secondary);
+    margin-left: 5px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+#activityIndicatorsTop span.active {
+    background-color: var(--accent-active);
+    color: var(--accent-active-text);
+}
+
+#themeToggleContainerTopRight {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+
+#themeToggleBtn {
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    width: 32px;
+    height: 32px;
+    color: var(--text-theme-toggle-icon);
+    line-height: 0;
+}
+
+#themeToggleBtn:hover {
+    background-color: var(--bg-theme-toggle-button-hover);
+    color: var(--text-button-hover);
+    border-color: var(--border-theme-toggle-button);
+}
+
+#themeToggleBtn svg {
+    stroke: currentColor;
+    width: 85%;
+    height: 85%;
+}
+
+#themeToggleBtn #themeIconMoon { display: none; }
+#themeToggleBtn #themeIconSun { display: inline-block; }
+body.theme-light #themeToggleBtn #themeIconSun { display: none; }
+body.theme-light #themeToggleBtn #themeIconMoon { display: inline-block; }
+body.theme-dark #themeToggleBtn #themeIconMoon { display: none; }
+body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
+
+
+/* --- Window Styling --- */
+.window {
+    position: absolute;
+    border: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-window);
+    background-color: var(--bg-window);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 150px;
+    min-height: 100px;
+    color: var(--text-primary);
+    border-radius: 3px;
+}
+
+.window.minimized { display: none !important; }
+.window-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 5px 8px; cursor: grab; display: flex; justify-content: space-between; align-items: center; height: 28px; flex-shrink: 0; font-weight: 600; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 2px; border-top-right-radius: 2px;}
+.window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;}
+.window-title-buttons { display: flex;}
+.window-title-buttons button { background: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button); width: 20px; height: 20px; line-height: 18px; text-align: center; font-size: 11px; font-weight: bold; margin-left: 4px; padding: 0; cursor: default; flex-shrink: 0; border-radius: 3px; transition: background-color 0.15s ease;}
+.window-title-buttons button:hover { background: var(--bg-button-hover); color: var(--text-button-hover);}
+.window-title-buttons button:active { background: var(--bg-button-active); border-color: var(--border-button);}
+.window-content { flex-grow: 1; padding: 0; background-color: var(--bg-window-content); overflow: auto; color: var(--text-primary);}
+.window-resizer { position: absolute; width: 10px; height: 10px; right: 0; bottom: 0; cursor: nwse-resize; }
+
+
+/* --- Taskbar Styling (Bottom Taskbar) --- */
+#taskbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 32px; background-color: var(--bg-taskbar); border-top: 1px solid var(--border-secondary); z-index: 10000; display: flex; align-items: center; padding: 0 6px; box-sizing: border-box; color: var(--text-secondary);}
+#startButton { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 12px; font-weight: 600; margin-right: 6px; color: var(--text-button); border-radius: 3px; transition: background-color 0.15s ease;}
+#startButton:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
+#startButton:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
+#taskbarButtons .taskbar-button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 10px; margin: 0 3px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; color: var(--text-secondary); border-radius: 3px; transition: background-color 0.15s ease, color 0.15s ease;}
+#taskbarButtons .taskbar-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover);}
+#taskbarButtons .taskbar-button.active,
+#taskbarButtons .taskbar-button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active); color: var(--text-button-hover);}
+#taskbarButtons .taskbar-button.minimized-on-taskbar { background-color: var(--bg-button); opacity: 0.65;}
+#taskbarTempoDisplay { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button); cursor: pointer; color: var(--text-secondary); border-radius: 3px;}
+#taskbarTempoDisplay:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
+
+/* --- Start Menu Styling --- */
+#startMenu { position: absolute; bottom: 32px; left: 0; background: var(--bg-start-menu); border: 1px solid var(--border-start-menu); border-color: var(--border-start-menu-shadow); box-shadow: var(--shadow-start-menu); z-index: 10001; padding: 4px; min-width: 220px; color: var(--text-primary); border-radius: 3px;}
+#startMenu.hidden { display: none; }
+#startMenu ul { list-style: none; padding: 0; margin: 0; }
+#startMenu li { padding: 6px 20px 6px 12px; cursor: pointer; white-space: nowrap; color: var(--text-primary); border-radius: 2px; transition: background-color 0.1s ease;}
+#startMenu li:hover, #startMenu li.disabled:hover { background: var(--accent-focus); color: #000000; }
+#startMenu li.disabled { color: var(--text-start-menu-disabled); cursor: default; }
+#startMenu hr { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
+
+/* --- Pad Button Styling --- */
+.pad-button { padding: 8px; border: 1px solid var(--border-pad); background-color: var(--bg-button); color: var(--text-secondary); cursor: pointer; text-align: center; min-width: 70px; min-height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: inset -1px -1px 1px var(--shadow-pad-inset-main), inset 1px 1px 1px var(--shadow-pad-inset-secondary); transition: background-color 0.15s ease, box-shadow 0.15s ease; overflow: hidden; position: relative; border-radius: 3px;}
+.pad-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
+.pad-button:active, .pad-button.selected-for-edit { background-color: var(--bg-button-active); box-shadow: inset 1px 1px 1px var(--shadow-pad-inset-main), inset -1px -1px 1px var(--shadow-pad-inset-secondary); border-color: var(--border-pad-active);}
+.pad-button.selected-for-edit { border-color: var(--border-pad-selected); border-width: 2px; padding: 7px;}
+.pad-label { font-size: 0.8em; color: var(--text-secondary); display: block; margin-top: 5px; word-break: break-all; line-height: 1.2; max-height: 2.4em; overflow: hidden; text-overflow: ellipsis;}
+
+/* --- General Drop Zone Styling --- */
+.drop-zone { border: 2px dashed var(--border-dropzone); padding: 10px; text-align: center; background-color: var(--bg-dropzone); color: var(--text-dropzone); font-size: 0.9em; border-radius: 4px; margin-bottom: 5px; transition: background-color 0.2s ease, border-color 0.2s ease;}
+.drop-zone.dragover { background-color: var(--bg-dropzone-dragover); border-color: var(--border-dropzone-dragover); color: var(--text-dropzone-dragover);}
+.drop-zone label { color: var(--text-dropzone-label); text-decoration: underline; cursor: pointer; }
+.drop-zone label:hover { color: var(--text-dropzone-label-hover); }
+
+/* --- Knob Styling --- */
+.knob-container { display: flex; flex-direction: column; align-items: center; margin: 5px; min-width: 60px;}
+.knob-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center;}
+.knob { width: 36px; height: 36px; background-color: var(--bg-button); border-radius: 50%; position: relative; border: 1px solid var(--border-knob); box-shadow: var(--shadow-knob); cursor: ns-resize;}
+.knob-handle { width: 4px; height: 10px; background-color: var(--text-secondary); position: absolute; top: 3px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; border-radius: 2px;}
+.knob-value { font-size: 0.75rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
+
+/* --- General Button Active States --- */
+button.muted { background-color: var(--accent-muted) !important; color: var(--accent-muted-text) !important; }
+button.soloed { background-color: var(--accent-soloed) !important; color: var(--accent-soloed-text) !important; }
+button.armed, button.recording { background-color: var(--accent-armed) !important; color: var(--accent-armed-text) !important; }
+button.active { background-color: var(--accent-active) !important; color: var(--accent-active-text) !important; }
+
+/* --- Notification Area --- */
+#notification-area { position: fixed; bottom: 40px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
+.notification-message { background-color: rgba(0,0,0,0.8); color: white; padding: 10px 15px; margin-top: 5px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; max-width: 300px; }
+.notification-message.show { opacity: 1; transform: translateY(0); }
+.theme-light .notification-message { background-color: rgba(255,255,255,0.9); color: #000000; border: 1px solid #000000; }
+
+/* --- Panel and Control Group --- */
+.panel { border: 1px solid var(--border-primary); padding: 8px; margin-bottom: 8px; border-radius: 3px; background-color: var(--bg-window); }
+.control-group { margin-bottom: 6px; } .control-group label { display: block; margin-bottom: 2px; font-size: 0.9rem; color: var(--text-secondary); }
+.single-control-container { display: inline-block; vertical-align: top; margin-right: 8px; margin-bottom: 4px; }
+
+/* --- Waveform Canvas --- */
+.waveform-canvas { border: 1px solid var(--border-waveform); background-color: var(--bg-meter-track); width: 100%; height: 70px; display: block;}
+
+/* --- Meter Bar Styling --- */
+.meter-bar-container { background-color: var(--bg-meter-bar-container); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-meter-bar-container); height: 10px; box-sizing: border-box;}
+.meter-bar { background-color: var(--accent-meter); height: 100%; width: 0%; transition: width 0.05s linear;}
+.meter-bar.clipping { background-color: var(--accent-meter-clip);}
+.track-meter-container { height: 16px; margin-top: 2px; }
+.mixer-meter-container { height: 12px; margin-top: 4px; }
+#masterMeterContainerGlobal, #mixerMasterMeterContainer { height: 15px; }
+
+/* Modal Styling */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-modal-overlay); display: flex; justify-content: center; align-items: center; z-index: 15000;}
+.modal-dialog { background-color: var(--bg-modal-dialog); border: 1px solid var(--border-modal); box-shadow: var(--shadow-modal); min-width: 300px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column; color: var(--text-primary); border-radius: 4px;}
+.modal-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 6px 10px; font-weight: bold; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 3px; border-top-right-radius: 3px;}
+.modal-content { padding: 15px; overflow-y: auto; flex-grow: 1; background-color: var(--bg-window-content); color: var(--text-primary);}
+.modal-content p { margin-bottom: 10px; }
+.modal-content p:last-child { margin-bottom: 0; }
+.modal-buttons { padding: 10px 15px; text-align: right; border-top: 1px solid var(--border-primary); background-color: var(--bg-window); border-bottom-left-radius: 3px; border-bottom-right-radius: 3px;}
+.modal-buttons button { background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button); padding: 6px 15px; margin-left: 10px; cursor: pointer; border-radius: 3px; transition: background-color 0.15s ease;}
+.modal-buttons button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
+.modal-buttons button:active { background-color: var(--bg-button-active);}
+
+/* --- Context Menu Styling --- */
+.context-menu { background-color: var(--bg-context-menu); border: 1px solid var(--border-context-menu); box-shadow: var(--shadow-context-menu); padding: 4px 0; min-width: 180px; border-radius: 3px; color: var(--text-primary); position: absolute;}
+.context-menu ul { list-style: none; padding: 0; margin: 0; }
+.context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
+.context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: #000000; }
+.context-menu-item.disabled { color: var(--text-start-menu-disabled); cursor: default; }
+.context-menu-separator { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
+
+/* Input and Select General Styling */
+select, input[type="text"], input[type="number"],
+.window-content select, .modal-content select,
+.window-content input[type="text"], .window-content input[type="number"],
+.modal-content input[type="text"], .modal-content input[type="number"] { background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input); padding: 5px 8px; border-radius: 3px;}
+input::placeholder,
+.window-content input::placeholder, .modal-content input::placeholder { color: var(--text-placeholder);}
