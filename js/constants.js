@@ -47,11 +47,11 @@ export const PIANO_ROLL_NOTE_HEIGHT = 20;
 export const PIANO_ROLL_SIXTEENTH_NOTE_WIDTH = 25; 
 
 export const soundLibraries = {
-    "Drums": "assets/drums.zip",
-    "Instruments": "assets/instruments.zip",
-    "Instruments 2": "assets/instruments2.zip",
-    "Instruments 3": "assets/instruments3.zip",
-    "Srna's Piano": "assets/srnas_piano.zip"
+    "Drums": "./assets/drums.zip",
+    "Instruments": "./assets/instruments.zip",
+    "Instruments 2": "./assets/instruments2.zip",
+    "Instruments 3": "./assets/instruments3.zip",
+    "Srna's Piano": "./assets/srnas_piano.zip"
 };
 
 export const defaultDesktopBg = '#1e1e1e';
