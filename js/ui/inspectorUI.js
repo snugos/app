@@ -195,6 +195,13 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
 function buildTrackInspectorContentDOM(track) {
     const content = document.createElement('div');
     content.className = 'p-2 space-y-2 overflow-y-auto h-full text-black dark:text-white';
+    
+    // *** FIX: Added Piano Roll button logic here ***
+    let pianoRollButtonHTML = '';
+    if (track.type !== 'Audio') {
+        pianoRollButtonHTML = `<button id="openPianoRollBtn-${track.id}" class="w-full p-1 mt-2 border rounded">Open Piano Roll</button>`;
+    }
+
     content.innerHTML = `
         <div class="panel">
             <h3 class="font-bold mb-2">Track Controls</h3>
@@ -207,6 +214,7 @@ function buildTrackInspectorContentDOM(track) {
                 <label for="trackNameInput-${track.id}" class="text-sm">Track Name:</label>
                 <input type="text" id="trackNameInput-${track.id}" value="${track.name}" class="w-full p-1 border rounded bg-white dark:bg-black border-black dark:border-white">
             </div>
+            ${pianoRollButtonHTML}
         </div>
         <div id="inspector-type-specific-controls-${track.id}"></div>
     `;
@@ -245,6 +253,12 @@ function initializeCommonInspectorControls(track, element) {
     nameInput?.addEventListener('change', (e) => {
         track.name = e.target.value;
         localAppServices.updateTrackUI(track.id, 'nameChanged');
+    });
+
+    // *** FIX: Add event listener for the new button ***
+    const openPianoRollBtn = element.querySelector(`#openPianoRollBtn-${track.id}`);
+    openPianoRollBtn?.addEventListener('click', () => {
+        localAppServices.handleOpenPianoRoll?.(track.id);
     });
 
     localAppServices.updateTrackUI(track.id, 'soloChanged');
@@ -332,7 +346,6 @@ function buildInstrumentSamplerControls(track, container) {
     
     const canvas = container.querySelector(`#waveform-canvas-instrument-${track.id}`);
     if(track.instrumentSamplerSettings.audioBuffer) {
-        // *** FIX: Call the generic drawWaveform and pass the correct buffer ***
         drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
     }
 }
