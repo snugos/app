@@ -85,6 +85,7 @@ function applyCustomBackground(file) {
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
         videoEl.style.objectFit = 'cover';
+        videoEl.style.zIndex = '-1';
         videoEl.src = url;
         videoEl.autoplay = true;
         videoEl.loop = true;
