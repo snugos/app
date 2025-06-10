@@ -130,16 +130,15 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
 
-    document.getElementById('menuUndo')?.addEventListener('click', () => {
+    // UPDATED: Event listeners now attached to top bar buttons
+    document.getElementById('undoBtnTop')?.addEventListener('click', () => {
         localAppServices.undoLastAction?.();
         updateUndoRedoButtons(); 
-        startMenu?.classList.add('hidden');
     });
 
-    document.getElementById('menuRedo')?.addEventListener('click', () => {
+    document.getElementById('redoBtnTop')?.addEventListener('click', () => {
         localAppServices.redoLastAction?.();
         updateUndoRedoButtons();
-        startMenu?.classList.add('hidden');
     });
 
     document.getElementById('menuSaveProject')?.addEventListener('click', () => {
@@ -415,27 +414,29 @@ export function attachGlobalControlEvents(uiCache) {
     });
 }
 
+// UPDATED: This function now targets the top bar buttons
 function updateUndoRedoButtons() {
-    const menuUndo = document.getElementById('menuUndo');
-    const menuRedo = document.getElementById('menuRedo');
-    if (menuUndo) {
+    const undoBtn = document.getElementById('undoBtnTop');
+    const redoBtn = document.getElementById('redoBtnTop');
+    
+    if (undoBtn) {
         const undoStack = getUndoStackState();
         if (undoStack.length > 0) {
-            menuUndo.classList.remove('disabled');
-            menuUndo.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
+            undoBtn.disabled = false;
+            undoBtn.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
         } else {
-            menuUndo.classList.add('disabled');
-            menuUndo.title = 'Undo';
+            undoBtn.disabled = true;
+            undoBtn.title = 'Undo';
         }
     }
-    if (menuRedo) {
+    if (redoBtn) {
         const redoStack = getRedoStackState();
         if (redoStack.length > 0) {
-            menuRedo.classList.remove('disabled');
-            menuRedo.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
+            redoBtn.disabled = false;
+            redoBtn.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
         } else {
-            menuRedo.classList.add('disabled');
-            menuRedo.title = 'Redo';
+            redoBtn.disabled = true;
+            redoBtn.title = 'Redo';
         }
     }
 }
