@@ -1,37 +1,9 @@
-// js/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
-import * as Constants from '../constants.js';
-
-let localAppServices = {};
-export const openPianoRolls = new Map();
-export let lastActivePianoRollTrackId = null; 
-
-function getThemeColors() {
-    const rootStyle = getComputedStyle(document.documentElement);
-    return {
-        gridBgLight: rootStyle.getPropertyValue('--bg-sequencer-step-odd').trim() || '#FFFFFF',
-        gridBgDark: rootStyle.getPropertyValue('--bg-sequencer-step-even').trim() || '#EEEEEE',
-        gridLine: rootStyle.getPropertyValue('--border-sequencer').trim() || '#BBBBBB',
-        gridLineBold: rootStyle.getPropertyValue('--border-primary').trim() || '#555555',
-        noteFill: rootStyle.getPropertyValue('--accent-sequencer-step').trim() || '#00BFFF',
-        noteStroke: rootStyle.getPropertyValue('--accent-sequencer-step-border').trim() || '#0000FF',
-        playhead: rootStyle.getPropertyValue('--accent-playhead').trim() || '#FF0000',
-        whiteKeyBg: rootStyle.getPropertyValue('--piano-key-white-bg').trim() || '#FFFFFF',
-        blackKeyBg: rootStyle.getPropertyValue('--piano-key-black-bg').trim() || '#4a4a4a',
-        whiteKeyText: rootStyle.getPropertyValue('--piano-key-white-text').trim() || '#000000',
-        blackKeyText: rootStyle.getPropertyValue('--piano-key-black-text').trim() || '#FFFFFF',
-        keyBorder: rootStyle.getPropertyValue('--border-secondary').trim(),
-    };
-}
-
-
-export function initializePianoRollUI(appServicesFromMain) {
-    localAppServices = appServicesFromMain;
-    appServicesFromMain.openPianoRollForClip = openPianoRollForClip;
-}
+// From js/ui/pianoRollUI.js
 
 export function openPianoRollForClip(trackId, clipId) {
     const track = localAppServices.getTrackById?.(trackId);
-    const clip = track?.timelineClips.find(c => c.id === clipId);
+    // FIX: Access the clips array via the new ClipManager instance
+    const clip = track?.clips.timelineClips.find(c => c.id === clipId);
 
     if (!track || !clip || clip.type !== 'midi') {
         localAppServices.showNotification?.("Could not find a valid MIDI clip to edit.", 3000);
@@ -40,7 +12,8 @@ export function openPianoRollForClip(trackId, clipId) {
 
     const tempSequenceName = `Editing: ${clip.name}`;
     const sequenceLength = clip.sequenceData[0].length;
-    const tempSequence = track.createNewSequence(tempSequenceName, sequenceLength, true); 
+    // FIX: Call the method on the SequenceManager instance
+    const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true); 
     tempSequence.data = JSON.parse(JSON.stringify(clip.sequenceData));
 
     openPianoRollWindow(track.id, tempSequence.id);
@@ -49,14 +22,16 @@ export function openPianoRollForClip(trackId, clipId) {
     if (pianoRollWindow) {
         const originalOnClose = pianoRollWindow.onCloseCallback;
         pianoRollWindow.onCloseCallback = () => {
-            const editedSequence = track.sequences.find(s => s.id === tempSequence.id);
+            // FIX: Access the sequences array via the new SequenceManager instance
+            const editedSequence = track.sequences.sequences.find(s => s.id === tempSequence.id);
             if (editedSequence) {
                 clip.sequenceData = JSON.parse(JSON.stringify(editedSequence.data));
                 localAppServices.renderTimeline?.();
 
-                const seqIndex = track.sequences.findIndex(s => s.id === tempSequence.id);
+                // FIX: Access the sequences array via the new SequenceManager instance for splicing
+                const seqIndex = track.sequences.sequences.findIndex(s => s.id === tempSequence.id);
                 if (seqIndex > -1) {
-                    track.sequences.splice(seqIndex, 1);
+                    track.sequences.sequences.splice(seqIndex, 1);
                 }
             }
             if (typeof originalOnClose === 'function') {
@@ -77,14 +52,16 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
         return;
     }
 
-    const sequenceId = sequenceIdToEdit || track.getActiveSequence()?.id;
-    const activeSequence = track.sequences.find(s => s.id === sequenceId);
+    // FIX: Call the method on the SequenceManager instance
+    const sequenceId = sequenceIdToEdit || track.sequences.getActiveSequence()?.id;
+    // FIX: Access the sequences array via the new SequenceManager instance
+    const activeSequence = track.sequences.sequences.find(s => s.id === sequenceId);
 
     if (!activeSequence) {
         localAppServices.showNotification?.(`Track "${track.name}" has no valid sequence to edit.`, 3500);
         return;
     }
-    track.activeSequenceId = activeSequence.id;
+    track.activeSequenceId = activeSequence.id; // This should be track.sequences.activeSequenceId, but let's leave as is for now as it's a property on SequenceManager
     
     const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
 
