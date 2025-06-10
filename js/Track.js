@@ -14,7 +14,7 @@ export class Track {
         if (type === 'DrumSampler') {
             this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
         } else if (type === 'Synth') {
-            this.name = initialData?.name || `PolySynth ${this.id}`;
+            this.name = initialData?.name || `MonoSynth ${this.id}`;
         } else if (type === 'Audio') {
             this.name = initialData?.name || `Audio ${this.id}`;
         }
@@ -112,11 +112,11 @@ export class Track {
     async initializeInstrument() {
         if (this.instrument) this.instrument.dispose();
         
-        // *** FIX: Correctly instantiate PolySynth and other samplers ***
         if (this.type === 'Synth') {
-            this.instrument = new Tone.PolySynth(Tone.Synth);
-            this.instrument.set(this.synthParams);
-            this.instrument.set({ polyphony: 16 });
+            this.instrument = new Tone.PolySynth(Tone.Synth, {
+                polyphony: 16,
+                ...this.synthParams 
+            });
         } else if (this.type === 'InstrumentSampler' || this.type === 'DrumSampler' || this.type === 'Sampler') {
              this.instrument = new Tone.Sampler({
                 attack: 0.01,
@@ -170,14 +170,11 @@ export class Track {
         this.appServices.updateTrackUI?.(this.id, 'soloChanged');
     }
 
-    // *** FIX: Correctly set parameters on the PolySynth instrument ***
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
         try {
-            // The .set() method on PolySynth correctly routes params to its voices
             this.instrument.set({ [paramPath]: value });
 
-            // Also update our state object for serialization
             let current = this.synthParams;
             const keys = paramPath.split('.');
             for (let i = 0; i < keys.length - 1; i++) {
@@ -513,8 +510,11 @@ export class Track {
 
     getDefaultSynthParams() {
         return {
+            portamento: 0,
             oscillator: { type: 'sine' },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 }
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 },
+            filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 10000 },
+            filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7 }
         };
     }
 
