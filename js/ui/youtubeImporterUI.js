@@ -58,7 +58,7 @@ function attachImporterEventListeners(windowElement) {
 
         try {
             // Step 1: Call our Netlify function
-            const response = await fetch('/api/youtube', { //
+            const response = await fetch('https://snugos-server-api.onrender.com/api/youtube', { //
                 method: 'POST', //
                 headers: { 'Content-Type': 'application/json' }, //
                 body: JSON.stringify({ url: youtubeUrl }) //
