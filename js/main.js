@@ -46,6 +46,7 @@ import {
 } from './audio/sampleManager.js';
 import { storeAudio as dbStoreAudio, getAudio as dbGetAudio, deleteAudio as dbDeleteAudio } from './db.js';
 import {
+    // *** FIX: Import the missing function from ui.js ***
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
@@ -84,7 +85,6 @@ function applyCustomBackground(file) {
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
         videoEl.style.objectFit = 'cover';
-        // *** FIX: Removed z-index: -1, which was hiding the video ***
         videoEl.src = url;
         videoEl.autoplay = true;
         videoEl.loop = true;
@@ -298,6 +298,7 @@ async function initializeSnugOS() {
         openTimelineWindow, renderTimeline, updatePlayheadPosition, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
         drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
+        openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView,
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, 
         handleOpenPianoRoll: handleOpenPianoRoll,
