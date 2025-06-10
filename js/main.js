@@ -61,12 +61,10 @@ import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
 let appServices = {};
 
-// *** NEW FEATURE: Function to apply custom backgrounds ***
 function applyCustomBackground(file) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
 
-    // Clear previous custom background
     desktopEl.style.backgroundImage = '';
     const existingVideo = desktopEl.querySelector('#desktop-video-bg');
     if (existingVideo) {
@@ -86,11 +84,11 @@ function applyCustomBackground(file) {
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
         videoEl.style.objectFit = 'cover';
-        videoEl.style.zIndex = '-1';
+        // *** FIX: Removed z-index: -1, which was hiding the video ***
         videoEl.src = url;
         videoEl.autoplay = true;
         videoEl.loop = true;
-        videoEl.muted = true; // Ensure no audio plays
+        videoEl.muted = true;
         videoEl.playsInline = true;
         desktopEl.appendChild(videoEl);
     }
@@ -228,13 +226,16 @@ function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
     const tracks = getTracksState();
 
-    Tone.Transport.cancel(0);
+    if (Tone.Transport.state === 'started') {
+        Tone.Transport.stop();
+    }
+    
     tracks.forEach(track => track.stopSequence?.());
 
     if (newMode === 'timeline') {
         scheduleTimelinePlayback();
     } else { 
-        tracks.forEach(track => track.startSequence?.());
+        tracks.forEach(track => track.recreateToneSequence?.());
     }
 
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
@@ -260,7 +261,7 @@ async function initializeSnugOS() {
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
         showNotification: utilShowNotification, createContextMenu, updateTrackUI: handleTrackUIUpdate,
         showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
-        applyCustomBackground, // Add the new service
+        applyCustomBackground,
         getTracks: getTracksState, getTrackById: getTrackByIdState, addTrack: addTrackToStateInternal,
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
         addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
