@@ -1,6 +1,6 @@
 // js/SequenceManager.js
 
-import * as Constants from '/constants.js';
+import * as Constants from './constants.js';
 
 export class SequenceManager {
     constructor(track, appServices) {
