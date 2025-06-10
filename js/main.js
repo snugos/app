@@ -65,7 +65,6 @@ function applyCustomBackground(file) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
 
-    // Clear previous custom background
     desktopEl.style.backgroundImage = '';
     const existingVideo = desktopEl.querySelector('#desktop-video-bg');
     if (existingVideo) {
@@ -85,7 +84,6 @@ function applyCustomBackground(file) {
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
         videoEl.style.objectFit = 'cover';
-        videoEl.style.zIndex = '-1';
         videoEl.src = url;
         videoEl.autoplay = true;
         videoEl.loop = true;
@@ -254,8 +252,15 @@ async function initializeSnugOS() {
     function drawLoop() {
         if (typeof Tone !== 'undefined') {
             const transportTime = Tone.Transport.seconds;
-            updatePlayheadPosition(transportTime);
-            updatePianoRollPlayhead(transportTime);
+            
+            // *** FIX: Only update the playhead for the active mode ***
+            const mode = appServices.getPlaybackMode();
+            if (mode === 'timeline') {
+                updatePlayheadPosition(transportTime);
+            } else { // 'piano-roll'
+                updatePianoRollPlayhead(transportTime);
+            }
+            
             updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, getTracksState());
         }
         requestAnimationFrame(drawLoop);
