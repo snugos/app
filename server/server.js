@@ -73,37 +73,51 @@ const authenticateToken = (req, res, next) => {
 
 // === API Endpoints ===
 
-// [Existing /api/register and /api/login endpoints remain here...]
-// ...
+// NEW: Secure endpoint to get the currently logged-in user's profile
+app.get('/api/profile/me', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const profileResult = await pool.query(
+            "SELECT id, username, created_at, background_url FROM profiles WHERE id = $1",
+            [userId]
+        );
+        const profile = profileResult.rows[0];
+        if (!profile) {
+            return response.status(404).json({ success: false, message: 'Current user profile not found.' });
+        }
+        response.json({ success: true, profile });
+    } catch (error) {
+        console.error("[Get My Profile] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching current user profile.' });
+    }
+});
 
-// NEW: Endpoint to update a user's background
+
+// Endpoint to update a user's background
 app.put('/api/profile/background', authenticateToken, upload.single('backgroundFile'), async (request, response) => {
     if (!request.file) {
         return response.status(400).json({ success: false, message: 'No file uploaded.' });
     }
-
     try {
         const file = request.file;
-        const userId = request.user.id; // Get user ID from the authenticated token
+        const userId = request.user.id;
         const fileName = `backgrounds/${userId}-${Date.now()}-${file.originalname}`;
 
         const uploadParams = {
             Bucket: process.env.S3_BUCKET_NAME,
             Key: fileName,
             Body: file.buffer,
-            ACL: 'public-read', // Make the file publicly accessible
+            ACL: 'public-read',
             ContentType: file.mimetype
         };
 
         const data = await s3.upload(uploadParams).promise();
-        const backgroundUrl = data.Location; // The public URL of the uploaded file
+        const backgroundUrl = data.Location;
 
-        // Save the URL to the user's profile in the database
         await pool.query(
             "UPDATE profiles SET background_url = $1 WHERE id = $2",
             [backgroundUrl, userId]
         );
-
         response.json({ success: true, backgroundUrl });
 
     } catch (error) {
@@ -113,40 +127,92 @@ app.put('/api/profile/background', authenticateToken, upload.single('backgroundF
 });
 
 
-// UPDATED: Public Profile Endpoint now includes background_url
+// Public Profile Endpoint
 app.get('/api/profiles/:username', async (request, response) => {
     try {
         const { username } = request.params;
-        
         const profileResult = await pool.query(
             "SELECT id, username, created_at, background_url FROM profiles WHERE username = $1",
             [username]
         );
-
         const profile = profileResult.rows[0];
-
         if (!profile) {
             return response.status(404).json({ success: false, message: 'Profile not found.' });
         }
-        
         response.json({
             success: true,
             profile: {
                 id: profile.id,
                 username: profile.username,
                 memberSince: profile.created_at,
-                backgroundUrl: profile.background_url // Send the background URL
+                backgroundUrl: profile.background_url
             },
             projects: [] 
         });
-
     } catch (error) {
         console.error("[Get Profile] Error:", error);
         response.status(500).json({ success: false, message: 'Server error while fetching profile.' });
     }
 });
 
+
 // ... your /api/register, /api/login, and /api/youtube endpoints ...
+// Registration Endpoint
+app.post('/api/register', async (request, response) => { //
+    try {
+        const { username, password } = request.body; //
+        if (!username || !password || password.length < 6) { //
+            return response.status(400).json({ success: false, message: 'Username and a password of at least 6 characters are required.' }); //
+        }
+        const salt = await bcrypt.genSalt(10); //
+        const passwordHash = await bcrypt.hash(password, salt); //
+
+        const newProfile = await pool.query( //
+            "INSERT INTO profiles (username, password_hash) VALUES ($1, $2) RETURNING id, username",
+            [username, passwordHash]
+        );
+
+        response.status(201).json({ success: true, user: newProfile.rows[0] }); //
+
+    } catch (error) {
+        console.error("[Register] Error:", error); //
+        if (error.code === '23505') { //
+            return response.status(409).json({ success: false, message: 'Username already exists.' }); //
+        }
+        response.status(500).json({ success: false, message: 'Server error during registration.' }); //
+    }
+});
+
+// Login Endpoint
+app.post('/api/login', async (request, response) => { //
+    try {
+        const { username, password } = request.body; //
+        const result = await pool.query("SELECT * FROM profiles WHERE username = $1", [username]); //
+        const profile = result.rows[0]; //
+
+        if (!profile) { //
+            return response.status(401).json({ success: false, message: 'Invalid credentials.' }); //
+        }
+
+        const isMatch = await bcrypt.compare(password, profile.password_hash); //
+        if (!isMatch) { //
+            return response.status(401).json({ success: false, message: 'Invalid credentials.' }); //
+        }
+
+        const token = jwt.sign( //
+            { id: profile.id, username: profile.username },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        );
+
+        response.json({ success: true, token, user: { id: profile.id, username: profile.username } }); //
+
+    } catch (error) {
+        console.error("[Login] Error:", error); //
+        response.status(500).json({ success: false, message: 'Server error during login.' }); //
+    }
+});
+
 
 // === Start the Server ===
 app.listen(PORT, () => {
