@@ -99,7 +99,6 @@ export function updateSliceEditorUI(track, container) {
     }
 }
 
-// *** UPDATED to make each pad a drop zone ***
 export function renderDrumSamplerPads(track, container) {
     if (!container) return;
     container.innerHTML = '';
@@ -121,7 +120,6 @@ export function renderDrumSamplerPads(track, container) {
             pad.classList.add('selected-for-edit');
         }
 
-        // Handle clicking for selection and preview
         pad.addEventListener('click', () => {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
@@ -129,7 +127,6 @@ export function renderDrumSamplerPads(track, container) {
             renderDrumSamplerPads(track, container); // Re-render to update selection
         });
 
-        // Setup drag and drop listeners for each pad
         setupGenericDropZoneListeners(
             pad, 
             track.id, 
@@ -328,6 +325,11 @@ function buildSlicerSamplerControls(track, container) {
     const fileInputEl = dzContainerEl.querySelector(`#slicer-file-input-${track.id}`);
     fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'Sampler');
     
+    const canvas = container.querySelector(`#waveform-canvas-${track.id}`);
+    if (track.audioBuffer) {
+        drawWaveform(canvas, track.audioBuffer);
+    }
+
     renderSamplePads(track, container.querySelector(`#sample-pads-container-${track.id}`));
 }
 
