@@ -58,7 +58,7 @@ function attachImporterEventListeners(windowElement) {
 
         try {
             // Step 1: Call our Netlify function
-            const response = await fetch('/.netlify/functions/youtube', { //
+            const response = await fetch('/api/youtube', { //
                 method: 'POST', //
                 headers: { 'Content-Type': 'application/json' }, //
                 body: JSON.stringify({ url: youtubeUrl }) //
