@@ -23,9 +23,9 @@ function getThemeColors() {
     };
 }
 
+
 export function initializePianoRollUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
-    // *** FIX: Use the correct variable name 'appServicesFromMain' ***
     appServicesFromMain.openPianoRollForClip = openPianoRollForClip;
 }
 
@@ -563,6 +563,7 @@ function attachPianoRollListeners(pianoRoll) {
     const dragHandle = document.getElementById(`piano-roll-drag-handle-${track.id}`);
     if (dragHandle) {
         dragHandle.addEventListener('dragstart', (e) => {
+            if (!activeSequence) return;
             const dragData = {
                 type: 'piano-roll-sequence',
                 sourceTrackId: track.id,
