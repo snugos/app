@@ -26,79 +26,67 @@ export function setActualMasterVolume(gainValue, rampTime = 0.05) {
     }
 }
 
-export async function initAudioContextAndMasterMeter() {
+export async function initAudioContextAndMasterMeter(isUserInteraction = false) {
     if (audioContextInitialized && Tone.context.state === 'running') return true;
-    try {
-        await Tone.start();
-        if (Tone.context.state === 'running') {
+    if (Tone.context.state === 'suspended' && isUserInteraction) {
+        try {
+            await Tone.start();
+            console.log('[Audio] Audio context resumed.');
             if (!audioContextInitialized) {
-                console.log('[Audio] Audio context initialized.');
-                setupMasterBus();
+                 setupMasterBus();
+                 audioContextInitialized = true;
             }
-            audioContextInitialized = true;
             return true;
+        } catch(e) {
+            console.error("Error resuming audio context:", e);
+            return false;
         }
-        return false;
-    } catch (error) {
-        console.error("Error initializing audio:", error);
-        return false;
     }
+    return audioContextInitialized;
 }
 
 function setupMasterBus() {
-    if (!Tone.context || Tone.context.state !== 'running') return;
-
-    masterEffectsBusInputNode?.dispose();
-    masterGainNodeActual?.dispose();
-    masterMeterNode?.dispose();
-
-    masterEffectsBusInputNode = new Tone.Gain();
-    masterGainNodeActual = new Tone.Gain(localAppServices.getMasterGainValue?.() ?? 1);
-    masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
+    if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) return;
     
-    rebuildMasterEffectChain();
+    masterEffectsBusInputNode = new Tone.Gain();
+    masterGainNodeActual = new Tone.Gain().toDestination();
+    masterMeterNode = new Tone.Meter();
+    
+    masterEffectsBusInputNode.connect(masterGainNodeActual);
+    masterGainNodeActual.connect(masterMeterNode);
+    
     console.log('[Audio] Master bus setup complete.');
+    audioContextInitialized = true;
 }
 
 export function rebuildMasterEffectChain() {
-    if (!masterEffectsBusInputNode || !masterGainNodeActual || !masterMeterNode) {
-        console.warn("Master bus components not ready, aborting rebuild.");
-        return;
-    }
-
-    // --- Start of Corrected Code ---
-    // Disconnect everything to ensure a clean slate
-    masterEffectsBusInputNode.disconnect();
-    activeMasterEffectNodes.forEach(node => node.disconnect());
-    masterGainNodeActual.disconnect();
-
-    let lastNodeInChain = masterEffectsBusInputNode;
+    if (!masterEffectsBusInputNode || !masterGainNodeActual) return;
     
+    masterEffectsBusInputNode.disconnect();
+    
+    let lastNodeInChain = masterEffectsBusInputNode;
     const masterEffects = localAppServices.getMasterEffects?.() || [];
-    masterEffects.forEach(effectState => {
-        let effectNode = activeMasterEffectNodes.get(effectState.id);
-        if (!effectNode || effectNode.disposed) {
-            effectNode = createEffectInstance(effectState.type, effectState.params);
-            activeMasterEffectNodes.set(effectState.id, effectNode);
-        }
-        // Connect the last node to the current effect, then update the last node
-        lastNodeInChain.connect(effectNode);
-        lastNodeInChain = effectNode;
+
+    activeMasterEffectNodes.forEach(node => {
+        if(node && !node.disposed) node.disconnect();
     });
 
-    // Connect the end of the effects chain to the master gain
+    masterEffects.forEach(effectState => {
+        const effectNode = activeMasterEffectNodes.get(effectState.id);
+        if (effectNode && !effectNode.disposed) {
+            lastNodeInChain.connect(effectNode);
+            lastNodeInChain = effectNode;
+        }
+    });
+
     lastNodeInChain.connect(masterGainNodeActual);
-    
-    // Connect the master gain to the final destination and the meter
-    masterGainNodeActual.fan(Tone.Destination, masterMeterNode);
-    // --- End of Corrected Code ---
 }
 
-
 export function addMasterEffectToAudio(effectId, effectType, params) {
-    const toneNode = createEffectInstance(effectType, params);
-    if (toneNode) {
-        activeMasterEffectNodes.set(effectId, toneNode);
+    if (activeMasterEffectNodes.has(effectId)) return;
+    const effectInstance = createEffectInstance(effectType, params);
+    if (effectInstance) {
+        activeMasterEffectNodes.set(effectId, effectInstance);
         rebuildMasterEffectChain();
     }
 }
@@ -113,7 +101,6 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
     const effectNode = activeMasterEffectNodes.get(effectId);
     if (!effectNode) return;
 
-    // Use Tone.js's 'set' method for robust parameter setting
     try {
         effectNode.set({ [paramPath]: value });
     } catch (e) {
@@ -132,13 +119,34 @@ export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) 
         if (globalMasterMeterBar) {
             globalMasterMeterBar.style.width = `${Math.min(100, masterLevelGain * 100)}%`;
         }
+        if (mixerMasterMeterBar) {
+            mixerMasterMeterBar.style.width = `${Math.min(100, masterLevelGain * 100)}%`;
+        }
     }
     tracks.forEach(track => {
         if (track.trackMeter && !track.trackMeter.disposed) {
             const trackLevelDb = track.trackMeter.getValue();
             const trackLevelGain = isFinite(trackLevelDb) ? Tone.dbToGain(trackLevelDb) : 0;
-            // Assuming you'll want to update track meters in the UI eventually
-            // localAppServices.updateTrackUI?.(track.id, 'meterUpdate', trackLevelGain);
+            const mixerTrackMeterBar = document.getElementById(`mixerTrackMeterBar-${track.id}`);
+            if (mixerTrackMeterBar) {
+                mixerTrackMeterBar.style.width = `${Math.min(100, trackLevelGain * 100)}%`;
+            }
         }
     });
+}
+
+// *** NEW FUNCTION to force stop all audio ***
+export function forceStopAllAudio() {
+    const tracks = localAppServices.getTracks?.() || [];
+    tracks.forEach(track => {
+        if (track.instrument && typeof track.instrument.releaseAll === 'function') {
+            track.instrument.releaseAll();
+        }
+    });
+    
+    // This cancels all scheduled events and stops the transport
+    Tone.Transport.cancel(0);
+    Tone.Transport.stop();
+    // Rewind to the beginning
+    Tone.Transport.position = 0;
 }
