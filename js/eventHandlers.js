@@ -217,16 +217,13 @@ export function attachGlobalControlEvents(uiCache) {
     };
     
     const handleStop = () => {
-        // Force-stop all scheduled sources and release all instrument notes
         localAppServices.forceStopAllAudio?.();
         
-        // Then officially stop the transport and rewind
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.stop();
         }
     };
 
-    // *** UPDATED to handle vocal recording ***
     const handleRecord = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
@@ -238,24 +235,19 @@ export function attachGlobalControlEvents(uiCache) {
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
-            // --- STOP RECORDING ---
             setIsRecording(false);
             recordBtn.classList.remove('recording');
-
-            if (getRecordingTrackIdState() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
+            if (getRecordingTrackId() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
                 await localAppServices.stopAudioRecording();
             }
-            // If transport was running for recording, stop it.
             if (Tone.Transport.state === 'started') {
                 handleStop();
             }
         } else if (armedTrack) {
-            // --- START RECORDING ---
             setRecordingTrackId(armedTrackId);
             setIsRecording(true);
             recordBtn.classList.add('recording');
             
-            // Set the recording start time from the transport's current position
             setRecordingStartTimeState(Tone.Transport.seconds);
     
             if (armedTrack.type === 'Audio') {
@@ -267,7 +259,6 @@ export function attachGlobalControlEvents(uiCache) {
                 }
             }
     
-            // Start the transport if it's not already playing
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.start();
             }
