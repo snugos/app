@@ -1,6 +1,6 @@
 // js/ui/inspectorUI.js
 
-import { createDropZoneHTML, setupGenericDropZoneListeners } from '../utils.js';
+import { createDropZoneHTML, setupGenericDropZoneListeners, drawInstrumentWaveform } from '../utils.js';
 import * as Constants from '../constants.js';
 
 let localAppServices = {};
@@ -59,68 +59,6 @@ function buildSynthEngineControls(track, container, engineType) {
             placeholder.appendChild(selectEl);
         }
     });
-}
-
-export function drawWaveform(track, canvas) {
-    if (!canvas || !track.audioBuffer) return;
-    const audioBuffer = track.audioBuffer;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    ctx.clearRect(0, 0, width, height);
-
-    const data = audioBuffer.getChannelData(0);
-    const step = Math.ceil(data.length / width);
-    const amp = height / 2;
-    
-    ctx.fillStyle = '#FFFFFF';
-    
-    for (let i = 0; i < width; i++) {
-        let min = 1.0;
-        let max = -1.0;
-
-        for (let j = 0; j < step; j++) {
-            const datum = data[(i * step) + j];
-            if (datum < min) min = datum;
-            if (datum > max) max = datum;
-        }
-        
-        const rectHeight = Math.max(1, (max - min) * amp);
-        const y = (1 + min) * amp;
-        ctx.fillRect(i, y, 1, rectHeight);
-    }
-}
-
-export function drawInstrumentWaveform(track, canvas) {
-    if (!canvas || !track.instrumentSamplerSettings.audioBuffer) return;
-    const audioBuffer = track.instrumentSamplerSettings.audioBuffer;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    ctx.clearRect(0, 0, width, height);
-
-    const data = audioBuffer.getChannelData(0);
-    const step = Math.ceil(data.length / width);
-    const amp = height / 2;
-    
-    ctx.fillStyle = '#FFFFFF';
-    
-    for (let i = 0; i < width; i++) {
-        let min = 1.0;
-        let max = -1.0;
-
-        for (let j = 0; j < step; j++) {
-            const datum = data[(i * step) + j];
-            if (datum < min) min = datum;
-            if (datum > max) max = datum;
-        }
-        
-        const rectHeight = Math.max(1, (max - min) * amp);
-        const y = (1 + min) * amp;
-        ctx.fillRect(i, y, 1, rectHeight);
-    }
 }
 
 export function renderSamplePads(track, container) {
@@ -242,7 +180,7 @@ export function updateDrumPadControlsUI(track, container) {
 export function openTrackInspectorWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
-    const windowId = `trackInspector-${trackId}`
+    const windowId = `trackInspector-${trackId}`;
     if (localAppServices.getOpenWindows().has(windowId) && !savedState) {
         localAppServices.getOpenWindows().get(windowId).restore(); return;
     }
@@ -309,7 +247,6 @@ function initializeCommonInspectorControls(track, element) {
         localAppServices.updateTrackUI(track.id, 'nameChanged');
     });
 
-    // Initial state updates
     localAppServices.updateTrackUI(track.id, 'soloChanged');
     localAppServices.updateTrackUI(track.id, 'muteChanged');
     localAppServices.updateTrackUI(track.id, 'armChanged');
@@ -395,6 +332,7 @@ function buildInstrumentSamplerControls(track, container) {
     
     const canvas = container.querySelector(`#waveform-canvas-instrument-${track.id}`);
     if(track.instrumentSamplerSettings.audioBuffer) {
-        drawInstrumentWaveform(track, canvas);
+        // Use the shared waveform drawing function from utils
+        localAppServices.drawInstrumentWaveform(track, canvas);
     }
 }
