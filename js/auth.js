@@ -15,7 +15,7 @@ export function initializeAuth(appServices) {
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
 
-    // Check if the user is already logged in on page load
+    // Check if the user is already logged in from a previous session
     checkInitialAuthState();
 }
 
@@ -89,7 +89,9 @@ async function checkInitialAuthState() {
  * Creates and displays a modal window with forms for both login and registration.
  */
 export function showLoginModal() {
-    // ... (This function remains the same as before)
+    // Hide the start menu if it's open
+    document.getElementById('startMenu')?.classList.add('hidden');
+
     const modalContent = `
         <div class="space-y-4">
             <div>
@@ -111,8 +113,51 @@ export function showLoginModal() {
             </div>
         </div>
     `;
+    
+    // Use the utility function to show the modal
     const { overlay, contentDiv } = localAppServices.showCustomModal('Login or Register', modalContent, []);
-    // ... (styling and event listeners for the form remain the same)
+
+    // Apply SnugOS styles to the new form elements
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    // Add submit event listeners to the forms
+    overlay.querySelector('#loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        handleLogin(username, password).then(() => overlay.remove());
+    });
+
+    overlay.querySelector('#registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        handleRegister(username, password).then(() => overlay.remove());
+    });
 }
 
 /**
@@ -121,7 +166,7 @@ export function showLoginModal() {
  * @param {string} password 
  */
 async function handleLogin(username, password) {
-    const serverUrl = 'https://snugos-server-api.onrender.com';
+    const serverUrl = 'https://snugos-server-api.onrender.com'; // Your Render server URL
 
     try {
         const response = await fetch(`${serverUrl}/api/login`, {
@@ -138,6 +183,32 @@ async function handleLogin(username, password) {
             localAppServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             localAppServices.showNotification(`Login failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        localAppServices.showNotification('Network error. Could not connect to server.', 3000);
+    }
+}
+
+/**
+ * Sends a registration request to the server.
+ * @param {string} username 
+ * @param {string} password 
+ */
+async function handleRegister(username, password) {
+    const serverUrl = 'https://snugos-server-api.onrender.com';
+
+    try {
+        const response = await fetch(`${serverUrl}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            localAppServices.showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            localAppServices.showNotification(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
         localAppServices.showNotification('Network error. Could not connect to server.', 3000);
