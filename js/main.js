@@ -46,7 +46,6 @@ import {
 } from './audio/sampleManager.js';
 import { storeAudio as dbStoreAudio, getAudio as dbGetAudio, deleteAudio as dbDeleteAudio } from './db.js';
 import {
-    // *** FIX: Removed drawWaveform and drawInstrumentWaveform from this import list ***
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
@@ -66,6 +65,7 @@ function applyCustomBackground(file) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
 
+    // Clear previous custom background
     desktopEl.style.backgroundImage = '';
     const existingVideo = desktopEl.querySelector('#desktop-video-bg');
     if (existingVideo) {
@@ -194,7 +194,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         if (reason === 'instrumentSamplerLoaded') {
             const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
             if (canvas && track.instrumentSamplerSettings.audioBuffer) {
-                // Now we call the function directly from appServices, which gets it from utils.js
                 appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
             }
         }
@@ -209,7 +208,10 @@ function handleTrackUIUpdate(trackId, reason, detail) {
             const soloBtn = trackDiv.querySelector(`#mixerSoloBtn-${track.id}`);
             if (soloBtn) soloBtn.classList.toggle('soloed', track.isSoloed);
             const trackNameDiv = trackDiv.querySelector('.track-name');
-            if (trackNameDiv) trackNameDiv.textContent = track.name;
+            if (trackNameDiv && reason === 'nameChanged') {
+                trackNameDiv.textContent = track.name;
+                trackNameDiv.title = track.name;
+            }
         }
     }
 
@@ -294,14 +296,13 @@ async function initializeSnugOS() {
         setPreviewPlayer: setPreviewPlayerState, loadSampleFile, loadDrumSamplerPadFile,
         loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
         playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio, dbGetAudio, dbDeleteAudio,
-        // UI functions passed as services
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
         openTimelineWindow, renderTimeline, updatePlayheadPosition, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
         renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView,
-        drawWaveform, // The generic function from utils.js is now a service
+        drawWaveform,
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, 
         handleOpenPianoRoll: handleOpenPianoRoll,
