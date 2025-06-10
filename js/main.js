@@ -53,15 +53,16 @@ import {
     renderDirectoryView,
     renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
+    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, openProfileWindow
 } from './ui.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
-import { initializeAuth } from './auth.js'; // <-- NEW IMPORT FOR AUTH LOGIC
+import { initializeAuth, handleBackgroundUpload } from './auth.js'; 
 
 let appServices = {};
 
-function applyCustomBackground(file) {
+// UPDATED: Can now handle a URL string or a File object
+function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
 
@@ -71,11 +72,25 @@ function applyCustomBackground(file) {
         existingVideo.remove();
     }
 
-    const url = URL.createObjectURL(file);
+    let url;
+    let fileType;
 
-    if (file.type.startsWith('image/')) {
+    if (typeof source === 'string') {
+        url = source;
+        const extension = source.split('.').pop().toLowerCase().split('?')[0];
+        if (['mp4', 'webm', 'mov'].includes(extension)) {
+            fileType = `video/${extension}`;
+        } else {
+            fileType = 'image/jpeg'; // Assume image for other URLs
+        }
+    } else { // It's a File object
+        url = URL.createObjectURL(source);
+        fileType = source.type;
+    }
+
+    if (fileType.startsWith('image/')) {
         desktopEl.style.backgroundImage = `url(${url})`;
-    } else if (file.type.startsWith('video/')) {
+    } else if (fileType.startsWith('video/')) {
         const videoEl = document.createElement('video');
         videoEl.id = 'desktop-video-bg';
         videoEl.style.position = 'absolute';
@@ -92,6 +107,7 @@ function applyCustomBackground(file) {
         desktopEl.appendChild(videoEl);
     }
 }
+
 
 function openDefaultLayout() {
     setTimeout(() => {
@@ -270,6 +286,7 @@ async function initializeSnugOS() {
         showNotification: utilShowNotification, createContextMenu, updateTrackUI: handleTrackUIUpdate,
         showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
         applyCustomBackground,
+        handleBackgroundUpload, // NEW service for handling uploads
         getTracks: getTracksState, getTrackById: getTrackByIdState, addTrack: addTrackToStateInternal,
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
         addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
@@ -305,6 +322,7 @@ async function initializeSnugOS() {
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
         openTimelineWindow, renderTimeline, updatePlayheadPosition, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
+        openProfileWindow, // Add the new profile window opener to services
         renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView,
@@ -329,7 +347,7 @@ async function initializeSnugOS() {
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
     initializeMetronome(appServices);
-    initializeAuth(appServices); // <-- INITIALIZE THE NEW AUTH MODULE
+    initializeAuth(appServices);
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
