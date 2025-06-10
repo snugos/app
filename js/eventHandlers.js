@@ -69,10 +69,11 @@ export function initializePrimaryEventListeners() {
         createContextMenu(e, menuItems, localAppServices);
     });
     
+    // UPDATED: This now calls the new server upload function
     customBgInput?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            localAppServices.applyCustomBackground(file);
+            localAppServices.handleBackgroundUpload(file);
         }
         e.target.value = null; 
     });
@@ -156,6 +157,7 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
     
+    // NEW: Event listener for opening a profile page in a new tab
     document.getElementById('menuOpenTestProfile')?.addEventListener('click', () => {
         // Replace 'testuser' with a username that actually exists in your database
         const usernameToOpen = 'testuser';
