@@ -19,7 +19,8 @@ import {
     setActiveMIDIInputState,
     getActiveMIDIInputState,
     getUndoStackState, 
-    getRedoStackState  
+    getRedoStackState,
+    setRecordingStartTimeState
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
 import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
@@ -208,30 +209,24 @@ export function attachGlobalControlEvents(uiCache) {
         }
 
         if (Tone.Transport.state === 'started') {
-            handleStop(); // Use the robust handleStop function
+            handleStop();
         } else {
             localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
             Tone.Transport.start();
         }
     };
     
-    // *** UPDATED to be more robust ***
     const handleStop = () => {
-        // Release all notes on all instruments first
-        const tracks = localAppServices.getTracks?.() || [];
-        tracks.forEach(track => {
-            if (track.instrument && typeof track.instrument.releaseAll === 'function') {
-                track.instrument.releaseAll();
-            }
-        });
-
-        // Then stop the transport and reset position
+        // Force-stop all scheduled sources and release all instrument notes
+        localAppServices.forceStopAllAudio?.();
+        
+        // Then officially stop the transport and rewind
         if (Tone.Transport.state !== 'stopped') {
             Tone.Transport.stop();
         }
-        Tone.Transport.position = 0;
     };
 
+    // *** UPDATED to handle vocal recording ***
     const handleRecord = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
@@ -243,15 +238,25 @@ export function attachGlobalControlEvents(uiCache) {
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
+            // --- STOP RECORDING ---
             setIsRecording(false);
             recordBtn.classList.remove('recording');
-            if (armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
+
+            if (getRecordingTrackIdState() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
                 await localAppServices.stopAudioRecording();
             }
+            // If transport was running for recording, stop it.
+            if (Tone.Transport.state === 'started') {
+                handleStop();
+            }
         } else if (armedTrack) {
+            // --- START RECORDING ---
             setRecordingTrackId(armedTrackId);
             setIsRecording(true);
             recordBtn.classList.add('recording');
+            
+            // Set the recording start time from the transport's current position
+            setRecordingStartTimeState(Tone.Transport.seconds);
     
             if (armedTrack.type === 'Audio') {
                 const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
@@ -262,6 +267,7 @@ export function attachGlobalControlEvents(uiCache) {
                 }
             }
     
+            // Start the transport if it's not already playing
             if (Tone.Transport.state !== 'started') {
                 Tone.Transport.start();
             }
