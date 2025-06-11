@@ -203,10 +203,35 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 
     const inspectorWindow = getWindowByIdState(`trackInspector-${track.id}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
-        // Instead of trying to update individual buttons, re-initialize the common controls.
-        // This ensures all button states are correctly set and listeners are fresh.
-        // Pass inspectorWindow.getWindowState() to preserve its position/size/state on re-open.
-        appServices.openTrackInspectorWindow(trackId, inspectorWindow.getWindowState()); //
+        // Find the specific buttons within this inspector window
+        const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
+        const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
+        const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
+
+        if (reason === 'armChanged') {
+            if (armBtn) armBtn.classList.toggle('armed', getArmedTrackIdState() === track.id);
+        }
+        if (reason === 'soloChanged' || reason === 'muteChanged') {
+            if (muteBtn) {
+                muteBtn.classList.toggle('muted', isEffectivelyMuted);
+                muteBtn.textContent = track.isMuted ? 'Unmute' : 'Mute';
+            }
+            if (soloBtn) {
+                soloBtn.classList.toggle('soloed', track.isSoloed);
+                soloBtn.textContent = track.isSoloed ? 'Unsolo' : 'Solo';
+            }
+        }
+        if (reason === 'nameChanged') {
+            const titleSpan = inspectorWindow.titleBar.querySelector('span');
+            if (titleSpan) titleSpan.textContent = `Inspector: ${track.name}`;
+            if (inspectorWindow.taskbarButton) inspectorWindow.taskbarButton.textContent = `Inspector: ${track.name}`;
+        }
+        if (reason === 'instrumentSamplerLoaded') {
+            const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
+            if (canvas && track.instrumentSamplerSettings.audioBuffer) {
+                appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
+            }
+        }
     }
     
     // The mixer window update logic is already robust as it re-renders
