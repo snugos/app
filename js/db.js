@@ -4,9 +4,9 @@ const DB_NAME = 'SnugOSAudioDB';
 // ADDED a new store name for assets and incremented DB version
 const STORES = {
     AUDIO: 'audioFiles',
-    ASSETS: 'userAssets'
+    ASSETS: 'userAssets' //
 };
-const DB_VERSION = 2; 
+const DB_VERSION = 2; //
 
 let dbPromise = null;
 
@@ -35,7 +35,7 @@ function getDB() {
                 }
                 // NEW: Create the userAssets store if it doesn't exist
                 if (!db.objectStoreNames.contains(STORES.ASSETS)) {
-                    db.createObjectStore(STORES.ASSETS);
+                    db.createObjectStore(STORES.ASSETS); //
                     console.log(`[DB] Object store "${STORES.ASSETS}" created.`);
                 }
             };
@@ -125,9 +125,9 @@ export function deleteAudio(key) {
 
 // NEW: Functions for storing and retrieving user assets like backgrounds
 export function storeAsset(key, assetBlob) {
-    return storeValue(STORES.ASSETS, key, assetBlob);
+    return storeValue(STORES.ASSETS, key, assetBlob); //
 }
 
 export function getAsset(key) {
-    return getValue(STORES.ASSETS, key);
+    return getValue(STORES.ASSETS, key); //
 }
