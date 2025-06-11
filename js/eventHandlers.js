@@ -20,9 +20,10 @@ import {
     getActiveMIDIInputState,
     getUndoStackState, 
     getRedoStackState,
-    // FIX: Correctly alias the function name
     getRecordingTrackIdState as getRecordingTrackId,
-    setRecordingStartTimeState
+    setRecordingStartTimeState,
+    getMidiRecordModeState, // NEW
+    setMidiRecordModeState  // NEW
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
 import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
@@ -187,7 +188,8 @@ export function attachGlobalControlEvents(uiCache) {
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
-    
+    const midiRecordModeBtn = document.getElementById('midiRecordModeBtn'); // NEW
+
     const handlePlayPause = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
@@ -241,6 +243,7 @@ export function attachGlobalControlEvents(uiCache) {
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
+            // Stop recording logic
             setIsRecording(false);
             recordBtn.classList.remove('recording');
             if (getRecordingTrackId() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
@@ -250,24 +253,36 @@ export function attachGlobalControlEvents(uiCache) {
                 handleStop();
             }
         } else if (armedTrack) {
-            setRecordingTrackId(armedTrackId);
-            setIsRecording(true);
-            recordBtn.classList.add('recording');
-            
-            setRecordingStartTimeState(Tone.Transport.seconds);
-    
-            if (armedTrack.type === 'Audio') {
-                const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
-                if (!success) {
-                    setIsRecording(false);
-                    recordBtn.classList.remove('recording');
-                    return;
+            // Count-in logic
+            Tone.Transport.stop();
+            Tone.Transport.position = 0;
+            Tone.Transport.start();
+
+            const metronomeBtn = document.getElementById('metronomeToggleBtn');
+            if (!metronomeBtn.classList.contains('active')) {
+                localAppServices.toggleMetronome();
+                metronomeBtn.classList.add('active');
+            }
+
+            showNotification("Get ready...", Tone.Time("1m").toMilliseconds());
+
+            Tone.Transport.scheduleOnce(async (time) => {
+                setRecordingTrackId(armedTrackId);
+                setIsRecording(true);
+                recordBtn.classList.add('recording');
+                
+                setRecordingStartTimeState(time);
+
+                if (armedTrack.type === 'Audio') {
+                    const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
+                    if (!success) {
+                        setIsRecording(false);
+                        recordBtn.classList.remove('recording');
+                        handleStop();
+                    }
                 }
-            }
-    
-            if (Tone.Transport.state !== 'started') {
-                Tone.Transport.start();
-            }
+            }, "1m");
+
         } else {
             showNotification("No track armed for recording.", 2500);
         }
@@ -280,6 +295,16 @@ export function attachGlobalControlEvents(uiCache) {
     metronomeBtn?.addEventListener('click', () => {
         const isEnabled = localAppServices.toggleMetronome();
         metronomeBtn.classList.toggle('active', isEnabled);
+    });
+
+    // NEW: Event listener for the record mode toggle
+    midiRecordModeBtn?.addEventListener('click', () => {
+        const currentMode = getMidiRecordModeState();
+        const newMode = currentMode === 'overdub' ? 'replace' : 'overdub';
+        setMidiRecordModeState(newMode);
+        midiRecordModeBtn.textContent = newMode.charAt(0).toUpperCase() + newMode.slice(1);
+        midiRecordModeBtn.classList.toggle('active', newMode === 'replace');
+        showNotification(`MIDI Record Mode: ${newMode.toUpperCase()}`, 1500);
     });
 
     tempoInput?.addEventListener('change', (e) => {
@@ -526,6 +551,7 @@ export function selectMIDIInput(event) {
     }
 }
 
+// UPDATED: MIDI Recording logic now checks the record mode
 function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
     const commandType = command & 0xF0;
@@ -574,10 +600,22 @@ function onMIDIMessage(message) {
             const activeSequence = track.sequences.getActiveSequence();
             if (activeSequence) {
                 const ticksPerStep = Tone.Transport.PPQ / 4;
-                const currentStep = Math.round(Tone.Transport.ticks / ticksPerStep);
+                const currentStep = Math.round(Tone.Transport.ticks / ticksPerStep) % activeSequence.length;
                 const pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber;
 
                 if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
+                    
+                    const recordMode = getMidiRecordModeState();
+                    if (recordMode === 'replace') {
+                        // In replace mode, clear any notes at the current step on all pitches
+                        for (let i = 0; i < Constants.SYNTH_PITCHES.length; i++) {
+                            if (activeSequence.data[i][currentStep]) {
+                                // Pass true to prevent this from creating its own undo step
+                                track.sequences.removeNoteFromSequence(activeSequence.id, i, currentStep, true); 
+                            }
+                        }
+                    }
+                    
                     track.sequences.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
                     
                     const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
