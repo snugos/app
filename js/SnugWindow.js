@@ -199,4 +199,17 @@ export class SnugWindow {
     showTaskbarContextMenu(e) {
         // Implementation for context menu...
     }
+
+    // NEW: Method to get the current state of the window for serialization/restoration
+    getWindowState() {
+        return {
+            x: this.element.offsetLeft,
+            y: this.element.offsetTop,
+            width: this.element.offsetWidth,
+            height: this.element.offsetHeight,
+            isMinimized: this.isMinimized,
+            isMaximized: this.isMaximized,
+            // Add other state properties you want to persist/restore here if necessary
+        };
+    }
 }
