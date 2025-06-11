@@ -1,41 +1,42 @@
 // js/db.js - IndexedDB Helper Module
 
 const DB_NAME = 'SnugOSAudioDB';
-const STORE_NAME = 'audioFiles';
-const DB_VERSION = 1;
+// ADDED a new store name for assets and incremented DB version
+const STORES = {
+    AUDIO: 'audioFiles',
+    ASSETS: 'userAssets'
+};
+const DB_VERSION = 2; 
 
 let dbPromise = null;
 
 /**
  * Gets the IndexedDB database instance.
- * Initializes the database and object store if they don't exist.
  * @returns {Promise<IDBDatabase>} A promise that resolves with the database instance.
  */
 function getDB() {
     if (!dbPromise) {
         dbPromise = new Promise((resolve, reject) => {
             if (!window.indexedDB) {
-                console.error('[DB] IndexedDB not supported by this browser.');
-                return reject(new Error('IndexedDB not supported. Audio samples cannot be saved locally.'));
+                return reject(new Error('IndexedDB not supported.'));
             }
             const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-            request.onerror = (event) => {
-                console.error('[DB] Database open error:', event.target.error);
-                reject(new Error('Error opening database: ' + (event.target.error?.message || 'Unknown DB open error')));
-            };
+            request.onerror = (event) => reject(new Error('Error opening database: ' + event.target.error?.message));
 
-            request.onsuccess = (event) => {
-                // console.log('[DB] Database opened successfully.');
-                resolve(event.target.result);
-            };
+            request.onsuccess = (event) => resolve(event.target.result);
 
             request.onupgradeneeded = (event) => {
                 console.log('[DB] Database upgrade needed.');
                 const db = event.target.result;
-                if (!db.objectStoreNames.contains(STORE_NAME)) {
-                    db.createObjectStore(STORE_NAME);
-                    console.log(`[DB] Object store "${STORE_NAME}" created.`);
+                if (!db.objectStoreNames.contains(STORES.AUDIO)) {
+                    db.createObjectStore(STORES.AUDIO);
+                    console.log(`[DB] Object store "${STORES.AUDIO}" created.`);
+                }
+                // NEW: Create the userAssets store if it doesn't exist
+                if (!db.objectStoreNames.contains(STORES.ASSETS)) {
+                    db.createObjectStore(STORES.ASSETS);
+                    console.log(`[DB] Object store "${STORES.ASSETS}" created.`);
                 }
             };
         });
@@ -44,20 +45,21 @@ function getDB() {
 }
 
 /**
- * Stores a key-value pair in the database.
+ * Generic function to store a value in a specific store.
+ * @param {string} storeName - The name of the object store.
  * @param {string} key - The key for the data.
- * @param {Blob} audioBlob - The audio data to store.
+ * @param {any} value - The data to store (e.g., a Blob).
  * @returns {Promise<void>}
  */
-export async function storeAudio(key, audioBlob) {
+async function storeValue(storeName, key, value) {
     const db = await getDB();
     return new Promise((resolve, reject) => {
         try {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.put(audioBlob, key);
+            const transaction = db.transaction(storeName, 'readwrite');
+            const store = transaction.objectStore(storeName);
+            const request = store.put(value, key);
             request.onsuccess = () => resolve();
-            request.onerror = (event) => reject(new Error('Error storing audio: ' + event.target.error?.message));
+            request.onerror = (event) => reject(new Error('Error storing value: ' + event.target.error?.message));
         } catch (e) {
             reject(new Error('Failed to initiate store transaction: ' + e.message));
         }
@@ -65,19 +67,20 @@ export async function storeAudio(key, audioBlob) {
 }
 
 /**
- * Retrieves audio data from the database by key.
- * @param {string} key - The key of the data to retrieve.
- * @returns {Promise<Blob|undefined>} A promise that resolves with the audio blob or undefined.
+ * Generic function to retrieve a value from a specific store.
+ * @param {string} storeName - The name of the object store.
+ * @param {string} key - The key for the data.
+ * @returns {Promise<any>} A promise that resolves with the data or undefined.
  */
-export async function getAudio(key) {
+async function getValue(storeName, key) {
     const db = await getDB();
     return new Promise((resolve, reject) => {
         try {
-            const transaction = db.transaction(STORE_NAME, 'readonly');
-            const store = transaction.objectStore(STORE_NAME);
+            const transaction = db.transaction(storeName, 'readonly');
+            const store = transaction.objectStore(storeName);
             const request = store.get(key);
             request.onsuccess = () => resolve(request.result);
-            request.onerror = (event) => reject(new Error('Error getting audio: ' + event.target.error?.message));
+            request.onerror = (event) => reject(new Error('Error getting value: ' + event.target.error?.message));
         } catch (e) {
             reject(new Error('Failed to initiate get transaction: ' + e.message));
         }
@@ -85,48 +88,46 @@ export async function getAudio(key) {
 }
 
 /**
- * NEW: Deletes audio data from the database by key.
- * @param {string} key - The key of the data to delete.
+ * Generic function to delete a value from a specific store.
+ * @param {string} storeName - The name of the object store.
+ * @param {string} key - The key for the data.
  * @returns {Promise<void>}
  */
-export async function deleteAudio(key) {
+async function deleteValue(storeName, key) {
     const db = await getDB();
     return new Promise((resolve, reject) => {
         try {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
+            const transaction = db.transaction(storeName, 'readwrite');
+            const store = transaction.objectStore(storeName);
             const request = store.delete(key);
             request.onsuccess = () => resolve();
-            request.onerror = (event) => reject(new Error('Error deleting audio: ' + event.target.error?.message));
+            request.onerror = (event) => reject(new Error('Error deleting value: ' + event.target.error?.message));
         } catch (e) {
             reject(new Error('Failed to initiate delete transaction: ' + e.message));
         }
     });
 }
 
-/**
- * Clears all entries from the audio store.
- * @returns {Promise<void>}
- */
-export async function clearAllAudio() {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-        try {
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
-            const request = store.clear();
 
-            request.onsuccess = () => {
-                console.log('[DB] All audio cleared from database.');
-                resolve();
-            };
-            request.onerror = (event) => {
-                console.error('[DB clearAllAudio] Error clearing audio database:', event.target.error);
-                reject(new Error('Error clearing audio database: ' + (event.target.error?.message || 'Unknown DB clear error')));
-            };
-        } catch (e) {
-            console.error('[DB clearAllAudio] Synchronous error during transaction creation:', e);
-            reject(new Error('Failed to initiate clear audio store transaction: ' + e.message));
-        }
-    });
+// --- Specific Implementations ---
+
+export function storeAudio(key, audioBlob) {
+    return storeValue(STORES.AUDIO, key, audioBlob);
+}
+
+export function getAudio(key) {
+    return getValue(STORES.AUDIO, key);
+}
+
+export function deleteAudio(key) {
+    return deleteValue(STORES.AUDIO, key);
+}
+
+// NEW: Functions for storing and retrieving user assets like backgrounds
+export function storeAsset(key, assetBlob) {
+    return storeValue(STORES.ASSETS, key, assetBlob);
+}
+
+export function getAsset(key) {
+    return getValue(STORES.ASSETS, key);
 }
