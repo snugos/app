@@ -4,7 +4,7 @@ import * as Constants from './constants.js';
 import { EffectChain } from './EffectChain.js';
 import { SequenceManager } from './SequenceManager.js';
 import { ClipManager } from './ClipManager.js';
-import { getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
+import { getEffectDefaultParams, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
