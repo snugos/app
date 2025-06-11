@@ -20,7 +20,8 @@ import {
     getActiveMIDIInputState,
     getUndoStackState, 
     getRedoStackState,
-    getRecordingTrackIdState,
+    // FIX: Correctly alias the function name
+    getRecordingTrackIdState as getRecordingTrackId,
     setRecordingStartTimeState
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
@@ -229,7 +230,6 @@ export function attachGlobalControlEvents(uiCache) {
         }
     };
 
-    // UPDATED: handleRecord function with count-in logic
     const handleRecord = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
@@ -241,7 +241,6 @@ export function attachGlobalControlEvents(uiCache) {
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
-            // Stop recording logic (remains the same)
             setIsRecording(false);
             recordBtn.classList.remove('recording');
             if (getRecordingTrackId() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
@@ -251,41 +250,24 @@ export function attachGlobalControlEvents(uiCache) {
                 handleStop();
             }
         } else if (armedTrack) {
-            // --- NEW COUNT-IN LOGIC ---
+            setRecordingTrackId(armedTrackId);
+            setIsRecording(true);
+            recordBtn.classList.add('recording');
             
-            // 1. Start the transport immediately, but at position 0.
-            Tone.Transport.stop();
-            Tone.Transport.position = 0;
-            Tone.Transport.start();
-
-            // 2. Activate the metronome so it clicks during the count-in.
-            const metronomeBtn = document.getElementById('metronomeToggleBtn');
-            if (!metronomeBtn.classList.contains('active')) {
-                localAppServices.toggleMetronome();
-                metronomeBtn.classList.add('active');
-            }
-
-            showNotification("Get ready...", Tone.Time("1m").toMilliseconds());
-
-            // 3. Schedule the actual recording to start after one measure ('1m').
-            Tone.Transport.scheduleOnce(async (time) => {
-                // This code will execute exactly one measure later.
-                setRecordingTrackId(armedTrackId);
-                setIsRecording(true);
-                recordBtn.classList.add('recording');
-                
-                setRecordingStartTimeState(time);
-
-                if (armedTrack.type === 'Audio') {
-                    const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
-                    if (!success) {
-                        setIsRecording(false);
-                        recordBtn.classList.remove('recording');
-                        handleStop(); // Stop if audio recording failed
-                    }
+            setRecordingStartTimeState(Tone.Transport.seconds);
+    
+            if (armedTrack.type === 'Audio') {
+                const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
+                if (!success) {
+                    setIsRecording(false);
+                    recordBtn.classList.remove('recording');
+                    return;
                 }
-            }, "1m");
-
+            }
+    
+            if (Tone.Transport.state !== 'started') {
+                Tone.Transport.start();
+            }
         } else {
             showNotification("No track armed for recording.", 2500);
         }
