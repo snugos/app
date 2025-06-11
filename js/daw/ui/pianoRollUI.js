@@ -1,5 +1,5 @@
-// js/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
-import * as Constants from '../constants.js';
+// js/daw/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
+import * as Constants from '../../constants.js';
 
 let localAppServices = {};
 export const openPianoRolls = new Map();
@@ -52,7 +52,8 @@ export function openPianoRollForClip(trackId, clipId) {
             const editedSequence = track.sequences.sequences.find(s => s.id === tempSequence.id);
             if (editedSequence) {
                 clip.sequenceData = JSON.parse(JSON.stringify(editedSequence.data));
-                localAppServices.renderTimeline?.();
+                // Removed renderTimeline call as timeline is removed
+                // localAppServices.renderTimeline?.();
 
                 const seqIndex = track.sequences.sequences.findIndex(s => s.id === tempSequence.id);
                 if (seqIndex > -1) {
@@ -140,11 +141,15 @@ export function updatePianoRollPlayhead(transportTime) {
 
             if (loopDurationInSeconds === 0) return;
 
-            const loopTime = transportTime % loopDurationInSeconds;
-
             const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
             const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
-            const newX = (loopTime * pixelsPerSecond) + keyWidth;
+            const newX = (transportTime * pixelsPerSecond) + keyWidth; // Changed loopTime to transportTime
+
+            // Removed check if loop is active
+            // if (loopDurationInSeconds > 0) {
+            //    const loopTime = transportTime % loopDurationInSeconds;
+            //    newX = (loopTime * pixelsPerSecond) + keyWidth;
+            // }
 
             playhead.x(newX);
             playheadLayer.batchDraw();
