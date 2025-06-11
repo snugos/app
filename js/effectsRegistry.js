@@ -1,12 +1,12 @@
 // js/effectsRegistry.js - Definitions for modular effects
 
-export const synthEngineControlDefinitions = {
+const synthEngineControlDefinitions = {
     MonoSynth: [
         { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
-        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' }, // MODIFIED
+        { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' },
         { idPrefix: 'envAttack', label: 'Attack', type: 'knob', min: 0.001, max: 2, step: 0.001, defaultValue: 0.005, decimals: 3, path: 'envelope.attack' },
-        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' }, // MODIFIED
-        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' }, // MODIFIED
+        { idPrefix: 'envDecay', label: 'Decay', type: 'knob', min: 0.01, max: 2, step: 0.01, defaultValue: 2, decimals: 2, path: 'envelope.decay' },
+        { idPrefix: 'envSustain', label: 'Sustain', type: 'knob', min: 0, max: 1, step: 0.01, defaultValue: 0, decimals: 2, path: 'envelope.sustain' },
         { idPrefix: 'envRelease', label: 'Release', type: 'knob', min: 0.01, max: 5, step: 0.01, defaultValue: 1, decimals: 2, path: 'envelope.release' },
         { idPrefix: 'filtType', label: 'Filt Type', type: 'select', options: ['lowpass', 'highpass', 'bandpass', 'lowshelf', 'highshelf', 'notch', 'allpass', 'peaking'], defaultValue: 'lowpass' },
         { idPrefix: 'filtFreq', label: 'Filt Freq', type: 'knob', min: 20, max: 20000, step: 10, defaultValue: 1000, decimals: 0, displaySuffix: 'Hz', isSignal: true },
@@ -18,10 +18,9 @@ export const synthEngineControlDefinitions = {
         { idPrefix: 'filtEnvBaseFreq', label: 'F.Base', type: 'knob', min:20, max:5000, step:1, defaultValue:200, decimals:0, path:'filterEnvelope.baseFrequency'},
         { idPrefix: 'filtEnvOctaves', label: 'F.Oct', type: 'knob', min:0, max:10, step:0.1, defaultValue:7, decimals:1, path:'filterEnvelope.octaves'},
     ]
-    // Add other synth engine definitions here
 };
 
-export const AVAILABLE_EFFECTS = {
+const AVAILABLE_EFFECTS = {
     AutoFilter: {
         displayName: 'Auto Filter',
         toneClass: 'AutoFilter',
@@ -254,7 +253,7 @@ export const AVAILABLE_EFFECTS = {
     },
 };
 
-export function createEffectInstance(effectType, initialParams = {}) {
+function createEffectInstance(effectType, initialParams = {}) {
     if (typeof Tone === 'undefined') {
         console.error(`[EffectsRegistry createEffectInstance] Tone.js is not loaded. Cannot create effect "${effectType}".`);
         return null;
@@ -362,7 +361,7 @@ export function createEffectInstance(effectType, initialParams = {}) {
     }
 }
 
-export function getEffectDefaultParams(effectType) {
+function getEffectDefaultParams(effectType) {
     const definition = AVAILABLE_EFFECTS[effectType];
     if (!definition || !definition.params || !Array.isArray(definition.params)) {
         if (!definition) console.warn(`[EffectsRegistry getEffectDefaultParams] No definition found for effect type: ${effectType}`);
@@ -384,7 +383,7 @@ export function getEffectDefaultParams(effectType) {
     return defaults;
 }
 
-export function getEffectParamDefinitions(effectType) {
+function getEffectParamDefinitions(effectType) {
     const definition = AVAILABLE_EFFECTS[effectType];
     if (!definition) {
         console.warn(`[EffectsRegistry getEffectParamDefinitions] No definition found for effect type: ${effectType}`);
