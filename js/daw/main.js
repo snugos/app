@@ -1,16 +1,16 @@
-// js/main.js - Main Application Logic Orchestrator
+// js/daw/main.js - Main Application Logic Orchestrator
 
-import { SnugWindow } from './SnugWindow.js';
-import * as Constants from './constants.js';
-import { showNotification as utilShowNotification, createContextMenu, showCustomModal, drawWaveform } from './utils.js';
+import { SnugWindow } from './SnugWindow.js'; // Path updated
+import * as Constants from '../constants.js'; // Still shared, path relative to js/daw/
+import { showNotification as utilShowNotification, createContextMenu, showCustomModal, drawWaveform } from '../utils.js'; // Still shared, path relative to js/daw/
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
-} from './eventHandlers.js';
+} from './eventHandlers.js'; // Path updated
 import {
-    // Importing from decomposed state modules
+    // Importing from decomposed state modules (these remain the same relative to main.js)
     getTracks as getTracksState, getTrackById as getTrackByIdState,
     getOpenWindows as getOpenWindowsState, getWindowById as getWindowByIdState,
     getArmedTrackId as getArmedTrackIdState, setArmedTrackId as setArmedTrackIdState,
@@ -38,35 +38,35 @@ import {
     getMidiAccess as getMidiAccessState, setMidiAccess as setMidiAccessState,
     getMidiRecordModeState, setMidiRecordModeState,
     // Add specific imports for track and window state where needed
-    addTrack as addTrackToStateInternal, // From trackState.js
-    removeTrack as removeTrackFromStateInternal, // From trackState.js
-    setTracks as setTracksState, // From trackState.js
-    setTrackIdCounter as setTrackIdCounterState, // From trackState.js
-    addWindowToStore as addWindowToStoreState, // From windowState.js
-    removeWindowFromStore as removeWindowFromStoreState, // From windowState.js
-    setHighestZ as setHighestZState, // From windowState.js
-    incrementHighestZ as incrementHighestZState, // From windowState.js
-    initializeProjectState, // From projectState.js
-    initializeTrackState, // From trackState.js
-    initializeWindowState, // From windowState.js
-    initializeAppState, // From appState.js
-    initializeMasterState, // From masterState.js
-    initializeSoundLibraryState // From soundLibraryState.js
-} from './state.js'; // This is now a barrel file, importing from here is okay for compatibility
+    addTrack as addTrackToStateInternal,
+    removeTrack as removeTrackFromStateInternal,
+    setTracks as setTracksState,
+    setTrackIdCounter as setTrackIdCounterState,
+    addWindowToStore as addWindowToStoreState,
+    removeWindowFromStore as removeWindowFromStoreState,
+    setHighestZ as setHighestZState,
+    incrementHighestZ as incrementHighestZState,
+    initializeProjectState,
+    initializeTrackState,
+    initializeWindowState,
+    initializeAppState,
+    initializeMasterState,
+    initializeSoundLibraryState
+} from '../state.js'; // This is now a barrel file, importing from here is okay for compatibility
 
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode, forceStopAllAudio
-} from './audio.js';
-import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js';
-import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js';
+} from './audio.js'; // Path updated to js/daw/audio/
+import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; // Path updated
+import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; // Path updated
 import { 
     initializeSampleManager, loadSampleFile, loadDrumSamplerPadFile, loadSoundFromBrowserToTarget,
     getAudioBlobFromSoundBrowserItem, autoSliceSample, fetchSoundLibrary
-} from './audio/sampleManager.js';
-import { storeAudio as dbStoreAudio, getAudio as dbGetAudio, deleteAudio as dbDeleteAudio } from './db.js';
+} from './audio/sampleManager.js'; // Path updated
+import { storeAudio as dbStoreAudio, getAudio as dbGetAudio, deleteAudio as dbDeleteAudio } from '../db.js'; // Still shared, path relative to js/daw/
 import {
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
     openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
@@ -76,10 +76,10 @@ import {
     renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, openProfileWindow
-} from './ui.js';
-import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
-import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
-import { initializeAuth, handleBackgroundUpload } from './auth.js'; 
+} from './ui.js'; // Path updated
+import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from '../effectsRegistry.js'; // Still shared, path relative to js/daw/
+import { initializeMetronome, toggleMetronome } from './metronome.js'; // Path updated
+import { initializeAuth, handleBackgroundUpload } from '../auth.js'; // Still shared, path relative to js/daw/
 
 let appServices = {};
 
@@ -348,7 +348,7 @@ async function initializeSnugOS() {
         getIsReconstructingDAW: getIsReconstructingDAWState, setIsReconstructingDAW: setIsReconstructingDAWState,
         captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
         redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal,
-        reconstructDAW: reconstructDAWInternal, saveProject: saveProjectInternal, loadProject: loadProjectInternal,
+        reconstructDAW: reconstructDAwInternal, saveProject: saveProjectInternal, loadProject: loadProjectInternal,
         handleProjectFileLoad: handleProjectFileLoadInternal, exportToWav: exportToWavInternal,
         initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
         addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio,
