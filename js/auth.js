@@ -1,8 +1,11 @@
 // js/auth.js
-import { storeAsset, getAsset } from './db.js'; // FIX: Corrected path from '../db.js' to './db.js'
+import { storeAsset, getAsset } from '../db.js'; // Path updated
+import * as Constants from '../constants.js'; // Path updated
+import { showNotification, showCustomModal } from '../utils.js'; // Path updated
 
 let localAppServices = {};
 let loggedInUser = null;
+const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 export function initializeAuth(appServices) {
     localAppServices = appServices;
@@ -23,7 +26,7 @@ function updateAuthUI(user = null) {
         menuLogin?.classList.add('hidden');
         menuLogout?.classList.remove('hidden');
     } else {
-        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1">Login</button>`;
+        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
         userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
         menuLogin?.classList.remove('hidden');
         menuLogout?.classList.add('hidden');
@@ -46,9 +49,10 @@ async function checkInitialAuthState() {
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
 
-        const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
+        // Apply custom background if available and logged in
+        const backgroundBlob = await localAppServices.getAsset?.(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
-            localAppServices.applyCustomBackground(backgroundBlob);
+            localAppServices.applyCustomBackground?.(backgroundBlob);
         }
 
     } catch (e) {
@@ -109,26 +113,26 @@ export function showLoginModal() {
         });
     });
 
-    overlay.querySelector('#loginForm').addEventListener('submit', (e) => {
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#loginUsername').value;
         const password = overlay.querySelector('#loginPassword').value;
-        handleLogin(username, password).then(() => overlay.remove());
+        await handleLogin(username, password);
+        overlay.remove();
     });
 
-    overlay.querySelector('#registerForm').addEventListener('submit', (e) => {
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#registerUsername').value;
         const password = overlay.querySelector('#registerPassword').value;
-        handleRegister(username, password).then(() => overlay.remove());
+        await handleRegister(username, password);
+        overlay.remove();
     });
 }
 
 async function handleLogin(username, password) {
-    const serverUrl = 'https://snugos-server-api.onrender.com';
-
     try {
-        const response = await fetch(`${serverUrl}/api/login`, {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -137,21 +141,20 @@ async function handleLogin(username, password) {
 
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
-            await checkInitialAuthState();
+            await checkInitialAuthState(); // Re-check state after login to update UI and load background
             localAppServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             localAppServices.showNotification(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
         localAppServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Login Error:", error);
     }
 }
 
 async function handleRegister(username, password) {
-    const serverUrl = 'https://snugos-server-api.onrender.com';
-
     try {
-        const response = await fetch(`${serverUrl}/api/register`, {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -165,27 +168,30 @@ async function handleRegister(username, password) {
         }
     } catch (error) {
         localAppServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Register Error:", error);
     }
 }
 
 export async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
         localAppServices.showNotification('You must be logged in to save a custom background.', 3000);
-        localAppServices.applyCustomBackground(file);
+        localAppServices.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
         return;
     }
 
     try {
         localAppServices.showNotification('Saving background...', 1500);
-        await storeAsset(`background-for-user-${loggedInUser.id}`, file);
-        localAppServices.applyCustomBackground(file);
+        // Use localAppServices.storeAsset for consistency
+        await localAppServices.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
+        localAppServices.applyCustomBackground?.(file);
         localAppServices.showNotification('Background saved locally!', 2000);
     } catch (error) {
         localAppServices.showNotification(`Error saving background: ${error.message}`, 3000);
+        console.error("Background Upload Error:", error);
     }
 }
 
-function handleLogout() {
+export function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
