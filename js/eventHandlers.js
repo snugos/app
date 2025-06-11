@@ -612,40 +612,58 @@ function onMIDIMessage(message) {
 
 
 export function handleTrackMute(trackId) {
+    console.log(`[eventHandlers.js] handleTrackMute called for trackId: ${trackId}`); // DEBUG LOG
     const track = getTrackById(trackId);
-    if (!track) return;
+    if (!track) {
+        console.warn(`[eventHandlers.js] handleTrackMute: Track with ID ${trackId} not found.`); // DEBUG LOG
+        return;
+    }
     captureStateForUndo(`${track.isMuted ? 'Unmute' : 'Mute'} Track: ${track.name}`);
     track.isMuted = !track.isMuted;
     track.applyMuteState();
+    // This part is crucial: update UI for all tracks that might be affected by solo/mute changes
     if (localAppServices.updateTrackUI) {
-        localAppServices.updateTrackUI(trackId, 'muteChanged');
+        getTracks().forEach(t => localAppServices.updateTrackUI(t.id, 'muteChanged'));
+        localAppServices.updateMixerWindow(); // Re-render mixer to update button states
     }
 }
 
 export function handleTrackSolo(trackId) {
+    console.log(`[eventHandlers.js] handleTrackSolo called for trackId: ${trackId}`); // DEBUG LOG
     const track = getTrackById(trackId);
-    if (!track) return;
+    if (!track) {
+        console.warn(`[eventHandlers.js] handleTrackSolo: Track with ID ${trackId} not found.`); // DEBUG LOG
+        return;
+    }
     captureStateForUndo(`Solo Track: ${track.name}`);
     const currentSoloId = getSoloedTrackId();
     const newSoloId = (currentSoloId === trackId) ? null : trackId;
     setSoloedTrackId(newSoloId);
+    // This loop now correctly updates ALL tracks' UI
     getTracks().forEach(t => {
         if (t.updateSoloMuteState) {
             t.updateSoloMuteState(newSoloId);
         }
+        localAppServices.updateTrackUI(t.id, 'soloChanged'); // Update UI for each track
     });
+    // Ensure mixer also gets updated
     if (localAppServices.updateMixerWindow) {
         localAppServices.updateMixerWindow();
     }
 }
 
 export function handleTrackArm(trackId) {
+    console.log(`[eventHandlers.js] handleTrackArm called for trackId: ${trackId}`); // DEBUG LOG
     const currentArmedId = getArmedTrackId();
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
     setArmedTrackId(newArmedId);
-    localAppServices.updateTrackUI?.(trackId, 'armChanged');
-    if (currentArmedId !== null) {
-        localAppServices.updateTrackUI?.(currentArmedId, 'armChanged');
+    // Update UI for the newly armed/unarmed track
+    if (localAppServices.updateTrackUI) {
+        localAppServices.updateTrackUI(trackId, 'armChanged');
+        // Also update the previously armed track if it was different
+        if (currentArmedId !== null && currentArmedId !== trackId) {
+            localAppServices.updateTrackUI(currentArmedId, 'armChanged');
+        }
     }
 }
 
