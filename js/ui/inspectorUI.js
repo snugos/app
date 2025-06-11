@@ -197,6 +197,8 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     const contentDOM = buildTrackInspectorContentDOM(track);
     const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450 });
     if (inspectorWindow?.element) {
+        // --- DEBUG: Confirming this function is called ---
+        console.log(`[inspectorUI.js] Calling initializeCommonInspectorControls for track ${track.id}`);
         initializeCommonInspectorControls(track, inspectorWindow.element);
     }
     return inspectorWindow;
@@ -254,14 +256,41 @@ function buildTrackInspectorContentDOM(track) {
 }
 
 function initializeCommonInspectorControls(track, element) {
+    // --- DEBUG: Verifying button elements are found ---
+    console.log(`[inspectorUI.js] Initializing common controls for track: ${track.id}`);
+
     const muteBtn = element.querySelector(`#muteBtn-${track.id}`);
-    muteBtn?.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
+    if (muteBtn) { // Added null check
+        console.log(`[inspectorUI.js] Found muteBtn-${track.id}`);
+        muteBtn.addEventListener('click', () => {
+            console.log(`[inspectorUI.js] Click event fired for muteBtn-${track.id}`);
+            localAppServices.handleTrackMute(track.id);
+        });
+    } else {
+        console.warn(`[inspectorUI.js] Mute button not found for track ${track.id}`);
+    }
 
     const soloBtn = element.querySelector(`#soloBtn-${track.id}`);
-    soloBtn?.addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
+    if (soloBtn) { // Added null check
+        console.log(`[inspectorUI.js] Found soloBtn-${track.id}`);
+        soloBtn.addEventListener('click', () => {
+            console.log(`[inspectorUI.js] Click event fired for soloBtn-${track.id}`);
+            localAppServices.handleTrackSolo(track.id);
+        });
+    } else {
+        console.warn(`[inspectorUI.js] Solo button not found for track ${track.id}`);
+    }
 
     const armBtn = element.querySelector(`#armInputBtn-${track.id}`);
-    armBtn?.addEventListener('click', () => localAppServices.handleTrackArm(track.id));
+    if (armBtn) { // Added null check
+        console.log(`[inspectorUI.js] Found armInputBtn-${track.id}`);
+        armBtn.addEventListener('click', () => {
+            console.log(`[inspectorUI.js] Click event fired for armInputBtn-${track.id}`);
+            localAppServices.handleTrackArm(track.id);
+        });
+    } else {
+        console.warn(`[inspectorUI.js] Arm button not found for track ${track.id}`);
+    }
 
     const nameInput = element.querySelector(`#trackNameInput-${track.id}`);
     nameInput?.addEventListener('change', (e) => {
@@ -279,6 +308,7 @@ function initializeCommonInspectorControls(track, element) {
         localAppServices.handleOpenEffectsRack?.(track.id);
     });
 
+    // These update calls ensure the initial visual state of the buttons is correct
     localAppServices.updateTrackUI(track.id, 'soloChanged');
     localAppServices.updateTrackUI(track.id, 'muteChanged');
     localAppServices.updateTrackUI(track.id, 'armChanged');
