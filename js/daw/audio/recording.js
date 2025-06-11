@@ -1,26 +1,30 @@
 // js/daw/audio/recording.js
 
-import { getRecordingStartTimeState } from '../state/state.js'; // Path updated
+// Removed import { getRecordingStartTimeState } from '../state.js'; as getRecordingStartTimeState is global
 
 let localAppServices = {};
 let mic = null;
 let recorder = null;
 
-export function initializeRecording(appServices) {
+// Removed export
+function initializeRecording(appServices) {
     localAppServices = appServices;
 }
 
-export async function startAudioRecording(track, isMonitoringEnabled) {
+// Removed export
+async function startAudioRecording(track, isMonitoringEnabled) {
     if (mic?.state === "started") mic.close();
     if (recorder?.state === "started") await recorder.stop();
 
     try {
+        // Tone.UserMedia and Tone.Recorder are global
         mic = new Tone.UserMedia({
             audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false }
         });
         recorder = new Tone.Recorder();
 
         if (!track || track.type !== 'Audio' || !track.inputChannel) {
+            // showNotification is global
             localAppServices.showNotification?.('Invalid track for recording.', 3000);
             return false;
         }
@@ -34,12 +38,14 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         return true;
     } catch (error) {
         console.error("Error starting recording:", error);
+        // showNotification is global
         localAppServices.showNotification?.('Could not start recording. Check microphone permissions.', 4000);
         return false;
     }
 }
 
-export async function stopAudioRecording() {
+// Removed export
+async function stopAudioRecording() {
     if (!recorder) return;
     
     let blob = null;
@@ -54,8 +60,11 @@ export async function stopAudioRecording() {
     recorder = null;
 
     if (blob && blob.size > 0) {
+        // getRecordingTrackIdState is global
         const recordingTrackId = localAppServices.getRecordingTrackId?.();
+        // getRecordingStartTimeState is global
         const startTime = getRecordingStartTimeState();
+        // getTrackByIdState is global
         const track = localAppServices.getTrackById?.(recordingTrackId);
 
         if (track && typeof track.addAudioClip === 'function') {
@@ -63,6 +72,7 @@ export async function stopAudioRecording() {
             await track.addAudioClip(blob, startTime, clipName);
         } else {
             console.error("Could not find track to add recorded clip to.");
+            // showNotification is global
             localAppServices.showNotification?.('Error: Could not find track to place recording.', 3000);
         }
     }
