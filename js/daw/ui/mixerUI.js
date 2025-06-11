@@ -1,16 +1,23 @@
 // js/daw/ui/mixerUI.js
 
+// Removed import { createKnob } from '../../knobUI.js'; as createKnob is global
+// Removed imports for state functions as they are global
+
 let localAppServices = {};
 
-export function initializeMixerUI(appServices) {
+// Removed export
+function initializeMixerUI(appServices) {
     localAppServices = appServices;
 }
 
-export function openMixerWindow(savedState = null) {
+// Removed export
+function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
-    const openWindows = localAppServices.getOpenWindows();
+    // getOpenWindowsState is global
+    const openWindows = getOpenWindowsState();
     if (openWindows.has(windowId) && !savedState) {
-        openWindows.get(windowId).restore();
+        // getWindowByIdState is global
+        getWindowByIdState(windowId).restore();
         return;
     }
 
@@ -29,13 +36,15 @@ export function openMixerWindow(savedState = null) {
 
     if (savedState) Object.assign(mixerOptions, savedState);
     
+    // SnugWindow is global
     const mixerWindow = localAppServices.createWindow(windowId, 'Mixer', contentContainer, mixerOptions);
     if (mixerWindow?.element) {
         updateMixerWindow();
     }
 }
 
-export function updateMixerWindow() {
+// Removed export
+function updateMixerWindow() {
     // --- DEBUGGING LOG ---
     console.log('[mixerUI.js] updateMixerWindow called.');
     const container = document.getElementById('mixerContentContainer');
@@ -45,7 +54,8 @@ export function updateMixerWindow() {
 }
 
 function renderMixerTracks(container) {
-    const tracks = localAppServices.getTracks?.() || [];
+    // getTracksState is global
+    const tracks = getTracksState?.() || [];
     // --- DEBUGGING LOG ---
     console.log(`%c[mixerUI.js] renderMixerTracks called with ${tracks.length} tracks.`, 'color: #f39c12; font-weight: bold;');
 
@@ -62,10 +72,13 @@ function renderMixerTracks(container) {
 
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
     if (masterVolKnobPlaceholder) {
-        const masterVolKnob = localAppServices.createKnob({
+        // createKnob is global
+        const masterVolKnob = createKnob({
             label: 'Master', min: 0, max: 1, step: 0.01,
-            initialValue: localAppServices.getMasterGainValue(),
-            onValueChange: (val) => localAppServices.setMasterGainValue(val)
+            // getMasterGainValueState is global
+            initialValue: getMasterGainValueState(),
+            // setMasterGainValueState is global
+            onValueChange: (val) => setMasterGainValueState(val)
         });
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
@@ -80,7 +93,7 @@ function renderMixerTracks(container) {
         trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
             <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
-                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;\"></div>
+                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;\\"></div>
             </div>
             <div class="flex justify-around mt-1">
                 <button id="mixerMuteBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs">${track.isMuted ? 'Unmute' : 'Mute'}</button>
@@ -91,7 +104,8 @@ function renderMixerTracks(container) {
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
-            const volKnob = localAppServices.createKnob({
+            // createKnob is global
+            const volKnob = createKnob({
                 label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
@@ -104,7 +118,8 @@ function renderMixerTracks(container) {
         if (mixerMuteBtn) {
             mixerMuteBtn.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
             // Update initial state for mute button style
-            const soloedTrackId = localAppServices.getSoloedTrackId?.();
+            // getSoloedTrackIdState is global
+            const soloedTrackId = getSoloedTrackIdState?.();
             mixerMuteBtn.classList.toggle('muted', track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id));
         }
 
