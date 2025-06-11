@@ -30,7 +30,8 @@ import {
     setIsRecordingState, isTrackRecordingState, setRecordingTrackIdState, getRecordingTrackIdState, setRecordingStartTimeState,
     getCurrentUserThemePreferenceState, setCurrentUserThemePreferenceState,
     addFileToSoundLibraryInternal,
-    setMidiAccessState, getMidiAccessState
+    setMidiAccessState, getMidiAccessState,
+    getMidiRecordModeState, setMidiRecordModeState
 } from './state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
@@ -292,7 +293,8 @@ async function initializeSnugOS() {
         addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
         getHighestZ: getHighestZState, setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
         getMidiAccess: getMidiAccessState, setMidiAccess: setMidiAccessState,
-        getArmedTrackId: getArmedTrackIdState, setArmedTrackId: setArmedTrackIdState,
+        getArmedTrackId: getArmedTrackIdState,
+        setArmedTrackId: setArmedTrackIdState,
         getSoloedTrackId: getSoloedTrackIdState, setSoloedTrackId: setSoloedTrackIdState,
         getMasterEffects: getMasterEffectsState, addMasterEffect: addMasterEffectToState,
         removeMasterEffect: removeMasterEffectFromState, updateMasterEffectParam: updateMasterEffectParamInState,
@@ -336,7 +338,9 @@ async function initializeSnugOS() {
         toggleMetronome: toggleMetronome,
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
         uiElementsCache: {},
-        context: Tone.context
+        context: Tone.context,
+        getMidiRecordModeState, // Added from state.js
+        setMidiRecordModeState  // Added from state.js
     };
 
     initializeStateModule(appServices);
