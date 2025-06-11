@@ -24,14 +24,12 @@ function getThemeColors() {
 }
 
 
-// Removed export
-function initializePianoRollUI(appServicesFromMain) {
+export function initializePianoRollUI(appServicesFromMain) { // Export re-added
     localAppServices = appServicesFromMain;
     appServicesFromMain.openPianoRollForClip = openPianoRollForClip;
 }
 
-// Removed export
-function openPianoRollForClip(trackId, clipId) {
+export function openPianoRollForClip(trackId, clipId) { // Export re-added
     const track = localAppServices.getTrackById?.(trackId); // getTrackByIdState is global
     const clip = track?.clips.timelineClips.find(c => c.id === clipId);
 
@@ -45,11 +43,9 @@ function openPianoRollForClip(trackId, clipId) {
     const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true); 
     tempSequence.data = JSON.parse(JSON.stringify(clip.sequenceData));
 
-    // openPianoRollWindow is global
-    openPianoRollWindow(track.id, tempSequence.id);
+    openPianoRollWindow(track.id, tempSequence.id); // openPianoRollWindow is exported here
 
-    // getWindowByIdState is global
-    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${trackId}`);
+    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${trackId}`); // getWindowByIdState is global
     if (pianoRollWindow) {
         const originalOnClose = pianoRollWindow.onCloseCallback;
         pianoRollWindow.onCloseCallback = () => {
@@ -72,17 +68,13 @@ function openPianoRollForClip(trackId, clipId) {
 }
 
 
-// Removed export
-function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) {
-    // getTrackByIdState is global
-    const track = localAppServices.getTrackById?.(trackId);
+export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) { // Export re-added
+    const track = localAppServices.getTrackById?.(trackId); // getTrackByIdState is global
     if (!track || track.type === 'Audio') return;
 
     const windowId = `pianoRollWin-${trackId}`;
-    // getOpenWindowsState is global
-    if (getOpenWindowsState().has(windowId) && !savedState) {
-        // getWindowByIdState is global
-        getWindowByIdState(windowId).restore();
+    if (getOpenWindowsState().has(windowId) && !savedState) { // getOpenWindowsState is global
+        getWindowByIdState(windowId).restore(); // getWindowByIdState is global
         return;
     }
 
@@ -116,8 +108,7 @@ function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null
         <div id="velocityPaneContainer-${trackId}" class="flex-shrink-0 w-full h-1/5 bg-gray-200 dark:bg-gray-800 border-t-2 border-gray-400 dark:border-gray-600 overflow-x-auto overflow-y-hidden"></div>
     `;
 
-    // SnugWindow is global
-    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, { 
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, { // SnugWindow is global
         width: 800, height: 500, minWidth: 500, minHeight: 300, initialContentKey: windowId,
         onCloseCallback: () => {
             openPianoRolls.delete(trackId);
@@ -134,12 +125,10 @@ function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null
     }
 }
 
-// Removed export
-function updatePianoRollPlayhead(transportTime) {
+export function updatePianoRollPlayhead(transportTime) { // Export re-added
     if (openPianoRolls.size === 0) return;
 
     openPianoRolls.forEach(({ playhead, playheadLayer, track }) => {
-        // _sequenceEventId is on track.sequences
         if (playhead && playheadLayer && track && track.sequences._sequenceEventId !== null) {
             const activeSequence = track.sequences.getActiveSequence();
             if (!activeSequence) return;
@@ -152,8 +141,7 @@ function updatePianoRollPlayhead(transportTime) {
 
             if (loopDurationInSeconds === 0) return;
 
-            // Constants is global
-            const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+            const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH; // Constants is global
             const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
             const newX = (transportTime * pixelsPerSecond) + keyWidth;
 
