@@ -191,13 +191,28 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
     const windowId = `trackInspector-${trackId}`;
-    if (localAppServices.getOpenWindows().has(windowId) && !savedState) {
-        localAppServices.getOpenWindows().get(windowId).restore(); return;
+    
+    // Check if the window is already open
+    const existingWindow = localAppServices.getOpenWindows().get(windowId);
+
+    if (existingWindow) {
+        // If savedState is NOT provided, it means this call is from a menu click (e.g., "Open Inspector")
+        // and the window is already open, so just restore/focus it.
+        if (!savedState) {
+            existingWindow.restore();
+            return existingWindow;
+        } else {
+            // If savedState *IS* provided, it means we are trying to re-render an existing window
+            // (e.g., from handleTrackUIUpdate). We must close the old one first to avoid duplicates
+            // and ensure fresh elements/listeners, then proceed to create the new one with saved state.
+            existingWindow.close(true); // Close silently
+        }
     }
+
     const contentDOM = buildTrackInspectorContentDOM(track);
-    const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450, ...savedState }); // Apply savedState here
+    // Apply savedState if provided, which will include x, y, width, height, etc.
+    const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450, ...savedState });
     if (inspectorWindow?.element) {
-        // --- DEBUG: Confirming this function is called ---
         console.log(`[inspectorUI.js] Calling initializeCommonInspectorControls for track ${track.id}`);
         initializeCommonInspectorControls(track, inspectorWindow.element);
     }
@@ -267,7 +282,7 @@ function initializeCommonInspectorControls(track, element) {
             localAppServices.handleTrackMute(track.id);
         });
     } else {
-        console.warn(`[inspectorUI.js] Mute button with ID muteBtn-${track.id} not found.`); // More specific warning
+        console.warn(`[inspectorUI.js] Mute button with ID muteBtn-${track.id} not found.`);
     }
 
     const soloBtn = element.querySelector(`#soloBtn-${track.id}`);
@@ -278,7 +293,7 @@ function initializeCommonInspectorControls(track, element) {
             localAppServices.handleTrackSolo(track.id);
         });
     } else {
-        console.warn(`[inspectorUI.js] Solo button with ID soloBtn-${track.id} not found.`); // More specific warning
+        console.warn(`[inspectorUI.js] Solo button with ID soloBtn-${track.id} not found.`);
     }
 
     const armBtn = element.querySelector(`#armInputBtn-${track.id}`);
@@ -289,7 +304,7 @@ function initializeCommonInspectorControls(track, element) {
             localAppServices.handleTrackArm(track.id);
         });
     } else {
-        console.warn(`[inspectorUI.js] Arm button with ID armInputBtn-${track.id} not found.`); // More specific warning
+        console.warn(`[inspectorUI.js] Arm button with ID armInputBtn-${track.id} not found.`);
     }
 
     const nameInput = element.querySelector(`#trackNameInput-${track.id}`);
@@ -309,9 +324,9 @@ function initializeCommonInspectorControls(track, element) {
     });
 
     // REMOVED THE FOLLOWING LINES TO PREVENT INFINITE LOOP:
-    // localAppServices.updateTrackUI(track.id, 'soloChanged');
-    // localAppServices.updateTrackUI(track.id, 'muteChanged');
-    // localAppServices.updateTrackUI(track.id, 'armChanged');
+    // localAppServices.updateTrackUI(track.id, 'soloChanged'); 
+    // localAppServices.updateTrackUI(track.id, 'muteChanged'); 
+    // localAppServices.updateTrackUI(track.id, 'armChanged'); 
 }
 
 function buildSynthControls(track, container) {
