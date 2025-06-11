@@ -10,12 +10,20 @@ export class EffectChain {
     }
 
     initialize(effects = []) {
-        effects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
+        // Ensure effects is an array before iterating
+        if (Array.isArray(effects)) {
+            effects.forEach(effectData => this.addEffect(effectData.type, effectData.params, true));
+        } else {
+            console.warn(`[EffectChain.js] initialize received non-array effects data for track ${this.track.id}:`, effects);
+        }
     }
 
     addEffect(effectType, params, isInitialLoad = false) {
         const effectDef = this.appServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effectType]; //
-        if (!effectDef) return; //
+        if (!effectDef) {
+            console.warn(`[EffectChain.js] Effect definition for type "${effectType}" not found.`);
+            return;
+        }
         const initialParams = params || this.appServices.effectsRegistryAccess.getEffectDefaultParams(effectType); //
         const toneNode = createEffectInstance(effectType, initialParams); //
         if (toneNode) { //
@@ -26,6 +34,8 @@ export class EffectChain {
                 this.appServices.updateTrackUI?.(this.track.id, 'effectsChanged'); //
                 this.appServices.captureStateForUndo?.(`Add ${effectDef.displayName} to ${this.track.name}`); //
             }
+        } else {
+            console.error(`[EffectChain.js] Failed to create Tone.js instance for effect type "${effectType}".`);
         }
     }
 
@@ -37,6 +47,8 @@ export class EffectChain {
             this.rebuildEffectChain(); //
             this.appServices.updateTrackUI?.(this.track.id, 'effectsChanged'); //
             this.appServices.captureStateForUndo?.(`Remove ${removedEffect.type} from ${this.track.name}`); //
+        } else {
+            console.warn(`[EffectChain.js] Effect with ID ${effectId} not found in activeEffects for track ${this.track.id}.`);
         }
     }
 
@@ -53,8 +65,10 @@ export class EffectChain {
             try {
                 effect.toneNode.set({ [paramPath]: value }); //
             } catch (e) {
-                console.warn(`Could not set param ${paramPath} on effect ${effect.type}`, e); //
+                console.warn(`[EffectChain.js] Could not set param ${paramPath} on effect ${effect.type}`, e); //
             }
+        } else {
+            console.warn(`[EffectChain.js] Effect with ID ${effectId} or its ToneNode not found for track ${this.track.id}.`);
         }
     }
 
@@ -78,5 +92,6 @@ export class EffectChain {
 
     dispose() {
         this.activeEffects.forEach(e => e.toneNode.dispose()); //
+        this.activeEffects = []; // Clear the array after disposing
     }
 }
