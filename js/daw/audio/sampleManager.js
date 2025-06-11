@@ -1,7 +1,15 @@
-// js/audio/sampleManager.js
+// js/daw/audio/sampleManager.js
 
-import { storeAudio, getAudio } from '../db.js';
-import * as Constants from '../constants.js';
+import { storeAudio, getAudio } from '../../db.js'; // Path updated
+import * as Constants from '../../constants.js'; // Path updated
+import {
+    getIsReconstructingDAW as getIsReconstructingDAWGlobal,
+    getLoadedZipFiles as getLoadedZipFilesGlobal,
+    setLoadedZipFiles as setLoadedZipFilesGlobal,
+    setSoundLibraryFileTrees as setSoundLibraryFileTreesGlobal,
+    getSoundLibraryFileTrees as getSoundLibraryFileTreesGlobal
+} from '../state/state.js'; // Path updated
+
 
 let localAppServices = {};
 
@@ -22,7 +30,7 @@ function getMimeTypeFromFilename(filename) {
 }
 
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
-    const isReconstructing = localAppServices.getIsReconstructingDAW?.();
+    const isReconstructing = getIsReconstructingDAWGlobal?.(); // Use global state
     if (!isReconstructing) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ? `Pad ${padIndex + 1} on ${track.name}` : track.name;
         localAppServices.captureStateForUndo?.(`Load ${sourceName} to ${targetName}`);
@@ -111,7 +119,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     if (!track) return;
 
     try {
-        const fileBlob = await getAudioBlobFromSoundBrowserItem(soundData);
+        const fileBlob = await localAppServices.getAudioBlobFromSoundBrowserItem(soundData); // Use localAppServices
         if (!fileBlob) throw new Error("Could not retrieve sample from library.");
 
         const finalMimeType = getMimeTypeFromFilename(soundData.fileName);
@@ -134,7 +142,7 @@ export async function getAudioBlobFromSoundBrowserItem(soundData) {
         if (soundData.libraryName === 'Imports') {
             return await localAppServices.dbGetAudio(soundData.fullPath);
         } else {
-            const loadedZips = localAppServices.getLoadedZipFiles?.();
+            const loadedZips = getLoadedZipFilesGlobal?.(); // Use global state
             const zipInstance = loadedZips?.[soundData.libraryName]?.zip;
             if (!zipInstance) {
                 throw new Error(`Library "${soundData.libraryName}" is not loaded.`);
@@ -156,7 +164,7 @@ export async function getAudioBlobFromSoundBrowserItem(soundData) {
 
 export async function fetchSoundLibrary(libraryName, zipUrl) {
     // Check if the library is already loaded or actively loading to prevent redundant fetches
-    const loadedZips = localAppServices.getLoadedZipFiles?.();
+    const loadedZips = getLoadedZipFilesGlobal?.(); // Use global state
     if (loadedZips[libraryName]?.status === 'loaded' || loadedZips[libraryName]?.status === 'loading') {
         console.log(`[sampleManager.js] Library "${libraryName}" already loaded or loading.`);
         return; 
@@ -164,7 +172,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
 
     try {
         // Set the status to 'loading'
-        localAppServices.setLoadedZipFiles?.(libraryName, null, "loading");
+        setLoadedZipFilesGlobal?.(libraryName, null, "loading"); // Use global state
         console.log(`[sampleManager.js] Attempting to fetch library: "${zipUrl}"`);
 
         const response = await fetch(zipUrl);
@@ -178,7 +186,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
         const loadedZipInstance = await jszip.loadAsync(zipData);
         
         // Set the status to 'loaded' and store the JSZip instance
-        localAppServices.setLoadedZipFiles?.(libraryName, loadedZipInstance, 'loaded');
+        setLoadedZipFilesGlobal?.(libraryName, loadedZipInstance, 'loaded'); // Use global state
         console.log(`[sampleManager.js] Library "${libraryName}" loaded successfully.`);
 
         const fileTree = {};
@@ -203,16 +211,12 @@ export async function fetchSoundLibrary(libraryName, zipUrl) {
                 }
             });
         });
-        localAppServices.setSoundLibraryFileTrees?.(libraryName, fileTree);
+        setSoundLibraryFileTreesGlobal?.(libraryName, fileTree); // Use global state
         console.log(`[sampleManager.js] File tree for "${libraryName}" constructed. Found ${filesCount} audio files.`);
-
-        // Important: Notify the UI that the sound browser content needs to be re-rendered
-        // This is done in soundBrowserUI.js's openSoundBrowserWindow after fetchSoundLibrary.then()
-        // So no explicit call here, but ensure the chaining in soundBrowserUI.js is correct.
 
     } catch (error) {
         console.error(`[sampleManager.js] Error loading library "${libraryName}" from "${zipUrl}":`, error);
-        localAppServices.setLoadedZipFiles?.(libraryName, null, 'error');
+        setLoadedZipFilesGlobal?.(libraryName, null, 'error'); // Use global state
         localAppServices.showNotification?.(`Failed to load library "${libraryName}". Check console for details.`, 5000);
     }
 }
