@@ -1,5 +1,5 @@
-// js/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
-import { showNotification, base64ToBlob } from '../utils.js'; //
+// js/daw/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
+import { showNotification, base64ToBlob } from '../../utils.js'; // Path updated
 
 let localAppServices = {}; //
 
