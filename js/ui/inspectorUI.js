@@ -267,7 +267,7 @@ function initializeCommonInspectorControls(track, element) {
             localAppServices.handleTrackMute(track.id);
         });
     } else {
-        console.warn(`[inspectorUI.js] Mute button not found for track ${track.id}`);
+        console.warn(`[inspectorUI.js] Mute button with ID muteBtn-${track.id} not found.`); // More specific warning
     }
 
     const soloBtn = element.querySelector(`#soloBtn-${track.id}`);
@@ -278,7 +278,7 @@ function initializeCommonInspectorControls(track, element) {
             localAppServices.handleTrackSolo(track.id);
         });
     } else {
-        console.warn(`[inspectorUI.js] Solo button not found for track ${track.id}`);
+        console.warn(`[inspectorUI.js] Solo button with ID soloBtn-${track.id} not found.`); // More specific warning
     }
 
     const armBtn = element.querySelector(`#armInputBtn-${track.id}`);
@@ -289,7 +289,7 @@ function initializeCommonInspectorControls(track, element) {
             localAppServices.handleTrackArm(track.id);
         });
     } else {
-        console.warn(`[inspectorUI.js] Arm button not found for track ${track.id}`);
+        console.warn(`[inspectorUI.js] Arm button with ID armInputBtn-${track.id} not found.`); // More specific warning
     }
 
     const nameInput = element.querySelector(`#trackNameInput-${track.id}`);
