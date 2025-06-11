@@ -1,4 +1,4 @@
-// js/ui/mixerUI.js
+// js/daw/ui/mixerUI.js
 
 let localAppServices = {};
 
