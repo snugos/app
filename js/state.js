@@ -37,6 +37,7 @@ export {
     getRecordingTrackId as getRecordingTrackIdState,
     setRecordingTrackId as setRecordingTrackIdState,
     getRecordingStartTime as getRecordingStartTimeState,
+    setRecordingStartTime as setRecordingStartTimeState, // <-- THE FIX IS HERE
     addTrack as addTrackToStateInternal,
     removeTrack as removeTrackFromStateInternal,
     setTracks as setTracksState,
