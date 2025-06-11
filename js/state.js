@@ -97,7 +97,7 @@ export function setPlaybackModeState(mode) {
     if (mode === 'piano-roll' || mode === 'timeline') {
         const oldMode = playbackMode;
         playbackMode = mode;
-        appServices.onPlaybackModeChange?.(newMode, oldMode);
+        appServices.onPlaybackModeChange?.(mode, oldMode); // Fixed to use `mode` instead of `newMode`
     }
 }
 export function getIsReconstructingDAWState() { return isReconstructingDAW; }
@@ -302,7 +302,7 @@ export function loadProjectInternal(file) {
             const projectData = JSON.parse(e.target.result);
             reconstructDAWInternal(projectData);
         } catch (error) {
-            showNotification("Error: Could not parse project file.", 3000);
+            utilShowNotification("Error: Could not parse project file.", 3000); // Fixed showNotification call
             console.error("Project file parsing error:", error);
         }
     };
