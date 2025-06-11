@@ -82,6 +82,11 @@ const authenticateToken = (req, res, next) => {
 
 // === API Endpoints ===
 
+// NEW: Keep-alive endpoint for the pinging service
+app.get('/api/keep-alive', (request, response) => {
+    response.json({ success: true, message: "Server is awake." });
+});
+
 // User Registration Endpoint
 app.post('/api/register', async (request, response) => {
     try {
