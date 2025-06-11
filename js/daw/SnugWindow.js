@@ -2,7 +2,7 @@
 
 // Removed import { createContextMenu } from './utils.js'; as createContextMenu is global
 
-export class SnugWindow { // Export re-added
+export class SnugWindow { // This class is exported
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
         // --- DEBUGGING LOG ---
         console.log(`%c[SnugWindow.js] Constructor for window "${id}" received options:`, 'color: #9b59b6; font-weight: bold;', JSON.parse(JSON.stringify(options)));
@@ -202,7 +202,7 @@ export class SnugWindow { // Export re-added
     }
 
     // NEW: Method to get the current state of the window for serialization/restoration
-    export function getWindowState() { // Export re-added
+    getWindowState() { // Export removed
         return {
             x: this.element.offsetLeft,
             y: this.element.offsetTop,
