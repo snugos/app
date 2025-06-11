@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to SnugOS</title>
+    
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="msapplication-TileColor" content="#1e1e1e">
+    <meta name="msapplication-TileImage" content="ms-icon-144x144.png">
+    <meta name="theme-color" content="#1e1e1e">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="theme-dark">
+
+    <div id="topTaskbar" class="select-none">
+        <div style="flex-grow: 1;"></div> 
+        <div id="userAuthContainer" class="flex items-center text-sm ml-4">
+            <button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>
+        </div>
+        <div id="themeToggleContainerTopRight">
+            <button id="themeToggleBtn" title="Toggle Theme">
+                <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="desktop">
+        <h1 class="text-center text-3xl font-bold text-white mt-20">Welcome to SnugOS</h1>
+        <p class="text-center text-gray-400 text-lg mt-4">Your browser-based digital audio workstation.</p>
+
+        <div class="flex flex-col items-center justify-center space-y-4 mt-12">
+            <button id="launchDawBtn" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-xl hover:bg-blue-700 transition duration-300">
+                Launch DAW
+            </button>
+            <button id="viewProfilesBtn" class="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition duration-300">
+                View Community Profiles
+            </button>
+        </div>
+    </div>
+
+    <div id="taskbar" class="select-none">
+        <button id="startButton">Start</button>
+        <div id="taskbarButtons">
+            </div>
+        <div style="flex-grow: 1;"></div> <div id="taskbarClockDisplay" class="text-right px-2"></div>
+    </div>
+
+    <div id="startMenu" class="hidden select-none">
+        <ul>
+            <li id="menuLaunchDaw">Launch DAW</li>
+            <li><hr></li>
+            <li id="menuViewProfiles">View Profiles</li>
+            <li><hr></li>
+            <li id="menuLogin">Login / Register</li>
+            <li id="menuLogout" class="hidden">Logout</li>
+            <li><hr></li>
+            <li id="menuToggleFullScreen">Toggle Full Screen</li>
+        </ul>
+    </div>
+
+    <div id="notification-area"></div>
+    <div id="modalContainer"></div>
+
+    <script type="module" src="js/welcome.js"></script>
+
+</body>
+</html>
