@@ -1,311 +1,108 @@
-// js/state.js - Application State Management
-import * as Constants from './constants.js';
-import { Track } from './Track.js';
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from './effectsRegistry.js';
-import {
-    initAudioContextAndMasterMeter as audioInitAudioContextAndMasterMeter
-} from './audio.js';
+// js/state.js - Main State Aggregator Module
 
+// Import all functions from the new state modules
+import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
+import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ } from './state/windowState.js';
+import { initializeMasterState, getMasterEffects, setMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
+import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
+import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
+import { initializeAppState, getMidiAccess, setMidiAccess, getActiveMIDIInput, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState } from './state/appState.js';
 
-// --- Centralized State Variables ---
-let tracks = [];
-let trackIdCounter = 0;
+/**
+ * Initializes all state sub-modules by passing them the appServices object.
+ * This is the single entry point for state initialization.
+ * @param {object} appServices 
+ */
+export function initializeStateModule(appServices) {
+    initializeTrackState(appServices);
+    initializeWindowState(appServices);
+    initializeMasterState(appServices);
+    initializeProjectState(appServices);
+    initializeSoundLibraryState(appServices);
+    initializeAppState(appServices);
+}
 
-let openWindowsMap = new Map();
-let highestZ = 100;
+// Export all functions again for the rest of the application to use.
+// This preserves the original API of the state module.
+export {
+    // trackState exports
+    getTracks as getTracksState,
+    getTrackById as getTrackByIdState,
+    getSoloedTrackId as getSoloedTrackIdState,
+    setSoloedTrackId as setSoloedTrackIdState,
+    getArmedTrackId as getArmedTrackIdState,
+    setArmedTrackId as setArmedTrackIdState,
+    isRecording as isTrackRecordingState,
+    setIsRecording as setIsRecordingState,
+    getRecordingTrackId as getRecordingTrackIdState,
+    setRecordingTrackId as setRecordingTrackIdState,
+    getRecordingStartTime as getRecordingStartTimeState,
+    setRecordingStartTime as setRecordingStartTimeState,
+    addTrack as addTrackToStateInternal,
+    removeTrack as removeTrackFromStateInternal,
+    setTracks as setTracksState,
+    setTrackIdCounter as setTrackIdCounterState,
 
-let masterEffectsChainState = [];
-let masterGainValueState = Tone.dbToGain(0); 
+    // windowState exports
+    getOpenWindows as getOpenWindowsState,
+    getWindowById as getWindowByIdState,
+    addWindowToStore as addWindowToStoreState,
+    removeWindowFromStore as removeWindowFromStoreState,
+    getHighestZ as getHighestZState,
+    setHighestZ as setHighestZState,
+    incrementHighestZ as incrementHighestZState,
 
-let midiAccessGlobal = null;
-let activeMIDIInputGlobal = null;
+    // masterState exports
+    getMasterEffects as getMasterEffectsState,
+    setMasterEffects as setMasterEffectsState,
+    addMasterEffect as addMasterEffectToState,
+    removeMasterEffect as removeMasterEffectFromState,
+    updateMasterEffectParam as updateMasterEffectParamInState,
+    reorderMasterEffect as reorderMasterEffectInState,
+    getMasterGainValue as getMasterGainValueState,
+    setMasterGainValue as setMasterGainValueState,
 
-let loadedZipFilesGlobal = {};
-let soundLibraryFileTreesGlobal = {};
-let currentLibraryNameGlobal = null;
-let currentSoundFileTreeGlobal = null;
-let currentSoundBrowserPathGlobal = [];
-let previewPlayerGlobal = null;
+    // projectState exports
+    getIsReconstructingDAW as getIsReconstructingDAWState,
+    setIsReconstructingDAW as setIsReconstructingDAWState,
+    getUndoStack as getUndoStackState,
+    getRedoStack as getRedoStackState,
+    getClipboardData as getClipboardDataState,
+    setClipboardData as setClipboardDataState,
+    captureStateForUndo as captureStateForUndoInternal,
+    undoLastAction as undoLastActionInternal,
+    redoLastAction as redoLastActionInternal,
+    gatherProjectData as gatherProjectDataInternal,
+    reconstructDAW as reconstructDAWInternal,
+    saveProject as saveProjectInternal,
+    loadProject as loadProjectInternal,
+    handleProjectFileLoad as handleProjectFileLoadInternal,
+    exportToWav as exportToWavInternal,
 
-let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
+    // soundLibraryState exports
+    getLoadedZipFiles as getLoadedZipFilesState,
+    setLoadedZipFiles as setLoadedZipFilesState,
+    getSoundLibraryFileTrees as getSoundLibraryFileTreesState,
+    setSoundLibraryFileTrees as setSoundLibraryFileTreesState,
+    getCurrentLibraryName as getCurrentLibraryNameState,
+    setCurrentLibraryName as setCurrentLibraryNameState,
+    getCurrentSoundBrowserPath as getCurrentSoundBrowserPathState,
+    setCurrentSoundBrowserPath as setCurrentSoundBrowserPathState, // <-- THE FIX IS HERE
+    getPreviewPlayer as getPreviewPlayerState,
+    setPreviewPlayer as setPreviewPlayerState,
+    addFileToSoundLibrary as addFileToSoundLibraryInternal,
 
-let activeSequencerTrackId = null; 
-let soloedTrackId = null;
-let armedTrackId = null;
-let isRecordingGlobal = false;
-let recordingTrackIdGlobal = null;
-let recordingStartTimeGlobal = 0; 
-
-let playbackMode = 'piano-roll'; 
-
-let isReconstructingDAW = false;
-let undoStack = [];
-let redoStack = [];
-const MAX_UNDO_HISTORY = 50;
-
-let selectedTimelineClipInfo = { 
-    clipId: null,
-    trackId: null,
-    originalLeft: 0, 
-    originalStart: 0,
-    pixelsPerSecond: 0,
+    // appState exports
+    getMidiAccess as getMidiAccessState,
+    setMidiAccess as setMidiAccessState,
+    getActiveMIDIInput as getActiveMIDIInputState,
+    setActiveMIDIInput as setActiveMIDIInputState,
+    getPlaybackMode as getPlaybackModeState,
+    setPlaybackMode as setPlaybackModeState,
+    getCurrentUserThemePreference as getCurrentUserThemePreferenceState,
+    setCurrentUserThemePreference as setCurrentUserThemePreferenceState,
+    getSelectedTimelineClipInfo as getSelectedTimelineClipInfoState,
+    setSelectedTimelineClipInfo as setSelectedTimelineClipInfoState,
+    getMidiRecordModeState,
+    setMidiRecordModeState
 };
-
-let currentUserThemePreference = 'system'; 
-
-let appServices = {};
-
-
-// --- State Initialization and Accessors ---
-
-export function initializeStateModule(appServicesFromMain) {
-    appServices = appServicesFromMain;
-}
-
-export function getTracksState() { return tracks; }
-export function getTrackByIdState(id) { return tracks.find(t => t.id === id); }
-export function getOpenWindowsState() { return openWindowsMap; }
-export function getWindowByIdState(id) { return openWindowsMap.get(id); }
-export function getHighestZState() { return highestZ; }
-export function setHighestZState(z) { highestZ = z; }
-export function incrementHighestZState() { return ++highestZ; }
-export function addWindowToStoreState(id, windowInstance) { openWindowsMap.set(id, windowInstance); }
-export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
-export function getMidiAccessState() { return midiAccessGlobal; }
-export function setMidiAccessState(access) { midiAccessGlobal = access; }
-export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
-export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
-export function getSoloedTrackIdState() { return soloedTrackId; }
-export function setSoloedTrackIdState(id) { soloedTrackId = id; }
-export function getArmedTrackIdState() { return armedTrackId; }
-export function setArmedTrackIdState(id) { armedTrackId = id; }
-export function isTrackRecordingState() { return isRecordingGlobal; }
-export function setIsRecordingState(isRecording) { isRecordingGlobal = isRecording; }
-export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
-export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
-export function getRecordingStartTimeState() { return recordingStartTimeGlobal; }
-export function setRecordingStartTimeState(time) { recordingStartTimeGlobal = time; }
-export function getPlaybackModeState() { return playbackMode; }
-export function setPlaybackModeState(mode) {
-    if (mode === 'piano-roll' || mode === 'timeline') {
-        const oldMode = playbackMode;
-        playbackMode = mode;
-        appServices.onPlaybackModeChange?.(newMode, oldMode);
-    }
-}
-export function getIsReconstructingDAWState() { return isReconstructingDAW; }
-export function setIsReconstructingDAWState(isReconstructing) { isReconstructingDAW = isReconstructing; }
-export function getUndoStackState() { return undoStack; }
-export function getRedoStackState() { return redoStack; }
-export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
-export function setLoadedZipFilesState(name, zip, status) {
-    if (!loadedZipFilesGlobal[name]) loadedZipFilesGlobal[name] = {};
-    if (zip) loadedZipFilesGlobal[name].zip = zip;
-    if (status) loadedZipFilesGlobal[name].status = status;
-}
-export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
-export function setSoundLibraryFileTreesState(libraryName, tree) { soundLibraryFileTreesGlobal[libraryName] = tree; }
-export function getCurrentLibraryNameState() { return currentLibraryNameGlobal; }
-export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
-export function getPreviewPlayerState() { return previewPlayerGlobal; }
-export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
-export function setSelectedTimelineClipInfoState(info) { selectedTimelineClipInfo = { ...selectedTimelineClipInfo, ...info }; }
-export function getCurrentUserThemePreferenceState() { return currentUserThemePreference; }
-export function setCurrentUserThemePreferenceState(theme) {
-    currentUserThemePreference = theme;
-    localStorage.setItem('snugos-theme', theme);
-    appServices.applyUserThemePreference?.();
-}
-export function getMasterGainValueState() { return masterGainValueState; }
-export function setMasterGainValueState(gain) {
-    masterGainValueState = gain;
-    appServices.setActualMasterVolume?.(gain);
-}
-export function getMasterEffectsState() { return masterEffectsChainState; }
-export function addMasterEffectToState(effectType) {
-    const defaultParams = getEffectDefaultParamsFromRegistry(effectType);
-    const effect = { id: `master-effect-${Date.now()}`, type: effectType, params: defaultParams };
-    masterEffectsChainState.push(effect);
-    appServices.addMasterEffectToAudio?.(effect);
-    appServices.updateMasterEffectsUI?.();
-}
-export function removeMasterEffectFromState(effectId) {
-    const index = masterEffectsChainState.findIndex(e => e.id === effectId);
-    if (index > -1) {
-        masterEffectsChainState.splice(index, 1);
-        appServices.removeMasterEffectFromAudio?.(effectId);
-        appServices.updateMasterEffectsUI?.();
-    }
-}
-export function updateMasterEffectParamInState(effectId, paramPath, value) {
-    const effect = masterEffectsChainState.find(e => e.id === effectId);
-    if (effect) {
-        let paramState = effect.params;
-        const keys = paramPath.split('.');
-        const finalKey = keys.pop();
-        for (const key of keys) {
-           paramState = paramState[key] = paramState[key] || {};
-        }
-        paramState[finalKey] = value;
-        appServices.updateMasterEffectParamInAudio?.(effectId, paramPath, value);
-    }
-}
-export function reorderMasterEffectInState(oldIndex, newIndex) {
-    const [moved] = masterEffectsChainState.splice(oldIndex, 1);
-    masterEffectsChainState.splice(newIndex, 0, moved);
-    appServices.reorderMasterEffectInAudio?.();
-    appServices.updateMasterEffectsUI?.();
-}
-
-export async function addTrackToStateInternal(type) {
-    const newTrackId = trackIdCounter++;
-    const track = new Track(newTrackId, type, null, appServices);
-    tracks.push(track);
-    await track.initializeInstrument();
-    appServices.updateMixerWindow?.();
-    appServices.renderTimeline?.();
-    captureStateForUndoInternal(`Add ${type} Track`);
-    return track;
-}
-
-export function removeTrackFromStateInternal(trackId) {
-    const index = tracks.findIndex(t => t.id === trackId);
-    if (index > -1) {
-        const trackName = tracks[index].name;
-        captureStateForUndoInternal(`Remove Track: ${trackName}`);
-        tracks[index].dispose();
-        tracks.splice(index, 1);
-        appServices.updateMixerWindow?.();
-        appServices.renderTimeline?.();
-    }
-}
-
-export function addFileToSoundLibraryInternal(fileName, fileBlob) {
-    console.log(`Adding ${fileName} to sound library.`);
-    const dbKey = `imports/${fileName}-${fileBlob.size}-${Date.now()}`;
-    return dbStoreAudio(dbKey, fileBlob);
-}
-
-export function captureStateForUndoInternal(actionDescription) {
-    if (isReconstructingDAW) return;
-    const state = gatherProjectDataInternal();
-    undoStack.push({ state, actionDescription });
-    if (undoStack.length > MAX_UNDO_HISTORY) {
-        undoStack.shift();
-    }
-    redoStack = [];
-}
-
-export function undoLastActionInternal() {
-    if (undoStack.length > 0) {
-        const lastState = undoStack.pop();
-        const currentState = gatherProjectDataInternal();
-        redoStack.push({ state: currentState, actionDescription: lastState.actionDescription });
-        reconstructDAWInternal(lastState.state);
-    }
-}
-
-export function redoLastActionInternal() {
-    if (redoStack.length > 0) {
-        const nextState = redoStack.pop();
-        const currentState = gatherProjectDataInternal();
-        undoStack.push({ state: currentState, actionDescription: nextState.actionDescription });
-        reconstructDAWInternal(nextState.state);
-    }
-}
-
-export function gatherProjectDataInternal() {
-    return {
-        tracks: tracks.map(t => t.serialize()),
-        masterEffects: masterEffectsChainState,
-        masterVolume: masterGainValueState,
-        tempo: Tone.Transport.bpm.value,
-        version: Constants.APP_VERSION,
-    };
-}
-
-// UPDATED: This function is now more robust.
-export async function reconstructDAWInternal(projectData) {
-    setIsReconstructingDAWState(true);
-
-    try {
-        // Clear existing state
-        tracks.forEach(t => t.dispose());
-        tracks = [];
-        trackIdCounter = 0;
-        let maxId = 0;
-
-        // Reconstruct tracks
-        if (projectData.tracks && Array.isArray(projectData.tracks)) {
-            for (const trackData of projectData.tracks) {
-                // Pass the full saved track data as initialData to the constructor
-                const newTrack = new Track(trackData.id, trackData.type, trackData, appServices);
-                tracks.push(newTrack);
-                if (trackData.id > maxId) {
-                    maxId = trackData.id;
-                }
-            }
-        }
-        trackIdCounter = maxId + 1;
-
-        // Initialize instruments AFTER all tracks are created
-        for (const track of tracks) {
-            await track.initializeInstrument();
-        }
-
-        // Reconstruct master state
-        setMasterGainValueState(projectData.masterVolume ?? 1.0);
-        Tone.Transport.bpm.value = projectData.tempo ?? 120;
-        masterEffectsChainState = projectData.masterEffects || [];
-        appServices.rebuildMasterEffectChain?.();
-
-    } catch (error) {
-        console.error("Critical error during project reconstruction:", error);
-        utilShowNotification("Failed to load project due to an error.", 5000);
-    } finally {
-        // Update UI
-        appServices.updateMixerWindow?.();
-        appServices.renderTimeline?.();
-        setIsReconstructingDAWState(false);
-    }
-}
-
-
-export function saveProjectInternal() {
-    const projectData = gatherProjectDataInternal();
-    const jsonString = JSON.stringify(projectData, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'snugos-project.snug';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-export function loadProjectInternal(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const projectData = JSON.parse(e.target.result);
-            reconstructDAWInternal(projectData);
-        } catch (error) {
-            showNotification("Error: Could not parse project file.", 3000);
-            console.error("Project file parsing error:", error);
-        }
-    };
-    reader.readAsText(file);
-}
-
-export async function handleProjectFileLoadInternal(event) {
-    const file = event.target.files[0];
-    if (file) {
-        loadProjectInternal(file);
-    }
-}
-
-export async function exportToWavInternal() {
-    // ... export logic ...
-}
