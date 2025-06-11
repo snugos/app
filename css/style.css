@@ -273,26 +273,61 @@ body {
     gap: 6px;
 }
 
-#topTaskbar button {
-    background-color: var(--bg-button);
-    border: 1px solid var(--border-button);
-    color: var(--text-button);
-    padding: 5px 8px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Consolidate common button styles here for consistent sizing across most buttons.
+    This includes:
+    - #topTaskbar button
+    - #taskbarButtons .taskbar-button
+    - .window-title-buttons button (min/max/close)
+    - .panel button (general buttons like in Inspector)
+    - .modal-buttons button (buttons in modals)
+    - .mixer-track button (mute/solo buttons in mixer)
+*/
+#topTaskbar button,
+#taskbarButtons .taskbar-button,
+.window-title-buttons button,
+.panel button,
+.modal-buttons button,
+.mixer-track button {
+    padding: 5px 8px; /* Consistent padding */
+    border: 1px solid var(--border-button); /* Consistent border */
+    border-radius: 3px; /* Consistent border-radius */
+    font-size: 11px; /* Consistent font size */
+    height: 30px; /* Explicit height to prevent enlargement */
+    min-width: 30px; /* Ensure minimum width to prevent collapse */
+    box-sizing: border-box; /* Crucial: Include padding and border in element's total width/height */
+    display: inline-flex; /* Use flexbox for centering content */
+    align-items: center; /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    flex-shrink: 0; /* Prevent buttons from shrinking in flex containers */
+    cursor: pointer; /* Ensure cursor is pointer by default for all buttons */
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; /* Smooth transitions */
+    background-color: var(--bg-button); /* Default background */
+    color: var(--text-button); /* Default text color */
 }
-#topTaskbar button:hover {
+
+/* Common hover and active states for these consolidated buttons */
+#topTaskbar button:hover,
+#taskbarButtons .taskbar-button:hover,
+.window-title-buttons button:hover,
+.panel button:hover,
+.modal-buttons button:hover,
+.mixer-track button:hover {
     background-color: var(--bg-button-hover);
     border-color: var(--border-button-hover);
     color: var(--text-button-hover);
 }
-#topTaskbar button:active {
+
+#topTaskbar button:active,
+#taskbarButtons .taskbar-button:active,
+.window-title-buttons button:active,
+.panel button:active,
+.modal-buttons button:active,
+.mixer-track button:active {
     background-color: var(--bg-button-active);
+    border-color: var(--border-button-active-outer); /* Use outer border for active */
+    box-shadow: inset 1px 1px 0 var(--shadow-button-inset-main), inset -1px -1px 0 var(--shadow-button-inset-secondary); /* Apply inset shadow for active */
 }
+
 
 #topTaskbar button#recordBtnGlobalTop svg {
     fill: var(--text-button);
@@ -437,20 +472,60 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 .window-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 5px 8px; cursor: grab; display: flex; justify-content: space-between; align-items: center; height: 28px; flex-shrink: 0; font-weight: 600; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 2px; border-top-right-radius: 2px;}
 .window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;}
 .window-title-buttons { display: flex;}
-.window-title-buttons button { background: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button); width: 20px; height: 20px; line-height: 18px; text-align: center; font-size: 11px; font-weight: bold; margin-left: 4px; padding: 0; cursor: default; flex-shrink: 0; border-radius: 3px; transition: background-color 0.15s ease;}
-.window-title-buttons button:hover { background: var(--bg-button-hover); color: var(--text-button-hover);}
-.window-title-buttons button:active { background: var(--bg-button-active); border-color: var(--border-button);}
+/* Window title buttons have a more specific size here */
+.window-title-buttons button {
+    width: 20px;
+    height: 20px;
+    line-height: 18px; /* Adjust line-height for vertical centering of single char */
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 4px;
+    padding: 0; /* Remove padding explicitly for smaller buttons */
+    /* Inherits other base styles from the consolidated button rule above */
+}
+
 .window-content { flex-grow: 1; padding: 0; background-color: var(--bg-window-content); overflow: auto; color: var(--text-primary);}
 
 /* --- Taskbar Styling (Bottom Taskbar) --- */
 #taskbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 32px; background-color: var(--bg-taskbar); border-top: 1px solid var(--border-secondary); z-index: 10000; display: flex; align-items: center; padding: 0 6px; box-sizing: border-box; color: var(--text-secondary);}
-#startButton { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 12px; font-weight: 600; margin-right: 6px; color: var(--text-button); border-radius: 3px; transition: background-color 0.15s ease;}
-#startButton:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
-#startButton:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
-#taskbarButtons .taskbar-button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 10px; margin: 0 3px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; color: var(--text-secondary); border-radius: 3px; transition: background-color 0.15s ease, color 0.15s ease;}
-#taskbarButtons .taskbar-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover);}
+
+#startButton { 
+    padding: 3px 12px; 
+    font-weight: 600; 
+    margin-right: 6px; 
+    /* Inherits other base styles from the consolidated button rule above */
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); 
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; 
+}
+#startButton:hover { 
+    /* Inherits from consolidated hover */
+}
+#startButton:active { 
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); 
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; 
+    /* Inherits from consolidated active */
+}
+
+#taskbarButtons .taskbar-button { 
+    padding: 3px 10px; 
+    margin: 0 3px; 
+    max-width: 160px; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    /* Inherits other base styles from the consolidated button rule above */
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); 
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; 
+}
+#taskbarButtons .taskbar-button:hover { 
+    /* Inherits from consolidated hover */
+}
 #taskbarButtons .taskbar-button.active,
-#taskbarButtons .taskbar-button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active); color: var(--text-button-hover);}
+#taskbarButtons .taskbar-button:active { 
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); 
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; 
+    /* Inherits from consolidated active */
+}
 #taskbarButtons .taskbar-button.minimized-on-taskbar { background-color: var(--bg-button); opacity: 0.65;}
 #taskbarTempoDisplay { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button); cursor: pointer; color: var(--text-secondary); border-radius: 3px;}
 #taskbarTempoDisplay:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
@@ -484,46 +559,31 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 .knob-handle { width: 4px; height: 10px; background-color: var(--text-secondary); position: absolute; top: 3px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; border-radius: 2px;}
 .knob-value { font-size: 0.75rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
 
-/* --- General Button Active States --- */
-/* Ensure these styles explicitly define sizing/padding to prevent enlargement */
-button.muted,
-button.soloed,
-button.armed, /* include arm button for consistency */
-button.recording, /* include recording button for consistency */
-button.active {
-    /* Re-apply standard button sizing/layout properties from your .taskbar-button styles or #topTaskbar button styles */
-    padding: 5px 8px; /* Example: adjust to match your intended button size */
-    border: 1px solid var(--border-button); /* Example: ensure border is consistent */
-    border-radius: 3px; /* Example: maintain border-radius */
-    font-size: 11px; /* Example: match font size */
-    height: 30px; /* Explicit height to prevent enlargement */
-    box-sizing: border-box; /* Include padding and border in element's total width/height */
-    display: inline-flex; /* Use flex to align content */
-    align-items: center; /* Vertically center content */
-    justify-content: center; /* Horizontally center content */
-    flex-shrink: 0; /* Prevent shrinking if in a flex container */
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; /* Maintain smooth transition */
-}
-
-/* Specific color overrides for muted/soloed/armed/active states */
+/* --- General Button Active States (for .muted, .soloed, .armed, .active) --- */
+/* These rules should ONLY change colors, and NOT affect sizing or layout. */
+/* The sizing/layout is handled by the consolidated rules near the top. */
 button.muted {
     background-color: var(--accent-muted) !important;
     color: var(--accent-muted-text) !important;
+    border-color: var(--accent-muted) !important; /* Make border match background for a solid look */
 }
 
 button.soloed {
     background-color: var(--accent-soloed) !important;
     color: var(--accent-soloed-text) !important;
+    border-color: var(--accent-soloed) !important; /* Make border match background */
 }
 
-button.armed, button.recording { /* For armed/recording button */
+button.armed, button.recording {
     background-color: var(--accent-armed) !important;
     color: var(--accent-armed-text) !important;
+    border-color: var(--accent-armed) !important; /* Make border match background */
 }
 
-button.active { /* For general active state, like playback mode toggle */
+button.active {
     background-color: var(--accent-active) !important;
     color: var(--accent-active-text) !important;
+    border-color: var(--accent-active) !important; /* Make border match background */
 }
 
 /* --- Piano Roll / Sequencer Styling --- */
