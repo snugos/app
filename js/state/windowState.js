@@ -2,6 +2,15 @@
 
 let openWindowsMap = new Map();
 let highestZ = 100;
+let localAppServices = {};
+
+/**
+ * Initializes the window state module.
+ * @param {object} appServices - The main app services object.
+ */
+export function initializeWindowState(appServices) {
+    localAppServices = appServices;
+}
 
 export function getOpenWindows() {
     return openWindowsMap;
