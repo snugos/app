@@ -1,5 +1,9 @@
 // js/daw/metronome.js
 
+// Removed import * as Constants from '../constants.js'; // Removed as Constants is global
+// Removed Tone.MembraneSynth import as Tone is global
+
+let localAppServices = {};
 let metronomeSynth = null;
 let metronomeEventId = -1;
 let isMetronomeEnabled = false;
@@ -17,14 +21,16 @@ function createMetronomeSynth() {
     }).toDestination();
 }
 
-export function initializeMetronome(appServices) {
+// Removed export
+function initializeMetronome(appServices) {
     // The appServices variable is still used, but its specific properties
     // like showNotification would need to be accessed via the appServices object
     // if needed within this module. For now, it's just passed for consistency.
-    // localAppServices = appServices;
+    localAppServices = appServices;
 }
 
-export function startMetronome() {
+// Removed export
+function startMetronome() {
     if (metronomeEventId !== -1) {
         // Already running
         return;
@@ -51,7 +57,8 @@ export function startMetronome() {
     isMetronomeEnabled = true;
 }
 
-export function stopMetronome() {
+// Removed export
+function stopMetronome() {
     if (metronomeEventId !== -1) {
         Tone.Transport.clear(metronomeEventId);
         metronomeEventId = -1;
@@ -59,7 +66,8 @@ export function stopMetronome() {
     isMetronomeEnabled = false;
 }
 
-export function toggleMetronome() {
+// Removed export
+function toggleMetronome() {
     isMetronomeEnabled ? stopMetronome() : startMetronome();
     return isMetronomeEnabled;
 }
