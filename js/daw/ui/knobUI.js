@@ -1,6 +1,6 @@
-// js/ui/knobUI.js - Knob UI Component
+// js/knobUI.js - Knob UI Component
 
-export function createKnob(options, appServices) {
+function createKnob(options, appServices) {
     const container = document.createElement('div');
     container.className = 'knob-container';
 
@@ -31,74 +31,99 @@ export function createKnob(options, appServices) {
     let mouseDownListener = null;
     let touchStartListener = null;
 
-    function updateKnobVisual(disabled = false) {
-        const percentage = range === 0 ? 0 : (currentValue - min) / range;
-        const rotation = (percentage * maxDegrees) - (maxDegrees / 2);
-        handleEl.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
-        valueEl.textContent = typeof currentValue === 'number' ? currentValue.toFixed(options.decimals !== undefined ? options.decimals : (step < 1 && step !== 0 ? 2 : 0)) : currentValue;
-        if (options.displaySuffix) valueEl.textContent += options.displaySuffix;
-        knobEl.style.cursor = disabled ? 'not-allowed' : 'ns-resize';
-        knobEl.style.opacity = disabled ? '0.5' : '1';
-        if (mouseDownListener) knobEl.removeEventListener('mousedown', mouseDownListener);
-        if (touchStartListener) knobEl.removeEventListener('touchstart', touchStartListener);
-        if (!disabled) {
-            mouseDownListener = (e) => handleInteraction(e, false);
-            touchStartListener = (e) => handleInteraction(e, true);
-            knobEl.addEventListener('mousedown', mouseDownListener);
-            knobEl.addEventListener('touchstart', touchStartListener, { passive: false });
-        } else {
-            mouseDownListener = null;
-            touchStartListener = null;
+    function setValue(newValue, fromInteraction = false, skipCapture = false) {
+        // Clamp and step value
+        newValue = Math.max(min, Math.min(max, newValue));
+        newValue = Math.round(newValue / step) * step;
+
+        if (newValue !== currentValue) {
+            currentValue = newValue;
+            const percentage = (currentValue - min) / range;
+            const degrees = percentage * maxDegrees - (maxDegrees / 2);
+            handleEl.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
+            valueEl.textContent = `${options.displayPrefix || ''}${options.decimals !== undefined ? currentValue.toFixed(options.decimals) : currentValue}${options.displaySuffix || ''}`;
+            if (options.onValueChange && fromInteraction) {
+                options.onValueChange(currentValue, options.initialValue, true); // Pass true for fromInteraction
+            }
+        }
+        if (options.onValueChange && !fromInteraction) {
+             options.onValueChange(currentValue, options.initialValue, false); // Pass false for fromInteraction if not from user interaction
         }
     }
 
-    function setValue(newValue, triggerCallback = true, fromInteraction = false) {
-        const numValue = parseFloat(newValue);
-        if (isNaN(numValue)) return;
-        let boundedValue = Math.min(max, Math.max(min, numValue));
-        if (step !== 0) boundedValue = Math.round(boundedValue / step) * step;
-        const oldValue = currentValue;
-        currentValue = Math.min(max, Math.max(min, boundedValue));
-        updateKnobVisual(options.disabled);
-        if (triggerCallback && options.onValueChange && (oldValue !== currentValue || fromInteraction) ) {
-            options.onValueChange(currentValue, oldValue, fromInteraction);
-        }
-    }
+    knobEl.addEventListener('mousedown', onMouseDown);
+    knobEl.addEventListener('touchstart', onTouchStart, { passive: false });
 
-    function handleInteraction(e, isTouch = false) {
+    function onMouseDown(e) {
+        if (options.disabled) return;
         e.preventDefault();
         initialValueBeforeInteraction = currentValue;
-        const startY = isTouch ? e.touches[0].clientY : e.clientY;
+        const startY = e.clientY;
         const startValue = currentValue;
-        const pixelsForFullRange = isTouch ? 450 : 300;
-        function onMove(moveEvent) {
-            const currentY = isTouch ? moveEvent.touches[0].clientY : moveEvent.clientY;
+        const pixelsForFullRange = 300; // Pixels to move mouse for full range
+
+        function onMouseMove(moveEvent) {
             const deltaY = startY - moveEvent.clientY;
             let valueChange = (deltaY / pixelsForFullRange) * range;
-            setValue(startValue + valueChange, true, true);
+            setValue(startValue + valueChange, true); // Call setValue directly
         }
-        function onEnd() {
-            document.removeEventListener(isTouch ? 'touchmove' : 'mousemove', onMove);
-            document.removeEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
+
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
             if (currentValue !== initialValueBeforeInteraction && appServices.captureStateForUndo) {
                 appServices.captureStateForUndo(`Change ${options.label} to ${valueEl.textContent}`);
             }
         }
-        document.addEventListener(isTouch ? 'touchmove' : 'mousemove', onMove, { passive: !isTouch });
-        document.addEventListener(isTouch ? 'touchend' : 'mouseup', onEnd);
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
     }
 
+    function onTouchStart(e) {
+        if (options.disabled) return;
+        e.preventDefault(); // Prevent scrolling
+        initialValueBeforeInteraction = currentValue;
+        const startY = e.touches[0].clientY;
+        const startValue = currentValue;
+        const pixelsForFullRange = 450; // More pixels for touch
+
+        function onTouchMove(moveEvent) {
+            const deltaY = startY - moveEvent.touches[0].clientY;
+            let valueChange = (deltaY / pixelsForFullRange) * range;
+            setValue(startValue + valueChange, true); // Call setValue directly
+        }
+
+        function onTouchEnd() {
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('touchend', onTouchEnd);
+            if (currentValue !== initialValueBeforeInteraction && appServices.captureStateForUndo) {
+                appServices.captureStateForUndo(`Change ${options.label} to ${valueEl.textContent}`);
+            }
+        }
+
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd);
+    }
+
+    // Set initial value
     options.disabled = !!options.disabled;
     setValue(currentValue, false);
+
+    // Refresh visuals for disabled state
+    function refreshVisuals(disabledState) {
+        options.disabled = !!disabledState;
+        knobEl.style.opacity = options.disabled ? '0.5' : '1';
+        knobEl.style.cursor = options.disabled ? 'default' : 'ns-resize';
+    }
+
+    refreshVisuals(options.disabled);
 
     return {
         element: container,
         setValue,
         getValue: () => currentValue,
         type: 'knob',
-        refreshVisuals: (disabledState) => {
-            options.disabled = !!disabledState;
-            updateKnobVisual(options.disabled);
-        }
+        refreshVisuals,
     };
 }
