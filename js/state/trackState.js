@@ -26,7 +26,7 @@ export function setSoloedTrackId(id) { soloedTrackId = id; }
 
 export function getArmedTrackId() { return armedTrackId; }
 
-export function setArmedTrackId(id) { setArmedTrackId = id; }
+export function setArmedTrackId(id) { armedTrackId = id; }
 
 export function isRecording() { return isRecordingGlobal; }
 
