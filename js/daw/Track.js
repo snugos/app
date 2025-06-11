@@ -1,10 +1,20 @@
-// js/Track.js - Track Class Module (Refactored)
+// js/daw/Track.js - Track Class Module (Refactored)
 
-import * as Constants from './constants.js';
-import { EffectChain } from './EffectChain.js';
-import { SequenceManager } from './SequenceManager.js';
-import { ClipManager } from './ClipManager.js';
-import { getEffectDefaultParams, AVAILABLE_EFFECTS } from './effectsRegistry.js';
+import * as Constants from '../constants.js'; // Still shared
+import { EffectChain } from './EffectChain.js'; // Same directory
+import { SequenceManager } from './SequenceManager.js'; // Same directory
+import { ClipManager } from './ClipManager.js'; // Same directory
+import { getEffectDefaultParams, AVAILABLE_EFFECTS } from '../effectsRegistry.js'; // Path updated
+
+// Import from the monolithic state.js
+import {
+    getArmedTrackIdState, getSoloedTrackIdState,
+    removeTrackFromStateInternal, captureStateForUndoInternal,
+    addTrackToStateInternal, setTracksState, setTrackIdCounterState,
+    getMasterBusInputNode, setActualMasterVolume,
+    getTracksState // Added getTracksState for comprehensive updates
+} from '../state.js'; // Path updated
+
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
@@ -114,7 +124,7 @@ export class Track {
             newData[note.oldPitch][note.oldTime] = null;
         });
         notesToMove.forEach(note => {
-            newData[note.oldPitch][note.newTime] = note.data;
+            newData[note.newPitch][note.newTime] = note.data;
         });
         
         sequence.data = newData;
@@ -122,8 +132,10 @@ export class Track {
         
         const pianoRollWindow = this.appServices.getWindowById?.(`pianoRollWin-${this.id}`);
         if (pianoRollWindow && !pianoRollWindow.isMinimized) {
-            pianoRollWindow.close(true);
-            this.appServices.openPianoRollWindow(this.id, sequenceId);
+           if(this.appServices.openPianoRollWindow) {
+               pianoRollWindow.close(true);
+               this.appServices.openPianoRollWindow(this.id, sequenceId);
+           }
         }
     }
 
