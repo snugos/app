@@ -43,7 +43,7 @@ export function setPlaybackMode(mode) {
     if (mode === 'piano-roll' || mode === 'timeline') {
         const oldMode = playbackMode;
         playbackMode = mode;
-        localAppServices.onPlaybackModeChange?.(mode, oldMode); // Fixed to use `mode` instead of `newMode`
+        localAppServices.onPlaybackModeChange?.(mode, oldMode);
     }
 }
 
