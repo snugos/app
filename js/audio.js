@@ -49,7 +49,7 @@ function setupMasterBus() {
     if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) return;
     
     masterEffectsBusInputNode = new Tone.Gain();
-    masterGainNodeActual = new Tone.Gain().toDestination();
+    masterGainNodeActual = new Tone.Gain(Tone.dbToGain(0)).toDestination(); // Initialized to 0dB gain
     masterMeterNode = new Tone.Meter();
     
     masterEffectsBusInputNode.connect(masterGainNodeActual);
