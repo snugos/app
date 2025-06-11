@@ -1,5 +1,5 @@
-// js/ClipManager.js
-import * as Constants from './constants.js';
+// js/daw/ClipManager.js
+import * as Constants from '../constants.js'; // Path updated
 
 export class ClipManager {
     constructor(track, appServices) {
@@ -24,7 +24,8 @@ export class ClipManager {
             return;
         }
         this.timelineClips.push(clipData);
-        this.appServices.renderTimeline?.();
+        // Removed renderTimeline call as timeline is removed
+        // this.appServices.renderTimeline?.();
         this.appServices.captureStateForUndo?.(`Add clip ${clipData.name}`);
     }
 
@@ -54,6 +55,7 @@ export class ClipManager {
         }
         try {
             const dbKey = `clip-${this.track.id}-${Date.now()}-${clipName}`;
+            // Use appServices for dbStoreAudio
             await this.appServices.dbStoreAudio(dbKey, audioBlob);
             const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
             const newClip = {
@@ -75,36 +77,32 @@ export class ClipManager {
     deleteClip(clipId) {
         const index = this.timelineClips.findIndex(c => c.id === clipId);
         if (index > -1) {
-            const clipName = this.timelineClips[index].name;
-            // Dispose of audio buffer if it's an audio clip to free memory
-            if (this.timelineClips[index].type === 'audio' && this.timelineClips[index].audioBuffer) {
-                this.timelineClips[index].audioBuffer.dispose();
-                // Optionally, also delete from IndexedDB if dbKey exists
-                if (this.timelineClips[index].dbKey) {
-                    this.appServices.dbDeleteAudio?.(this.timelineClips[index].dbKey);
+            const removedClip = this.timelineClips[index]; // Store removed clip for undo
+            if (removedClip.type === 'audio' && removedClip.audioBuffer) {
+                removedClip.audioBuffer.dispose();
+                if (removedClip.dbKey) {
+                    // Use appServices for dbDeleteAudio
+                    this.appServices.dbDeleteAudio?.(removedClip.dbKey);
                 }
             }
             this.timelineClips.splice(index, 1);
-            this.appServices.renderTimeline?.();
-            this.appServices.captureStateForUndo?.(`Delete clip ${clipName}`);
+            // Removed renderTimeline call
+            // this.appServices.renderTimeline?.();
+            this.appServices.captureStateForUndo?.(`Delete clip ${removedClip.name}`);
         } else {
             console.warn(`[ClipManager.js] Clip with ID ${clipId} not found for deletion.`);
         }
     }
     
     serialize() {
-        // Only serialize properties that are primitives or can be reconstructed
         return this.timelineClips.map(clip => ({
             id: clip.id,
             type: clip.type,
             name: clip.name,
             startTime: clip.startTime,
             duration: clip.duration,
-            // For audio clips, store only the dbKey, not the Tone.Buffer object
             dbKey: clip.dbKey || undefined,
-            // For MIDI clips, store sequenceData
             sequenceData: clip.sequenceData ? JSON.parse(JSON.stringify(clip.sequenceData)) : undefined
-            // Do NOT serialize Tone.Buffer or Tone.Sequence objects directly
         }));
     }
 }
