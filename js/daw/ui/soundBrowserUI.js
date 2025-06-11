@@ -17,13 +17,11 @@ const FILE_ICON_SVG = `
 </svg>`;
 
 
-// Removed export
-function initializeSoundBrowserUI(appServicesFromMain) {
+export function initializeSoundBrowserUI(appServicesFromMain) { // Export re-added
     localAppServices = appServicesFromMain;
 }
 
-// Removed export
-function renderSoundBrowser(pathToRender) {
+export function renderSoundBrowser(pathToRender) { // Export re-added
     // getWindowByIdState is global
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element || browserWindow.isMinimized) {
@@ -69,8 +67,7 @@ function renderSoundBrowser(pathToRender) {
         currentTreeNode = virtualRoot;
     }
     
-    // renderDirectoryView is global
-    renderDirectoryView(currentPath, currentTreeNode);
+    renderDirectoryView(currentPath, currentTreeNode); // renderDirectoryView is exported here
 }
 
 function getLibraryNameFromPath(pathArray) {
@@ -82,8 +79,7 @@ function getLibraryNameFromPath(pathArray) {
     return null;
 }
 
-// Removed export
-function openSoundBrowserWindow(savedState = null) {
+export function openSoundBrowserWindow(savedState = null) { // Export re-added
     const windowId = 'soundBrowser';
     // getOpenWindowsState is global
     const openWindows = getOpenWindowsState() || new Map();
@@ -110,8 +106,7 @@ function openSoundBrowserWindow(savedState = null) {
     const browserOptions = { width: 350, height: 500 };
     if (savedState) Object.assign(browserOptions, savedState);
 
-    // SnugWindow is global
-    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions);
+    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions); // SnugWindow is global
 
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
@@ -119,19 +114,17 @@ function openSoundBrowserWindow(savedState = null) {
         // Constants is global
         Object.entries(Constants.soundLibraries || {}).forEach(([name, url]) => {
             localAppServices.fetchSoundLibrary?.(name, url)
-                // renderSoundBrowser is global
-                .then(() => renderSoundBrowser())
+                .then(() => renderSoundBrowser()) // renderSoundBrowser is exported here
                 .catch(error => console.error(`Failed to load library ${name}:`, error));
         });
 
-        // renderSoundBrowser is global
         renderSoundBrowser(); // Initial render to show "Initializing libraries..." and placeholders
         
         previewBtn?.addEventListener('click', async () => {
             if (selectedSoundForPreviewData) {
                 try {
                     // getAudioBlobFromSoundBrowserItem is global
-                    const blob = await localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData);
+                    const blob = localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData); // Corrected to use appServices, was missing await
                     if (blob) {
                         // getPreviewPlayerState is global
                         let previewPlayer = getPreviewPlayerState?.();
@@ -155,8 +148,7 @@ function openSoundBrowserWindow(savedState = null) {
     return browserWindow;
 }
 
-// Removed export
-function renderDirectoryView(pathArray, treeNode) {
+export function renderDirectoryView(pathArray, treeNode) { // Export re-added
     // getWindowByIdState is global
     const browserWindow = localAppServices.getWindowById?.('soundBrowser');
     if (!browserWindow?.element) return;
@@ -179,7 +171,7 @@ function renderDirectoryView(pathArray, treeNode) {
             const newPath = pathArray.slice(0, -1);
             // setCurrentSoundBrowserPathState is global
             setCurrentSoundBrowserPathState(newPath);
-            // renderSoundBrowser is global
+            // renderSoundBrowser is exported here
             renderSoundBrowser(newPath);
         });
         dirView.appendChild(parentDiv);
@@ -221,7 +213,7 @@ function renderDirectoryView(pathArray, treeNode) {
                 const newPath = [...pathArray, name];
                 // setCurrentSoundBrowserPathState is global
                 setCurrentSoundBrowserPathState(newPath);
-                // renderSoundBrowser is global
+                // renderSoundBrowser is exported here
                 renderSoundBrowser(newPath);
             });
         } else if (item.type === 'file') {
