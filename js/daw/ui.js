@@ -1,4 +1,4 @@
-// js/daw/ui.js - Main UI Orchestrator
+// js/daw/ui/ui.js - Main UI Orchestrator
 
 // Import initializers from all UI sub-modules
 import { initializeInspectorUI } from './inspectorUI.js';
@@ -8,25 +8,27 @@ import { initializeEffectsRackUI } from './effectsRackUI.js';
 import { initializeSoundBrowserUI } from './soundBrowserUI.js';
 import { initializePianoRollUI } from './pianoRollUI.js';
 import { initializeYouTubeImporterUI } from './youtubeImporterUI.js';
-import { initializeProfileUI, openProfileWindow } from './profileUI.js';
+// Removed initializeProfileUI and openProfileWindow as profile page is now separate
 
-// Import all exported functions from the sub-modules that main.js needs
-import { createKnob } from '../knobUI.js'; // Adjusted path
-import { openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from './inspectorUI.js';
-import { openMixerWindow, updateMixerWindow } from './mixerUI.js';
-import { openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './effectsRackUI.js';
-// Removed openTimelineWindow, renderTimeline, updatePlayheadPosition
-import { openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView } from './soundBrowserUI.js';
-import { openPianoRollWindow, updatePianoRollPlayhead } from './pianoRollUI.js';
-import { openYouTubeImporterWindow } from './youtubeImporterUI.js';
+// Removed specific imports for now-global functions and separated profile functions
+// createKnob is global
+// openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI are global
+// openMixerWindow, updateMixerWindow are global
+// openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls are global
+// openTimelineWindow, renderTimeline, updatePlayheadPosition are removed (timeline removed)
+// openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView are global
+// openPianoRollWindow, updatePianoRollPlayhead are global
+// openYouTubeImporterWindow is global
 
 /**
  * Initializes all UI sub-modules by passing them the appServices object.
  * This function also wires up services that are defined in one UI module but needed by others.
  * @param {object} appServices 
  */
-export function initializeUIModule(appServices) {
+// Removed export
+function initializeUIModule(appServices) {
     // Make createKnob available as a service for other modules to use
+    // createKnob is global
     appServices.createKnob = (opts) => createKnob(opts, appServices);
     
     // Initialize all modules
@@ -37,11 +39,14 @@ export function initializeUIModule(appServices) {
     initializeSoundBrowserUI(appServices);
     initializePianoRollUI(appServices);
     initializeYouTubeImporterUI(appServices);
-    initializeProfileUI(appServices);
+    // Removed initializeProfileUI
 }
 
 // Export all the functions that main.js needs to build the appServices object.
 // This file acts as a single entry point for all UI functionality.
+// Removed exports as these functions are now globally available or handled by localAppServices.
+// The appServices object in main.js will now directly refer to the global functions.
+/*
 export {
     createKnob,
     openTrackInspectorWindow,
@@ -51,7 +56,6 @@ export {
     openMasterEffectsRackWindow,
     renderEffectsList,
     renderEffectControls,
-    // Removed openTimelineWindow, renderTimeline, updatePlayheadPosition
     openSoundBrowserWindow,
     renderSoundBrowser,
     renderDirectoryView,
@@ -62,5 +66,6 @@ export {
     updateSliceEditorUI,
     renderDrumSamplerPads,
     updateDrumPadControlsUI,
-    openProfileWindow,
+    openProfileWindow, // This should no longer be exported from here
 };
+*/
