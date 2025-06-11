@@ -1,8 +1,8 @@
 // js/daw/SequenceManager.js
 
-import * as Constants from '../constants.js';
+// Removed import * as Constants from '../constants.js'; as Constants is global
 
-export class SequenceManager {
+class SequenceManager { // Removed export
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
@@ -26,12 +26,13 @@ export class SequenceManager {
         const newSeqId = `seq_${this.track.id}_${Date.now()}`;
         const newSequence = {
             id: newSeqId,
-            data: Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(length).fill(null)),
+            name,
+            data: Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(length).fill(null)), // Constants is global
             length
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-        if (!skipUndo) this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.track.name}`);
+        if (!skipUndo) this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.track.name}`); // captureStateForUndoInternal is global
         return newSequence;
     }
 
@@ -39,7 +40,7 @@ export class SequenceManager {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined && timeStep < sequence.length) {
             sequence.data[pitchIndex][timeStep] = noteData;
-            this.appServices.captureStateForUndo?.(`Add note to ${this.track.name}`);
+            this.appServices.captureStateForUndo?.(`Add note to ${this.track.name}`); // captureStateForUndoInternal is global
             this.recreateToneSequence();
         }
     }
@@ -48,7 +49,7 @@ export class SequenceManager {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence?.data[pitchIndex]?.[timeStep]) {
             sequence.data[pitchIndex][timeStep] = null;
-            this.appServices.captureStateForUndo?.(`Remove note from ${this.track.name}`);
+            this.appServices.captureStateForUndo?.(`Remove note from ${this.track.name}`); // captureStateForUndoInternal is global
             this.recreateToneSequence();
         }
     }
@@ -62,7 +63,7 @@ export class SequenceManager {
                 sequence.data[pitchIndex][timeStep] = null;
             }
         });
-        this.appServices.captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.track.name}`);
+        this.appServices.captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.track.name}`); // captureStateForUndoInternal is global
         this.recreateToneSequence();
     }
 
@@ -93,7 +94,7 @@ export class SequenceManager {
             const newPitchIndex = pitchIndex + pitchOffset;
             const newTimeStep = timeStep + timeOffset;
             if (newPitchIndex < 0 || newPitchIndex >= sequence.data.length || newTimeStep < 0 || newTimeStep >= sequence.length) {
-                this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000);
+                this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000); // showNotification is global
                 return null;
             }
             notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, data: sequence.data[pitchIndex][timeStep] });
@@ -106,7 +107,7 @@ export class SequenceManager {
             sequence.data[note.newPitch][note.newTime] = note.data;
             newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`);
         });
-        this.appServices.captureStateForUndo?.('Move notes');
+        this.appServices.captureStateForUndo?.('Move notes'); // captureStateForUndoInternal is global
         this.recreateToneSequence();
         return newSelectedNoteIds;
     }
@@ -129,9 +130,9 @@ export class SequenceManager {
     clearSequence(sequenceId) {
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (!sequence) return;
-        sequence.data = Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(sequence.length).fill(null));
+        sequence.data = Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(sequence.length).fill(null)); // Constants is global
         this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Clear sequence on ${this.track.name}`);
+        this.appServices.captureStateForUndo?.(`Clear sequence on ${this.track.name}`); // captureStateForUndoInternal is global
     }
 
     duplicateSequence(sequenceId) {
@@ -141,7 +142,7 @@ export class SequenceManager {
         const newSequence = this.createNewSequence(newName, originalSequence.length, true);
         newSequence.data = JSON.parse(JSON.stringify(originalSequence.data));
         this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Duplicate sequence on ${this.track.name}`);
+        this.appServices.captureStateForUndo?.(`Duplicate sequence on ${this.track.name}`); // captureStateForUndoInternal is global
         return newSequence;
     }
     
@@ -165,12 +166,12 @@ export class SequenceManager {
             noteData: n.data
         }));
 
-        this.appServices.setClipboardData?.({ type: 'piano-roll-notes', notes: relativeNotes });
-        this.appServices.showNotification?.(`${relativeNotes.length} note(s) copied.`);
+        this.appServices.setClipboardData?.({ type: 'piano-roll-notes', notes: relativeNotes }); // setClipboardData is global
+        this.appServices.showNotification?.(`${relativeNotes.length} note(s) copied.`); // showNotification is global
     }
 
     pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) {
-        const clipboard = this.appServices.getClipboardData?.();
+        const clipboard = this.appServices.getClipboardData?.(); // getClipboardData is global
         if (clipboard?.type !== 'piano-roll-notes' || !clipboard.notes?.length) return;
 
         const sequence = this.sequences.find(s => s.id === sequenceId);
@@ -186,7 +187,7 @@ export class SequenceManager {
         });
 
         this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`);
+        this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`); // captureStateForUndoInternal is global
     }
 
     recreateToneSequence() {
@@ -201,7 +202,7 @@ export class SequenceManager {
             for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) {
                 const note = activeSequence.data[pitchIndex][loopStep];
                 if (note) {
-                    const notePitch = Constants.SYNTH_PITCHES[pitchIndex];
+                    const notePitch = Constants.SYNTH_PITCHES[pitchIndex]; // Constants is global
                     const noteDuration = `${note.duration || 1}*16n`;
                     const noteVelocity = note.velocity || 0.75;
                     if (this.track.instrument) {
@@ -220,7 +221,7 @@ export class SequenceManager {
     stopSequence() {
         if (this._sequenceEventId) {
             Tone.Transport.clear(this._sequenceEventId);
-            this._sequenceEventId = null;
+            this._sequenceEventId = -1;
         }
     }
 
