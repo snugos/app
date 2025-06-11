@@ -32,7 +32,7 @@ import {
     renderDirectoryView, renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, openProfileWindow
-} from './ui.js'; // Path updated
+} from './ui/ui.js'; // Path updated
 // Removed AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions imports as they are global
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // Path updated
