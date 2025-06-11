@@ -33,11 +33,11 @@ export const PIANO_ROLL_SIXTEENTH_NOTE_WIDTH = 25;
 
 // UPDATED: Use relative paths to your assets folder
 export const soundLibraries = {
-    "Drums": "/assets/drums.zip",
-    "Instruments": "/assets/instruments.zip",
-    "Instruments 2": "/assets/instruments2.zip",
-    "Instruments 3": "/assets/instruments3.zip",
-    "Srna's Piano": "/assets/srnas_piano.zip"
+    "Drums": "assets/drums.zip",
+    "Instruments": "assets/instruments.zip",
+    "Instruments 2": "assets/instruments2.zip",
+    "Instruments 3": "assets/instruments3.zip",
+    "Srna's Piano": "assets/srnas_piano.zip"
 };
 
 export const defaultDesktopBg = '#1e1e1e';
@@ -50,27 +50,35 @@ export let COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = 0;
 export function incrementOctaveShift() { 
     COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.min(3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT + 1);
 }
-export function decrementOctaveShift() { 
-    COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.max(-3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT - 1);
+export function decrementOctaveShift() {
+    COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.max(-2, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT - 1);
 }
 
 export const computerKeySynthMap = {
-    'a': 48, 
-    's': 50,
-    'd': 52,
-    'f': 53,
-    'g': 55,
-    'h': 57,
-    'j': 59,
-    'k': 60,
-    'l': 62,
-    ';': 64,
-    "'": 65,
-    'w': 49,
-    'e': 51,
-    't': 54,
-    'y': 56,
-    'u': 58,
-    'o': 61,
-    'p': 63,
+    'a': 60,  // C4
+    'w': 61,  // C#4
+    's': 62,  // D4
+    'e': 63,  // D#4
+    'd': 64,  // E4
+    'f': 65,  // F4
+    't': 66,  // F#4
+    'g': 67,  // G4
+    'y': 68,  // G#4
+    'h': 69,  // A4
+    'u': 70,  // A#4
+    'j': 71,  // B4
+    'k': 72,  // C5
+    'o': 73,  // C#5
+    'l': 74,  // D5
+    'p': 75,  // D#5
+    ';': 76,  // E5
+    "'": 77,  // F5
+    ']': 78,  // F#5
+    '\\': 79, // G5
+};
+
+export const authConstants = {
+    TOKEN_KEY: 'snugos_token',
+    USER_KEY: 'snugos_user',
+    REMEMBER_ME_KEY: 'snugos_remember_me',
 };
