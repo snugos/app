@@ -1,15 +1,13 @@
 // js/daw/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
-// Removed import { showNotification, base64ToBlob } from '../../utils.js'; as they are global
+// Removed imports as functions will be global or accessed via localAppServices
 
 let localAppServices = {};
 
-// Removed export
-function initializeYouTubeImporterUI(appServicesFromMain) {
+export function initializeYouTubeImporterUI(appServicesFromMain) { // Export re-added
     localAppServices = appServicesFromMain || {};
 }
 
-// Removed export
-function openYouTubeImporterWindow(savedState = null) {
+export function openYouTubeImporterWindow(savedState = null) { // Export re-added
     const windowId = 'youtubeImporter';
     // getOpenWindowsState is global
     if (localAppServices.getOpenWindows?.().has(windowId)) {
