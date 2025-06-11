@@ -6,8 +6,7 @@
 
 let localAppServices = {};
 
-// Removed export
-function initializeSampleManager(appServices) {
+export function initializeSampleManager(appServices) { // Export re-added
     localAppServices = appServices;
 }
 
@@ -18,7 +17,7 @@ function getMimeTypeFromFilename(filename) {
     if (lowerFilename.endsWith(".mp3")) return "audio/mpeg";
     if (lowerFilename.endsWith(".ogg")) return "audio/ogg";
     if (lowerFilename.endsWith(".flac")) return "audio/flac";
-    if (lowerFilename.endsWith(".aac")) return "audio/mp4";
+    if (lowerFilename.endsWith(".aac")) return "audio/aac";
     if (lowerFilename.endsWith(".m4a")) return "audio/mp4";
     return "application/octet-stream";
 }
@@ -94,8 +93,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
     }
 }
 
-// Removed export
-async function loadSampleFile(event, trackId, trackTypeHint) {
+export async function loadSampleFile(event, trackId, trackTypeHint) { // Export re-added
     const file = event.target.files[0];
     if (!file) return;
     // getTrackByIdState is global
@@ -104,8 +102,7 @@ async function loadSampleFile(event, trackId, trackTypeHint) {
     await commonLoadSampleLogic(file, file.name, track, trackTypeHint);
 }
 
-// Removed export
-async function loadDrumSamplerPadFile(event, trackId, padIndex) {
+export async function loadDrumSamplerPadFile(event, trackId, padIndex) { // Export re-added
     const file = event.target.files[0];
     if (!file) return;
     // getTrackByIdState is global
@@ -114,8 +111,7 @@ async function loadDrumSamplerPadFile(event, trackId, padIndex) {
     await commonLoadSampleLogic(file, file.name, track, 'DrumSampler', padIndex);
 }
 
-// Removed export
-async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetType, targetIndex) {
+export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetType, targetIndex) { // Export re-added
     // getTrackByIdState is global
     const track = localAppServices.getTrackById?.(targetTrackId);
     if (!track) return;
@@ -135,8 +131,7 @@ async function loadSoundFromBrowserToTarget(soundData, targetTrackId, targetType
     }
 }
 
-// Removed export
-async function getAudioBlobFromSoundBrowserItem(soundData) {
+export async function getAudioBlobFromSoundBrowserItem(soundData) { // Export re-added
     if (!soundData || !soundData.libraryName || !soundData.fullPath) {
         console.error("[getAudioBlobFromSoundBrowserItem] Invalid soundData provided.", soundData);
         return null;
@@ -168,8 +163,7 @@ async function getAudioBlobFromSoundBrowserItem(soundData) {
     }
 }
 
-// Removed export
-async function fetchSoundLibrary(libraryName, zipUrl) {
+export async function fetchSoundLibrary(libraryName, zipUrl) { // Export re-added
     // Check if the library is already loaded or actively loading to prevent redundant fetches
     // getLoadedZipFilesState is global
     const loadedZips = getLoadedZipFilesState?.();
@@ -229,8 +223,7 @@ async function fetchSoundLibrary(libraryName, zipUrl) {
     }
 }
 
-// Removed export
-function autoSliceSample(trackId, numSlices) {
+export function autoSliceSample(trackId, numSlices) { // Export re-added
     // getTrackByIdState is global
     const track = localAppServices.getTrackById?.(trackId);
     if (!track || track.type !== 'Sampler' || !track.audioBuffer?.loaded) return;
