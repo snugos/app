@@ -205,8 +205,8 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         // Instead of trying to update individual buttons, re-initialize the common controls.
         // This ensures all button states are correctly set and listeners are fresh.
-        // We pass inspectorWindow.serialize() to preserve its position/size/state on re-open.
-        appServices.openTrackInspectorWindow(trackId, inspectorWindow.serialize()); //
+        // Pass inspectorWindow.getWindowState() to preserve its position/size/state on re-open.
+        appServices.openTrackInspectorWindow(trackId, inspectorWindow.getWindowState()); //
     }
     
     // The mixer window update logic is already robust as it re-renders
