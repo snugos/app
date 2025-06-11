@@ -1,12 +1,11 @@
-// js/state.js - Application State Management (Central Re-exporter, temporary .txt extensions)
+// js/state/state.js - Application State Management (Central Re-exporter)
 
 // Re-exporting all functions from the new, decomposed state modules
-// TEMPORARY: Using .txt extensions to force Cloudflare cache clear
-export * from './projectState.txt';
-export * from './trackState.txt';
-export * from './windowState.txt';
-export * from './appState.txt';
-export * from './masterState.txt';
-export * from './soundLibraryState.txt';
+export * from './projectState.js';
+export * from './trackState.js';
+export * from './windowState.js';
+export * from './appState.js';
+export * from './masterState.js';
+export * from './soundLibraryState.js';
 
 // No internal state or logic remains in this file after decomposition
