@@ -155,35 +155,65 @@ export async function getAudioBlobFromSoundBrowserItem(soundData) {
 }
 
 export async function fetchSoundLibrary(libraryName, zipUrl) {
+    // Check if the library is already loaded or actively loading to prevent redundant fetches
     const loadedZips = localAppServices.getLoadedZipFiles?.();
-    if (loadedZips[libraryName]?.status === 'loaded' || loadedZips[libraryName]?.status === 'loading') return;
+    if (loadedZips[libraryName]?.status === 'loaded' || loadedZips[libraryName]?.status === 'loading') {
+        console.log(`[sampleManager.js] Library "${libraryName}" already loaded or loading.`);
+        return; 
+    }
 
     try {
+        // Set the status to 'loading'
         localAppServices.setLoadedZipFiles?.(libraryName, null, "loading");
+        console.log(`[sampleManager.js] Attempting to fetch library: "${zipUrl}"`);
+
         const response = await fetch(zipUrl);
-        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} for ${zipUrl}`);
+        }
         const zipData = await response.arrayBuffer();
+        
+        console.log(`[sampleManager.js] Downloaded zip data for "${libraryName}". Loading with JSZip...`);
         const jszip = new JSZip();
         const loadedZipInstance = await jszip.loadAsync(zipData);
+        
+        // Set the status to 'loaded' and store the JSZip instance
         localAppServices.setLoadedZipFiles?.(libraryName, loadedZipInstance, 'loaded');
+        console.log(`[sampleManager.js] Library "${libraryName}" loaded successfully.`);
 
         const fileTree = {};
+        let filesCount = 0; // Debugging: count files processed
         loadedZipInstance.forEach((relativePath, zipEntry) => {
-            if (zipEntry.dir || !relativePath.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) return;
+            if (zipEntry.dir) return; // Skip directories
+            // Filter for common audio file extensions
+            if (!relativePath.match(/\.(wav|mp3|ogg|flac|aac|m4a)$/i)) return; 
+
+            filesCount++; // Debugging: increment count
+
             let currentLevel = fileTree;
-            relativePath.split('/').forEach((part, index, arr) => {
+            const pathParts = relativePath.split('/');
+            pathParts.forEach((part, index, arr) => {
                 if (index === arr.length - 1) {
+                    // This is the file itself
                     currentLevel[part] = { type: 'file', fullPath: relativePath, fileName: part };
                 } else {
+                    // This is a folder
                     currentLevel[part] = currentLevel[part] || { type: 'folder', children: {} };
                     currentLevel = currentLevel[part].children;
                 }
             });
         });
         localAppServices.setSoundLibraryFileTrees?.(libraryName, fileTree);
+        console.log(`[sampleManager.js] File tree for "${libraryName}" constructed. Found ${filesCount} audio files.`);
+
+        // Important: Notify the UI that the sound browser content needs to be re-rendered
+        // This is done in soundBrowserUI.js's openSoundBrowserWindow after fetchSoundLibrary.then()
+        // So no explicit call here, but ensure the chaining in soundBrowserUI.js is correct.
+
     } catch (error) {
-        console.error(`Error loading library ${libraryName}:`, error);
+        console.error(`[sampleManager.js] Error loading library "${libraryName}" from "${zipUrl}":`, error);
         localAppServices.setLoadedZipFiles?.(libraryName, null, 'error');
+        localAppServices.showNotification?.(`Failed to load library "${libraryName}". Check console for details.`, 5000);
     }
 }
 
