@@ -20,10 +20,8 @@ import {
     getActiveMIDIInputState,
     getUndoStackState, 
     getRedoStackState,
-    getRecordingTrackIdState as getRecordingTrackId,
-    setRecordingStartTimeState,
-    getMidiRecordModeState, // NEW
-    setMidiRecordModeState  // NEW
+    getRecordingTrackIdState,
+    setRecordingStartTimeState
 } from './state.js';
 import { incrementOctaveShift, decrementOctaveShift } from './constants.js';
 import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
@@ -71,6 +69,7 @@ export function initializePrimaryEventListeners() {
         createContextMenu(e, menuItems, localAppServices);
     });
     
+    // UPDATED: This now calls the new server upload function
     customBgInput?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -131,6 +130,7 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
 
+    // UPDATED: Event listeners now attached to top bar buttons
     document.getElementById('undoBtnTop')?.addEventListener('click', () => {
         localAppServices.undoLastAction?.();
         updateUndoRedoButtons(); 
@@ -156,10 +156,12 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
     
+    // NEW: Event listener for opening a profile page in a new tab
     document.getElementById('menuOpenTestProfile')?.addEventListener('click', () => {
+        // Replace 'testuser' with a username that actually exists in your database
         const usernameToOpen = 'testuser';
         window.open(`profile.html?user=${usernameToOpen}`, '_blank');
-        startMenu?.classList.add('hidden');
+        document.getElementById('startMenu')?.classList.add('hidden');
     });
 
     document.getElementById('menuRefreshMidi')?.addEventListener('click', () => {
@@ -188,8 +190,7 @@ export function attachGlobalControlEvents(uiCache) {
     const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
-    const midiRecordModeBtn = document.getElementById('midiRecordModeBtn'); // NEW
-
+    
     const handlePlayPause = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) {
@@ -243,7 +244,6 @@ export function attachGlobalControlEvents(uiCache) {
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
-            // Stop recording logic
             setIsRecording(false);
             recordBtn.classList.remove('recording');
             if (getRecordingTrackId() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
@@ -253,36 +253,24 @@ export function attachGlobalControlEvents(uiCache) {
                 handleStop();
             }
         } else if (armedTrack) {
-            // Count-in logic
-            Tone.Transport.stop();
-            Tone.Transport.position = 0;
-            Tone.Transport.start();
-
-            const metronomeBtn = document.getElementById('metronomeToggleBtn');
-            if (!metronomeBtn.classList.contains('active')) {
-                localAppServices.toggleMetronome();
-                metronomeBtn.classList.add('active');
-            }
-
-            showNotification("Get ready...", Tone.Time("1m").toMilliseconds());
-
-            Tone.Transport.scheduleOnce(async (time) => {
-                setRecordingTrackId(armedTrackId);
-                setIsRecording(true);
-                recordBtn.classList.add('recording');
-                
-                setRecordingStartTimeState(time);
-
-                if (armedTrack.type === 'Audio') {
-                    const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
-                    if (!success) {
-                        setIsRecording(false);
-                        recordBtn.classList.remove('recording');
-                        handleStop();
-                    }
+            setRecordingTrackId(armedTrackId);
+            setIsRecording(true);
+            recordBtn.classList.add('recording');
+            
+            setRecordingStartTimeState(Tone.Transport.seconds);
+    
+            if (armedTrack.type === 'Audio') {
+                const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
+                if (!success) {
+                    setIsRecording(false);
+                    recordBtn.classList.remove('recording');
+                    return;
                 }
-            }, "1m");
-
+            }
+    
+            if (Tone.Transport.state !== 'started') {
+                Tone.Transport.start();
+            }
         } else {
             showNotification("No track armed for recording.", 2500);
         }
@@ -295,16 +283,6 @@ export function attachGlobalControlEvents(uiCache) {
     metronomeBtn?.addEventListener('click', () => {
         const isEnabled = localAppServices.toggleMetronome();
         metronomeBtn.classList.toggle('active', isEnabled);
-    });
-
-    // NEW: Event listener for the record mode toggle
-    midiRecordModeBtn?.addEventListener('click', () => {
-        const currentMode = getMidiRecordModeState();
-        const newMode = currentMode === 'overdub' ? 'replace' : 'overdub';
-        setMidiRecordModeState(newMode);
-        midiRecordModeBtn.textContent = newMode.charAt(0).toUpperCase() + newMode.slice(1);
-        midiRecordModeBtn.classList.toggle('active', newMode === 'replace');
-        showNotification(`MIDI Record Mode: ${newMode.toUpperCase()}`, 1500);
     });
 
     tempoInput?.addEventListener('change', (e) => {
@@ -338,6 +316,7 @@ export function attachGlobalControlEvents(uiCache) {
         }
         if (e.repeat) return;
         
+        // This line includes the fix for the toLowerCase error
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
         if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
@@ -435,6 +414,7 @@ export function attachGlobalControlEvents(uiCache) {
     });
 }
 
+// UPDATED: This function now targets the top bar buttons
 function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtnTop');
     const redoBtn = document.getElementById('redoBtnTop');
@@ -551,7 +531,6 @@ export function selectMIDIInput(event) {
     }
 }
 
-// UPDATED: MIDI Recording logic now checks the record mode
 function onMIDIMessage(message) {
     const [command, noteNumber, velocity] = message.data;
     const commandType = command & 0xF0;
