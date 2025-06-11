@@ -1,22 +1,13 @@
 // js/daw/Track.js - Track Class Module (Refactored)
 
-import * as Constants from '../constants.js'; // Still shared
+// Removed imports for Constants, EffectChain, SequenceManager, ClipManager,
+// getEffectDefaultParams, AVAILABLE_EFFECTS, and all state functions as they are now global
 import { EffectChain } from './EffectChain.js'; // Same directory
 import { SequenceManager } from './SequenceManager.js'; // Same directory
 import { ClipManager } from './ClipManager.js'; // Same directory
-import { getEffectDefaultParams, AVAILABLE_EFFECTS } from '../effectsRegistry.js'; // Path updated
-
-// Import from the monolithic state.js
-import {
-    getArmedTrackIdState, getSoloedTrackIdState,
-    removeTrackFromStateInternal, captureStateForUndoInternal,
-    addTrackToStateInternal, setTracksState, setTrackIdCounterState,
-    getMasterBusInputNode, setActualMasterVolume,
-    getTracksState // Added getTracksState for comprehensive updates
-} from '../state.js'; // Path updated
 
 
-export class Track {
+class Track { // Removed export
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
@@ -41,7 +32,7 @@ export class Track {
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
         
-        const masterBusInput = this.appServices.getMasterBusInputNode?.();
+        const masterBusInput = this.appServices.getMasterBusInputNode?.(); // getMasterBusInputNode is global
         if (masterBusInput) {
             this.outputNode.fan(this.trackMeter, masterBusInput);
         } else {
@@ -75,10 +66,10 @@ export class Track {
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
         } else if (this.type === 'Sampler') {
             this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
-            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
+            this.slices = initialData?.slices || Array(numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } })); // numSlices is global
             this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
         } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array.from({ length: Constants.numDrumSamplerPads || 16 }, (_, i) => 
+            this.drumSamplerPads = Array.from({ length: numDrumSamplerPads || 16 }, (_, i) => // numDrumSamplerPads is global
                 initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null }
             );
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
@@ -99,7 +90,7 @@ export class Track {
         const sequence = this.sequences.sequences.find(s => s.id === sequenceId);
         if (!sequence || noteIdsToQuantize.size === 0) return;
 
-        this.appServices.captureStateForUndo?.(`Quantize notes in ${this.name}`);
+        this.appServices.captureStateForUndo?.(`Quantize notes in ${this.name}`); // captureStateForUndoInternal is global
 
         const ticksPerGrid = Tone.Time(gridSize).toTicks();
 
@@ -125,12 +116,13 @@ export class Track {
         });
         notesToMove.forEach(note => {
             newData[note.newPitch][note.newTime] = note.data;
+            newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`);
         });
         
         sequence.data = newData;
         this.sequences.recreateToneSequence();
         
-        const pianoRollWindow = this.appServices.getWindowById?.(`pianoRollWin-${this.id}`);
+        const pianoRollWindow = this.appServices.getWindowById?.(`pianoRollWin-${this.id}`); // getWindowByIdState is global
         if (pianoRollWindow && !pianoRollWindow.isMinimized) {
            if(this.appServices.openPianoRollWindow) {
                pianoRollWindow.close(true);
@@ -169,11 +161,13 @@ export class Track {
         if (this.instrument) this.instrument.dispose();
         
         if (this.type === 'Synth') {
+            // Tone.PolySynth and Tone.Synth are global
             this.instrument = new Tone.PolySynth(Tone.Synth, {
                 polyphony: 16,
                 ...this.synthParams 
             });
         } else if (this.type === 'InstrumentSampler' || this.type === 'DrumSampler' || this.type === 'Sampler') {
+            // Tone.Sampler is global
              this.instrument = new Tone.Sampler({
                 attack: 0.01,
                 release: 0.1,
@@ -193,7 +187,7 @@ export class Track {
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
-        if (fromInteraction) this.appServices.captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`);
+        if (fromInteraction) this.appServices.captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`); // captureStateForUndoInternal is global
     }
 
     applyMuteState() {
