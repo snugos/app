@@ -1,11 +1,6 @@
 // js/utils.js - Utility Functions Module
 
-import {
-    getOpenWindowsState,
-    getWindowByIdState,
-} from './state/state.js'; // Path updated
-
-export function showNotification(message, duration = 3000) {
+function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
         console.error("CRITICAL: Notification area ('notification-area') not found in DOM. Message:", message);
@@ -36,7 +31,7 @@ export function showNotification(message, duration = 3000) {
     }
 }
 
-export function showCustomModal(title, contentHTML, buttonsConfig = []) {
+function showCustomModal(title, contentHTML, buttonsConfig = []) {
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) return;
 
@@ -81,7 +76,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig = []) {
     return { overlay, contentDiv };
 }
 
-export function createContextMenu(event, menuItems, appServices) {
+function createContextMenu(event, menuItems, appServices) {
     // Remove any existing context menus
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
@@ -138,7 +133,7 @@ export function createContextMenu(event, menuItems, appServices) {
  * @param {string} contentType - The MIME type of the content.
  * @returns {Blob}
  */
-export function base64ToBlob(base64, contentType = 'audio/mpeg') {
+function base64ToBlob(base64, contentType = 'audio/mpeg') {
     const byteCharacters = atob(base64);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -154,7 +149,7 @@ export function base64ToBlob(base64, contentType = 'audio/mpeg') {
  * @param {AudioBuffer} audioBuffer - The AudioBuffer containing the audio data.
  * @param {string} color - The color of the waveform (default: 'black').
  */
-export function drawWaveform(canvas, audioBuffer, color = 'black') {
+function drawWaveform(canvas, audioBuffer, color = 'black') {
     if (!canvas || !audioBuffer) return;
 
     const ctx = canvas.getContext('2d');
@@ -191,7 +186,7 @@ export function drawWaveform(canvas, audioBuffer, color = 'black') {
 
 
 // Generic drop zone listeners for dragging files from local system or sound browser
-export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) {
+function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) {
     dropZoneElement.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZoneElement.classList.add('dragover');
