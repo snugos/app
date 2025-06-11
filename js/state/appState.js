@@ -4,6 +4,7 @@ let midiAccess = null;
 let activeMIDIInput = null;
 let playbackMode = 'piano-roll'; // 'piano-roll' or 'timeline'
 let currentUserThemePreference = 'system'; // 'system', 'light', or 'dark'
+let midiRecordMode = 'overdub'; // 'overdub' or 'replace'
 let selectedTimelineClipInfo = { 
     clipId: null,
     trackId: null,
@@ -62,4 +63,14 @@ export function getSelectedTimelineClipInfo() {
 
 export function setSelectedTimelineClipInfo(info) {
     selectedTimelineClipInfo = { ...selectedTimelineClipInfo, ...info };
+}
+
+export function getMidiRecordModeState() { 
+    return midiRecordMode; 
+}
+
+export function setMidiRecordModeState(mode) {
+    if (mode === 'overdub' || mode === 'replace') {
+        midiRecordMode = mode;
+    }
 }
