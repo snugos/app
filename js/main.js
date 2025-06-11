@@ -10,29 +10,50 @@ import {
     handleTimelineLaneDrop, handleOpenYouTubeImporter
 } from './eventHandlers.js';
 import {
-    initializeStateModule, getTracksState, getTrackByIdState, getOpenWindowsState,
-    getWindowByIdState, addTrackToStateInternal, removeTrackFromStateInternal,
-    setHighestZState, getHighestZState, incrementHighestZState,
-    addWindowToStoreState, removeWindowFromStoreState,
-    getArmedTrackIdState, setArmedTrackIdState, getSoloedTrackIdState, setSoloedTrackIdState,
-    getMasterEffectsState, addMasterEffectToState, removeMasterEffectFromState,
-    updateMasterEffectParamInState, reorderMasterEffectInState,
-    getMasterGainValueState, setMasterGainValueState,
-    captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
-    gatherProjectDataInternal, reconstructDAWInternal,
-    getIsReconstructingDAWState, setIsReconstructingDAWState,
-    saveProjectInternal, loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal,
-    getLoadedZipFilesState, setLoadedZipFilesState, setSoundLibraryFileTreesState, getSoundLibraryFileTreesState,
-    setCurrentLibraryNameState, getCurrentLibraryNameState, setCurrentSoundBrowserPathState,
-    getPreviewPlayerState, setPreviewPlayerState,
-    setSelectedTimelineClipInfoState,
-    setPlaybackModeState, getPlaybackModeState,
-    setIsRecordingState, isTrackRecordingState, setRecordingTrackIdState, getRecordingTrackIdState, setRecordingStartTimeState,
-    getCurrentUserThemePreferenceState, setCurrentUserThemePreferenceState,
-    addFileToSoundLibraryInternal,
-    setMidiAccessState, getMidiAccessState,
-    getMidiRecordModeState, setMidiRecordModeState
-} from './state.js';
+    // Importing from decomposed state modules
+    getTracks as getTracksState, getTrackById as getTrackByIdState,
+    getOpenWindows as getOpenWindowsState, getWindowById as getWindowByIdState,
+    getArmedTrackId as getArmedTrackIdState, setArmedTrackId as setArmedTrackIdState,
+    getSoloedTrackId as getSoloedTrackIdState, setSoloedTrackId as setSoloedTrackIdState,
+    getMasterEffects as getMasterEffectsState, addMasterEffect as addMasterEffectToState,
+    removeMasterEffect as removeMasterEffectFromState, updateMasterEffectParam as updateMasterEffectParamInState,
+    reorderMasterEffect as reorderMasterEffectInState, getMasterGainValue as getMasterGainValueState,
+    setMasterGainValue as setMasterGainValueState, getPlaybackMode as getPlaybackModeState,
+    setPlaybackMode as setPlaybackModeState, setIsRecording as setIsRecordingState,
+    isTrackRecording as isTrackRecordingState, setRecordingTrackId as setRecordingTrackIdState,
+    getRecordingTrackId as getRecordingTrackIdState, setRecordingStartTime as setRecordingStartTimeState,
+    getCurrentUserThemePreference as getCurrentUserThemePreferenceState, setCurrentUserThemePreference as setCurrentUserThemePreferenceState,
+    getIsReconstructingDAW as getIsReconstructingDAWState, setIsReconstructingDAW as setIsReconstructingDAWState,
+    captureStateForUndo as captureStateForUndoInternal, undoLastAction as undoLastActionInternal,
+    redoLastAction as redoLastActionInternal, gatherProjectData as gatherProjectDataInternal,
+    reconstructDAW as reconstructDAWInternal, saveProject as saveProjectInternal, loadProject as loadProjectInternal,
+    handleProjectFileLoad as handleProjectFileLoadInternal, exportToWav as exportToWavInternal,
+    getLoadedZipFiles as getLoadedZipFilesState, setLoadedZipFiles as setLoadedZipFilesState,
+    setSoundLibraryFileTrees as setSoundLibraryFileTreesState, getSoundLibraryFileTrees as getSoundLibraryFileTreesState,
+    setCurrentLibraryName as setCurrentLibraryNameState, getCurrentLibraryName as getCurrentLibraryNameState,
+    setCurrentSoundBrowserPath as setCurrentSoundBrowserPathState, getPreviewPlayer as getPreviewPlayerState,
+    setPreviewPlayer as setPreviewPlayerState,
+    setSelectedTimelineClipInfo as setSelectedTimelineClipInfoState,
+    addFileToSoundLibrary as addFileToSoundLibraryInternal,
+    getMidiAccess as getMidiAccessState, setMidiAccess as setMidiAccessState,
+    getMidiRecordModeState, setMidiRecordModeState,
+    // Add specific imports for track and window state where needed
+    addTrack as addTrackToStateInternal, // From trackState.js
+    removeTrack as removeTrackFromStateInternal, // From trackState.js
+    setTracks as setTracksState, // From trackState.js
+    setTrackIdCounter as setTrackIdCounterState, // From trackState.js
+    addWindowToStore as addWindowToStoreState, // From windowState.js
+    removeWindowFromStore as removeWindowFromStoreState, // From windowState.js
+    setHighestZ as setHighestZState, // From windowState.js
+    incrementHighestZ as incrementHighestZState, // From windowState.js
+    initializeProjectState, // From projectState.js
+    initializeTrackState, // From trackState.js
+    initializeWindowState, // From windowState.js
+    initializeAppState, // From appState.js
+    initializeMasterState, // From masterState.js
+    initializeSoundLibraryState // From soundLibraryState.js
+} from './state.js'; // This is now a barrel file, importing from here is okay for compatibility
+
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
@@ -148,7 +169,7 @@ function openDefaultLayout() {
 
         // Now that the timelineWindow is created and stored, call renderTimeline
         if (timelineWindow?.element) {
-            appServices.renderTimeline(); // Explicitly call render for the timeline
+            appServices.renderTimeline();
         }
         
         // Continue with other windows, they don't have the same immediate render dependency
@@ -257,7 +278,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
     
     if (reason === 'nameChanged' || reason === 'clipsChanged') {
-        appServices.renderTimeline(); // Ensure this calls renderTimeline without issue
+        appServices.renderTimeline();
     }
 }
 
