@@ -184,7 +184,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     const soloedTrackId = getSoloedTrackIdState();
     const isEffectivelyMuted = track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id);
 
-    const inspectorWindow = getWindowByIdState(`trackInspector-${trackId}`);
+    const inspectorWindow = getWindowByIdState(`trackInspector-${track.id}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         if (reason === 'armChanged') {
             const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
