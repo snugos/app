@@ -3,11 +3,11 @@
 
 let localAppServices = {};
 
-export function initializeYouTubeImporterUI(appServicesFromMain) { // Export re-added
+export function initializeYouTubeImporterUI(appServicesFromMain) { // Export present
     localAppServices = appServicesFromMain || {};
 }
 
-export function openYouTubeImporterWindow(savedState = null) { // Export re-added
+export function openYouTubeImporterWindow(savedState = null) { // Export present
     const windowId = 'youtubeImporter';
     // getOpenWindowsState is global
     if (localAppServices.getOpenWindows?.().has(windowId)) {
