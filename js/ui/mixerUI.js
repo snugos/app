@@ -7,9 +7,6 @@ export function initializeMixerUI(appServices) {
 }
 
 export function openMixerWindow(savedState = null) {
-    // --- DEBUGGING LOG ---
-    console.log(`%c[mixerUI.js] openMixerWindow received savedState:`, 'color: #f39c12;', savedState);
-
     const windowId = 'mixer';
     const openWindows = localAppServices.getOpenWindows();
     if (openWindows.has(windowId) && !savedState) {
@@ -39,45 +36,50 @@ export function openMixerWindow(savedState = null) {
 }
 
 export function updateMixerWindow() {
-    const mixerWindow = localAppServices.getWindowById('mixer');
-    if (!mixerWindow?.element || mixerWindow.isMinimized) return;
+    // --- DEBUGGING LOG ---
+    console.log('[mixerUI.js] updateMixerWindow called.');
+    const container = document.getElementById('mixerContentContainer');
+    if (container) {
+        renderMixerTracks(container);
+    }
+}
 
-    const container = mixerWindow.element.querySelector('#mixerContentContainer');
-    if (!container) return;
+function renderMixerTracks(container) {
+    const tracks = localAppServices.getTracks?.() || [];
+    // --- DEBUGGING LOG ---
+    console.log(`%c[mixerUI.js] renderMixerTracks called with ${tracks.length} tracks.`, 'color: #f39c12; font-weight: bold;');
 
-    const tracks = localAppServices.getTracks();
-    const masterGainValue = localAppServices.getMasterGainValue();
     container.innerHTML = '';
-
+    
     const masterTrackDiv = document.createElement('div');
-    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border-2 border-black dark:border-white bg-white dark:bg-black shadow w-28 mr-2 text-xs';
-    masterTrackDiv.innerHTML = `<div class="track-name font-bold truncate mb-1 text-black dark:text-white" title="Master">MASTER</div>
+    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
+    masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="Master">Master</div>
         <div id="volumeKnob-mixer-master-placeholder" class="h-16 mx-auto mb-1"></div>
-        <div id="mixerMasterMeterContainer" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
-            <div id="mixerMasterMeterBar" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
+        <div id="mixerTrackMeterContainer-master" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
+            <div id="mixerTrackMeterBar-master" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
         </div>`;
     container.appendChild(masterTrackDiv);
 
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
     if (masterVolKnobPlaceholder) {
         const masterVolKnob = localAppServices.createKnob({
-            label: 'Master Vol', min: 0, max: 1.2, step: 0.01,
-            initialValue: masterGainValue,
-            onValueChange: (val) => {
-                if (localAppServices.setActualMasterVolume) localAppServices.setActualMasterVolume(val);
-                if (localAppServices.setMasterGainValue) localAppServices.setMasterGainValue(val);
-            }
-        }, localAppServices);
+            label: 'Master', min: 0, max: 1, step: 0.01,
+            initialValue: localAppServices.getMasterGainValue(),
+            onValueChange: (val) => localAppServices.setMasterGainValue(val)
+        });
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
     tracks.forEach(track => {
+        // --- DEBUGGING LOG ---
+        console.log(`[mixerUI.js] Rendering track: ${track.name}`);
+
         const trackDiv = document.createElement('div');
         trackDiv.className = 'mixer-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
         trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
             <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
-                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
+                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;\"></div>
             </div>`;
         container.appendChild(trackDiv);
 
@@ -87,7 +89,7 @@ export function updateMixerWindow() {
                 label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
-            }, localAppServices);
+            });
             volKnobPlaceholder.appendChild(volKnob.element);
         }
     });
