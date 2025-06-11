@@ -1,5 +1,5 @@
 // js/daw/audio/audio.js - Core Audio Engine, Master Bus and Master Effects
-// Removed import { createEffectInstance } from './effectsRegistry.js'; as createEffectInstance is global
+// Removed imports as functions will be global or accessed via localAppServices
 
 let masterEffectsBusInputNode = null;
 let masterGainNodeActual = null;
@@ -8,13 +8,11 @@ let activeMasterEffectNodes = new Map();
 let audioContextInitialized = false;
 let localAppServices = {};
 
-// Removed export
-function initializeAudioModule(appServices) {
+export function initializeAudioModule(appServices) { // Export re-added
     localAppServices = appServices;
 }
 
-// Removed export
-function getMasterBusInputNode() {
+export function getMasterBusInputNode() { // Export re-added
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
         console.log("[Audio] Master bus input node not ready, attempting setup.");
         setupMasterBus();
@@ -22,15 +20,13 @@ function getMasterBusInputNode() {
     return masterEffectsBusInputNode;
 }
 
-// Removed export
-function setActualMasterVolume(gainValue, rampTime = 0.05) {
+export function setActualMasterVolume(gainValue, rampTime = 0.05) { // Export re-added
     if (masterGainNodeActual?.gain) {
         masterGainNodeActual.gain.rampTo(gainValue, rampTime);
     }
 }
 
-// Removed export
-async function initAudioContextAndMasterMeter(isUserInteraction = false) {
+export async function initAudioContextAndMasterMeter(isUserInteraction = false) { // Export re-added
     if (audioContextInitialized && Tone.context.state === 'running') return true;
     if (Tone.context.state === 'suspended' && isUserInteraction) {
         try {
@@ -63,15 +59,13 @@ function setupMasterBus() {
     audioContextInitialized = true;
 }
 
-// Removed export
-function rebuildMasterEffectChain() {
+export function rebuildMasterEffectChain() { // Export re-added
     if (!masterEffectsBusInputNode || !masterGainNodeActual) return;
     
     masterEffectsBusInputNode.disconnect();
     
     let lastNodeInChain = masterEffectsBusInputNode;
-    // getMasterEffectsState is global
-    const masterEffects = localAppServices.getMasterEffects?.() || [];
+    const masterEffects = localAppServices.getMasterEffects?.() || []; // getMasterEffectsState is global
 
     activeMasterEffectNodes.forEach(node => {
         if(node && !node.disposed) node.disconnect();
@@ -88,26 +82,22 @@ function rebuildMasterEffectChain() {
     lastNodeInChain.connect(masterGainNodeActual);
 }
 
-// Removed export
-function addMasterEffectToAudio(effectId, effectType, params) {
+export function addMasterEffectToAudio(effectId, effectType, params) { // Export re-added
     if (activeMasterEffectNodes.has(effectId)) return;
-    // createEffectInstance is global
-    const effectInstance = createEffectInstance(effectType, params);
+    const effectInstance = createEffectInstance(effectType, params); // createEffectInstance is global
     if (effectInstance) {
         activeMasterEffectNodes.set(effectId, effectInstance);
         rebuildMasterEffectChain();
     }
 }
 
-// Removed export
-function removeMasterEffectFromAudio(effectId) {
+export function removeMasterEffectFromAudio(effectId) { // Export re-added
     activeMasterEffectNodes.get(effectId)?.dispose();
     activeMasterEffectNodes.delete(effectId);
     rebuildMasterEffectChain();
 }
 
-// Removed export
-function updateMasterEffectParamInAudio(effectId, paramPath, value) {
+export function updateMasterEffectParamInAudio(effectId, paramPath, value) { // Export re-added
     const effectNode = activeMasterEffectNodes.get(effectId);
     if (!effectNode) return;
 
@@ -118,13 +108,11 @@ function updateMasterEffectParamInAudio(effectId, paramPath, value) {
     }
 }
 
-// Removed export
-function reorderMasterEffectInAudio() {
+export function reorderMasterEffectInAudio() { // Export re-added
     rebuildMasterEffectChain();
 }
 
-// Removed export
-function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) {
+export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) { // Export re-added
     if (masterMeterNode && !masterMeterNode.disposed) {
         const masterLevelDb = masterMeterNode.getValue();
         const masterLevelGain = isFinite(masterLevelDb) ? Tone.dbToGain(masterLevelDb) : 0;
@@ -147,10 +135,8 @@ function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) {
     });
 }
 
-// Removed export
-function forceStopAllAudio() {
-    // getTracksState is global
-    const tracks = localAppServices.getTracks?.() || [];
+export function forceStopAllAudio() { // Export re-added
+    const tracks = localAppServices.getTracks?.() || []; // getTracksState is global
     tracks.forEach(track => {
         if (track.instrument && typeof track.instrument.releaseAll === 'function') {
             track.instrument.releaseAll();
