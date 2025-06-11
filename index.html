@@ -66,7 +66,6 @@
                     <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
             </button>
-            <!-- NEW: MIDI Record Mode Toggle Button -->
             <button id="midiRecordModeBtn" title="Toggle MIDI Record Mode (Overdub/Replace)">Overdub</button>
         </div>
 
@@ -163,8 +162,12 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/main.js?v=1.4"></script>
+    <script src="js/state/projectState.js"></script>
+    <script src="js/state/trackState.js"></script>
+    <script src="js/state/windowState.js"></script>
+    <script src="js/state/appState.js"></script>
+    <script src="js/state/masterState.js"></script>
+    <script src="js/state/soundLibraryState.js"></script>
 
-</body>
+    <script type="module" src="js/main.js"></script> </body>
 </html>
