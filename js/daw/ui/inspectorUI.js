@@ -1,11 +1,13 @@
 // js/daw/ui/inspectorUI.js
 
-import { createDropZoneHTML, setupGenericDropZoneListeners, drawWaveform } from '../../utils.js'; // Path updated
-import * as Constants from '../../constants.js'; // Path updated
+// Removed imports for createDropZoneHTML, setupGenericDropZoneListeners, drawWaveform as they are global
+// Removed import * as Constants from '../../constants.js'; as Constants is global
+// Removed import { createKnob } from '../../knobUI.js'; as createKnob is global
 
 let localAppServices = {};
 
-export function initializeInspectorUI(appServices) {
+// Removed export
+function initializeInspectorUI(appServices) {
     localAppServices = appServices;
 }
 
@@ -21,7 +23,8 @@ function getNestedParam(obj, path) {
 }
 
 function buildSynthEngineControls(track, container, engineType) {
-    const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
+    // synthEngineControlDefinitions is global
+    const definitions = effectsRegistry.synthEngineControlDefinitions?.[engineType] || [];
     if (!container || definitions.length === 0) return;
 
     definitions.forEach(def => {
@@ -32,7 +35,8 @@ function buildSynthEngineControls(track, container, engineType) {
         const initialValue = getNestedParam(track.synthParams, def.path);
 
         if (def.type === 'knob') {
-            control = localAppServices.createKnob({
+            // createKnob is global
+            control = createKnob({
                 label: def.label,
                 min: def.min,
                 max: def.max,
@@ -61,12 +65,14 @@ function buildSynthEngineControls(track, container, engineType) {
     });
 }
 
-export function renderSamplePads(track, container) {
+// Removed export
+function renderSamplePads(track, container) {
     if (!container) return;
     container.innerHTML = '';
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
+    // Constants is global
     for (let i = 0; i < Constants.numSlices; i++) {
         const pad = document.createElement('button');
         pad.className = 'pad-button';
@@ -76,6 +82,7 @@ export function renderSamplePads(track, container) {
         pad.addEventListener('click', () => {
             localAppServices.playSlicePreview?.(track.id, i);
             track.selectedSliceForEdit = i;
+            // updateSliceEditorUI is global
             updateSliceEditorUI(track, container.closest('.window-content'));
         });
         grid.appendChild(pad);
@@ -83,7 +90,8 @@ export function renderSamplePads(track, container) {
     container.appendChild(grid);
 }
 
-export function updateSliceEditorUI(track, container) {
+// Removed export
+function updateSliceEditorUI(track, container) {
     if (!container) return;
     const slice = track.slices[track.selectedSliceForEdit];
     if (!slice) return;
@@ -91,7 +99,8 @@ export function updateSliceEditorUI(track, container) {
     const pitchKnobEl = container.querySelector('#slice-pitch-knob-placeholder');
     if (pitchKnobEl) {
         pitchKnobEl.innerHTML = '';
-        const knob = localAppServices.createKnob({
+        // createKnob is global
+        const knob = createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: slice.pitchShift || 0,
             onValueChange: (val) => { slice.pitchShift = val; }
         }, localAppServices);
@@ -99,12 +108,14 @@ export function updateSliceEditorUI(track, container) {
     }
 }
 
-export function renderDrumSamplerPads(track, container) {
+// Removed export
+function renderDrumSamplerPads(track, container) {
     if (!container) return;
     container.innerHTML = '';
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
+    // Constants is global
     for (let i = 0; i < Constants.numDrumSamplerPads; i++) {
         const pad = document.createElement('button');
         pad.className = 'pad-button';
@@ -123,10 +134,13 @@ export function renderDrumSamplerPads(track, container) {
         pad.addEventListener('click', () => {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
+            // updateDrumPadControlsUI is global
             updateDrumPadControlsUI(track, container.closest('.window-content'));
+            // renderDrumSamplerPads is global
             renderDrumSamplerPads(track, container); // Re-render to update selection
         });
 
+        // setupGenericDropZoneListeners is global
         setupGenericDropZoneListeners(
             pad, 
             track.id, 
@@ -141,7 +155,8 @@ export function renderDrumSamplerPads(track, container) {
     container.appendChild(grid);
 }
 
-export function updateDrumPadControlsUI(track, container) {
+// Removed export
+function updateDrumPadControlsUI(track, container) {
     if (!container) return;
     const padIndex = track.selectedDrumPadForEdit;
     const padData = track.drumSamplerPads[padIndex];
@@ -163,37 +178,46 @@ export function updateDrumPadControlsUI(track, container) {
     `;
 
     const volContainer = controlsGrid.querySelector(`#volumeKnob-drumpad-${padIndex}-placeholder`);
-    const volKnob = localAppServices.createKnob({
-        label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: padData.volume || 0.7,
-        onValueChange: (val) => { padData.volume = val; }
-    }, localAppServices);
-    volContainer.appendChild(volKnob.element);
+    if (volContainer) {
+        // createKnob is global
+        const volKnob = createKnob({
+            label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: padData.volume || 0.7,
+            onValueChange: (val) => { padData.volume = val; }
+        }, localAppServices);
+        volContainer.appendChild(volKnob.element);
+    }
     
     const pitchContainer = controlsGrid.querySelector(`#pitchKnob-drumpad-${padIndex}-placeholder`);
-    const pitchKnob = localAppServices.createKnob({
-        label: 'Pitch', min: -24, max: 24, step: 1, initialValue: padData.pitchShift || 0,
-        onValueChange: (val) => { padData.pitchShift = val; }
-    }, localAppServices);
-    pitchContainer.appendChild(pitchKnob.element);
+    if (pitchContainer) {
+        // createKnob is global
+        const pitchKnob = createKnob({
+            label: 'Pitch', min: -24, max: 24, step: 1, initialValue: padData.pitchShift || 0,
+            onValueChange: (val) => { padData.pitchShift = val; }
+        }, localAppServices);
+        pitchContainer.appendChild(pitchKnob.element);
+    }
 
     container.appendChild(controlsGrid);
     
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}-drumpad-${padIndex}`);
     if(dzContainerEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
+        // setupGenericDropZoneListeners is global
         if(dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', padIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
         const fileInputEl = dzContainerEl.querySelector(`#drum-pad-file-input-${padIndex}`);
         if(fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, padIndex); };
     }
 }
 
-export function openTrackInspectorWindow(trackId, savedState = null) {
+// Removed export
+function openTrackInspectorWindow(trackId, savedState = null) {
+    // getTrackByIdState is global
     const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
     const windowId = `trackInspector-${trackId}`;
     
-    // Check if the window is already open
-    const existingWindow = localAppServices.getOpenWindows().get(windowId);
+    // getOpenWindowsState is global
+    const existingWindow = getOpenWindowsState().get(windowId);
 
     if (existingWindow) {
         // If savedState is NOT provided, it means this call is from a menu click (e.g., "Open Inspector")
@@ -210,7 +234,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     }
 
     const contentDOM = buildTrackInspectorContentDOM(track);
-    // Apply savedState if provided, which will include x, y, width, height, etc.
+    // SnugWindow is global
     const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450, ...savedState });
     if (inspectorWindow?.element) {
         console.log(`[inspectorUI.js] Calling initializeCommonInspectorControls for track ${track.id}`);
@@ -365,6 +389,7 @@ function buildSlicerSamplerControls(track, container) {
     `;
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
+    // setupGenericDropZoneListeners is global
     setupGenericDropZoneListeners(dzEl, track.id, 'Sampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
     
     const fileInputEl = dzContainerEl.querySelector(`#slicer-file-input-${track.id}`);
@@ -372,9 +397,11 @@ function buildSlicerSamplerControls(track, container) {
     
     const canvas = container.querySelector(`#waveform-canvas-${track.id}`);
     if (track.audioBuffer) {
+        // drawWaveform is global
         drawWaveform(canvas, track.audioBuffer);
     }
 
+    // renderSamplePads is global
     renderSamplePads(track, container.querySelector(`#sample-pads-container-${track.id}`));
 }
 
@@ -388,7 +415,9 @@ function buildDrumSamplerControls(track, container) {
     `;
     const padsContainer = container.querySelector(`#drum-pads-container-${track.id}`);
     const controlsContainer = container.querySelector(`#drum-pad-controls-container-${track.id}`);
+    // renderDrumSamplerPads is global
     renderDrumSamplerPads(track, padsContainer);
+    // updateDrumPadControlsUI is global
     updateDrumPadControlsUI(track, controlsContainer);
 }
 
@@ -418,6 +447,7 @@ function buildInstrumentSamplerControls(track, container) {
     `;
     const dzContainerEl = container.querySelector(`#dropZoneContainer-instrument-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
+    // setupGenericDropZoneListeners is global
     setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
 
     const fileInputEl = dzContainerEl.querySelector(`#instrument-file-input-${track.id}`);
@@ -425,6 +455,7 @@ function buildInstrumentSamplerControls(track, container) {
     
     const canvas = container.querySelector(`#waveform-canvas-instrument-${track.id}`);
     if(track.instrumentSamplerSettings.audioBuffer) {
+        // drawWaveform is global
         drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
     }
 
@@ -434,7 +465,8 @@ function buildInstrumentSamplerControls(track, container) {
     const volumeKnobPlaceholder = container.querySelector(`#instrumentSamplerVolume-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
         const initialVolume = track.previousVolumeBeforeMute; // Use track's main volume for now
-        const volumeKnob = localAppServices.createKnob({
+        // createKnob is global
+        const volumeKnob = createKnob({
             label: 'Volume', min: 0, max: 1.2, step: 0.01,
             initialValue: initialVolume,
             onValueChange: (val, oldVal, fromInteraction) => {
@@ -448,7 +480,8 @@ function buildInstrumentSamplerControls(track, container) {
     const pitchShiftKnobPlaceholder = container.querySelector(`#instrumentSamplerPitchShift-${track.id}-placeholder`);
     if (pitchShiftKnobPlaceholder) {
         const initialPitchShift = track.instrumentSamplerSettings.pitchShift || 0;
-        const pitchShiftKnob = localAppServices.createKnob({
+        // createKnob is global
+        const pitchShiftKnob = createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: initialPitchShift,
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
@@ -464,7 +497,7 @@ function buildInstrumentSamplerControls(track, container) {
                 }
             }
         }, localAppServices);
-        pitchShiftKnobPlaceholder.appendChild(pitchShiftKnob.element);
+        pitchShiftKnobPlaceholder.appendChild(pitchKnob.element);
     }
 
     // Envelope Knobs (Attack, Decay, Sustain, Release)
@@ -482,7 +515,8 @@ function buildInstrumentSamplerControls(track, container) {
                                  ? getNestedParam(track.instrumentSamplerSettings, paramDef.path)
                                  : paramDef.defaultValue; // Use defaultValue from a common source if available
 
-            const knob = localAppServices.createKnob({
+            // createKnob is global
+            const knob = createKnob({
                 label: paramDef.label,
                 min: paramDef.min,
                 max: paramDef.max,
