@@ -52,8 +52,7 @@ import {
     initializeAppState,
     initializeMasterState,
     initializeSoundLibraryState
-} from '../state.js'; // Path updated to barrel file in parent directory
-
+} from '../state.js';
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
@@ -69,14 +68,14 @@ import {
 import { storeAudio as dbStoreAudio, getAudio as dbGetAudio, deleteAudio as dbDeleteAudio } from '../db.js';
 import {
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
-    openMasterEffectsRackWindow, openTimelineWindow, openSoundBrowserWindow, openPianoRollWindow,
+    openMasterEffectsRackWindow, /* Removed openTimelineWindow */ openSoundBrowserWindow, openPianoRollWindow,
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
-    renderTimeline, updatePlayheadPosition, updatePianoRollPlayhead,
-    renderDirectoryView,
+    /* Removed renderTimeline, updatePlayheadPosition */ updatePianoRollPlayhead, /* Renamed renderDirectoryView for clarity below */
+    renderDirectoryView, /* Added new render functions for SoundBrowser */
     renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, openProfileWindow
-} from './ui.js';
+} from './ui.js'; /* Changed import for renderTimeline to be specific or removed */
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from '../effectsRegistry.js';
 import { initializeMetronome, toggleMetronome } from './metronome.js';
 import { initializeAuth, handleBackgroundUpload } from '../auth.js'; 
@@ -112,6 +111,8 @@ function applyCustomBackground(source) {
 
     if (fileType.startsWith('image/')) {
         desktopEl.style.backgroundImage = `url(${url})`;
+        desktopEl.style.backgroundSize = 'cover';
+        desktopEl.style.backgroundPosition = 'center';
     } else if (fileType.startsWith('video/')) {
         const videoEl = document.createElement('video');
         videoEl.id = 'desktop-video-bg';
@@ -140,55 +141,45 @@ function openDefaultLayout() {
         const margin = 10;
         const gap = 10;
 
-        const timelineHeight = 220;
-        const mixerHeight = 160;
+        const timelineHeight = 0; // Set to 0 as timeline is removed
+        const mixerHeight = Math.floor((rect.height - 40 - 32 - (margin * 2) - gap) * 0.5); // Use full remaining height
+        const sidePanelHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap); // Use full remaining height
         const sidePanelWidth = 350;
         const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
-        const timelineY = margin;
-        const row2Y = timelineY + timelineHeight + gap;
-        const row3Y = row2Y + mixerHeight + gap;
+        const row1Y = margin; // Top-most row starts at margin
+        const row2Y = row1Y + mixerHeight + gap; // Second row starts after mixer + gap
         
-        // Ensure timeline window is created and added to store before rendering
-        const timelineWindow = appServices.createWindow('timeline', 'Timeline', `
-            <div id="timeline-container" class="h-full w-full overflow-hidden relative flex flex-col bg-white dark:bg-black">
-                <div id="timeline-header" class="h-5 bg-white dark:bg-black border-b border-black dark:border-white relative overflow-hidden flex-shrink-0">
-                    <div id="timeline-ruler" class="absolute top-0 left-0 h-full" style="width: 4000px;"></div>
-                </div>
-                <div id="timeline-tracks-and-playhead-container" class="flex-grow relative overflow-auto">
-                    <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-red-500 z-20 pointer-events:none" style="left: 120px;"></div>
-                    <div id="timeline-tracks-area" class="relative h-full"></div>
-                </div>
-            </div>
-        `, { // Pass content HTML directly
-            x: margin,
-            y: timelineY,
-            width: rect.width - (margin * 2),
-            height: timelineHeight
-        });
-
-        // Now that the timelineWindow is created and stored, call renderTimeline
-        if (timelineWindow?.element) {
-            appServices.renderTimeline();
-        }
+        // Removed openTimelineWindow call
+        // appServices.openTimelineWindow({
+        //     x: margin,
+        //     y: row1Y,
+        //     width: rect.width - (margin * 2),
+        //     height: timelineHeight
+        // });
         
-        // Continue with other windows, they don't have the same immediate render dependency
+        // Mixer now starts higher and potentially fills more vertical space
         appServices.openMixerWindow({
             x: margin,
-            y: row2Y,
+            y: row1Y, // Starts at the top now
             width: leftPanelWidth,
             height: mixerHeight
         });
 
+        // Master Effects Rack also adjusts its position and height
         appServices.openMasterEffectsRackWindow({
             x: margin,
-            y: row3Y,
+            y: row1Y + mixerHeight + gap, // Position below mixer
+            width: leftPanelWidth,
+            height: sidePanelHeight - mixerHeight - gap // Adjust height to fill remaining space
         });
         
+        // Sound Browser also adjusts its position and height
         const soundBrowserX = rect.width - sidePanelWidth - margin;
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
-            y: row2Y,
+            y: row1Y, // Starts at the top now
+            height: sidePanelHeight // Use full remaining height for side panel
         });
     }, 100); 
 }
@@ -273,13 +264,14 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
 
     if (reason === 'effectsChanged') {
-        const rackWindow = getWindowByIdState(`effectsRack-${trackId}`);
+        const rackWindow = getWindowByIdById(`effectsRack-${trackId}`);
         rackWindow?.refresh();
     }
     
-    if (reason === 'nameChanged' || reason === 'clipsChanged') {
-        appServices.renderTimeline();
-    }
+    // Removed renderTimeline call
+    // if (reason === 'nameChanged' || reason === 'clipsChanged') {
+    //     appServices.renderTimeline();
+    // }
 }
 
 function onPlaybackModeChange(newMode, oldMode) {
@@ -312,11 +304,12 @@ async function initializeSnugOS() {
             const transportTime = Tone.Transport.seconds;
             
             const mode = appServices.getPlaybackMode();
-            if (mode === 'timeline') {
-                updatePlayheadPosition(transportTime);
-            } else { // 'piano-roll'
+            // No updatePlayheadPosition if timeline is removed
+            // if (mode === 'timeline') {
+            //     updatePlayheadPosition(transportTime);
+            // } else { // 'piano-roll'
                 updatePianoRollPlayhead(transportTime);
-            }
+            // }
             
             updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, getTracksState());
         }
@@ -363,12 +356,12 @@ async function initializeSnugOS() {
         loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
         playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio, dbGetAudio, dbDeleteAudio,
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
-        openMasterEffectsRackWindow, renderEffectsList, renderEffectControls, createKnob,
-        openTimelineWindow, renderTimeline, updatePlayheadPosition, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
-        openProfileWindow, // Add the new profile window opener to services
+        openMasterEffectsRackWindow, /* Removed openTimelineWindow */ openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, /* Removed renderTimeline, updatePlayheadPosition for timeline */
+        renderDirectoryView, /* Added new render functions for SoundBrowser */
+        renderSoundBrowser,
         renderSamplePads, updateSliceEditorUI,
-        renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
-        openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView,
+        renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, openProfileWindow,
+        /* Removed renderTimeline for timeline */
         drawWaveform,
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, 
