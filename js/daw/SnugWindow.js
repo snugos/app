@@ -1,8 +1,8 @@
-// js/SnugWindow.js - SnugWindow Class Module
+// js/daw/SnugWindow.js - SnugWindow Class Module
 
-import { createContextMenu } from './utils.js';
+// Removed import { createContextMenu } from './utils.js'; as createContextMenu is global
 
-export class SnugWindow {
+class SnugWindow { // Removed export
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
         // --- DEBUGGING LOG ---
         console.log(`%c[SnugWindow.js] Constructor for window "${id}" received options:`, 'color: #9b59b6; font-weight: bold;', JSON.parse(JSON.stringify(options)));
@@ -66,7 +66,7 @@ export class SnugWindow {
 
         this.element.addEventListener('mousedown', () => this.focus());
 
-        // Removed `?.` - This is crucial for the window to be added to the store correctly
+        // addWindowToStore is global
         this.appServices.addWindowToStore(this.id, this);
         this.focus();
     }
@@ -161,7 +161,7 @@ export class SnugWindow {
     }
 
     focus() {
-        // Removed `?.` - Ensure incrementHighestZ is always called
+        // incrementHighestZ is global
         const newZ = this.appServices.incrementHighestZ();
         this.element.style.zIndex = newZ;
         document.querySelectorAll('.taskbar-button').forEach(btn => btn.classList.remove('active'));
@@ -174,7 +174,7 @@ export class SnugWindow {
         }
         this.element?.remove();
         this.taskbarButton?.remove();
-        // Removed `?.` - Ensure removeWindowFromStore is always called
+        // removeWindowFromStore is global
         this.appServices.removeWindowFromStore(this.id);
     }
 
@@ -197,7 +197,8 @@ export class SnugWindow {
     }
     
     showTaskbarContextMenu(e) {
-        // Implementation for context menu...
+        // createContextMenu is global
+        createContextMenu(e, [], this.appServices);
     }
 
     // NEW: Method to get the current state of the window for serialization/restoration
