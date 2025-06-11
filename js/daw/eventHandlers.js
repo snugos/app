@@ -1,28 +1,21 @@
 // js/daw/eventHandlers.js - Global Event Listeners and Input Handling Module
-import * as Constants from '../constants.js';
-import { showNotification, showConfirmationDialog, createContextMenu } from '../utils.js';
-import {
-    // Importing from decomposed state modules
-    getTracks as getTracksState, getTrackById as getTrackByIdState,
-    getArmedTrackId as getArmedTrackIdState, setArmedTrackId as setArmedTrackIdState,
-    getSoloedTrackId as getSoloedTrackIdState, setSoloedTrackId as setSoloedTrackIdState,
-    setIsRecording as setIsRecordingState,
-    isTrackRecording as isTrackRecordingState, setRecordingTrackId as setRecordingTrackIdState,
-    getRecordingTrackId as getRecordingTrackIdState, setRecordingStartTime as setRecordingStartTimeState,
-    getPlaybackMode as getPlaybackModeState,
-    setPlaybackMode as setPlaybackModeState,
-    getMidiAccess as getMidiAccessState,
-    setActiveMIDIInput as setActiveMIDIInputState,
-    getActiveMIDIInput as getActiveMIDIInputState,
-    getMidiRecordMode as getMidiRecordModeState,
-    // Project state imports
-    captureStateForUndo as captureStateForUndoInternal,
-    getUndoStack as getUndoStackState, 
-    getRedoStack as getRedoStackState,
-} from '../state.js';
-import { incrementOctaveShift, decrementOctaveShift } from '../constants.js';
+// Removed imports for Constants, showNotification, showConfirmationDialog, createContextMenu, and state functions as they are now global
+// import * as Constants from '../constants.js';
+// import { showNotification, showConfirmationDialog, createContextMenu } from '../utils.js';
+// import {
+//     getTracksState, getTrackByIdState,
+//     captureStateForUndoInternal,
+//     setSoloedTrackIdState, getSoloedTrackIdState,
+//     setArmedTrackIdState, getArmedTrackIdState,
+//     setIsRecordingState, isTrackRecordingState, setRecordingTrackIdState,
+//     removeTrackFromStateInternal, getPlaybackModeState, setPlaybackModeState,
+//     getMidiAccessState, setActiveMIDIInputState, getActiveMIDIInputState,
+//     getUndoStackState, getRedoStackState,
+//     getRecordingTrackIdState, setRecordingStartTimeState,
+//     getMidiRecordModeState
+// } from '../state.js';
+// import { incrementOctaveShift, decrementOctaveShift } from '../constants.js';
 // Removed specific timeline/piano roll imports from pianoRollUI, as timeline is removed
-// import { lastActivePianoRollTrackId, openPianoRolls } from './ui/pianoRollUI.js';
 
 
 let localAppServices = {};
@@ -64,14 +57,14 @@ export function initializePrimaryEventListeners() {
                 action: () => customBgInput?.click()
             }
         ];
-        createContextMenu(e, menuItems, localAppServices);
+        createContextMenu(e, menuItems, localAppServices); // createContextMenu is global
     });
     
     // UPDATED: This now calls the new server upload function
     customBgInput?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            localAppServices.handleBackgroundUpload(file);
+            handleBackgroundUpload(file); // handleBackgroundUpload is global
         }
         e.target.value = null; 
     });
@@ -109,12 +102,12 @@ export function initializePrimaryEventListeners() {
     // });
     
     document.getElementById('menuOpenPianoRoll')?.addEventListener('click', () => {
-        const currentTracks = getTracksState(); // Use getTracksState
+        const currentTracks = getTracksState(); // getTracksState is global
         const firstInstrumentTrack = currentTracks.find(t => t.type === 'Synth' || t.type === 'InstrumentSampler' || t.type === 'Sampler' || t.type === 'DrumSampler');
         if (firstInstrumentTrack) {
             handleOpenPianoRoll(firstInstrumentTrack.id);
         } else {
-            showNotification("Add an instrument or sampler track first.", 3000);
+            showNotification("Add an instrument or sampler track first.", 3000); // showNotification is global
         }
         startMenu?.classList.add('hidden');
     });
@@ -130,20 +123,20 @@ export function initializePrimaryEventListeners() {
     });
 
     document.getElementById('undoBtnTop')?.addEventListener('click', () => {
-        captureStateForUndoInternal("Undo Action"); // Using captureStateForUndoInternal
+        captureStateForUndoInternal("Undo Action"); // captureStateForUndoInternal is global
         updateUndoRedoButtons(); 
     });
 
     document.getElementById('redoBtnTop')?.addEventListener('click', () => {
         // Redo functionality needs separate state management (not just captureStateForUndoInternal)
         // Ensure redo logic is properly implemented in state.js
-        showNotification("Redo not yet implemented fully.", 2000); // Placeholder
+        showNotification("Redo not yet implemented fully.", 2000); // showNotification is global
         updateUndoRedoButtons();
     });
 
 
     document.getElementById('menuSaveProject')?.addEventListener('click', () => {
-        localAppServices.saveProject?.(); // Using localAppServices
+        saveProjectInternal(); // saveProjectInternal is global
         startMenu?.classList.add('hidden');
     });
 
@@ -153,19 +146,19 @@ export function initializePrimaryEventListeners() {
     });
 
     document.getElementById('menuExportWav')?.addEventListener('click', () => {
-        localAppServices.exportToWav?.(); // Using localAppServices
+        exportToWavInternal(); // exportToWavInternal is global
         startMenu?.classList.add('hidden');
     });
     
     // NEW: Event listener for opening a profile page in a new tab
     document.getElementById('menuOpenTestProfile')?.addEventListener('click', () => {
         const usernameToOpen = 'testuser';
-        window.open('profile.html?user=${usernameToOpen}', '_blank');
+        window.open(`profile.html?user=${usernameToOpen}`, '_blank');
         document.getElementById('startMenu')?.classList.add('hidden');
     });
 
     document.getElementById('menuRefreshMidi')?.addEventListener('click', () => {
-        showNotification('Refreshing MIDI devices...', 1500);
+        showNotification('Refreshing MIDI devices...', 1500); // showNotification is global
         setupMIDI();
         startMenu?.classList.add('hidden');
     });
@@ -176,8 +169,8 @@ export function initializePrimaryEventListeners() {
     });
 
     const loadProjectInput = document.getElementById('loadProjectInput');
-    if (loadProjectInput && localAppServices.handleProjectFileLoad) {
-        loadProjectInput.addEventListener('change', localAppServices.handleProjectFileLoad); // Using localAppServices
+    if (loadProjectInput && handleProjectFileLoadInternal) { // handleProjectFileLoadInternal is global
+        loadProjectInput.addEventListener('change', handleProjectFileLoadInternal); // handleProjectFileLoadInternal is global
     }
 }
 
@@ -192,9 +185,9 @@ export function attachGlobalControlEvents(uiCache) {
     const metronomeBtn = document.getElementById('metronomeToggleBtn');
     
     const handlePlayPause = async () => {
-        const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+        const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
         if (!audioReady) {
-            showNotification("Audio context not running. Please interact with the page.", 3000);
+            showNotification("Audio context not running. Please interact with the page.", 3000); // showNotification is global
             return;
         }
 
@@ -204,23 +197,23 @@ export function attachGlobalControlEvents(uiCache) {
             Tone.Transport.pause();
         } else {
             if (transportState === 'stopped') {
-                localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
+                localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule'); // getPlaybackModeState is global
             }
             Tone.Transport.start();
         }
     };
 
     const handlePlayStop = async () => {
-        const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+        const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
         if (!audioReady) {
-            showNotification("Audio context not running. Please interact with the page.", 3000);
+            showNotification("Audio context not running. Please interact with the page.", 3000); // showNotification is global
             return;
         }
 
         if (Tone.Transport.state === 'started') {
             handleStop();
         } else {
-            localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule');
+            localAppServices.onPlaybackModeChange?.(getPlaybackModeState(), 'reschedule'); // getPlaybackModeState is global
             Tone.Transport.start();
         }
     };
@@ -234,35 +227,35 @@ export function attachGlobalControlEvents(uiCache) {
     };
 
     const handleRecord = async () => {
-        const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+        const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
         if (!audioReady) return;
     
-        const currentlyRecording = isTrackRecordingState();
-        const armedTrackId = getArmedTrackIdState();
-        const armedTrack = getTrackByIdState(armedTrackId);
+        const currentlyRecording = isTrackRecordingState(); // isTrackRecordingState is global
+        const armedTrackId = getArmedTrackIdState(); // getArmedTrackIdState is global
+        const armedTrack = getTrackByIdState(armedTrackId); // getTrackByIdState is global
         
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
-            setIsRecordingState(false);
+            setIsRecordingState(false); // setIsRecordingState is global
             recordBtn.classList.remove('recording');
-            if (getRecordingTrackIdState() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
+            if (getRecordingTrackIdState() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) { // getRecordingTrackIdState is global
                 await localAppServices.stopAudioRecording();
             }
             if (Tone.Transport.state === 'started') {
                 handleStop();
             }
         } else if (armedTrack) {
-            setRecordingTrackIdState(armedTrackId);
-            setIsRecordingState(true);
+            setRecordingTrackIdState(armedTrackId); // setRecordingTrackIdState is global
+            setIsRecordingState(true); // setIsRecordingState is global
             recordBtn.classList.add('recording');
             
-            setRecordingStartTimeState(Tone.Transport.seconds);
+            setRecordingStartTimeState(Tone.Transport.seconds); // setRecordingStartTimeState is global
     
             if (armedTrack.type === 'Audio') {
                 const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
                 if (!success) {
-                    setIsRecordingState(false);
+                    setIsRecordingState(false); // setIsRecordingState is global
                     recordBtn.classList.remove('recording');
                     return;
                 }
@@ -272,7 +265,7 @@ export function attachGlobalControlEvents(uiCache) {
                 Tone.Transport.start();
             }
         } else {
-            showNotification("No track armed for recording.", 2500);
+            showNotification("No track armed for recording.", 2500); // showNotification is global
         }
     };
 
@@ -287,7 +280,7 @@ export function attachGlobalControlEvents(uiCache) {
 
     tempoInput?.addEventListener('change', (e) => {
         const newTempo = parseFloat(e.target.value);
-        if (newTempo >= Constants.MIN_TEMPO && newTempo <= Constants.MAX_TEMPO) {
+        if (newTempo >= Constants.MIN_TEMPO && newTempo <= Constants.MAX_TEMPO) { // Constants is global
             Tone.Transport.bpm.value = newTempo;
         }
     });
@@ -299,15 +292,15 @@ export function attachGlobalControlEvents(uiCache) {
     midiSelect?.addEventListener('change', selectMIDIInput);
     
     playbackModeToggle?.addEventListener('click', () => {
-        const currentMode = getPlaybackModeState();
+        const currentMode = getPlaybackModeState(); // getPlaybackModeState is global
         const newMode = currentMode === 'piano-roll' ? 'timeline' : 'piano-roll';
-        setPlaybackModeState(newMode);
+        setPlaybackModeState(newMode); // setPlaybackModeState is global
     });
     
     themeToggleBtn?.addEventListener('click', () => {
         const isLightTheme = document.body.classList.contains('theme-light');
         const newTheme = isLightTheme ? 'dark' : 'light';
-        localAppServices.setCurrentUserThemePreference?.(newTheme);
+        setCurrentUserThemePreferenceState(newTheme); // setCurrentUserThemePreferenceState is global
     });
 
     document.addEventListener('keydown', (e) => {
@@ -319,13 +312,13 @@ export function attachGlobalControlEvents(uiCache) {
         // This line includes the fix for the toLowerCase error
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
-        if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
+        if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) { // Constants is global
             e.preventDefault();
-            const armedTrackId = getArmedTrackIdState();
-            const armedTrack = getTrackByIdState(armedTrackId);
+            const armedTrackId = getArmedTrackIdState(); // getArmedTrackIdState is global
+            const armedTrack = getTrackByIdState(armedTrackId); // getTrackByIdState is global
             
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Constants is global
                 const noteName = Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerAttack(noteName, Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
@@ -339,75 +332,28 @@ export function attachGlobalControlEvents(uiCache) {
             } else if (key === 'r' && !e.ctrlKey && !e.metaKey) {
                 handleRecord();
             } else if (key === 'z') {
-                decrementOctaveShift();
-                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                decrementOctaveShift(); // decrementOctaveShift is global
+                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000); // Constants is global
             } else if (key === 'x') {
-                incrementOctaveShift();
-                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                incrementOctaveShift(); // incrementOctaveShift is global
+                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000); // Constants is global
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 // Removed timeline interaction code
-                // if (lastActivePianoRollTrackId !== null) {
-                //     const pianoRoll = openPianoRolls.get(lastActivePianoRollTrackId);
-                //     if (pianoRoll && pianoRoll.selectedNotes.size > 0) {
-                //         e.preventDefault();
-                //         const track = pianoRoll.track;
-                //         const activeSequence = track.sequences.getActiveSequence();
-                //         track.sequences.removeNotesFromSequence(activeSequence.id, pianoRoll.selectedNotes);
-                        
-                //         const win = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
-                //         if (win) {
-                //             win.close(true);
-                //             localAppServices.openPianoRollWindow(track.id, activeSequence.id);
-                //         }
-                //     }
-                // }
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 // Removed timeline interaction code
-                // if (lastActivePianoRollTrackId !== null) {
-                //     e.preventDefault();
-                    
-                //     const pianoRoll = openPianoRolls.get(lastActivePianoRollTrackId);
-                //     if (pianoRoll && pianoRoll.selectedNotes.size > 0) {
-                //         const track = pianoRoll.track;
-                //         const activeSequence = track.sequences.getActiveSequence();
-
-                //         let pitchOffset = 0;
-                //         let timeOffset = 0;
-
-                //         switch (e.key) {
-                //             case 'ArrowUp':    pitchOffset = -1; break;
-                //             case 'ArrowDown':  pitchOffset = 1;  break;
-                //             case 'ArrowLeft':  timeOffset = -1;  break;
-                //             case 'ArrowRight': timeOffset = 1;   break;
-                //         }
-
-                //         const newSelection = track.sequences.moveSelectedNotes(activeSequence.id, pianoRoll.selectedNotes, pitchOffset, timeOffset);
-
-                //         if (newSelection) {
-                //             pianoRoll.selectedNotes.clear();
-                //             newSelection.forEach(id => pianoRoll.selectedNotes.add(id));
-                            
-                //             const win = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
-                //             if (win) {
-                //                 win.close(true);
-                //                 localAppServices.openPianoRollWindow(track.id, activeSequence.id);
-                //             }
-                //         }
-                //     }
-                // }
             }
         }
     });
 
     document.addEventListener('keyup', (e) => {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
-        if (Constants.computerKeySynthMap[key]) {
+        if (Constants.computerKeySynthMap[key]) { // Constants is global
             e.preventDefault();
-            const armedTrackId = getArmedTrackIdState();
-            const armedTrack = getTrackByIdState(armedTrackId);
+            const armedTrackId = getArmedTrackIdState(); // getArmedTrackIdState is global
+            const armedTrack = getTrackByIdState(armedTrackId); // getTrackByIdState is global
 
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Constants is global
                 const noteName = Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerRelease(noteName, Tone.now());
                 currentlyPressedKeys.delete(key);
@@ -422,7 +368,7 @@ function updateUndoRedoButtons() {
     const redoBtn = document.getElementById('redoBtnTop');
     
     if (undoBtn) {
-        const undoStack = getUndoStackState();
+        const undoStack = getUndoStackState(); // getUndoStackState is global
         if (undoStack.length > 0) {
             undoBtn.disabled = false;
             undoBtn.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
@@ -432,7 +378,7 @@ function updateUndoRedoButtons() {
         }
     }
     if (redoBtn) {
-        const redoStack = getRedoStackState();
+        const redoStack = getRedoStackState(); // getRedoStackState is global
         if (redoStack.length > 0) {
             redoBtn.disabled = false;
             redoBtn.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
@@ -446,7 +392,7 @@ function updateUndoRedoButtons() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000);
+            showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000); // showNotification is global
         });
     } else {
         if (document.exitFullscreen) {
@@ -455,13 +401,13 @@ function toggleFullScreen() {
     }
 }
 
-export function setupMIDI() {
+function setupMIDI() {
     if (!navigator.requestMIDIAccess) {
-        showNotification("Web MIDI is not supported in this browser.", 4000);
+        showNotification("Web MIDI is not supported in this browser.", 4000); // showNotification is global
         return;
     }
     if (!window.isSecureContext) {
-        showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
+        showNotification("MIDI access requires a secure connection (HTTPS).", 6000); // showNotification is global
         return;
     }
 
@@ -471,7 +417,7 @@ export function setupMIDI() {
 }
 
 function onMIDISuccess(midiAccess) {
-    localAppServices.setMidiAccess?.(midiAccess);
+    localAppServices.setMidiAccess?.(midiAccess); // setMidiAccessState is global
     populateMIDIInputSelector(midiAccess);
     midiAccess.onstatechange = () => {
         populateMIDIInputSelector(midiAccess);
@@ -480,7 +426,7 @@ function onMIDISuccess(midiAccess) {
 
 function onMIDIFailure(error) {
     console.error("Failed to get MIDI access -", error);
-    showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
+    showNotification(`Failed to get MIDI access: ${error.name}`, 4000); // showNotification is global
 }
 
 function populateMIDIInputSelector(midiAccess) {
@@ -507,18 +453,18 @@ function populateMIDIInputSelector(midiAccess) {
         });
     }
 
-    const activeInput = getActiveMIDIInputState();
+    const activeInput = getActiveMIDIInputState(); // getActiveMIDIInputState is global
     if (activeInput && currentInputs.has(activeInput.id)) {
         midiSelect.value = activeInput.id;
     } else {
-        setActiveMIDIInputState(null);
+        setActiveMIDIInputState(null); // setActiveMIDIInputState is global
     }
 }
 
 export function selectMIDIInput(event) {
-    const midiAccess = localAppServices.getMidiAccess?.();
+    const midiAccess = localAppServices.getMidiAccess?.(); // getMidiAccessState is global
     const selectedId = event.target.value;
-    const currentActiveInput = getActiveMIDIInputState();
+    const currentActiveInput = getActiveMIDIInputState(); // getActiveMIDIInputState is global
 
     if (currentActiveInput) {
         currentActiveInput.onmidimessage = null;
@@ -527,9 +473,9 @@ export function selectMIDIInput(event) {
     if (selectedId && midiAccess) {
         const newActiveInput = midiAccess.inputs.get(selectedId);
         newActiveInput.onmidimessage = onMIDIMessage;
-        setActiveMIDIInputState(newActiveInput);
+        setActiveMIDIInputState(newActiveInput); // setActiveMIDIInputState is global
     } else {
-        setActiveMIDIInputState(null);
+        setActiveMIDIInputState(null); // setActiveMIDIInputState is global
     }
 }
 
@@ -539,9 +485,9 @@ function onMIDIMessage(message) {
     const noteOn = commandType === 0x90 && velocity > 0;
     const noteOff = commandType === 0x80 || (commandType === 0x90 && velocity === 0);
 
-    const armedTrackId = getArmedTrackIdState();
+    const armedTrackId = getArmedTrackIdState(); // getArmedTrackIdState is global
     if (armedTrackId === null) return;
-    const armedTrack = getTrackByIdState(armedTrackId);
+    const armedTrack = getTrackByIdState(armedTrackId); // getTrackByIdState is global
     if (!armedTrack || !armedTrack.instrument) return;
 
     if (commandType === 0xB0 && noteNumber === 64) { 
@@ -575,21 +521,21 @@ function onMIDIMessage(message) {
         }
     }
     
-    if (noteOn && isTrackRecordingState()) {
+    if (noteOn && isTrackRecordingState()) { // isTrackRecordingState is global
         const track = armedTrack;
         if (track.type !== 'Audio') {
             const activeSequence = track.sequences.getActiveSequence();
             if (activeSequence) {
                 const ticksPerStep = Tone.Transport.PPQ / 4;
                 const currentStep = Math.round(Tone.Transport.ticks / ticksPerStep) % activeSequence.length;
-                const pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber;
+                const pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber; // Constants is global
 
-                if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
+                if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) { // Constants is global
                     
-                    const recordMode = getMidiRecordModeState();
+                    const recordMode = getMidiRecordModeState(); // getMidiRecordModeState is global
                     if (recordMode === 'replace') {
                         // In replace mode, clear any notes at the current step on all pitches
-                        for (let i = 0; i < Constants.SYNTH_PITCHES.length; i++) {
+                        for (let i = 0; i < Constants.SYNTH_PITCHES.length; i++) { // Constants is global
                             if (activeSequence.data[i][currentStep]) {
                                 // Pass true to prevent this from creating its own undo step
                                 track.sequences.removeNoteFromSequence(activeSequence.id, i, currentStep, true); 
@@ -599,7 +545,7 @@ function onMIDIMessage(message) {
                     
                     track.sequences.addNoteToSequence(activeSequence.id, pitchIndex, currentStep, { velocity: velocity / 127, duration: 1 });
                     
-                    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`);
+                    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${track.id}`); // getWindowByIdState is global
                     if (pianoRollWindow && !pianoRollWindow.isMinimized) {
                        if(localAppServices.openPianoRollWindow) {
                            pianoRollWindow.close(true);
@@ -615,34 +561,34 @@ function onMIDIMessage(message) {
 
 export function handleTrackMute(trackId) {
     console.log(`[eventHandlers.js] handleTrackMute called for trackId: ${trackId}`); // DEBUG LOG
-    const track = getTrackByIdState(trackId);
+    const track = getTrackByIdState(trackId); // getTrackByIdState is global
     if (!track) {
         console.warn(`[eventHandlers.js] handleTrackMute: Track with ID ${trackId} not found.`); // DEBUG LOG
         return;
     }
-    captureStateForUndoInternal(`${track.isMuted ? 'Unmute' : 'Mute'} Track: ${track.name}`);
+    captureStateForUndoInternal(`${track.isMuted ? 'Unmute' : 'Mute'} Track: ${track.name}`); // captureStateForUndoInternal is global
     track.isMuted = !track.isMuted;
     track.applyMuteState();
     // This part is crucial: update UI for all tracks that might be affected by solo/mute changes
     if (localAppServices.updateTrackUI) {
-        getTracksState().forEach(t => localAppServices.updateTrackUI(t.id, 'muteChanged'));
+        getTracksState().forEach(t => localAppServices.updateTrackUI(t.id, 'muteChanged')); // getTracksState is global
         localAppServices.updateMixerWindow(); // Re-render mixer to update button states
     }
 }
 
 export function handleTrackSolo(trackId) {
     console.log(`[eventHandlers.js] handleTrackSolo called for trackId: ${trackId}`); // DEBUG LOG
-    const track = getTrackByIdState(trackId);
+    const track = getTrackByIdState(trackId); // getTrackByIdState is global
     if (!track) {
         console.warn(`[eventHandlers.js] handleTrackSolo: Track with ID ${trackId} not found.`); // DEBUG LOG
         return;
     }
-    captureStateForUndoInternal(`Solo Track: ${track.name}`);
-    const currentSoloId = getSoloedTrackIdState();
+    captureStateForUndoInternal(`Solo Track: ${track.name}`); // captureStateForUndoInternal is global
+    const currentSoloId = getSoloedTrackIdState(); // getSoloedTrackIdState is global
     const newSoloId = (currentSoloId === trackId) ? null : trackId;
-    setSoloedTrackIdState(newSoloId);
+    setSoloedTrackIdState(newSoloId); // setSoloedTrackIdState is global
     // This loop now correctly updates ALL tracks' UI
-    getTracksState().forEach(t => {
+    getTracksState().forEach(t => { // getTracksState is global
         if (t.updateSoloMuteState) {
             t.updateSoloMuteState(newSoloId);
         }
@@ -656,9 +602,9 @@ export function handleTrackSolo(trackId) {
 
 export function handleTrackArm(trackId) {
     console.log(`[eventHandlers.js] handleTrackArm called for trackId: ${trackId}`); // DEBUG LOG
-    const currentArmedId = getArmedTrackIdState();
+    const currentArmedId = getArmedTrackIdState(); // getArmedTrackIdState is global
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
-    setArmedTrackIdState(newArmedId);
+    setArmedTrackIdState(newArmedId); // setArmedTrackIdState is global
     // Update UI for the newly armed/unarmed track
     if (localAppServices.updateTrackUI) {
         localAppServices.updateTrackUI(trackId, 'armChanged');
@@ -670,10 +616,10 @@ export function handleTrackArm(trackId) {
 }
 
 export function handleRemoveTrack(trackId) {
-    const track = getTrackByIdState(trackId);
+    const track = getTrackByIdState(trackId); // getTrackByIdState is global
     if (!track) return;
-    showConfirmationDialog('Remove Track', `Are you sure you want to remove "${track.name}"? This cannot be undone.`, () => {
-        localAppServices.removeTrackFromStateInternal(trackId); // Using localAppServices
+    showConfirmationDialog('Remove Track', `Are you sure you want to remove "${track.name}"? This cannot be undone.`, () => { // showConfirmationDialog is global
+        removeTrackFromStateInternal(trackId); // removeTrackFromStateInternal is global
     });
 }
 
@@ -693,13 +639,13 @@ export function handleOpenPianoRoll(trackId) {
     if (localAppServices.openPianoRollWindow) {
         localAppServices.openPianoRollWindow(trackId);
     } else {
-        showNotification("Piano Roll UI is currently unavailable.", 3000);
+        showNotification("Piano Roll UI is currently unavailable.", 3000); // showNotification is global
     }
 }
 
 export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
     const files = event.dataTransfer.files;
-    const targetTrack = getTrackByIdState(targetTrackId);
+    const targetTrack = getTrackByIdState(targetTrackId); // getTrackByIdState is global
     // This function is still here but will not be called from the UI as timeline is removed.
     // It can be removed during a future cleanup step for unused code.
 
@@ -711,7 +657,7 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
             if (targetTrack.type === 'Audio') {
                 targetTrack.clips.addAudioClip(file, startTime, file.name);
             } else {
-                showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500);
+                showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500); // showNotification is global
             }
         }
     } else {
@@ -720,13 +666,13 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
             try {
                 const soundData = JSON.parse(jsonDataString);
                 if (soundData.type === 'piano-roll-sequence') {
-                    const sourceTrack = getTrackByIdState(soundData.sourceTrackId);
+                    const sourceTrack = getTrackByIdState(soundData.sourceTrackId); // getTrackByIdState is global
                     const sequence = sourceTrack?.sequences.sequences.find(s => s.id === soundData.sequenceId);
                     if (targetTrack && sequence) {
                         targetTrack.clips.addMidiClip(sequence, startTime);
                     }
                 } else if (soundData.type === 'sound-browser-item') {
-                    showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000);
+                    showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000); // showNotification is global
                 }
             } catch(e) {
                 console.error("Error parsing dropped JSON data:", e);
@@ -739,6 +685,6 @@ export function handleOpenYouTubeImporter() {
     if (localAppServices.openYouTubeImporterWindow) {
         localAppServices.openYouTubeImporterWindow();
     } else {
-        showNotification("YouTube Importer UI is currently unavailable.", 3000);
+        showNotification("YouTube Importer UI is currently unavailable.", 3000); // showNotification is global
     }
 }
