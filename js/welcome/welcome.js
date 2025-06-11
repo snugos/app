@@ -1,7 +1,7 @@
 // js/welcome/welcome.js - Logic for the Welcome Page
 
-import { showNotification, showCustomModal, base64ToBlob } from './welcomeUtils.js'; // Import from new welcomeUtils
-import { storeAsset, getAsset } from './welcomeDb.js'; // Import from new welcomeDb
+import { showNotification, showCustomModal, base64ToBlob } from './welcomeUtils.js';
+import { storeAsset, getAsset } from './welcomeDb.js';
 
 // Minimal appServices for this page, tailored for welcome page needs
 const appServices = {};
@@ -69,7 +69,8 @@ function toggleStartMenu() {
 }
 
 function launchDaw() {
-    window.location.href = 'index.html';
+    // Navigate to the main DAW application, now named snaw.html
+    window.location.href = 'snaw.html';
 }
 
 function viewProfiles() {
