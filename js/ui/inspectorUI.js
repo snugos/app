@@ -195,7 +195,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
         localAppServices.getOpenWindows().get(windowId).restore(); return;
     }
     const contentDOM = buildTrackInspectorContentDOM(track);
-    const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450 });
+    const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450, ...savedState }); // Apply savedState here
     if (inspectorWindow?.element) {
         // --- DEBUG: Confirming this function is called ---
         console.log(`[inspectorUI.js] Calling initializeCommonInspectorControls for track ${track.id}`);
@@ -308,10 +308,10 @@ function initializeCommonInspectorControls(track, element) {
         localAppServices.handleOpenEffectsRack?.(track.id);
     });
 
-    // These update calls ensure the initial visual state of the buttons is correct
-    localAppServices.updateTrackUI(track.id, 'soloChanged');
-    localAppServices.updateTrackUI(track.id, 'muteChanged');
-    localAppServices.updateTrackUI(track.id, 'armChanged');
+    // REMOVED THE FOLLOWING LINES TO PREVENT INFINITE LOOP:
+    // localAppServices.updateTrackUI(track.id, 'soloChanged');
+    // localAppServices.updateTrackUI(track.id, 'muteChanged');
+    // localAppServices.updateTrackUI(track.id, 'armChanged');
 }
 
 function buildSynthControls(track, container) {
