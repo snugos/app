@@ -16,7 +16,7 @@ import {
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode, forceStopAllAudio
-} from './audio.js'; // Path updated
+} from './audoio/audio.js'; // Path updated
 import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; // Path updated
 import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; // Path updated
 import { 
@@ -35,7 +35,7 @@ import {
 } from './ui.js'; // Path updated
 // Removed AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions imports as they are global
 
-import { initializeMetronome, toggleMetronome } from './metronome.js'; // Path updated
+import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // Path updated
 // Removed initializeAuth, handleBackgroundUpload imports as they are global
 
 let appServices = {};
