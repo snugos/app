@@ -62,7 +62,7 @@ export class SnugWindow {
         desktopEl.appendChild(this.element);
 
         this.makeDraggable();
-        this.makeResizable();
+        this.makeResizable(); // Added makeResizable() call
 
         this.element.addEventListener('mousedown', () => this.focus());
 
@@ -154,7 +154,9 @@ export class SnugWindow {
     }
     
     makeResizable() {
-        // Implementation for resizing logic...
+        // This function is declared but currently empty.
+        // You would add the resize handle elements and their drag logic here.
+        // For example, creating a corner div that changes width/height on drag.
     }
 
     focus() {
