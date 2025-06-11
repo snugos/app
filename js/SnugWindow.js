@@ -16,7 +16,7 @@ export class SnugWindow {
         this.onRefreshCallback = options.onRefresh || null;
         this.isMaximized = false;
         this.restoreState = {};
-        this.appServices = appServices || {}; 
+        this.appServices = appServices; // Ensure appServices is assigned
         this._isDragging = false; 
         this._isResizing = false;
 
@@ -62,11 +62,12 @@ export class SnugWindow {
         desktopEl.appendChild(this.element);
 
         this.makeDraggable();
-        this.makeResizable(); // Added makeResizable() call
+        this.makeResizable();
 
         this.element.addEventListener('mousedown', () => this.focus());
 
-        this.appServices.addWindowToStore?.(this);
+        // Removed `?.` - This is crucial for the window to be added to the store correctly
+        this.appServices.addWindowToStore(this.id, this);
         this.focus();
     }
     
@@ -160,7 +161,8 @@ export class SnugWindow {
     }
 
     focus() {
-        const newZ = this.appServices.incrementHighestZ?.();
+        // Removed `?.` - Ensure incrementHighestZ is always called
+        const newZ = this.appServices.incrementHighestZ();
         this.element.style.zIndex = newZ;
         document.querySelectorAll('.taskbar-button').forEach(btn => btn.classList.remove('active'));
         this.taskbarButton?.classList.add('active');
@@ -172,7 +174,8 @@ export class SnugWindow {
         }
         this.element?.remove();
         this.taskbarButton?.remove();
-        this.appServices.removeWindowFromStore?.(this.id);
+        // Removed `?.` - Ensure removeWindowFromStore is always called
+        this.appServices.removeWindowFromStore(this.id);
     }
 
     minimize(isSilent = false) {
