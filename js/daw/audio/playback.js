@@ -1,6 +1,6 @@
-// js/audio/playback.js
+// js/daw/audio/playback.js
 
-import * as Constants from '../constants.js';
+import * as Constants from '../../constants.js'; // Path updated
 
 let localAppServices = {};
 
