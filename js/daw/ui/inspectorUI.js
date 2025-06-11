@@ -6,8 +6,7 @@
 
 let localAppServices = {};
 
-// Removed export
-function initializeInspectorUI(appServices) {
+export function initializeInspectorUI(appServices) { // Export re-added
     localAppServices = appServices;
 }
 
@@ -65,8 +64,7 @@ function buildSynthEngineControls(track, container, engineType) {
     });
 }
 
-// Removed export
-function renderSamplePads(track, container) {
+export function renderSamplePads(track, container) { // Export re-added
     if (!container) return;
     container.innerHTML = '';
     const grid = document.createElement('div');
@@ -90,8 +88,7 @@ function renderSamplePads(track, container) {
     container.appendChild(grid);
 }
 
-// Removed export
-function updateSliceEditorUI(track, container) {
+export function updateSliceEditorUI(track, container) { // Export re-added
     if (!container) return;
     const slice = track.slices[track.selectedSliceForEdit];
     if (!slice) return;
@@ -108,8 +105,7 @@ function updateSliceEditorUI(track, container) {
     }
 }
 
-// Removed export
-function renderDrumSamplerPads(track, container) {
+export function renderDrumSamplerPads(track, container) { // Export re-added
     if (!container) return;
     container.innerHTML = '';
     const grid = document.createElement('div');
@@ -155,8 +151,7 @@ function renderDrumSamplerPads(track, container) {
     container.appendChild(grid);
 }
 
-// Removed export
-function updateDrumPadControlsUI(track, container) {
+export function updateDrumPadControlsUI(track, container) { // Export re-added
     if (!container) return;
     const padIndex = track.selectedDrumPadForEdit;
     const padData = track.drumSamplerPads[padIndex];
@@ -194,7 +189,7 @@ function updateDrumPadControlsUI(track, container) {
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices);
-        pitchContainer.appendChild(pitchKnob.element);
+        pitchKnob.appendChild(knob.element);
     }
 
     container.appendChild(controlsGrid);
@@ -209,8 +204,7 @@ function updateDrumPadControlsUI(track, container) {
     }
 }
 
-// Removed export
-function openTrackInspectorWindow(trackId, savedState = null) {
+export function openTrackInspectorWindow(trackId, savedState = null) { // Export re-added
     // getTrackByIdState is global
     const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
@@ -481,7 +475,7 @@ function buildInstrumentSamplerControls(track, container) {
     if (pitchShiftKnobPlaceholder) {
         const initialPitchShift = track.instrumentSamplerSettings.pitchShift || 0;
         // createKnob is global
-        const pitchShiftKnob = createKnob({
+        const pitchKnob = createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: initialPitchShift,
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
@@ -497,7 +491,7 @@ function buildInstrumentSamplerControls(track, container) {
                 }
             }
         }, localAppServices);
-        pitchShiftKnobPlaceholder.appendChild(pitchKnob.element);
+        pitchKnob.appendChild(knob.element);
     }
 
     // Envelope Knobs (Attack, Decay, Sustain, Release)
