@@ -9,7 +9,7 @@ import { initializeSoundBrowserUI } from './ui/soundBrowserUI.js';
 import { initializePianoRollUI } from './ui/pianoRollUI.js';
 import { initializeYouTubeImporterUI } from './ui/youtubeImporterUI.js';
 // NEW: Import the profile UI functions
-import { initializeProfileUI, openProfileWindow } from './ui/profileUI.js';
+import { initializeProfileUI, openProfileWindow } from './ui/profileUI.js'; //
 
 // Import all exported functions from the sub-modules that main.js needs
 import { createKnob } from './ui/knobUI.js';
@@ -39,7 +39,7 @@ export function initializeUIModule(appServices) {
     initializePianoRollUI(appServices);
     initializeYouTubeImporterUI(appServices);
     // NEW: Initialize the profile UI module
-    initializeProfileUI(appServices);
+    initializeProfileUI(appServices); //
 }
 
 // Export all the functions that main.js needs to build the appServices object.
@@ -67,5 +67,5 @@ export {
     renderDrumSamplerPads,
     updateDrumPadControlsUI,
     // NEW: Add openProfileWindow to the exports
-    openProfileWindow,
+    openProfileWindow, //
 };
