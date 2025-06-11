@@ -1,3 +1,11 @@
+// js/daw/ui/profileUI.js
+
+// Import from the monolithic state.js
+import {
+    getOpenWindowsState,
+    getWindowByIdState,
+} from '../../state.js'; // Path updated
+
 let localAppServices = {};
 
 /**
@@ -19,10 +27,9 @@ export async function openProfileWindow(username) {
     }
 
     const windowId = `profile-${username}`;
-    // Use getOpenWindows from monolithic state
-    if (localAppServices.getOpenWindows?.().has(windowId)) {
-        // Use getWindowById from monolithic state
-        localAppServices.getWindowById(windowId).focus();
+    // Use getOpenWindowsState and getWindowByIdState from monolithic state
+    if (getOpenWindowsState().has(windowId)) {
+        getWindowByIdState(windowId).focus();
         return;
     }
 
