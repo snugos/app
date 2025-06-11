@@ -1,6 +1,5 @@
-// js/audio/metronome.js
+// js/daw/metronome.js
 
-let localAppServices = {};
 let metronomeSynth = null;
 let metronomeEventId = -1;
 let isMetronomeEnabled = false;
@@ -19,7 +18,10 @@ function createMetronomeSynth() {
 }
 
 export function initializeMetronome(appServices) {
-    localAppServices = appServices;
+    // The appServices variable is still used, but its specific properties
+    // like showNotification would need to be accessed via the appServices object
+    // if needed within this module. For now, it's just passed for consistency.
+    // localAppServices = appServices;
 }
 
 export function startMetronome() {
