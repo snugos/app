@@ -128,13 +128,30 @@ function openDefaultLayout() {
         const row2Y = timelineY + timelineHeight + gap;
         const row3Y = row2Y + mixerHeight + gap;
         
-        appServices.openTimelineWindow({
+        // Ensure timeline window is created and added to store before rendering
+        const timelineWindow = appServices.createWindow('timeline', 'Timeline', `
+            <div id="timeline-container" class="h-full w-full overflow-hidden relative flex flex-col bg-white dark:bg-black">
+                <div id="timeline-header" class="h-5 bg-white dark:bg-black border-b border-black dark:border-white relative overflow-hidden flex-shrink-0">
+                    <div id="timeline-ruler" class="absolute top-0 left-0 h-full" style="width: 4000px;"></div>
+                </div>
+                <div id="timeline-tracks-and-playhead-container" class="flex-grow relative overflow-auto">
+                    <div id="timeline-playhead" class="absolute top-0 w-0.5 h-full bg-red-500 z-20 pointer-events:none" style="left: 120px;"></div>
+                    <div id="timeline-tracks-area" class="relative h-full"></div>
+                </div>
+            </div>
+        `, { // Pass content HTML directly
             x: margin,
             y: timelineY,
             width: rect.width - (margin * 2),
             height: timelineHeight
         });
+
+        // Now that the timelineWindow is created and stored, call renderTimeline
+        if (timelineWindow?.element) {
+            appServices.renderTimeline(); // Explicitly call render for the timeline
+        }
         
+        // Continue with other windows, they don't have the same immediate render dependency
         appServices.openMixerWindow({
             x: margin,
             y: row2Y,
@@ -186,17 +203,19 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 
     const inspectorWindow = getWindowByIdState(`trackInspector-${track.id}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
+        // Re-select elements to ensure fresh references, especially if parts of the UI are rebuilt
+        const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
+        const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
+        const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`); // Also for arm button
+
         if (reason === 'armChanged') {
-            const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
             if (armBtn) armBtn.classList.toggle('armed', getArmedTrackIdState() === track.id);
         }
         if (reason === 'soloChanged' || reason === 'muteChanged') {
-            const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
             if (muteBtn) {
                 muteBtn.classList.toggle('muted', isEffectivelyMuted);
                 muteBtn.textContent = track.isMuted ? 'Unmute' : 'Mute';
             }
-            const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
             if (soloBtn) {
                 soloBtn.classList.toggle('soloed', track.isSoloed);
                 soloBtn.textContent = track.isSoloed ? 'Unsolo' : 'Solo';
@@ -215,6 +234,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         }
     }
     
+    // The mixer window update logic is already robust as it re-renders
     const mixerWindow = getWindowByIdState('mixer');
     if (mixerWindow && mixerWindow.element && !mixerWindow.isMinimized) {
         const trackDiv = mixerWindow.element.querySelector(`.mixer-track[data-track-id='${track.id}']`);
@@ -237,7 +257,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
     
     if (reason === 'nameChanged' || reason === 'clipsChanged') {
-        renderTimeline();
+        appServices.renderTimeline(); // Ensure this calls renderTimeline without issue
     }
 }
 
@@ -290,7 +310,7 @@ async function initializeSnugOS() {
         handleBackgroundUpload, // NEW service for handling uploads
         getTracks: getTracksState, getTrackById: getTrackByIdState, addTrack: addTrackToStateInternal,
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
-        addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
+        addWindowToStore: addWindowToStoreState, removeWindowFromStoreState: removeWindowFromStoreState,
         getHighestZ: getHighestZState, setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
         getMidiAccess: getMidiAccessState, setMidiAccess: setMidiAccessState,
         getArmedTrackId: getArmedTrackIdState,
