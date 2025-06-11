@@ -1,13 +1,14 @@
 // js/auth.js
-import { storeAsset, getAsset } from '../db.js'; // Path updated
-import * as Constants from '../constants.js'; // Path updated
-import { showNotification, showCustomModal } from '../utils.js'; // Path updated
+// Removed imports as functions will be global or accessed via localAppServices
+// import { storeAsset, getAsset } from './db.js';
+// import * as Constants from './constants.js';
+// import { showNotification, showCustomModal } from './utils.js';
 
 let localAppServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-export function initializeAuth(appServices) {
+function initializeAuth(appServices) {
     localAppServices = appServices;
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
@@ -50,6 +51,7 @@ async function checkInitialAuthState() {
         updateAuthUI(loggedInUser);
 
         // Apply custom background if available and logged in
+        // Assumes getAsset and applyCustomBackground are now global or accessed via appServices
         const backgroundBlob = await localAppServices.getAsset?.(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
             localAppServices.applyCustomBackground?.(backgroundBlob);
@@ -61,7 +63,7 @@ async function checkInitialAuthState() {
     }
 }
 
-export function showLoginModal() {
+function showLoginModal() {
     document.getElementById('startMenu')?.classList.add('hidden');
     const modalContent = `
         <div class="space-y-4">
@@ -85,6 +87,7 @@ export function showLoginModal() {
         </div>
     `;
     
+    // Assumes showCustomModal is now global or accessed via appServices
     const { overlay, contentDiv } = localAppServices.showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
@@ -172,7 +175,7 @@ async function handleRegister(username, password) {
     }
 }
 
-export async function handleBackgroundUpload(file) {
+async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
         localAppServices.showNotification('You must be logged in to save a custom background.', 3000);
         localAppServices.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
@@ -181,7 +184,7 @@ export async function handleBackgroundUpload(file) {
 
     try {
         localAppServices.showNotification('Saving background...', 1500);
-        // Use localAppServices.storeAsset for consistency
+        // Assumes storeAsset is now global or accessed via appServices
         await localAppServices.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
         localAppServices.applyCustomBackground?.(file);
         localAppServices.showNotification('Background saved locally!', 2000);
@@ -191,7 +194,7 @@ export async function handleBackgroundUpload(file) {
     }
 }
 
-export function handleLogout() {
+function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
