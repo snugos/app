@@ -1,17 +1,14 @@
 // js/daw/ui/mixerUI.js
 
-// Removed import { createKnob } from '../../knobUI.js'; as createKnob is global
-// Removed imports for state functions as they are global
+// Removed imports as functions will be global or accessed via localAppServices
 
 let localAppServices = {};
 
-// Removed export
-function initializeMixerUI(appServices) {
+export function initializeMixerUI(appServices) { // Export re-added
     localAppServices = appServices;
 }
 
-// Removed export
-function openMixerWindow(savedState = null) {
+export function openMixerWindow(savedState = null) { // Export re-added
     const windowId = 'mixer';
     // getOpenWindowsState is global
     const openWindows = getOpenWindowsState();
@@ -43,8 +40,7 @@ function openMixerWindow(savedState = null) {
     }
 }
 
-// Removed export
-function updateMixerWindow() {
+export function updateMixerWindow() { // Export re-added
     // --- DEBUGGING LOG ---
     console.log('[mixerUI.js] updateMixerWindow called.');
     const container = document.getElementById('mixerContentContainer');
@@ -66,7 +62,7 @@ function renderMixerTracks(container) {
     masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="Master">Master</div>
         <div id="volumeKnob-mixer-master-placeholder" class="h-16 mx-auto mb-1"></div>
         <div id="mixerTrackMeterContainer-master" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
-            <div id="mixerTrackMeterBar-master" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;"></div>
+            <div id="mixerTrackMeterBar-master" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;\\"></div>
         </div>`;
     container.appendChild(masterTrackDiv);
 
