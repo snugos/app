@@ -300,10 +300,10 @@ export function createEffectInstance(effectType, initialParams = {}) {
         });
     }
 
-    if (initialParams.hasOwnProperty('wet') && definition.params.some(p => p.key === 'wet')) {
-         if (!paramsForInstance.hasOwnProperty('wet')) { 
-            paramsForInstance.wet = initialParams.wet;
-         }
+    // Explicitly handle 'wet' parameter if it exists in initialParams but not in definition.params hierarchy
+    // This addresses a potential issue where 'wet' might be a top-level param but not part of a nested path in the definition
+    if (initialParams.hasOwnProperty('wet') && !paramsForInstance.hasOwnProperty('wet')) { 
+         paramsForInstance.wet = initialParams.wet;
     }
 
 
@@ -314,6 +314,7 @@ export function createEffectInstance(effectType, initialParams = {}) {
     } catch (e) {
         console.warn(`[EffectsRegistry createEffectInstance] Error during primary instantiation of Tone.${definition.toneClass} with structured params (Error: ${e.message}). Attempting fallback... Params:`, JSON.parse(JSON.stringify(paramsForInstance)));
         try {
+            // Fallback: Try instantiating without initial params, then set them
             const instance = new Tone[definition.toneClass]();
             if (typeof instance.set === 'function') {
                 console.log(`[EffectsRegistry createEffectInstance Fallback] Using instance.set() for Tone.${definition.toneClass}`);
@@ -325,7 +326,7 @@ export function createEffectInstance(effectType, initialParams = {}) {
                          const value = paramsForInstance[keyPath];
                          const keys = keyPath.split('.');
                          let target = instance;
-                         let paramDefForPath = definition.params.find(p => p.key === keyPath);
+                         let paramDefForPath = definition.params.find(p => p.key === keyPath); // Find the param definition for 'isSignal'
 
                          for (let i = 0; i < keys.length - 1; i++) {
                              if (target && target.hasOwnProperty(keys[i])) {
@@ -339,6 +340,7 @@ export function createEffectInstance(effectType, initialParams = {}) {
 
                          if (target && typeof target[keys[keys.length-1]] !== 'undefined') {
                               const finalKey = keys[keys.length-1];
+                              // Check if it's a Tone.js Signal/Param and if it's explicitly marked as 'isSignal' in definition
                               if (target[finalKey] && typeof target[finalKey].value !== 'undefined' && paramDefForPath?.isSignal) {
                                  target[finalKey].value = value;
                                  console.log(`[EffectsRegistry Fallback] Set signal ${keyPath}.value = ${value}`);
