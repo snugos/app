@@ -69,7 +69,6 @@ export function initializePrimaryEventListeners() {
         createContextMenu(e, menuItems, localAppServices);
     });
     
-    // UPDATED: This now calls the new server upload function
     customBgInput?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -130,7 +129,6 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
 
-    // UPDATED: Event listeners now attached to top bar buttons
     document.getElementById('undoBtnTop')?.addEventListener('click', () => {
         localAppServices.undoLastAction?.();
         updateUndoRedoButtons(); 
@@ -156,12 +154,10 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
     
-    // NEW: Event listener for opening a profile page in a new tab
     document.getElementById('menuOpenTestProfile')?.addEventListener('click', () => {
-        // Replace 'testuser' with a username that actually exists in your database
         const usernameToOpen = 'testuser';
         window.open(`profile.html?user=${usernameToOpen}`, '_blank');
-        document.getElementById('startMenu')?.classList.add('hidden');
+        startMenu?.classList.add('hidden');
     });
 
     document.getElementById('menuRefreshMidi')?.addEventListener('click', () => {
@@ -233,6 +229,7 @@ export function attachGlobalControlEvents(uiCache) {
         }
     };
 
+    // UPDATED: handleRecord function with count-in logic
     const handleRecord = async () => {
         const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
         if (!audioReady) return;
@@ -244,6 +241,7 @@ export function attachGlobalControlEvents(uiCache) {
         const recordBtn = document.getElementById('recordBtnGlobalTop');
 
         if (currentlyRecording) {
+            // Stop recording logic (remains the same)
             setIsRecording(false);
             recordBtn.classList.remove('recording');
             if (getRecordingTrackId() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
@@ -253,24 +251,41 @@ export function attachGlobalControlEvents(uiCache) {
                 handleStop();
             }
         } else if (armedTrack) {
-            setRecordingTrackId(armedTrackId);
-            setIsRecording(true);
-            recordBtn.classList.add('recording');
+            // --- NEW COUNT-IN LOGIC ---
             
-            setRecordingStartTimeState(Tone.Transport.seconds);
-    
-            if (armedTrack.type === 'Audio') {
-                const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
-                if (!success) {
-                    setIsRecording(false);
-                    recordBtn.classList.remove('recording');
-                    return;
+            // 1. Start the transport immediately, but at position 0.
+            Tone.Transport.stop();
+            Tone.Transport.position = 0;
+            Tone.Transport.start();
+
+            // 2. Activate the metronome so it clicks during the count-in.
+            const metronomeBtn = document.getElementById('metronomeToggleBtn');
+            if (!metronomeBtn.classList.contains('active')) {
+                localAppServices.toggleMetronome();
+                metronomeBtn.classList.add('active');
+            }
+
+            showNotification("Get ready...", Tone.Time("1m").toMilliseconds());
+
+            // 3. Schedule the actual recording to start after one measure ('1m').
+            Tone.Transport.scheduleOnce(async (time) => {
+                // This code will execute exactly one measure later.
+                setRecordingTrackId(armedTrackId);
+                setIsRecording(true);
+                recordBtn.classList.add('recording');
+                
+                setRecordingStartTimeState(time);
+
+                if (armedTrack.type === 'Audio') {
+                    const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
+                    if (!success) {
+                        setIsRecording(false);
+                        recordBtn.classList.remove('recording');
+                        handleStop(); // Stop if audio recording failed
+                    }
                 }
-            }
-    
-            if (Tone.Transport.state !== 'started') {
-                Tone.Transport.start();
-            }
+            }, "1m");
+
         } else {
             showNotification("No track armed for recording.", 2500);
         }
@@ -316,7 +331,6 @@ export function attachGlobalControlEvents(uiCache) {
         }
         if (e.repeat) return;
         
-        // This line includes the fix for the toLowerCase error
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
         if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
@@ -414,7 +428,6 @@ export function attachGlobalControlEvents(uiCache) {
     });
 }
 
-// UPDATED: This function now targets the top bar buttons
 function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtnTop');
     const redoBtn = document.getElementById('redoBtnTop');
