@@ -203,35 +203,10 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 
     const inspectorWindow = getWindowByIdState(`trackInspector-${track.id}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
-        // Re-select elements to ensure fresh references, especially if parts of the UI are rebuilt
-        const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
-        const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
-        const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`); // Also for arm button
-
-        if (reason === 'armChanged') {
-            if (armBtn) armBtn.classList.toggle('armed', getArmedTrackIdState() === track.id);
-        }
-        if (reason === 'soloChanged' || reason === 'muteChanged') {
-            if (muteBtn) {
-                muteBtn.classList.toggle('muted', isEffectivelyMuted);
-                muteBtn.textContent = track.isMuted ? 'Unmute' : 'Mute';
-            }
-            if (soloBtn) {
-                soloBtn.classList.toggle('soloed', track.isSoloed);
-                soloBtn.textContent = track.isSoloed ? 'Unsolo' : 'Solo';
-            }
-        }
-        if (reason === 'nameChanged') {
-            const titleSpan = inspectorWindow.titleBar.querySelector('span');
-            if (titleSpan) titleSpan.textContent = `Inspector: ${track.name}`;
-            if (inspectorWindow.taskbarButton) inspectorWindow.taskbarButton.textContent = `Inspector: ${track.name}`;
-        }
-        if (reason === 'instrumentSamplerLoaded') {
-            const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
-            if (canvas && track.instrumentSamplerSettings.audioBuffer) {
-                appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
-            }
-        }
+        // Instead of trying to update individual buttons, re-initialize the common controls.
+        // This ensures all button states are correctly set and listeners are fresh.
+        // We pass inspectorWindow.serialize() to preserve its position/size/state on re-open.
+        appServices.openTrackInspectorWindow(trackId, inspectorWindow.serialize()); //
     }
     
     // The mixer window update logic is already robust as it re-renders
@@ -310,7 +285,7 @@ async function initializeSnugOS() {
         handleBackgroundUpload, // NEW service for handling uploads
         getTracks: getTracksState, getTrackById: getTrackByIdState, addTrack: addTrackToStateInternal,
         removeTrack: removeTrackFromStateInternal, getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
-        addWindowToStore: addWindowToStoreState, removeWindowFromStoreState: removeWindowFromStoreState,
+        addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
         getHighestZ: getHighestZState, setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
         getMidiAccess: getMidiAccessState, setMidiAccess: setMidiAccessState,
         getArmedTrackId: getArmedTrackIdState,
