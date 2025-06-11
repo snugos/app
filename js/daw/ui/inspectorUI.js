@@ -1,7 +1,7 @@
-// js/ui/inspectorUI.js
+// js/daw/ui/inspectorUI.js
 
-import { createDropZoneHTML, setupGenericDropZoneListeners, drawWaveform } from '../utils.js';
-import * as Constants from '../constants.js';
+import { createDropZoneHTML, setupGenericDropZoneListeners, drawWaveform } from '../../utils.js'; // Path updated
+import * as Constants from '../../constants.js'; // Path updated
 
 let localAppServices = {};
 
@@ -416,7 +416,6 @@ function buildInstrumentSamplerControls(track, container) {
             </div>
         </div>
     `;
-
     const dzContainerEl = container.querySelector(`#dropZoneContainer-instrument-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
     setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
