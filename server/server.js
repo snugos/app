@@ -1,8 +1,9 @@
-// server.js - SnugOS Dedicated API Server with Profiles, Projects, and more
+// server.js - SnugOS Dedicated API Server with Profiles & Backgrounds
 
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
@@ -31,38 +32,38 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // --- Database Initialization ---
 const initializeDatabase = async () => {
-    // Query to create the 'profiles' table with new columns
     const createProfilesTableQuery = `
         CREATE TABLE IF NOT EXISTS profiles (
             id SERIAL PRIMARY KEY,
             username VARCHAR(50) UNIQUE NOT NULL,
             password_hash VARCHAR(100) NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            background_url TEXT,
-            bio TEXT,
-            avatar_url TEXT
+            background_url TEXT
         );
     `;
-    // Queries to add columns if they don't exist, for backward compatibility
-    const alterTableQueries = [
-        `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS background_url TEXT;`,
-        `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;`,
-        `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;`
-    ];
-    
+    const alterProfilesTableQuery = `
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS background_url TEXT;
+    `;
+    const createFollowersTableQuery = `
+        CREATE TABLE IF NOT EXISTS followers (
+            follower_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            followed_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (follower_id, followed_id)
+        );
+    `;
     try {
         await pool.query(createProfilesTableQuery);
-        for (const query of alterTableQueries) {
-            await pool.query(query);
-        }
-        console.log('[DB] "profiles" table checked/created successfully.');
+        await pool.query(alterProfilesTableQuery);
+        await pool.query(createFollowersTableQuery);
+        console.log('[DB] All tables checked/created successfully.');
     } catch (err) {
-        console.error('[DB] Error initializing database table:', err.stack);
+        console.error('[DB] Error initializing database tables:', err.stack);
     }
 };
 
 // --- Middleware ---
-app.use(express.json({ limit: '50mb' })); // Increase body limit for project data
+app.use(express.json());
 app.use(cors());
 
 // Authentication Middleware to protect routes
@@ -70,10 +71,10 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
 
-    if (token == null) return res.sendStatus(401);
+    if (token == null) return res.sendStatus(401); // if there isn't any token
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) return res.sendStatus(403); // if token is no longer valid
         req.user = user;
         next();
     });
@@ -81,78 +82,139 @@ const authenticateToken = (req, res, next) => {
 
 // === API Endpoints ===
 
-// --- User Account Endpoints ---
-app.post('/api/register', async (req, res) => {
+// User Registration Endpoint
+app.post('/api/register', async (request, response) => {
     try {
-        const { username, password } = req.body;
+        const { username, password } = request.body;
         if (!username || !password || password.length < 6) {
-            return res.status(400).json({ message: 'Username and a password of at least 6 characters are required.' });
+            return response.status(400).json({ success: false, message: 'Username and a password of at least 6 characters are required.' });
         }
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-        const newUser = await pool.query(
+
+        const newProfile = await pool.query(
             "INSERT INTO profiles (username, password_hash) VALUES ($1, $2) RETURNING id, username",
             [username, passwordHash]
         );
-        res.status(201).json(newUser.rows[0]);
-    } catch (err) {
-        if (err.code === '23505') {
-            return res.status(409).json({ message: 'Username already exists.' });
+
+        response.status(201).json({ success: true, user: newProfile.rows[0] });
+
+    } catch (error) {
+        console.error("[Register] Error:", error);
+        if (error.code === '23505') {
+            return response.status(409).json({ success: false, message: 'Username already exists.' });
         }
-        res.status(500).json({ message: 'Server error during registration.' });
+        response.status(500).json({ success: false, message: 'Server error during registration.' });
     }
 });
 
-app.post('/api/login', async (req, res) => {
+// User Login Endpoint
+app.post('/api/login', async (request, response) => {
     try {
-        const { username, password } = req.body;
+        const { username, password } = request.body;
         const result = await pool.query("SELECT * FROM profiles WHERE username = $1", [username]);
-        const user = result.rows[0];
-        if (!user) return res.status(401).json({ message: 'Invalid credentials.' });
+        const profile = result.rows[0];
 
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) return res.status(401).json({ message: 'Invalid credentials.' });
+        if (!profile) {
+            return response.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
 
-        const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
-        res.json({ token, user: { id: user.id, username: user.username } });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error during login.' });
-    }
-});
+        const isMatch = await bcrypt.compare(password, profile.password_hash);
+        if (!isMatch) {
+            return response.status(401).json({ success: false, message: 'Invalid credentials.' });
+        }
 
-// --- Profile Customization Endpoints ---
-app.get('/api/profiles/me', authenticateToken, async (req, res) => {
-    try {
-        const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio, avatar_url FROM profiles WHERE id = $1", [req.user.id]);
-        res.json(profileResult.rows[0]);
-    } catch (err) {
-        res.status(500).json({ message: 'Error fetching user profile.' });
-    }
-});
-
-app.put('/api/profiles/me', authenticateToken, async (req, res) => {
-    try {
-        const { bio } = req.body; // Add other fields like social links later
-        const updatedProfile = await pool.query(
-            "UPDATE profiles SET bio = $1 WHERE id = $2 RETURNING id, username, bio",
-            [bio, req.user.id]
+        const token = jwt.sign(
+            { id: profile.id, username: profile.username },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
         );
-        res.json(updatedProfile.rows[0]);
-    } catch (err) {
-        res.status(500).json({ message: 'Error updating profile.' });
+
+        response.json({ success: true, token, user: { id: profile.id, username: profile.username } });
+
+    } catch (error) {
+        console.error("[Login] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error during login.' });
     }
 });
 
-app.put('/api/profiles/me/background', authenticateToken, upload.single('backgroundFile'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ message: 'No file uploaded.' });
+// Secure endpoint to get the currently logged-in user's profile
+app.get('/api/profile/me', authenticateToken, async (request, response) => {
     try {
-        const fileName = `backgrounds/${req.user.id}-${Date.now()}-${req.file.originalname}`;
-        const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: fileName, Body: req.file.buffer, ACL: 'public-read', ContentType: req.file.mimetype };
+        const userId = request.user.id;
+        const profileResult = await pool.query(
+            "SELECT id, username, created_at, background_url FROM profiles WHERE id = $1",
+            [userId]
+        );
+        const profile = profileResult.rows[0];
+        if (!profile) {
+            return response.status(404).json({ success: false, message: 'Current user profile not found.' });
+        }
+        response.json({ success: true, profile });
+    } catch (error) {
+        console.error("[Get My Profile] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching current user profile.' });
+    }
+});
+
+// Endpoint to update a user's background
+app.put('/api/profile/background', authenticateToken, upload.single('backgroundFile'), async (request, response) => {
+    if (!request.file) {
+        return response.status(400).json({ success: false, message: 'No file uploaded.' });
+    }
+    try {
+        const file = request.file;
+        const userId = request.user.id;
+        const fileName = `backgrounds/${userId}-${Date.now()}-${file.originalname}`;
+
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: fileName,
+            Body: file.buffer,
+            ACL: 'public-read',
+            ContentType: file.mimetype
+        };
+
         const data = await s3.upload(uploadParams).promise();
-        await pool.query("UPDATE profiles SET background_url = $1 WHERE id = $2", [data.Location, req.user.id]);
-        res.json({ backgroundUrl: data.Location });
-    } catch (err) {
-        res.status(500).json({ message: 'Error uploading file.' });
+        const backgroundUrl = data.Location;
+
+        await pool.query(
+            "UPDATE profiles SET background_url = $1 WHERE id = $2",
+            [backgroundUrl, userId]
+        );
+        response.json({ success: true, backgroundUrl });
+
+    } catch (error) {
+        console.error("[Background Upload] Error:", error);
+        response.status(500).json({ success: false, message: 'Error uploading file.' });
+    }
+});
+
+// Public Profile Endpoint
+app.get('/api/profiles/:username', async (request, response) => {
+    try {
+        const { username } = request.params;
+        const profileResult = await pool.query(
+            "SELECT id, username, created_at, background_url FROM profiles WHERE username = $1",
+            [username]
+        );
+        const profile = profileResult.rows[0];
+        if (!profile) {
+            return response.status(404).json({ success: false, message: 'Profile not found.' });
+        }
+        response.json({
+            success: true,
+            profile: {
+                id: profile.id,
+                username: profile.username,
+                memberSince: profile.created_at,
+                backgroundUrl: profile.background_url
+            },
+            projects: [] 
+        });
+    } catch (error) {
+        console.error("[Get Profile] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching profile.' });
     }
 });
 
