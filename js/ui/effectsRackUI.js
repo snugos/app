@@ -16,7 +16,8 @@ function refreshEffectsRack(windowInstance) {
     if (ownerType === 'track') { //
         owner = localAppServices.getTrackById(parseInt(ownerId)); //
     } else {
-        owner = localAppServices.getMasterEffects(); //
+        // For master, the 'owner' is not a Track object, but the effects array itself
+        owner = { effects: { activeEffects: localAppServices.getMasterEffects() } }; // Create a dummy owner object for consistency
     }
 
     if (!owner) return; //
@@ -32,7 +33,7 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     return `<div id="effectsRackContent-${ownerId}" class="p-2 space-y-2 overflow-y-auto h-full text-black dark:text-white">
         <h3 class="text-sm font-semibold">${ownerName}</h3>
         <div id="effectsList-${ownerId}" class="space-y-1 min-h-[50px] border rounded p-1 bg-white dark:bg-black border-black dark:border-white"></div>
-        <button id="addEffectBtn-${ownerId}" class="w-full text-xs px-2 py-1 border rounded bg-black text-white border-black hover:bg-white hover:text-black dark:bg-white dark:text-black dark:border-white dark:hover:bg-black dark:hover:text-white">+ Add Effect</button>
+        <button id="addEffectBtn-${ownerId}" class="w-full text-xs px-2 py-1 border rounded bg-black text-white border-black hover:bg-white hover:text-black dark:bg-white dark:hover:text-white">+ Add Effect</button>
         <div id="effectControlsContainer-${ownerId}" class="mt-2 space-y-2 border-t border-black dark:border-white pt-2"></div>
     </div>`; //
 }
@@ -63,8 +64,9 @@ export function openMasterEffectsRackWindow(savedState = null) {
         localAppServices.getOpenWindows().get(windowId).restore(); //
         return; //
     }
-    const masterEffects = localAppServices.getMasterEffects(); //
-    const content = buildModularEffectsRackDOM(masterEffects, 'master'); //
+    // For master, pass a dummy owner object that contains the effects array in the same structure as a Track's effects.activeEffects
+    const masterOwner = { effects: { activeEffects: localAppServices.getMasterEffects() } }; //
+    const content = buildModularEffectsRackDOM(masterOwner, 'master'); //
     
     const rackOptions = {  //
         width: 350, height: 400, minWidth: 300, minHeight: 250,
@@ -73,7 +75,7 @@ export function openMasterEffectsRackWindow(savedState = null) {
     if (savedState) Object.assign(rackOptions, savedState); //
 
     const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, rackOptions); //
-    attachEffectsRackListeners(masterEffects, 'master', rackWindow.element); //
+    attachEffectsRackListeners(masterOwner, 'master', rackWindow.element); //
 }
 
 function attachEffectsRackListeners(owner, ownerType, rackEl) {
@@ -91,7 +93,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
     const ownerId = (ownerType === 'track') ? owner.id : 'master'; //
     
     // FIX: Get the effects array from the correct place
-    const effects = (ownerType === 'track') ? owner.effects.activeEffects : localAppServices.getMasterEffects(); //
+    const effects = owner.effects.activeEffects; // Access effects from the owner object's effects property
     
     listDiv.innerHTML = ''; //
 
@@ -111,8 +113,8 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
             effectDiv.addEventListener('click', (e) => { //
                 if (e.target.tagName === 'BUTTON') { //
                     // FIX: Call the method on the track's effects manager
-                    if (ownerType === 'track') owner.effects.removeEffect(effect.id); //
-                    else localAppServices.removeMasterEffect(effect.id); //
+                    if (ownerType === 'track') owner.effects.removeEffect(effect.id); // Correctly calls removeEffect on Track's EffectChain
+                    else localAppServices.removeMasterEffect(effect.id); // Correctly calls global master remove function
                 } else {
                     selectedEffectId[ownerId] = effect.id; //
                     renderEffectsList(owner, ownerType, listDiv, controlsContainer); //
@@ -134,7 +136,7 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
     if (!controlsContainer) return; //
     
     // FIX: Get the effects array from the correct place
-    const effects = (ownerType === 'track') ? owner.effects.activeEffects : localAppServices.getMasterEffects(); //
+    const effects = owner.effects.activeEffects; // Access effects from the owner object's effects property
     const effect = effects.find(e => e.id === effectId); //
     
     if (!effect) { //
@@ -164,8 +166,8 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                     initialValue: currentValue,
                     onValueChange: (val) => {
                         // FIX: Call the method on the track's effects manager
-                        if (ownerType === 'track') owner.effects.updateEffectParam(effectId, paramDef.key, val); //
-                        else localAppServices.updateMasterEffectParam(effectId, paramDef.key, val); //
+                        if (ownerType === 'track') owner.effects.updateEffectParam(effectId, paramDef.key, val); // Correctly calls updateEffectParam on Track's EffectChain
+                        else localAppServices.updateMasterEffectParam(effectId, paramDef.key, val); // Correctly calls global master update function
                     }
                 }, localAppServices);
                 controlWrapper.appendChild(knob.element); //
@@ -191,9 +193,9 @@ function showAddEffectModal(owner, ownerType) {
             const effectType = li.dataset.effect; //
             // FIX: Call the method on the track's effects manager
             if (ownerType === 'track') { //
-                owner.effects.addEffect(effectType); //
+                owner.effects.addEffect(effectType); // Correctly calls addEffect on Track's EffectChain
             } else {
-                localAppServices.addMasterEffect(effectType); //
+                localAppServices.addMasterEffect(effectType); // Correctly calls global master add function
             }
             modal.overlay.remove(); //
         });
