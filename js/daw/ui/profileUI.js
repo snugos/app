@@ -19,7 +19,9 @@ export async function openProfileWindow(username) {
     }
 
     const windowId = `profile-${username}`;
+    // Use getOpenWindows from monolithic state
     if (localAppServices.getOpenWindows?.().has(windowId)) {
+        // Use getWindowById from monolithic state
         localAppServices.getWindowById(windowId).focus();
         return;
     }
@@ -71,16 +73,12 @@ function buildProfileUI(container, profileData, projectsData) {
     // This HTML structure uses TailwindCSS classes for styling
     container.innerHTML = `
         <div class="h-full bg-white dark:bg-gray-900 text-black dark:text-white">
-            <!-- Header and Avatar Section -->
             <div class="relative h-32 bg-gray-200 dark:bg-gray-700">
-                <!-- Banner Image Placeholder -->
                 <div class="absolute bottom-0 left-4 translate-y-1/2 w-24 h-24 rounded-full border-4 border-white dark:border-gray-900 bg-gray-500 flex items-center justify-center">
-                    <!-- Avatar Placeholder -->
                     <span class="text-4xl text-white">${profileData.username.charAt(0).toUpperCase()}</span>
                 </div>
             </div>
 
-            <!-- User Info and Actions Section -->
             <div class="pt-16 px-6 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-2xl font-bold">${profileData.username}</h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400">Member since ${joinDate}</p>
@@ -89,11 +87,9 @@ function buildProfileUI(container, profileData, projectsData) {
                 </div>
             </div>
 
-            <!-- Projects Section -->
             <div class="p-6">
                 <h3 class="text-lg font-semibold">Public Projects</h3>
                 <div id="profile-projects-list" class="mt-4">
-                    <!-- Projects will be rendered here -->
                     <p class="text-gray-500 italic">No public projects yet.</p>
                 </div>
             </div>
