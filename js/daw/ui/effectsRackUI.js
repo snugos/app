@@ -1,14 +1,11 @@
 // js/daw/ui/effectsRackUI.js
 
-// Removed import { createKnob } from '../../knobUI.js'; as createKnob is global
-// Removed import { AVAILABLE_EFFECTS, getEffectDefaultParams } from '../../effectsRegistry.js'; as they are global
-// Removed specific imports for getMasterEffects from state.js as they are global
+// Removed imports as functions will be global or accessed via localAppServices
 
 let localAppServices = {}; //
 let selectedEffectId = {}; // Keyed by ownerId //
 
-// Removed export
-function initializeEffectsRackUI(appServices) {
+export function initializeEffectsRackUI(appServices) { // Export re-added
     localAppServices = appServices; //
 }
 
@@ -19,11 +16,9 @@ function refreshEffectsRack(windowInstance) {
     
     let owner; //
     if (ownerType === 'track') { //
-        // getTrackByIdState is global
-        owner = localAppServices.getTrackById(parseInt(ownerId)); //
+        owner = localAppServices.getTrackById(parseInt(ownerId)); // getTrackByIdState is global
     } else {
-        // getMasterEffectsState is global
-        owner = { effects: { activeEffects: getMasterEffectsState() } }; // Create a dummy owner object for consistency
+        owner = { effects: { activeEffects: getMasterEffectsState() } }; // getMasterEffectsState is global
     }
 
     if (!owner) return; //
@@ -44,16 +39,12 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
     </div>`; //
 }
 
-// Removed export
-function openTrackEffectsRackWindow(trackId, savedState = null) {
-    // getTrackByIdState is global
-    const track = localAppServices.getTrackById(trackId); //
+export function openTrackEffectsRackWindow(trackId, savedState = null) { // Export re-added
+    const track = localAppServices.getTrackById(trackId); // getTrackByIdState is global
     if (!track) return null; //
     const windowId = `effectsRack-${trackId}`; //
-    // getOpenWindowsState is global
-    if (getOpenWindowsState().has(windowId) && !savedState) { //
-        // getWindowByIdState is global
-        getWindowByIdState(windowId).restore(); //
+    if (getOpenWindowsState().has(windowId) && !savedState) { // getOpenWindowsState is global
+        getWindowByIdState(windowId).restore(); // getWindowByIdState is global
         return; //
     }
     const content = buildModularEffectsRackDOM(track, 'track'); //
@@ -64,22 +55,17 @@ function openTrackEffectsRackWindow(trackId, savedState = null) {
     };
     if (savedState) Object.assign(rackOptions, savedState); //
 
-    // SnugWindow is global
-    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, rackOptions); //
+    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, rackOptions); // SnugWindow is global
     attachEffectsRackListeners(track, 'track', rackWindow.element); //
 }
 
-// Removed export
-function openMasterEffectsRackWindow(savedState = null) {
+export function openMasterEffectsRackWindow(savedState = null) { // Export re-added
     const windowId = 'masterEffectsRack'; //
-    // getOpenWindowsState is global
-    if (getOpenWindowsState().has(windowId) && !savedState) { //
-        // getWindowByIdState is global
-        getWindowByIdState(windowId).restore(); //
+    if (getOpenWindowsState().has(windowId) && !savedState) { // getOpenWindowsState is global
+        getWindowByIdState(windowId).restore(); // getWindowByIdState is global
         return; //
     }
-    // getMasterEffectsState is global
-    const masterOwner = { effects: { activeEffects: getMasterEffectsState() } }; //
+    const masterOwner = { effects: { activeEffects: getMasterEffectsState() } }; // getMasterEffectsState is global
     const content = buildModularEffectsRackDOM(masterOwner, 'master'); //
     
     const rackOptions = {  //
@@ -88,8 +74,7 @@ function openMasterEffectsRackWindow(savedState = null) {
     };
     if (savedState) Object.assign(rackOptions, savedState); //
 
-    // SnugWindow is global
-    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, rackOptions); //
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, rackOptions); // SnugWindow is global
     attachEffectsRackListeners(masterOwner, 'master', rackWindow.element); //
 }
 
@@ -103,13 +88,11 @@ function attachEffectsRackListeners(owner, ownerType, rackEl) {
     renderEffectsList(owner, ownerType, listDiv, controlsContainer); //
 }
 
-// Removed export
-function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
+export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) { // Export re-added
     if (!listDiv) return; //
     const ownerId = (ownerType === 'track') ? owner.id : 'master'; //
     
-    // AVAILABLE_EFFECTS is global
-    const effects = owner.effects.activeEffects; // Access effects from the owner object's effects property
+    const effects = owner.effects.activeEffects; //
     
     listDiv.innerHTML = ''; //
 
@@ -128,9 +111,8 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
 
             effectDiv.addEventListener('click', (e) => { //
                 if (e.target.tagName === 'BUTTON') { //
-                    // removeMasterEffectFromState is global
-                    if (ownerType === 'track') owner.effects.removeEffect(effect.id); // Correctly calls removeEffect on Track's EffectChain
-                    else removeMasterEffectFromState(effect.id); // Correctly calls global master remove function
+                    if (ownerType === 'track') owner.effects.removeEffect(effect.id); //
+                    else removeMasterEffectFromState(effect.id); // removeMasterEffectFromState is global
                 } else {
                     selectedEffectId[ownerId] = effect.id; //
                     renderEffectsList(owner, ownerType, listDiv, controlsContainer); //
@@ -148,12 +130,10 @@ function renderEffectsList(owner, ownerType, listDiv, controlsContainer) {
     }
 }
 
-// Removed export
-function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
+export function renderEffectControls(owner, ownerType, effectId, controlsContainer) { // Export re-added
     if (!controlsContainer) return; //
     
-    // AVAILABLE_EFFECTS is global
-    const effects = owner.effects.activeEffects; // Access effects from the owner object's effects property
+    const effects = owner.effects.activeEffects; //
     const effect = effects.find(e => e.id === effectId); //
     
     if (!effect) { //
@@ -161,8 +141,7 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
         return; //
     }
 
-    // getEffectParamDefinitions is global
-    const paramDefinitions = getEffectParamDefinitions(effect.type) || []; //
+    const paramDefinitions = getEffectParamDefinitions(effect.type) || []; // getEffectParamDefinitions is global
     const effectName = AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type; // AVAILABLE_EFFECTS is global
     controlsContainer.innerHTML = `<h4 class="text-xs font-bold border-b border-black dark:border-white mb-2 pb-1">${effectName} Controls</h4>`; //
     
@@ -176,17 +155,15 @@ function renderEffectControls(owner, ownerType, effectId, controlsContainer) {
             paramDef.key.split('.').forEach(k => { currentValue = currentValue?.[k]; }); //
 
             if (paramDef.type === 'knob') { //
-                // createKnob is global
-                const knob = createKnob({ //
+                const knob = createKnob({ // createKnob is global
                     label: paramDef.label,
                     min: paramDef.min, max: paramDef.max, step: paramDef.step,
                     decimals: paramDef.decimals,
                     displaySuffix: paramDef.displaySuffix || '',
                     initialValue: currentValue,
                     onValueChange: (val) => {
-                        // updateMasterEffectParamInState is global
-                        if (ownerType === 'track') owner.effects.updateEffectParam(effectId, paramDef.key, val); // Correctly calls updateEffectParam on Track's EffectChain
-                        else updateMasterEffectParamInState(effectId, paramDef.key, val); // Correctly calls global master update function
+                        if (ownerType === 'track') owner.effects.updateEffectParam(effectId, paramDef.key, val); //
+                        else updateMasterEffectParamInState(effectId, paramDef.key, val); // updateMasterEffectParamInState is global
                     }
                 }, localAppServices);
                 controlWrapper.appendChild(knob.element); //
@@ -212,17 +189,15 @@ function showAddEffectModal(owner, ownerType) {
         action: () => { /* no specific action needed, modal will close by default */ }
     }]; //
 
-    // showCustomModal is global
-    const modal = showCustomModal(`Add Effect to ${ownerName}`, content, buttons); // Changed empty array to 'buttons' variable
+    const modal = showCustomModal(`Add Effect to ${ownerName}`, content, buttons); // showCustomModal is global
 
     modal.contentDiv.querySelectorAll('li').forEach(li => { //
         li.addEventListener('click', () => { //
             const effectType = li.dataset.effect; //
-            // addMasterEffectToState is global
             if (ownerType === 'track') { //
-                owner.effects.addEffect(effectType); // Correctly calls addEffect on Track's EffectChain
+                owner.effects.addEffect(effectType); //
             } else {
-                addMasterEffectToState(effectType); // Correctly calls global master add function
+                addMasterEffectToState(effectType); // addMasterEffectToState is global
             }
             modal.overlay.remove(); // This closes the modal
         });
