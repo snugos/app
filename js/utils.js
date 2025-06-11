@@ -1,272 +1,138 @@
 // js/utils.js - Utility Functions Module
 
-export function showNotification(message, duration = 3000) {
-    const notificationArea = document.getElementById('notification-area'); //
-    if (!notificationArea) { //
-        console.error("CRITICAL: Notification area ('notification-area') not found in DOM. Message:", message); //
-        alert(`Notification: ${message}`); //
-        return; //
-    }
-    try { //
-        const notification = document.createElement('div'); //
-        notification.className = 'notification-message'; //
-        notification.textContent = message; //
-        notificationArea.appendChild(notification); //
+import {
+    getOpenWindowsState,
+    getWindowByIdState,
+} from './state/state.js'; // Path updated
 
-        setTimeout(() => { //
-            notification.classList.add('show'); //
+export function showNotification(message, duration = 3000) {
+    const notificationArea = document.getElementById('notification-area');
+    if (!notificationArea) {
+        console.error("CRITICAL: Notification area ('notification-area') not found in DOM. Message:", message);
+        // Fallback to alert if notification area is missing (e.g., during initial setup)
+        alert(`Notification: ${message}`);
+        return;
+    }
+    try {
+        const notification = document.createElement('div');
+        notification.className = 'notification-message';
+        notification.textContent = message;
+        notificationArea.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('show');
         }, 10); 
 
-        setTimeout(() => { //
-            notification.classList.remove('show'); //
-            setTimeout(() => { //
-                if (notification.parentElement) { //
-                    notificationArea.removeChild(notification); //
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notificationArea.removeChild(notification);
                 }
-            }, 300); //
-        }, duration); //
+            }, 300);
+        }, duration);
     } catch (error) {
-        console.error("Error displaying notification:", error, "Message:", message); //
+        console.error("Error displaying notification:", error, "Message:", message);
     }
 }
 
 export function showCustomModal(title, contentHTML, buttonsConfig = []) {
-    const modalContainer = document.getElementById('modalContainer'); //
-    if (!modalContainer) return; //
+    const modalContainer = document.getElementById('modalContainer');
+    if (!modalContainer) return;
 
-    const overlay = document.createElement('div'); //
-    overlay.className = 'modal-overlay'; //
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
     
-    const dialog = document.createElement('div'); //
-    dialog.className = 'modal-dialog'; //
+    const dialog = document.createElement('div');
+    dialog.className = 'modal-dialog';
 
-    const titleBar = document.createElement('div'); //
-    titleBar.className = 'modal-title-bar'; //
-    titleBar.textContent = title; //
-    dialog.appendChild(titleBar); //
+    const titleBar = document.createElement('div');
+    titleBar.className = 'modal-title-bar';
+    titleBar.textContent = title;
+    dialog.appendChild(titleBar);
 
-    const contentDiv = document.createElement('div'); //
-    contentDiv.className = 'modal-content'; //
-    if (typeof contentHTML === 'string') { //
-        contentDiv.innerHTML = contentHTML; //
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'modal-content';
+    if (typeof contentHTML === 'string') {
+        contentDiv.innerHTML = contentHTML;
     } else {
-        contentDiv.appendChild(contentHTML); //
+        contentDiv.appendChild(contentHTML);
     }
-    dialog.appendChild(contentDiv); //
+    dialog.appendChild(contentDiv);
 
-    if (buttonsConfig.length > 0) { //
-        const buttonsDiv = document.createElement('div'); //
-        buttonsDiv.className = 'modal-buttons'; //
-        buttonsConfig.forEach(btnConfig => { //
-            const button = document.createElement('button'); //
-            button.textContent = btnConfig.label; //
-            button.addEventListener('click', () => { //
-                btnConfig.action?.(); //
-                overlay.remove(); //
+    if (buttonsConfig.length > 0) {
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.className = 'modal-buttons';
+        buttonsConfig.forEach(btnConfig => {
+            const button = document.createElement('button');
+            button.textContent = btnConfig.label;
+            button.addEventListener('click', () => {
+                btnConfig.action?.();
+                overlay.remove();
             });
-            buttonsDiv.appendChild(button); //
+            buttonsDiv.appendChild(button);
         });
-        dialog.appendChild(buttonsDiv); //
+        dialog.appendChild(buttonsDiv);
     }
     
-    overlay.appendChild(dialog); //
-    modalContainer.appendChild(overlay); //
+    overlay.appendChild(dialog);
+    modalContainer.appendChild(overlay);
 
-    return { overlay, contentDiv }; //
+    return { overlay, contentDiv };
 }
 
-export function showConfirmationDialog(title, message, onConfirm, onCancel) {
-    const content = document.createElement('p'); //
-    content.textContent = message; //
-
-    const buttons = [ //
-        { label: 'Cancel', action: onCancel },
-        { label: 'Confirm', action: onConfirm }
-    ];
-
-    showCustomModal(title, content, buttons); //
-}
-
-let activeContextMenu = null; //
-let activeCloseListener = null; //
-let activeBlurListener = null; //
-
-function removeActiveContextMenuListeners() {
-    if (activeCloseListener) { //
-        document.removeEventListener('click', activeCloseListener, { capture: true }); //
-        document.removeEventListener('contextmenu', activeCloseListener, { capture: true }); //
-        activeCloseListener = null; //
+export function createContextMenu(event, menuItems, appServices) {
+    // Remove any existing context menus
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) {
+        existingMenu.remove();
     }
-    if (activeBlurListener) { //
-        window.removeEventListener('blur', activeBlurListener); //
-        activeBlurListener = null; //
-    }
-}
 
-export function createContextMenu(event, menuItems, appServicesForZIndex) {
-    removeActiveContextMenuListeners(); //
-    event.preventDefault(); //
-    event.stopPropagation(); //
-    
-    const menu = document.createElement('div'); //
-    menu.className = 'context-menu'; //
-    const ul = document.createElement('ul'); //
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.style.left = `${event.clientX}px`;
+    menu.style.top = `${event.clientY}px`;
 
-    menuItems.forEach(item => { //
-        if (item.separator) { //
-            const li = document.createElement('li'); //
-            li.innerHTML = '<hr>'; //
-            ul.appendChild(li); //
-            return; //
-        }
+    const ul = document.createElement('ul');
+    menu.appendChild(ul);
 
-        const li = document.createElement('li'); //
-        li.className = 'context-menu-item'; //
-        li.textContent = item.label; //
-        if (item.disabled) { //
-            li.classList.add('disabled'); //
+    menuItems.forEach(item => {
+        if (item.separator) {
+            const hr = document.createElement('hr');
+            hr.className = 'context-menu-separator';
+            ul.appendChild(hr);
         } else {
-            li.addEventListener('click', (e) => { //
-                e.stopPropagation(); //
-                item.action(); //
-                closeMenu(); //
-            });
-        }
-        ul.appendChild(li); //
-    });
-
-    menu.appendChild(ul); //
-    document.body.appendChild(menu); //
-    activeContextMenu = menu; //
-
-    const zIndex = appServicesForZIndex?.incrementHighestZ ? appServicesForZIndex.incrementHighestZ() : 10003; //
-    menu.style.zIndex = zIndex; //
-
-    const { clientX: mouseX, clientY: mouseY } = event; //
-    const { offsetWidth: menuWidth, offsetHeight: menuHeight } = menu; //
-    const { innerWidth: viewportWidth, innerHeight: viewportHeight } = window; //
-
-    let top = mouseY; //
-    let left = mouseX; //
-
-    if (mouseX + menuWidth > viewportWidth) { //
-        left = mouseX - menuWidth; //
-    }
-    if (mouseY + menuHeight > viewportHeight) { //
-        top = mouseY - menuHeight; //
-    }
-    menu.style.top = `${Math.max(0, top)}px`; //
-    menu.style.left = `${Math.max(0, left)}px`; //
-    
-    const closeMenu = () => { //
-        if (activeContextMenu) { //
-            try { //
-                activeContextMenu.remove(); //
-            } catch (removeError) { /* ignore */ }
-            activeContextMenu = null; //
-        }
-        removeActiveContextMenuListeners(); //
-    };
-
-    activeCloseListener = closeMenu; //
-    activeBlurListener = closeMenu; //
-
-    setTimeout(() => { //
-        document.addEventListener('click', activeCloseListener, { capture: true }); //
-        document.addEventListener('contextmenu', activeCloseListener, { capture: true }); //
-        window.addEventListener('blur', activeBlurListener); //
-    }, 0);
-}
-
-export function createDropZoneHTML(inputId, labelText = 'Drop file or click to load') {
-    return `
-        <div class="drop-zone" data-input-id="${inputId}">
-            <p>${labelText}</p>
-            <input type="file" id="${inputId}" class="hidden">
-        </div>
-    `; //
-}
-
-export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex, onDropSound, onFileLoad) {
-    if (!dropZoneElement) return; //
-
-    dropZoneElement.addEventListener('dragover', (e) => { //
-        e.preventDefault(); //
-        e.stopPropagation(); //
-        dropZoneElement.classList.add('dragover'); //
-    });
-
-    dropZoneElement.addEventListener('dragleave', (e) => { //
-        e.preventDefault(); //
-        e.stopPropagation(); //
-        dropZoneElement.classList.remove('dragover'); //
-    });
-
-    dropZoneElement.addEventListener('drop', (e) => { //
-        e.preventDefault(); //
-        e.stopPropagation(); //
-        dropZoneElement.classList.remove('dragover'); //
-
-        if (e.dataTransfer.files.length > 0) { //
-            const file = e.dataTransfer.files[0]; //
-            const event = { target: { files: [file] } }; //
-            if (padIndex !== null) { //
-                onFileLoad(event, trackId, padIndex); //
+            const li = document.createElement('li');
+            li.className = 'context-menu-item';
+            li.textContent = item.label;
+            if (item.disabled) {
+                li.classList.add('disabled');
             } else {
-                onFileLoad(event, trackId, trackTypeHint); //
+                li.addEventListener('click', () => {
+                    item.action();
+                    menu.remove(); // Close menu after action
+                });
             }
-        } else {
-            const jsonDataString = e.dataTransfer.getData("application/json"); //
-            if (jsonDataString) { //
-                const soundData = JSON.parse(jsonDataString); //
-                onDropSound(soundData, trackId, trackTypeHint, padIndex); //
-            }
+            ul.appendChild(li);
         }
     });
 
-    if (dropZoneElement.dataset.inputId) { //
-        dropZoneElement.addEventListener('click', (e) => { //
-            document.getElementById(dropZoneElement.dataset.inputId)?.click(); //
-        });
-    }
-}
-
-export function drawWaveform(canvas, audioBuffer, color = '#FFFFFF') {
-    if (!canvas || !audioBuffer) return; //
-    const ctx = canvas.getContext('2d'); //
-    const width = canvas.width; //
-    const height = canvas.height; //
-    
-    ctx.clearRect(0, 0, width, height); //
-
-    const data = audioBuffer.getChannelData(0); //
-    const step = Math.ceil(data.length / width); //
-    const amp = height / 2; //
-    
-    ctx.fillStyle = color; //
-    
-    for (let i = 0; i < width; i++) { //
-        let min = 1.0; //
-        let max = -1.0; //
-
-        for (let j = 0; j < step; j++) { //
-            const datum = data[(i * step) + j]; //
-            if (datum < min) { //
-                min = datum; //
-            }
-            if (datum > max) { //
-                max = datum; //
-            }
+    // Close menu when clicking outside
+    const closeMenu = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+            document.removeEventListener('contextmenu', closeMenu); // Also remove on subsequent right-clicks
         }
-        
-        const rectHeight = Math.max(1, (max - min) * amp); //
-        const y = (1 + min) * amp; //
-        ctx.fillRect(i, y, 1, rectHeight); //
-    }
+    };
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('contextmenu', closeMenu); // To close if another right-click happens outside
+
+    document.body.appendChild(menu);
 }
+
 
 /**
- * NEW UTILITY FUNCTION
  * Converts a Base64 encoded string to a Blob object.
  * @param {string} base64 - The Base64 string.
  * @param {string} contentType - The MIME type of the content.
@@ -280,4 +146,92 @@ export function base64ToBlob(base64, contentType = 'audio/mpeg') {
     }
     const byteArray = new Uint8Array(byteNumbers);
     return new Blob([byteArray], { type: contentType });
+}
+
+/**
+ * Draws a waveform on a given canvas element.
+ * @param {HTMLCanvasElement} canvas - The canvas element to draw on.
+ * @param {AudioBuffer} audioBuffer - The AudioBuffer containing the audio data.
+ * @param {string} color - The color of the waveform (default: 'black').
+ */
+export function drawWaveform(canvas, audioBuffer, color = 'black') {
+    if (!canvas || !audioBuffer) return;
+
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    ctx.clearRect(0, 0, width, height);
+
+    const data = audioBuffer.getChannelData(0);
+    const step = Math.ceil(data.length / width);
+    const amp = height / 2;
+    
+    ctx.fillStyle = color;
+    
+    for (let i = 0; i < width; i++) {
+        let min = 1.0;
+        let max = -1.0;
+
+        for (let j = 0; j < step; j++) {
+            const datum = data[(i * step) + j];
+            if (datum < min) {
+                min = datum;
+            }
+            if (datum > max) {
+                max = datum;
+            }
+        }
+        
+        const rectHeight = Math.max(1, (max - min) * amp);
+        const y = (1 + min) * amp;
+        ctx.fillRect(i, y, 1, rectHeight);
+    }
+}
+
+
+// Generic drop zone listeners for dragging files from local system or sound browser
+export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) {
+    dropZoneElement.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZoneElement.classList.add('dragover');
+    });
+
+    dropZoneElement.addEventListener('dragleave', () => {
+        dropZoneElement.classList.remove('dragover');
+    });
+
+    dropZoneElement.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dropZoneElement.classList.remove('dragover');
+
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('audio/')) {
+                loadFromFileCallback(e, trackId, trackTypeHint, padIndex); // Use the callback
+            } else {
+                showNotification(`Unsupported file type: ${file.type}`, 3000);
+            }
+        } else {
+            const jsonData = e.dataTransfer.getData("application/json");
+            if (jsonData) {
+                try {
+                    const data = JSON.parse(jsonData);
+                    if (data.type === 'sound-browser-item') {
+                        loadFromSoundBrowserCallback(data, trackId, trackTypeHint, padIndex); // Use the callback
+                    }
+                } catch (jsonError) {
+                    console.error("Error parsing dropped JSON data:", jsonError);
+                    showNotification("Error processing dropped data.", 3000);
+                }
+            }
+        }
+    });
+
+    // Attach click listener to trigger file input
+    const fileInput = dropZoneElement.querySelector('input[type="file"]');
+    if (fileInput) {
+        dropZoneElement.addEventListener('click', () => fileInput.click());
+    }
 }
