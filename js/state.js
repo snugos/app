@@ -87,7 +87,7 @@ export {
     getCurrentLibraryName as getCurrentLibraryNameState,
     setCurrentLibraryName as setCurrentLibraryNameState,
     getCurrentSoundBrowserPath as getCurrentSoundBrowserPathState,
-    setCurrentSoundBrowserPath as setCurrentSoundBrowserPathState, // <-- THE FIX IS HERE
+    setCurrentSoundBrowserPath as setCurrentSoundBrowserPathState,
     getPreviewPlayer as getPreviewPlayerState,
     setPreviewPlayer as setPreviewPlayerState,
     addFileToSoundLibrary as addFileToSoundLibraryInternal,
