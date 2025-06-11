@@ -16,7 +16,7 @@ import {
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode, forceStopAllAudio
-} from './audoio/audio.js'; // Path updated
+} from './audio/audio.js'; // Path updated
 import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; // Path updated
 import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; // Path updated
 import { 
