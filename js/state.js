@@ -15,7 +15,7 @@ let openWindowsMap = new Map();
 let highestZ = 100;
 
 let masterEffectsChainState = [];
-let masterGainValueState = Tone.dbToGain(0); 
+let masterGainValueState = Tone.dbToGain(0);
 
 let midiAccessGlobal = null;
 let activeMIDIInputGlobal = null;
@@ -29,30 +29,30 @@ let previewPlayerGlobal = null;
 
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
 
-let activeSequencerTrackId = null; 
+let activeSequencerTrackId = null;
 let soloedTrackId = null;
 let armedTrackId = null;
 let isRecordingGlobal = false;
 let recordingTrackIdGlobal = null;
-let recordingStartTimeGlobal = 0; 
+let recordingStartTimeGlobal = 0;
 let midiRecordMode = 'overdub';
 
-let playbackMode = 'piano-roll'; 
+let playbackMode = 'piano-roll';
 
 let isReconstructingDAW = false;
 let undoStack = [];
 let redoStack = [];
 const MAX_UNDO_HISTORY = 50;
 
-let selectedTimelineClipInfo = { 
+let selectedTimelineClipInfo = {
     clipId: null,
     trackId: null,
-    originalLeft: 0, 
+    originalLeft: 0,
     originalStart: 0,
     pixelsPerSecond: 0,
 };
 
-let currentUserThemePreference = 'system'; 
+let currentUserThemePreference = 'system';
 
 let appServices = {};
 
