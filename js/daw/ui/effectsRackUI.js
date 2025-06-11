@@ -1,4 +1,4 @@
-// js/ui/effectsRackUI.js
+// js/daw/ui/effectsRackUI.js
 
 let localAppServices = {}; //
 let selectedEffectId = {}; // Keyed by ownerId //
@@ -187,7 +187,15 @@ function showAddEffectModal(owner, ownerType) {
     }
     content += '</ul>'; //
     
-    const modal = localAppServices.showCustomModal(`Add Effect to ${ownerName}`, content, []); //
+    // Add a "Cancel" button to the buttonsConfig
+    const buttons = [{
+        label: 'Cancel',
+        action: () => { /* no specific action needed, modal will close by default */ }
+    }]; //
+
+    // Pass the buttons array to showCustomModal
+    const modal = localAppServices.showCustomModal(`Add Effect to ${ownerName}`, content, buttons); // Changed empty array to 'buttons' variable
+
     modal.contentDiv.querySelectorAll('li').forEach(li => { //
         li.addEventListener('click', () => { //
             const effectType = li.dataset.effect; //
@@ -197,7 +205,7 @@ function showAddEffectModal(owner, ownerType) {
             } else {
                 localAppServices.addMasterEffect(effectType); // Correctly calls global master add function
             }
-            modal.overlay.remove(); //
+            modal.overlay.remove(); // This closes the modal
         });
     });
 }
