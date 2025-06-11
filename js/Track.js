@@ -2,18 +2,16 @@
 
 import * as Constants from './constants.js';
 import { EffectChain } from './EffectChain.js';
-// FIX: Corrected the import name from 'getEffectDefaultParamsFromRegistry' to 'getEffectDefaultParams'
-import { createEffectInstance, getEffectDefaultParams, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { SequenceManager } from './SequenceManager.js';
 import { ClipManager } from './ClipManager.js';
-
+import { getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 
 export class Track {
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
         this.appServices = appServices || {};
-        
+
         this.name = initialData?.name || `${type} Track ${this.id}`;
         if (type === 'DrumSampler') {
             this.name = initialData?.name || `Sampler (Pads) ${this.id}`;
@@ -41,12 +39,11 @@ export class Track {
         }
         this.input.connect(this.outputNode);
         
-        // --- Instantiate and Delegate to Managers ---
+        // --- Delegate to Managers ---
         this.effects = new EffectChain(this, this.appServices);
         this.sequences = new SequenceManager(this, this.appServices);
         this.clips = new ClipManager(this, this.appServices);
-        
-        // --- Initialize Instrument and Properties ---
+
         this.instrument = null;
         this.synthEngineType = null;
         this.synthParams = {};
@@ -86,6 +83,50 @@ export class Track {
             this.sequences.createNewSequence("Sequence 1", 64, true);
         }
     }
+
+    // NEW: Quantize method
+    quantizeNotes(sequenceId, noteIdsToQuantize, gridSize = '16n') {
+        const sequence = this.sequences.sequences.find(s => s.id === sequenceId);
+        if (!sequence || noteIdsToQuantize.size === 0) return;
+
+        this.appServices.captureStateForUndo?.(`Quantize notes in ${this.name}`);
+
+        const ticksPerGrid = Tone.Time(gridSize).toTicks();
+
+        const newData = JSON.parse(JSON.stringify(sequence.data));
+        const notesToMove = [];
+
+        noteIdsToQuantize.forEach(noteId => {
+            const [pitchIndex, timeStep] = noteId.split('-').map(Number);
+            const noteData = sequence.data[pitchIndex]?.[timeStep];
+            if (noteData) {
+                const currentTicks = Tone.Time(`${timeStep}*16n`).toTicks();
+                const nearestTick = Math.round(currentTicks / ticksPerGrid) * ticksPerGrid;
+                const newTimeStep = Math.round(nearestTick / (Tone.Transport.PPQ / 4));
+
+                if (newTimeStep !== timeStep && newData[pitchIndex]?.[newTimeStep] === null) {
+                    notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, newTime: newTimeStep, data: noteData });
+                }
+            }
+        });
+
+        notesToMove.forEach(note => {
+            newData[note.oldPitch][note.oldTime] = null;
+        });
+        notesToMove.forEach(note => {
+            newData[note.oldPitch][note.newTime] = note.data;
+        });
+        
+        sequence.data = newData;
+        this.sequences.recreateToneSequence();
+        
+        const pianoRollWindow = this.appServices.getWindowById?.(`pianoRollWin-${this.id}`);
+        if (pianoRollWindow && !pianoRollWindow.isMinimized) {
+            pianoRollWindow.close(true);
+            this.appServices.openPianoRollWindow(this.id, sequenceId);
+        }
+    }
+
 
     serialize() {
         return {
