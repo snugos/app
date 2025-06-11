@@ -393,6 +393,7 @@ function buildDrumSamplerControls(track, container) {
 }
 
 function buildInstrumentSamplerControls(track, container) {
+    // Add HTML structure for Instrument Sampler controls, including placeholders for knobs
     container.innerHTML = `
         <div class="panel">
             <h3 class="font-bold mb-2">Instrument Sampler</h3>
@@ -400,8 +401,22 @@ function buildInstrumentSamplerControls(track, container) {
                 ${createDropZoneHTML(`instrument-file-input-${track.id}`)}
             </div>
             <canvas id="waveform-canvas-instrument-${track.id}" class="waveform-canvas mt-2"></canvas>
+            
+            <div class="mt-4 grid grid-cols-2 gap-2">
+                <div id="instrumentSamplerVolume-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerPitchShift-${track.id}-placeholder"></div>
+            </div>
+
+            <div class="mt-2 grid grid-cols-2 gap-x-2 gap-y-1">
+                <h4 class="col-span-2 font-semibold mt-2">Envelope</h4>
+                <div id="instrumentSamplerEnvAttack-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerEnvDecay-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerEnvSustain-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerEnvRelease-${track.id}-placeholder"></div>
+            </div>
         </div>
     `;
+
     const dzContainerEl = container.querySelector(`#dropZoneContainer-instrument-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
     setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
@@ -413,4 +428,84 @@ function buildInstrumentSamplerControls(track, container) {
     if(track.instrumentSamplerSettings.audioBuffer) {
         drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
     }
+
+    // --- NEW: Add knob creation logic for Instrument Sampler parameters ---
+
+    // Volume Knob
+    const volumeKnobPlaceholder = container.querySelector(`#instrumentSamplerVolume-${track.id}-placeholder`);
+    if (volumeKnobPlaceholder) {
+        const initialVolume = track.previousVolumeBeforeMute; // Use track's main volume for now
+        const volumeKnob = localAppServices.createKnob({
+            label: 'Volume', min: 0, max: 1.2, step: 0.01,
+            initialValue: initialVolume,
+            onValueChange: (val, oldVal, fromInteraction) => {
+                track.setVolume(val, fromInteraction); // Update track's master volume
+            }
+        }, localAppServices);
+        volumeKnobPlaceholder.appendChild(volumeKnob.element);
+    }
+
+    // Pitch Shift Knob
+    const pitchShiftKnobPlaceholder = container.querySelector(`#instrumentSamplerPitchShift-${track.id}-placeholder`);
+    if (pitchShiftKnobPlaceholder) {
+        const initialPitchShift = track.instrumentSamplerSettings.pitchShift || 0;
+        const pitchShiftKnob = localAppServices.createKnob({
+            label: 'Pitch', min: -24, max: 24, step: 1, initialValue: initialPitchShift,
+            onValueChange: (val) => {
+                track.instrumentSamplerSettings.pitchShift = val;
+                // If instrument is already loaded, update its pitch
+                if (track.instrument && track.instrumentSamplerSettings.audioBuffer && track.instrumentSamplerSettings.audioBuffer.loaded) {
+                    const rootNote = track.instrumentSamplerSettings.rootNote || 'C4';
+                    const playbackRate = Math.pow(2, val / 12);
+                    // Sampler's triggerAttack will apply this playbackRate based on note difference,
+                    // but we can ensure the base pitch shift is applied if the sampler has a 'pitch' property
+                    // Tone.js Sampler doesn't directly have a global pitch property like an oscillator.
+                    // Instead, pitch shifting applies per note, so we store it and apply on trigger.
+                    // For now, this knob just updates the setting. The Sampler logic needs to read this.
+                }
+            }
+        }, localAppServices);
+        pitchShiftKnobPlaceholder.appendChild(pitchShiftKnob.element);
+    }
+
+    // Envelope Knobs (Attack, Decay, Sustain, Release)
+    const envelopeParams = [
+        { id: 'EnvAttack', label: 'Attack', min: 0.001, max: 2, step: 0.001, decimals: 3, path: 'envelope.attack' },
+        { id: 'EnvDecay', label: 'Decay', min: 0.01, max: 2, step: 0.01, decimals: 2, path: 'envelope.decay' },
+        { id: 'EnvSustain', label: 'Sustain', min: 0, max: 1, step: 0.01, decimals: 2, path: 'envelope.sustain' },
+        { id: 'EnvRelease', label: 'Release', min: 0.01, max: 5, step: 0.01, decimals: 2, path: 'envelope.release' },
+    ];
+
+    envelopeParams.forEach(paramDef => {
+        const placeholder = container.querySelector(`#instrumentSampler${paramDef.id}-${track.id}-placeholder`);
+        if (placeholder) {
+            const initialValue = getNestedParam(track.instrumentSamplerSettings, paramDef.path) !== undefined
+                                 ? getNestedParam(track.instrumentSamplerSettings, paramDef.path)
+                                 : paramDef.defaultValue; // Use defaultValue from a common source if available
+
+            const knob = localAppServices.createKnob({
+                label: paramDef.label,
+                min: paramDef.min,
+                max: paramDef.max,
+                step: paramDef.step,
+                initialValue: initialValue,
+                decimals: paramDef.decimals,
+                onValueChange: (val) => {
+                    // Update track's instrumentSamplerSettings
+                    let current = track.instrumentSamplerSettings;
+                    const keys = paramDef.path.split('.');
+                    for (let i = 0; i < keys.length - 1; i++) {
+                        current = current[keys[i]] = current[keys[i]] || {};
+                    }
+                    current[keys[keys.length - 1]] = val;
+
+                    // Apply to the Tone.js instrument if it exists
+                    if (track.instrument && track.instrument[keys[0]] && typeof track.instrument[keys[0]].set === 'function') {
+                        track.instrument[keys[0]].set({ [keys.slice(1).join('.')]: val });
+                    }
+                }
+            }, localAppServices);
+            placeholder.appendChild(knob.element);
+        }
+    });
 }
