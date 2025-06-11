@@ -1,7 +1,8 @@
 // js/welcome.js - Logic for the Welcome Page
 
-import { showLoginModal, handleBackgroundUpload } from './auth.js';
+import { showLoginModal, handleBackgroundUpload, checkInitialAuthState } from './auth.js'; // Import checkInitialAuthState too
 import { showNotification } from './utils.js';
+import { applyCustomBackground } from './main.js'; // NEW: Import applyCustomBackground from main.js
 
 // No Tone.js or complex DAW services needed here, as it's a simple welcome screen.
 // We only need a subset of functionalities.
@@ -16,24 +17,11 @@ function initializeWelcomePage() {
 
     attachEventListeners();
     updateClockDisplay();
-    // checkInitialAuthState(); // Re-enable if you want login state persistent on welcome page
-    applyUserThemePreference();
-    
-    // Attempt to load and apply any saved background image from local storage/IndexedDB
-    // This part requires access to db.js and auth.js logic for user assets
-    // For now, let's keep it simple and assume a default if not logged in
-    const savedTheme = localStorage.getItem('snugos-theme');
-    if (savedTheme) {
-        // This is a placeholder for a more robust theme application if you have a state manager
-        // For now, directly apply.
-        if (savedTheme === 'light') {
-            document.body.classList.remove('theme-dark');
-            document.body.classList.add('theme-light');
-        } else {
-            document.body.classList.remove('theme-light');
-            document.body.classList.add('theme-dark');
-        }
-    }
+    checkInitialAuthState(appServices); // Pass appServices to checkInitialAuthState
+    applyUserThemePreference(); // This applies the theme, but not background
+
+    // The logic to apply custom background from IndexedDB needs to be in auth.js,
+    // which already tries to do it. Just ensure checkInitialAuthState is called.
 }
 
 function attachEventListeners() {
