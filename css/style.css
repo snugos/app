@@ -89,7 +89,7 @@
     --accent-soloed-text: #000000;
     --accent-soloed: #FFFFFF;
     --accent-armed-text: #000000;
-    --accent-armed: #FFFFFF;
+    --accent-armed: #FF0000; /* Red for armed/recording */
     --accent-active-text: #000000;
     --accent-active: #FFFFFF;
     --accent-sequencer-step-border: #000000;
@@ -205,7 +205,7 @@
     --accent-soloed-text: #FFFFFF;
     --accent-soloed: #000000;
     --accent-armed-text: #FFFFFF;
-    --accent-armed: #000000;
+    --accent-armed: #CC0000; /* Darker red for armed */
     --accent-active-text: #FFFFFF;
     --accent-active: #000000;
     --accent-sequencer-step-border: #FFFFFF;
@@ -223,7 +223,6 @@
     --scrollbar-thumb-border: #FFFFFF;
     --scrollbar-corner: #FFFFFF;
     
-    /* FIX: Add dedicated piano key colors */
     --piano-key-white-bg: #FFFFFF;
     --piano-key-black-bg: #4a4a4a;
     --piano-key-white-text: #000000;
@@ -486,10 +485,46 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 .knob-value { font-size: 0.75rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
 
 /* --- General Button Active States --- */
-button.muted { background-color: var(--accent-muted) !important; color: var(--accent-muted-text) !important; }
-button.soloed { background-color: var(--accent-soloed) !important; color: var(--accent-soloed-text) !important; }
-button.armed, button.recording { background-color: var(--accent-armed) !important; color: var(--accent-armed-text) !important; }
-button.active { background-color: var(--accent-active) !important; color: var(--accent-active-text) !important; }
+/* Ensure these styles explicitly define sizing/padding to prevent enlargement */
+button.muted,
+button.soloed,
+button.armed, /* include arm button for consistency */
+button.recording, /* include recording button for consistency */
+button.active {
+    /* Re-apply standard button sizing/layout properties from your .taskbar-button styles or #topTaskbar button styles */
+    padding: 5px 8px; /* Example: adjust to match your intended button size */
+    border: 1px solid var(--border-button); /* Example: ensure border is consistent */
+    border-radius: 3px; /* Example: maintain border-radius */
+    font-size: 11px; /* Example: match font size */
+    height: 30px; /* Explicit height to prevent enlargement */
+    box-sizing: border-box; /* Include padding and border in element's total width/height */
+    display: inline-flex; /* Use flex to align content */
+    align-items: center; /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    flex-shrink: 0; /* Prevent shrinking if in a flex container */
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; /* Maintain smooth transition */
+}
+
+/* Specific color overrides for muted/soloed/armed/active states */
+button.muted {
+    background-color: var(--accent-muted) !important;
+    color: var(--accent-muted-text) !important;
+}
+
+button.soloed {
+    background-color: var(--accent-soloed) !important;
+    color: var(--accent-soloed-text) !important;
+}
+
+button.armed, button.recording { /* For armed/recording button */
+    background-color: var(--accent-armed) !important;
+    color: var(--accent-armed-text) !important;
+}
+
+button.active { /* For general active state, like playback mode toggle */
+    background-color: var(--accent-active) !important;
+    color: var(--accent-active-text) !important;
+}
 
 /* --- Piano Roll / Sequencer Styling --- */
 .sequencer-container .controls { position: sticky; top: 0; left: 0; background-color: var(--bg-title-bar); z-index: 30; border-bottom: 1px solid var(--border-primary); padding: 0.25rem; color: var(--text-title-bar);}
@@ -552,7 +587,6 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 .window-resizer { position: absolute; width: 10px; height: 10px; right: 0; bottom: 0; cursor: nwse-resize; }
 .modular-effects-rack {}
 .effects-list-container {}
-.effect-controls-panel {}
 .effect-item.dragging { opacity: 0.5; background-color: var(--bg-button-hover); }
 .effect-item.dragover-target { border-top: 2px solid var(--accent-focus); }
 .drop-zone-relink-container { margin-top: 5px; }
