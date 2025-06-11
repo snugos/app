@@ -1,6 +1,6 @@
-// js/audio/recording.js
+// js/daw/audio/recording.js
 
-import { getRecordingStartTimeState } from '../state.js';
+import { getRecordingStartTimeState } from '../state/state.js'; // Path updated
 
 let localAppServices = {};
 let mic = null;
