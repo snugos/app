@@ -1,6 +1,19 @@
-// js/ui/soundBrowserUI.js - Sound Browser UI Management
-import * as Constants from '../constants.js';
-import { showNotification } from '../utils.js';
+// js/daw/ui/soundBrowserUI.js - Sound Browser UI Management
+import * as Constants from '../../constants.js'; // Path updated
+import { showNotification } from '../../utils.js'; // Path updated
+import {
+    getLoadedZipFiles as getLoadedZipFilesGlobal,
+    setLoadedZipFiles as setLoadedZipFilesGlobal,
+    getSoundLibraryFileTrees as getSoundLibraryFileTreesGlobal,
+    setSoundLibraryFileTrees as setSoundLibraryFileTreesGlobal,
+    getCurrentLibraryName as getCurrentLibraryNameGlobal,
+    setCurrentLibraryName as setCurrentLibraryNameGlobal,
+    getCurrentSoundBrowserPath as getCurrentSoundBrowserPathGlobal,
+    setCurrentSoundBrowserPath as setCurrentSoundBrowserPathGlobal,
+    getPreviewPlayer as getPreviewPlayerGlobal,
+    setPreviewPlayer as setPreviewPlayerGlobal
+} from '../state/state.js'; // Path updated
+
 
 let localAppServices = {};
 let selectedSoundForPreviewData = null; 
@@ -23,14 +36,14 @@ export function initializeSoundBrowserUI(appServicesFromMain) {
 }
 
 export function renderSoundBrowser(pathToRender) {
-    const browserWindow = localAppServices.getWindowById?.('soundBrowser'); //
-    if (!browserWindow?.element || browserWindow.isMinimized) { //
+    const browserWindow = localAppServices.getWindowById?.('soundBrowser');
+    if (!browserWindow?.element || browserWindow.isMinimized) {
         return;
     }
 
-    const currentPath = pathToRender !== undefined ? pathToRender : (localAppServices.getCurrentSoundBrowserPath?.() || []); //
+    const currentPath = pathToRender !== undefined ? pathToRender : (getCurrentSoundBrowserPathGlobal?.() || []); // Use global state
     
-    const allFileTrees = localAppServices.getSoundLibraryFileTrees?.() || {}; //
+    const allFileTrees = getSoundLibraryFileTreesGlobal?.(); // Use global state
     
     const virtualRoot = {};
     virtualRoot['Imports'] = { type: 'folder', children: allFileTrees['Imports'] || {} };
@@ -38,7 +51,7 @@ export function renderSoundBrowser(pathToRender) {
         if (allFileTrees[libName]) {
             virtualRoot[libName] = { type: 'folder', children: allFileTrees[libName] };
         } else {
-            const loadedZips = localAppServices.getLoadedZipFiles?.() || {};
+            const loadedZips = getLoadedZipFilesGlobal?.(); // Use global state
             // Updated to show loading status more accurately
             virtualRoot[libName] = { 
                 type: 'placeholder', 
@@ -58,11 +71,11 @@ export function renderSoundBrowser(pathToRender) {
             }
         }
     } catch (e) {
-        localAppServices.setCurrentSoundBrowserPath?.([]);
+        setCurrentSoundBrowserPathGlobal?.([]); // Use global state
         currentTreeNode = virtualRoot;
     }
     
-    renderDirectoryView(currentPath, currentTreeNode); //
+    renderDirectoryView(currentPath, currentTreeNode);
 }
 
 function getLibraryNameFromPath(pathArray) {
@@ -74,11 +87,11 @@ function getLibraryNameFromPath(pathArray) {
 }
 
 export function openSoundBrowserWindow(savedState = null) {
-    const windowId = 'soundBrowser'; //
-    const openWindows = localAppServices.getOpenWindows?.() || new Map(); //
+    const windowId = 'soundBrowser';
+    const openWindows = localAppServices.getOpenWindows?.() || new Map();
 
-    if (openWindows.has(windowId) && !savedState) { //
-        openWindows.get(windowId).restore(); //
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
         return openWindows.get(windowId);
     }
     
@@ -98,14 +111,14 @@ export function openSoundBrowserWindow(savedState = null) {
     const browserOptions = { width: 350, height: 500 };
     if (savedState) Object.assign(browserOptions, savedState);
 
-    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions); //
+    const browserWindow = localAppServices.createWindow(windowId, 'Sound Browser', contentHTML, browserOptions);
 
-    if (browserWindow?.element) { //
-        const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn'); //
+    if (browserWindow?.element) {
+        const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
         
         Object.entries(Constants.soundLibraries || {}).forEach(([name, url]) => {
-            localAppServices.fetchSoundLibrary?.(name, url) //
-                .then(() => renderSoundBrowser()) // <-- THIS IS THE KEY FIX: Re-render after EACH library loads successfully
+            localAppServices.fetchSoundLibrary?.(name, url)
+                .then(() => renderSoundBrowser())
                 .catch(error => console.error(`Failed to load library ${name}:`, error));
         });
 
@@ -114,19 +127,19 @@ export function openSoundBrowserWindow(savedState = null) {
         previewBtn?.addEventListener('click', async () => {
             if (selectedSoundForPreviewData) {
                 try {
-                    const blob = await localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData); //
+                    const blob = await localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData);
                     if (blob) {
-                        let previewPlayer = localAppServices.getPreviewPlayer(); //
+                        let previewPlayer = getPreviewPlayerGlobal?.(); // Use global state
                         if (!previewPlayer) {
-                            previewPlayer = new Tone.Player().toDestination(); //
-                            localAppServices.setPreviewPlayer(previewPlayer); //
+                            previewPlayer = new Tone.Player().toDestination();
+                            setPreviewPlayerGlobal?.(previewPlayer); // Use global state
                         }
                         const objectURL = URL.createObjectURL(blob);
                         await previewPlayer.load(objectURL);
                         previewPlayer.start();
                     }
                 } catch (err) {
-                    showNotification("Error playing preview.", "error"); //
+                    showNotification("Error playing preview.", "error");
                     console.error("Preview Error:", err);
                 }
             }
@@ -136,29 +149,29 @@ export function openSoundBrowserWindow(savedState = null) {
 }
 
 export function renderDirectoryView(pathArray, treeNode) {
-    const browserWindow = localAppServices.getWindowById?.('soundBrowser'); //
-    if (!browserWindow?.element) return; //
+    const browserWindow = localAppServices.getWindowById?.('soundBrowser');
+    if (!browserWindow?.element) return;
 
-    const dirView = browserWindow.element.querySelector('#soundBrowserDirectoryView'); //
-    const pathDisplay = browserWindow.element.querySelector('#soundBrowserPathDisplay'); //
-    const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn'); //
+    const dirView = browserWindow.element.querySelector('#soundBrowserDirectoryView');
+    const pathDisplay = browserWindow.element.querySelector('#soundBrowserPathDisplay');
+    const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
     
-    if (!dirView || !pathDisplay) return; //
+    if (!dirView || !pathDisplay) return;
 
-    dirView.innerHTML = ''; //
-    pathDisplay.textContent = `/${pathArray.join('/')}`; //
-    if (previewBtn) previewBtn.disabled = true; //
+    dirView.innerHTML = '';
+    pathDisplay.textContent = `/${pathArray.join('/')}`;
+    if (previewBtn) previewBtn.disabled = true;
 
     if (pathArray.length > 0) {
-        const parentDiv = document.createElement('div'); //
-        parentDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center'; //
-        parentDiv.innerHTML = `<span class="mr-2 text-lg font-bold text-black dark:text-white">↩</span> .. (Parent)`; //
+        const parentDiv = document.createElement('div');
+        parentDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
+        parentDiv.innerHTML = `<span class="mr-2 text-lg font-bold text-black dark:text-white">↩</span> .. (Parent)`;
         parentDiv.addEventListener('click', () => {
-            const newPath = pathArray.slice(0, -1); //
-            localAppServices.setCurrentSoundBrowserPath?.(newPath); //
-            renderSoundBrowser(newPath); //
+            const newPath = pathArray.slice(0, -1);
+            setCurrentSoundBrowserPathGlobal?.(newPath); // Use global state
+            renderSoundBrowser(newPath);
         });
-        dirView.appendChild(parentDiv); //
+        dirView.appendChild(parentDiv);
     }
 
     // Sort entries: folders first, then files, both alphabetically
@@ -177,56 +190,56 @@ export function renderDirectoryView(pathArray, treeNode) {
     });
 
     entries.forEach(([name, item]) => {
-        const itemDiv = document.createElement('div'); //
-        itemDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center'; //
-        itemDiv.title = item.displayName || name; // Use displayName for title if available
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'p-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black cursor-pointer rounded flex items-center';
+        itemDiv.title = item.displayName || name;
 
-        const icon = document.createElement('span'); //
-        icon.className = 'mr-2 flex-shrink-0 text-black dark:text-white'; //
-        icon.innerHTML = item.type === 'folder' || item.type === 'placeholder' ? FOLDER_ICON_SVG : FILE_ICON_SVG; //
+        const icon = document.createElement('span');
+        icon.className = 'mr-2 flex-shrink-0 text-black dark:text-white';
+        icon.innerHTML = item.type === 'folder' || item.type === 'placeholder' ? FOLDER_ICON_SVG : FILE_ICON_SVG;
 
-        const nameSpan = document.createElement('span'); //
-        nameSpan.className = 'truncate'; //
-        nameSpan.textContent = item.displayName || name; // Display displayName for placeholders
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'truncate';
+        nameSpan.textContent = item.displayName || name;
 
-        itemDiv.appendChild(icon); //
-        itemDiv.appendChild(nameSpan); //
+        itemDiv.appendChild(icon);
+        itemDiv.appendChild(nameSpan);
 
         if (item.type === 'folder') {
             itemDiv.addEventListener('click', () => {
-                const newPath = [...pathArray, name]; //
-                localAppServices.setCurrentSoundBrowserPath?.(newPath); //
-                renderSoundBrowser(newPath); //
+                const newPath = [...pathArray, name];
+                setCurrentSoundBrowserPathGlobal?.(newPath); // Use global state
+                renderSoundBrowser(newPath);
             });
         } else if (item.type === 'file') {
-            itemDiv.draggable = true; //
+            itemDiv.draggable = true;
             itemDiv.addEventListener('dragstart', (e) => {
-                const libraryName = getLibraryNameFromPath(pathArray); //
+                const libraryName = getLibraryNameFromPath(pathArray);
                 if (!libraryName) { e.preventDefault(); return; }
-                const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.fullPath, fileName: name }; //
-                e.dataTransfer.setData('application/json', JSON.stringify(dragData)); //
-                e.dataTransfer.effectAllowed = 'copy'; //
+                const dragData = { type: 'sound-browser-item', libraryName, fullPath: item.fullPath, fileName: name };
+                e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                e.dataTransfer.effectAllowed = 'copy';
             });
             itemDiv.addEventListener('click', () => {
                 dirView.querySelectorAll('.bg-black.text-white, .dark\\:bg-white.dark\\:text-black').forEach(el => {
                     el.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
                 });
                 itemDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black');
-                const libraryName = getLibraryNameFromPath(pathArray); //
-                selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name }; //
-                if (previewBtn) previewBtn.disabled = false; //
+                const libraryName = getLibraryNameFromPath(pathArray);
+                selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name };
+                if (previewBtn) previewBtn.disabled = false;
             });
             itemDiv.addEventListener('dblclick', () => {
-                const armedTrackId = localAppServices.getArmedTrackId?.(); //
-                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null; //
+                const armedTrackId = localAppServices.getArmedTrackId?.();
+                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
 
                 if (armedTrack) {
-                    const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name }; //
+                    const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name };
                     let targetIndex = null;
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
-                    localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex); //
+                    localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex);
                 } else {
-                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500); //
+                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500);
                 }
             });
         } else if (item.type === 'placeholder') {
@@ -235,6 +248,6 @@ export function renderDirectoryView(pathArray, treeNode) {
             itemDiv.title = item.status === 'error' ? `Error loading ${name}` : `Loading ${name}...`;
             // No click handler for placeholders, as they are not browsable yet
         }
-        dirView.appendChild(itemDiv); //
+        dirView.appendChild(itemDiv);
     });
 }
