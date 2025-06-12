@@ -1,23 +1,29 @@
 // js/welcome/welcome.js - Logic for the Welcome Page
 
-import { showNotification, showCustomModal } from './welcomeUtils.js';
+import { showNotification, showCustomModal, base64ToBlob } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
+
+// This object is used to pass functions to the SnugWindow class.
+// It needs to be populated with globally available functions from your other scripts.
+const appServices = {};
 
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-// NOTE: This is the new function that will launch your game window
+/**
+ * Creates and opens a new window containing the Tetris game.
+ * The game itself is loaded from tetris.html into an iframe.
+ */
 function openGameWindow() {
     const windowId = 'tetrisGame';
-    // Use the global getWindowByIdState function
+    // Use the global getWindowByIdState function from state.js
     if (typeof getWindowByIdState !== 'undefined' && getWindowByIdState(windowId)) {
         getWindowByIdState(windowId).focus();
         return;
     }
 
-    // The content is an iframe that loads your game file
     const content = document.createElement('iframe');
-    content.src = 'tetris.html';
+    content.src = 'tetris.html'; // The game file to load
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
@@ -29,24 +35,54 @@ function openGameWindow() {
         minHeight: 600,
     };
 
-    // Use the global SnugWindow constructor
+    // Ensure SnugWindow class from SnugWindow.js is available
     if (typeof SnugWindow !== 'undefined') {
         new SnugWindow(windowId, 'Snugtris', content, options, appServices);
     } else {
-        console.error("SnugWindow is not defined. Make sure SnugWindow.js is loaded.");
+        console.error("SnugWindow class is not defined. Ensure SnugWindow.js is loaded before welcome.js.");
+        showNotification("Error: Could not open game window component.", 3000);
     }
 }
 
+
 function initializeWelcomePage() {
-    // ... (Your existing appServices setup)
+    // Populate the appServices object. These functions are expected to be globally available
+    // from the other script files you load in index.html (like utils.js, state.js).
+    if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
+    if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
+    if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
+    if (typeof getWindowByIdState !== 'undefined') appServices.getWindowById = getWindowByIdState;
+    if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
+
     attachEventListeners();
     updateClockDisplay();
-    // ... (rest of your initialization)
+    checkInitialAuthState();
+    applyUserThemePreference();
     renderDesktopIcons();
 }
 
 function attachEventListeners() {
-    // ... (Your existing event listeners)
+    // Top taskbar buttons
+    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
+    document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
+
+    // Start Menu buttons
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
+    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
+    document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
+    document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+
+    // Custom background upload for welcome page
+    const customBgInput = document.getElementById('customBgInput');
+    customBgInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleBackgroundUpload(file);
+        }
+        e.target.value = null;
+    });
 }
 
 function renderDesktopIcons() {
@@ -56,7 +92,6 @@ function renderDesktopIcons() {
     desktopIconsContainer.innerHTML = '';
 
     const icons = [
-        // Your existing icons...
         {
             id: 'snaw-icon',
             name: 'Snaw',
@@ -83,11 +118,10 @@ function renderDesktopIcons() {
             },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
-        // NOTE: The new icon for your game
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow, // This calls the new function
+            action: openGameWindow,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -117,13 +151,11 @@ function toggleStartMenu() {
 }
 
 function launchDaw() {
-    // Navigate to the main DAW application, now named snaw.html
     window.location.href = 'snaw.html';
 }
 
 function viewProfiles() {
-    // This will open profile.html in a new tab. Profile.html has its own JS dependencies.
-    window.open('profile.html?user=testuser', '_blank'); // Replace 'testuser' as needed
+    window.open('profile.html?user=testuser', '_blank');
 }
 
 function updateClockDisplay() {
@@ -132,10 +164,9 @@ function updateClockDisplay() {
         const now = new Date();
         clockDisplay.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    setTimeout(updateClockDisplay, 1000); // Update every second
+    setTimeout(updateClockDisplay, 60000);
 }
 
-// --- Authentication & User State Logic (Self-contained for Welcome Page) ---
 async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
@@ -152,14 +183,13 @@ async function checkInitialAuthState() {
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
 
-        // Apply custom background if available and logged in
-        const backgroundBlob = await appServices.getAsset(`background-for-user-${loggedInUser.id}`);
+        const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
             applyCustomBackground(backgroundBlob);
         }
 
     } catch (e) {
-        console.error("Error during initial auth state check on welcome page:", e);
+        console.error("Error during initial auth state check:", e);
         handleLogout();
     }
 }
@@ -206,7 +236,7 @@ function showLoginModal() {
         </div>
     `;
     
-    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
+    const { overlay, contentDiv } = showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
@@ -223,7 +253,6 @@ function showLoginModal() {
         button.style.padding = '8px 15px';
         button.style.cursor = 'pointer';
         button.style.borderRadius = '3px';
-        button.style.transition = 'background-color 0.15s ease';
         button.addEventListener('mouseover', () => {
             button.style.backgroundColor = 'var(--bg-button-hover)';
             button.style.color = 'var(--text-button-hover)';
@@ -262,7 +291,7 @@ async function handleLogin(username, password) {
 
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
-            await checkInitialAuthState(); // Re-check state after login to update UI and load background
+            await checkInitialAuthState();
             showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             showNotification(`Login failed: ${data.message}`, 3000);
@@ -281,7 +310,6 @@ async function handleRegister(username, password) {
             body: JSON.stringify({ username, password })
         });
         const data = await response.json();
-
         if (data.success) {
             showNotification('Registration successful! Please log in.', 2500);
         } else {
@@ -296,13 +324,13 @@ async function handleRegister(username, password) {
 async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
         showNotification('You must be logged in to save a custom background.', 3000);
-        applyCustomBackground(file); // Still apply temporarily even if not logged in
+        applyCustomBackground(file);
         return;
     }
 
     try {
         showNotification('Saving background...', 1500);
-        await appServices.storeAsset(`background-for-user-${loggedInUser.id}`, file);
+        await storeAsset(`background-for-user-${loggedInUser.id}`, file);
         applyCustomBackground(file);
         showNotification('Background saved locally!', 2000);
     } catch (error) {
@@ -318,7 +346,6 @@ function handleLogout() {
     document.getElementById('desktop').style.backgroundImage = '';
     const existingVideo = document.getElementById('desktop-video-bg');
     if (existingVideo) existingVideo.remove();
-    
     showNotification('You have been logged out.', 2000);
 }
 
@@ -328,26 +355,18 @@ function applyCustomBackground(source) {
 
     desktopEl.style.backgroundImage = '';
     const existingVideo = desktopEl.querySelector('#desktop-video-bg');
-    if (existingVideo) {
-        existingVideo.remove();
-    }
+    if (existingVideo) existingVideo.remove();
 
     let url;
     let fileType;
-
     if (typeof source === 'string') {
         url = source;
         const extension = source.split('.').pop().toLowerCase().split('?')[0];
-        if (['mp4', 'webm', 'mov'].includes(extension)) {
-            fileType = `video/${extension}`;
-        } else {
-            fileType = 'image/jpeg'; // Assume image for other URLs
-        }
-    } else if (source instanceof Blob || source instanceof File) { // Accept Blob or File
+        fileType = ['mp4', 'webm', 'mov'].includes(extension) ? `video/${extension}` : 'image/jpeg';
+    } else if (source instanceof Blob || source instanceof File) {
         url = URL.createObjectURL(source);
         fileType = source.type;
     } else {
-        console.warn("Invalid source for applyCustomBackground:", source);
         return;
     }
 
@@ -398,7 +417,7 @@ function applyUserThemePreference() {
     } else if (preference === 'dark') {
         body.classList.remove('theme-light');
         body.classList.add('theme-dark');
-    } else { // 'system' or no preference saved
+    } else {
         if (prefersDark) {
             body.classList.remove('theme-light');
             body.classList.add('theme-dark');
@@ -421,6 +440,4 @@ function toggleFullScreen() {
     }
 }
 
-
-// Initialize the welcome page when the DOM is ready
 document.addEventListener('DOMContentLoaded', initializeWelcomePage);
