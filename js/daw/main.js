@@ -32,13 +32,13 @@ import {
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderDirectoryView, renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPushInputBtn, updateDrumPadControlsUI, createKnob
+    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob // CORRECTED: renderDrumSamplerPushInputBtn changed to renderDrumSamplerPads
 } from './ui/ui.js';
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
 // NEW: Explicitly import functions from auth.js as it is now a module
-import { initializeAuth, handleBackgroundUpload } from '../auth.js'; // CORRECTED: Added import
+import { initializeAuth, handleBackgroundUpload } from '../auth.js';
 
 // Import the new state modules
 import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState } from './state/appState.js';
@@ -274,7 +274,7 @@ async function initializeSnugOS() {
         showNotification: showNotification, createContextMenu: createContextMenu, updateTrackUI: handleTrackUIUpdate,
         showCustomModal: showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
         applyCustomBackground: applyCustomBackground,
-        handleBackgroundUpload: handleBackgroundUpload, // This now references the imported handleBackgroundUpload
+        handleBackgroundUpload: handleBackgroundUpload,
         getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack,
         removeTrack: removeTrack, getOpenWindows: getOpenWindows, getWindowById: getWindowById,
         getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ,
@@ -311,7 +311,7 @@ async function initializeSnugOS() {
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
         renderSamplePads, updateSliceEditorUI,
-        renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo,
+        renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, // CORRECTED: renderDrumSamplerPushInputBtn changed to renderDrumSamplerPads
         renderDirectoryView, renderSoundBrowser,
         drawWaveform: drawWaveform,
         handleTrackMute: handleTrackMute, handleTrackSolo: handleTrackSolo, handleTrackArm: handleTrackArm, handleRemoveTrack: handleRemoveTrack,
@@ -342,7 +342,7 @@ async function initializeSnugOS() {
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
     initializeMetronome(appServices);
-    initializeAuth(appServices); // This now references the imported initializeAuth
+    initializeAuth(appServices);
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
