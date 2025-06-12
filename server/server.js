@@ -260,6 +260,7 @@ app.get('/api/friends', authenticateToken, async (request, response) => {
     }
 });
 
+
 // --- Messaging Endpoints ---
 
 app.post('/api/messages', authenticateToken, async (request, response) => {
@@ -282,13 +283,11 @@ app.get('/api/messages/conversation/:username', authenticateToken, async (reques
     try {
         const userId = request.user.id;
         const otherUsername = request.params.username;
-
         const otherUserResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [otherUsername]);
         if (otherUserResult.rows.length === 0) {
             return response.status(404).json({ success: false, message: 'User not found.' });
         }
         const otherUserId = otherUserResult.rows[0].id;
-        
         const query = `
             SELECT m.id, m.sender_id, m.content, m.timestamp, s.username as sender_username
             FROM messages m
@@ -298,11 +297,8 @@ app.get('/api/messages/conversation/:username', authenticateToken, async (reques
             ORDER BY m.timestamp ASC;
         `;
         const result = await pool.query(query, [userId, otherUserId]);
-
         await pool.query("UPDATE messages SET read = TRUE WHERE sender_id = $1 AND recipient_id = $2", [otherUserId, userId]);
-        
         response.json({ success: true, conversation: result.rows });
-
     } catch (error) {
         console.error("[Get Conversation] Error:", error);
         response.status(500).json({ success: false, message: 'Server error while fetching conversation.' });
