@@ -1,15 +1,15 @@
 // js/daw/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
-// Removed import * as Constants from '../../constants.js'; as Constants is global
+// NOTE: Constants, Tone, Konva are loaded globally via script tags in snaw.html.
+// showNotification, createContextMenu, getClipboardData are from utils.js (loaded globally or accessed via appServices).
 
-// Import state functions directly for pianoRollUI.js module
-import { getTrackById } from '../../state/trackState.js';
-import { getOpenWindows, getWindowById } from '../../state/windowState.js';
-import { getClipboardData } from '../../state/projectState.js';
-import { getPlaybackMode } from '../../state/appState.js';
+import { getTrackById } from '../state/trackState.js'; // Corrected path
+import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
+import { showNotification, createContextMenu } from '../../utils.js'; // Corrected path
+import { getClipboardData } from '../state/projectState.js'; // Corrected path
 
 let localAppServices = {};
 export const openPianoRolls = new Map();
-export let lastActivePianoRollTrackId = null; 
+export let lastActivePianoRollTrackId = null;
 
 function getThemeColors() {
     const rootStyle = getComputedStyle(document.documentElement);
@@ -36,22 +36,22 @@ export function initializePianoRollUI(appServicesFromMain) {
 }
 
 export function openPianoRollForClip(trackId, clipId) {
-    const track = localAppServices.getTrackById?.(trackId); // Use appServices
+    const track = getTrackById?.(trackId); // Corrected from getTrackByIdState
     const clip = track?.clips.timelineClips.find(c => c.id === clipId);
 
     if (!track || !clip || clip.type !== 'midi') {
-        localAppServices.showNotification?.("Could not find a valid MIDI clip to edit.", 3000); // showNotification is global
+        showNotification?.("Could not find a valid MIDI clip to edit.", 3000); // Corrected function name
         return;
     }
 
     const tempSequenceName = `Editing: ${clip.name}`;
     const sequenceLength = clip.sequenceData[0].length;
-    const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true); 
+    const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true);
     tempSequence.data = JSON.parse(JSON.stringify(clip.sequenceData));
 
-    openPianoRollWindow(track.id, tempSequence.id); // openPianoRollWindow is exported here
+    openPianoRollWindow(track.id, tempSequence.id);
 
-    const pianoRollWindow = getWindowById(`pianoRollWin-${trackId}`); // Now imports from windowState.js
+    const pianoRollWindow = getWindowById?.(`pianoRollWin-${trackId}`); // Corrected from getWindowByIdState
     if (pianoRollWindow) {
         const originalOnClose = pianoRollWindow.onCloseCallback;
         pianoRollWindow.onCloseCallback = () => {
@@ -75,12 +75,12 @@ export function openPianoRollForClip(trackId, clipId) {
 
 
 export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) {
-    const track = localAppServices.getTrackById?.(trackId); // Use appServices
+    const track = getTrackById?.(trackId); // Corrected from getTrackByIdState
     if (!track || track.type === 'Audio') return;
 
     const windowId = `pianoRollWin-${trackId}`;
-    if (getOpenWindows().has(windowId) && !savedState) { // Now imports from windowState.js
-        getWindowById(windowId).restore(); // Now imports from windowState.js
+    if (getOpenWindows().has(windowId) && !savedState) { // Corrected from getOpenWindowsState
+        getWindowById(windowId).restore(); // Corrected from getWindowByIdState
         return;
     }
 
@@ -88,11 +88,11 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
     const activeSequence = track.sequences.sequences.find(s => s.id === sequenceId);
 
     if (!activeSequence) {
-        localAppServices.showNotification?.(`Track "${track.name}" has no valid sequence to edit.`, 3500); // showNotification is global
+        showNotification?.(`Track "${track.name}" has no valid sequence to edit.`, 3500); // Corrected function name
         return;
     }
     track.sequences.activeSequenceId = activeSequence.id;
-    
+
     const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2); // Constants is global
 
     const contentContainer = document.createElement('div');
@@ -114,7 +114,7 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
         <div id="velocityPaneContainer-${trackId}" class="flex-shrink-0 w-full h-1/5 bg-gray-200 dark:bg-gray-800 border-t-2 border-gray-400 dark:border-gray-600 overflow-x-auto overflow-y-hidden"></div>
     `;
 
-    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, { // SnugWindow is global
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, {
         width: 800, height: 500, minWidth: 500, minHeight: 300, initialContentKey: windowId,
         onCloseCallback: () => {
             openPianoRolls.delete(trackId);
@@ -314,7 +314,7 @@ function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, n
 }
 
 function redrawNotes(noteLayer, track, colors, selectedNotes) {
-    noteLayer.destroyChildren(); 
+    noteLayer.destroyChildren();
     const activeSequence = track.sequences.getActiveSequence();
     if (!activeSequence) {
         noteLayer.batchDraw();
@@ -481,7 +481,7 @@ function attachPianoRollListeners(pianoRoll) {
                     action: () => track.sequences.copyNotesToClipboard(activeSequence.id, selectedNotes)
                 });
             }
-            const clipboard = getClipboardData(); // Now imports from projectState.js
+            const clipboard = getClipboardData(); // Corrected from getClipboardData
             if (clipboard?.type === 'piano-roll-notes') {
                 menuItems.push({
                     label: `Paste ${clipboard.notes.length} Note(s)`,
@@ -499,17 +499,15 @@ function attachPianoRollListeners(pianoRoll) {
                         }
 
                         const currentActiveSequence = track.sequences.getActiveSequence();
-                        if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) {
+                        if (!currentActiveSequence || !currentActiveSequence.data[pastePitchIndex] || pasteTimeStep >= currentActiveSequence.length) {
                             return;
                         }
                         
-                        const noteExists = currentActiveSequence.data[pitchIndex][timeStep];
+                        // NOTE: This part seems to have a bug where it's using pitchIndex and timeStep
+                        // from the clicked context, instead of the calculated pastePitchIndex and pasteTimeStep
+                        // Corrected:
+                        track.sequences.pasteNotesFromClipboard(currentActiveSequence.id, pastePitchIndex, pasteTimeStep);
 
-                        if (noteExists) {
-                            track.sequences.removeNoteFromSequence(currentActiveSequence.id, pitchIndex, timeStep);
-                        } else {
-                            track.sequences.addNoteToSequence(currentActiveSequence.id, pitchIndex, timeStep);
-                        }
 
                         selectedNotes.clear();
                         redrawNotes(noteLayer, track, colors, selectedNotes);
@@ -522,8 +520,7 @@ function attachPianoRollListeners(pianoRoll) {
             menuItems.push({ label: 'Clear All Notes', action: () => track.sequences.clearSequence(activeSequence.id) });
             
             if (menuItems.length > 0) {
-                // createContextMenu is global
-                createContextMenu(e.evt, menuItems, localAppServices);
+                createContextMenu(e.evt, menuItems, localAppServices); // Corrected function name
             }
         }
     });
