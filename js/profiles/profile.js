@@ -37,15 +37,15 @@ async function openProfilePage(username) {
     try {
         const token = localStorage.getItem('snugos_token');
         // Fetch profile data and friend status in parallel
-        const [profileRes, friendStatusRes] = await Promise.all([ // Renamed followStatusRes to friendStatusRes
+        const [profileRes, friendStatusRes] = await Promise.all([
             fetch(`${SERVER_URL}/api/profiles/${username}`),
-            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, { // Changed endpoint to friend-status
+            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }) : Promise.resolve(null)
         ]);
 
         const profileData = await profileRes.json();
-        const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null; // Renamed followStatusData to friendStatusData
+        const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null;
 
         if (!profileRes.ok || !profileData.success) {
             throw new Error(profileData.message || 'Could not fetch profile.');
@@ -53,7 +53,7 @@ async function openProfilePage(username) {
 
         loggedInUser = checkLocalAuth(); // Check if current user is logged in
         currentProfileData = profileData.profile; // Store fetched profile data
-        currentProfileData.isFriend = friendStatusData?.isFriend || false; // Changed isFollowing to isFriend
+        currentProfileData.isFriend = friendStatusData?.isFriend || false; // Add friend status
 
         updateProfileUI(profileContainer, currentProfileData);
 
@@ -119,7 +119,7 @@ function updateProfileUI(container, profileData) {
         });
     }
     if (!isOwner && loggedInUser) {
-        document.getElementById('addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend)); // Changed to handleAddFriendToggle
+        document.getElementById('addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
         document.getElementById('messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
     }
 }
@@ -130,12 +130,12 @@ function updateProfileUI(container, profileData) {
 function renderViewMode(container, profileData) {
     container.innerHTML = `
         <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-2">Bio</h3>
+            <h3 class="font-semibold mb-2">Bio</h3>
             <p>${profileData.bio || 'No bio yet.'}</p>
         </div>
 
         <div>
-            <h3 class="text-lg font-semibold">Public Projects</h3>
+            <h3 class="font-semibold">Public Projects</h3>
             <div id="profile-projects-list" class="mt-4 space-y-3">
                 ${profileData.projects && profileData.projects.length > 0 ? 
                     profileData.projects.map(project => `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded shadow"><span class="font-bold">${project.name}</span> - <span>${new Date(project.createdAt).toLocaleDateString()}</span></div>`).join('')
@@ -152,7 +152,7 @@ function renderEditMode(container, profileData) {
     container.innerHTML = `
         <form id="editProfileForm" class="space-y-4">
             <div>
-                <label for="editBio" class="block text-sm font-medium mb-1">Bio</label>
+                <label for="editBio" class="block font-medium mb-1">Bio</label>
                 <textarea id="editBio" class="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700" rows="5">${profileData.bio || ''}</textarea>
             </div>
             
@@ -168,13 +168,13 @@ function renderEditMode(container, profileData) {
 }
 
 // --- Authentication & User State Logic (Self-contained for Profile Page) ---
-const checkLocalAuth = () => {
+const checkLocalAuth = () => { // Changed to const function expression
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token');
+            localStorage.removeItem('snugos_token'); // Token expired
             return null;
         }
         return { id: payload.id, username: payload.username };
@@ -228,19 +228,19 @@ function cancelEdit() {
 }
 
 // --- Add Friend/Remove Friend Feature ---
-async function handleAddFriendToggle(username, isCurrentlyFriend) { // Renamed from handleFollowToggle
+async function handleAddFriendToggle(username, isCurrentlyFriend) {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
-        showNotification('You must be logged in to add/remove friends.', 3000); // Updated notification
+        showNotification('You must be logged in to add/remove friends.', 3000);
         return;
     }
 
     const method = isCurrentlyFriend ? 'DELETE' : 'POST';
-    const action = isCurrentlyFriend ? 'Removing friend' : 'Adding friend'; // Updated action
+    const action = isCurrentlyFriend ? 'Removing friend' : 'Adding friend';
 
     try {
         showNotification(`${action} ${username}...`, 1500);
-        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, { // Changed endpoint to /friend
+        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -317,23 +317,5 @@ async function sendMessage(recipientUsername, content) {
     } catch (error) {
         showNotification(`Error sending message: ${error.message}`, 3000);
         console.error("Send Message Error:", error);
-    }
-}
-
-// --- Helper to get logged in user from localStorage (minimal auth) ---
-function checkLocalAuth() {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token'); // Token expired
-            return null;
-        }
-        return { id: payload.id, username: payload.username };
-    } catch (e) {
-        console.error("Error decoding token:", e);
-        localStorage.removeItem('snugos_token');
-        return null;
     }
 }
