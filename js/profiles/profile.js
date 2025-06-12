@@ -1,3 +1,7 @@
+// NOTE: This import statement is the fix. It makes the SnugWindow class
+// available for use within this file.
+import { SnugWindow } from '../daw/SnugWindow.js';
+
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let currentProfileData = null;
@@ -196,7 +200,7 @@ async function handleAvatarUpload(file) {
 
         showNotification("Profile picture updated!", 2000);
         const profileWindow = appServices.getWindowById(`profile-${loggedInUser.username}`);
-        if(profileWindow) loadProfilePage(loggedInUser.username); // Refresh the window content
+        if(profileWindow) openProfileWindow(loggedInUser.username);
 
     } catch (error) {
         showNotification(`Update failed: ${error.message}`, 4000);
@@ -218,7 +222,7 @@ async function saveProfile(username, dataToSave) {
         showNotification("Profile saved!", 2000);
         isEditing = false;
         const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) loadProfilePage(username);
+        if (profileWindow) openProfileWindow(username);
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
@@ -238,7 +242,7 @@ async function handleAddFriendToggle(username, isFriend) {
         if (!response.ok) throw new Error(result.message);
         showNotification(result.message, 2000);
         const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) loadProfilePage(username);
+        if (profileWindow) openProfileWindow(username);
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
@@ -272,8 +276,6 @@ async function sendMessage(recipientUsername, content) {
         showNotification(`Error: ${error.message}`, 4000);
     }
 }
-
-// --- Desktop and Global Functionality ---
 
 function attachDesktopEventListeners() {
     const desktop = document.getElementById('desktop');
@@ -391,6 +393,5 @@ function toggleFullScreen() {
 }
 
 function showLoginModal() {
-    // Basic placeholder, implement your full login form here
-    showCustomModal('Login / Register', '<p class="p-4">Login form functionality would go here.</p>', [{label: 'Close'}]);
+    showCustomModal('Login / Register', '<p class="p-4">Login functionality would go here.</p>', [{label: 'Close'}]);
 }
