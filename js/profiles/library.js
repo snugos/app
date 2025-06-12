@@ -21,6 +21,7 @@ function initAudioOnFirstGesture() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Assign appServices globally for communication between modules
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -28,43 +29,55 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.setHighestZ = setHighestZState;
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
+    appServices.createContextMenu = createContextMenu; // Global context menu function
+    appServices.showNotification = showNotification;   // Global notification function
+    appServices.showCustomModal = showCustomModal;     // Global custom modal function
 
+    // Check for existing local authentication token
     loggedInUser = checkLocalAuth();
     
+    // Attach event listeners for desktop interactions
     attachDesktopEventListeners();
+    // Apply user's theme preference
     applyUserThemePreference();
+    // Update the clock display in the taskbar
     updateClockDisplay();
+    // Initialize audio context on first user gesture
     initAudioOnFirstGesture(); 
+    // Update the UI based on authentication status
     updateAuthUI(loggedInUser);
     
+    // Set up file input listener
     const actualFileInput = document.getElementById('actualFileInput');
     actualFileInput?.addEventListener('change', e => {
         handleFileUpload(e.target.files);
-        e.target.value = null;
+        e.target.value = null; // Clear the input after file selection
     });
     
+    // Open the library window if a user is logged in, otherwise show a login prompt
     if (loggedInUser) {
         openLibraryWindow();
-        loadAndApplyGlobals();
+        loadAndApplyGlobals(); // Load user-specific global settings like background
     } else {
         showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
     }
 });
 
+/**
+ * Loads and applies global settings for the logged-in user, such as custom background.
+ */
 async function loadAndApplyGlobals() {
-    if (!loggedInUser) return;
+    if (!loggedInUser) return; // Only proceed if a user is logged in
     try {
-        const token = localStorage.getItem('snugos_token');
+        const token = localStorage.getItem('snugos_token'); // Retrieve authentication token
         const response = await fetch(`${SERVER_URL}/api/profile/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` } // Authorize the request
         });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
             const desktop = document.getElementById('desktop');
             if(desktop) {
+                // Apply background image if available
                 desktop.style.backgroundImage = `url(${data.profile.background_url})`;
                 desktop.style.backgroundSize = 'cover';
                 desktop.style.backgroundPosition = 'center';
@@ -75,12 +88,17 @@ async function loadAndApplyGlobals() {
     }
 }
 
+/**
+ * Opens the main Library window or focuses it if already open.
+ */
 function openLibraryWindow() {
     const windowId = 'library';
+    // Check if the window is already open
     if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
+    // HTML content for the Library window
     const contentHTML = `
         <div class="flex h-full" style="background-color: var(--bg-window-content);">
             <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
@@ -102,17 +120,29 @@ function openLibraryWindow() {
         </div>
     `;
     const desktopEl = document.getElementById('desktop');
-    const options = { width: Math.max(800, desktopEl.offsetWidth * 0.7), height: Math.max(600, desktopEl.offsetHeight * 0.8), x: desktopEl.offsetWidth * 0.15, y: desktopEl.offsetHeight * 0.05 };
+    // Calculate optimal window size and position
+    const options = { 
+        width: Math.max(800, desktopEl.offsetWidth * 0.7), 
+        height: Math.max(600, desktopEl.offsetHeight * 0.8), 
+        x: desktopEl.offsetWidth * 0.15, 
+        y: desktopEl.offsetHeight * 0.05 
+    };
+    // Create a new SnugWindow instance for the library
     const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
-    initializePageUI(libWindow.element);
+    initializePageUI(libWindow.element); // Initialize UI elements within the new window
 }
 
+/**
+ * Initializes event listeners and styling for the Library page UI elements.
+ * @param {HTMLElement} container The main container element of the library window.
+ */
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
     const uploadBtn = container.querySelector('#uploadFileBtn');
     const newFolderBtn = container.querySelector('#createFolderBtn');
 
+    // Function to update navigation button styling based on current view mode
     const updateNavStyling = () => {
         myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
         myFilesBtn.style.color = currentViewMode === 'my-files' ? 'var(--accent-active-text)' : 'var(--text-primary)';
@@ -120,19 +150,22 @@ function initializePageUI(container) {
         globalFilesBtn.style.color = currentViewMode === 'global' ? 'var(--accent-active-text)' : 'var(--text-primary)';
     };
     
+    // Event listener for "My Files" button
     myFilesBtn.addEventListener('click', () => {
         currentViewMode = 'my-files';
-        currentPath = ['/'];
-        fetchAndRenderLibraryItems(container);
-        updateNavStyling();
+        currentPath = ['/']; // Reset path for "My Files"
+        fetchAndRenderLibraryItems(container); // Fetch and render items
+        updateNavStyling(); // Update button styling
     });
+    // Event listener for "Global" button
     globalFilesBtn.addEventListener('click', () => {
         currentViewMode = 'global';
-        currentPath = ['/'];
-        fetchAndRenderLibraryItems(container);
-        updateNavStyling();
+        currentPath = ['/']; // Reset path for "Global"
+        fetchAndRenderLibraryItems(container); // Fetch and render items
+        updateNavStyling(); // Update button styling
     });
 
+    // Add hover effects to buttons
     [myFilesBtn, globalFilesBtn, uploadBtn, newFolderBtn].forEach(btn => {
         if (!btn) return;
         const originalBg = btn.id.includes('-files-btn') ? 'transparent' : 'var(--bg-button)';
@@ -140,51 +173,64 @@ function initializePageUI(container) {
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
     });
 
+    // Event listeners for "Upload File" and "New Folder" buttons
     uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
     newFolderBtn?.addEventListener('click', createFolder);
 
-    updateNavStyling();
-    fetchAndRenderLibraryItems(container);
+    updateNavStyling(); // Initial styling update
+    fetchAndRenderLibraryItems(container); // Initial fetch and render
 }
 
+/**
+ * Attaches event listeners to desktop elements like start button, full screen toggle, etc.
+ */
 function attachDesktopEventListeners() {
-    setupDesktopContextMenu();
+    setupDesktopContextMenu(); // Set up right-click context menu for the desktop
     
+    // Event listeners for taskbar buttons
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
     document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 
+    // Event listener for custom background upload
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         handleBackgroundUpload(e.target.files[0]);
     });
 }
 
+/**
+ * Sets up the right-click context menu for the desktop area.
+ */
 function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
     if (!desktop) return;
 
     desktop.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (e.target.closest('.window')) return;
+        e.preventDefault(); // Prevent default browser context menu
+        if (e.target.closest('.window')) return; // Don't show if clicking on a window
         const menuItems = [
             { label: 'New Folder', action: () => createFolder() },
             { label: 'Upload File', action: () => document.getElementById('actualFileInput').click() },
-            { type: 'separator' },
+            { type: 'separator' }, // Separator line in the menu
             { label: 'Change Background', action: () => document.getElementById('customBgInput').click() }
         ];
-        appServices.createContextMenu(e, menuItems);
+        appServices.createContextMenu(e, menuItems); // Use global context menu function
     });
 }
 
+/**
+ * Handles the upload of a custom background image.
+ * @param {File} file The image file to upload.
+ */
 async function handleBackgroundUpload(file) {
     if (!loggedInUser) return;
     showNotification("Uploading background...", 2000);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('path', '/backgrounds/');
+    formData.append('path', '/backgrounds/'); // Specify upload path for backgrounds
     try {
         const token = localStorage.getItem('snugos_token');
         const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
@@ -195,26 +241,32 @@ async function handleBackgroundUpload(file) {
         const uploadResult = await uploadResponse.json();
         if (!uploadResult.success) throw new Error(uploadResult.message);
         const newBgUrl = uploadResult.file.s3_url;
+        // Update user's profile with the new background URL
         await fetch(`${SERVER_URL}/api/profile/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ background_url: newBgUrl })
         });
         showNotification("Background updated!", 2000);
-        loadAndApplyGlobals();
+        loadAndApplyGlobals(); // Re-apply global settings to reflect new background
     } catch(error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
+/**
+ * Fetches and renders library items (files and folders) based on current view mode and path.
+ * @param {HTMLElement} container The container where files will be rendered.
+ */
 async function fetchAndRenderLibraryItems(container) {
     const fileViewArea = container.querySelector('#file-view-area');
     const pathDisplay = container.querySelector('#library-path-display');
     if (!fileViewArea || !pathDisplay) return;
 
     fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">Loading...</p>`;
-    pathDisplay.textContent = currentPath.join('');
+    pathDisplay.textContent = currentPath.join(''); // Update path display
 
+    // Determine the API endpoint based on current view mode
     const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public';
     try {
         const token = localStorage.getItem('snugos_token');
@@ -223,13 +275,16 @@ async function fetchAndRenderLibraryItems(container) {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Failed to fetch files');
-        fileViewArea.innerHTML = '';
+        
+        fileViewArea.innerHTML = ''; // Clear previous content
+        // Add ".." (parent folder) item if not at root
         if (currentPath.length > 1) {
             fileViewArea.appendChild(renderFileItem({ file_name: '..', mime_type: 'folder' }, true));
         }
+        // Render fetched items
         if (data.items && data.items.length > 0) {
             data.items.forEach(item => fileViewArea.appendChild(renderFileItem(item)));
-        } else if (currentPath.length <= 1) {
+        } else if (currentPath.length <= 1) { // Display message if folder is empty at root level
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
         }
     } catch (error) {
@@ -237,11 +292,19 @@ async function fetchAndRenderLibraryItems(container) {
     }
 }
 
+/**
+ * Renders a single file or folder item for display in the library.
+ * Includes action buttons (share, toggle public/private, delete) for owned files.
+ * @param {Object} item The file or folder object.
+ * @param {boolean} isParentFolder True if this item represents the ".." parent folder.
+ * @returns {HTMLElement} The created div element for the file item.
+ */
 function renderFileItem(item, isParentFolder = false) {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28 file-item-container';
     itemDiv.style.color = 'var(--text-primary)';
     
+    // Add click and double-click listeners
     itemDiv.addEventListener('click', () => {
         document.querySelectorAll('.file-item-container').forEach(el => el.style.backgroundColor = 'transparent');
         itemDiv.style.backgroundColor = 'var(--accent-focus)';
@@ -251,6 +314,7 @@ function renderFileItem(item, isParentFolder = false) {
     let iconHtml = '';
     const mime = isParentFolder ? 'folder' : (item.mime_type || '');
 
+    // Determine icon based on MIME type or if it's a parent folder
     if (isParentFolder) {
         iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.172 4L15.172 6H20V18H4V4H13.172ZM14.586 2H4A2 2 0 0 0 2 4V18A2 2 0 0 0 4 20H20A2 2 0 0 0 22 18V6A2 2 0 0 0 20 4H16L14.586 2Z"></path></svg>`;
     } else if (mime.includes('folder')) {
@@ -260,40 +324,79 @@ function renderFileItem(item, isParentFolder = false) {
     } else if (mime.startsWith('audio/')) {
         iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55a4.002 4.002 0 00-3-1.55c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`;
     } else {
-        iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm7 1.5V9h5.5L13 3.5z"/></svg>`;
+        iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 012-2V4a2 2 0 012-2zm7 1.5V9h5.5L13 3.5z"/></svg>`;
     }
 
+    // Set inner HTML for the item
     itemDiv.innerHTML = `
         <div class="relative">${iconHtml}</div>
         <p class="text-xs mt-1 w-full break-words truncate" title="${isParentFolder ? '..' : item.file_name}">${isParentFolder ? '..' : item.file_name}</p>
         ${(currentViewMode === 'global' && item.owner_username) ? `<p class="text-xs opacity-60 truncate">by ${item.owner_username}</p>` : ''}
     `;
 
+    // Add action buttons for owned files (share, toggle public/private, delete)
     const itemContainer = itemDiv.querySelector('.relative');
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'absolute top-0 right-0 flex flex-col space-y-1';
 
-    if (!isParentFolder && item.user_id === loggedInUser.id) {
-        // ... (action buttons logic remains unchanged)
+    if (!isParentFolder && loggedInUser && item.user_id === loggedInUser.id) {
+        // Share button
+        const shareBtn = document.createElement('button');
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+        shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        shareBtn.style.backgroundColor = 'var(--bg-button)';
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
+        actionsContainer.appendChild(shareBtn);
+        
+        // Public/Private toggle button
+        const privacyBtn = document.createElement('button');
+        if (item.is_public) {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Private" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6z"/></svg>`;
+        } else {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Public" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>`;
+        }
+        privacyBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        privacyBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
+        privacyBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
+        actionsContainer.appendChild(privacyBtn);
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`;
+        deleteBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        deleteBtn.style.backgroundColor = 'var(--bg-button)';
+        deleteBtn.title = "Delete File";
+        deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); showDeleteModal(item); });
+        actionsContainer.appendChild(deleteBtn);
     }
     
     itemContainer.appendChild(actionsContainer);
     return itemDiv;
 }
 
+/**
+ * Handles clicks (and double clicks) on file and folder items.
+ * Navigates into folders or opens the file viewer for files.
+ * @param {Object} item The clicked file or folder object.
+ * @param {boolean} isParentFolder True if the item is the ".." parent folder.
+ */
 function handleItemClick(item, isParentFolder) {
     const libWindow = appServices.getWindowById('library');
     if (isParentFolder) {
-        if (currentPath.length > 1) currentPath.pop();
-    } else if (item.mime_type.includes('folder')) {
-        currentPath.push(item.file_name + '/');
+        if (currentPath.length > 1) currentPath.pop(); // Go up one level
+    } else if (item.mime_type && item.mime_type.includes('folder')) {
+        currentPath.push(item.file_name + '/'); // Navigate into the folder
     } else {
-        openFileViewerWindow(item);
+        openFileViewerWindow(item); // Open the file viewer for actual files
         return;
     }
-    if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+    if (libWindow) fetchAndRenderLibraryItems(libWindow.element); // Re-render library items
 }
 
+/**
+ * Opens a new window to view the selected file.
+ * @param {Object} item The file object to view.
+ */
 function openFileViewerWindow(item) {
     const windowId = `file-viewer-${item.id}`;
     if (appServices.getWindowById(windowId)) {
@@ -302,6 +405,7 @@ function openFileViewerWindow(item) {
     }
     let content = '';
     const fileType = item.mime_type || '';
+    // Generate content based on file type
     if (fileType.startsWith('image/')) {
         content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
     } else if (fileType.startsWith('video/')) {
@@ -315,7 +419,10 @@ function openFileViewerWindow(item) {
     new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
 }
 
-
+/**
+ * Generates and copies a shareable link for a file.
+ * @param {Object} item The file object to share.
+ */
 async function handleShareFile(item) {
     showNotification("Generating secure link...", 1500);
     try {
@@ -325,23 +432,33 @@ async function handleShareFile(item) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        await navigator.clipboard.writeText(result.shareUrl);
+        // Copy the generated share URL to clipboard
+        document.execCommand('copy', false, result.shareUrl); // Using execCommand for broader compatibility within iframes
         showNotification("Sharable link copied! It expires in 1 hour.", 4000);
     } catch (error) {
         showNotification(`Could not generate link: ${error.message}`, 4000);
     }
 }
 
+/**
+ * Shows a confirmation modal for changing a file's public/private status.
+ * @param {Object} item The file object to modify.
+ */
 function showShareModal(item) {
     const newStatus = !item.is_public;
     const actionText = newStatus ? "publicly available" : "private";
     const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
-    showCustomModal('Confirm Action', modalContent, [
+    appServices.showCustomModal('Confirm Action', modalContent, [
         { label: 'Cancel' },
         { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
     ]);
 }
 
+/**
+ * Toggles the public/private status of a file.
+ * @param {string} fileId The ID of the file to modify.
+ * @param {boolean} newStatus The new public status (true for public, false for private).
+ */
 async function handleToggleFilePublic(fileId, newStatus) {
     try {
         const token = localStorage.getItem('snugos_token');
@@ -353,6 +470,7 @@ async function handleToggleFilePublic(fileId, newStatus) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         showNotification('File status updated!', 2000);
+        // Refresh the library window to reflect changes
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
@@ -360,14 +478,22 @@ async function handleToggleFilePublic(fileId, newStatus) {
     }
 }
 
+/**
+ * Shows a confirmation modal before deleting a file.
+ * @param {Object} item The file object to delete.
+ */
 function showDeleteModal(item) {
     const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
-    showCustomModal('Confirm Deletion', modalContent, [
+    appServices.showCustomModal('Confirm Deletion', modalContent, [
         { label: 'Cancel' },
         { label: 'Delete', action: () => handleDeleteFile(item.id) }
     ]);
 }
 
+/**
+ * Deletes a file from the server and refreshes the library.
+ * @param {string} fileId The ID of the file to delete.
+ */
 async function handleDeleteFile(fileId) {
     try {
         const token = localStorage.getItem('snugos_token');
@@ -378,6 +504,7 @@ async function handleDeleteFile(fileId) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         showNotification('File deleted!', 2000);
+        // Refresh the library window to reflect changes
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
@@ -385,39 +512,56 @@ async function handleDeleteFile(fileId) {
     }
 }
 
+/**
+ * Handles the upload of multiple files to the current path.
+ * @param {FileList} files The files to upload.
+ */
 async function handleFileUpload(files) {
     if (!loggedInUser || files.length === 0) return;
     showNotification(`Uploading ${files.length} file(s)...`, 3000);
     for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('path', currentPath.join('/'));
+        formData.append('path', currentPath.join('/')); // Upload to the current path
         try {
             const token = localStorage.getItem('snugos_token');
-            const response = await fetch(`${SERVER_URL}/api/files/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+            const response = await fetch(`${SERVER_URL}/api/files/upload`, { 
+                method: 'POST', 
+                headers: { 'Authorization': `Bearer ${token}` }, 
+                body: formData 
+            });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message);
         } catch (error) {
             showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000);
         }
     }
+    // Refresh the library window after all uploads
     const libWindow = appServices.getWindowById('library');
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
 }
 
+/**
+ * Prompts the user for a new folder name and creates it.
+ */
 function createFolder() {
     if (!loggedInUser) return;
-    showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
+    appServices.showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
         { label: 'Cancel' },
         { label: 'Create', action: async ()=>{
             const folderName = document.getElementById('folderNameInput').value;
             if (!folderName) return;
             try {
                 const token = localStorage.getItem('snugos_token');
-                const response = await fetch(`${SERVER_URL}/api/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: folderName, path: currentPath.join('/') }) });
+                const response = await fetch(`${SERVER_URL}/api/folders`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ name: folderName, path: currentPath.join('/') }) // Create folder at current path
+                });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message);
                 showNotification(`Folder '${folderName}' created!`, 2000);
+                // Refresh the library window after folder creation
                 const libWindow = appServices.getWindowById('library');
                 if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
             } catch (error) {
@@ -427,18 +571,27 @@ function createFolder() {
     ]);
 }
 
+/**
+ * Updates the clock display in the taskbar every minute.
+ */
 function updateClockDisplay() {
     const clockDisplay = document.getElementById('taskbarClockDisplay');
     if (clockDisplay) {
         clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    setTimeout(updateClockDisplay, 60000);
+    setTimeout(updateClockDisplay, 60000); // Update every minute
 }
 
+/**
+ * Toggles the visibility of the start menu.
+ */
 function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
+/**
+ * Toggles full-screen mode for the document.
+ */
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -449,30 +602,43 @@ function toggleFullScreen() {
     }
 }
 
+/**
+ * Checks for a valid authentication token in local storage and returns user info if valid.
+ * @returns {Object|null} The logged-in user's ID and username, or null if no valid token.
+ */
 function checkLocalAuth() {
     try {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
+        // Decode JWT payload
         const payload = JSON.parse(atob(token.split('.')[1]));
+        // Check token expiration
         if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token');
+            localStorage.removeItem('snugos_token'); // Remove expired token
             return null;
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
-        localStorage.removeItem('snugos_token');
+        localStorage.removeItem('snugos_token'); // Clear token on error
         return null;
     }
 }
 
+/**
+ * Handles user logout: clears token, updates UI, and reloads the page.
+ */
 function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
-    updateAuthUI(null);
+    updateAuthUI(null); // Update UI to logged-out state
     showNotification('You have been logged out.', 2000);
-    window.location.reload();
+    window.location.reload(); // Reload page to reset state
 }
 
+/**
+ * Updates the authentication-related UI elements (login/logout buttons, welcome message).
+ * @param {Object|null} user The logged-in user object, or null if logged out.
+ */
 function updateAuthUI(user) {
     const userAuthContainer = document.getElementById('userAuthContainer');
     const menuLogin = document.getElementById('menuLogin');
@@ -491,11 +657,14 @@ function updateAuthUI(user) {
     }
 }
 
+/**
+ * Applies the user's saved theme preference (light/dark).
+ */
 function applyUserThemePreference() {
     const preference = localStorage.getItem('snugos-theme');
     const body = document.body;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light'); // Default to system preference
     if (themeToApply === 'light') {
         body.classList.remove('theme-dark');
         body.classList.add('theme-light');
@@ -505,6 +674,9 @@ function applyUserThemePreference() {
     }
 }
 
+/**
+ * Toggles between light and dark themes and saves the preference.
+ */
 function toggleTheme() {
     const body = document.body;
     const isLightTheme = body.classList.contains('theme-light');
@@ -519,6 +691,10 @@ function toggleTheme() {
     }
 }
 
+/**
+ * Shows a placeholder modal for login/registration functionality.
+ */
 function showLoginModal() {
-    showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
+    appServices.showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
 }
+
