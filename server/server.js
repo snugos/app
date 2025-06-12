@@ -241,6 +241,44 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
     }
 });
 
+// --- Messaging Endpoints ---
+
+app.post('/api/messages', authenticateToken, async (request, response) => {
+    const { recipientUsername, content } = request.body;
+    const senderId = request.user.id;
+    if (!recipientUsername || !content) return response.status(400).json({ success: false, message: 'Recipient and content are required.' });
+    try {
+        const recipientResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [recipientUsername]);
+        if (recipientResult.rows.length === 0) return response.status(404).json({ success: false, message: 'Recipient not found.' });
+        const recipientId = recipientResult.rows[0].id;
+        const insertMessageQuery = `INSERT INTO messages (sender_id, recipient_id, content) VALUES ($1, $2, $3) RETURNING *;`;
+        const result = await pool.query(insertMessageQuery, [senderId, recipientId, content]);
+        response.status(201).json({ success: true, messageData: result.rows[0] });
+    } catch (error) {
+        response.status(500).json({ success: false, message: 'Server error while sending message.' });
+    }
+});
+
+app.get('/api/messages/sent', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const messages = await pool.query("SELECT m.id, r.username as recipient_username, m.content, m.timestamp, m.read FROM messages m JOIN profiles r ON m.recipient_id = r.id WHERE m.sender_id = $1 ORDER BY m.timestamp DESC", [userId]);
+        response.json({ success: true, messages: messages.rows });
+    } catch (error) {
+        response.status(500).json({ success: false, message: 'Server error while fetching sent messages.' });
+    }
+});
+
+app.get('/api/messages/received', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const messages = await pool.query("SELECT m.id, s.username as sender_username, m.content, m.timestamp, m.read FROM messages m JOIN profiles s ON m.sender_id = s.id WHERE m.recipient_id = $1 ORDER BY m.timestamp DESC", [userId]);
+        response.json({ success: true, messages: messages.rows });
+    } catch (error) {
+        response.status(500).json({ success: false, message: 'Server error while fetching received messages.' });
+    }
+});
+
 // --- File Storage Endpoints ---
 
 app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
@@ -250,17 +288,16 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
     try {
         const file = req.file;
         const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`;
+        // NOTE: I am removing ACL from the upload params as a potential fix for S3 issues.
         const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key, Body: file.buffer, ContentType: file.mimetype };
         const data = await s3.upload(uploadParams).promise();
         const insertFileQuery = `INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
         const result = await pool.query(insertFileQuery, [userId, path || '/', file.originalname, s3Key, data.Location, file.mimetype, file.size, is_public === 'true']);
         res.status(201).json({ success: true, file: result.rows[0] });
-} catch (error) {
-    console.error("[File Upload] Error:", error);
-    res.status(500).json({ success: false, message: 'Error uploading file.' });
-}
-    });
-}
+    } catch (error) {
+        console.error("[File Upload] Error:", error);
+        res.status(500).json({ success: false, message: 'Error uploading file.' });
+    }
 });
 
 app.post('/api/folders', authenticateToken, async (req, res) => {
