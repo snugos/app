@@ -1,6 +1,6 @@
-// js/utils.js - Utility Functions Module
+// js/daw/utils.js - Utility Functions Module
 
-export function showNotification(message, duration = 3000) { // Added 'export' here
+export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
         console.error("CRITICAL: Notification area ('notification-area') not found in DOM. Message:", message);
@@ -31,7 +31,7 @@ export function showNotification(message, duration = 3000) { // Added 'export' h
     }
 }
 
-export function showCustomModal(title, contentHTML, buttonsConfig = []) { // Added 'export' here
+export function showCustomModal(title, contentHTML, buttonsConfig = []) {
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) return;
 
@@ -76,7 +76,7 @@ export function showCustomModal(title, contentHTML, buttonsConfig = []) { // Add
     return { overlay, contentDiv };
 }
 
-export function createContextMenu(event, menuItems, appServices) { // Added 'export' here
+export function createContextMenu(event, menuItems, appServices) {
     // Remove any existing context menus
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
@@ -133,7 +133,7 @@ export function createContextMenu(event, menuItems, appServices) { // Added 'exp
  * @param {string} contentType - The MIME type of the content.
  * @returns {Blob}
  */
-export function base64ToBlob(base64, contentType = 'audio/mpeg') { // Added 'export' here
+export function base64ToBlob(base64, contentType = 'audio/mpeg') {
     const byteCharacters = atob(base64);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -149,7 +149,7 @@ export function base64ToBlob(base64, contentType = 'audio/mpeg') { // Added 'exp
  * @param {AudioBuffer} audioBuffer - The AudioBuffer containing the audio data.
  * @param {string} color - The color of the waveform (default: 'black').
  */
-export function drawWaveform(canvas, audioBuffer, color = 'black') { // Added 'export' here
+export function drawWaveform(canvas, audioBuffer, color = 'black') {
     if (!canvas || !audioBuffer) return;
 
     const ctx = canvas.getContext('2d');
@@ -186,7 +186,7 @@ export function drawWaveform(canvas, audioBuffer, color = 'black') { // Added 'e
 
 
 // Generic drop zone listeners for dragging files from local system or sound browser
-export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) { // Added 'export' here
+export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) {
     dropZoneElement.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZoneElement.classList.add('dragover');
@@ -232,7 +232,7 @@ export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTyp
 }
 
 // Helper to generate the HTML for a drop zone with a hidden file input
-export function createDropZoneHTML(inputId, label = "Drag & Drop Audio Here or Click to Browse") { // Added 'export' here
+export function createDropZoneHTML(inputId, label = "Drag & Drop Audio Here or Click to Browse") {
     return `
         <div class="drop-zone">
             <input type="file" id="${inputId}" class="hidden" accept="audio/*">
