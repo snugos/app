@@ -32,7 +32,7 @@ import {
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderDirectoryView, renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob // CORRECTED: renderDrumSamplerPushInputBtn changed to renderDrumSamplerPads
+    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
 } from './ui/ui.js';
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
@@ -41,7 +41,7 @@ import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 import { initializeAuth, handleBackgroundUpload } from '../auth.js';
 
 // Import the new state modules
-import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState } from './state/appState.js';
+import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState, setMidiAccess } from './state/appState.js'; // CORRECTED: Added setMidiAccess
 import { initializeMasterState, getMasterEffects, setMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
@@ -311,7 +311,7 @@ async function initializeSnugOS() {
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
         renderSamplePads, updateSliceEditorUI,
-        renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, // CORRECTED: renderDrumSamplerPushInputBtn changed to renderDrumSamplerPads
+        renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo,
         renderDirectoryView, renderSoundBrowser,
         drawWaveform: drawWaveform,
         handleTrackMute: handleTrackMute, handleTrackSolo: handleTrackSolo, handleTrackArm: handleTrackArm, handleRemoveTrack: handleRemoveTrack,
@@ -342,7 +342,7 @@ async function initializeSnugOS() {
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
     initializeMetronome(appServices);
-    initializeAuth(appServices);
+    initializeAuth(appServices); // This now references the imported initializeAuth
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
