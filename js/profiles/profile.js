@@ -67,8 +67,9 @@ async function openProfilePage(username) {
  * Updates the entire profile UI (view or edit mode).
  * @param {HTMLElement} container 
  * @param {object} profileData 
+ * @param {Array} projectsData (Note: projectsData not directly passed here anymore as it's part of profileData.projects)
  */
-function updateProfileUI(container, profileData) {
+function updateProfileUI(container, profileData) { // Removed projectsData from params here
     const isOwner = loggedInUser && loggedInUser.username === profileData.username;
 
     container.innerHTML = '';
@@ -108,7 +109,7 @@ function updateProfileUI(container, profileData) {
     if (isEditing) {
         renderEditMode(bodyContentDiv, profileData);
     } else {
-        renderViewMode(bodyContentDiv, profileData);
+        renderViewMode(bodyContentDiv, profileData); // Pass profileData here
     }
 
     // Attach event listeners for the new buttons
@@ -127,7 +128,7 @@ function updateProfileUI(container, profileData) {
 /**
  * Renders the profile content in view mode.
  */
-function renderViewMode(container, profileData) {
+function renderViewMode(container, profileData) { // projectsData removed from params
     container.innerHTML = `
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-2">Bio</h3>
@@ -168,13 +169,13 @@ function renderEditMode(container, profileData) {
 }
 
 // --- Authentication & User State Logic (Self-contained for Profile Page) ---
-function checkLocalAuth() {
+const checkLocalAuth = () => { // Changed to const function expression
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token');
+            localStorage.removeItem('snugos_token'); // Token expired
             return null;
         }
         return { id: payload.id, username: payload.username };
@@ -183,7 +184,7 @@ function checkLocalAuth() {
         localStorage.removeItem('snugos_token');
         return null;
     }
-}
+};
 
 // --- Profile Editing Actions ---
 async function saveProfile(event, username) {
@@ -317,25 +318,5 @@ async function sendMessage(recipientUsername, content) {
     } catch (error) {
         showNotification(`Error sending message: ${error.message}`, 3000);
         console.error("Send Message Error:", error);
-    }
-}
-
-// --- Helper to get logged in user from localStorage (minimal auth) ---
-// This is a simplified version of checkInitialAuthState from auth.js,
-// just for getting the user object for UI display.
-function checkLocalAuth() {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) return null;
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token'); // Token expired
-            return null;
-        }
-        return { id: payload.id, username: payload.username };
-    } catch (e) {
-        console.error("Error decoding token:", e);
-        localStorage.removeItem('snugos_token');
-        return null;
     }
 }
