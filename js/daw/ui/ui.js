@@ -10,7 +10,7 @@ import { initializePianoRollUI, openPianoRollWindow, updatePianoRollPlayhead } f
 import { initializeYouTubeImporterUI, openYouTubeImporterWindow } from './youtubeImporterUI.js'; // Re-added imports
 // Removed initializeProfileUI and openProfileWindow as profile page is now separate
 
-import { createKnob } from '../../knobUI.js'; // Re-added import for createKnob from its source
+import { createKnob } from './knobUI.js'; // CORRECTED PATH: Changed from '../../knobUI.js' to './knobUI.js'
 
 
 /**
