@@ -23,41 +23,13 @@
 </head>
 <body class="theme-dark">
 
-    <div id="topTaskbar" class="select-none">
-        <div style="flex-grow: 1;"></div> 
-        <div id="userAuthContainer" class="flex items-center text-sm ml-4">
-            <button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>
-        </div>
-        <div id="themeToggleContainerTopRight">
-            <button id="themeToggleBtn" title="Toggle Theme">
-                <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            </button>
-        </div>
-    </div>
-
-    <main id="library-container" class="max-w-6xl mx-auto my-8 p-4 bg-window text-primary border border-primary rounded-lg shadow-window flex flex-col h-[calc(100vh-140px)]">
-        <h1 class="text-2xl font-bold mb-4 flex-shrink-0">My Library</h1>
-        
-        <div id="library-browser-window" class="flex flex-col flex-grow border border-secondary rounded-lg overflow-hidden">
-            <div class="flex items-center p-2 border-b border-secondary bg-gray-100 dark:bg-gray-800 flex-shrink-0">
-                <button id="uploadFileBtn" class="px-3 py-1 mr-2 bg-button text-button border border-button rounded hover:bg-button-hover hover:text-button-hover">Upload File</button>
-                <button id="createFolderBtn" class="px-3 py-1 bg-button text-button border border-button rounded hover:bg-button-hover hover:text-button-hover">New Folder</button>
-                
-                <div class="flex-grow"></div> <div id="library-path-display" class="text-sm px-2 text-secondary">/</div>
-            </div>
-
-            <div id="file-view-area" class="flex-grow p-4 grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-4 overflow-y-auto">
-                <p class="text-gray-500 italic text-center col-span-full">Loading files...</p>
-            </div>
-        </div>
-    </main>
+    <div id="desktop"></div>
 
     <div id="taskbar" class="select-none">
         <button id="startButton">Start</button>
-        <div id="taskbarButtons">
-            </div>
-        <div style="flex-grow: 1;"></div> <div id="taskbarClockDisplay" class="text-right px-2"></div>
+        <div id="taskbarButtons"></div>
+        <div style="flex-grow: 1;"></div> 
+        <div id="taskbarClockDisplay" class="text-right px-2"></div>
     </div>
 
     <div id="startMenu" class="hidden select-none">
@@ -72,13 +44,16 @@
             <li id="menuToggleFullScreen">Toggle Full Screen</li>
         </ul>
     </div>
-
-    <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
-    <input type="file" id="actualFileInput" class="hidden" multiple> <div id="notification-area"></div>
+    
+    <div id="notification-area"></div>
     <div id="modalContainer"></div>
+    
+    <input type="file" id="actualFileInput" class="hidden" multiple>
 
-    <script type="module" src="js/profiles/profileUtils.js"></script>
-    <script type="module" src="js/profiles/profileDb.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script type="module" src="js/daw/SnugWindow.js"></script>
+
     <script type="module" src="js/profiles/library.js"></script>
 
 </body>
