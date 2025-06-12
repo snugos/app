@@ -61,7 +61,7 @@ function renderDesktopIcons() {
     const icons = [
         {
             id: 'snaw-icon',
-            name: 'Snaw',
+            name: 'Snaw', // Text changed to just "Snaw"
             action: launchDaw,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/>
@@ -70,7 +70,14 @@ function renderDesktopIcons() {
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: viewProfiles,
+            action: () => { // Updated action for profiles icon
+                if (loggedInUser) {
+                    window.location.href = `profile.html?user=${loggedInUser.username}`; // Link to current user's profile
+                } else {
+                    showNotification('Please log in to view your profile.', 3000);
+                    // Or show login modal, or link to a generic profiles list
+                }
+            },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>` // Head/person SVG
@@ -78,7 +85,9 @@ function renderDesktopIcons() {
         {
             id: 'sound-library-icon',
             name: 'Library', // Changed text to "Library"
-            action: () => showNotification('Library (sounds, images, videos) will open here!', 2000), // Updated action text
+            action: () => { // Updated action for Library icon
+                window.location.href = 'library.html'; // Direct link to library.html
+            },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
                             <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/>
                         </svg>` // Book SVG
@@ -88,7 +97,7 @@ function renderDesktopIcons() {
             name: 'Settings',
             action: () => showNotification('Settings will open here!', 2000), // Placeholder action
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.99l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.52.42l-.38 2.65c-.61.26-1.17.59-1.69.99l-2.49-1c-.22-.08-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.99l.38 2.65c.06.24.27.42.52.42h4c.25 0 .46-.18.52-.42l.38-2.65c.61-.26 1.17-.59 1.69-.99l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
+                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.99l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.52.42l-.38 2.65c-.61.26-1.17.59-1.69.99l-2.49-1c-.22-.08-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.99l.38 2.65c.06.24.27.42.52.42h4c.25 0 .46-.18.52-.42l.38-2.65c.61-.26 1.17-.59 1.69-.99l2.49 1c.22.08.49 0 .61-.22l2-3.46c-.12-.22.07-.49-.12-.64l-2.11-1.65zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
                         </svg>` // Gear/settings SVG
         },
     ];
