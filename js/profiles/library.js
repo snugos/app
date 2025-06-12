@@ -39,6 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClockDisplay();
     initAudioOnFirstGesture(); 
     
+    // NOTE: This listener for the hidden file input is now set up here,
+    // ensuring it's always ready, independent of the window. This is the main fix.
+    const actualFileInput = document.getElementById('actualFileInput');
+    actualFileInput?.addEventListener('change', e => {
+        handleFileUpload(e.target.files);
+        e.target.value = null; // Clear input after selection to allow re-uploading the same file
+    });
+    
     if (loggedInUser) {
         openLibraryWindow();
         loadAndApplyGlobals();
@@ -76,6 +84,7 @@ function openLibraryWindow() {
     }
     const contentHTML = `
         <div class="flex h-full" style="background-color: var(--bg-window-content);">
+            <!-- Sidebar -->
             <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
                 <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
                 <ul>
@@ -86,6 +95,7 @@ function openLibraryWindow() {
                 <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
                 <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
             </div>
+            <!-- Main Content -->
             <div class="flex-grow flex flex-col">
                 <div class="p-2 border-b" style="border-color: var(--border-secondary);">
                     <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
@@ -105,7 +115,6 @@ function initializePageUI(container) {
     const globalFilesBtn = container.querySelector('#global-files-btn');
     const uploadBtn = container.querySelector('#uploadFileBtn');
     const newFolderBtn = container.querySelector('#createFolderBtn');
-    const actualFileInput = document.getElementById('actualFileInput'); // This is in the main document
 
     const updateNavStyling = () => {
         myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
@@ -127,17 +136,13 @@ function initializePageUI(container) {
         updateNavStyling();
     });
 
-    [myFilesBtn, globalFilesBtn].forEach(btn => {
-        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
-        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
+    [myFilesBtn, globalFilesBtn, uploadBtn, newFolderBtn].forEach(btn => {
+        const originalBg = btn.id.includes('-files-btn') ? 'transparent' : 'var(--bg-button)';
+        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === originalBg || btn.style.backgroundColor === '') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
+        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
     });
 
-    // NOTE: These are the listeners that were missing and have now been restored.
-    uploadBtn?.addEventListener('click', () => actualFileInput.click());
-    actualFileInput?.addEventListener('change', e => {
-        handleFileUpload(e.target.files);
-        e.target.value = null; // Clear input after selection
-    });
+    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
@@ -225,7 +230,7 @@ async function fetchAndRenderLibraryItems(container) {
 
         if (data.items && data.items.length > 0) {
             data.items.forEach(item => fileViewArea.appendChild(renderFileItem(item)));
-        } else if (currentPath.length <= 1) {
+        } else if (currentPath.length <= 1 && data.items.length === 0) {
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
         }
     } catch (error) {
