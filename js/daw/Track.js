@@ -12,7 +12,7 @@ import { createEffectInstance, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { getMasterBusInputNode } from './audio/audio.js';
 import { captureStateForUndo } from './state/projectState.js';
 import { getWindowById } from './state/windowState.js';
-import { showNotification, drawWaveform } from './utils.js'; // CORRECTED: Path to js/daw/utils.js
+import { showNotification, drawWaveform } from './utils.js';
 
 
 class Track {
@@ -251,7 +251,7 @@ class Track {
     updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) { return this.sequences.updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity); }
     clearSequence(sequenceId) { return this.sequences.clearSequence(sequenceId); }
     duplicateSequence(sequenceId) { return this.sequences.duplicateSequence(sequenceId); }
-    copyNotesToClipboard(sequenceId, notesToCopy) { return this.sequences.copyNotesToClipboard(sequenceId, notesToCopy); }
+    copyNotesToClipboard(sequenceId, notesToCopy) { return this.sequences.copyNotes.toClipboard(sequenceId, notesToCopy); }
     pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) { return this.sequences.pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep); }
     recreateToneSequence() { return this.sequences.recreateToneSequence(); }
     startSequence() { return this.sequences.startSequence(); }
