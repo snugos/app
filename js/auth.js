@@ -4,7 +4,7 @@
 // import * as Constants from './constants.js';
 // import { showNotification, showCustomModal } from './utils.js';
 
-import { showNotification, showCustomModal } from './daw/utils.js'; // CORRECTED: Now relative to js/
+import { showNotification, showCustomModal } from './daw/utils.js';
 
 let localAppServices = {};
 let loggedInUser = null;
@@ -49,7 +49,7 @@ async function checkInitialAuthState() {
             return handleLogout();
         }
         
-        loggedInUser = { id: payload.id, username: payload.username };
+        loggedInUser = { id: payload.id, username: payload.id };
         updateAuthUI(loggedInUser);
 
         // Apply custom background if available and logged in
@@ -177,7 +177,7 @@ async function handleRegister(username, password) {
     }
 }
 
-async function handleBackgroundUpload(file) {
+export async function handleBackgroundUpload(file) { // CORRECTED: Added 'export' here
     if (!loggedInUser) {
         localAppServices.showNotification('You must be logged in to save a custom background.', 3000);
         localAppServices.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
