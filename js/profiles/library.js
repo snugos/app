@@ -39,10 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClockDisplay();
     initAudioOnFirstGesture(); 
     
+    // NOTE: This is the restored event listener. It listens for when a user
+    // selects a file from the dialog and then calls the upload function.
     const actualFileInput = document.getElementById('actualFileInput');
     actualFileInput?.addEventListener('change', e => {
+        console.log("File input 'change' event fired."); // For debugging
         handleFileUpload(e.target.files);
-        e.target.value = null;
+        e.target.value = null; // Clear input to allow re-uploading the same file
     });
     
     if (loggedInUser) {
@@ -128,6 +131,7 @@ function openFileViewerWindow(item) {
     new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
 }
 
+
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
@@ -161,7 +165,9 @@ function initializePageUI(container) {
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
     });
 
-    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
+    uploadBtn?.addEventListener('click', () => {
+        document.getElementById('actualFileInput').click();
+    });
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
@@ -291,22 +297,14 @@ function renderFileItem(item, isParentFolder = false) {
 
     if (!isParentFolder && item.user_id === loggedInUser.id) {
         const shareBtn = document.createElement('button');
-        // NOTE: Updated SVG icon for Share
-        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.715 6.542 3.343 7.914a.5.5 0 1 0 .707.707l1.414-1.414a.5.5 0 0 0 0-.707l-1.414-1.414a.5.5 0 1 0-.707.707l1.371 1.371z"/><path fill-rule="evenodd" d="M7.447 11.458a.5.5 0 0 0 .707 0l1.414-1.414a.5.5 0 1 0-.707-.707l-1.371 1.371a.5.5 0 0 0 0 .708l1.371 1.371a.5.5 0 1 0 .707-.707L7.447 11.458zM12.95 6.542a.5.5 0 0 0-.707-.707L10.828 7.25a.5.5 0 0 0 0 .707l1.414 1.414a.5.5 0 0 0 .707-.707L11.543 7.914l1.407-1.372z"/><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 11.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-11 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>`;
         shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
         shareBtn.style.backgroundColor = 'var(--bg-button)';
         shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
         actionsContainer.appendChild(shareBtn);
         
         const privacyBtn = document.createElement('button');
-        // NOTE: Updated SVG icons for Public/Private
-        if (item.is_public) {
-            // Unlocked padlock icon for Public files
-            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Private" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6z"/></svg>`;
-        } else {
-            // Locked padlock icon for Private files
-            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Public" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>`;
-        }
+        privacyBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
         privacyBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
         privacyBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
         privacyBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
