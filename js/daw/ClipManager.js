@@ -2,11 +2,11 @@
 // NOTE: Constants, Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
 
 import * as Constants from './constants.js';
-import { storeAudio, getAudio, deleteAudio } from './db.js'; // CORRECTED PATH: From '../db.js' to './db.js'
+import { storeAudio, getAudio, deleteAudio } from './db.js';
 import { showNotification } from './utils.js';
 import { captureStateForUndo } from './state/projectState.js';
 
-class ClipManager {
+export class ClipManager { // CORRECTED: Added 'export' here
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
