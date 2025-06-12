@@ -39,12 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClockDisplay();
     initAudioOnFirstGesture(); 
     
-    // NOTE: This listener for the hidden file input is now set up here,
-    // ensuring it's always ready, independent of the window. This is the main fix.
+    // NOTE: The main file input listener is now more robust.
     const actualFileInput = document.getElementById('actualFileInput');
     actualFileInput?.addEventListener('change', e => {
+        console.log("File input 'change' event fired.");
         handleFileUpload(e.target.files);
-        e.target.value = null; // Clear input after selection to allow re-uploading the same file
+        e.target.value = null; 
     });
     
     if (loggedInUser) {
@@ -137,12 +137,16 @@ function initializePageUI(container) {
     });
 
     [myFilesBtn, globalFilesBtn, uploadBtn, newFolderBtn].forEach(btn => {
+        if (!btn) return;
         const originalBg = btn.id.includes('-files-btn') ? 'transparent' : 'var(--bg-button)';
         btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === originalBg || btn.style.backgroundColor === '') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
     });
 
-    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
+    uploadBtn?.addEventListener('click', () => {
+        console.log("Upload button clicked.");
+        document.getElementById('actualFileInput').click();
+    });
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
@@ -230,7 +234,7 @@ async function fetchAndRenderLibraryItems(container) {
 
         if (data.items && data.items.length > 0) {
             data.items.forEach(item => fileViewArea.appendChild(renderFileItem(item)));
-        } else if (currentPath.length <= 1 && data.items.length === 0) {
+        } else if (currentPath.length <= 1) {
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
         }
     } catch (error) {
@@ -381,7 +385,11 @@ async function handleDeleteFile(fileId) {
 }
 
 async function handleFileUpload(files) {
-    if (!loggedInUser || files.length === 0) return;
+    console.log("handleFileUpload triggered with", files.length, "files.");
+    if (!loggedInUser || files.length === 0) {
+        console.log("handleFileUpload exited early. Logged in:", !!loggedInUser, "Files:", files.length);
+        return;
+    }
     showNotification(`Uploading ${files.length} file(s)...`, 3000);
     for (const file of files) {
         const formData = new FormData();
