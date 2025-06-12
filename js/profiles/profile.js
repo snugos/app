@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAndApplyGlobals();
     attachDesktopEventListeners();
     updateClockDisplay();
+    updateAuthUI(loggedInUser);
 
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
@@ -32,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
     }
     
-    // FIX 1: The event listener for the avatar file input is now correctly attached.
     document.getElementById('avatarUploadInput')?.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             handleAvatarUpload(e.target.files[0]);
@@ -99,7 +99,6 @@ function updateProfileUI(profileWindow, profileData) {
         actionButtons = `<button id="editProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Edit Profile</button>`;
     } else if (loggedInUser) {
         const friendBtnText = profileData.isFriend ? 'Remove Friend' : 'Add Friend';
-        // FIX 3: Added color styles to ensure text is readable
         const friendBtnStyle = `background-color: ${profileData.isFriend ? 'var(--accent-armed)' : 'var(--accent-active)'}; color: var(--accent-active-text);`;
         actionButtons = `
             <button id="addFriendBtn" class="px-4 py-2 rounded" style="${friendBtnStyle}">${friendBtnText}</button>
@@ -205,7 +204,6 @@ async function handleAvatarUpload(file) {
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
         showNotification("Profile picture updated!", 2000);
-        // Refresh the window by re-loading the profile data.
         openProfileWindow(loggedInUser.username);
 
     } catch (error) {
@@ -213,7 +211,6 @@ async function handleAvatarUpload(file) {
     }
 }
 
-// FIX 2: This function now correctly redraws the window after saving.
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
@@ -226,13 +223,10 @@ async function saveProfile(username, dataToSave) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        
         showNotification("Profile saved!", 2000);
         isEditing = false;
-        
         const profileWindow = appServices.getWindowById(`profile-${username}`);
         if (profileWindow) {
-            // Update the local data and redraw the UI, no need to re-fetch everything.
             currentProfileData.bio = result.profile.bio;
             updateProfileUI(profileWindow, currentProfileData);
         }
@@ -254,10 +248,8 @@ async function handleAddFriendToggle(username, isFriend) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         showNotification(result.message, 2000);
-        // Re-open/refresh the window to show the new friend status
         const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if(profileWindow) openProfileWindow(username);
-
+        if (profileWindow) openProfileWindow(username);
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
@@ -342,6 +334,7 @@ function attachDesktopEventListeners() {
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
     document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
+    document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 }
 
 async function loadAndApplyGlobals() {
@@ -407,6 +400,54 @@ function toggleFullScreen() {
     }
 }
 
+function updateAuthUI(user) {
+    const userAuthContainer = document.getElementById('userAuthContainer');
+    const menuLogin = document.getElementById('menuLogin');
+    const menuLogout = document.getElementById('menuLogout');
+
+    if (user && userAuthContainer) {
+        userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span> <button id="logoutBtnTop" class="px-3 py-1 border rounded">Logout</button>`;
+        userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('click', handleLogout);
+        if (menuLogin) menuLogin.style.display = 'none';
+        if (menuLogout) menuLogout.style.display = 'block';
+    } else if (userAuthContainer) {
+        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
+        userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
+        if (menuLogin) menuLogin.style.display = 'block';
+        if (menuLogout) menuLogout.style.display = 'none';
+    }
+}
+
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const isLightTheme = body.classList.contains('theme-light');
+    if (isLightTheme) {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    } else {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    }
+}
+
+
 function showLoginModal() {
-    showCustomModal('Login / Register', '<p class="p-4">Login functionality would go here.</p>', [{label: 'Close'}]);
+    // This needs the full login/register form HTML
+    showCustomModal('Login / Register', '<p class="p-4">Login/Register form would appear here.</p>', [{label: 'Close'}]);
 }
