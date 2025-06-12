@@ -1,17 +1,17 @@
 // js/profiles/library.js - Main JavaScript for the independent Library Page
 
-import { showNotification, showCustomModal, getThemeColors } from './profileUtils.js'; // Added getThemeColors import
-import { getAsset } from './profileDb.js'; // Reusing profileDb for IndexedDB access (e.g. for user backgrounds)
+import { showNotification, showCustomModal, getThemeColors } from './profileUtils.js';
+import { getAsset } from './profileDb.js';
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Your backend server URL
 
 let loggedInUser = null; // Store logged-in user info
+let currentPath = []; // Track the current folder path
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     loggedInUser = checkLocalAuth(); // Check if user is logged in
     if (!loggedInUser) {
-        // Redirect or show message if not logged in
         document.getElementById('library-container').innerHTML = `
             <div class="text-center p-12 bg-window text-primary border border-primary rounded-lg shadow-window">
                 <h1 class="text-2xl font-bold mb-4">Access Denied</h1>
@@ -22,56 +22,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initializePageUI();
-    attachEventListeners();
-    fetchAndRenderMyFiles(); // Call to fetch and display user's files
+    attachEventListeners(); // Global listeners for top bar
+    fetchAndRenderLibraryItems(); // Fetch items for the current path
 });
 
 function initializePageUI() {
-    const colors = getThemeColors(); // Get theme colors once
     // Dynamically update top taskbar for logged-in user
     updateAuthUI(loggedInUser);
     applyUserThemePreference(); // Apply user theme
 
-    // Initialize dropzone for file uploads
-    const dropZone = document.getElementById('file-upload-dropzone');
-    const fileInput = document.getElementById('fileInput');
+    // Attach listeners for file browser toolbar buttons
+    const uploadFileBtn = document.getElementById('uploadFileBtn');
+    const createFolderBtn = document.getElementById('createFolderBtn');
+    const actualFileInput = document.getElementById('actualFileInput'); // The hidden file input
 
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Use CSS variables for highlight
-        dropZone.style.backgroundColor = colors.bgDropzoneDragover;
-        dropZone.style.borderColor = colors.borderDropzoneDragover;
-        dropZone.style.color = colors.textDropzoneDragover;
+    uploadFileBtn?.addEventListener('click', () => {
+        actualFileInput.click(); // Trigger the hidden file input
     });
 
-    dropZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Revert to normal dropzone colors
-        dropZone.style.backgroundColor = colors.bgDropzone;
-        dropZone.style.borderColor = colors.borderDropzone;
-        dropZone.style.color = colors.textDropzone;
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // Revert to normal dropzone colors
-        dropZone.style.backgroundColor = colors.bgDropzone;
-        dropZone.style.borderColor = colors.borderDropzone;
-        dropZone.style.color = colors.textDropzone;
-        const files = e.dataTransfer.files;
-        handleFileUpload(files);
-    });
-
-    dropZone.addEventListener('click', () => {
-        fileInput.click(); // Trigger file input click
-    });
-
-    fileInput.addEventListener('change', (e) => {
+    actualFileInput?.addEventListener('change', (e) => {
         handleFileUpload(e.target.files);
+        e.target.value = null; // Clear the input
     });
+
+    // Dropzone logic (reusing old dropzone ID for simplicity)
+    const dropZone = document.getElementById('file-upload-dropzone'); // In the upload new file section
+    if (dropZone) { // Check if the element exists in this version of HTML
+        const colors = getThemeColors();
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.style.backgroundColor = colors.bgDropzoneDragover;
+            dropZone.style.borderColor = colors.borderDropzoneDragover;
+            dropZone.style.color = colors.textDropzoneDragover;
+        });
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.style.backgroundColor = colors.bgDropzone;
+            dropZone.style.borderColor = colors.borderDropzone;
+            dropZone.style.color = colors.textDropzone;
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault(); e.stopPropagation();
+            dropZone.style.backgroundColor = colors.bgDropzone;
+            dropZone.style.borderColor = colors.borderDropzone;
+            dropZone.style.color = colors.textDropzone;
+            handleFileUpload(e.dataTransfer.files);
+        });
+    }
+
+    createFolderBtn?.addEventListener('click', createFolder); // Handler for new folder
 }
 
 function attachEventListeners() {
@@ -80,7 +79,7 @@ function attachEventListeners() {
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 }
 
-// --- File Upload Logic ---
+// --- File Upload Logic (now triggered by actualFileInput) ---
 async function handleFileUpload(files) {
     if (!loggedInUser) {
         showNotification('You must be logged in to upload files.', 3000);
@@ -93,8 +92,9 @@ async function handleFileUpload(files) {
     for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
-        // You might want to add a UI to ask the user if they want the file to be public or private
         formData.append('is_public', 'true'); // Default to public for now
+        // Add path to formData for folder support
+        formData.append('path', currentPath.join('/') + '/'); // currentPath global
 
         try {
             const token = localStorage.getItem('snugos_token');
@@ -103,14 +103,14 @@ async function handleFileUpload(files) {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
-                body: formData // Multer handles multipart/form-data
+                body: formData
             });
 
             const result = await response.json();
 
             if (response.ok && result.success) {
                 showNotification(`'${file.name}' uploaded successfully!`, 2000);
-                fetchAndRenderMyFiles(); // Refresh the list
+                fetchAndRenderLibraryItems(); // Refresh the list
             } else {
                 throw new Error(result.message || 'Unknown upload error.');
             }
@@ -121,170 +121,209 @@ async function handleFileUpload(files) {
     }
 }
 
-// --- Fetch & Render My Files ---
-async function fetchAndRenderMyFiles() {
-    const myFilesList = document.getElementById('my-files-list');
-    if (!myFilesList || !loggedInUser) return;
+// --- Create Folder Logic ---
+async function createFolder() {
+    if (!loggedInUser) {
+        showNotification('You must be logged in to create folders.', 3000);
+        return;
+    }
 
-    myFilesList.innerHTML = '<p class="text-gray-500 italic">Loading files...</p>';
+    const colors = getThemeColors();
+    const modalContent = `
+        <div class="space-y-4">
+            <label class="text-primary">Folder Name:</label>
+            <input type="text" id="folderNameInput" placeholder="New Folder" class="w-full p-2 border rounded-md" style="background-color: ${colors.bgInput}; color: ${colors.textPrimary}; border-color: ${colors.borderInput};">
+        </div>
+    `;
+
+    const buttons = [
+        { label: 'Cancel', action: () => {} },
+        { label: 'Create', action: async () => {
+            const folderName = document.getElementById('folderNameInput').value;
+            if (!folderName.trim()) {
+                showNotification('Folder name cannot be empty.', 2000);
+                return;
+            }
+            // Backend will handle the actual creation
+            showNotification(`Creating folder '${folderName}'...`, 1500);
+            try {
+                const token = localStorage.getItem('snugos_token');
+                const response = await fetch(`${SERVER_URL}/api/folders`, { // NEW Backend Endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ name: folderName, path: currentPath.join('/') }) // currentPath global
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    showNotification(`Folder '${folderName}' created!`, 2000);
+                    fetchAndRenderLibraryItems(); // Refresh items
+                } else {
+                    throw new Error(result.message || 'Failed to create folder.');
+                }
+            } catch (error) {
+                showNotification(`Error creating folder: ${error.message}`, 5000);
+                console.error('Create folder error:', error);
+            }
+        }}
+    ];
+
+    showCustomModal('Create New Folder', modalContent, buttons);
+}
+
+// --- Fetch & Render Library Items ---
+async function fetchAndRenderLibraryItems() { // Renamed from fetchAndRenderMyFiles
+    const fileViewArea = document.getElementById('file-view-area');
+    const pathDisplay = document.getElementById('library-path-display'); // New path display element
+    if (!fileViewArea || !pathDisplay || !loggedInUser) return;
+
+    fileViewArea.innerHTML = '<p class="text-gray-500 italic text-center col-span-full">Loading items...</p>';
+    pathDisplay.textContent = `/${currentPath.join('/')}`; // Update path display
 
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}/api/files/my`, {
+        const response = await fetch(`${SERVER_URL}/api/files/my?path=${encodeURIComponent(currentPath.join('/'))}`, { // Add path query param
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
 
         if (response.ok && data.success) {
-            if (data.files && data.files.length > 0) {
-                myFilesList.innerHTML = ''; // Clear "Loading files..."
-                data.files.forEach(file => {
-                    const colors = getThemeColors(); // Get theme colors inside loop for dynamic elements
-                    const fileDiv = document.createElement('div');
-                    // Use CSS variables for consistent file item styling
-                    fileDiv.className = 'file-item'; // Apply the general file-item class
-                    // Tailwind classes for text based on theme for specific elements
-                    // p tags inside file-item will inherit color, name p tag will have font-bold
-                    
-                    let previewHtml = '';
-                    if (file.mime_type.startsWith('image/')) {
-                        previewHtml = `<img src="<span class="math-inline">\{file\.s3\_url\}" alt\="</span>{file.file_name}" class="max-h-24 w-auto object-contain mb-2">`;
-                    } else if (file.mime_type.startsWith('audio/')) {
-                        // Audio player styling handled by components.css
-                        previewHtml = `<audio controls src="${file.s3_url}" class="w-full mb-2"></audio>`;
-                    } else if (file.mime_type.startsWith('video/')) {
-                        // Video player styling handled by components.css
-                        previewHtml = `<video controls src="${file.s3_url}" class="w-full mb-2"></video>`;
-                    } else {
-                        previewHtml = `<span class="text-4xl mb-2" style="color: ${colors.textPrimary};">📄</span>`; // Generic file icon
-                    }
+            if (data.items && data.items.length > 0) { // Data now contains 'items' (files+folders)
+                fileViewArea.innerHTML = ''; // Clear "Loading items..."
 
-                    fileDiv.innerHTML = `
-                        <div class="text-center w-full">
-                            ${previewHtml}
-                            <p class="font-bold text-sm truncate w-full" style="color: <span class="math-inline">\{colors\.textPrimary\};"\></span>{file.file_name}</p>
-                            <p class="text-xs" style="color: <span class="math-inline">\{colors\.textSecondary\};"\></span>{(file.file_size / 1024 / 1024).toFixed(2)} MB</p>
-                            <p class="text-xs" style="color: <span class="math-inline">\{colors\.textSecondary\};"\></span>{new Date(file.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div class="flex space-x-2 mt-2 w-full justify-center">
-                            <a href="<span class="math-inline">\{file\.s3\_url\}" target\="\_blank" class\="px\-2 py\-1 bg\-blue\-500 text\-white rounded text\-xs hover\:bg\-blue\-600"\>View/DL</a\>
-<button class\="px\-2 py\-1 bg\-gray\-500 text\-white rounded text\-xs hover\:bg\-gray\-600 toggle\-public\-btn" data\-file\-id\="</span>{file.id}" data-is-public="${file.is_public}">
-                                <span class="math-inline">\{file\.is\_public ? 'Make Private' \: 'Make Public'\}
-</button\>
-<button class\="px\-2 py\-1 bg\-red\-500 text\-white rounded text\-xs hover\:bg\-red\-600 delete\-file\-btn" data\-file\-id\="</span>{file.id}">Delete</button>
-                        </div>
-                    `;
-                    myFilesList.appendChild(fileDiv);
+                // Add ".." (Parent Folder) item if not in root
+                if (currentPath.length > 0) {
+                    const parentFolderDiv = renderFileItem({
+                        id: '..',
+                        file_name: '..',
+                        type: 'folder',
+                        is_public: false, // Irrelevant for parent, but needed by renderer
+                        s3_url: '' // Not applicable
+                    }, true); // Pass true for isParentFolder
+                    fileViewArea.appendChild(parentFolderDiv);
+                }
 
-                    // Apply dynamic button styles based on CSS variables and hover
-                    const viewDlBtn = fileDiv.querySelector('a');
-                    viewDlBtn.style.backgroundColor = colors.blue500;
-                    viewDlBtn.style.color = colors.textPrimary;
-                    viewDlBtn.addEventListener('mouseover', () => { viewDlBtn.style.backgroundColor = colors.blue600; });
-                    viewDlBtn.addEventListener('mouseout', () => { viewDlBtn.style.backgroundColor = colors.blue500; });
-
-                    const toggleBtn = fileDiv.querySelector('.toggle-public-btn');
-                    if (toggleBtn) {
-                        toggleBtn.style.backgroundColor = colors.gray500;
-                        toggleBtn.style.color = colors.textPrimary;
-                        toggleBtn.addEventListener('mouseover', () => { toggleBtn.style.backgroundColor = colors.gray600; });
-                        toggleBtn.addEventListener('mouseout', () => { toggleBtn.style.backgroundColor = colors.gray500; });
-                    }
-
-                    const deleteBtn = fileDiv.querySelector('.delete-file-btn');
-                    if (deleteBtn) {
-                        deleteBtn.style.backgroundColor = colors.red500;
-                        deleteBtn.style.color = colors.textPrimary;
-                        deleteBtn.addEventListener('mouseover', () => { deleteBtn.style.backgroundColor = colors.red600; });
-                        deleteBtn.addEventListener('mouseout', () => { deleteBtn.style.backgroundColor = colors.red500; });
-                    }
+                data.items.forEach(item => { // Loop through items (files and folders)
+                    fileViewArea.appendChild(renderFileItem(item)); // Render each item
                 });
-
-                // Attach event listeners for toggle public and delete buttons
-                myFilesList.querySelectorAll('.toggle-public-btn').forEach(button => {
-                    button.addEventListener('click', (e) => toggleFilePublicStatus(e.target.dataset.fileId, e.target.dataset.isPublic === 'true'));
-                });
-                myFilesList.querySelectorAll('.delete-file-btn').forEach(button => {
-                    button.addEventListener('click', (e) => deleteUserFile(e.target.dataset.fileId));
-                });
-
             } else {
-                myFilesList.innerHTML = '<p class="text-gray-500 italic">No files uploaded yet.</p>';
+                fileViewArea.innerHTML = '<p class="text-gray-500 italic text-center col-span-full">This folder is empty.</p>';
             }
         } else {
             throw new Error(data.message || 'Could not fetch files.');
         }
     } catch (error) {
-        showNotification(`Error fetching files: ${error.message}`, 5000);
-        console.error('Fetch files error:', error);
-        myFilesList.innerHTML = `<p class="text-red-500">Error loading files: ${error.message}</p>`;
+        showNotification(`Error fetching items: ${error.message}`, 5000);
+        console.error('Fetch items error:', error);
+        fileViewArea.innerHTML = `<p class="text-red-500 text-center col-span-full">Error loading items: ${error.message}</p>`;
     }
 }
 
-// --- File Actions (Make Public/Private, Delete) ---
-async function toggleFilePublicStatus(fileId, isCurrentlyPublic) {
-    if (!loggedInUser) {
-        showNotification('You must be logged in to change file status.', 3000);
-        return;
-    }
-    const token = localStorage.getItem('snugos_token');
-    const newStatus = !isCurrentlyPublic;
-    const action = newStatus ? 'Making public' : 'Making private';
+// --- Render Single File/Folder Item ---
+function renderFileItem(item, isParentFolder = false) { // New helper function
+    const colors = getThemeColors();
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'file-item'; // Apply the general file-item class
 
-    try {
-        showNotification(`${action}...`, 1500);
-        const response = await fetch(`<span class="math-inline">\{SERVER\_URL\}/api/files/</span>{fileId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ is_public: newStatus })
-        });
-        const result = await response.json();
-        if (response.ok && result.success) {
-            showNotification(`File status changed to ${newStatus ? 'public' : 'private'}!`, 2000);
-            fetchAndRenderMyFiles(); // Refresh list
-        } else {
-            throw new Error(result.message || 'Failed to change file status.');
-        }
-    } catch (error) {
-        showNotification(`Error changing file status: ${error.message}`, 5000);
-        console.error('Toggle public status error:', error);
+    let iconHtml = '';
+    let itemName = item.file_name;
+    let clickAction = () => handleItemClick(item, isParentFolder); // New click handler
+
+    if (isParentFolder) {
+        itemName = '..';
+        iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-primary">
+                        <path d="M12 2L4 9v11h16V9l-8-7zM6 18v-8h12v8H6zm3-1h6v-2H9v2z"/>
+                    </svg>`; // Up-folder icon
+    } else if (item.mime_type === 'application/vnd.snugos.folder') { // Custom MIME type for folders
+        iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-primary">
+                        <path fill-rule="evenodd" d="M19.5 9a7.5 7.5 0 100 6h-15a.75.75 0 000 1.5h15.75A3.75 3.75 0 0023.25 15V9.75a.75.75 0 00-.75-.75H19.5z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M3.75 9H1.5a.75.75 0 00-.75.75V15a3.75 3.75 0 003.75 3.75h1.5a.75.75 0 000-1.5H3.75A2.25 2.25 0 011.5 15V9.75c0-.414.336-.75.75-.75H3.75a.75.75 0 000-1.5z" clip-rule="evenodd" />
+                    </svg>`; // Generic folder icon
+        itemDiv.dataset.itemId = item.id; // Store folder ID
+        itemDiv.dataset.itemType = 'folder'; // Identify as folder
+    } else if (item.mime_type.startsWith('image/')) {
+        iconHtml = `<img src="${item.s3_url}" alt="${item.file_name}" class="max-h-24 w-auto object-contain mb-2">`;
+        itemDiv.dataset.itemId = item.id;
+        itemDiv.dataset.itemType = 'file';
+    } else if (item.mime_type.startsWith('audio/')) {
+        iconHtml = `<audio controls src="${item.s3_url}" class="w-full mb-2"></audio>`;
+        itemDiv.dataset.itemId = item.id;
+        itemDiv.dataset.itemType = 'file';
+    } else if (item.mime_type.startsWith('video/')) {
+        iconHtml = `<video controls src="${item.s3_url}" class="w-full mb-2"></video>`;
+        itemDiv.dataset.itemId = item.id;
+        itemDiv.dataset.itemType = 'file';
+    } else {
+        iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 text-primary">
+                        <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+                    </svg>`; // Generic document icon
+        itemDiv.dataset.itemId = item.id;
+        itemDiv.dataset.itemType = 'file';
     }
+
+    itemDiv.innerHTML = `
+        <div class="text-center w-full flex-grow flex flex-col items-center justify-center">
+            <div class="mb-2">${iconHtml}</div>
+            <p class="font-bold text-sm truncate w-full" style="color: ${colors.textPrimary};">${itemName}</p>
+            ${!isParentFolder && item.file_size ? `<p class="text-xs" style="color: ${colors.textSecondary};">${(item.file_size / 1024 / 1024).toFixed(2)} MB</p>` : ''}
+            ${!isParentFolder && item.created_at ? `<p class="text-xs" style="color: ${colors.textSecondary};">${new Date(item.created_at).toLocaleDateString()}</p>` : ''}
+        </div>
+        ${!isParentFolder && item.type !== 'folder' ? ` <div class="flex space-x-2 mt-2 w-full justify-center flex-shrink-0">
+            <a href="${item.s3_url}" target="_blank" class="px-2 py-1 rounded text-xs view-dl-btn">View/DL</a>
+            <button class="px-2 py-1 rounded text-xs toggle-public-btn" data-file-id="${item.id}" data-is-public="${item.is_public}">
+                ${item.is_public ? 'Make Private' : 'Make Public'}
+            </button>
+            <button class="px-2 py-1 rounded text-xs delete-file-btn" data-file-id="${item.id}">Delete</button>
+        </div>
+        ` : ''}
+    `;
+
+    // Attach click handler for item navigation/selection
+    itemDiv.addEventListener('click', clickAction);
+    
+    // Apply dynamic button styles for View/DL, Toggle Public, Delete
+    const viewDlBtn = itemDiv.querySelector('.view-dl-btn');
+    if (viewDlBtn) {
+        viewDlBtn.style.backgroundColor = colors.blue500;
+        viewDlBtn.style.color = colors.textPrimary;
+        viewDlBtn.addEventListener('mouseover', () => { viewDlBtn.style.backgroundColor = colors.blue600; });
+        viewDlBtn.addEventListener('mouseout', () => { viewDlBtn.style.backgroundColor = colors.blue500; });
+    }
+
+    const toggleBtn = itemDiv.querySelector('.toggle-public-btn');
+    if (toggleBtn) {
+        toggleBtn.style.backgroundColor = colors.gray500;
+        toggleBtn.style.color = colors.textPrimary;
+        toggleBtn.addEventListener('mouseover', () => { toggleBtn.style.backgroundColor = colors.gray600; });
+        toggleBtn.addEventListener('mouseout', () => { toggleBtn.style.backgroundColor = colors.gray500; });
+    }
+
+    const deleteBtn = itemDiv.querySelector('.delete-file-btn');
+    if (deleteBtn) {
+        deleteBtn.style.backgroundColor = colors.red500;
+        deleteBtn.style.color = colors.textPrimary;
+        deleteBtn.addEventListener('mouseover', () => { deleteBtn.style.backgroundColor = colors.red600; });
+        deleteBtn.addEventListener('mouseout', () => { deleteBtn.style.backgroundColor = colors.red500; });
+    }
+    
+    return itemDiv;
 }
 
-async function deleteUserFile(fileId) {
-    if (!loggedInUser) {
-        showNotification('You must be logged in to delete files.', 3000);
-        return;
+// --- Item Click Handler (for files and folders) ---
+function handleItemClick(item, isParentFolder) { // New function
+    if (isParentFolder) {
+        currentPath.pop(); // Go up one level
+    } else if (item.mime_type === 'application/vnd.snugos.folder') {
+        currentPath.push(item.file_name); // Navigate into folder
+    } else {
+        // It's a file, do nothing on single click for now (double click or View/DL button handles it)
+        return; 
     }
-    const token = localStorage.getItem('snugos_token');
-
-    // Confirm with user before deleting
-    const confirmDelete = showCustomModal('Delete File', 'Are you sure you want to delete this file? This cannot be undone.', [
-        { label: 'Cancel', action: () => {} },
-        { label: 'Delete', action: async () => {
-            try {
-                showNotification('Deleting file...', 1500);
-                const response = await fetch(`<span class="math-inline">\{SERVER\_URL\}/api/files/</span>{fileId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const result = await response.json();
-                if (response.ok && result.success) {
-                    showNotification('File deleted successfully!', 2000);
-                    fetchAndRenderMyFiles(); // Refresh list
-                } else {
-                    throw new Error(result.message || 'Failed to delete file.');
-                }
-            } catch (error) {
-                showNotification(`Error deleting file: ${error.message}`, 5000);
-                console.error('Delete file error:', error);
-            }
-        }}
-    ]);
+    fetchAndRenderLibraryItems(); // Re-render for new path
 }
+
 
 // --- Helper: Check Local Auth (copied from profile.js, for independence) ---
 function checkLocalAuth() {
@@ -407,7 +446,7 @@ async function handleLogin(username, password) {
             localStorage.setItem('snugos_token', data.token);
             loggedInUser = checkLocalAuth(); // Update loggedInUser after login
             showNotification(`Welcome back, ${data.user.username}!`, 2000);
-            fetchAndRenderMyFiles(); // Refresh files after login
+            fetchAndRenderLibraryItems(); // Refresh files after login
             updateAuthUI(loggedInUser); // Update top bar auth UI
         } else {
             showNotification(`Login failed: ${data.message}`, 3000);
@@ -443,7 +482,7 @@ function handleLogout() {
     loggedInUser = null;
     updateAuthUI(null); // Update top bar auth UI
     showNotification('You have been logged out.', 2000);
-    fetchAndRenderMyFiles(); // Clear files display on logout
+    fetchAndRenderLibraryItems(); // Clear files display on logout
 }
 
 // --- Theme Toggling (copied from welcome.js) ---
@@ -481,3 +520,4 @@ function applyUserThemePreference() {
             body.classList.add('theme-light');
         }
     }
+}
