@@ -20,7 +20,7 @@ const synthEngineControlDefinitions = {
     ]
 };
 
-export const AVAILABLE_EFFECTS = { // Added 'export' here
+export const AVAILABLE_EFFECTS = {
     AutoFilter: {
         displayName: 'Auto Filter',
         toneClass: 'AutoFilter',
@@ -253,7 +253,7 @@ export const AVAILABLE_EFFECTS = { // Added 'export' here
     },
 };
 
-export function createEffectInstance(effectType, initialParams = {}) { // Added 'export' here
+export function createEffectInstance(effectType, initialParams = {}) {
     if (typeof Tone === 'undefined') {
         console.error(`[EffectsRegistry createEffectInstance] Tone.js is not loaded. Cannot create effect "${effectType}".`);
         return null;
@@ -361,7 +361,7 @@ export function createEffectInstance(effectType, initialParams = {}) { // Added 
     }
 }
 
-export function getEffectDefaultParams(effectType) { // Added 'export' here
+export function getEffectDefaultParams(effectType) {
     const definition = AVAILABLE_EFFECTS[effectType];
     if (!definition || !definition.params || !Array.isArray(definition.params)) {
         if (!definition) console.warn(`[EffectsRegistry getEffectDefaultParams] No definition found for effect type: ${effectType}`);
@@ -383,7 +383,7 @@ export function getEffectDefaultParams(effectType) { // Added 'export' here
     return defaults;
 }
 
-export function getEffectParamDefinitions(effectType) { // Added 'export' here
+export function getEffectParamDefinitions(effectType) {
     const definition = AVAILABLE_EFFECTS[effectType];
     if (!definition) {
         console.warn(`[EffectsRegistry getEffectParamDefinitions] No definition found for effect type: ${effectType}`);
