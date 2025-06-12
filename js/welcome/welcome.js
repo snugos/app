@@ -6,41 +6,26 @@ const appServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-/**
- * Creates and opens a new window containing the Tetris game.
- */
 function openGameWindow() {
     const windowId = 'tetrisGame';
     if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
-
     const content = document.createElement('iframe');
     content.src = 'tetris.html';
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
-
-    // NOTE: The window size is now calculated to better fit the game's content.
-    // This makes it feel much more like a native game window.
-    const options = {
-        width: 530,  // Calculated width for the game board + sidebar + padding
-        height: 700, // Calculated height for the game board and info panels
-        minWidth: 400,
-        minHeight: 600,
-    };
-
+    const options = { width: 530, height: 700, minWidth: 400, minHeight: 600 };
     new SnugWindow(windowId, 'Snugtris', content, options, appServices);
 }
-
 
 function initializeWelcomePage() {
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.storeAsset = storeAsset;
     appServices.getAsset = getAsset;
-
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
     if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
@@ -127,7 +112,12 @@ function renderDesktopIcons() {
             },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
-        // NOTE: Updated icon for the game
+        {
+            id: 'messenger-icon',
+            name: 'Messenger',
+            action: () => { window.location.href = 'messenger.html'; },
+            svgContent: `<svg class="w-12 h-12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`
+        },
         {
             id: 'game-icon',
             name: 'Game',
