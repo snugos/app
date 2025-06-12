@@ -1,6 +1,6 @@
 // js/profiles/library.js - Main JavaScript for the independent Library Page
 
-import { showNotification, showCustomModal, getThemeColors } from './profileUtils.js'; // Added getThemeColors
+import { showNotification, showCustomModal, getThemeColors } from './profileUtils.js'; // Added getThemeColors import
 import { getAsset } from './profileDb.js'; // Reusing profileDb for IndexedDB access (e.g. for user backgrounds)
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Your backend server URL
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializePageUI() {
-    const colors = getThemeColors(); // Get theme colors
+    const colors = getThemeColors(); // Get theme colors once
     // Dynamically update top taskbar for logged-in user
     updateAuthUI(loggedInUser);
     applyUserThemePreference(); // Apply user theme
@@ -142,17 +142,18 @@ async function fetchAndRenderMyFiles() {
                     const colors = getThemeColors(); // Get theme colors inside loop for dynamic elements
                     const fileDiv = document.createElement('div');
                     // Use CSS variables for consistent file item styling
-                    fileDiv.className = 'p-3 rounded shadow flex flex-col items-center justify-between';
-                    fileDiv.style.backgroundColor = colors.bgButton; // Using bg-button for file item background
-                    fileDiv.style.borderColor = colors.borderButton;
-                    fileDiv.style.color = colors.textSecondary; // Text for size/date
-
+                    fileDiv.className = 'file-item'; // Apply the general file-item class
+                    // Tailwind classes for text based on theme for specific elements
+                    // p tags inside file-item will inherit color, name p tag will have font-bold
+                    
                     let previewHtml = '';
                     if (file.mime_type.startsWith('image/')) {
                         previewHtml = `<img src="${file.s3_url}" alt="${file.file_name}" class="max-h-24 w-auto object-contain mb-2">`;
                     } else if (file.mime_type.startsWith('audio/')) {
+                        // Audio player styling handled by components.css
                         previewHtml = `<audio controls src="${file.s3_url}" class="w-full mb-2"></audio>`;
                     } else if (file.mime_type.startsWith('video/')) {
+                        // Video player styling handled by components.css
                         previewHtml = `<video controls src="${file.s3_url}" class="max-h-24 w-auto object-contain mb-2"></video>`;
                     } else {
                         previewHtml = `<span class="text-4xl mb-2" style="color: ${colors.textPrimary};">📄</span>`; // Generic file icon
@@ -162,8 +163,8 @@ async function fetchAndRenderMyFiles() {
                         <div class="text-center w-full">
                             ${previewHtml}
                             <p class="font-bold text-sm truncate w-full" style="color: ${colors.textPrimary};">${file.file_name}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">${(file.file_size / 1024 / 1024).toFixed(2)} MB</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">${new Date(file.created_at).toLocaleDateString()}</p>
+                            <p class="text-xs" style="color: ${colors.textSecondary};">${(file.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p class="text-xs" style="color: ${colors.textSecondary};">${new Date(file.created_at).toLocaleDateString()}</p>
                         </div>
                         <div class="flex space-x-2 mt-2 w-full justify-center">
                             <a href="${file.s3_url}" target="_blank" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">View/DL</a>
@@ -175,25 +176,28 @@ async function fetchAndRenderMyFiles() {
                     `;
                     myFilesList.appendChild(fileDiv);
 
-                    // Apply dynamic button styles and hover effects
+                    // Apply dynamic button styles based on CSS variables and hover
                     const viewDlBtn = fileDiv.querySelector('a');
                     viewDlBtn.style.backgroundColor = colors.blue500;
                     viewDlBtn.style.color = colors.textPrimary;
                     viewDlBtn.addEventListener('mouseover', () => { viewDlBtn.style.backgroundColor = colors.blue600; });
                     viewDlBtn.addEventListener('mouseout', () => { viewDlBtn.style.backgroundColor = colors.blue500; });
 
-
                     const toggleBtn = fileDiv.querySelector('.toggle-public-btn');
-                    toggleBtn.style.backgroundColor = colors.gray500;
-                    toggleBtn.style.color = colors.textPrimary;
-                    toggleBtn.addEventListener('mouseover', () => { toggleBtn.style.backgroundColor = colors.gray600; });
-                    toggleBtn.addEventListener('mouseout', () => { toggleBtn.style.backgroundColor = colors.gray500; });
+                    if (toggleBtn) {
+                        toggleBtn.style.backgroundColor = colors.gray500;
+                        toggleBtn.style.color = colors.textPrimary;
+                        toggleBtn.addEventListener('mouseover', () => { toggleBtn.style.backgroundColor = colors.gray600; });
+                        toggleBtn.addEventListener('mouseout', () => { toggleBtn.style.backgroundColor = colors.gray500; });
+                    }
 
                     const deleteBtn = fileDiv.querySelector('.delete-file-btn');
-                    deleteBtn.style.backgroundColor = colors.red500;
-                    deleteBtn.style.color = colors.textPrimary;
-                    deleteBtn.addEventListener('mouseover', () => { deleteBtn.style.backgroundColor = colors.red600; });
-                    deleteBtn.addEventListener('mouseout', () => { deleteBtn.style.backgroundColor = colors.red500; });
+                    if (deleteBtn) {
+                        deleteBtn.style.backgroundColor = colors.red500;
+                        deleteBtn.style.color = colors.textPrimary;
+                        deleteBtn.addEventListener('mouseover', () => { deleteBtn.style.backgroundColor = colors.red600; });
+                        deleteBtn.addEventListener('mouseout', () => { deleteBtn.style.backgroundColor = colors.red500; });
+                    }
                 });
 
                 // Attach event listeners for toggle public and delete buttons
@@ -300,7 +304,7 @@ function checkLocalAuth() {
     }
 }
 
-// --- Helper: Update Auth UI (minimal version for Library page) ---
+// --- Helper: Update Auth UI (copied from welcome.js for consistency) ---
 function updateAuthUI(user = null) {
     const userAuthContainer = document.getElementById('userAuthContainer');
     if (userAuthContainer) {
@@ -319,7 +323,7 @@ function updateAuthUI(user = null) {
     }
 }
 
-// --- Helper: Login Modal (from welcome.js, for independence) ---
+// --- Helper: Login Modal (copied from welcome.js for consistency) ---
 function showLoginModal() {
     const colors = getThemeColors(); // Get theme colors
     const modalContent = `
