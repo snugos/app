@@ -111,23 +111,23 @@ async function deleteValue(storeName, key) {
 
 // --- Specific Implementations ---
 
-function storeAudio(key, audioBlob) {
+export function storeAudio(key, audioBlob) { // Added 'export'
     return storeValue(STORES.AUDIO, key, audioBlob);
 }
 
-function getAudio(key) {
+export function getAudio(key) { // Added 'export'
     return getValue(STORES.AUDIO, key);
 }
 
-function deleteAudio(key) {
+export function deleteAudio(key) { // Added 'export'
     return deleteValue(STORES.AUDIO, key);
 }
 
 // NEW: Functions for storing and retrieving user assets like backgrounds
-function storeAsset(key, assetBlob) {
+export function storeAsset(key, assetBlob) { // Added 'export'
     return storeValue(STORES.ASSETS, key, assetBlob);
 }
 
-function getAsset(key) {
+export function getAsset(key) { // Added 'export'
     return getValue(STORES.ASSETS, key);
 }
