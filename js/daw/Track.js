@@ -7,8 +7,8 @@ import { EffectChain } from '../EffectChain.js';
 import { SequenceManager } from './SequenceManager.js';
 import { ClipManager } from './ClipManager.js';
 
-import * as Constants from '../constants.js';
-import { createEffectInstance, AVAILABLE_EFFECTS } from './effectsRegistry.js'; // CORRECTED: Path to js/daw/effectsRegistry.js
+import * as Constants from './constants.js'; // CORRECTED: Path to js/daw/constants.js
+import { createEffectInstance, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { getMasterBusInputNode } from './audio/audio.js';
 import { captureStateForUndo } from './state/projectState.js';
 import { getWindowById } from './state/windowState.js';
