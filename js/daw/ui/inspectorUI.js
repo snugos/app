@@ -4,11 +4,9 @@
 // createDropZoneHTML, setupGenericDropZoneListeners, drawWaveform are from utils.js (loaded globally or accessed via appServices).
 // createKnob is imported from ./knobUI.js
 
-import { getTrackById, getArmedTrackId, getSoloedTrackId } from '../state/trackState.js'; // Corrected path
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
-import { showNotification, setupGenericDropZoneListeners, drawWaveform, createDropZoneHTML } from '../../utils.js'; // Corrected path
-// effectsRegistry is directly available via appServices.effectsRegistryAccess
-// createKnob is imported directly from the same folder.
+import { getTrackById, getArmedTrackId, getSoloedTrackId } from '../state/trackState.js';
+import { getOpenWindows, getWindowById } from '../state/windowState.js';
+import { showNotification, setupGenericDropZoneListeners, drawWaveform, createDropZoneHTML } from '../utils.js'; // CORRECTED PATH
 
 let localAppServices = {};
 
@@ -28,7 +26,6 @@ function getNestedParam(obj, path) {
 }
 
 function buildSynthEngineControls(track, container, engineType) {
-    // effectsRegistry is available via localAppServices.effectsRegistryAccess
     const definitions = localAppServices.effectsRegistryAccess?.synthEngineControlDefinitions?.[engineType] || [];
     if (!container || definitions.length === 0) return;
 
@@ -40,7 +37,6 @@ function buildSynthEngineControls(track, container, engineType) {
         const initialValue = getNestedParam(track.synthParams, def.path);
 
         if (def.type === 'knob') {
-            // createKnob is now provided via appServices, or imported directly
             control = localAppServices.createKnob({
                 label: def.label,
                 min: def.min,
@@ -86,7 +82,6 @@ export function renderSamplePads(track, container) {
         pad.addEventListener('click', () => {
             localAppServices.playSlicePreview?.(track.id, i);
             track.selectedSliceForEdit = i;
-            // updateSliceEditorUI is global
             updateSliceEditorUI(track, container.closest('.window-content'));
         });
         grid.appendChild(pad);
@@ -102,7 +97,6 @@ export function updateSliceEditorUI(track, container) {
     const pitchKnobEl = container.querySelector('#slice-pitch-knob-placeholder');
     if (pitchKnobEl) {
         pitchKnobEl.innerHTML = '';
-        // createKnob is global
         const knob = localAppServices.createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: slice.pitchShift || 0,
             onValueChange: (val) => { slice.pitchShift = val; }
@@ -136,13 +130,10 @@ export function renderDrumSamplerPads(track, container) {
         pad.addEventListener('click', () => {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
-            // updateDrumPadControlsUI is global
             updateDrumPadControlsUI(track, container.closest('.window-content'));
-            // renderDrumSamplerPads is global
-            renderDrumSamplerPads(track, container); // Re-render to update selection
+            renderDrumSamplerPads(track, container);
         });
 
-        // setupGenericDropZoneListeners is global
         setupGenericDropZoneListeners(
             pad,
             track.id,
@@ -180,7 +171,6 @@ export function updateDrumPadControlsUI(track, container) {
 
     const volContainer = controlsGrid.querySelector(`#volumeKnob-drumpad-${padIndex}-placeholder`);
     if (volContainer) {
-        // createKnob is global
         const volKnob = localAppServices.createKnob({
             label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: padData.volume || 0.7,
             onValueChange: (val) => { padData.volume = val; }
@@ -190,12 +180,10 @@ export function updateDrumPadControlsUI(track, container) {
     
     const pitchContainer = controlsGrid.querySelector(`#pitchKnob-drumpad-${padIndex}-placeholder`);
     if (pitchContainer) {
-        // createKnob is global
         const pitchKnob = localAppServices.createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices);
-        // Corrected: Append pitchKnob.element not knob.element
         pitchContainer.appendChild(pitchKnob.element);
     }
 
@@ -204,7 +192,6 @@ export function updateDrumPadControlsUI(track, container) {
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}-drumpad-${padIndex}`);
     if(dzContainerEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
-        // setupGenericDropZoneListeners is global
         if(dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', padIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
         const fileInputEl = dzContainerEl.querySelector(`#drum-pad-file-input-${padIndex}`);
         if(fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, padIndex); };
@@ -212,11 +199,11 @@ export function updateDrumPadControlsUI(track, container) {
 }
 
 export function openTrackInspectorWindow(trackId, savedState = null) {
-    const track = getTrackById(trackId); // Corrected from getTrackByIdState
+    const track = getTrackById(trackId);
     if (!track) return null;
     const windowId = `trackInspector-${trackId}`;
     
-    const existingWindow = getOpenWindows().get(windowId); // Corrected from getOpenWindowsState
+    const existingWindow = getOpenWindows().get(windowId);
 
     if (existingWindow) {
         if (!savedState) {
@@ -481,7 +468,6 @@ function buildInstrumentSamplerControls(track, container) {
                 }
             }
         }, localAppServices);
-        // Corrected: Append pitchKnob.element not knob.element
         pitchShiftKnobPlaceholder.appendChild(pitchKnob.element);
     }
 
@@ -498,7 +484,7 @@ function buildInstrumentSamplerControls(track, container) {
         if (placeholder) {
             const initialValue = getNestedParam(track.instrumentSamplerSettings, paramDef.path) !== undefined
                                  ? getNestedParam(track.instrumentSamplerSettings, paramDef.path)
-                                 : paramDef.defaultValue; // Use defaultValue from a common source if available
+                                 : paramDef.defaultValue;
 
             const knob = localAppServices.createKnob({
                 label: paramDef.label,
