@@ -5,28 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SnugOS Library</title>
     
-    <link rel="apple-touch-icon" sizes="57x57" href="assets/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="assets/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="assets/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="assets/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="assets/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="assets/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="assets/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="assets/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="assets/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
-    <link rel="manifest" href="manifest.json">
-    <meta name="msapplication-TileColor" content="#1e1e1e">
-    <meta name="msapplication-TileImage" content="assets/ms-icon-144x144.png">
-    <meta name="theme-color" content="#1e1e1e">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     
@@ -58,21 +36,19 @@
         </div>
     </div>
 
-    <main id="library-container" class="max-w-6xl mx-auto my-8 p-4 bg-window text-primary border border-primary rounded-lg shadow-window">
-        <h1 class="text-2xl font-bold mb-4">My Library</h1>
+    <main id="library-container" class="max-w-6xl mx-auto my-8 p-4 bg-window text-primary border border-primary rounded-lg shadow-window flex flex-col h-[calc(100vh-140px)]">
+        <h1 class="text-2xl font-bold mb-4 flex-shrink-0">My Library</h1>
         
-        <div class="mb-6 panel">
-            <h2 class="text-xl font-semibold mb-2">Upload New File</h2>
-            <div id="file-upload-dropzone" class="drop-zone border-2 border-dashed p-8 text-center cursor-pointer">
-                <p class="mb-2 text-dropzone">Drag & drop files here, or click to browse</p>
-                <input type="file" id="fileInput" class="hidden" multiple>
+        <div id="library-browser-window" class="flex flex-col flex-grow border border-secondary rounded-lg overflow-hidden">
+            <div class="flex items-center p-2 border-b border-secondary bg-gray-100 dark:bg-gray-800 flex-shrink-0">
+                <button id="uploadFileBtn" class="px-3 py-1 mr-2 bg-button text-button border border-button rounded hover:bg-button-hover hover:text-button-hover">Upload File</button>
+                <button id="createFolderBtn" class="px-3 py-1 bg-button text-button border border-button rounded hover:bg-button-hover hover:text-button-hover">New Folder</button>
+                
+                <div class="flex-grow"></div> <div id="library-path-display" class="text-sm px-2 text-secondary">/</div>
             </div>
-        </div>
 
-        <div class="mb-6 panel">
-            <h2 class="text-xl font-semibold mb-2">My Files</h2>
-            <div id="my-files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <p class="text-gray-500 italic">No files uploaded yet.</p>
+            <div id="file-view-area" class="flex-grow p-4 grid grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-4 overflow-y-auto">
+                <p class="text-gray-500 italic text-center col-span-full">Loading files...</p>
             </div>
         </div>
     </main>
@@ -98,8 +74,7 @@
     </div>
 
     <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
-
-    <div id="notification-area"></div>
+    <input type="file" id="actualFileInput" class="hidden" multiple> <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
     <script type="module" src="js/profiles/profileUtils.js"></script>
