@@ -148,13 +148,13 @@ async function fetchAndRenderMyFiles() {
                     
                     let previewHtml = '';
                     if (file.mime_type.startsWith('image/')) {
-                        previewHtml = `<img src="${file.s3_url}" alt="${file.file_name}" class="max-h-24 w-auto object-contain mb-2">`;
+                        previewHtml = `<img src="<span class="math-inline">\{file\.s3\_url\}" alt\="</span>{file.file_name}" class="max-h-24 w-auto object-contain mb-2">`;
                     } else if (file.mime_type.startsWith('audio/')) {
                         // Audio player styling handled by components.css
                         previewHtml = `<audio controls src="${file.s3_url}" class="w-full mb-2"></audio>`;
                     } else if (file.mime_type.startsWith('video/')) {
                         // Video player styling handled by components.css
-                        previewHtml = `<video controls src="${file.s3_url}" class="max-h-24 w-auto object-contain mb-2"></video>`;
+                        previewHtml = `<video controls src="${file.s3_url}" class="w-full mb-2"></video>`;
                     } else {
                         previewHtml = `<span class="text-4xl mb-2" style="color: ${colors.textPrimary};">📄</span>`; // Generic file icon
                     }
@@ -162,16 +162,16 @@ async function fetchAndRenderMyFiles() {
                     fileDiv.innerHTML = `
                         <div class="text-center w-full">
                             ${previewHtml}
-                            <p class="font-bold text-sm truncate w-full" style="color: ${colors.textPrimary};">${file.file_name}</p>
-                            <p class="text-xs" style="color: ${colors.textSecondary};">${(file.file_size / 1024 / 1024).toFixed(2)} MB</p>
-                            <p class="text-xs" style="color: ${colors.textSecondary};">${new Date(file.created_at).toLocaleDateString()}</p>
+                            <p class="font-bold text-sm truncate w-full" style="color: <span class="math-inline">\{colors\.textPrimary\};"\></span>{file.file_name}</p>
+                            <p class="text-xs" style="color: <span class="math-inline">\{colors\.textSecondary\};"\></span>{(file.file_size / 1024 / 1024).toFixed(2)} MB</p>
+                            <p class="text-xs" style="color: <span class="math-inline">\{colors\.textSecondary\};"\></span>{new Date(file.created_at).toLocaleDateString()}</p>
                         </div>
                         <div class="flex space-x-2 mt-2 w-full justify-center">
-                            <a href="${file.s3_url}" target="_blank" class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">View/DL</a>
-                            <button class="px-2 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 toggle-public-btn" data-file-id="${file.id}" data-is-public="${file.is_public}">
-                                ${file.is_public ? 'Make Private' : 'Make Public'}
-                            </button>
-                            <button class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 delete-file-btn" data-file-id="${file.id}">Delete</button>
+                            <a href="<span class="math-inline">\{file\.s3\_url\}" target\="\_blank" class\="px\-2 py\-1 bg\-blue\-500 text\-white rounded text\-xs hover\:bg\-blue\-600"\>View/DL</a\>
+<button class\="px\-2 py\-1 bg\-gray\-500 text\-white rounded text\-xs hover\:bg\-gray\-600 toggle\-public\-btn" data\-file\-id\="</span>{file.id}" data-is-public="${file.is_public}">
+                                <span class="math-inline">\{file\.is\_public ? 'Make Private' \: 'Make Public'\}
+</button\>
+<button class\="px\-2 py\-1 bg\-red\-500 text\-white rounded text\-xs hover\:bg\-red\-600 delete\-file\-btn" data\-file\-id\="</span>{file.id}">Delete</button>
                         </div>
                     `;
                     myFilesList.appendChild(fileDiv);
@@ -233,7 +233,7 @@ async function toggleFilePublicStatus(fileId, isCurrentlyPublic) {
 
     try {
         showNotification(`${action}...`, 1500);
-        const response = await fetch(`${SERVER_URL}/api/files/${fileId}`, {
+        const response = await fetch(`<span class="math-inline">\{SERVER\_URL\}/api/files/</span>{fileId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -267,7 +267,7 @@ async function deleteUserFile(fileId) {
         { label: 'Delete', action: async () => {
             try {
                 showNotification('Deleting file...', 1500);
-                const response = await fetch(`${SERVER_URL}/api/files/${fileId}`, {
+                const response = await fetch(`<span class="math-inline">\{SERVER\_URL\}/api/files/</span>{fileId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -323,7 +323,7 @@ function updateAuthUI(user = null) {
     }
 }
 
-// --- Helper: Login Modal (copied from welcome.js for consistency) ---
+// --- Helper: Login Modal (from welcome.js, for independence) ---
 function showLoginModal() {
     const colors = getThemeColors(); // Get theme colors
     const modalContent = `
@@ -481,4 +481,3 @@ function applyUserThemePreference() {
             body.classList.add('theme-light');
         }
     }
-}
