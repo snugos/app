@@ -3,16 +3,16 @@
 // NOTE: Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
 // Constants is also loaded globally via script tag.
 
-import { EffectChain } from '../EffectChain.js'; // CORRECTED: Path to js/EffectChain.js
-import { SequenceManager } from './SequenceManager.js'; // CORRECTED: Path to js/daw/SequenceManager.js
-import { ClipManager } from './ClipManager.js'; // CORRECTED: Path to js/daw/ClipManager.js
+import { EffectChain } from '../EffectChain.js';
+import { SequenceManager } from './SequenceManager.js';
+import { ClipManager } from './ClipManager.js';
 
-import * as Constants from '../constants.js'; // Assuming constants.js is now a module or will be. If global, remove this.
-import { createEffectInstance, AVAILABLE_EFFECTS } from '../effectsRegistry.js';
+import * as Constants from '../constants.js';
+import { createEffectInstance, AVAILABLE_EFFECTS } from './effectsRegistry.js'; // CORRECTED: Path to js/daw/effectsRegistry.js
 import { getMasterBusInputNode } from './audio/audio.js';
 import { captureStateForUndo } from './state/projectState.js';
 import { getWindowById } from './state/windowState.js';
-import { showNotification, drawWaveform } from '../utils.js';
+import { showNotification, drawWaveform } from './utils.js'; // CORRECTED: Path to js/daw/utils.js
 
 
 class Track {
