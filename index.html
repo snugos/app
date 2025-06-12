@@ -59,16 +59,17 @@
     </div>
 
     <div id="desktop" class="relative h-full w-full">
+        <!-- The welcome message has been removed to make room for icons -->
         <div id="desktop-icons-container" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            </div>
+            <!-- Desktop icons will be rendered here by welcome.js -->
+        </div>
     </div>
 
     <div id="taskbar" class="select-none">
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
-        </div>
-        <div style="flex-grow: 1;"></div> 
-        <div id="taskbarClockDisplay" class="text-right px-2"></div>
+            </div>
+        <div style="flex-grow: 1;"></div> <div id="taskbarClockDisplay" class="text-right px-2"></div>
     </div>
 
     <div id="startMenu" class="hidden select-none">
@@ -89,10 +90,13 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
+    <!-- NOTE: Added these scripts to enable the windowing system on the welcome page. -->
+    <!-- This will fix the "SnugWindow is not defined" error. -->
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script type="module" src="js/daw/SnugWindow.js"></script>
 
+    <!-- Original welcome page scripts -->
     <script type="module" src="js/welcome/welcomeUtils.js"></script>
     <script type="module" src="js/welcome/welcomeDb.js"></script>
     <script type="module" src="js/welcome/welcome.js"></script>
