@@ -1,8 +1,8 @@
 // js/daw/ClipManager.js
 // NOTE: Constants, Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
 
-import * as Constants from '../constants.js'; // CORRECTED: Path to js/daw/constants.js
-import { storeAudio, getAudio, deleteAudio } from '../db.js';
+import * as Constants from './constants.js'; // CORRECTED: Path to js/daw/constants.js
+import { storeAudio, getAudio, deleteAudio } from '../db.js'; // Corrected path to js/db.js
 import { showNotification } from './utils.js'; // CORRECTED: Path to js/daw/utils.js
 import { captureStateForUndo } from './state/projectState.js';
 
