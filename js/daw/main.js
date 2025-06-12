@@ -41,7 +41,7 @@ import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 import { initializeAuth, handleBackgroundUpload } from '../auth.js';
 
 // Import the new state modules
-import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState, setMidiAccess } from './state/appState.js'; // CORRECTED: Added setMidiAccess
+import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState, setMidiAccess } from './state/appState.js';
 import { initializeMasterState, getMasterEffects, setMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
@@ -262,7 +262,7 @@ async function initializeSnugOS() {
             const transportTime = Tone.Transport.seconds;
             
             const mode = getPlaybackMode();
-            updatePianoRollPlayhead(transportTime);
+            appServices.updatePianoRollPlayhead(transportTime); // CORRECTED: Access via appServices
             
             updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, getTracks());
         }
@@ -342,7 +342,7 @@ async function initializeSnugOS() {
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
     initializeMetronome(appServices);
-    initializeAuth(appServices); // This now references the imported initializeAuth
+    initializeAuth(appServices);
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
