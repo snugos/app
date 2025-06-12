@@ -32,12 +32,15 @@ import {
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderDirectoryView, renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob
+    renderDrumSamplerPushInputBtn, updateDrumPadControlsUI, createKnob
 } from './ui/ui.js';
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
-// Import the new state modules - CORRECTED PATHS
+// NEW: Explicitly import functions from auth.js as it is now a module
+import { initializeAuth, handleBackgroundUpload } from '../auth.js'; // CORRECTED: Added import
+
+// Import the new state modules
 import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState } from './state/appState.js';
 import { initializeMasterState, getMasterEffects, setMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
@@ -271,7 +274,7 @@ async function initializeSnugOS() {
         showNotification: showNotification, createContextMenu: createContextMenu, updateTrackUI: handleTrackUIUpdate,
         showCustomModal: showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
         applyCustomBackground: applyCustomBackground,
-        handleBackgroundUpload: handleBackgroundUpload,
+        handleBackgroundUpload: handleBackgroundUpload, // This now references the imported handleBackgroundUpload
         getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack,
         removeTrack: removeTrack, getOpenWindows: getOpenWindows, getWindowById: getWindowById,
         getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ,
@@ -339,7 +342,7 @@ async function initializeSnugOS() {
     initializeUIModule(appServices);
     initializeEventHandlersModule(appServices);
     initializeMetronome(appServices);
-    initializeAuth(appServices);
+    initializeAuth(appServices); // This now references the imported initializeAuth
 
     initializePrimaryEventListeners();
     attachGlobalControlEvents({});
