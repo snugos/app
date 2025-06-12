@@ -5,13 +5,11 @@
 
 let localAppServices = {};
 
-// Removed export
-function initializePlayback(appServices) {
+export function initializePlayback(appServices) { // Added 'export' here
     localAppServices = appServices;
 }
 
-// Removed export
-function scheduleTimelinePlayback() {
+export function scheduleTimelinePlayback() { // Added 'export' here
     // First, clear any existing scheduled events from the transport
     Tone.Transport.cancel(0);
 
@@ -64,8 +62,7 @@ function scheduleTimelinePlayback() {
     });
 }
 
-// Removed export
-async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
+export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) { // Added 'export' here
     const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
     if (!audioReady) {
         // showNotification is global
@@ -108,8 +105,7 @@ async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalP
     }, scheduledTime + playDuration + 0.5);
 }
 
-// Removed export
-async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
+export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) { // Added 'export' here
     const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
     if (!audioReady) {
         // showNotification is global
