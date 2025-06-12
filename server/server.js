@@ -257,15 +257,8 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
         res.status(201).json({ success: true, file: result.rows[0] });
 } catch (error) {
     console.error("[File Upload] Error:", error);
-    // Temporarily send the detailed error back to the browser for debugging
-    res.status(500).json({
-        success: false,
-        message: 'Server crashed during file upload.',
-        error: {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-        }
+    res.status(500).json({ success: false, message: 'Error uploading file.' });
+}
     });
 }
 });
