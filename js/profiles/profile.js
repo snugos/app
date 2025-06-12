@@ -1,24 +1,22 @@
-// js/profiles/profile.js - Main JavaScript for the independent Profile Page
-
-// NOTE: Utility functions are globally available from utils.js
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let currentProfileData = null;
-let isEditing = false; // To track edit mode for the bio
+let isEditing = false;
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    loggedInUser = checkLocalAuth();
+    loadAndApplyGlobals(); 
+    
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
-
     if (username) {
         loadProfilePage(username);
     } else {
         const profileContainer = document.getElementById('profile-container');
-        profileContainer.innerHTML = `<div class="text-center p-12"><p style="color:red;">Error: No username specified in URL.</p></div>`;
+        profileContainer.innerHTML = `<div class="text-center p-12"><p style="color:red;">Error: No username specified.</p></div>`;
     }
 
-    // Listener for the hidden avatar file input
     document.getElementById('avatarUploadInput')?.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             handleAvatarUpload(e.target.files[0]);
@@ -26,7 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- Core Profile Loading and Rendering ---
+async function loadAndApplyGlobals() {
+    if (!loggedInUser) return;
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/profile/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success && data.profile.background_url) {
+            document.body.style.backgroundImage = `url(${data.profile.background_url})`;
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+        }
+    } catch (error) {
+        console.error("Could not apply global settings:", error);
+    }
+}
 
 async function loadProfilePage(username) {
     isEditing = false;
@@ -35,7 +49,6 @@ async function loadProfilePage(username) {
     profileContainer.innerHTML = '<div class="text-center p-12"><p>Loading Profile...</p></div>';
 
     try {
-        // Fetch profile data and friend status at the same time
         const token = localStorage.getItem('snugos_token');
         const [profileRes, friendStatusRes] = await Promise.all([
             fetch(`${SERVER_URL}/api/profiles/${username}`),
@@ -46,14 +59,14 @@ async function loadProfilePage(username) {
         if (!profileRes.ok) throw new Error(profileData.message);
 
         const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null;
-
+        
         loggedInUser = checkLocalAuth();
         currentProfileData = profileData.profile;
         currentProfileData.isFriend = friendStatusData?.isFriend || false;
 
         updateProfileUI(profileContainer, currentProfileData);
     } catch (error) {
-        profileContainer.innerHTML = `<div class="text-center p-12"><p style="color:red;">Error loading profile: ${error.message}</p></div>`;
+        profileContainer.innerHTML = `<div class="text-center p-12"><p style="color:red;">Error: ${error.message}</p></div>`;
     }
 }
 
@@ -61,17 +74,14 @@ function updateProfileUI(container, profileData) {
     const isOwner = loggedInUser && loggedInUser.id === profileData.id;
     const joinDate = new Date(profileData.created_at).toLocaleDateString();
 
-    // Avatar display logic
     let avatarContent = profileData.avatar_url
-        ? `<img src="${profileData.avatar_url}" alt="${profileData.username}'s avatar" class="w-full h-full object-cover">`
+        ? `<img src="${profileData.avatar_url}" alt="avatar" class="w-full h-full object-cover">`
         : `<span class="text-4xl font-bold">${profileData.username.charAt(0).toUpperCase()}</span>`;
 
-    // Clickable overlay for avatar upload
     const uploadOverlay = isOwner
-        ? `<div id="avatarOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" title="Change Profile Picture">...</div>`
+        ? `<div id="avatarOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" title="Change Picture">...</div>`
         : '';
         
-    // Action buttons (Edit, Add Friend, Message)
     let actionButtons = '';
     if (isOwner) {
         actionButtons = `<button id="editProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Edit Profile</button>`;
@@ -88,8 +98,7 @@ function updateProfileUI(container, profileData) {
         <div class="bg-window text-primary border border-primary rounded-lg shadow-window">
             <div class="relative h-40 bg-gray-700 rounded-t-lg bg-cover bg-center" style="background-image: url(${profileData.background_url || ''})">
                 <div id="avatarContainer" class="absolute bottom-0 left-6 transform translate-y-1/2 w-28 h-28 rounded-full border-4 border-window bg-gray-500 flex items-center justify-center text-white overflow-hidden">
-                    ${avatarContent}
-                    ${uploadOverlay}
+                    ${avatarContent}${uploadOverlay}
                 </div>
             </div>
             <div class="pt-20 px-6 pb-4 border-b border-secondary flex justify-between items-end">
@@ -99,8 +108,7 @@ function updateProfileUI(container, profileData) {
                 </div>
                 <div class="flex space-x-2">${actionButtons}</div>
             </div>
-            <div id="profile-body-content" class="p-6">
-                </div>
+            <div id="profile-body-content" class="p-6"></div>
         </div>
     `;
 
@@ -111,7 +119,6 @@ function updateProfileUI(container, profileData) {
         renderViewMode(profileBody, profileData);
     }
 
-    // Attach all event listeners
     if (isOwner) {
         container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
         container.querySelector('#editProfileBtn')?.addEventListener('click', () => {
@@ -155,35 +162,33 @@ function renderEditMode(container, profileData) {
     });
 }
 
-// --- Action Handlers (Avatar, Friends, Bio, Messages) ---
-
 async function handleAvatarUpload(file) {
     if (!loggedInUser) return;
-    const formData = new FormData();
-    formData.append('avatarFile', file);
     showNotification("Uploading picture...", 2000);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', '/avatars/');
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}/api/profile/avatar`, {
+        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) throw new Error(uploadResult.message);
+        const newAvatarUrl = uploadResult.file.s3_url;
+        const settingsResponse = await fetch(`${SERVER_URL}/api/profile/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ avatar_url: newAvatarUrl })
+        });
+        const settingsResult = await settingsResponse.json();
+        if (!settingsResult.success) throw new Error(settingsResult.message);
         showNotification("Profile picture updated!", 2000);
-        // Dynamically update the image on the page
-        const avatarContainer = document.getElementById('avatarContainer');
-        if (avatarContainer) {
-            const oldContent = avatarContainer.querySelector('img, span');
-            if(oldContent) oldContent.remove();
-            const newImg = document.createElement('img');
-            newImg.src = result.avatar_url;
-            newImg.className = 'w-full h-full object-cover';
-            avatarContainer.insertAdjacentElement('afterbegin', newImg);
-        }
+        loadProfilePage(loggedInUser.username);
     } catch (error) {
-        showNotification(`Upload failed: ${error.message}`, 4000);
+        showNotification(`Update failed: ${error.message}`, 4000);
     }
 }
 
@@ -220,18 +225,16 @@ async function handleAddFriendToggle(username, isFriend) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         showNotification(result.message, 2000);
-        loadProfilePage(username); // Refresh to show new friend status
+        loadProfilePage(username);
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
 function showMessageModal(recipientUsername) {
-    const modalContent = `
-        <textarea id="messageTextarea" class="w-full p-2 border rounded-md" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);" rows="5" placeholder="Your message..."></textarea>
-    `;
+    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5"></textarea>`;
     showCustomModal(`Message ${recipientUsername}`, modalContent, [
-        { label: 'Cancel', action: () => {} },
+        { label: 'Cancel' },
         { label: 'Send', action: () => {
             const content = document.getElementById('messageTextarea').value;
             if (content) sendMessage(recipientUsername, content);
@@ -242,7 +245,7 @@ function showMessageModal(recipientUsername) {
 async function sendMessage(recipientUsername, content) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    showNotification("Sending message...", 1500);
+    showNotification("Sending...", 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/messages`, {
             method: 'POST',
@@ -257,7 +260,6 @@ async function sendMessage(recipientUsername, content) {
     }
 }
 
-// --- Auth Helper ---
 function checkLocalAuth() {
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
