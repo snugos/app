@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Base Styling inspired by your website --- */
+        :root {
+            --bg-primary: #000000;
+            --text-primary: #FFFFFF;
+            --border-primary: #FFFFFF;
+            --bg-button: #000000;
+            --text-button: #FFFFFF;
+            --border-button: #FFFFFF;
+            --bg-button-hover: #FFFFFF;
+            --text-button-hover: #000000;
+        }
+
+        /* Make body and html take full height for vertical centering */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            text-transform: lowercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            height: 2.5rem; /* Keep space to prevent layout shift */
+        }
+
+        /* --- Game Layout --- */
+        .game-container {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            border: 2px solid var(--border-primary);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        #game-board {
+            border: 1px solid var(--border-primary);
+            display: block; /* Remove extra space below canvas */
+        }
+
+        .sidebar {
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .info-panel, .controls-panel {
+            border: 1px solid var(--border-primary);
+            padding: 1rem;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .info-panel h2, .controls-panel h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border-primary);
+            padding-bottom: 0.5rem;
+        }
+
+        .info-panel div {
+            font-size: 1rem;
+        }
+
+        #next-piece-canvas {
+            background-color: var(--bg-primary);
+            align-self: center;
+            display: block; /* Remove extra space below canvas */
+        }
+        
+        /* --- Button Styling inspired by your website --- */
+        button {
+            background-color: var(--bg-button);
+            border: 1px solid var(--border-button);
+            color: var(--text-button);
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+            font-size: 1rem;
+            text-transform: lowercase;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: var(--bg-button-hover);
+            color: var(--text-button-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* --- Modal for Game Over --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-dialog {
+            background-color: var(--bg-primary);
+            border: 2px solid var(--border-primary);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-dialog h2 {
+            margin-top: 0;
+            font-size: 2rem;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            body {
+                justify-content: flex-start;
+                padding-top: 2rem;
+            }
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+                padding: 1rem;
+                gap: 1rem;
+                border: none;
+            }
+            .sidebar {
+                width: 100%;
+                max-width: 300px; /* Max width for sidebar on mobile */
+                flex-direction: row;
+                justify-content: space-around;
+                flex-wrap: wrap;
+            }
+            .info-panel, .controls-panel {
+                flex-grow: 1;
+            }
+            h1 {
+                display: none;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1></h1>
+
+    <div class="game-container">
+        <canvas id="game-board"></canvas>
+        <div class="sidebar">
+            <div class="info-panel">
+                <h2>info</h2>
+                <div>score: <span id="score">0</span></div>
+                <div>lines: <span id="lines">0</span></div>
+                <div>level: <span id="level">1</span></div>
+            </div>
+             <div class="info-panel">
+                <h2>next</h2>
+                <canvas id="next-piece-canvas"></canvas>
+            </div>
+            <div class="controls-panel">
+                 <h2>controls</h2>
+                <button id="start-btn">start</button>
+                <button id="pause-btn">pause</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="game-over-modal" class="modal-overlay">
+        <div class="modal-dialog">
+            <h2>game over</h2>
+            <p>final score: <span id="final-score">0</span></p>
+            <button id="restart-btn">restart</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Canvas and Context Setup ---
+        const boardCanvas = document.getElementById('game-board');
+        const boardCtx = boardCanvas.getContext('2d');
+        const nextCanvas = document.getElementById('next-piece-canvas');
+        const nextCtx = nextCanvas.getContext('2d');
+
+        // --- Game Constants ---
+        const COLS = 10;
+        const ROWS = 20;
+        const LINES_PER_LEVEL = 10;
+        let BLOCK_SIZE = 30; // Will be calculated dynamically
+
+        // --- Colors & Tetrominoes (Shapes) ---
+        const PIECE_COLOR = '#FFFFFF';
+        const BORDER_COLOR = '#444444'; // Dark gray for block outlines
+        const TETROMINOES = {
+            'I': [[1, 1, 1, 1]],
+            'J': [[1, 0, 0], [1, 1, 1]],
+            'L': [[0, 0, 1], [1, 1, 1]],
+            'O': [[1, 1], [1, 1]],
+            'S': [[0, 1, 1], [1, 1, 0]],
+            'T': [[0, 1, 0], [1, 1, 1]],
+            'Z': [[1, 1, 0], [0, 1, 1]]
+        };
+        const PIECE_KEYS = 'IJLOSTZ';
+
+        // --- Game State Variables ---
+        let grid;
+        let currentPiece;
+        let nextPiece;
+        let score;
+        let lines;
+        let level;
+        let dropCounter;
+        let dropInterval;
+        let lastTime; // To calculate time between frames
+        let isPaused = false;
+        let isGameOver = false;
+        let animationFrameId;
+
+        // --- UI Elements ---
+        const scoreEl = document.getElementById('score');
+        const linesEl = document.getElementById('lines');
+        const levelEl = document.getElementById('level');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const finalScoreEl = document.getElementById('final-score');
+        
+        // --- Game Logic ---
+        
+        /**
+         * Represents a Tetromino piece.
+         * @param {Array<Array<number>>} shape The 2D array representing the piece shape.
+         */
+        class Piece {
+            constructor(shape) {
+                this.shape = shape;
+                this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
+                this.y = 0;
+            }
+        }
+        
+        /**
+         * Creates an empty grid for the game board.
+         * @returns {Array<Array<number>>} A 2D array initialized to zeros.
+         */
+        function createEmptyGrid() {
+            return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+        }
+        
+        /**
+         * Generates a new random Tetromino piece.
+         * @returns {Piece} A new piece object.
+         */
+        function generatePiece() {
+            const randomKey = PIECE_KEYS[Math.floor(Math.random() * PIECE_KEYS.length)];
+            const shape = TETROMINOES[randomKey];
+            return new Piece(shape);
+        }
+
+        /**
+         * Resets the game state to start a new game.
+         */
+        function resetGame() {
+            grid = createEmptyGrid();
+            score = 0;
+            lines = 0;
+            level = 1;
+            dropCounter = 0;
+            dropInterval = 1000; // Initial drop speed: 1 second
+            lastTime = 0;
+            isPaused = false;
+            isGameOver = false;
+            
+            currentPiece = generatePiece();
+            nextPiece = generatePiece();
+            
+            updateUI();
+            gameOverModal.style.display = 'none';
+        }
+        
+        /**
+         * The main game loop, responsible for updating the game state.
+         * @param {number} time The current time from requestAnimationFrame.
+         */
+        function update(time = 0) {
+            if (isPaused || isGameOver) {
+                return;
+            }
+
+            // Calculate time since last frame
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            
+            // Accumulate time
+            dropCounter += deltaTime;
+            
+            // Adjust speed based on level, with a max speed cap
+            dropInterval = 1000 - (level - 1) * 50;
+            if (dropInterval < 100) {
+                dropInterval = 100; // Max speed
+            }
+
+            // Time to drop the piece?
+            if (dropCounter > dropInterval) {
+                 pieceDrop();
+            }
+           
+            draw();
+            animationFrameId = requestAnimationFrame(update);
+        }
+        
+        /**
+         * Handles the automatic dropping of the current piece.
+         */
+        function pieceDrop() {
+             if (isPaused) return;
+             currentPiece.y++;
+             if (checkCollision(grid, currentPiece)) {
+                 currentPiece.y--;
+                 lockPiece();
+                 removeFullRows();
+                 currentPiece = nextPiece;
+                 nextPiece = generatePiece();
+                 
+                 // Check for game over condition
+                 if (checkCollision(grid, currentPiece)) {
+                    gameOver();
+                 }
+             }
+             // Reset the drop counter after a drop
+             dropCounter = 0;
+        }
+
+        /**
+         * Instantly drops the piece to the bottom-most valid position.
+         */
+        function hardDrop() {
+            if (isPaused || isGameOver) return;
+
+            while (!checkCollision(grid, currentPiece)) {
+                currentPiece.y++;
+            }
+            currentPiece.y--; // Move back to the last valid position
+
+            lockPiece();
+            removeFullRows();
+            currentPiece = nextPiece;
+            nextPiece = generatePiece();
+            
+            if (checkCollision(grid, currentPiece)) {
+                gameOver();
+            }
+            
+            dropCounter = 0;
+            draw(); // Immediately redraw to show the new state
+        }
+        
+        /**
+         * Checks for collision between a piece and the grid.
+         * @param {Array<Array<number>>} grid The game board.
+         * @param {Piece} piece The piece to check.
+         * @returns {boolean} True if there is a collision, false otherwise.
+         */
+        function checkCollision(grid, piece) {
+            for (let y = 0; y < piece.shape.length; y++) {
+                for (let x = 0; x < piece.shape[y].length; x++) {
+                    if (piece.shape[y][x] !== 0) {
+                        let newX = piece.x + x;
+                        let newY = piece.y + y;
+                        if (
+                            newX < 0 || newX >= COLS || // Out of bounds horizontally
+                            newY >= ROWS ||             // Out of bounds vertically
+                            (grid[newY] && grid[newY][newX] !== 0) // Collides with another piece
+                        ) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        
+        /**
+         * Locks the current piece into the grid.
+         */
+        function lockPiece() {
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        grid[currentPiece.y + y][currentPiece.x + x] = 1; // Mark block as filled
+                    }
+                });
+            });
+        }
+        
+        /**
+         * Checks for and removes any full rows from the grid.
+         */
+        function removeFullRows() {
+            let rowsCleared = 0;
+            outer: for (let y = ROWS - 1; y >= 0; y--) {
+                for (let x = 0; x < COLS; x++) {
+                    if (grid[y][x] === 0) {
+                        continue outer; // Row is not full, move to the next one
+                    }
+                }
+                
+                // If we get here, the row is full
+                const row = grid.splice(y, 1)[0].fill(0);
+                grid.unshift(row);
+                rowsCleared++;
+                y++; // Re-check the same row index since we shifted everything down
+            }
+
+            if (rowsCleared > 0) {
+                // Scoring system (e.g., Tetris Guideline)
+                const points = [0, 100, 300, 500, 800];
+                score += points[rowsCleared] * level;
+                lines += rowsCleared;
+                
+                // Check for level up
+                if (lines >= level * LINES_PER_LEVEL) {
+                    level++;
+                }
+                
+                updateUI();
+            }
+        }
+        
+        /**
+         * Rotates the current piece's shape matrix.
+         * @param {number} dir Direction to rotate (1 for clockwise, -1 for counter-clockwise).
+         */
+        function rotatePiece(dir) {
+            const shape = currentPiece.shape;
+            const newShape = [];
+            for (let y = 0; y < shape[0].length; y++) {
+                newShape.push([]);
+                for (let x = 0; x < shape.length; x++) {
+                    newShape[y].push(shape[shape.length - 1 - x][y]);
+                }
+            }
+            
+            // Prevent rotating into walls
+            const originalX = currentPiece.x;
+            let offset = 1;
+            const originalShape = currentPiece.shape;
+            currentPiece.shape = newShape;
+
+            while (checkCollision(grid, currentPiece)) {
+                currentPiece.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > currentPiece.shape[0].length) {
+                    currentPiece.shape = originalShape; // Can't rotate, revert
+                    currentPiece.x = originalX;
+                    return;
+                }
+            }
+        }
+        
+        // --- Drawing Functions ---
+        
+        /**
+         * Draws a single block on the canvas.
+         * @param {CanvasRenderingContext2D} ctx The canvas context.
+         * @param {number} x The x-coordinate (in grid units).
+         * @param {number} y The y-coordinate (in grid units).
+         */
+        function drawBlock(ctx, x, y) {
+            ctx.fillStyle = PIECE_COLOR;
+            ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+            ctx.strokeStyle = BORDER_COLOR;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+        }
+        
+        /**
+         * Draws the game board (locked pieces).
+         */
+        function drawBoard() {
+            grid.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        drawBlock(boardCtx, x, y);
+                    }
+                });
+            });
+        }
+        
+        /**
+         * Draws the currently falling piece.
+         */
+        function drawCurrentPiece() {
+            if (!currentPiece) return;
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y);
+                    }
+                });
+            });
+        }
+        
+        /**
+         * Draws the next piece in its preview box.
+         */
+        function drawNextPiece() {
+            if (!nextPiece) return;
+            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+            const shape = nextPiece.shape;
+            const shapeWidth = shape[0].length * BLOCK_SIZE;
+            const shapeHeight = shape.length * BLOCK_SIZE;
+            const offsetX = (nextCanvas.width - shapeWidth) / 2;
+            const offsetY = (nextCanvas.height - shapeHeight) / 2;
+
+            shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        nextCtx.fillStyle = PIECE_COLOR;
+                        nextCtx.fillRect(offsetX + x * BLOCK_SIZE, offsetY + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                        nextCtx.strokeStyle = BORDER_COLOR;
+                        nextCtx.lineWidth = 2;
+                        nextCtx.strokeRect(offsetX + x * BLOCK_SIZE, offsetY + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+                    }
+                });
+            });
+        }
+        
+        /**
+         * Main drawing function, clears and redraws everything.
+         */
+        function draw() {
+            boardCtx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
+            drawBoard();
+            drawCurrentPiece();
+            drawNextPiece();
+        }
+        
+        /**
+         * Updates the score, lines, and level display.
+         */
+        function updateUI() {
+            scoreEl.textContent = score;
+            linesEl.textContent = lines;
+            levelEl.textContent = level;
+        }
+
+        /**
+         * Handles the game over state.
+         */
+        function gameOver() {
+            isGameOver = true;
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            finalScoreEl.textContent = score;
+            gameOverModal.style.display = 'flex';
+        }
+
+        // --- Event Handlers ---
+        
+        /**
+         * Starts the game.
+         */
+        function startGame() {
+            if (isGameOver) {
+                resetGame();
+            }
+            if (!animationFrameId) {
+                isPaused = false;
+                pauseBtn.textContent = 'pause';
+                lastTime = 0; 
+                animationFrameId = requestAnimationFrame(update);
+            }
+        }
+        
+        /**
+         * Pauses or resumes the game.
+         */
+        function togglePause() {
+            if (isGameOver || (!animationFrameId && !isPaused)) return; 
+            
+            isPaused = !isPaused;
+            if (isPaused) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                pauseBtn.textContent = 'resume';
+            } else {
+                pauseBtn.textContent = 'pause';
+                lastTime = performance.now(); 
+                update(lastTime);
+            }
+        }
+        
+        /**
+         * Recalculates canvas sizes and redraws the game.
+         */
+        function resizeGame() {
+            // Calculate available space, leaving some padding
+            const padding = 32;
+            const sidebarWidth = 150 + (32 * 2); // approx sidebar width + gaps
+            let availableWidth = window.innerWidth - sidebarWidth - padding;
+            if (window.innerWidth <= 768) { // On mobile view, sidebar is below
+                 availableWidth = window.innerWidth - padding;
+            }
+            const availableHeight = window.innerHeight - (document.querySelector('h1').offsetHeight * 2) - padding;
+
+            // Calculate block size based on aspect ratio
+            const blockSizeW = availableWidth / COLS;
+            const blockSizeH = availableHeight / ROWS;
+            BLOCK_SIZE = Math.floor(Math.min(blockSizeW, blockSizeH));
+            
+            // Set main canvas size
+            boardCanvas.width = COLS * BLOCK_SIZE;
+            boardCanvas.height = ROWS * BLOCK_SIZE;
+
+            // Set next piece canvas size
+            nextCanvas.width = 4 * BLOCK_SIZE;
+            nextCanvas.height = 4 * BLOCK_SIZE;
+            
+            // Redraw the game with the new sizes
+            draw();
+        }
+
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', togglePause);
+        restartBtn.addEventListener('click', () => {
+            resetGame();
+            startGame();
+        });
+        
+        document.addEventListener('keydown', event => {
+            if (isPaused || isGameOver) {
+                return;
+            }
+
+            let moved = false;
+            switch (event.code) { // Use event.code for layout-independent keys
+                case 'ArrowLeft':
+                case 'KeyA':
+                    currentPiece.x--;
+                    if (checkCollision(grid, currentPiece)) {
+                        currentPiece.x++;
+                    } else {
+                        moved = true;
+                    }
+                    break;
+                case 'ArrowRight':
+                case 'KeyD':
+                    currentPiece.x++;
+                    if (checkCollision(grid, currentPiece)) {
+                        currentPiece.x--;
+                    } else {
+                        moved = true;
+                    }
+                    break;
+                case 'ArrowDown':
+                case 'KeyS':
+                    pieceDrop();
+                    break;
+                case 'ArrowUp':
+                case 'KeyW':
+                    rotatePiece(1);
+                    moved = true;
+                    break;
+                case 'Space': 
+                    event.preventDefault(); 
+                    hardDrop();
+                    break;
+            }
+            
+            if (moved) {
+                draw();
+            }
+        });
+
+        // --- Initial Game Setup ---
+        window.addEventListener('resize', resizeGame);
+        resetGame();
+        resizeGame(); // Set initial size
+    </script>
+
+</body>
+</html>
