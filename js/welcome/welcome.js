@@ -6,6 +6,10 @@ const appServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
+/**
+ * Creates and opens a new window containing the Tetris game.
+ * The game itself is loaded from tetris.html into an iframe.
+ */
 function openGameWindow() {
     const windowId = 'tetrisGame';
     if (appServices.getWindowById(windowId)) {
@@ -14,7 +18,7 @@ function openGameWindow() {
     }
 
     const content = document.createElement('iframe');
-    content.src = 'tetris.html';
+    content.src = 'tetris.html'; // The game file to load
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
@@ -29,15 +33,21 @@ function openGameWindow() {
     new SnugWindow(windowId, 'Snugtris', content, options, appServices);
 }
 
+/**
+ * Sets up the main welcome page functionality.
+ */
 function initializeWelcomePage() {
+    // Populate the appServices object. These functions are expected to be globally available
+    // from the other script files you load in index.html (like utils.js, state.js).
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.storeAsset = storeAsset;
     appServices.getAsset = getAsset;
-
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
     if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
+    if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
+    if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
     if (typeof getWindowByIdState !== 'undefined') appServices.getWindowById = getWindowByIdState;
     if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
 
@@ -49,6 +59,10 @@ function initializeWelcomePage() {
     initAudioOnFirstGesture();
 }
 
+/**
+ * Handles browser security restrictions by starting the audio context
+ * only after the first user click on the page.
+ */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
         try {
@@ -64,14 +78,23 @@ function initAudioOnFirstGesture() {
     document.body.addEventListener('mousedown', startAudio);
 }
 
+/**
+ * Attaches all primary event listeners for the page.
+ */
 function attachEventListeners() {
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
     document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
-    document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
-    document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
+    document.getElementById('menuLogin')?.addEventListener('click', () => {
+        toggleStartMenu();
+        showLoginModal();
+    });
+    document.getElementById('menuLogout')?.addEventListener('click', () => {
+        toggleStartMenu();
+        handleLogout();
+    });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('customBgInput')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -80,6 +103,9 @@ function attachEventListeners() {
     });
 }
 
+/**
+ * Renders the application icons on the desktop.
+ */
 function renderDesktopIcons() {
     const desktopIconsContainer = document.getElementById('desktop-icons-container');
     if (!desktopIconsContainer) return;
@@ -168,21 +194,17 @@ async function checkInitialAuthState() {
         updateAuthUI(null);
         return;
     }
-
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
             return handleLogout();
         }
-        
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
-
         const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
             applyCustomBackground(backgroundBlob);
         }
-
     } catch (e) {
         console.error("Error during initial auth state check:", e);
         handleLogout();
@@ -194,7 +216,6 @@ function updateAuthUI(user = null) {
     const userAuthContainer = document.getElementById('userAuthContainer');
     const menuLogin = document.getElementById('menuLogin');
     const menuLogout = document.getElementById('menuLogout');
-
     if (user && userAuthContainer) {
         userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span>`;
         menuLogin?.classList.add('hidden');
@@ -230,9 +251,7 @@ function showLoginModal() {
             </div>
         </div>
     `;
-    
     const { overlay } = showCustomModal('Login or Register', modalContent, []);
-
     overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#loginUsername').value;
@@ -240,7 +259,6 @@ function showLoginModal() {
         await handleLogin(username, password);
         overlay.remove();
     });
-
     overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#registerUsername').value;
@@ -258,7 +276,6 @@ async function handleLogin(username, password) {
             body: JSON.stringify({ username, password })
         });
         const data = await response.json();
-
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
             await checkInitialAuthState();
@@ -330,9 +347,7 @@ function applyCustomBackground(source) {
     } else if (source instanceof Blob || source instanceof File) {
         url = URL.createObjectURL(source);
         fileType = source.type;
-    } else {
-        return;
-    }
+    } else { return; }
     if (fileType.startsWith('image/')) {
         desktopEl.style.backgroundImage = `url(${url})`;
         desktopEl.style.backgroundSize = 'cover';
