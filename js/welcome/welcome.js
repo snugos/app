@@ -21,7 +21,7 @@ function initializeWelcomePage() {
     updateClockDisplay();
     checkInitialAuthState(); // Will now use functions defined/imported in welcome.js scope
     applyUserThemePreference(); // Will also be self-contained
-    renderDesktopIcons(); // NEW: Call to render desktop icons
+    renderDesktopIcons(); // Call to render desktop icons
 }
 
 function attachEventListeners() {
@@ -36,20 +36,6 @@ function attachEventListeners() {
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-
-    // Removed direct event listeners for 'launchDawBtn' and 'viewProfilesBtn'
-    // as these are now handled by desktop icons.
-
-    // Close start menu on click outside
-    document.addEventListener('click', (e) => {
-        const startMenu = document.getElementById('startMenu');
-        const startButton = document.getElementById('startButton');
-        if (startMenu && !startMenu.classList.contains('hidden')) {
-            if (!startMenu.contains(e.target) && e.target !== startButton) {
-                startMenu.classList.add('hidden');
-            }
-        }
-    });
 
     // Custom background upload for welcome page
     const customBgInput = document.getElementById('customBgInput');
@@ -73,27 +59,55 @@ function renderDesktopIcons() {
     desktopIconsContainer.innerHTML = '';
 
     const icons = [
-        { id: 'snaw-daw-icon', name: 'Snaw DAW', imgSrc: 'assets/snaw-icon.png', action: launchDaw },
-        { id: 'profiles-icon', name: 'Profiles', imgSrc: 'assets/profiles-icon.png', action: viewProfiles },
-        // Add more icons here as needed
-        // { id: 'sound-library-icon', name: 'Sound Library', imgSrc: 'assets/sound-library-icon.png', action: () => showNotification('Sound Library will open here!', 2000) },
-        // { id: 'settings-icon', name: 'Settings', imgSrc: 'assets/settings-icon.png', action: () => showNotification('Settings will open here!', 2000) },
+        { 
+            id: 'snaw-icon', 
+            name: 'Snaw', // Changed text here
+            action: launchDaw,
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14H8V8h2v8zm4 0h-2V8h2v8zm-3-9.75V11H8V6.25a2.25 2.25 0 014.5 0v4.75h-1V11z"/>
+                        </svg>`
+        },
+        { 
+            id: 'profiles-icon', 
+            name: 'Profiles', 
+            action: viewProfiles,
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
+                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0V3.75a.75.75 0 011.5 0V6a7.5 7.5 0 11-15 0V3.75a.75.75 0 011.5 0V6zM3.75 16.5a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zM3 20.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
+                        </svg>`
+        },
+        { 
+            id: 'sound-library-icon', 
+            name: 'Sound Library', 
+            action: () => showNotification('Sound Library will open here!', 2000), // Placeholder action
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
+                            <path fill-rule="evenodd" d="M19.5 9a7.5 7.5 0 100 6h-15a.75.75 0 000 1.5h15.75A3.75 3.75 0 0023.25 15V9.75a.75.75 0 00-.75-.75H19.5z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M3.75 9H1.5a.75.75 0 00-.75.75V15a3.75 3.75 0 003.75 3.75h1.5a.75.75 0 000-1.5H3.75A2.25 2.25 0 011.5 15V9.75c0-.414.336-.75.75-.75H3.75a.75.75 0 000-1.5z" clip-rule="evenodd" />
+                        </svg>`
+        },
+        { 
+            id: 'settings-icon', 
+            name: 'Settings', 
+            action: () => showNotification('Settings will open here!', 2000), // Placeholder action
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
+                            <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.884a1.125 1.125 0 01-1.07 1.07l-1.77-.252a1.125 1.125 0 00-1.44 1.188l.252 1.77c.057.42.106.827.147 1.229.058.423.095.823.132 1.226zM15.352 2.25c.917 0 1.699.663 1.85 1.567l.252 1.77a1.125 1.125 0 001.07 1.07l1.77-.252a1.125 1.125 0 011.188 1.44l-.252 1.77c-.057.42-.106.827-.147 1.229-.058.423-.095.823-.132 1.226zM11.078 21.75a1.125 1.125 0 01-1.07-1.07l-.252-1.77a1.125 1.125 0 00-1.07-1.07l-1.77.252a1.125 1.125 0 01-1.44-1.188l.252-1.77c.057-.42.106-.827.147-1.229.058-.423.095-.823.132-1.226zM15.352 21.75c.917 0 1.699-.663 1.85-1.567l.252-1.77a1.125 1.125 0 001.07-1.07l1.77.252a1.125 1.125 0 011.188-1.44l-.252-1.77c-.057-.42-.106-.827-.147-1.229-.058-.423-.095-.823-.132-1.226zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" />
+                        </svg>`
+        },
     ];
 
     icons.forEach(icon => {
         const iconDiv = document.createElement('div');
         iconDiv.className = 'desktop-icon'; // Use desktop-icon class for styling
-        iconDiv.dataset.app = icon.id;
+        iconDiv.id = icon.id; // Set ID for potential specific styling or manipulation
+        iconDiv.dataset.app = icon.id; // Data attribute for logic
 
-        const img = document.createElement('img');
-        img.src = icon.imgSrc;
-        img.alt = icon.name;
-        img.className = 'w-12 h-12 mb-1'; // Tailwind classes for image size
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'desktop-icon-image'; // Container for the SVG
+        imgContainer.innerHTML = icon.svgContent; // Insert SVG directly
 
         const span = document.createElement('span');
         span.textContent = icon.name;
 
-        iconDiv.appendChild(img);
+        iconDiv.appendChild(imgContainer);
         iconDiv.appendChild(span);
 
         iconDiv.addEventListener('click', icon.action);
@@ -208,7 +222,7 @@ function showLoginModal() {
 
     contentDiv.querySelectorAll('button').forEach(button => {
         button.style.backgroundColor = 'var(--bg-button)';
-        button.style.border = '1px solid var(--border-button)';
+        button.style.border = '1px solid '`var(--border-button)`;
         button.style.color = 'var(--text-button)';
         button.style.padding = '8px 15px';
         button.style.cursor = 'pointer';
