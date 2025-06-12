@@ -38,14 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
     applyUserThemePreference();
     updateClockDisplay();
     initAudioOnFirstGesture(); 
+    updateAuthUI(loggedInUser);
     
-    // NOTE: This is the restored event listener. It listens for when a user
-    // selects a file from the dialog and then calls the upload function.
     const actualFileInput = document.getElementById('actualFileInput');
     actualFileInput?.addEventListener('change', e => {
-        console.log("File input 'change' event fired."); // For debugging
         handleFileUpload(e.target.files);
-        e.target.value = null; // Clear input to allow re-uploading the same file
+        e.target.value = null;
     });
     
     if (loggedInUser) {
@@ -109,29 +107,6 @@ function openLibraryWindow() {
     initializePageUI(libWindow.element);
 }
 
-function openFileViewerWindow(item) {
-    const windowId = `file-viewer-${item.id}`;
-    if (appServices.getWindowById(windowId)) {
-        appServices.getWindowById(windowId).focus();
-        return;
-    }
-    let content = '';
-    const fileType = item.mime_type || '';
-
-    if (fileType.startsWith('image/')) {
-        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
-    } else if (fileType.startsWith('video/')) {
-        content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
-    } else if (fileType.startsWith('audio/')) {
-        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
-    } else {
-        content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
-    }
-    const options = { width: 640, height: 480 };
-    new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
-}
-
-
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
@@ -165,13 +140,28 @@ function initializePageUI(container) {
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
     });
 
-    uploadBtn?.addEventListener('click', () => {
-        document.getElementById('actualFileInput').click();
-    });
+    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
     fetchAndRenderLibraryItems(container);
+}
+
+function attachDesktopEventListeners() {
+    setupDesktopContextMenu();
+    
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
+
+    document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
+
+    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+        const file = e.target.files[0];
+        handleBackgroundUpload(file);
+    });
 }
 
 function setupDesktopContextMenu() {
@@ -191,45 +181,34 @@ function setupDesktopContextMenu() {
     });
 }
 
-function attachDesktopEventListeners() {
-    setupDesktopContextMenu();
-    
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
+async function handleBackgroundUpload(file) {
+    if (!loggedInUser) return;
+    showNotification("Uploading background...", 2000);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', '/backgrounds/');
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) throw new Error(uploadResult.message);
 
-    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        const file = e.target.files[0];
-        
-        showNotification("Uploading background...", 2000);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', '/backgrounds/');
-        try {
-            const token = localStorage.getItem('snugos_token');
-            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResult.success) throw new Error(uploadResult.message);
+        const newBgUrl = uploadResult.file.s3_url;
+        await fetch(`${SERVER_URL}/api/profile/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ background_url: newBgUrl })
+        });
 
-            const newBgUrl = uploadResult.file.s3_url;
-            await fetch(`${SERVER_URL}/api/profile/settings`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ background_url: newBgUrl })
-            });
-
-            showNotification("Background updated!", 2000);
-            loadAndApplyGlobals();
-        } catch(error) {
-            showNotification(`Error: ${error.message}`, 4000);
-        }
-    });
+        showNotification("Background updated!", 2000);
+        loadAndApplyGlobals();
+    } catch(error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
 }
 
 async function fetchAndRenderLibraryItems(container) {
@@ -297,14 +276,18 @@ function renderFileItem(item, isParentFolder = false) {
 
     if (!isParentFolder && item.user_id === loggedInUser.id) {
         const shareBtn = document.createElement('button');
-        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.715 6.542 3.343 7.914a.5.5 0 1 0 .707.707l1.414-1.414a.5.5 0 0 0 0-.707l-1.414-1.414a.5.5 0 1 0-.707.707l1.371 1.371z"/><path fill-rule="evenodd" d="M7.447 11.458a.5.5 0 0 0 .707 0l1.414-1.414a.5.5 0 1 0-.707-.707l-1.371 1.371a.5.5 0 0 0 0 .708l1.371 1.371a.5.5 0 1 0 .707-.707L7.447 11.458zM12.95 6.542a.5.5 0 0 0-.707-.707L10.828 7.25a.5.5 0 0 0 0 .707l1.414 1.414a.5.5 0 0 0 .707-.707L11.543 7.914l1.407-1.372z"/><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 11.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-11 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>`;
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
         shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
         shareBtn.style.backgroundColor = 'var(--bg-button)';
         shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
         actionsContainer.appendChild(shareBtn);
         
         const privacyBtn = document.createElement('button');
-        privacyBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
+        if (item.is_public) {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Private" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6z"/></svg>`;
+        } else {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Public" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>`;
+        }
         privacyBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
         privacyBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
         privacyBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
@@ -491,6 +474,24 @@ function handleLogout() {
     window.location.reload();
 }
 
+function updateAuthUI(user) {
+    const userAuthContainer = document.getElementById('userAuthContainer');
+    const menuLogin = document.getElementById('menuLogin');
+    const menuLogout = document.getElementById('menuLogout');
+
+    if (user && userAuthContainer) {
+        userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span> <button id="logoutBtnTop" class="px-3 py-1 border rounded">Logout</button>`;
+        userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('click', handleLogout);
+        if (menuLogin) menuLogin.style.display = 'none';
+        if (menuLogout) menuLogout.style.display = 'block';
+    } else if (userAuthContainer) {
+        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
+        userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
+        if (menuLogin) menuLogin.style.display = 'block';
+        if (menuLogout) menuLogout.style.display = 'none';
+    }
+}
+
 function applyUserThemePreference() {
     const preference = localStorage.getItem('snugos-theme');
     const body = document.body;
@@ -505,6 +506,21 @@ function applyUserThemePreference() {
     }
 }
 
+function toggleTheme() {
+    const body = document.body;
+    const isLightTheme = body.classList.contains('theme-light');
+    if (isLightTheme) {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    } else {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    }
+}
+
 function showLoginModal() {
+    // Placeholder for the full login modal implementation
     showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
 }
