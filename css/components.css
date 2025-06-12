@@ -300,7 +300,6 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 
 /* --- Meter Bar Styling --- */
 .meter-bar-container { background-color: var(--bg-meter-bar-container); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-meter-bar-container); height: 10px; box-sizing: border-box;}
-.meter-bar { background-color: var(--accent-meter); height: 100%; width: 0%; transition: width 0.05s linear;}
 .meter-bar.clipping { background-color: var(--accent-meter-clip);}
 .track-meter-container { height: 16px; margin-top: 2px; }
 .mixer-meter-container { height: 12px; margin-top: 4px; }
@@ -376,7 +375,7 @@ input::placeholder,
     max-width: 150px; /* Constrain width for condensed view */
     height: auto;
     background-color: #000000; /* Black background for players */
-    border-radius: 0.25rem; /* Slightly rounded corners for players */
+    border-radius: 0.25rem; /* Match player rounding */
     outline: none; /* Remove default focus outline */
 }
 
