@@ -3,19 +3,19 @@
 // NOTE: Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
 // Constants is also loaded globally via script tag.
 
-import { EffectChain } from './EffectChain.js';
-import { SequenceManager } from './SequenceManager.js';
-import { ClipManager } from './ClipManager.js';
+import { EffectChain } from '../EffectChain.js'; // CORRECTED: Path to js/EffectChain.js
+import { SequenceManager } from './SequenceManager.js'; // CORRECTED: Path to js/daw/SequenceManager.js
+import { ClipManager } from './ClipManager.js'; // CORRECTED: Path to js/daw/ClipManager.js
 
 import * as Constants from '../constants.js'; // Assuming constants.js is now a module or will be. If global, remove this.
 import { createEffectInstance, AVAILABLE_EFFECTS } from '../effectsRegistry.js';
 import { getMasterBusInputNode } from './audio/audio.js';
-import { captureStateForUndo } from './state/projectState.js'; // Corrected path
-import { getWindowById } from './state/windowState.js'; // Corrected path
-import { showNotification, drawWaveform } from '../utils.js'; // Corrected path to utils.js
+import { captureStateForUndo } from './state/projectState.js';
+import { getWindowById } from './state/windowState.js';
+import { showNotification, drawWaveform } from '../utils.js';
 
 
-class Track { // Removed export
+class Track {
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
@@ -35,12 +35,11 @@ class Track { // Removed export
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
 
-        // --- Core Audio Nodes ---
         this.input = new Tone.Gain();
         this.outputNode = new Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new Tone.Meter();
         
-        const masterBusInput = getMasterBusInputNode?.(); // Corrected from global to imported function
+        const masterBusInput = getMasterBusInputNode?.();
         if (masterBusInput) {
             this.outputNode.fan(this.trackMeter, masterBusInput);
         } else {
@@ -48,7 +47,6 @@ class Track { // Removed export
         }
         this.input.connect(this.outputNode);
         
-        // --- Delegate to Managers ---
         this.effects = new EffectChain(this, this.appServices);
         this.sequences = new SequenceManager(this, this.appServices);
         this.clips = new ClipManager(this, this.appServices);
@@ -64,7 +62,6 @@ class Track { // Removed export
         this.instrumentSamplerSettings = {};
         this.inputChannel = (this.type === 'Audio') ? new Tone.Gain().connect(this.input) : null;
 
-        // --- Initialize from initialData ---
         this.effects.initialize(initialData?.activeEffects);
         this.sequences.initialize(initialData?.sequences, initialData?.activeSequenceId);
         this.clips.initialize(initialData?.timelineClips);
@@ -74,10 +71,10 @@ class Track { // Removed export
             this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
         } else if (this.type === 'Sampler') {
             this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
-            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } })); // numSlices is global
+            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
             this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
         } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array.from({ length: Constants.numDrumSamplerPads || 16 }, (_, i) => // numDrumSamplerPads is global
+            this.drumSamplerPads = Array.from({ length: Constants.numDrumSamplerPads || 16 }, (_, i) =>
                 initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null }
             );
             this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
@@ -93,12 +90,11 @@ class Track { // Removed export
         }
     }
 
-    // NEW: Quantize method
     quantizeNotes(sequenceId, noteIdsToQuantize, gridSize = '16n') {
         const sequence = this.sequences.sequences.find(s => s.id === sequenceId);
         if (!sequence || noteIdsToQuantize.size === 0) return;
 
-        captureStateForUndo?.(`Quantize notes in ${this.name}`); // Corrected function name
+        captureStateForUndo?.(`Quantize notes in ${this.name}`);
 
         const ticksPerGrid = Tone.Time(gridSize).toTicks();
 
@@ -130,7 +126,7 @@ class Track { // Removed export
         sequence.data = newData;
         this.sequences.recreateToneSequence();
         
-        const pianoRollWindow = getWindowById?.(`pianoRollWin-${this.id}`); // Corrected function name
+        const pianoRollWindow = getWindowById?.(`pianoRollWin-${this.id}`);
         if (pianoRollWindow && !pianoRollWindow.isMinimized) {
            if(this.appServices.openPianoRollWindow) {
                pianoRollWindow.close(true);
@@ -169,13 +165,11 @@ class Track { // Removed export
         if (this.instrument) this.instrument.dispose();
         
         if (this.type === 'Synth') {
-            // Tone.PolySynth and Tone.Synth are global
             this.instrument = new Tone.PolySynth(Tone.Synth, {
                 polyphony: 16,
                 ...this.synthParams 
             });
         } else if (this.type === 'InstrumentSampler' || this.type === 'DrumSampler' || this.type === 'Sampler') {
-            // Tone.Sampler is global
              this.instrument = new Tone.Sampler({
                 attack: 0.01,
                 release: 0.1,
@@ -191,11 +185,10 @@ class Track { // Removed export
         this.sequences.recreateToneSequence();
     }
     
-    // --- Methods that stay in Track.js ---
     setVolume(volume, fromInteraction = false) {
         this.previousVolumeBeforeMute = volume;
         if (!this.isMuted) this.outputNode.gain.rampTo(volume, 0.02);
-        if (fromInteraction) captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`); // Corrected function name
+        if (fromInteraction) captureStateForUndo?.(`Set Volume for ${this.name} to ${volume.toFixed(2)}`);
     }
 
     applyMuteState() {
@@ -242,7 +235,6 @@ class Track { // Removed export
         };
     }
 
-    // --- Delegated Methods ---
     addEffect(effectType, params, isInitialLoad = false) { return this.effects.addEffect(effectType, params, isInitialLoad); }
     removeEffect(effectId) { return this.effects.removeEffect(effectId); }
     updateEffectParam(effectId, paramPath, value) { return this.effects.updateEffectParam(effectId, paramPath, value); }
