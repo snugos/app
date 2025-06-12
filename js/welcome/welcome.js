@@ -6,25 +6,33 @@ const appServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
+/**
+ * Creates and opens a new window containing the Tetris game.
+ */
 function openGameWindow() {
     const windowId = 'tetrisGame';
     if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
+
     const content = document.createElement('iframe');
     content.src = 'tetris.html';
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
+
+    // NOTE: The window size has been adjusted for a tighter fit around the game content.
     const options = {
-        width: 530,
-        height: 700,
+        width: 500,
+        height: 680,
         minWidth: 400,
         minHeight: 600,
     };
+
     new SnugWindow(windowId, 'Snugtris', content, options, appServices);
 }
+
 
 function initializeWelcomePage() {
     appServices.showNotification = showNotification;
@@ -115,7 +123,6 @@ function renderDesktopIcons() {
             action: () => {
                 window.location.href = 'library.html';
             },
-            // NOTE: New SVG icon for a file folder
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.11 0-2 .9-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path></svg>`
         },
         {
@@ -128,7 +135,6 @@ function renderDesktopIcons() {
             id: 'game-icon',
             name: 'Game',
             action: openGameWindow,
-            // NOTE: New SVG icon for an arcade controller
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
