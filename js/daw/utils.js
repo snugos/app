@@ -225,7 +225,7 @@ export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTyp
     });
 
     // Attach click listener to trigger file input
-    const fileInput = dropZoneElement.querySelector('input[type="file"]');
+    const fileInput = dropZoneElement.querySelector('input[type="file']');
     if (fileInput) {
         dropZoneElement.addEventListener('click', () => fileInput.click());
     }
