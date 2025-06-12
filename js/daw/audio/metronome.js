@@ -21,15 +21,13 @@ function createMetronomeSynth() {
     }).toDestination();
 }
 
-// Removed export
-function initializeMetronome(appServices) {
+export function initializeMetronome(appServices) { // Added 'export' here
     // The appServices variable is still used, but its specific properties
     // like showNotification would need to be accessed via the appServices object
     // if needed within this module. For now, it's just passed for consistency.
     localAppServices = appServices;
 }
 
-// Removed export
 function startMetronome() {
     if (metronomeEventId !== -1) {
         // Already running
@@ -57,7 +55,6 @@ function startMetronome() {
     isMetronomeEnabled = true;
 }
 
-// Removed export
 function stopMetronome() {
     if (metronomeEventId !== -1) {
         Tone.Transport.clear(metronomeEventId);
@@ -66,8 +63,7 @@ function stopMetronome() {
     isMetronomeEnabled = false;
 }
 
-// Removed export
-function toggleMetronome() {
+export function toggleMetronome() { // Added 'export' here
     isMetronomeEnabled ? stopMetronome() : startMetronome();
     return isMetronomeEnabled;
 }
