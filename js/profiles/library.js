@@ -107,6 +107,28 @@ function openLibraryWindow() {
     initializePageUI(libWindow.element);
 }
 
+function openFileViewerWindow(item) {
+    const windowId = `file-viewer-${item.id}`;
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
+        return;
+    }
+    let content = '';
+    const fileType = item.mime_type || '';
+
+    if (fileType.startsWith('image/')) {
+        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
+    } else if (fileType.startsWith('video/')) {
+        content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
+    } else if (fileType.startsWith('audio/')) {
+        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
+    } else {
+        content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
+    }
+    const options = { width: 640, height: 480 };
+    new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
+}
+
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
@@ -165,6 +187,7 @@ function attachDesktopEventListeners() {
 function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
     if (!desktop) return;
+
     desktop.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         if (e.target.closest('.window')) return;
@@ -193,6 +216,7 @@ async function handleBackgroundUpload(file) {
         });
         const uploadResult = await uploadResponse.json();
         if (!uploadResult.success) throw new Error(uploadResult.message);
+
         const newBgUrl = uploadResult.file.s3_url;
         await fetch(`${SERVER_URL}/api/profile/settings`, {
             method: 'PUT',
@@ -226,6 +250,7 @@ async function fetchAndRenderLibraryItems(container) {
         if (currentPath.length > 1) {
             fileViewArea.appendChild(renderFileItem({ file_name: '..', mime_type: 'folder' }, true));
         }
+
         if (data.items && data.items.length > 0) {
             data.items.forEach(item => fileViewArea.appendChild(renderFileItem(item)));
         } else if (currentPath.length <= 1) {
@@ -262,33 +287,49 @@ function renderFileItem(item, isParentFolder = false) {
         iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm7 1.5V9h5.5L13 3.5z"/></svg>`;
     }
 
-    // NOTE: This is the updated rendering logic to show the file owner.
-    itemDiv.innerHTML = `
-        <div class="relative">${iconHtml}</div>
-        <p class="text-xs mt-2 w-full break-words truncate" title="${isParentFolder ? '..' : item.file_name}">${isParentFolder ? '..' : item.file_name}</p>
-        ${(currentViewMode === 'global' && item.owner_username) ? `<p class="text-xs opacity-60 truncate">by ${item.owner_username}</p>` : ''}
-    `;
+    itemDiv.innerHTML = `<div class="relative">${iconHtml}</div><p class="text-xs mt-2 w-full break-words truncate">${isParentFolder ? '..' : item.file_name}</p>`;
 
     const itemContainer = itemDiv.querySelector('.relative');
     const actionsContainer = document.createElement('div');
     actionsContainer.className = 'absolute top-0 right-0 flex flex-col space-y-1';
 
     if (!isParentFolder && item.user_id === loggedInUser.id) {
-        // All button logic (share, privacy, delete) goes here...
+        const shareBtn = document.createElement('button');
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+        shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        shareBtn.style.backgroundColor = 'var(--bg-button)';
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
+        actionsContainer.appendChild(shareBtn);
+        
+        const privacyBtn = document.createElement('button');
+        if (item.is_public) {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Private" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6z"/></svg>`;
+        } else {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Public" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>`;
+        }
+        privacyBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        privacyBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
+        privacyBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
+        actionsContainer.appendChild(privacyBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`;
+        deleteBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        deleteBtn.style.backgroundColor = 'var(--bg-button)';
+        deleteBtn.title = "Delete File";
+        deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); showDeleteModal(item); });
+        actionsContainer.appendChild(deleteBtn);
     }
     
     itemContainer.appendChild(actionsContainer);
     return itemDiv;
 }
 
-// All other functions (handleItemClick, handleShareFile, auth helpers, etc.) are included below.
-// This is the complete file.
-
 function handleItemClick(item, isParentFolder) {
     const libWindow = appServices.getWindowById('library');
     if (isParentFolder) {
         if (currentPath.length > 1) currentPath.pop();
-    } else if (item.mime_type.includes('folder')) {
+    } else if (item.mime_type && item.mime_type.includes('folder')) {
         currentPath.push(item.file_name + '/');
     } else {
         openFileViewerWindow(item);
@@ -499,7 +540,6 @@ function toggleTheme() {
         localStorage.setItem('snugos-theme', 'light');
     }
 }
-
 
 function showLoginModal() {
     showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
