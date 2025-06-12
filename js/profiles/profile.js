@@ -1,7 +1,7 @@
 // js/profiles/profile.js - Main JavaScript for the independent Profile Page
 
-import { showNotification, showCustomModal } from './profileUtils.js'; // From new profileUtils.js
-import { storeAsset, getAsset } from './profileDb.js'; // From new profileDb.js
+import { showNotification, showCustomModal } from './profileUtils.js';
+import { storeAsset, getAsset } from './profileDb.js';
 
 let loggedInUser = null; // Manage user state directly on profile page
 const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Your server URL
@@ -36,16 +36,16 @@ async function openProfilePage(username) {
 
     try {
         const token = localStorage.getItem('snugos_token');
-        // Fetch profile data and follow status in parallel
-        const [profileRes, followStatusRes] = await Promise.all([
+        // Fetch profile data and friend status in parallel
+        const [profileRes, friendStatusRes] = await Promise.all([ // Renamed followStatusRes to friendStatusRes
             fetch(`${SERVER_URL}/api/profiles/${username}`),
-            token ? fetch(`${SERVER_URL}/api/profiles/${username}/follow-status`, {
+            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, { // Changed endpoint to friend-status
                 headers: { 'Authorization': `Bearer ${token}` }
             }) : Promise.resolve(null)
         ]);
 
         const profileData = await profileRes.json();
-        const followStatusData = followStatusRes ? await followStatusRes.json() : null;
+        const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null; // Renamed followStatusData to friendStatusData
 
         if (!profileRes.ok || !profileData.success) {
             throw new Error(profileData.message || 'Could not fetch profile.');
@@ -53,7 +53,7 @@ async function openProfilePage(username) {
 
         loggedInUser = checkLocalAuth(); // Check if current user is logged in
         currentProfileData = profileData.profile; // Store fetched profile data
-        currentProfileData.isFollowing = followStatusData?.isFollowing || false; // Add follow status
+        currentProfileData.isFriend = friendStatusData?.isFriend || false; // Changed isFollowing to isFriend
 
         updateProfileUI(profileContainer, currentProfileData);
 
@@ -67,9 +67,8 @@ async function openProfilePage(username) {
  * Updates the entire profile UI (view or edit mode).
  * @param {HTMLElement} container 
  * @param {object} profileData 
- * @param {Array} projectsData (Note: projectsData not directly passed here anymore as it's part of profileData.projects)
  */
-function updateProfileUI(container, profileData) { // Removed projectsData from params here
+function updateProfileUI(container, profileData) {
     const isOwner = loggedInUser && loggedInUser.username === profileData.username;
 
     container.innerHTML = '';
@@ -95,7 +94,7 @@ function updateProfileUI(container, profileData) { // Removed projectsData from 
             </div>
             <div class="flex space-x-2">
                 ${isOwner ? `<button id="editProfileBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">Edit Profile</button>` : ''}
-                ${!isOwner && loggedInUser ? `<button id="followBtn" class="px-4 py-2 ${profileData.isFollowing ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg transition duration-300">${profileData.isFollowing ? 'Unfollow' : 'Follow'}</button>` : ''}
+                ${!isOwner && loggedInUser ? `<button id="addFriendBtn" class="px-4 py-2 ${profileData.isFriend ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg transition duration-300">${profileData.isFriend ? 'Remove Friend' : 'Add Friend'}</button>` : ''}
                 ${!isOwner && loggedInUser ? `<button id="messageBtn" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition duration-300">Message</button>` : ''}
             </div>
         </div>
@@ -109,7 +108,7 @@ function updateProfileUI(container, profileData) { // Removed projectsData from 
     if (isEditing) {
         renderEditMode(bodyContentDiv, profileData);
     } else {
-        renderViewMode(bodyContentDiv, profileData); // Pass profileData here
+        renderViewMode(bodyContentDiv, profileData);
     }
 
     // Attach event listeners for the new buttons
@@ -120,7 +119,7 @@ function updateProfileUI(container, profileData) { // Removed projectsData from 
         });
     }
     if (!isOwner && loggedInUser) {
-        document.getElementById('followBtn')?.addEventListener('click', () => handleFollowToggle(profileData.username, profileData.isFollowing));
+        document.getElementById('addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend)); // Changed to handleAddFriendToggle
         document.getElementById('messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
     }
 }
@@ -128,7 +127,7 @@ function updateProfileUI(container, profileData) { // Removed projectsData from 
 /**
  * Renders the profile content in view mode.
  */
-function renderViewMode(container, profileData) { // projectsData removed from params
+function renderViewMode(container, profileData) {
     container.innerHTML = `
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-2">Bio</h3>
@@ -169,13 +168,13 @@ function renderEditMode(container, profileData) {
 }
 
 // --- Authentication & User State Logic (Self-contained for Profile Page) ---
-const checkLocalAuth = () => { // Changed to const function expression
+const checkLocalAuth = () => {
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token'); // Token expired
+            localStorage.removeItem('snugos_token');
             return null;
         }
         return { id: payload.id, username: payload.username };
@@ -228,20 +227,20 @@ function cancelEdit() {
     openProfilePage(currentProfileData.username); // Re-render to show original profile
 }
 
-// --- Follow/Unfollow Feature ---
-async function handleFollowToggle(username, isCurrentlyFollowing) {
+// --- Add Friend/Remove Friend Feature ---
+async function handleAddFriendToggle(username, isCurrentlyFriend) { // Renamed from handleFollowToggle
     const token = localStorage.getItem('snugos_token');
     if (!token) {
-        showNotification('You must be logged in to follow/unfollow users.', 3000);
+        showNotification('You must be logged in to add/remove friends.', 3000); // Updated notification
         return;
     }
 
-    const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
-    const action = isCurrentlyFollowing ? 'Unfollowing' : 'Following';
+    const method = isCurrentlyFriend ? 'DELETE' : 'POST';
+    const action = isCurrentlyFriend ? 'Removing friend' : 'Adding friend'; // Updated action
 
     try {
         showNotification(`${action} ${username}...`, 1500);
-        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/follow`, {
+        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, { // Changed endpoint to /friend
             method: method,
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -252,7 +251,7 @@ async function handleFollowToggle(username, isCurrentlyFollowing) {
         }
 
         showNotification(`${action} successful!`, 2000);
-        openProfilePage(username); // Re-fetch and re-render to update UI with new follow state
+        openProfilePage(username); // Re-fetch and re-render to update UI with new friend state
 
     } catch (error) {
         showNotification(`Error ${action.toLowerCase()}: ${error.message}`, 3000);
@@ -318,5 +317,23 @@ async function sendMessage(recipientUsername, content) {
     } catch (error) {
         showNotification(`Error sending message: ${error.message}`, 3000);
         console.error("Send Message Error:", error);
+    }
+}
+
+// --- Helper to get logged in user from localStorage (minimal auth) ---
+function checkLocalAuth() {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('snugos_token'); // Token expired
+            return null;
+        }
+        return { id: payload.id, username: payload.username };
+    } catch (e) {
+        console.error("Error decoding token:", e);
+        localStorage.removeItem('snugos_token');
+        return null;
     }
 }
