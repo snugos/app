@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const actualFileInput = document.getElementById('actualFileInput');
     actualFileInput?.addEventListener('change', e => {
         handleFileUpload(e.target.files);
-        e.target.value = null;
+        e.target.value = null; 
     });
     
     if (loggedInUser) {
@@ -107,6 +107,30 @@ function openLibraryWindow() {
     initializePageUI(libWindow.element);
 }
 
+// NOTE: This is the missing function that has been restored to fix the error.
+function openFileViewerWindow(item) {
+    const windowId = `file-viewer-${item.id}`;
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
+        return;
+    }
+    let content = '';
+    const fileType = item.mime_type || '';
+
+    if (fileType.startsWith('image/')) {
+        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
+    } else if (fileType.startsWith('video/')) {
+        content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
+    } else if (fileType.startsWith('audio/')) {
+        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
+    } else {
+        content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
+    }
+    const options = { width: 640, height: 480 };
+    new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
+}
+
+
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
@@ -159,8 +183,7 @@ function attachDesktopEventListeners() {
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        const file = e.target.files[0];
-        handleBackgroundUpload(file);
+        handleBackgroundUpload(e.target.files[0]);
     });
 }
 
@@ -470,6 +493,8 @@ function checkLocalAuth() {
 
 function handleLogout() {
     localStorage.removeItem('snugos_token');
+    loggedInUser = null;
+    updateAuthUI(null);
     showNotification('You have been logged out.', 2000);
     window.location.reload();
 }
@@ -521,6 +546,5 @@ function toggleTheme() {
 }
 
 function showLoginModal() {
-    // Placeholder for the full login modal implementation
     showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
 }
