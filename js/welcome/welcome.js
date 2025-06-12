@@ -8,7 +8,6 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
  * Creates and opens a new window containing the Tetris game.
- * The game itself is loaded from tetris.html into an iframe.
  */
 function openGameWindow() {
     const windowId = 'tetrisGame';
@@ -18,14 +17,16 @@ function openGameWindow() {
     }
 
     const content = document.createElement('iframe');
-    content.src = 'tetris.html'; // The game file to load
+    content.src = 'tetris.html';
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
 
+    // NOTE: The window size is now calculated to better fit the game's content.
+    // This makes it feel much more like a native game window.
     const options = {
-        width: 600,
-        height: 750,
+        width: 530,  // Calculated width for the game board + sidebar + padding
+        height: 700, // Calculated height for the game board and info panels
         minWidth: 400,
         minHeight: 600,
     };
@@ -33,23 +34,20 @@ function openGameWindow() {
     new SnugWindow(windowId, 'Snugtris', content, options, appServices);
 }
 
-/**
- * Sets up the main welcome page functionality.
- */
+
 function initializeWelcomePage() {
-    // Populate the appServices object. These functions are expected to be globally available
-    // from the other script files you load in index.html (like utils.js, state.js).
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.storeAsset = storeAsset;
     appServices.getAsset = getAsset;
+
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
     if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
-    if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
-    if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
     if (typeof getWindowByIdState !== 'undefined') appServices.getWindowById = getWindowByIdState;
     if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
+    if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
+    if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
 
     attachEventListeners();
     updateClockDisplay();
@@ -59,10 +57,6 @@ function initializeWelcomePage() {
     initAudioOnFirstGesture();
 }
 
-/**
- * Handles browser security restrictions by starting the audio context
- * only after the first user click on the page.
- */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
         try {
@@ -78,9 +72,6 @@ function initAudioOnFirstGesture() {
     document.body.addEventListener('mousedown', startAudio);
 }
 
-/**
- * Attaches all primary event listeners for the page.
- */
 function attachEventListeners() {
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
@@ -103,9 +94,6 @@ function attachEventListeners() {
     });
 }
 
-/**
- * Renders the application icons on the desktop.
- */
 function renderDesktopIcons() {
     const desktopIconsContainer = document.getElementById('desktop-icons-container');
     if (!desktopIconsContainer) return;
@@ -139,11 +127,12 @@ function renderDesktopIcons() {
             },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
+        // NOTE: Updated icon for the game
         {
             id: 'game-icon',
             name: 'Game',
             action: openGameWindow,
-            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
 
@@ -194,17 +183,21 @@ async function checkInitialAuthState() {
         updateAuthUI(null);
         return;
     }
+
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
             return handleLogout();
         }
+        
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
+
         const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
             applyCustomBackground(backgroundBlob);
         }
+
     } catch (e) {
         console.error("Error during initial auth state check:", e);
         handleLogout();
