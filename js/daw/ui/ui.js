@@ -1,13 +1,13 @@
 // js/daw/ui/ui.js - Main UI Orchestrator
 
 // Import initializers from all UI sub-modules
-import { initializeInspectorUI, openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from './inspectorUI.js'; // Re-added imports
-import { initializeMixerUI, openMixerWindow, updateMixerWindow } from './mixerUI.js'; // Re-added imports
-import { initializeEffectsRackUI, openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './effectsRackUI.js'; // Re-added imports
+import { initializeInspectorUI, openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from './inspectorUI.js';
+import { initializeMixerUI, openMixerWindow, updateMixerWindow } from './mixerUI.js';
+import { initializeEffectsRackUI, openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './effectsRackUI.js';
 // Removed initializeTimelineUI as timeline is removed
-import { initializeSoundBrowserUI, openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView } from './soundBrowserUI.js'; // Re-added imports
-import { initializePianoRollUI, openPianoRollWindow, updatePianoRollPlayhead } from './pianoRollUI.js'; // Re-added imports
-import { initializeYouTubeImporterUI, openYouTubeImporterWindow } from './youtubeImporterUI.js'; // Re-added imports
+import { initializeSoundBrowserUI, openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView } from './soundBrowserUI.js';
+import { initializePianoRollUI, openPianoRollWindow, updatePianoRollPlayhead } from './pianoRollUI.js';
+import { initializeYouTubeImporterUI, openYouTubeImporterWindow } from './youtubeImporterUI.js';
 // Removed initializeProfileUI and openProfileWindow as profile page is now separate
 
 import { createKnob } from './knobUI.js'; // CORRECTED PATH: Changed from '../../knobUI.js' to './knobUI.js'
@@ -18,9 +18,9 @@ import { createKnob } from './knobUI.js'; // CORRECTED PATH: Changed from '../..
  * This function also wires up services that are defined in one UI module but needed by others.
  * @param {object} appServices 
  */
-export function initializeUIModule(appServices) { // Export re-added
+export function initializeUIModule(appServices) {
     // Make createKnob available as a service for other modules to use
-    appServices.createKnob = (opts) => createKnob(opts, appServices); // createKnob is imported from knobUI.js
+    appServices.createKnob = (opts) => createKnob(opts, appServices);
     
     // Initialize all modules
     initializeInspectorUI(appServices);
@@ -35,7 +35,7 @@ export function initializeUIModule(appServices) { // Export re-added
 
 // Export all the functions that main.js needs to build the appServices object.
 // This file acts as a single entry point for all UI functionality.
-export { // Exports re-added
+export {
     createKnob, // Re-exported
     openTrackInspectorWindow,
     openMixerWindow,
