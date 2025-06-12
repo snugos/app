@@ -1,6 +1,6 @@
 // js/knobUI.js - Knob UI Component
 
-function createKnob(options, appServices) {
+export function createKnob(options, appServices) { // Added 'export' keyword here
     const container = document.createElement('div');
     container.className = 'knob-container';
 
