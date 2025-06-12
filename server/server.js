@@ -383,7 +383,6 @@ app.get('/api/messages/received', authenticateToken, async (request, response) =
 
 // === General File Storage Endpoints ===
 
-// POST /api/files/upload - Upload any file to S3 and save metadata to DB
 app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file provided for upload.' });
