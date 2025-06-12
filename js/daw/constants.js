@@ -51,7 +51,7 @@ function incrementOctaveShift() {
     COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.min(3, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT + 1);
 }
 function decrementOctaveShift() {
-    COMPUTER_KEY_SYNTH_OCTAVE_SHIFT = Math.max(-2, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT - 1);
+    COMPUTER_KEY_SYNTH_OCTAVE_OCTAVE_SHIFT = Math.max(-2, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT - 1);
 }
 
 const computerKeySynthMap = {
