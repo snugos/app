@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loggedInUser) {
         openLibraryWindow();
     } else {
-        showCustomModal('Access Denied', '<p class="p-4">Please log in.</p>', [{ label: 'Close' }]);
+        showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
     }
 });
 
@@ -177,7 +177,7 @@ function renderFileItem(item, isParentFolder = false) {
     itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28';
     itemDiv.style.color = 'var(--text-primary)';
     
-    itemDiv.addEventListener('click', (e) => {
+    itemDiv.addEventListener('click', () => {
         document.querySelectorAll('.file-item-container').forEach(el => el.style.backgroundColor = 'transparent');
         itemDiv.style.backgroundColor = 'var(--accent-focus)';
     });
@@ -201,26 +201,28 @@ function renderFileItem(item, isParentFolder = false) {
     itemDiv.innerHTML = `<div class="relative">${iconHtml}</div><p class="text-xs mt-2 w-full break-words truncate">${isParentFolder ? '..' : item.file_name}</p>`;
 
     const itemContainer = itemDiv.querySelector('.relative');
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'absolute top-0 right-0 flex flex-col space-y-1';
 
-    if (!isParentFolder && currentViewMode === 'my-files' && item.user_id === loggedInUser.id) {
-        const shareBtn = document.createElement('button');
-        shareBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
-        shareBtn.className = 'absolute top-0 right-0 p-1 rounded-full opacity-60 hover:opacity-100';
-        shareBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
-        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
-        itemContainer.appendChild(shareBtn);
-    }
-    
     if (!isParentFolder && item.user_id === loggedInUser.id) {
+        const shareBtn = document.createElement('button');
+        shareBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.715 6.542 3.343 7.914a.5.5 0 1 0 .707.707l1.414-1.414a.5.5 0 0 0 0-.707l-1.414-1.414a.5.5 0 1 0-.707.707l1.371 1.371z"/><path fill-rule="evenodd" d="M7.447 11.458a.5.5 0 0 0 .707 0l1.414-1.414a.5.5 0 1 0-.707-.707l-1.371 1.371a.5.5 0 0 0 0 .708l1.371 1.371a.5.5 0 1 0 .707-.707L7.447 11.458zM12.95 6.542a.5.5 0 0 0-.707-.707L10.828 7.25a.5.5 0 0 0 0 .707l1.414 1.414a.5.5 0 0 0 .707-.707L11.543 7.914l1.407-1.372z"/><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 11.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-11 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>`;
+        shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        shareBtn.style.backgroundColor = 'var(--bg-button)';
+        shareBtn.title = "Share File";
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
+        actionsContainer.appendChild(shareBtn);
+
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`;
-        deleteBtn.className = 'absolute bottom-0 right-0 p-1 rounded-full opacity-60 hover:opacity-100';
+        deleteBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
         deleteBtn.style.backgroundColor = 'var(--bg-button)';
         deleteBtn.title = "Delete File";
         deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); showDeleteModal(item); });
-        itemContainer.appendChild(deleteBtn);
+        actionsContainer.appendChild(deleteBtn);
     }
-
+    
+    itemContainer.appendChild(actionsContainer);
     return itemDiv;
 }
 
@@ -237,31 +239,19 @@ function handleItemClick(item, isParentFolder) {
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
 }
 
-function showShareModal(item) {
-    const newStatus = !item.is_public;
-    const actionText = newStatus ? "publicly available" : "private";
-    const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
-    showCustomModal('Confirm Action', modalContent, [
-        { label: 'Cancel' },
-        { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
-    ]);
-}
-
-async function handleToggleFilePublic(fileId, newStatus) {
+async function handleShareFile(item) {
+    showNotification("Generating secure link...", 1500);
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}/api/files/${fileId}/toggle-public`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ is_public: newStatus })
+        const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification('File status updated!', 2000);
-        const libWindow = appServices.getWindowById('library');
-        if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+        await navigator.clipboard.writeText(result.shareUrl);
+        showNotification("Sharable link copied! It expires in 1 hour.", 4000);
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        showNotification(`Could not generate link: ${error.message}`, 4000);
     }
 }
 
