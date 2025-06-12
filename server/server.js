@@ -34,26 +34,45 @@ const initializeDatabase = async () => {
             username VARCHAR(50) UNIQUE NOT NULL,
             password_hash VARCHAR(100) NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            background_url TEXT
+            background_url TEXT,
+            bio TEXT
         );
     `;
-    // NEW: Add bio column if not exists
     const addBioColumnQuery = `
         ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
     `;
-    // NEW: Query to create the followers table
-    const createFollowersTableQuery = `
-        CREATE TABLE IF NOT EXISTS followers (
-            follower_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-            followed_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    // NEW: Rename followers table to friends if it exists, or create friends table
+    const renameFollowersTableQuery = `
+        ALTER TABLE followers RENAME TO friends;
+    `;
+    const renameFollowerIdColumnQuery = `
+        ALTER TABLE friends RENAME COLUMN follower_id TO user_id;
+    `;
+    const renameFollowedIdColumnQuery = `
+        ALTER TABLE friends RENAME COLUMN followed_id TO friend_id;
+    `;
+    const createFriendsTableQuery = `
+        CREATE TABLE IF NOT EXISTS friends (
+            user_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            friend_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (follower_id, followed_id)
+            PRIMARY KEY (user_id, friend_id)
         );
     `;
     try {
         await pool.query(createProfilesTableQuery);
-        await pool.query(addBioColumnQuery); // Execute the query to add bio column
-        await pool.query(createFollowersTableQuery);
+        await pool.query(addBioColumnQuery);
+        // Attempt to rename table/columns first, if they exist from previous deploys
+        try {
+            await pool.query(renameFollowersTableQuery);
+            await pool.query(renameFollowerIdColumnQuery);
+            await pool.query(renameFollowedIdColumnQuery);
+            console.log('[DB] Renamed followers table to friends.');
+        } catch (err) {
+            // If rename fails (e.g., table doesn't exist, or columns already renamed), create the table
+            console.log('[DB] Followers table/columns not found or already renamed. Creating friends table if not exists.');
+            await pool.query(createFriendsTableQuery); // Create the new table if it doesn't exist under 'friends' name
+        }
         console.log('[DB] All tables checked/created successfully.');
     } catch (err) {
         console.error('[DB] Error initializing database tables:', err.stack);
@@ -75,7 +94,6 @@ const authenticateToken = (req, res, next) => {
 };
 
 // --- Existing User & Profile Endpoints ---
-// ... your /api/register, /api/login, /api/profile/me, etc. endpoints ...
 app.post('/api/register', async (request, response) => {
     try {
         const { username, password } = request.body;
@@ -110,7 +128,7 @@ app.post('/api/login', async (request, response) => {
 app.get('/api/profile/me', authenticateToken, async (request, response) => {
     try {
         const userId = request.user.id;
-        const profileResult = await pool.query("SELECT id, username, created_at, background_url FROM profiles WHERE id = $1", [userId]);
+        const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio FROM profiles WHERE id = $1", [userId]); // Include bio
         const profile = profileResult.rows[0];
         if (!profile) return response.status(404).json({ success: false, message: 'Current user profile not found.' });
         response.json({ success: true, profile });
@@ -136,7 +154,6 @@ app.put('/api/profile/background', authenticateToken, upload.single('backgroundF
 app.get('/api/profiles/:username', async (request, response) => {
     try {
         const { username } = request.params;
-        // Also select the bio here
         const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio FROM profiles WHERE username = $1", [username]);
         const profile = profileResult.rows[0];
         if (!profile) return response.status(404).json({ success: false, message: 'Profile not found.' });
@@ -146,23 +163,18 @@ app.get('/api/profiles/:username', async (request, response) => {
     }
 });
 
-// === NEW: PUT /api/profiles/:username - Update Profile ===
 app.put('/api/profiles/:username', authenticateToken, async (request, response) => {
-    const { username } = request.params; // Get username from URL
-    const { bio } = request.body; // Get bio from request body
+    const { username } = request.params;
+    const { bio } = request.body;
 
-    // --- Basic Validation ---
-    if (typeof bio !== 'string') { // bio must be a string
+    if (typeof bio !== 'string') {
         return response.status(400).json({ success: false, message: "Bio must be a string." });
     }
-    // Limit bio length to prevent abuse (e.g., 500 characters)
     if (bio.length > 500) {
         return response.status(400).json({ success: false, message: "Bio cannot exceed 500 characters." });
     }
 
     try {
-        // --- Authorization Check (Crucial for security) ---
-        // Ensure the logged-in user (from token) matches the profile being edited
         const profileToUpdateResult = await pool.query("SELECT id, username FROM profiles WHERE username = $1", [username]);
         const profileToUpdate = profileToUpdateResult.rows[0];
 
@@ -170,105 +182,177 @@ app.put('/api/profiles/:username', authenticateToken, async (request, response) 
             return response.status(404).json({ success: false, message: "Profile to update not found." });
         }
 
-        if (request.user.id !== profileToUpdate.id) { // req.user.id comes from authenticateToken middleware
+        if (request.user.id !== profileToUpdate.id) {
             return response.status(403).json({ success: false, message: "Unauthorized: You can only edit your own profile." });
         }
 
-        // --- Database Update ---
-        // Update the 'bio' column for the user's profile
         const updateQuery = 'UPDATE profiles SET bio = $1 WHERE id = $2 RETURNING id, username, created_at, background_url, bio';
-        const result = await pool.query(updateQuery, [bio, request.user.id]); // Use request.user.id for security
+        const result = await pool.query(updateQuery, [bio, request.user.id]);
         const updatedProfile = result.rows[0];
 
-        // --- Send Success Response ---
         response.status(200).json({ success: true, message: "Profile updated successfully.", profile: { id: updatedProfile.id, username: updatedProfile.username, memberSince: updatedProfile.created_at, backgroundUrl: updatedProfile.background_url, bio: updatedProfile.bio } });
 
     } catch (error) {
         console.error("Error updating profile in DB:", error);
-        response.status(500).json({ success: false, message: "Server error during profile update." });
+        response.status(500).json({ success: false, message: 'Server error during profile update.' });
     }
 });
 
-// === NEW: FOLLOW SYSTEM ENDPOINTS ===
 
-// POST /api/profiles/:username/follow - Follow a user
-app.post('/api/profiles/:username/follow', authenticateToken, async (request, response) => {
+// === FRIEND SYSTEM ENDPOINTS (Renamed from FOLLOW) ===
+
+// POST /api/profiles/:username/friend - Add a friend
+app.post('/api/profiles/:username/friend', authenticateToken, async (request, response) => {
     try {
-        const followerId = request.user.id;
-        const followedUsername = request.params.username;
+        const userId = request.user.id; // The user who is adding the friend
+        const friendUsername = request.params.username; // The username of the friend to add
 
-        // Get the ID of the user to be followed
-        const followedResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [followedUsername]);
-        if (followedResult.rows.length === 0) {
-            return response.status(404).json({ success: false, message: 'User to follow not found.' });
+        // Get the ID of the user to be added as a friend
+        const friendResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [friendUsername]);
+        if (friendResult.rows.length === 0) {
+            return response.status(404).json({ success: false, message: 'User to add as friend not found.' });
         }
-        const followedId = followedResult.rows[0].id;
+        const friendId = friendResult.rows[0].id;
 
-        if (followerId === followedId) {
-            return response.status(400).json({ success: false, message: 'You cannot follow yourself.' });
+        if (userId === friendId) {
+            return response.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
         }
 
-        // Insert the follow relationship
+        // Insert the friend relationship (user_id adds friend_id)
         await pool.query(
-            "INSERT INTO followers (follower_id, followed_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-            [followerId, followedId]
+            "INSERT INTO friends (user_id, friend_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            [userId, friendId]
         );
 
-        response.json({ success: true, message: `You are now following ${followedUsername}.` });
+        response.json({ success: true, message: `You are now friends with ${friendUsername}.` });
 
     } catch (error) {
-        console.error("[Follow] Error:", error);
-        response.status(500).json({ success: false, message: 'Server error while trying to follow user.' });
+        console.error("[Add Friend] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while trying to add friend.' });
     }
 });
 
-// DELETE /api/profiles/:username/follow - Unfollow a user
-app.delete('/api/profiles/:username/follow', authenticateToken, async (request, response) => {
+// DELETE /api/profiles/:username/friend - Remove a friend
+app.delete('/api/profiles/:username/friend', authenticateToken, async (request, response) => {
     try {
-        const followerId = request.user.id;
-        const followedUsername = request.params.username;
+        const userId = request.user.id; // The user who is removing the friend
+        const friendUsername = request.params.username; // The username of the friend to remove
 
-        const followedResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [followedUsername]);
-        if (followedResult.rows.length === 0) {
-            return response.status(404).json({ success: false, message: 'User to unfollow not found.' });
+        const friendResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [friendUsername]);
+        if (friendResult.rows.length === 0) {
+            return response.status(404).json({ success: false, message: 'User to remove as friend not found.' });
         }
-        const followedId = followedResult.rows[0].id;
+        const friendId = friendResult.rows[0].id;
 
-        // Delete the follow relationship
+        // Delete the friend relationship
         await pool.query(
-            "DELETE FROM followers WHERE follower_id = $1 AND followed_id = $2",
-            [followerId, followedId]
+            "DELETE FROM friends WHERE user_id = $1 AND friend_id = $2",
+            [userId, friendId]
         );
 
-        response.json({ success: true, message: `You have unfollowed ${followedUsername}.` });
+        response.json({ success: true, message: `You have removed ${friendUsername} as a friend.` });
 
     } catch (error) {
-        console.error("[Unfollow] Error:", error);
-        response.status(500).json({ success: false, message: 'Server error while trying to unfollow user.' });
+        console.error("[Remove Friend] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while trying to remove friend.' });
     }
 });
 
-// GET /api/profiles/:username/follow-status - Check if the current user is following someone
-app.get('/api/profiles/:username/follow-status', authenticateToken, async (request, response) => {
+// GET /api/profiles/:username/friend-status - Check if the current user is friends with someone
+app.get('/api/profiles/:username/friend-status', authenticateToken, async (request, response) => {
     try {
-        const followerId = request.user.id;
-        const followedUsername = request.params.username;
+        const userId = request.user.id; // The current logged-in user
+        const checkFriendUsername = request.params.username; // The username whose friend status is being checked
 
-        const followedResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [followedUsername]);
-        if (followedResult.rows.length === 0) {
+        const checkFriendResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [checkFriendUsername]);
+        if (checkFriendResult.rows.length === 0) {
             return response.status(404).json({ success: false, message: 'User not found.' });
         }
-        const followedId = followedResult.rows[0].id;
+        const checkFriendId = checkFriendResult.rows[0].id;
 
-        const followStatusResult = await pool.query(
-            "SELECT 1 FROM followers WHERE follower_id = $1 AND followed_id = $2",
-            [followerId, followedId]
+        const friendStatusResult = await pool.query(
+            "SELECT 1 FROM friends WHERE user_id = $1 AND friend_id = $2",
+            [userId, checkFriendId]
         );
 
-        response.json({ success: true, isFollowing: followStatusResult.rows.length > 0 });
+        response.json({ success: true, isFriend: friendStatusResult.rows.length > 0 });
     } catch (error) {
-        console.error("[Follow Status] Error:", error);
-        response.status(500).json({ success: false, message: 'Server error while checking follow status.' });
+        console.error("[Friend Status] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while checking friend status.' });
+    }
+});
+
+
+// === NEW: Messaging Endpoints ===
+
+// POST /api/messages - Send a new message
+app.post('/api/messages', authenticateToken, async (request, response) => {
+    const { recipientUsername, content } = request.body;
+    const senderId = request.user.id; // Sender ID from authenticated token
+
+    if (!recipientUsername || !content || content.trim() === '') {
+        return response.status(400).json({ success: false, message: 'Recipient username and message content are required.' });
+    }
+
+    try {
+        // Get recipient's ID
+        const recipientResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [recipientUsername]);
+        if (recipientResult.rows.length === 0) {
+            return response.status(404).json({ success: false, message: 'Recipient not found.' });
+        }
+        const recipientId = recipientResult.rows[0].id;
+
+        // Insert message into a new 'messages' table (need to create this table)
+        const insertMessageQuery = `
+            INSERT INTO messages (sender_id, recipient_id, content)
+            VALUES ($1, $2, $3) RETURNING *;
+        `;
+        const result = await pool.query(insertMessageQuery, [senderId, recipientId, content]);
+        const newMessage = result.rows[0];
+
+        response.status(201).json({ success: true, message: 'Message sent successfully.', messageData: newMessage });
+
+    } catch (error) {
+        console.error("[Messaging] Error sending message:", error);
+        response.status(500).json({ success: false, message: 'Server error while sending message.' });
+    }
+});
+
+// GET /api/messages/sent - Get messages sent by the current user
+app.get('/api/messages/sent', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const messages = await pool.query(
+            "SELECT m.id, s.username as sender_username, r.username as recipient_username, m.content, m.timestamp, m.read " +
+            "FROM messages m " +
+            "JOIN profiles s ON m.sender_id = s.id " +
+            "JOIN profiles r ON m.recipient_id = r.id " +
+            "WHERE m.sender_id = $1 ORDER BY m.timestamp DESC",
+            [userId]
+        );
+        response.json({ success: true, messages: messages.rows });
+    } catch (error) {
+        console.error("[Messaging] Error fetching sent messages:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching sent messages.' });
+    }
+});
+
+// GET /api/messages/received - Get messages received by the current user
+app.get('/api/messages/received', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const messages = await pool.query(
+            "SELECT m.id, s.username as sender_username, r.username as recipient_username, m.content, m.timestamp, m.read " +
+            "FROM messages m " +
+            "JOIN profiles s ON m.sender_id = s.id " +
+            "JOIN profiles r ON m.recipient_id = r.id " +
+            "WHERE m.recipient_id = $1 ORDER BY m.timestamp DESC",
+            [userId]
+        );
+        response.json({ success: true, messages: messages.rows });
+    } catch (error) {
+        console.error("[Messaging] Error fetching received messages:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching received messages.' });
     }
 });
 
