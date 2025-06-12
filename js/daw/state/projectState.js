@@ -1,7 +1,7 @@
-// js/state/projectState.js
+// js/daw/state/projectState.js
 
-import * as Constants from '../../constants.js'; // Corrected path
-import { showNotification } from '../../utils.js'; // Corrected path
+import * as Constants from '../constants.js'; // CORRECTED PATH: From '../../constants.js' to '../constants.js'
+import { showNotification } from '../utils.js'; // CORRECTED PATH: From '../../utils.js' to '../utils.js'
 
 let undoStack = [];
 let redoStack = [];
@@ -74,7 +74,7 @@ export function gatherProjectData() {
     return {
         tracks: tracks.map(t => t.serialize()),
         masterEffects: localAppServices.getMasterEffects?.(),
-        masterVolume: localAppServices.getMasterGainValue?.(),
+        masterVolume: Tone.Transport.bpm.value,
         tempo: Tone.Transport.bpm.value,
         version: Constants.APP_VERSION,
     };
