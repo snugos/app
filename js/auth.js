@@ -4,6 +4,8 @@
 // import * as Constants from './constants.js';
 // import { showNotification, showCustomModal } from './utils.js';
 
+import { showNotification, showCustomModal } from './daw/utils.js'; // CORRECTED PATH
+
 let localAppServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
