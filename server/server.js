@@ -1,5 +1,3 @@
-// server.js - SnugOS Dedicated API Server
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -138,18 +136,34 @@ app.post('/api/login', async (request, response) => {
     }
 });
 
-app.post('/api/profile/avatar', authenticateToken, upload.single('avatarFile'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded.' });
+app.get('/api/profile/me', authenticateToken, async (request, response) => {
     try {
-        const file = req.file;
-        const userId = req.user.id;
-        const fileName = `avatars/${userId}-${Date.now()}-${file.originalname.replace(/ /g, '_')}`;
-        const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: fileName, Body: file.buffer, ACL: 'public-read', ContentType: file.mimetype };
-        const data = await s3.upload(uploadParams).promise();
-        await pool.query("UPDATE profiles SET avatar_url = $1 WHERE id = $2", [data.Location, userId]);
-        res.json({ success: true, message: "Avatar updated successfully!", avatar_url: data.Location });
+        const userId = request.user.id;
+        const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio, avatar_url FROM profiles WHERE id = $1", [userId]);
+        if (profileResult.rows.length === 0) {
+            return response.status(404).json({ success: false, message: 'Profile not found.' });
+        }
+        response.json({ success: true, profile: profileResult.rows[0] });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error uploading file.' });
+        response.status(500).json({ success: false, message: 'Server error while fetching profile.' });
+    }
+});
+
+app.put('/api/profile/settings', authenticateToken, async (req, res) => {
+    const { avatar_url, background_url } = req.body;
+    const userId = req.user.id;
+    
+    try {
+        if (avatar_url) {
+            await pool.query("UPDATE profiles SET avatar_url = $1 WHERE id = $2", [avatar_url, userId]);
+        }
+        if (background_url) {
+            await pool.query("UPDATE profiles SET background_url = $1 WHERE id = $2", [background_url, userId]);
+        }
+        res.json({ success: true, message: "Profile settings updated." });
+    } catch (error) {
+        console.error("[Profile Settings Update] Error:", error);
+        res.status(500).json({ success: false, message: 'Error updating settings.' });
     }
 });
 
@@ -166,10 +180,23 @@ app.get('/api/profiles/:username', async (request, response) => {
 });
 
 app.put('/api/profiles/:username', authenticateToken, async (request, response) => {
-    // ... logic to update profile bio ...
+    const { username } = request.params;
+    const { bio } = request.body;
+
+    if (request.user.username !== username) {
+        return response.status(403).json({ success: false, message: "You can only edit your own profile." });
+    }
+    
+    try {
+        const updateQuery = 'UPDATE profiles SET bio = $1 WHERE id = $2 RETURNING id, username, bio';
+        const result = await pool.query(updateQuery, [bio, request.user.id]);
+        response.status(200).json({ success: true, profile: result.rows[0] });
+    } catch (error) {
+        response.status(500).json({ success: false, message: 'Server error during profile update.' });
+    }
 });
 
-// --- FRIEND SYSTEM ENDPOINTS (Re-added) ---
+// --- Friend System Endpoints ---
 
 app.post('/api/profiles/:username/friend', authenticateToken, async (request, response) => {
     try {
@@ -214,19 +241,25 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
     }
 });
 
-// --- MESSAGING ENDPOINTS (Re-added) ---
+// --- Messaging Endpoints ---
 
 app.post('/api/messages', authenticateToken, async (request, response) => {
-    // ... logic to send a message ...
-});
-app.get('/api/messages/sent', authenticateToken, async (request, response) => {
-    // ... logic to get sent messages ...
-});
-app.get('/api/messages/received', authenticateToken, async (request, response) => {
-    // ... logic to get received messages ...
+    const { recipientUsername, content } = request.body;
+    const senderId = request.user.id;
+    if (!recipientUsername || !content) return response.status(400).json({ success: false, message: 'Recipient and content are required.' });
+    try {
+        const recipientResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [recipientUsername]);
+        if (recipientResult.rows.length === 0) return response.status(404).json({ success: false, message: 'Recipient not found.' });
+        const recipientId = recipientResult.rows[0].id;
+        const insertMessageQuery = `INSERT INTO messages (sender_id, recipient_id, content) VALUES ($1, $2, $3) RETURNING *;`;
+        const result = await pool.query(insertMessageQuery, [senderId, recipientId, content]);
+        response.status(201).json({ success: true, messageData: result.rows[0] });
+    } catch (error) {
+        response.status(500).json({ success: false, message: 'Server error while sending message.' });
+    }
 });
 
-// --- FILE STORAGE ENDPOINTS ---
+// --- File Storage Endpoints ---
 
 app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, message: 'No file provided.' });
@@ -235,7 +268,7 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
     try {
         const file = req.file;
         const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`;
-        const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key, Body: file.buffer, ContentType: file.mimetype };
+        const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key, Body: file.buffer, ContentType: file.mimetype, ACL: 'public-read' };
         const data = await s3.upload(uploadParams).promise();
         const insertFileQuery = `INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
         const result = await pool.query(insertFileQuery, [userId, path || '/', file.originalname, s3Key, data.Location, file.mimetype, file.size, is_public === 'true']);
@@ -262,7 +295,7 @@ app.get('/api/files/my', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const path = req.query.path || '/';
-        const query = `SELECT id, user_id, file_name, s3_url, mime_type, file_size, is_public, created_at FROM user_files WHERE user_id = $1 AND path = $2 ORDER BY mime_type, file_name ASC`;
+        const query = `SELECT * FROM user_files WHERE user_id = $1 AND path = $2 ORDER BY mime_type, file_name ASC`;
         const result = await pool.query(query, [userId, path]);
         res.json({ success: true, items: result.rows });
     } catch (error) {
@@ -273,7 +306,7 @@ app.get('/api/files/my', authenticateToken, async (req, res) => {
 app.get('/api/files/public', authenticateToken, async (req, res) => {
     try {
         const path = req.query.path || '/';
-        const query = `SELECT id, user_id, file_name, s3_url, mime_type, file_size, is_public, created_at FROM user_files WHERE is_public = TRUE AND path = $1 ORDER BY mime_type, file_name ASC`;
+        const query = `SELECT * FROM user_files WHERE is_public = TRUE AND path = $1 ORDER BY mime_type, file_name ASC`;
         const result = await pool.query(query, [path]);
         res.json({ success: true, items: result.rows });
     } catch (error) {
@@ -287,12 +320,34 @@ app.put('/api/files/:fileId/toggle-public', authenticateToken, async (req, res) 
     const { is_public } = req.body;
     if (typeof is_public !== 'boolean') return res.status(400).json({ success: false, message: 'is_public must be a boolean.' });
     try {
-        const query = `UPDATE user_files SET is_public = $1 WHERE id = $2 AND user_id = $3 RETURNING id, file_name, is_public;`;
+        const query = `UPDATE user_files SET is_public = $1 WHERE id = $2 AND user_id = $3 RETURNING *;`;
         const result = await pool.query(query, [is_public, fileId, userId]);
         if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'File not found or you do not have permission.' });
         res.json({ success: true, message: 'File status updated.', file: result.rows[0] });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error updating file status.' });
+    }
+});
+
+app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
+    const fileId = req.params.fileId;
+    const userId = req.user.id;
+    try {
+        const getFileQuery = "SELECT user_id, s3_key FROM user_files WHERE id = $1";
+        const fileResult = await pool.query(getFileQuery, [fileId]);
+        if (fileResult.rows.length === 0) return res.status(404).json({ success: false, message: 'File not found.' });
+        
+        const fileOwnerId = fileResult.rows[0].user_id;
+        const s3Key = fileResult.rows[0].s3_key;
+        if (fileOwnerId !== userId) return res.status(403).json({ success: false, message: 'You do not have permission to delete this file.' });
+
+        if (!s3Key.startsWith('folder-')) {
+            await s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3Key }).promise();
+        }
+        await pool.query("DELETE FROM user_files WHERE id = $1", [fileId]);
+        res.json({ success: true, message: 'File deleted successfully.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error while deleting file.' });
     }
 });
 
