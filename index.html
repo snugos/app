@@ -58,8 +58,10 @@
         </div>
     </div>
 
-    <div id="desktop" class="relative h-full w-full">
-        <div id="desktop-icons-container" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <!-- NOTE: This div now uses flexbox to center its content. -->
+    <div id="desktop" class="relative h-full w-full flex items-center justify-center">
+        <!-- The icon container is now a simple grid that will be centered by the flex parent. -->
+        <div id="desktop-icons-container" class="grid grid-cols-2 sm:grid-cols-4 gap-8">
             <!-- Desktop icons will be rendered here by welcome.js -->
         </div>
     </div>
@@ -90,13 +92,11 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
-    <!-- NOTE: The order of these scripts is important. Tone.js must load before state.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script type="module" src="js/daw/SnugWindow.js"></script>
 
-    <!-- Scripts specific to the Welcome page -->
     <script type="module" src="js/welcome/welcomeUtils.js"></script>
     <script type="module" src="js/welcome/welcomeDb.js"></script>
     <script type="module" src="js/welcome/welcome.js"></script>
