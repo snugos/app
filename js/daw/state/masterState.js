@@ -1,6 +1,6 @@
 // js/state/masterState.js
 
-import { getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '../../effectsRegistry.js'; // Corrected path
+import { getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '../effectsRegistry.js'; // CORRECTED PATH
 
 let masterEffectsChain = [];
 let masterGainValue = 1.0; // Default gain, not dB
