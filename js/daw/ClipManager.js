@@ -1,12 +1,12 @@
 // js/daw/ClipManager.js
-// NOTE: Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
+// NOTE: Constants, Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
 
-import * as Constants from '../constants.js'; // Assuming constants.js is now a module or will be. If global, remove this.
-import { storeAudio, getAudio, deleteAudio } from '../db.js'; // Corrected path to db.js
-import { showNotification } from '../utils.js'; // Corrected path to utils.js
-import { captureStateForUndo } from './state/projectState.js'; // Corrected path for state
+import * as Constants from '../constants.js'; // CORRECTED: Path to js/constants.js
+import { storeAudio, getAudio, deleteAudio } from '../db.js'; // CORRECTED: Path to js/db.js
+import { showNotification } from '../utils.js'; // CORRECTED: Path to js/utils.js
+import { captureStateForUndo } from './state/projectState.js';
 
-class ClipManager { // Removed export
+class ClipManager {
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
@@ -31,7 +31,7 @@ class ClipManager { // Removed export
         this.timelineClips.push(clipData);
         // Removed renderTimeline call as timeline is removed
         // this.appServices.renderTimeline?.();
-        captureStateForUndo?.(`Add clip ${clipData.name}`); // Corrected function name
+        captureStateForUndo?.(`Add clip ${clipData.name}`);
     }
 
     addMidiClip(sequence, startTime) {
@@ -56,7 +56,7 @@ class ClipManager { // Removed export
 
     async addAudioClip(audioBlob, startTime, clipName) {
         if (this.track.type !== 'Audio') {
-            showNotification?.('Cannot add audio clip to a non-audio track.', 3000); // Corrected function name
+            showNotification?.('Cannot add audio clip to a non-audio track.', 3000);
             return;
         }
         try {
@@ -76,7 +76,7 @@ class ClipManager { // Removed export
             this.addClip(newClip);
         } catch (error) {
             console.error("[ClipManager.js] Error adding audio clip:", error);
-            showNotification?.('Failed to process and add audio clip.', 3000); // Corrected function name
+            showNotification?.('Failed to process and add audio clip.', 3000);
         }
     }
     
@@ -94,7 +94,7 @@ class ClipManager { // Removed export
             this.timelineClips.splice(index, 1);
             // Removed renderTimeline call
             // this.appServices.renderTimeline?.();
-            captureStateForUndo?.(`Delete clip ${removedClip.name}`); // Corrected function name
+            captureStateForUndo?.(`Delete clip ${removedClip.name}`);
         } else {
             console.warn(`[ClipManager.js] Clip with ID ${clipId} not found for deletion.`);
         }
