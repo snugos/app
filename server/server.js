@@ -41,7 +41,7 @@ const initializeDatabase = async () => {
     const addBioColumnQuery = `
         ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
     `;
-    // NEW: Rename followers table to friends if it exists, or create friends table
+    // Rename followers table to friends if it exists, or create friends table
     const renameFollowersTableQuery = `
         ALTER TABLE followers RENAME TO friends;
     `;
@@ -59,6 +59,18 @@ const initializeDatabase = async () => {
             PRIMARY KEY (user_id, friend_id)
         );
     `;
+    // NEW: Query to create the messages table
+    const createMessagesTableQuery = `
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            sender_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            recipient_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            content TEXT NOT NULL,
+            timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            read BOOLEAN DEFAULT FALSE
+        );
+    `;
+
     try {
         await pool.query(createProfilesTableQuery);
         await pool.query(addBioColumnQuery);
@@ -73,6 +85,7 @@ const initializeDatabase = async () => {
             console.log('[DB] Followers table/columns not found or already renamed. Creating friends table if not exists.');
             await pool.query(createFriendsTableQuery); // Create the new table if it doesn't exist under 'friends' name
         }
+        await pool.query(createMessagesTableQuery); // Create the messages table
         console.log('[DB] All tables checked/created successfully.');
     } catch (err) {
         console.error('[DB] Error initializing database tables:', err.stack);
@@ -154,6 +167,7 @@ app.put('/api/profile/background', authenticateToken, upload.single('backgroundF
 app.get('/api/profiles/:username', async (request, response) => {
     try {
         const { username } = request.params;
+        // Also select the bio here
         const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio FROM profiles WHERE username = $1", [username]);
         const profile = profileResult.rows[0];
         if (!profile) return response.status(404).json({ success: false, message: 'Profile not found.' });
