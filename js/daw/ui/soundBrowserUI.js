@@ -3,10 +3,10 @@
 // showNotification is from utils.js (loaded globally or accessed via appServices).
 // getAudioBlobFromSoundBrowserItem from sampleManager.js (accessed via appServices)
 
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
-import { getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getSoundLibraryFileTrees, getLoadedZipFiles, setCurrentLibraryName, setLoadedZipFiles, setSoundLibraryFileTrees, getPreviewPlayer, setPreviewPlayer } from '../state/soundLibraryState.js'; // Corrected path
-import { showNotification } from '../../utils.js'; // Corrected path
-import * as Constants from '../../constants.js'; // Assuming constants.js is now a module or will be. If global, remove this.
+import { getOpenWindows, getWindowById } from '../state/windowState.js';
+import { getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getSoundLibraryFileTrees, getLoadedZipFiles, setCurrentLibraryName, setLoadedZipFiles, setSoundLibraryFileTrees, getPreviewPlayer, setPreviewPlayer } from '../state/soundLibraryState.js';
+import { showNotification } from '../utils.js'; // CORRECTED PATH
+import * as Constants from '../constants.js';
 
 
 let localAppServices = {};
@@ -30,14 +30,14 @@ export function initializeSoundBrowserUI(appServicesFromMain) {
 }
 
 export function renderSoundBrowser(pathToRender) {
-    const browserWindow = getWindowById?.('soundBrowser'); // Corrected from getWindowByIdState
+    const browserWindow = getWindowById?.('soundBrowser');
     if (!browserWindow?.element || browserWindow.isMinimized) {
         return;
     }
 
-    const currentPath = pathToRender !== undefined ? pathToRender : (getCurrentSoundBrowserPath?.() || []); // Corrected function name
+    const currentPath = pathToRender !== undefined ? pathToRender : (getCurrentSoundBrowserPath?.() || []);
     
-    const allFileTrees = getSoundLibraryFileTrees?.() || {}; // Corrected function name
+    const allFileTrees = getSoundLibraryFileTrees?.() || {};
     
     const virtualRoot = {};
     virtualRoot['Imports'] = { type: 'folder', children: allFileTrees['Imports'] || {} };
@@ -46,8 +46,7 @@ export function renderSoundBrowser(pathToRender) {
         if (allFileTrees[libName]) {
             virtualRoot[libName] = { type: 'folder', children: allFileTrees[libName] };
         } else {
-            const loadedZips = getLoadedZipFiles?.() || {}; // Corrected function name
-            // Updated to show loading status more accurately
+            const loadedZips = getLoadedZipFiles?.() || {};
             virtualRoot[libName] = {
                 type: 'placeholder',
                 status: loadedZips[libName]?.status || 'pending',
@@ -66,7 +65,7 @@ export function renderSoundBrowser(pathToRender) {
             }
         }
     } catch (e) {
-        setCurrentSoundBrowserPath([]); // Corrected function name
+        setCurrentSoundBrowserPath([]);
         currentTreeNode = virtualRoot;
     }
     
@@ -84,11 +83,11 @@ function getLibraryNameFromPath(pathArray) {
 
 export function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
-    const openWindows = getOpenWindows() || new Map(); // Corrected from getOpenWindowsState
+    const openWindows = getOpenWindows() || new Map();
 
     if (openWindows.has(windowId) && !savedState) {
-        getWindowById(windowId).restore(); // Corrected from getWindowByIdState
-        return getWindowById(windowId); // Corrected from getWindowByIdState
+        getWindowById(windowId).restore();
+        return getWindowById(windowId);
     }
     
     const contentHTML = `
@@ -103,7 +102,6 @@ export function openSoundBrowserWindow(savedState = null) {
             </div>
         </div>`;
 
-    // --- FIX: Apply savedState to options object ---
     const browserOptions = { width: 350, height: 500 };
     if (savedState) Object.assign(browserOptions, savedState);
 
@@ -112,31 +110,30 @@ export function openSoundBrowserWindow(savedState = null) {
     if (browserWindow?.element) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
         
-        // Constants is global
-        Object.entries(Constants.soundLibraries).forEach(([name, url]) => { // Constants is global
+        Object.entries(Constants.soundLibraries).forEach(([name, url]) => {
             localAppServices.fetchSoundLibrary?.(name, url)
                 .then(() => renderSoundBrowser())
                 .catch(error => console.error(`Failed to load library ${name}:`, error));
         });
 
-        renderSoundBrowser(); // Initial render to show "Initializing libraries..." and placeholders
+        renderSoundBrowser();
         
         previewBtn?.addEventListener('click', async () => {
             if (selectedSoundForPreviewData) {
                 try {
-                    const blob = localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData); // Corrected to use appServices.
+                    const blob = localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData);
                     if (blob) {
-                        let previewPlayer = getPreviewPlayer(); // Corrected function name
+                        let previewPlayer = getPreviewPlayer();
                         if (!previewPlayer) {
                             previewPlayer = new Tone.Player().toDestination();
-                            setPreviewPlayer(previewPlayer); // Corrected function name
+                            setPreviewPlayer(previewPlayer);
                         }
                         const objectURL = URL.createObjectURL(blob);
                         await previewPlayer.load(objectURL);
                         previewPlayer.start();
                     }
                 } catch (err) {
-                    showNotification("Error playing preview.", "error"); // Corrected function name
+                    showNotification("Error playing preview.", "error");
                     console.error("Preview Error:", err);
                 }
             }
@@ -146,7 +143,7 @@ export function openSoundBrowserWindow(savedState = null) {
 }
 
 export function renderDirectoryView(pathArray, treeNode) {
-    const browserWindow = getWindowById?.('soundBrowser'); // Corrected from getWindowByIdState
+    const browserWindow = getWindowById?.('soundBrowser');
     if (!browserWindow?.element) return;
 
     const dirView = browserWindow.element.querySelector('#soundBrowserDirectoryView');
@@ -165,7 +162,7 @@ export function renderDirectoryView(pathArray, treeNode) {
         parentDiv.innerHTML = `<span class="mr-2 text-lg font-bold text-black dark:text-white">↩</span> .. (Parent)`;
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
-            setCurrentSoundBrowserPath(newPath); // Corrected function name
+            setCurrentSoundBrowserPath(newPath);
             renderSoundBrowser(newPath);
         });
         dirView.appendChild(parentDiv);
@@ -173,7 +170,7 @@ export function renderDirectoryView(pathArray, treeNode) {
 
     // Sort entries: folders first, then files, both alphabetically
     const entries = Object.entries(treeNode || {}).sort((a, b) => {
-        const aIsFolder = a[1].type === 'folder' || a[1].type === 'placeholder'; // Treat placeholder as folder for sorting
+        const aIsFolder = a[1].type === 'folder' || a[1].type === 'placeholder';
         const bIsFolder = b[1].type === 'folder' || b[1].type === 'placeholder';
 
         if (aIsFolder && !bIsFolder) return -1;
@@ -205,7 +202,7 @@ export function renderDirectoryView(pathArray, treeNode) {
         if (item.type === 'folder') {
             itemDiv.addEventListener('click', () => {
                 const newPath = [...pathArray, name];
-                setCurrentSoundBrowserPath(newPath); // Corrected function name
+                setCurrentSoundBrowserPath(newPath);
                 renderSoundBrowser(newPath);
             });
         } else if (item.type === 'file') {
@@ -227,8 +224,8 @@ export function renderDirectoryView(pathArray, treeNode) {
                 if (previewBtn) previewBtn.disabled = false;
             });
             itemDiv.addEventListener('dblclick', () => {
-                const armedTrackId = localAppServices.getArmedTrackId?.(); // Corrected from getArmedTrackIdState
-                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null; // Corrected from getTrackByIdState
+                const armedTrackId = localAppServices.getArmedTrackId?.();
+                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
 
                 if (armedTrack) {
                     const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name };
@@ -236,7 +233,7 @@ export function renderDirectoryView(pathArray, treeNode) {
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
                     localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex);
                 } else {
-                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500); // Corrected function name
+                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500);
                 }
             });
         } else if (item.type === 'placeholder') {
