@@ -1,7 +1,7 @@
 // js/state/projectState.js
 
-import * as Constants from '../constants.js';
-import { showNotification } from '../utils.js';
+import * as Constants from '../../constants.js'; // Corrected path
+import { showNotification } from '../../utils.js'; // Corrected path
 
 let undoStack = [];
 let redoStack = [];
@@ -108,8 +108,8 @@ export async function reconstructDAW(projectData) {
     
     // Update UI
     localAppServices.updateMixerWindow?.();
-    localAppServices.renderTimeline?.();
-    
+    localAppServices.renderTimeline?.(); // This will still not work as timeline is removed.
+
     setIsReconstructingDAW(false);
 }
 
