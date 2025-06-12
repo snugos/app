@@ -68,7 +68,84 @@ async function loadAndApplyGlobals() {
     }
 }
 
-function setupDesktopContextMenu() {
+function openLibraryWindow() {
+    const windowId = 'library';
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
+        return;
+    }
+
+    const contentHTML = `
+        <div class="flex h-full" style="background-color: var(--bg-window-content);">
+            <!-- Sidebar -->
+            <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
+                <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
+                <ul>
+                    <li><button id="my-files-btn" class="w-full text-left p-2 rounded mb-1" style="color: var(--text-primary);">My Files</button></li>
+                    <li><button id="global-files-btn" class="w-full text-left p-2 rounded" style="color: var(--text-primary);">Global</button></li>
+                </ul>
+                <hr class="my-4" style="border-color: var(--border-secondary);" />
+                <!-- NOTE: Buttons are restored here -->
+                <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
+                <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
+            </div>
+            <!-- Main Content -->
+            <div class="flex-grow flex flex-col">
+                <div class="p-2 border-b" style="border-color: var(--border-secondary);">
+                    <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
+                </div>
+                <div id="file-view-area" class="flex-grow p-4 overflow-y-auto flex flex-wrap content-start gap-4"></div>
+            </div>
+        </div>
+    `;
+    
+    const desktopEl = document.getElementById('desktop');
+    const options = { width: Math.max(800, desktopEl.offsetWidth * 0.7), height: Math.max(600, desktopEl.offsetHeight * 0.8), x: desktopEl.offsetWidth * 0.15, y: desktopEl.offsetHeight * 0.05 };
+    const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
+    
+    initializePageUI(libWindow.element);
+}
+
+function initializePageUI(container) {
+    const myFilesBtn = container.querySelector('#my-files-btn');
+    const globalFilesBtn = container.querySelector('#global-files-btn');
+    const uploadBtn = container.querySelector('#uploadFileBtn');
+    const newFolderBtn = container.querySelector('#createFolderBtn');
+
+    const updateNavStyling = () => {
+        myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
+        myFilesBtn.style.color = currentViewMode === 'my-files' ? 'var(--accent-active-text)' : 'var(--text-primary)';
+        globalFilesBtn.style.backgroundColor = currentViewMode === 'global' ? 'var(--accent-active)' : 'transparent';
+        globalFilesBtn.style.color = currentViewMode === 'global' ? 'var(--accent-active-text)' : 'var(--text-primary)';
+    };
+    
+    myFilesBtn.addEventListener('click', () => {
+        currentViewMode = 'my-files';
+        currentPath = ['/'];
+        fetchAndRenderLibraryItems(container);
+        updateNavStyling();
+    });
+    globalFilesBtn.addEventListener('click', () => {
+        currentViewMode = 'global';
+        currentPath = ['/'];
+        fetchAndRenderLibraryItems(container);
+        updateNavStyling();
+    });
+
+    [myFilesBtn, globalFilesBtn].forEach(btn => {
+        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
+        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
+    });
+
+    // NOTE: Listeners for the restored buttons
+    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
+    newFolderBtn?.addEventListener('click', createFolder);
+
+    updateNavStyling();
+    fetchAndRenderLibraryItems(container);
+}
+
+function attachDesktopEventListeners() {
     const desktop = document.getElementById('desktop');
     if (!desktop) return;
 
@@ -83,15 +160,6 @@ function setupDesktopContextMenu() {
         ];
         appServices.createContextMenu(e, menuItems);
     });
-}
-
-function attachDesktopEventListeners() {
-    setupDesktopContextMenu();
-    
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
@@ -124,70 +192,14 @@ function attachDesktopEventListeners() {
             showNotification(`Error: ${error.message}`, 4000);
         }
     });
-}
-
-function openLibraryWindow() {
-    const windowId = 'library';
-    if (appServices.getWindowById(windowId)) {
-        appServices.getWindowById(windowId).focus();
-        return;
-    }
-    const contentHTML = `
-        <div class="flex h-full" style="background-color: var(--bg-window-content);">
-            <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
-                <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
-                <ul>
-                    <li><button id="my-files-btn" class="w-full text-left p-2 rounded mb-1" style="color: var(--text-primary);">My Files</button></li>
-                    <li><button id="global-files-btn" class="w-full text-left p-2 rounded" style="color: var(--text-primary);">Global</button></li>
-                </ul>
-            </div>
-            <div class="flex-grow flex flex-col">
-                <div class="p-2 border-b" style="border-color: var(--border-secondary);">
-                    <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
-                </div>
-                <div id="file-view-area" class="flex-grow p-4 overflow-y-auto flex flex-wrap content-start gap-4"></div>
-            </div>
-        </div>
-    `;
-    const desktopEl = document.getElementById('desktop');
-    const options = { width: Math.max(800, desktopEl.offsetWidth * 0.7), height: Math.max(600, desktopEl.offsetHeight * 0.8), x: desktopEl.offsetWidth * 0.15, y: desktopEl.offsetHeight * 0.05 };
-    const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
-    initializePageUI(libWindow.element);
-}
-
-function initializePageUI(container) {
-    const myFilesBtn = container.querySelector('#my-files-btn');
-    const globalFilesBtn = container.querySelector('#global-files-btn');
-
-    const updateNavStyling = () => {
-        myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
-        myFilesBtn.style.color = currentViewMode === 'my-files' ? 'var(--accent-active-text)' : 'var(--text-primary)';
-        globalFilesBtn.style.backgroundColor = currentViewMode === 'global' ? 'var(--accent-active)' : 'transparent';
-        globalFilesBtn.style.color = currentViewMode === 'global' ? 'var(--accent-active-text)' : 'var(--text-primary)';
-    };
     
-    myFilesBtn.addEventListener('click', () => {
-        currentViewMode = 'my-files';
-        currentPath = ['/'];
-        fetchAndRenderLibraryItems(container);
-        updateNavStyling();
-    });
-    globalFilesBtn.addEventListener('click', () => {
-        currentViewMode = 'global';
-        currentPath = ['/'];
-        fetchAndRenderLibraryItems(container);
-        updateNavStyling();
-    });
-
-    [myFilesBtn, globalFilesBtn].forEach(btn => {
-        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
-        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
-    });
-
-    updateNavStyling();
-    fetchAndRenderLibraryItems(container);
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
 }
 
+// All other functions (fetchAndRenderLibraryItems, renderFileItem, handleItemClick, etc.) remain here...
 async function fetchAndRenderLibraryItems(container) {
     const fileViewArea = container.querySelector('#file-view-area');
     const pathDisplay = container.querySelector('#library-path-display');
@@ -221,7 +233,7 @@ async function fetchAndRenderLibraryItems(container) {
 
 function renderFileItem(item, isParentFolder = false) {
     const itemDiv = document.createElement('div');
-    itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28';
+    itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28 file-item-container';
     itemDiv.style.color = 'var(--text-primary)';
     
     itemDiv.addEventListener('click', () => {
