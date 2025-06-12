@@ -3,16 +3,12 @@
 // Removed import { getRecordingStartTimeState } from '../state.js'; as getRecordingStartTimeState is global
 
 let localAppServices = {};
-let mic = null;
-let recorder = null;
 
-// Removed export
-function initializeRecording(appServices) {
+export function initializeRecording(appServices) { // Added 'export' here
     localAppServices = appServices;
 }
 
-// Removed export
-async function startAudioRecording(track, isMonitoringEnabled) {
+export async function startAudioRecording(track, isMonitoringEnabled) { // Added 'export' here
     if (mic?.state === "started") mic.close();
     if (recorder?.state === "started") await recorder.stop();
 
@@ -44,8 +40,7 @@ async function startAudioRecording(track, isMonitoringEnabled) {
     }
 }
 
-// Removed export
-async function stopAudioRecording() {
+export async function stopAudioRecording() { // Added 'export' here
     if (!recorder) return;
     
     let blob = null;
