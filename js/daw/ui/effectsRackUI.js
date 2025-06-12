@@ -1,9 +1,12 @@
 // js/daw/ui/effectsRackUI.js
 
-// Import state functions directly for effectsRackUI.js module
-import { getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam } from '../../state/masterState.js';
-import { getTrackById } from '../../state/trackState.js';
-import { getOpenWindows, getWindowById } from '../../state/windowState.js';
+// NOTE: Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
+// createEffectInstance, AVAILABLE_EFFECTS, getEffectDefaultParams, getEffectParamDefinitions are from effectsRegistry.js
+// createKnob from knobUI.js
+
+import { getTrackById } from '../state/trackState.js'; // Corrected path
+import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
+import { getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam } from '../state/masterState.js'; // Corrected path
 
 let localAppServices = {};
 let selectedEffectId = {}; // Keyed by ownerId
@@ -19,9 +22,9 @@ function refreshEffectsRack(windowInstance) {
     
     let owner;
     if (ownerType === 'track') {
-        owner = localAppServices.getTrackById(parseInt(ownerId)); // Use appServices
+        owner = getTrackById(parseInt(ownerId)); // Corrected from getTrackByIdState
     } else {
-        owner = { effects: { activeEffects: getMasterEffects() } }; // Now imports from masterState.js
+        owner = { effects: { activeEffects: getMasterEffects() } }; // Corrected from getMasterEffectsState
     }
 
     if (!owner) return;
@@ -43,11 +46,11 @@ function buildModularEffectsRackDOM(owner, ownerType = 'track') {
 }
 
 export function openTrackEffectsRackWindow(trackId, savedState = null) {
-    const track = localAppServices.getTrackById(trackId); // Use appServices
+    const track = getTrackById(trackId); // Corrected from getTrackByIdState
     if (!track) return null;
     const windowId = `effectsRack-${trackId}`;
-    if (getOpenWindows().has(windowId) && !savedState) { // Now imports from windowState.js
-        getWindowById(windowId).restore(); // Now imports from windowState.js
+    if (getOpenWindows().has(windowId) && !savedState) { // Corrected from getOpenWindowsState
+        getWindowById(windowId).restore(); // Corrected from getWindowByIdState
         return;
     }
     const content = buildModularEffectsRackDOM(track, 'track');
@@ -58,17 +61,17 @@ export function openTrackEffectsRackWindow(trackId, savedState = null) {
     };
     if (savedState) Object.assign(rackOptions, savedState);
 
-    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, rackOptions); // SnugWindow is global
+    const rackWindow = localAppServices.createWindow(windowId, `Effects: ${track.name}`, content, rackOptions);
     attachEffectsRackListeners(track, 'track', rackWindow.element);
 }
 
 export function openMasterEffectsRackWindow(savedState = null) {
     const windowId = 'masterEffectsRack';
-    if (getOpenWindows().has(windowId) && !savedState) { // Now imports from windowState.js
-        getWindowById(windowId).restore(); // Now imports from windowState.js
+    if (getOpenWindows().has(windowId) && !savedState) { // Corrected from getOpenWindowsState
+        getWindowById(windowId).restore(); // Corrected from getWindowByIdState
         return;
     }
-    const masterOwner = { effects: { activeEffects: getMasterEffects() } }; // Now imports from masterState.js
+    const masterOwner = { effects: { activeEffects: getMasterEffects() } }; // Corrected from getMasterEffectsState
     const content = buildModularEffectsRackDOM(masterOwner, 'master');
     
     const rackOptions = {
@@ -77,7 +80,7 @@ export function openMasterEffectsRackWindow(savedState = null) {
     };
     if (savedState) Object.assign(rackOptions, savedState);
 
-    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, rackOptions); // SnugWindow is global
+    const rackWindow = localAppServices.createWindow(windowId, 'Master Effects Rack', content, rackOptions);
     attachEffectsRackListeners(masterOwner, 'master', rackWindow.element);
 }
 
@@ -105,7 +108,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
         effects.forEach(effect => {
             const effectDiv = document.createElement('div');
             effectDiv.className = 'effect-item p-1 border rounded cursor-pointer flex justify-between items-center bg-white dark:bg-black border-black dark:border-white';
-            const effectName = AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type; // AVAILABLE_EFFECTS is global
+            const effectName = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type; // Access AVAILABLE_EFFECTS via appServices
             effectDiv.innerHTML = `<span>${effects.indexOf(effect) + 1}. ${effectName}</span><button class="text-xs text-black dark:text-white hover:font-bold" title="Remove Effect">X</button>`;
             
             if (selectedEffectId[ownerId] === effect.id) {
@@ -115,7 +118,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
             effectDiv.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON') {
                     if (ownerType === 'track') owner.effects.removeEffect(effect.id);
-                    else removeMasterEffect(effect.id); // Now imports from masterState.js
+                    else removeMasterEffect(effect.id); // Corrected function name
                 } else {
                     selectedEffectId[ownerId] = effect.id;
                     renderEffectsList(owner, ownerType, listDiv, controlsContainer);
@@ -144,8 +147,8 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
         return;
     }
 
-    const paramDefinitions = getEffectParamDefinitions(effect.type) || []; // getEffectParamDefinitions is global
-    const effectName = AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type; // AVAILABLE_EFFECTS is global
+    const paramDefinitions = localAppServices.effectsRegistryAccess?.getEffectParamDefinitions(effect.type) || []; // Access getEffectParamDefinitions via appServices
+    const effectName = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS[effect.type]?.displayName || effect.type; // Access AVAILABLE_EFFECTS via appServices
     controlsContainer.innerHTML = `<h4 class="text-xs font-bold border-b border-black dark:border-white mb-2 pb-1">${effectName} Controls</h4>`;
     
     const gridContainer = document.createElement('div');
@@ -158,7 +161,7 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
             paramDef.key.split('.').forEach(k => { currentValue = currentValue?.[k]; });
 
             if (paramDef.type === 'knob') {
-                const knob = localAppServices.createKnob({ // Use appServices.createKnob
+                const knob = localAppServices.createKnob({ // Access createKnob via appServices
                     label: paramDef.label,
                     min: paramDef.min, max: paramDef.max, step: paramDef.step,
                     decimals: paramDef.decimals,
@@ -166,7 +169,7 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                     initialValue: currentValue,
                     onValueChange: (val) => {
                         if (ownerType === 'track') owner.effects.updateEffectParam(effectId, paramDef.key, val);
-                        else updateMasterEffectParam(effectId, paramDef.key, val); // Now imports from masterState.js
+                        else updateMasterEffectParam(effectId, paramDef.key, val); // Corrected function name
                     }
                 }, localAppServices);
                 controlWrapper.appendChild(knob.element);
@@ -180,9 +183,9 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
 function showAddEffectModal(owner, ownerType) {
     const ownerName = (ownerType === 'track' && owner) ? owner.name : 'Master';
     let content = '<ul class="list-none p-0 m-0">';
-    const AVAILABLE_EFFECTS = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {}; // AVAILABLE_EFFECTS is global
-    for (const key in AVAILABLE_EFFECTS) {
-        content += `<li class="p-2 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black cursor-pointer" data-effect="${key}">${AVAILABLE_EFFECTS[key].displayName}</li>`;
+    const AVAILABLE_EFFECTS_REG = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {}; // Access AVAILABLE_EFFECTS via appServices
+    for (const key in AVAILABLE_EFFECTS_REG) {
+        content += `<li class="p-2 hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black cursor-pointer" data-effect="${key}">${AVAILABLE_EFFECTS_REG[key].displayName}</li>`;
     }
     content += '</ul>';
     
@@ -192,7 +195,7 @@ function showAddEffectModal(owner, ownerType) {
         action: () => { /* no specific action needed, modal will close by default */ }
     }];
 
-    const modal = showCustomModal(`Add Effect to ${ownerName}`, content, buttons); // showCustomModal is global
+    const modal = localAppServices.showCustomModal(`Add Effect to ${ownerName}`, content, buttons); // Access showCustomModal via appServices
 
     modal.contentDiv.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', () => {
@@ -200,7 +203,7 @@ function showAddEffectModal(owner, ownerType) {
             if (ownerType === 'track') {
                 owner.effects.addEffect(effectType);
             } else {
-                addMasterEffect(effectType); // Now imports from masterState.js
+                addMasterEffect(effectType); // Corrected function name
             }
             modal.overlay.remove(); // This closes the modal
         });
