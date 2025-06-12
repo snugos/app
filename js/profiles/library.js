@@ -3,13 +3,33 @@ import { SnugWindow } from '../daw/SnugWindow.js';
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 let loggedInUser = null;
-let currentPath = ['/']; // Start at root
-let currentViewMode = 'my-files'; // Can be 'my-files' or 'global'
+let currentPath = ['/'];
+let currentViewMode = 'my-files';
 let appServices = {};
 
+/**
+ * NEW FUNCTION: Handles the AudioContext warning.
+ * Browsers require a user gesture (like a click) to start audio.
+ * This function waits for the first click, starts Tone.js, and then removes itself.
+ */
+function initAudioOnFirstGesture() {
+    const startAudio = async () => {
+        try {
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log('AudioContext started successfully.');
+            }
+        } catch (e) {
+            console.error('Could not start AudioContext:', e);
+        }
+        // Remove this listener after it has run once.
+        document.body.removeEventListener('mousedown', startAudio);
+    };
+    document.body.addEventListener('mousedown', startAudio);
+}
+
+// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-    // NOTE: This section is now complete. I've added the missing functions
-    // like getWindowById, getOpenWindows, etc., which fixes the second error.
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -26,12 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
     attachEventListeners();
     applyUserThemePreference();
     updateClockDisplay();
+    initAudioOnFirstGesture(); // Call the new function to set up the audio starter.
+    
     if (loggedInUser) {
         openLibraryWindow();
     } else {
         showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close', action: ()=>{} }]);
     }
 });
+
+// --- Window Management ---
 
 function openLibraryWindow() {
     const windowId = 'library';
@@ -56,8 +80,7 @@ function openLibraryWindow() {
                 <div class="p-2 border-b" style="border-color: var(--border-secondary);">
                     <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
                 </div>
-                <div id="file-view-area" class="flex-grow p-4 overflow-y-auto flex flex-wrap content-start gap-4">
-                    </div>
+                <div id="file-view-area" class="flex-grow p-4 overflow-y-auto flex flex-wrap content-start gap-4"></div>
             </div>
         </div>
     `;
@@ -73,6 +96,37 @@ function openLibraryWindow() {
     
     initializePageUI(libWindow.element);
 }
+
+function openFileViewerWindow(item) {
+    const windowId = `file-viewer-${item.id}`;
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
+        return;
+    }
+    let content = '';
+    const fileType = item.mime_type || '';
+
+    if (fileType.startsWith('image/')) {
+        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
+    } else if (fileType.startsWith('video/')) {
+        content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
+    } else if (fileType.startsWith('audio/')) {
+        content = `<div class="p-8 flex flex-col items-center justify-center h-full">
+                     <p class="mb-4 font-bold">${item.file_name}</p>
+                     <audio src="${item.s3_url}" controls autoplay></audio>
+                   </div>`;
+    } else {
+        content = `<div class="p-8 text-center">
+                     <p>Cannot preview this file type.</p>
+                     <a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a>
+                   </div>`;
+    }
+    
+    const options = { width: 640, height: 480 };
+    new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
+}
+
+// --- UI Initialization and Rendering ---
 
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
@@ -100,7 +154,6 @@ function initializePageUI(container) {
         updateNavStyling();
     });
 
-    // Hover effects for sidebar buttons
     [myFilesBtn, globalFilesBtn, uploadBtn, newFolderBtn].forEach(btn => {
         const originalBg = btn.id.includes('-files-btn') ? 'transparent' : 'var(--bg-button)';
         btn.addEventListener('mouseenter', () => { 
@@ -153,10 +206,18 @@ async function fetchAndRenderLibraryItems(container) {
 
 function renderFileItem(item, isParentFolder = false) {
     const itemDiv = document.createElement('div');
-    itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28';
+    itemDiv.className = 'file-item-container flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28';
     itemDiv.style.color = 'var(--text-primary)';
-    itemDiv.addEventListener('mouseenter', () => itemDiv.style.backgroundColor = 'var(--bg-button-hover)');
-    itemDiv.addEventListener('mouseleave', () => itemDiv.style.backgroundColor = 'transparent');
+    
+    // Select on single click
+    itemDiv.addEventListener('click', (e) => {
+        // Deselect all others
+        document.querySelectorAll('.file-item-container').forEach(el => el.style.backgroundColor = 'transparent');
+        // Select this one
+        itemDiv.style.backgroundColor = 'var(--accent-focus)';
+    });
+
+    // Open on double click
     itemDiv.addEventListener('dblclick', () => handleItemClick(item, isParentFolder));
 
     let iconHtml = '';
@@ -181,7 +242,8 @@ function renderFileItem(item, isParentFolder = false) {
 
     if (!isParentFolder && currentViewMode === 'my-files' && item.user_id === loggedInUser.id) {
         const shareBtn = document.createElement('button');
-        shareBtn.innerHTML = item.is_public ? `<svg class="w-4 h-4" title="Public" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM4.5 7.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7Z"/></svg>` : `<svg class="w-4 h-4" title="Private" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM4.5 7.5a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7Zm-2.25 2a.25.25 0 0 1 .25-.25h9.5a.25.25 0 0 1 0 .5h-9.5a.25.25 0 0 1-.25-.25Z"/></svg>`;
+        const iconColor = item.is_public ? 'var(--accent-soloed)' : 'var(--text-secondary)';
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" style="color:${iconColor};" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
         shareBtn.className = 'absolute top-0 right-0 p-1 rounded-full opacity-60 hover:opacity-100';
         shareBtn.style.backgroundColor = 'var(--bg-button)';
         shareBtn.addEventListener('click', (e) => {
@@ -194,7 +256,21 @@ function renderFileItem(item, isParentFolder = false) {
     return itemDiv;
 }
 
-// ... the rest of the file (all helper functions) is identical and complete ...
+// --- Core Logic & Event Handlers ---
+
+function handleItemClick(item, isParentFolder) {
+    const libWindow = appServices.getWindowById('library');
+    if (isParentFolder) {
+        if (currentPath.length > 1) currentPath.pop();
+    } else if (item.mime_type.includes('folder')) {
+        currentPath.push(item.file_name + '/');
+    } else {
+        openFileViewerWindow(item);
+        return;
+    }
+    if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+}
+
 function showShareModal(item) {
     const newStatus = !item.is_public;
     const actionText = newStatus ? "publicly available" : "private";
@@ -222,19 +298,6 @@ async function handleToggleFilePublic(fileId, newStatus) {
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
-}
-
-function handleItemClick(item, isParentFolder) {
-    const libWindow = appServices.getWindowById('library');
-    if (isParentFolder) {
-        if (currentPath.length > 1) currentPath.pop();
-    } else if (item.mime_type.includes('folder')) {
-        currentPath.push(item.file_name + '/');
-    } else {
-        openFileViewerWindow(item);
-        return;
-    }
-    if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
 }
 
 async function handleFileUpload(files) {
@@ -292,6 +355,8 @@ function createFolder() {
         }}
     ]);
 }
+
+// --- Desktop Environment and Auth Helpers ---
 
 function updateClockDisplay() {
     const clockDisplay = document.getElementById('taskbarClockDisplay');
@@ -377,4 +442,11 @@ function applyUserThemePreference() {
         body.classList.remove('theme-light');
         body.classList.add('theme-dark');
     }
+}
+
+// showLoginModal still needs its full implementation from your original files
+function showLoginModal() {
+    // The full implementation of your login/register modal would go here.
+    // This is just a placeholder to avoid errors.
+    showCustomModal('Login / Register', '<p class="p-4">Login form would appear here.</p>', [{label: 'Close'}]);
 }
