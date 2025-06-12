@@ -228,7 +228,7 @@ app.put('/api/profiles/:username', authenticateToken, async (request, response) 
 });
 
 
-// === FRIEND SYSTEM ENDPOINTS (Renamed from FOLLOW) ===
+// === FRIEND SYSTEM ENDPOINTS ===
 
 // POST /api/profiles/:username/friend - Add a friend
 app.post('/api/profiles/:username/friend', authenticateToken, async (request, response) => {
@@ -279,7 +279,7 @@ app.delete('/api/profiles/:username/friend', authenticateToken, async (request, 
             [userId, friendId]
         );
 
-        response.json({ success: true, message: `You have removed ${friendUsername}.` });
+        response.json({ success: true, message: `You have removed ${friendUsername} as a friend.` });
 
     } catch (error) {
         console.error("[Remove Friend] Error:", error);
@@ -312,7 +312,7 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
 });
 
 
-// === NEW: Messaging Endpoints ===
+// === Messaging Endpoints ===
 
 // POST /api/messages - Send a new message
 app.post('/api/messages', authenticateToken, async (request, response) => {
@@ -382,6 +382,131 @@ app.get('/api/messages/received', authenticateToken, async (request, response) =
     } catch (error) {
         console.error("[Messaging] Error fetching received messages:", error);
         response.status(500).json({ success: false, message: 'Server error while fetching received messages.' });
+    }
+});
+
+
+// === NEW: General File Storage Endpoints ===
+
+// POST /api/files/upload - Upload any file to S3 and save metadata to DB
+app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file provided for upload.' });
+    }
+    const userId = req.user.id;
+    const { is_public } = req.body; // Expect 'true' or 'false' string from form-data
+
+    try {
+        const file = req.file;
+        const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`; // Use originalname and replace spaces
+        
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: s3Key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+            ACL: 'public-read' // Make file publicly readable via URL
+        };
+
+        const data = await s3.upload(uploadParams).promise(); // Upload to S3
+
+        // Save file metadata to user_files table
+        const insertFileQuery = `
+            INSERT INTO user_files (user_id, file_name, s3_key, s3_url, mime_type, file_size, is_public)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, file_name, s3_url, mime_type, file_size, is_public, created_at;
+        `;
+        const result = await pool.query(insertFileQuery, [
+            userId,
+            file.originalname,
+            s3Key,
+            data.Location, // S3 URL
+            file.mimetype,
+            file.size,
+            is_public === 'true' // Convert string 'true'/'false' to boolean
+        ]);
+        const uploadedFile = result.rows[0];
+
+        res.status(201).json({ success: true, message: 'File uploaded and metadata saved.', file: uploadedFile });
+
+    } catch (error) {
+        console.error("[File Upload] Error:", error);
+        res.status(500).json({ success: false, message: 'Server error during file upload.' });
+    }
+});
+
+// GET /api/files/my - Get all files owned by the current user
+app.get('/api/files/my', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const query = "SELECT id, file_name, s3_url, mime_type, file_size, is_public, created_at FROM user_files WHERE user_id = $1 ORDER BY created_at DESC";
+        const result = await pool.query(query, [userId]);
+        res.json({ success: true, files: result.rows });
+    } catch (error) {
+        console.error("[File Listing] Error fetching user files:", error);
+        res.status(500).json({ success: false, message: 'Server error while fetching your files.' });
+    }
+});
+
+// PUT /api/files/:fileId - Update file metadata (e.g., is_public status)
+app.put('/api/files/:fileId', authenticateToken, async (req, res) => {
+    const fileId = req.params.fileId;
+    const userId = req.user.id;
+    const { is_public } = req.body; // Expect boolean from frontend
+
+    if (typeof is_public !== 'boolean') {
+        return res.status(400).json({ success: false, message: 'is_public must be a boolean.' });
+    }
+
+    try {
+        const query = `
+            UPDATE user_files
+            SET is_public = $1
+            WHERE id = $2 AND user_id = $3
+            RETURNING id, file_name, is_public;
+        `;
+        const result = await pool.query(query, [is_public, fileId, userId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'File not found or unauthorized.' });
+        }
+
+        res.json({ success: true, message: 'File status updated.', file: result.rows[0] });
+
+    } catch (error) {
+        console.error("[File Update] Error updating file status:", error);
+        res.status(500).json({ success: false, message: 'Server error while updating file status.' });
+    }
+});
+
+// DELETE /api/files/:fileId - Delete a file (from DB and S3)
+app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
+    const fileId = req.params.fileId;
+    const userId = req.user.id;
+
+    try {
+        // 1. Get file metadata to get S3 key
+        const getFileQuery = "SELECT s3_key FROM user_files WHERE id = $1 AND user_id = $2";
+        const fileResult = await pool.query(getFileQuery, [fileId, userId]);
+        if (fileResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'File not found or unauthorized.' });
+        }
+        const s3Key = fileResult.rows[0].s3_key;
+
+        // 2. Delete from S3
+        const deleteS3Params = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key };
+        await s3.deleteObject(deleteS3Params).promise();
+        console.log(`[File Delete] Deleted from S3: ${s3Key}`);
+
+        // 3. Delete metadata from DB
+        const deleteDbQuery = "DELETE FROM user_files WHERE id = $1 AND user_id = $2";
+        await pool.query(deleteDbQuery, [fileId, userId]);
+
+        res.json({ success: true, message: 'File deleted successfully.' });
+
+    } catch (error) {
+        console.error("[File Delete] Error deleting file:", error);
+        res.status(500).json({ success: false, message: 'Server error while deleting file.' });
     }
 });
 
