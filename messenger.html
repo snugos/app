@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnugOS Messenger</title>
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { /* ... */ };
+    </script>
+</head>
+<body class="theme-dark">
+
+    <div id="desktop"></div>
+
+    <div id="taskbar" class="select-none">
+        <button id="startButton">Start</button>
+        <div id="taskbarButtons"></div>
+        <div style="flex-grow: 1;"></div> 
+        <div id="taskbarClockDisplay" class="text-right px-2"></div>
+    </div>
+
+    <div id="startMenu" class="hidden select-none">
+        <ul>
+            <li><a href="index.html" style="text-decoration:none; color:inherit; display:block;">Desktop</a></li>
+            <li><a href="library.html" style="text-decoration:none; color:inherit; display:block;">Library</a></li>
+            <li><a href="snaw.html" style="text-decoration:none; color:inherit; display:block;">DAW</a></li>
+        </ul>
+    </div>
+    
+    <div id="notification-area"></div>
+    <div id="modalContainer"></div>
+    
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script type="module" src="js/daw/SnugWindow.js"></script>
+    
+    <script type="module" src="js/messenger.js"></script>
+
+</body>
+</html>
