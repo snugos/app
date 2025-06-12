@@ -242,6 +242,26 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
     }
 });
 
+// NOTE: NEW ENDPOINT TO GET A USER'S FRIEND LIST
+app.get('/api/friends', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const query = `
+            SELECT p.id, p.username, p.avatar_url 
+            FROM friends f
+            JOIN profiles p ON f.friend_id = p.id
+            WHERE f.user_id = $1
+            ORDER BY p.username ASC;
+        `;
+        const result = await pool.query(query, [userId]);
+        response.json({ success: true, friends: result.rows });
+    } catch (error) {
+        console.error("[Get Friends] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching friends.' });
+    }
+});
+
+
 // --- Messaging Endpoints ---
 
 app.post('/api/messages', authenticateToken, async (request, response) => {
@@ -257,6 +277,38 @@ app.post('/api/messages', authenticateToken, async (request, response) => {
         response.status(201).json({ success: true, messageData: result.rows[0] });
     } catch (error) {
         response.status(500).json({ success: false, message: 'Server error while sending message.' });
+    }
+});
+
+// NOTE: NEW ENDPOINT TO GET A FULL CONVERSATION
+app.get('/api/messages/conversation/:username', authenticateToken, async (request, response) => {
+    try {
+        const userId = request.user.id;
+        const otherUsername = request.params.username;
+
+        const otherUserResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [otherUsername]);
+        if (otherUserResult.rows.length === 0) {
+            return response.status(404).json({ success: false, message: 'User not found.' });
+        }
+        const otherUserId = otherUserResult.rows[0].id;
+        
+        const query = `
+            SELECT m.id, m.sender_id, m.content, m.timestamp, s.username as sender_username
+            FROM messages m
+            JOIN profiles s ON m.sender_id = s.id
+            WHERE (m.sender_id = $1 AND m.recipient_id = $2) 
+               OR (m.sender_id = $2 AND m.recipient_id = $1)
+            ORDER BY m.timestamp ASC;
+        `;
+        const result = await pool.query(query, [userId, otherUserId]);
+
+        await pool.query("UPDATE messages SET read = TRUE WHERE sender_id = $1 AND recipient_id = $2", [otherUserId, userId]);
+        
+        response.json({ success: true, conversation: result.rows });
+
+    } catch (error) {
+        console.error("[Get Conversation] Error:", error);
+        response.status(500).json({ success: false, message: 'Server error while fetching conversation.' });
     }
 });
 
