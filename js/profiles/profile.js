@@ -168,7 +168,7 @@ function renderEditMode(container, profileData) {
 }
 
 // --- Authentication & User State Logic (Self-contained for Profile Page) ---
-const checkLocalAuth = () => { // Changed to const function expression
+const checkLocalAuth = () => { // Declared as const function expression to prevent redeclaration issues
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
     try {
@@ -269,8 +269,10 @@ function showMessageModal(recipientUsername) {
 
     const modalContent = `
         <div class="space-y-4">
-            <p>Send a message to <strong>${recipientUsername}</strong>:</p>
-            <textarea id="messageTextarea" class="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700" rows="5" placeholder="Type your message here..."></textarea>
+            <div>
+                <p>Send a message to <strong>${recipientUsername}</strong>:</p>
+                <textarea id="messageTextarea" class="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700" rows="5" placeholder="Type your message here..."></textarea>
+            </div>
         </div>
     `;
 
