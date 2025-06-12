@@ -1,4 +1,4 @@
-// server.js - SnugOS Dedicated API Server with Profiles & Follows
+// server.js - SnugOS Dedicated API Server with Profiles & Follows and General File Storage
 
 require('dotenv').config();
 const express = require('express');
@@ -59,7 +59,7 @@ const initializeDatabase = async () => {
             PRIMARY KEY (user_id, friend_id)
         );
     `;
-    // NEW: Query to create the messages table
+    // Query to create the messages table
     const createMessagesTableQuery = `
         CREATE TABLE IF NOT EXISTS messages (
             id SERIAL PRIMARY KEY,
@@ -68,6 +68,20 @@ const initializeDatabase = async () => {
             content TEXT NOT NULL,
             timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             read BOOLEAN DEFAULT FALSE
+        );
+    `;
+    // NEW: Query to create the user_files table for general file storage
+    const createUserFilesTableQuery = `
+        CREATE TABLE IF NOT EXISTS user_files (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            file_name VARCHAR(255) NOT NULL,
+            s3_key TEXT NOT NULL UNIQUE,
+            s3_url TEXT NOT NULL UNIQUE,
+            mime_type VARCHAR(100),
+            file_size INTEGER,
+            is_public BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
 
@@ -85,7 +99,8 @@ const initializeDatabase = async () => {
             console.log('[DB] Followers table/columns not found or already renamed. Creating friends table if not exists.');
             await pool.query(createFriendsTableQuery); // Create the new table if it doesn't exist under 'friends' name
         }
-        await pool.query(createMessagesTableQuery); // Create the messages table
+        await pool.query(createMessagesTableQuery);
+        await pool.query(createUserFilesTableQuery); // Create the new user_files table
         console.log('[DB] All tables checked/created successfully.');
     } catch (err) {
         console.error('[DB] Error initializing database tables:', err.stack);
@@ -264,7 +279,7 @@ app.delete('/api/profiles/:username/friend', authenticateToken, async (request, 
             [userId, friendId]
         );
 
-        response.json({ success: true, message: `You have removed ${friendUsername} as a friend.` });
+        response.json({ success: true, message: `You have removed ${friendUsername}.` });
 
     } catch (error) {
         console.error("[Remove Friend] Error:", error);
