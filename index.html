@@ -59,7 +59,6 @@
     </div>
 
     <div id="desktop" class="relative h-full w-full">
-        <!-- The welcome message has been removed to make room for icons -->
         <div id="desktop-icons-container" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <!-- Desktop icons will be rendered here by welcome.js -->
         </div>
@@ -68,15 +67,16 @@
     <div id="taskbar" class="select-none">
         <button id="startButton">Start</button>
         <div id="taskbarButtons">
-            </div>
-        <div style="flex-grow: 1;"></div> <div id="taskbarClockDisplay" class="text-right px-2"></div>
+        </div>
+        <div style="flex-grow: 1;"></div> 
+        <div id="taskbarClockDisplay" class="text-right px-2"></div>
     </div>
 
     <div id="startMenu" class="hidden select-none">
         <ul>
-            <li id="menuLaunchDaw">Launch DAW</li>
+            <li id="menuLaunchDaw"><a href="snaw.html" style="text-decoration:none; color:inherit; display:block;">Launch DAW</a></li>
             <li><hr></li>
-            <li id="menuViewProfiles">View Profiles</li>
+            <li id="menuViewProfiles"><a href="library.html" style="text-decoration:none; color:inherit; display:block;">Library</a></li>
             <li><hr></li>
             <li id="menuLogin">Login / Register</li>
             <li id="menuLogout" class="hidden">Logout</li>
@@ -90,13 +90,13 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
-    <!-- NOTE: Added these scripts to enable the windowing system on the welcome page. -->
-    <!-- This will fix the "SnugWindow is not defined" error. -->
+    <!-- NOTE: The order of these scripts is important. Tone.js must load before state.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script type="module" src="js/daw/SnugWindow.js"></script>
 
-    <!-- Original welcome page scripts -->
+    <!-- Scripts specific to the Welcome page -->
     <script type="module" src="js/welcome/welcomeUtils.js"></script>
     <script type="module" src="js/welcome/welcomeDb.js"></script>
     <script type="module" src="js/welcome/welcome.js"></script>
