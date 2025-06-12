@@ -14,30 +14,44 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Roboto', 'sans-serif'],
-                    },
-                }
-            }
-        }
+        tailwind.config = { /* ... */ };
     </script>
 </head>
 <body class="theme-dark">
 
-    <main id="profile-container" class="max-w-4xl mx-auto my-8 p-4">
-        <div class="text-center p-12">
-            <p>Loading Profile...</p>
-        </div>
-    </main>
+    <!-- NOTE: The profile page is now a desktop environment -->
+    <div id="desktop"></div>
+
+    <div id="taskbar" class="select-none">
+        <button id="startButton">Start</button>
+        <div id="taskbarButtons"></div>
+        <div style="flex-grow: 1;"></div> 
+        <div id="taskbarClockDisplay" class="text-right px-2"></div>
+    </div>
+
+    <div id="startMenu" class="hidden select-none">
+        <ul>
+            <li id="menuLaunchDaw"><a href="snaw.html">Launch DAW</a></li>
+            <li id="menuLaunchLibrary"><a href="library.html">Open Library</a></li>
+            <li><hr></li>
+            <li id="menuLogin">Login / Register</li>
+            <li id="menuLogout" class="hidden">Logout</li>
+            <li><hr></li>
+            <li id="menuToggleFullScreen">Toggle Full Screen</li>
+        </ul>
+    </div>
     
     <div id="notification-area"></div>
-
+    <div id="modalContainer"></div>
+    
     <input type="file" id="avatarUploadInput" class="hidden" accept="image/*">
+    <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
 
+    <!-- NOTE: Required scripts for the windowing system and context menus -->
     <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script type="module" src="js/daw/SnugWindow.js"></script>
+    
     <script type="module" src="js/profiles/profile.js"></script>
 
 </body>
