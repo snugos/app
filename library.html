@@ -10,18 +10,22 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Roboto', 'sans-serif'],
-                    },
-                }
-            }
-        }
+        tailwind.config = { /* ... */ };
     </script>
 </head>
 <body class="theme-dark">
+
+    <div id="topTaskbar" class="select-none">
+        <div style="flex-grow: 1;"></div> 
+        <div id="userAuthContainer" class="flex items-center text-sm ml-4">
+            </div>
+        <div id="themeToggleContainerTopRight">
+            <button id="themeToggleBtn" title="Toggle Theme">
+                <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </div>
+    </div>
 
     <div id="desktop"></div>
 
@@ -34,9 +38,8 @@
 
     <div id="startMenu" class="hidden select-none">
         <ul>
-            <li id="menuLaunchDaw">Launch DAW</li>
-            <li><hr></li>
-            <li id="menuViewProfiles">View Profiles</li>
+            <li><a href="index.html" style="text-decoration:none; color:inherit; display:block;">Desktop</a></li>
+            <li><a href="snaw.html" style="text-decoration:none; color:inherit; display:block;">DAW</a></li>
             <li><hr></li>
             <li id="menuLogin">Login / Register</li>
             <li id="menuLogout" class="hidden">Logout</li>
@@ -49,13 +52,12 @@
     <div id="modalContainer"></div>
     
     <input type="file" id="actualFileInput" class="hidden" multiple>
+    <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    
     <script src="js/utils.js"></script>
     <script src="js/state.js"></script>
     <script type="module" src="js/daw/SnugWindow.js"></script>
-
     <script type="module" src="js/profiles/library.js"></script>
 
 </body>
