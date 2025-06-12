@@ -113,7 +113,7 @@ export function openSoundBrowserWindow(savedState = null) {
         const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
         
         // Constants is global
-        Object.entries(Constants.soundLibraries || {}).forEach(([name, url]) => {
+        Object.entries(Constants.soundLibraries).forEach(([name, url]) => { // Constants is global
             localAppServices.fetchSoundLibrary?.(name, url)
                 .then(() => renderSoundBrowser())
                 .catch(error => console.error(`Failed to load library ${name}:`, error));
