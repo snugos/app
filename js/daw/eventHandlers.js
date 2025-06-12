@@ -401,7 +401,7 @@ function toggleFullScreen() {
     }
 }
 
-function setupMIDI() {
+export function setupMIDI() { // Added 'export' here
     if (!navigator.requestMIDIAccess) {
         showNotification("Web MIDI is not supported in this browser.", 4000); // showNotification is global
         return;
@@ -461,7 +461,7 @@ function populateMIDIInputSelector(midiAccess) {
     }
 }
 
-export function selectMIDIInput(event) {
+export function selectMIDIInput(event) { // Added 'export' here
     const midiAccess = localAppServices.getMidiAccess?.(); // getMidiAccessState is global
     const selectedId = event.target.value;
     const currentActiveInput = getActiveMIDIInputState(); // getActiveMIDIInputState is global
@@ -559,7 +559,7 @@ function onMIDIMessage(message) {
 }
 
 
-export function handleTrackMute(trackId) {
+export function handleTrackMute(trackId) { // Added 'export' here
     console.log(`[eventHandlers.js] handleTrackMute called for trackId: ${trackId}`); // DEBUG LOG
     const track = getTrackByIdState(trackId); // getTrackByIdState is global
     if (!track) {
@@ -576,7 +576,7 @@ export function handleTrackMute(trackId) {
     }
 }
 
-export function handleTrackSolo(trackId) {
+export function handleTrackSolo(trackId) { // Added 'export' here
     console.log(`[eventHandlers.js] handleTrackSolo called for trackId: ${trackId}`); // DEBUG LOG
     const track = getTrackByIdState(trackId); // getTrackByIdState is global
     if (!track) {
@@ -600,7 +600,7 @@ export function handleTrackSolo(trackId) {
     }
 }
 
-export function handleTrackArm(trackId) {
+export function handleTrackArm(trackId) { // Added 'export' here
     console.log(`[eventHandlers.js] handleTrackArm called for trackId: ${trackId}`); // DEBUG LOG
     const currentArmedId = getArmedTrackIdState(); // getArmedTrackIdState is global
     const newArmedId = (currentArmedId === trackId) ? null : trackId;
@@ -615,7 +615,7 @@ export function handleTrackArm(trackId) {
     }
 }
 
-export function handleRemoveTrack(trackId) {
+export function handleRemoveTrack(trackId) { // Added 'export' here
     const track = getTrackByIdState(trackId); // getTrackByIdState is global
     if (!track) return;
     showConfirmationDialog('Remove Track', `Are you sure you want to remove "${track.name}"? This cannot be undone.`, () => { // showConfirmationDialog is global
@@ -623,19 +623,19 @@ export function handleRemoveTrack(trackId) {
     });
 }
 
-export function handleOpenTrackInspector(trackId) {
+export function handleOpenTrackInspector(trackId) { // Added 'export' here
     if (localAppServices.openTrackInspectorWindow) {
         localAppServices.openTrackInspectorWindow(trackId);
     }
 }
 
-export function handleOpenEffectsRack(trackId) {
+export function handleOpenEffectsRack(trackId) { // Added 'export' here
     if (localAppServices.openTrackEffectsRackWindow) {
         localAppServices.openTrackEffectsRackWindow(trackId);
     }
 }
 
-export function handleOpenPianoRoll(trackId) {
+export function handleOpenPianoRoll(trackId) { // Added 'export' here
     if (localAppServices.openPianoRollWindow) {
         localAppServices.openPianoRollWindow(trackId);
     } else {
@@ -643,7 +643,7 @@ export function handleOpenPianoRoll(trackId) {
     }
 }
 
-export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime) { // Added 'export' here
     const files = event.dataTransfer.files;
     const targetTrack = getTrackByIdState(targetTrackId); // getTrackByIdState is global
     // This function is still here but will not be called from the UI as timeline is removed.
@@ -681,7 +681,7 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
     }
 }
 
-export function handleOpenYouTubeImporter() {
+export function handleOpenYouTubeImporter() { // Added 'export' here
     if (localAppServices.openYouTubeImporterWindow) {
         localAppServices.openYouTubeImporterWindow();
     } else {
