@@ -1,5 +1,10 @@
 // js/daw/ui/soundBrowserUI.js - Sound Browser UI Management
-// Removed imports for Constants, showNotification, and state functions as they are global
+
+// Import state functions directly for soundBrowserUI.js module
+import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../../state/soundLibraryState.js';
+import { getWindowById } from '../../state/windowState.js';
+import { getArmedTrackId } from '../../state/trackState.js';
+
 
 let localAppServices = {};
 let selectedSoundForPreviewData = null; 
@@ -17,22 +22,19 @@ const FILE_ICON_SVG = `
 </svg>`;
 
 
-export function initializeSoundBrowserUI(appServicesFromMain) { // Export re-added
+export function initializeSoundBrowserUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
-export function renderSoundBrowser(pathToRender) { // Export re-added
-    // getWindowByIdState is global
-    const browserWindow = localAppServices.getWindowById?.('soundBrowser');
+export function renderSoundBrowser(pathToRender) {
+    const browserWindow = localAppServices.getWindowById?.('soundBrowser'); // Use appServices
     if (!browserWindow?.element || browserWindow.isMinimized) {
         return;
     }
 
-    // getCurrentSoundBrowserPathState is global
-    const currentPath = pathToRender !== undefined ? pathToRender : (getCurrentSoundBrowserPathState?.() || []);
+    const currentPath = pathToRender !== undefined ? pathToRender : (getCurrentSoundBrowserPath() || []); // Now imports from soundLibraryState.js
     
-    // getSoundLibraryFileTreesState is global
-    const allFileTrees = getSoundLibraryFileTreesState?.() || {};
+    const allFileTrees = getSoundLibraryFileTrees() || {}; // Now imports from soundLibraryState.js
     
     const virtualRoot = {};
     virtualRoot['Imports'] = { type: 'folder', children: allFileTrees['Imports'] || {} };
@@ -41,8 +43,7 @@ export function renderSoundBrowser(pathToRender) { // Export re-added
         if (allFileTrees[libName]) {
             virtualRoot[libName] = { type: 'folder', children: allFileTrees[libName] };
         } else {
-            // getLoadedZipFilesState is global
-            const loadedZips = getLoadedZipFilesState?.() || {};
+            const loadedZips = getLoadedZipFiles() || {}; // Now imports from soundLibraryState.js
             // Updated to show loading status more accurately
             virtualRoot[libName] = { 
                 type: 'placeholder', 
@@ -62,12 +63,11 @@ export function renderSoundBrowser(pathToRender) { // Export re-added
             }
         }
     } catch (e) {
-        // setCurrentSoundBrowserPathState is global
-        setCurrentSoundBrowserPathState([]);
+        setCurrentSoundBrowserPath([]); // Now imports from soundLibraryState.js
         currentTreeNode = virtualRoot;
     }
     
-    renderDirectoryView(currentPath, currentTreeNode); // renderDirectoryView is exported here
+    renderDirectoryView(currentPath, currentTreeNode);
 }
 
 function getLibraryNameFromPath(pathArray) {
@@ -79,15 +79,13 @@ function getLibraryNameFromPath(pathArray) {
     return null;
 }
 
-export function openSoundBrowserWindow(savedState = null) { // Export re-added
+export function openSoundBrowserWindow(savedState = null) {
     const windowId = 'soundBrowser';
-    // getOpenWindowsState is global
-    const openWindows = getOpenWindowsState() || new Map();
+    const openWindows = localAppServices.getOpenWindows?.() || new Map(); // Use appServices
 
     if (openWindows.has(windowId) && !savedState) {
-        // getWindowByIdState is global
-        getWindowByIdState(windowId).restore();
-        return getWindowByIdState(windowId);
+        localAppServices.getWindowById(windowId).restore(); // Use appServices
+        return localAppServices.getWindowById(windowId); // Use appServices
     }
     
     const contentHTML = `
@@ -114,7 +112,7 @@ export function openSoundBrowserWindow(savedState = null) { // Export re-added
         // Constants is global
         Object.entries(Constants.soundLibraries || {}).forEach(([name, url]) => {
             localAppServices.fetchSoundLibrary?.(name, url)
-                .then(() => renderSoundBrowser()) // renderSoundBrowser is exported here
+                .then(() => renderSoundBrowser())
                 .catch(error => console.error(`Failed to load library ${name}:`, error));
         });
 
@@ -126,12 +124,10 @@ export function openSoundBrowserWindow(savedState = null) { // Export re-added
                     // getAudioBlobFromSoundBrowserItem is global
                     const blob = localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData); // Corrected to use appServices, was missing await
                     if (blob) {
-                        // getPreviewPlayerState is global
-                        let previewPlayer = getPreviewPlayerState?.();
+                        let previewPlayer = getPreviewPlayer(); // Now imports from soundLibraryState.js
                         if (!previewPlayer) {
                             previewPlayer = new Tone.Player().toDestination();
-                            // setPreviewPlayerState is global
-                            setPreviewPlayerState(previewPlayer);
+                            setPreviewPlayer(previewPlayer); // Now imports from soundLibraryState.js
                         }
                         const objectURL = URL.createObjectURL(blob);
                         await previewPlayer.load(objectURL);
@@ -148,9 +144,8 @@ export function openSoundBrowserWindow(savedState = null) { // Export re-added
     return browserWindow;
 }
 
-export function renderDirectoryView(pathArray, treeNode) { // Export re-added
-    // getWindowByIdState is global
-    const browserWindow = localAppServices.getWindowById?.('soundBrowser');
+export function renderDirectoryView(pathArray, treeNode) {
+    const browserWindow = localAppServices.getWindowById?.('soundBrowser'); // Use appServices
     if (!browserWindow?.element) return;
 
     const dirView = browserWindow.element.querySelector('#soundBrowserDirectoryView');
@@ -169,9 +164,7 @@ export function renderDirectoryView(pathArray, treeNode) { // Export re-added
         parentDiv.innerHTML = `<span class="mr-2 text-lg font-bold text-black dark:text-white">↩</span> .. (Parent)`;
         parentDiv.addEventListener('click', () => {
             const newPath = pathArray.slice(0, -1);
-            // setCurrentSoundBrowserPathState is global
-            setCurrentSoundBrowserPathState(newPath);
-            // renderSoundBrowser is exported here
+            setCurrentSoundBrowserPath(newPath); // Now imports from soundLibraryState.js
             renderSoundBrowser(newPath);
         });
         dirView.appendChild(parentDiv);
@@ -211,9 +204,7 @@ export function renderDirectoryView(pathArray, treeNode) { // Export re-added
         if (item.type === 'folder') {
             itemDiv.addEventListener('click', () => {
                 const newPath = [...pathArray, name];
-                // setCurrentSoundBrowserPathState is global
-                setCurrentSoundBrowserPathState(newPath);
-                // renderSoundBrowser is exported here
+                setCurrentSoundBrowserPath(newPath); // Now imports from soundLibraryState.js
                 renderSoundBrowser(newPath);
             });
         } else if (item.type === 'file') {
@@ -235,10 +226,8 @@ export function renderDirectoryView(pathArray, treeNode) { // Export re-added
                 if (previewBtn) previewBtn.disabled = false;
             });
             itemDiv.addEventListener('dblclick', () => {
-                // getArmedTrackIdState is global
-                const armedTrackId = localAppServices.getArmedTrackId?.();
-                // getTrackByIdState is global
-                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null;
+                const armedTrackId = getArmedTrackId(); // Now imports from trackState.js
+                const armedTrack = armedTrackId !== null ? localAppServices.getTrackById?.(armedTrackId) : null; // Use appServices
 
                 if (armedTrack) {
                     const soundData = { libraryName: getLibraryNameFromPath(pathArray), fullPath: item.fullPath, fileName: name };
@@ -246,8 +235,7 @@ export function renderDirectoryView(pathArray, treeNode) { // Export re-added
                     if (armedTrack.type === 'DrumSampler') targetIndex = armedTrack.selectedDrumPadForEdit;
                     localAppServices.loadSoundFromBrowserToTarget?.(soundData, armedTrack.id, armedTrack.type, targetIndex);
                 } else {
-                    // showNotification is global
-                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500);
+                    showNotification(`No compatible track armed to load "${name}". Arm a sampler track first.`, 2500); // showNotification is global
                 }
             });
         } else if (item.type === 'placeholder') {
