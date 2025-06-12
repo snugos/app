@@ -1,4 +1,4 @@
-// js/effectsRegistry.js - Definitions for modular effects
+// js/daw/effectsRegistry.js - Definitions for modular effects
 
 const synthEngineControlDefinitions = {
     MonoSynth: [
@@ -278,7 +278,7 @@ export function createEffectInstance(effectType, initialParams = {}) {
             let paramFoundInInitial = true;
 
             for (const key of pathKeys) {
-                if (tempInitialParam && typeof tempInitialParam === 'object' && tempInitialParam.hasOwnProperty(key)) {
+                if (tempInitialParam && typeof tempInitialParam === 'object" && tempInitialParam.hasOwnProperty(key)) {
                     tempInitialParam = tempInitialParam[key];
                 } else {
                     paramFoundInInitial = false;
