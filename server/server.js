@@ -75,15 +75,23 @@ const initializeDatabase = async () => {
         CREATE TABLE IF NOT EXISTS user_files (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            path TEXT,
             file_name VARCHAR(255) NOT NULL,
             s3_key TEXT NOT NULL UNIQUE,
             s3_url TEXT NOT NULL UNIQUE,
             mime_type VARCHAR(100),
-            file_size INTEGER,
+            file_size BIGINT,
             is_public BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
     `;
+    const addPathColumnQuery = `
+        ALTER TABLE user_files ADD COLUMN IF NOT EXISTS path TEXT;
+    `;
+     const alterFileSizeColumnQuery = `
+        ALTER TABLE user_files ALTER COLUMN file_size TYPE BIGINT;
+    `;
+
 
     try {
         await pool.query(createProfilesTableQuery);
@@ -101,8 +109,11 @@ const initializeDatabase = async () => {
         }
         await pool.query(createMessagesTableQuery);
         await pool.query(createUserFilesTableQuery); // Create the new user_files table
+        await pool.query(addPathColumnQuery); // Ensure path column exists on existing tables
+        await pool.query(alterFileSizeColumnQuery); // Ensure file_size can handle large files
         console.log('[DB] All tables checked/created successfully.');
-    } catch (err) {
+    } catch (err)
+ {
         console.error('[DB] Error initializing database tables:', err.stack);
     }
 };
@@ -388,36 +399,35 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
         return res.status(400).json({ success: false, message: 'No file provided for upload.' });
     }
     const userId = req.user.id;
-    const { is_public } = req.body; // Expect 'true' or 'false' string from form-data
+    const { is_public, path } = req.body; 
 
     try {
         const file = req.file;
-        const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`; // Use originalname and replace spaces
+        const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`;
         
         const uploadParams = {
             Bucket: process.env.S3_BUCKET_NAME,
             Key: s3Key,
             Body: file.buffer,
             ContentType: file.mimetype,
-            // ACL: 'public-read' // REMOVED: Managed by bucket policy now
         };
 
-        const data = await s3.upload(uploadParams).promise(); // Upload to S3
+        const data = await s3.upload(uploadParams).promise();
 
-        // Save file metadata to user_files table
         const insertFileQuery = `
-            INSERT INTO user_files (user_id, file_name, s3_key, s3_url, mime_type, file_size, is_public)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id, file_name, s3_url, mime_type, file_size, is_public, created_at;
         `;
         const result = await pool.query(insertFileQuery, [
             userId,
+            path || '/',
             file.originalname,
             s3Key,
-            data.Location, // S3 URL
+            data.Location,
             file.mimetype,
             file.size,
-            is_public === 'true' // Convert string 'true'/'false' to boolean
+            is_public === 'true'
         ]);
         const uploadedFile = result.rows[0];
 
@@ -429,24 +439,63 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
     }
 });
 
-// GET /api/files/my - Get all files owned by the current user
+app.post('/api/folders', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    const { name, path } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ success: false, message: 'Folder name is required.' });
+    }
+
+    try {
+        const insertFolderQuery = `
+            INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id, file_name, path, created_at;
+        `;
+        const result = await pool.query(insertFolderQuery, [
+            userId,
+            path || '/',
+            name,
+            `folder-${userId}-${Date.now()}-${name}`,
+            '#',
+            'application/vnd.snugos.folder',
+            0,
+            false
+        ]);
+        const newFolder = result.rows[0];
+
+        res.status(201).json({ success: true, message: 'Folder created successfully.', folder: newFolder });
+
+    } catch (error) {
+        console.error("[Create Folder] Error:", error);
+        res.status(500).json({ success: false, message: 'Server error during folder creation.' });
+    }
+});
+
 app.get('/api/files/my', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
-        const query = "SELECT id, file_name, s3_url, mime_type, file_size, is_public, created_at FROM user_files WHERE user_id = $1 ORDER BY created_at DESC";
-        const result = await pool.query(query, [userId]);
-        res.json({ success: true, files: result.rows });
+        const path = req.query.path || '/';
+
+        const query = `
+            SELECT id, file_name, s3_url, mime_type, file_size, is_public, created_at 
+            FROM user_files 
+            WHERE user_id = $1 AND path = $2 
+            ORDER BY mime_type, file_name ASC`;
+            
+        const result = await pool.query(query, [userId, path]);
+        res.json({ success: true, items: result.rows });
     } catch (error) {
         console.error("[File Listing] Error fetching user files:", error);
         res.status(500).json({ success: false, message: 'Server error while fetching your files.' });
     }
 });
 
-// PUT /api/files/:fileId - Update file metadata (e.g., is_public status)
 app.put('/api/files/:fileId', authenticateToken, async (req, res) => {
     const fileId = req.params.fileId;
     const userId = req.user.id;
-    const { is_public } = req.body; // Expect boolean from frontend
+    const { is_public } = req.body;
 
     if (typeof is_public !== 'boolean') {
         return res.status(400).json({ success: false, message: 'is_public must be a boolean.' });
@@ -473,13 +522,11 @@ app.put('/api/files/:fileId', authenticateToken, async (req, res) => {
     }
 });
 
-// DELETE /api/files/:fileId - Delete a file (from DB and S3)
 app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
     const fileId = req.params.fileId;
     const userId = req.user.id;
 
     try {
-        // 1. Get file metadata to get S3 key
         const getFileQuery = "SELECT s3_key FROM user_files WHERE id = $1 AND user_id = $2";
         const fileResult = await pool.query(getFileQuery, [fileId, userId]);
         if (fileResult.rows.length === 0) {
@@ -487,12 +534,12 @@ app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
         }
         const s3Key = fileResult.rows[0].s3_key;
 
-        // 2. Delete from S3
-        const deleteS3Params = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key };
-        await s3.deleteObject(deleteS3Params).promise();
-        console.log(`[File Delete] Deleted from S3: ${s3Key}`);
+        if (!s3Key.startsWith('folder-')) {
+            const deleteS3Params = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key };
+            await s3.deleteObject(deleteS3Params).promise();
+            console.log(`[File Delete] Deleted from S3: ${s3Key}`);
+        }
 
-        // 3. Delete metadata from DB
         const deleteDbQuery = "DELETE FROM user_files WHERE id = $1 AND user_id = $2";
         await pool.query(deleteDbQuery, [fileId, userId]);
 
