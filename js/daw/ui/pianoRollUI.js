@@ -1,6 +1,12 @@
 // js/daw/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
 // Removed import * as Constants from '../../constants.js'; as Constants is global
 
+// Import state functions directly for pianoRollUI.js module
+import { getTrackById } from '../../state/trackState.js';
+import { getOpenWindows, getWindowById } from '../../state/windowState.js';
+import { getClipboardData } from '../../state/projectState.js';
+import { getPlaybackMode } from '../../state/appState.js';
+
 let localAppServices = {};
 export const openPianoRolls = new Map();
 export let lastActivePianoRollTrackId = null; 
@@ -24,13 +30,13 @@ function getThemeColors() {
 }
 
 
-export function initializePianoRollUI(appServicesFromMain) { // Export re-added
+export function initializePianoRollUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
     appServicesFromMain.openPianoRollForClip = openPianoRollForClip;
 }
 
-export function openPianoRollForClip(trackId, clipId) { // Export re-added
-    const track = localAppServices.getTrackById?.(trackId); // getTrackByIdState is global
+export function openPianoRollForClip(trackId, clipId) {
+    const track = localAppServices.getTrackById?.(trackId); // Use appServices
     const clip = track?.clips.timelineClips.find(c => c.id === clipId);
 
     if (!track || !clip || clip.type !== 'midi') {
@@ -45,7 +51,7 @@ export function openPianoRollForClip(trackId, clipId) { // Export re-added
 
     openPianoRollWindow(track.id, tempSequence.id); // openPianoRollWindow is exported here
 
-    const pianoRollWindow = localAppServices.getWindowById?.(`pianoRollWin-${trackId}`); // getWindowByIdState is global
+    const pianoRollWindow = getWindowById(`pianoRollWin-${trackId}`); // Now imports from windowState.js
     if (pianoRollWindow) {
         const originalOnClose = pianoRollWindow.onCloseCallback;
         pianoRollWindow.onCloseCallback = () => {
@@ -68,13 +74,13 @@ export function openPianoRollForClip(trackId, clipId) { // Export re-added
 }
 
 
-export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) { // Export re-added
-    const track = localAppServices.getTrackById?.(trackId); // getTrackByIdState is global
+export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) {
+    const track = localAppServices.getTrackById?.(trackId); // Use appServices
     if (!track || track.type === 'Audio') return;
 
     const windowId = `pianoRollWin-${trackId}`;
-    if (getOpenWindowsState().has(windowId) && !savedState) { // getOpenWindowsState is global
-        getWindowByIdState(windowId).restore(); // getWindowByIdState is global
+    if (getOpenWindows().has(windowId) && !savedState) { // Now imports from windowState.js
+        getWindowById(windowId).restore(); // Now imports from windowState.js
         return;
     }
 
@@ -125,7 +131,7 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
     }
 }
 
-export function updatePianoRollPlayhead(transportTime) { // Export re-added
+export function updatePianoRollPlayhead(transportTime) {
     if (openPianoRolls.size === 0) return;
 
     openPianoRolls.forEach(({ playhead, playheadLayer, track }) => {
@@ -475,8 +481,7 @@ function attachPianoRollListeners(pianoRoll) {
                     action: () => track.sequences.copyNotesToClipboard(activeSequence.id, selectedNotes)
                 });
             }
-            // getClipboardData is global
-            const clipboard = getClipboardData();
+            const clipboard = getClipboardData(); // Now imports from projectState.js
             if (clipboard?.type === 'piano-roll-notes') {
                 menuItems.push({
                     label: `Paste ${clipboard.notes.length} Note(s)`,
