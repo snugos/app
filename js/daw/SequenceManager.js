@@ -1,6 +1,12 @@
 // js/daw/SequenceManager.js
 
-// Removed import * as Constants from '../constants.js'; as Constants is global
+// NOTE: Constants, Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
+// Functions from utils.js, auth.js, db.js, effectsRegistry.js are typically accessed via appServices or are also global.
+
+import * as Constants from '../constants.js'; // Assuming constants.js is now a module or will be. If global, remove this.
+import { showNotification } from '../utils.js'; // Corrected path
+import { captureStateForUndo, getClipboardData, setClipboardData } from './state/projectState.js'; // Corrected path
+import { getWindowById } from './state/windowState.js'; // Corrected path
 
 class SequenceManager { // Removed export
     constructor(track, appServices) {
@@ -26,13 +32,12 @@ class SequenceManager { // Removed export
         const newSeqId = `seq_${this.track.id}_${Date.now()}`;
         const newSequence = {
             id: newSeqId,
-            name,
             data: Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(length).fill(null)), // Constants is global
             length
         };
         this.sequences.push(newSequence);
         this.activeSequenceId = newSeqId;
-        if (!skipUndo) this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.track.name}`); // captureStateForUndoInternal is global
+        if (!skipUndo) captureStateForUndo?.(`Create Sequence "${name}" on ${this.track.name}`); // Corrected function name
         return newSequence;
     }
 
@@ -40,7 +45,7 @@ class SequenceManager { // Removed export
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence && sequence.data[pitchIndex] !== undefined && timeStep < sequence.length) {
             sequence.data[pitchIndex][timeStep] = noteData;
-            this.appServices.captureStateForUndo?.(`Add note to ${this.track.name}`); // captureStateForUndoInternal is global
+            captureStateForUndo?.(`Add note to ${this.track.name}`); // Corrected function name
             this.recreateToneSequence();
         }
     }
@@ -49,7 +54,7 @@ class SequenceManager { // Removed export
         const sequence = this.sequences.find(s => s.id === sequenceId);
         if (sequence?.data[pitchIndex]?.[timeStep]) {
             sequence.data[pitchIndex][timeStep] = null;
-            this.appServices.captureStateForUndo?.(`Remove note from ${this.track.name}`); // captureStateForUndoInternal is global
+            captureStateForUndo?.(`Remove note from ${this.track.name}`); // Corrected function name
             this.recreateToneSequence();
         }
     }
@@ -63,7 +68,7 @@ class SequenceManager { // Removed export
                 sequence.data[pitchIndex][timeStep] = null;
             }
         });
-        this.appServices.captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.track.name}`); // captureStateForUndoInternal is global
+        captureStateForUndo?.(`Delete ${notesToRemove.size} notes from ${this.track.name}`); // Corrected function name
         this.recreateToneSequence();
     }
 
@@ -94,7 +99,7 @@ class SequenceManager { // Removed export
             const newPitchIndex = pitchIndex + pitchOffset;
             const newTimeStep = timeStep + timeOffset;
             if (newPitchIndex < 0 || newPitchIndex >= sequence.data.length || newTimeStep < 0 || newTimeStep >= sequence.length) {
-                this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000); // showNotification is global
+                showNotification?.('Cannot move notes outside the sequence bounds.', 2000); // Corrected function name
                 return null;
             }
             notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, data: sequence.data[pitchIndex][timeStep] });
@@ -107,7 +112,7 @@ class SequenceManager { // Removed export
             sequence.data[note.newPitch][note.newTime] = note.data;
             newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`);
         });
-        this.appServices.captureStateForUndo?.('Move notes'); // captureStateForUndoInternal is global
+        captureStateForUndo?.('Move notes'); // Corrected function name
         this.recreateToneSequence();
         return newSelectedNoteIds;
     }
@@ -132,7 +137,7 @@ class SequenceManager { // Removed export
         if (!sequence) return;
         sequence.data = Array(Constants.SYNTH_PITCHES.length).fill(null).map(() => Array(sequence.length).fill(null)); // Constants is global
         this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Clear sequence on ${this.track.name}`); // captureStateForUndoInternal is global
+        captureStateForUndo?.(`Clear sequence on ${this.track.name}`); // Corrected function name
     }
 
     duplicateSequence(sequenceId) {
@@ -142,7 +147,7 @@ class SequenceManager { // Removed export
         const newSequence = this.createNewSequence(newName, originalSequence.length, true);
         newSequence.data = JSON.parse(JSON.stringify(originalSequence.data));
         this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Duplicate sequence on ${this.track.name}`); // captureStateForUndoInternal is global
+        captureStateForUndo?.(`Duplicate sequence on ${this.track.name}`); // Corrected function name
         return newSequence;
     }
     
@@ -166,12 +171,12 @@ class SequenceManager { // Removed export
             noteData: n.data
         }));
 
-        this.appServices.setClipboardData?.({ type: 'piano-roll-notes', notes: relativeNotes }); // setClipboardData is global
-        this.appServices.showNotification?.(`${relativeNotes.length} note(s) copied.`); // showNotification is global
+        setClipboardData?.({ type: 'piano-roll-notes', notes: relativeNotes }); // Corrected function name
+        showNotification?.(`${relativeNotes.length} note(s) copied.`); // Corrected function name
     }
 
     pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) {
-        const clipboard = this.appServices.getClipboardData?.(); // getClipboardData is global
+        const clipboard = getClipboardData?.(); // Corrected function name
         if (clipboard?.type !== 'piano-roll-notes' || !clipboard.notes?.length) return;
 
         const sequence = this.sequences.find(s => s.id === sequenceId);
@@ -187,7 +192,7 @@ class SequenceManager { // Removed export
         });
 
         this.recreateToneSequence();
-        this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`); // captureStateForUndoInternal is global
+        captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`); // Corrected function name
     }
 
     recreateToneSequence() {
