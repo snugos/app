@@ -14,9 +14,7 @@ function initAudioOnFirstGesture() {
                 await Tone.start();
                 console.log('AudioContext started successfully.');
             }
-        } catch (e) {
-            console.error('Could not start AudioContext:', e);
-        }
+        } catch (e) { console.error('Could not start AudioContext:', e); }
         document.body.removeEventListener('mousedown', startAudio);
     };
     document.body.addEventListener('mousedown', startAudio);
@@ -36,17 +34,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loggedInUser = checkLocalAuth();
     
-    attachEventListeners();
+    attachDesktopEventListeners();
     applyUserThemePreference();
     updateClockDisplay();
     initAudioOnFirstGesture(); 
     
     if (loggedInUser) {
         openLibraryWindow();
+        loadAndApplyGlobals();
     } else {
         showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
     }
 });
+
+async function loadAndApplyGlobals() {
+    if (!loggedInUser) return;
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/profile/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.success && data.profile.background_url) {
+            const desktop = document.getElementById('desktop');
+            if(desktop) {
+                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
+                desktop.style.backgroundSize = 'cover';
+                desktop.style.backgroundPosition = 'center';
+            }
+        }
+    } catch (error) {
+        console.error("Could not apply global settings:", error);
+    }
+}
+
+function setupDesktopContextMenu() {
+    const desktop = document.getElementById('desktop');
+    if (!desktop) return;
+
+    desktop.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (e.target.closest('.window')) return;
+        const menuItems = [
+            { label: 'New Folder', action: () => createFolder() },
+            { label: 'Upload File', action: () => document.getElementById('actualFileInput').click() },
+            { type: 'separator' },
+            { label: 'Change Background', action: () => document.getElementById('customBgInput').click() }
+        ];
+        appServices.createContextMenu(e, menuItems);
+    });
+}
+
+function attachDesktopEventListeners() {
+    setupDesktopContextMenu();
+    
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
+
+    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+        const file = e.target.files[0];
+        
+        showNotification("Uploading background...", 2000);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', '/backgrounds/');
+        try {
+            const token = localStorage.getItem('snugos_token');
+            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const uploadResult = await uploadResponse.json();
+            if (!uploadResult.success) throw new Error(uploadResult.message);
+
+            const newBgUrl = uploadResult.file.s3_url;
+            await fetch(`${SERVER_URL}/api/profile/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ background_url: newBgUrl })
+            });
+
+            showNotification("Background updated!", 2000);
+            loadAndApplyGlobals();
+        } catch(error) {
+            showNotification(`Error: ${error.message}`, 4000);
+        }
+    });
+}
 
 function openLibraryWindow() {
     const windowId = 'library';
@@ -62,9 +140,6 @@ function openLibraryWindow() {
                     <li><button id="my-files-btn" class="w-full text-left p-2 rounded mb-1" style="color: var(--text-primary);">My Files</button></li>
                     <li><button id="global-files-btn" class="w-full text-left p-2 rounded" style="color: var(--text-primary);">Global</button></li>
                 </ul>
-                <hr class="my-4" style="border-color: var(--border-secondary);" />
-                <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
-                <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
             </div>
             <div class="flex-grow flex flex-col">
                 <div class="p-2 border-b" style="border-color: var(--border-secondary);">
@@ -80,33 +155,9 @@ function openLibraryWindow() {
     initializePageUI(libWindow.element);
 }
 
-function openFileViewerWindow(item) {
-    const windowId = `file-viewer-${item.id}`;
-    if (appServices.getWindowById(windowId)) {
-        appServices.getWindowById(windowId).focus();
-        return;
-    }
-    let content = '';
-    const fileType = item.mime_type || '';
-
-    if (fileType.startsWith('image/')) {
-        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
-    } else if (fileType.startsWith('video/')) {
-        content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
-    } else if (fileType.startsWith('audio/')) {
-        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
-    } else {
-        content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
-    }
-    const options = { width: 640, height: 480 };
-    new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
-}
-
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
-    const uploadBtn = container.querySelector('#uploadFileBtn');
-    const newFolderBtn = container.querySelector('#createFolderBtn');
 
     const updateNavStyling = () => {
         myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
@@ -132,10 +183,6 @@ function initializePageUI(container) {
         btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
     });
-
-    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
-    document.getElementById('actualFileInput')?.addEventListener('change', e => handleFileUpload(e.target.files));
-    newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
     fetchAndRenderLibraryItems(container);
@@ -206,12 +253,18 @@ function renderFileItem(item, isParentFolder = false) {
 
     if (!isParentFolder && item.user_id === loggedInUser.id) {
         const shareBtn = document.createElement('button');
-        shareBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.715 6.542 3.343 7.914a.5.5 0 1 0 .707.707l1.414-1.414a.5.5 0 0 0 0-.707l-1.414-1.414a.5.5 0 1 0-.707.707l1.371 1.371z"/><path fill-rule="evenodd" d="M7.447 11.458a.5.5 0 0 0 .707 0l1.414-1.414a.5.5 0 1 0-.707-.707l-1.371 1.371a.5.5 0 0 0 0 .708l1.371 1.371a.5.5 0 1 0 .707-.707L7.447 11.458zM12.95 6.542a.5.5 0 0 0-.707-.707L10.828 7.25a.5.5 0 0 0 0 .707l1.414 1.414a.5.5 0 0 0 .707-.707L11.543 7.914l1.407-1.372z"/><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 11.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-11 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>`;
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4.715 6.542 3.343 7.914a.5.5 0 1 0 .707.707l1.414-1.414a.5.5 0 0 0 0-.707l-1.414-1.414a.5.5 0 1 0-.707.707l1.371 1.371z"/><path fill-rule="evenodd" d="M7.447 11.458a.5.5 0 0 0 .707 0l1.414-1.414a.5.5 0 1 0-.707-.707l-1.371 1.371a.5.5 0 0 0 0 .708l1.371 1.371a.5.5 0 1 0 .707-.707L7.447 11.458zM12.95 6.542a.5.5 0 0 0-.707-.707L10.828 7.25a.5.5 0 0 0 0 .707l1.414 1.414a.5.5 0 0 0 .707-.707L11.543 7.914l1.407-1.372z"/><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 11.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-11 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>`;
         shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
         shareBtn.style.backgroundColor = 'var(--bg-button)';
-        shareBtn.title = "Share File";
         shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
         actionsContainer.appendChild(shareBtn);
+        
+        const privacyBtn = document.createElement('button');
+        privacyBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
+        privacyBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        privacyBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
+        privacyBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
+        actionsContainer.appendChild(privacyBtn);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`;
@@ -252,6 +305,34 @@ async function handleShareFile(item) {
         showNotification("Sharable link copied! It expires in 1 hour.", 4000);
     } catch (error) {
         showNotification(`Could not generate link: ${error.message}`, 4000);
+    }
+}
+
+function showShareModal(item) {
+    const newStatus = !item.is_public;
+    const actionText = newStatus ? "publicly available" : "private";
+    const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
+    showCustomModal('Confirm Action', modalContent, [
+        { label: 'Cancel' },
+        { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
+    ]);
+}
+
+async function handleToggleFilePublic(fileId, newStatus) {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${fileId}/toggle-public`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ is_public: newStatus })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification('File status updated!', 2000);
+        const libWindow = appServices.getWindowById('library');
+        if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
@@ -334,18 +415,6 @@ function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
-function launchDaw() {
-    window.location.href = 'snaw.html';
-}
-
-function viewProfiles() {
-    if (loggedInUser) {
-        window.open(`profile.html?user=${loggedInUser.username}`, '_blank');
-    } else {
-        showNotification('Please log in to view profiles.', 3000);
-    }
-}
-
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -354,15 +423,6 @@ function toggleFullScreen() {
     } else {
         if(document.exitFullscreen) document.exitFullscreen();
     }
-}
-
-function attachEventListeners() {
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
-    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
 }
 
 function checkLocalAuth() {
