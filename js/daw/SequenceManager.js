@@ -3,12 +3,12 @@
 // NOTE: Constants, Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
 // showNotification, createContextMenu, getClipboardData are from utils.js (loaded globally or accessed via appServices).
 
-import * as Constants from './constants.js'; // CORRECTED: Path to js/daw/constants.js
-import { showNotification } from './utils.js'; // CORRECTED: Path to js/daw/utils.js
+import * as Constants from './constants.js';
+import { showNotification } from './utils.js';
 import { captureStateForUndo, getClipboardData, setClipboardData } from './state/projectState.js';
 import { getWindowById } from './state/windowState.js';
 
-class SequenceManager {
+export class SequenceManager { // CORRECTED: Added 'export' here
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
