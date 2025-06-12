@@ -255,10 +255,19 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
         const insertFileQuery = `INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
         const result = await pool.query(insertFileQuery, [userId, path || '/', file.originalname, s3Key, data.Location, file.mimetype, file.size, is_public === 'true']);
         res.status(201).json({ success: true, file: result.rows[0] });
-    } catch (error) {
-        console.error("[File Upload] Error:", error);
-        res.status(500).json({ success: false, message: 'Error uploading file.' });
-    }
+} catch (error) {
+    console.error("[File Upload] Error:", error);
+    // Temporarily send the detailed error back to the browser for debugging
+    res.status(500).json({
+        success: false,
+        message: 'Server crashed during file upload.',
+        error: {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        }
+    });
+}
 });
 
 app.post('/api/folders', authenticateToken, async (req, res) => {
