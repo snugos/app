@@ -59,28 +59,9 @@
     </div>
 
     <div id="desktop" class="relative h-full w-full">
-        <h1 class="text-center text-3xl font-bold text-white mt-12 mb-8">Welcome to SnugOS</h1>
-        <p class="text-center text-gray-400 text-lg mb-8">Your browser-based digital audio workstation.</p>
-
-        <div id="desktop-icons-container" class="absolute inset-0 flex items-center justify-center">
-            <div class="grid grid-cols-2 gap-8">
-                <div id="snaw-icon" class="desktop-icon" data-app="snaw">
-                    <div class="desktop-icon-image"></div>
-                    <span>Snaw DAW</span>
-                </div>
-                <div id="profiles-icon" class="desktop-icon" data-app="profiles">
-                    <div class="desktop-icon-image"></div>
-                    <span>Profiles</span>
-                </div>
-                <div id="sound-library-icon" class="desktop-icon" data-app="sound-library">
-                    <div class="desktop-icon-image"></div>
-                    <span>Sound Library</span>
-                </div>
-                <div id="settings-icon" class="desktop-icon" data-app="settings">
-                    <div class="desktop-icon-image"></div>
-                    <span>Settings</span>
-                </div>
-            </div>
+        <!-- The welcome message has been removed to make room for icons -->
+        <div id="desktop-icons-container" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <!-- Desktop icons will be rendered here by welcome.js -->
         </div>
     </div>
 
@@ -109,6 +90,13 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
+    <!-- NOTE: Added these scripts to enable the windowing system on the welcome page. -->
+    <!-- This will fix the "SnugWindow is not defined" error. -->
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script type="module" src="js/daw/SnugWindow.js"></script>
+
+    <!-- Original welcome page scripts -->
     <script type="module" src="js/welcome/welcomeUtils.js"></script>
     <script type="module" src="js/welcome/welcomeDb.js"></script>
     <script type="module" src="js/welcome/welcome.js"></script>
