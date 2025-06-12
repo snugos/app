@@ -59,38 +59,37 @@ function renderDesktopIcons() {
     desktopIconsContainer.innerHTML = '';
 
     const icons = [
-        { 
-            id: 'snaw-icon', 
-            name: 'Snaw', // Changed text here
+        {
+            id: 'snaw-icon',
+            name: 'Snaw', // Text changed to just "Snaw"
             action: launchDaw,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14H8V8h2v8zm4 0h-2V8h2v8zm-3-9.75V11H8V6.25a2.25 2.25 0 014.5 0v4.75h-1V11z"/>
-                        </svg>`
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/>
+                        </svg>` // Music note SVG
         },
-        { 
-            id: 'profiles-icon', 
-            name: 'Profiles', 
+        {
+            id: 'profiles-icon',
+            name: 'Profiles',
             action: viewProfiles,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0V3.75a.75.75 0 011.5 0V6a7.5 7.5 0 11-15 0V3.75a.75.75 0 011.5 0V6zM3.75 16.5a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75zM3 20.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
-                        </svg>`
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>` // Head/person SVG
         },
-        { 
-            id: 'sound-library-icon', 
-            name: 'Sound Library', 
+        {
+            id: 'sound-library-icon',
+            name: 'Sound Library',
             action: () => showNotification('Sound Library will open here!', 2000), // Placeholder action
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path fill-rule="evenodd" d="M19.5 9a7.5 7.5 0 100 6h-15a.75.75 0 000 1.5h15.75A3.75 3.75 0 0023.25 15V9.75a.75.75 0 00-.75-.75H19.5z" clip-rule="evenodd" />
-                            <path fill-rule="evenodd" d="M3.75 9H1.5a.75.75 0 00-.75.75V15a3.75 3.75 0 003.75 3.75h1.5a.75.75 0 000-1.5H3.75A2.25 2.25 0 011.5 15V9.75c0-.414.336-.75.75-.75H3.75a.75.75 0 000-1.5z" clip-rule="evenodd" />
-                        </svg>`
+                            <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/>
+                        </svg>` // Book SVG
         },
-        { 
-            id: 'settings-icon', 
-            name: 'Settings', 
+        {
+            id: 'settings-icon',
+            name: 'Settings',
             action: () => showNotification('Settings will open here!', 2000), // Placeholder action
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.884a1.125 1.125 0 01-1.07 1.07l-1.77-.252a1.125 1.125 0 00-1.44 1.188l.252 1.77c.057.42.106.827.147 1.229.058.423.095.823.132 1.226zM15.352 2.25c.917 0 1.699.663 1.85 1.567l.252 1.77a1.125 1.125 0 001.07 1.07l1.77-.252a1.125 1.125 0 011.188 1.44l-.252 1.77c-.057.42-.106.827-.147 1.229-.058.423-.095.823-.132 1.226zM11.078 21.75a1.125 1.125 0 01-1.07-1.07l-.252-1.77a1.125 1.125 0 00-1.07-1.07l-1.77.252a1.125 1.125 0 01-1.44-1.188l.252-1.77c.057-.42.106-.827.147-1.229.058-.423.095-.823.132-1.226zM15.352 21.75c.917 0 1.699-.663 1.85-1.567l.252-1.77a1.125 1.125 0 001.07-1.07l1.77.252a1.125 1.125 0 011.188-1.44l-.252-1.77c-.057-.42-.106-.827-.147-1.229-.058-.423-.095-.823-.132-1.226zM12 15.75a3.75 3.75 0 100-7.5 3.75 3.75 0 000 7.5z" clip-rule="evenodd" />
-                        </svg>`
+                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.99l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.52.42l-.38 2.65c-.61.26-1.17.59-1.69.99l-2.49-1c-.22-.08-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.99l.38 2.65c.06.24.27.42.52.42h4c.25 0 .46-.18.52-.42l.38-2.65c.61-.26 1.17-.59 1.69-.99l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
+                        </svg>` // Gear/settings SVG
         },
     ];
 
@@ -222,7 +221,7 @@ function showLoginModal() {
 
     contentDiv.querySelectorAll('button').forEach(button => {
         button.style.backgroundColor = 'var(--bg-button)';
-        button.style.border = '1px solid '`var(--border-button)`;
+        button.style.border = '1px solid var(--border-button)';
         button.style.color = 'var(--text-button)';
         button.style.padding = '8px 15px';
         button.style.cursor = 'pointer';
