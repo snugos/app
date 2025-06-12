@@ -61,7 +61,7 @@ function renderDesktopIcons() {
     const icons = [
         {
             id: 'snaw-icon',
-            name: 'Snaw', // Text changed to just "Snaw"
+            name: 'Snaw',
             action: launchDaw,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
                             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/>
@@ -77,8 +77,8 @@ function renderDesktopIcons() {
         },
         {
             id: 'sound-library-icon',
-            name: 'Sound Library',
-            action: () => showNotification('Sound Library will open here!', 2000), // Placeholder action
+            name: 'Library', // Changed text to "Library"
+            action: () => showNotification('Library (sounds, images, videos) will open here!', 2000), // Updated action text
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
                             <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/>
                         </svg>` // Book SVG
@@ -190,7 +190,7 @@ function showLoginModal() {
     const modalContent = `
         <div class="space-y-4">
             <div>
-                <h3 class="text-lg font-bold mb-2">Login</h3>
+                <h3 class="font-bold mb-2">Login</h3>
                 <form id="loginForm" class="space-y-3">
                     <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
                     <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
@@ -199,7 +199,7 @@ function showLoginModal() {
             </div>
             <hr class="border-gray-500">
             <div>
-                <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
+                <h3 class="font-bold mb-2">Don't have an account? Register</h3>
                 <form id="registerForm" class="space-y-3">
                     <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
                     <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
