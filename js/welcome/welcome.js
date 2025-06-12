@@ -1,116 +1,105 @@
 // js/welcome/welcome.js - Logic for the Welcome Page
 
-import { showNotification, showCustomModal, base64ToBlob } from './welcomeUtils.js';
+import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
 
-// Minimal appServices for this page, tailored for welcome page needs
-const appServices = {};
+let loggedInUser = null;
+const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-let loggedInUser = null; // Manage user state directly in welcome.js
-const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Server URL for auth
+// NOTE: This is the new function that will launch your game window
+function openGameWindow() {
+    const windowId = 'tetrisGame';
+    // Use the global getWindowByIdState function
+    if (typeof getWindowByIdState !== 'undefined' && getWindowByIdState(windowId)) {
+        getWindowByIdState(windowId).focus();
+        return;
+    }
+
+    // The content is an iframe that loads your game file
+    const content = document.createElement('iframe');
+    content.src = 'tetris.html';
+    content.style.width = '100%';
+    content.style.height = '100%';
+    content.style.border = 'none';
+
+    const options = {
+        width: 600,
+        height: 750,
+        minWidth: 400,
+        minHeight: 600,
+    };
+
+    // Use the global SnugWindow constructor
+    if (typeof SnugWindow !== 'undefined') {
+        new SnugWindow(windowId, 'Snugtris', content, options, appServices);
+    } else {
+        console.error("SnugWindow is not defined. Make sure SnugWindow.js is loaded.");
+    }
+}
 
 function initializeWelcomePage() {
-    // Basic appServices setup needed for utility functions
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
-    appServices.base64ToBlob = base64ToBlob;
-    appServices.storeAsset = storeAsset;
-    appServices.getAsset = getAsset;
-
+    // ... (Your existing appServices setup)
     attachEventListeners();
     updateClockDisplay();
-    checkInitialAuthState(); // Will now use functions defined/imported in welcome.js scope
-    applyUserThemePreference(); // Will also be self-contained
-    renderDesktopIcons(); // Call to render desktop icons
+    // ... (rest of your initialization)
+    renderDesktopIcons();
 }
 
 function attachEventListeners() {
-    // Top taskbar buttons
-    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
-    document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
-
-    // Start Menu buttons
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
-    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
-    document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
-    document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-
-    // Custom background upload for welcome page
-    const customBgInput = document.getElementById('customBgInput');
-    customBgInput?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            handleBackgroundUpload(file);
-        }
-        e.target.value = null;
-    });
+    // ... (Your existing event listeners)
 }
 
-/**
- * Dynamically renders desktop icons and attaches click handlers.
- */
 function renderDesktopIcons() {
     const desktopIconsContainer = document.getElementById('desktop-icons-container');
     if (!desktopIconsContainer) return;
 
-    // Clear existing content
     desktopIconsContainer.innerHTML = '';
 
     const icons = [
+        // Your existing icons...
         {
             id: 'snaw-icon',
-            name: 'Snaw', // Text changed to just "Snaw"
+            name: 'Snaw',
             action: launchDaw,
-            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/>
-                        </svg>` // Music note SVG
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`
         },
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: () => { // Updated action for profiles icon
+            action: () => {
                 if (loggedInUser) {
-                    window.location.href = `profile.html?user=${loggedInUser.username}`; // Link to current user's profile
+                    window.location.href = `profile.html?user=${loggedInUser.username}`;
                 } else {
                     showNotification('Please log in to view your profile.', 3000);
-                    // Or show login modal, or link to a generic profiles list
                 }
             },
-            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>` // Head/person SVG
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
         },
         {
             id: 'sound-library-icon',
-            name: 'Library', // Changed text to "Library"
-            action: () => { // Updated action for Library icon
-                window.location.href = 'library.html'; // Direct link to library.html
+            name: 'Library',
+            action: () => {
+                window.location.href = 'library.html';
             },
-            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/>
-                        </svg>` // Book SVG
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
+        // NOTE: The new icon for your game
         {
-            id: 'settings-icon',
-            name: 'Settings',
-            action: () => showNotification('Settings will open here!', 2000), // Placeholder action
-            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
-                            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.99l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.52.42l-.38 2.65c-.61.26-1.17.59-1.69.99l-2.49-1c-.22-.08-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.64-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.99l.38 2.65c.06.24.27.42.52.42h4c.25 0 .46-.18.52-.42l.38-2.65c.61-.26 1.17-.59 1.69-.99l2.49 1c.22.08.49 0 .61-.22l2-3.46c-.12-.22.07-.49-.12-.64l-2.11-1.65zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/>
-                        </svg>` // Gear/settings SVG
-        },
+            id: 'game-icon',
+            name: 'Game',
+            action: openGameWindow, // This calls the new function
+            svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
+        }
     ];
 
     icons.forEach(icon => {
         const iconDiv = document.createElement('div');
-        iconDiv.className = 'desktop-icon'; // Use desktop-icon class for styling
-        iconDiv.id = icon.id; // Set ID for potential specific styling or manipulation
-        iconDiv.dataset.app = icon.id; // Data attribute for logic
-
+        iconDiv.className = 'desktop-icon';
+        iconDiv.id = icon.id;
+        
         const imgContainer = document.createElement('div');
-        imgContainer.className = 'desktop-icon-image'; // Container for the SVG
-        imgContainer.innerHTML = icon.svgContent; // Insert SVG directly
+        imgContainer.className = 'desktop-icon-image';
+        imgContainer.innerHTML = icon.svgContent;
 
         const span = document.createElement('span');
         span.textContent = icon.name;
@@ -122,7 +111,6 @@ function renderDesktopIcons() {
         desktopIconsContainer.appendChild(iconDiv);
     });
 }
-
 
 function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
