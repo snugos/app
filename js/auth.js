@@ -10,7 +10,7 @@ let localAppServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-function initializeAuth(appServices) {
+export function initializeAuth(appServices) { // CORRECTED: Added 'export' here
     localAppServices = appServices;
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
