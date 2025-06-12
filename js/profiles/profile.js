@@ -9,6 +9,11 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Your server URL
 let currentProfileData = null; // Store fetched profile data
 let isEditing = false; // Track edit mode state
 
+// Helper function to get CSS variable values at runtime
+function getCssVariable(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -16,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (username) {
         openProfilePage(username); // Changed from openProfileWindow to openProfilePage
     } else {
-        document.getElementById('profile-container').innerHTML = '<div class="text-center p-12 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg"><h2 class="text-xl font-bold text-red-700 dark:text-red-300">Error</h2><p class="text-red-600 dark:text-red-400">No username specified in URL (e.g., profile.html?user=yourusername)</p></div>';
+        document.getElementById('profile-container').innerHTML = `<div class="text-center p-12 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg"><h2 class="text-xl font-bold text-red-700 dark:text-red-300">Error</h2><p class="text-red-600 dark:text-red-400">No username specified in URL (e.g., profile.html?user=yourusername)</p></div>`;
     }
 });
 
@@ -59,7 +64,7 @@ async function openProfilePage(username) {
 
     } catch (error) {
         console.error("Failed to load profile:", error);
-        profileContainer.innerHTML = `<div class="text-center p-12 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg"><h2 class="text-xl font-bold text-red-700 dark:text-red-300">Error Loading Profile</h2><p class="text-red-600 dark:text-red-400">${error.message}</p></div>`;
+        displayError(profileContainer, `Error: ${error.message}`); // Use displayError helper
     }
 }
 
@@ -72,7 +77,8 @@ function updateProfileUI(container, profileData) {
     const isOwner = loggedInUser && loggedInUser.username === profileData.username;
 
     container.innerHTML = '';
-    container.className = 'max-w-4xl mx-auto my-8 p-4 bg-white dark:bg-gray-900 text-black dark:text-white rounded-lg shadow-lg';
+    // Use CSS variables for colors and borders
+    container.className = `max-w-4xl mx-auto my-8 p-4 bg-window text-primary border border-primary rounded-lg shadow-window`;
 
     const joinDate = new Date(profileData.memberSince).toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric'
@@ -80,9 +86,11 @@ function updateProfileUI(container, profileData) {
 
     const headerHtml = `
         <div class="relative h-32 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
+            <!-- Banner Image (Placeholder) -->
             <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold">
                 ${profileData.username}'s Profile
             </div>
+            <!-- Avatar -->
             <div class="absolute bottom-0 left-4 translate-y-1/2 w-24 h-24 rounded-full border-4 border-white dark:border-gray-900 bg-gray-500 flex items-center justify-center text-white text-4xl font-bold">
                 ${profileData.username.charAt(0).toUpperCase()}
             </div>
@@ -93,7 +101,7 @@ function updateProfileUI(container, profileData) {
                 <p class="text-sm text-gray-500 dark:text-gray-400">Member since ${joinDate}</p>
             </div>
             <div class="flex space-x-2">
-                ${isOwner ? `<button id="editProfileBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition duration-300">Edit Profile</button>` : ''}
+                ${isOwner ? `<button id="editProfileBtn" class="px-4 py-2 bg-button text-button border border-button rounded-lg hover:bg-button-hover hover:text-button-hover transition duration-300">Edit Profile</button>` : ''}
                 ${!isOwner && loggedInUser ? `<button id="addFriendBtn" class="px-4 py-2 ${profileData.isFriend ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg transition duration-300">${profileData.isFriend ? 'Remove Friend' : 'Add Friend'}</button>` : ''}
                 ${!isOwner && loggedInUser ? `<button id="messageBtn" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition duration-300">Message</button>` : ''}
             </div>
@@ -102,7 +110,8 @@ function updateProfileUI(container, profileData) {
     container.insertAdjacentHTML('afterbegin', headerHtml);
 
     const bodyContentDiv = document.createElement('div');
-    bodyContentDiv.className = 'p-6';
+    // Use 'panel' class for consistency
+    bodyContentDiv.className = 'p-6 panel';
     container.appendChild(bodyContentDiv);
 
     if (isEditing) {
@@ -153,28 +162,48 @@ function renderEditMode(container, profileData) {
         <form id="editProfileForm" class="space-y-4">
             <div>
                 <label for="editBio" class="block font-medium mb-1">Bio</label>
-                <textarea id="editBio" class="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700" rows="5">${profileData.bio || ''}</textarea>
+                <textarea id="editBio" class="w-full p-2 border rounded-md" rows="5">${profileData.bio || ''}</textarea>
             </div>
             
             <div class="flex justify-end space-x-2">
-                <button type="button" id="cancelEditBtn" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300">Cancel</button>
-                <button type="submit" id="saveProfileBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">Save Changes</button>
+                <button type="button" id="cancelEditBtn" class="px-4 py-2 bg-button text-button border border-button rounded-lg hover:bg-button-hover hover:text-button-hover transition duration-300">Cancel</button>
+                <button type="submit" id="saveProfileBtn" class="px-4 py-2 bg-button text-button border border-button rounded-lg hover:bg-button-hover hover:text-button-hover transition duration-300">Save Changes</button>
             </div>
         </form>
     `;
+
+    // Apply CSS variables to dynamically created input/textarea
+    const editBioTextarea = document.getElementById('editBio');
+    if (editBioTextarea) {
+        editBioTextarea.style.backgroundColor = getCssVariable('--bg-input');
+        editBioTextarea.style.color = getCssVariable('--text-primary');
+        editBioTextarea.style.borderColor = getCssVariable('--border-input');
+    }
 
     document.getElementById('cancelEditBtn')?.addEventListener('click', cancelEdit);
     document.getElementById('editProfileForm')?.addEventListener('submit', (e) => saveProfile(e, profileData.username));
 }
 
+/**
+ * Displays an error message in the main container.
+ */
+function displayError(container, message) {
+    container.innerHTML = `
+        <div class="text-center p-12" style="background-color: ${getCssVariable('--accent-muted')}; border: 1px solid ${getCssVariable('--accent-muted-text')}; color: ${getCssVariable('--accent-muted-text')}; border-radius: 0.5rem;">
+            <h2 class="text-xl font-bold">Error Loading Profile</h2>
+            <p class="mt-2">${message}</p>
+        </div>
+    `;
+}
+
 // --- Authentication & User State Logic (Self-contained for Profile Page) ---
-const checkLocalAuth = () => { // Declared as const function expression to prevent redeclaration issues
+const checkLocalAuth = () => {
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token'); // Token expired
+            localStorage.removeItem('snugos_token');
             return null;
         }
         return { id: payload.id, username: payload.username };
@@ -271,7 +300,7 @@ function showMessageModal(recipientUsername) {
         <div class="space-y-4">
             <div>
                 <p>Send a message to <strong>${recipientUsername}</strong>:</p>
-                <textarea id="messageTextarea" class="w-full p-2 border rounded-md bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700" rows="5" placeholder="Type your message here..."></textarea>
+                <textarea id="messageTextarea" class="w-full p-2 border rounded-md" rows="5" placeholder="Type your message here..."></textarea>
             </div>
         </div>
     `;
@@ -288,7 +317,34 @@ function showMessageModal(recipientUsername) {
         }}
     ];
     
-    showCustomModal(`Message ${recipientUsername}`, modalContent, buttons);
+    const { overlay, contentDiv } = showCustomModal(`Message ${recipientUsername}`, modalContent, buttons);
+
+    // Apply CSS variables to dynamically created input/textarea
+    const messageTextarea = contentDiv.querySelector('#messageTextarea');
+    if (messageTextarea) {
+        messageTextarea.style.backgroundColor = getCssVariable('--bg-input');
+        messageTextarea.style.color = getCssVariable('--text-primary');
+        messageTextarea.style.borderColor = getCssVariable('--border-input');
+    }
+
+    // Apply CSS variables to buttons within modal
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = getCssVariable('--bg-button');
+        button.style.border = `1px solid ${getCssVariable('--border-button')}`;
+        button.style.color = getCssVariable('--text-button');
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = getCssVariable('--bg-button-hover');
+            button.style.color = getCssVariable('--text-button-hover');
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = getCssVariable('--bg-button');
+            button.style.color = getCssVariable('--text-button');
+        });
+    });
 }
 
 async function sendMessage(recipientUsername, content) {
