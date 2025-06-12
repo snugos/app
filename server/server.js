@@ -37,6 +37,10 @@ const initializeDatabase = async () => {
             background_url TEXT
         );
     `;
+    // NEW: Add bio column if not exists
+    const addBioColumnQuery = `
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+    `;
     // NEW: Query to create the followers table
     const createFollowersTableQuery = `
         CREATE TABLE IF NOT EXISTS followers (
@@ -46,13 +50,10 @@ const initializeDatabase = async () => {
             PRIMARY KEY (follower_id, followed_id)
         );
     `;
-    const alterProfilesTableQuery = `
-        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS background_url TEXT;
-    `;
     try {
         await pool.query(createProfilesTableQuery);
-        await pool.query(alterProfilesTableQuery);
-        await pool.query(createFollowersTableQuery); // Create the new table
+        await pool.query(addBioColumnQuery); // Execute the query to add bio column
+        await pool.query(createFollowersTableQuery);
         console.log('[DB] All tables checked/created successfully.');
     } catch (err) {
         console.error('[DB] Error initializing database tables:', err.stack);
@@ -135,15 +136,58 @@ app.put('/api/profile/background', authenticateToken, upload.single('backgroundF
 app.get('/api/profiles/:username', async (request, response) => {
     try {
         const { username } = request.params;
-        const profileResult = await pool.query("SELECT id, username, created_at, background_url FROM profiles WHERE username = $1", [username]);
+        // Also select the bio here
+        const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio FROM profiles WHERE username = $1", [username]);
         const profile = profileResult.rows[0];
         if (!profile) return response.status(404).json({ success: false, message: 'Profile not found.' });
-        response.json({ success: true, profile: { id: profile.id, username: profile.username, memberSince: profile.created_at, backgroundUrl: profile.background_url }, projects: [] });
+        response.json({ success: true, profile: { id: profile.id, username: profile.username, memberSince: profile.created_at, backgroundUrl: profile.background_url, bio: profile.bio }, projects: [] });
     } catch (error) {
         response.status(500).json({ success: false, message: 'Server error while fetching profile.' });
     }
 });
 
+// === NEW: PUT /api/profiles/:username - Update Profile ===
+app.put('/api/profiles/:username', authenticateToken, async (request, response) => {
+    const { username } = request.params; // Get username from URL
+    const { bio } = request.body; // Get bio from request body
+
+    // --- Basic Validation ---
+    if (typeof bio !== 'string') { // bio must be a string
+        return response.status(400).json({ success: false, message: "Bio must be a string." });
+    }
+    // Limit bio length to prevent abuse (e.g., 500 characters)
+    if (bio.length > 500) {
+        return response.status(400).json({ success: false, message: "Bio cannot exceed 500 characters." });
+    }
+
+    try {
+        // --- Authorization Check (Crucial for security) ---
+        // Ensure the logged-in user (from token) matches the profile being edited
+        const profileToUpdateResult = await pool.query("SELECT id, username FROM profiles WHERE username = $1", [username]);
+        const profileToUpdate = profileToUpdateResult.rows[0];
+
+        if (!profileToUpdate) {
+            return response.status(404).json({ success: false, message: "Profile to update not found." });
+        }
+
+        if (request.user.id !== profileToUpdate.id) { // req.user.id comes from authenticateToken middleware
+            return response.status(403).json({ success: false, message: "Unauthorized: You can only edit your own profile." });
+        }
+
+        // --- Database Update ---
+        // Update the 'bio' column for the user's profile
+        const updateQuery = 'UPDATE profiles SET bio = $1 WHERE id = $2 RETURNING id, username, created_at, background_url, bio';
+        const result = await pool.query(updateQuery, [bio, request.user.id]); // Use request.user.id for security
+        const updatedProfile = result.rows[0];
+
+        // --- Send Success Response ---
+        response.status(200).json({ success: true, message: "Profile updated successfully.", profile: { id: updatedProfile.id, username: updatedProfile.username, memberSince: updatedProfile.created_at, backgroundUrl: updatedProfile.background_url, bio: updatedProfile.bio } });
+
+    } catch (error) {
+        console.error("Error updating profile in DB:", error);
+        response.status(500).json({ success: false, message: "Server error during profile update." });
+    }
+});
 
 // === NEW: FOLLOW SYSTEM ENDPOINTS ===
 
