@@ -1,29 +1,20 @@
-// js/welcome/welcome.js - Logic for the Welcome Page
-
-import { showNotification, showCustomModal, base64ToBlob } from './welcomeUtils.js';
+import { SnugWindow } from '../daw/SnugWindow.js';
+import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
 
-// This object is used to pass functions to the SnugWindow class.
-// It needs to be populated with globally available functions from your other scripts.
 const appServices = {};
-
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-/**
- * Creates and opens a new window containing the Tetris game.
- * The game itself is loaded from tetris.html into an iframe.
- */
 function openGameWindow() {
     const windowId = 'tetrisGame';
-    // Use the global getWindowByIdState function from state.js
-    if (typeof getWindowByIdState !== 'undefined' && getWindowByIdState(windowId)) {
-        getWindowByIdState(windowId).focus();
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
         return;
     }
 
     const content = document.createElement('iframe');
-    content.src = 'tetris.html'; // The game file to load
+    content.src = 'tetris.html';
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
@@ -35,19 +26,15 @@ function openGameWindow() {
         minHeight: 600,
     };
 
-    // Ensure SnugWindow class from SnugWindow.js is available
-    if (typeof SnugWindow !== 'undefined') {
-        new SnugWindow(windowId, 'Snugtris', content, options, appServices);
-    } else {
-        console.error("SnugWindow class is not defined. Ensure SnugWindow.js is loaded before welcome.js.");
-        showNotification("Error: Could not open game window component.", 3000);
-    }
+    new SnugWindow(windowId, 'Snugtris', content, options, appServices);
 }
 
-
 function initializeWelcomePage() {
-    // Populate the appServices object. These functions are expected to be globally available
-    // from the other script files you load in index.html (like utils.js, state.js).
+    appServices.showNotification = showNotification;
+    appServices.showCustomModal = showCustomModal;
+    appServices.storeAsset = storeAsset;
+    appServices.getAsset = getAsset;
+
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
     if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
@@ -59,28 +46,36 @@ function initializeWelcomePage() {
     checkInitialAuthState();
     applyUserThemePreference();
     renderDesktopIcons();
+    initAudioOnFirstGesture();
+}
+
+function initAudioOnFirstGesture() {
+    const startAudio = async () => {
+        try {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log('AudioContext started successfully.');
+            }
+        } catch (e) {
+            console.error('Could not start AudioContext:', e);
+        }
+        document.body.removeEventListener('mousedown', startAudio);
+    };
+    document.body.addEventListener('mousedown', startAudio);
 }
 
 function attachEventListeners() {
-    // Top taskbar buttons
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
-
-    // Start Menu buttons
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
     document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-
-    // Custom background upload for welcome page
-    const customBgInput = document.getElementById('customBgInput');
-    customBgInput?.addEventListener('change', (e) => {
+    document.getElementById('customBgInput')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) {
-            handleBackgroundUpload(file);
-        }
+        if (file) handleBackgroundUpload(file);
         e.target.value = null;
     });
 }
@@ -155,7 +150,7 @@ function launchDaw() {
 }
 
 function viewProfiles() {
-    window.open('profile.html?user=testuser', '_blank');
+    window.location.href = 'profile.html?user=snaw';
 }
 
 function updateClockDisplay() {
@@ -219,49 +214,24 @@ function showLoginModal() {
             <div>
                 <h3 class="font-bold mb-2">Login</h3>
                 <form id="loginForm" class="space-y-3">
-                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
-                    <button type="submit" class="w-full">Login</button>
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
                 </form>
             </div>
             <hr class="border-gray-500">
             <div>
-                <h3 class="font-bold mb-2">Don't have an account? Register</h3>
+                <h3 class="font-bold mb-2">Register</h3>
                 <form id="registerForm" class="space-y-3">
-                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
-                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
-                    <button type="submit" class="w-full">Register</button>
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
                 </form>
             </div>
         </div>
     `;
     
-    const { overlay, contentDiv } = showCustomModal('Login or Register', modalContent, []);
-
-    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
-        input.style.backgroundColor = 'var(--bg-input)';
-        input.style.color = 'var(--text-primary)';
-        input.style.border = '1px solid var(--border-input)';
-        input.style.padding = '8px';
-        input.style.borderRadius = '3px';
-    });
-
-    contentDiv.querySelectorAll('button').forEach(button => {
-        button.style.backgroundColor = 'var(--bg-button)';
-        button.style.border = '1px solid var(--border-button)';
-        button.style.color = 'var(--text-button)';
-        button.style.padding = '8px 15px';
-        button.style.cursor = 'pointer';
-        button.style.borderRadius = '3px';
-        button.addEventListener('mouseover', () => {
-            button.style.backgroundColor = 'var(--bg-button-hover)';
-            button.style.color = 'var(--text-button-hover)';
-        });
-        button.addEventListener('mouseout', () => {
-            button.style.backgroundColor = 'var(--bg-button)';
-            button.style.color = 'var(--text-button)';
-        });
-    });
+    const { overlay } = showCustomModal('Login or Register', modalContent, []);
 
     overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -297,7 +267,7 @@ async function handleLogin(username, password) {
             showNotification(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        showNotification('Network error. Could not connect to server.', 3000);
+        showNotification('Network error.', 3000);
         console.error("Login Error:", error);
     }
 }
@@ -316,26 +286,23 @@ async function handleRegister(username, password) {
             showNotification(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        showNotification('Network error. Could not connect to server.', 3000);
+        showNotification('Network error.', 3000);
         console.error("Register Error:", error);
     }
 }
 
 async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
-        showNotification('You must be logged in to save a custom background.', 3000);
+        showNotification('You must be logged in to save a background.', 3000);
         applyCustomBackground(file);
         return;
     }
-
     try {
-        showNotification('Saving background...', 1500);
         await storeAsset(`background-for-user-${loggedInUser.id}`, file);
         applyCustomBackground(file);
         showNotification('Background saved locally!', 2000);
     } catch (error) {
         showNotification(`Error saving background: ${error.message}`, 3000);
-        console.error("Background Upload Error:", error);
     }
 }
 
@@ -352,13 +319,10 @@ function handleLogout() {
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
-
     desktopEl.style.backgroundImage = '';
     const existingVideo = desktopEl.querySelector('#desktop-video-bg');
     if (existingVideo) existingVideo.remove();
-
-    let url;
-    let fileType;
+    let url, fileType;
     if (typeof source === 'string') {
         url = source;
         const extension = source.split('.').pop().toLowerCase().split('?')[0];
@@ -369,7 +333,6 @@ function applyCustomBackground(source) {
     } else {
         return;
     }
-
     if (fileType.startsWith('image/')) {
         desktopEl.style.backgroundImage = `url(${url})`;
         desktopEl.style.backgroundSize = 'cover';
@@ -410,28 +373,20 @@ function applyUserThemePreference() {
     const preference = localStorage.getItem('snugos-theme');
     const body = document.body;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (preference === 'light') {
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
         body.classList.remove('theme-dark');
         body.classList.add('theme-light');
-    } else if (preference === 'dark') {
+    } else {
         body.classList.remove('theme-light');
         body.classList.add('theme-dark');
-    } else {
-        if (prefersDark) {
-            body.classList.remove('theme-light');
-            body.classList.add('theme-dark');
-        } else {
-            body.classList.remove('theme-dark');
-            body.classList.add('theme-light');
-        }
     }
 }
 
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000);
+            showNotification(`Error: ${err.message}`, 3000);
         });
     } else {
         if (document.exitFullscreen) {
