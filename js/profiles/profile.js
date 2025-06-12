@@ -1,5 +1,3 @@
-// NOTE: This import statement is the fix. It makes the SnugWindow class
-// available for use within this file.
 import { SnugWindow } from '../daw/SnugWindow.js';
 
 let loggedInUser = null;
@@ -33,6 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
     }
+    
+    // FIX 1: The event listener for the avatar file input is now correctly attached.
+    document.getElementById('avatarUploadInput')?.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleAvatarUpload(e.target.files[0]);
+        }
+    });
 });
 
 // --- Main Window and UI Functions ---
@@ -94,10 +99,11 @@ function updateProfileUI(profileWindow, profileData) {
         actionButtons = `<button id="editProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Edit Profile</button>`;
     } else if (loggedInUser) {
         const friendBtnText = profileData.isFriend ? 'Remove Friend' : 'Add Friend';
-        const friendBtnColor = profileData.isFriend ? 'var(--accent-armed)' : 'var(--accent-active)';
+        // FIX 3: Added color styles to ensure text is readable
+        const friendBtnStyle = `background-color: ${profileData.isFriend ? 'var(--accent-armed)' : 'var(--accent-active)'}; color: var(--accent-active-text);`;
         actionButtons = `
-            <button id="addFriendBtn" class="px-4 py-2 rounded text-white" style="background-color: ${friendBtnColor};">${friendBtnText}</button>
-            <button id="messageBtn" class="px-4 py-2 rounded text-white ml-2" style="background-color: var(--accent-soloed);">Message</button>
+            <button id="addFriendBtn" class="px-4 py-2 rounded" style="${friendBtnStyle}">${friendBtnText}</button>
+            <button id="messageBtn" class="px-4 py-2 rounded ml-2" style="background-color: var(--accent-soloed); color: var(--accent-active-text);">Message</button>
         `;
     }
 
@@ -156,7 +162,7 @@ function renderEditMode(container, profileData) {
             </div>
             <div class="flex justify-end space-x-2">
                 <button type="button" id="cancelEditBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Cancel</button>
-                <button type="submit" id="saveProfileBtn" class="px-4 py-2 rounded text-white" style="background-color: var(--accent-active);">Save Changes</button>
+                <button type="submit" id="saveProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--accent-active); color: var(--accent-active-text);">Save Changes</button>
             </div>
         </form>
     `;
@@ -199,14 +205,15 @@ async function handleAvatarUpload(file) {
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
         showNotification("Profile picture updated!", 2000);
-        const profileWindow = appServices.getWindowById(`profile-${loggedInUser.username}`);
-        if(profileWindow) openProfileWindow(loggedInUser.username);
+        // Refresh the window by re-loading the profile data.
+        openProfileWindow(loggedInUser.username);
 
     } catch (error) {
         showNotification(`Update failed: ${error.message}`, 4000);
     }
 }
 
+// FIX 2: This function now correctly redraws the window after saving.
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
@@ -219,10 +226,16 @@ async function saveProfile(username, dataToSave) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
+        
         showNotification("Profile saved!", 2000);
         isEditing = false;
+        
         const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) openProfileWindow(username);
+        if (profileWindow) {
+            // Update the local data and redraw the UI, no need to re-fetch everything.
+            currentProfileData.bio = result.profile.bio;
+            updateProfileUI(profileWindow, currentProfileData);
+        }
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
@@ -241,15 +254,17 @@ async function handleAddFriendToggle(username, isFriend) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         showNotification(result.message, 2000);
+        // Re-open/refresh the window to show the new friend status
         const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) openProfileWindow(username);
+        if(profileWindow) openProfileWindow(username);
+
     } catch (error) {
         showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
 function showMessageModal(recipientUsername) {
-    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5"></textarea>`;
+    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);"></textarea>`;
     showCustomModal(`Message ${recipientUsername}`, modalContent, [
         { label: 'Cancel' },
         { label: 'Send', action: () => {
