@@ -7,28 +7,21 @@ let currentPath = ['/'];
 let currentViewMode = 'my-files';
 let appServices = {};
 
-/**
- * NEW FUNCTION: Handles the AudioContext warning.
- * Browsers require a user gesture (like a click) to start audio.
- * This function waits for the first click, starts Tone.js, and then removes itself.
- */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
         try {
-            if (Tone.context.state !== 'running') {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 await Tone.start();
                 console.log('AudioContext started successfully.');
             }
         } catch (e) {
             console.error('Could not start AudioContext:', e);
         }
-        // Remove this listener after it has run once.
         document.body.removeEventListener('mousedown', startAudio);
     };
     document.body.addEventListener('mousedown', startAudio);
 }
 
-// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
@@ -46,16 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
     attachEventListeners();
     applyUserThemePreference();
     updateClockDisplay();
-    initAudioOnFirstGesture(); // Call the new function to set up the audio starter.
+    initAudioOnFirstGesture(); 
     
     if (loggedInUser) {
         openLibraryWindow();
     } else {
-        showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close', action: ()=>{} }]);
+        showCustomModal('Access Denied', '<p class="p-4">Please log in.</p>', [{ label: 'Close' }]);
     }
 });
-
-// --- Window Management ---
 
 function openLibraryWindow() {
     const windowId = 'library';
@@ -63,7 +54,6 @@ function openLibraryWindow() {
         appServices.getWindowById(windowId).focus();
         return;
     }
-
     const contentHTML = `
         <div class="flex h-full" style="background-color: var(--bg-window-content);">
             <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
@@ -84,16 +74,9 @@ function openLibraryWindow() {
             </div>
         </div>
     `;
-    
     const desktopEl = document.getElementById('desktop');
-    const options = { 
-        width: Math.max(800, desktopEl.offsetWidth * 0.7), 
-        height: Math.max(600, desktopEl.offsetHeight * 0.8),
-        x: desktopEl.offsetWidth * 0.15,
-        y: desktopEl.offsetHeight * 0.05
-    };
+    const options = { width: Math.max(800, desktopEl.offsetWidth * 0.7), height: Math.max(600, desktopEl.offsetHeight * 0.8), x: desktopEl.offsetWidth * 0.15, y: desktopEl.offsetHeight * 0.05 };
     const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
-    
     initializePageUI(libWindow.element);
 }
 
@@ -111,22 +94,13 @@ function openFileViewerWindow(item) {
     } else if (fileType.startsWith('video/')) {
         content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
     } else if (fileType.startsWith('audio/')) {
-        content = `<div class="p-8 flex flex-col items-center justify-center h-full">
-                     <p class="mb-4 font-bold">${item.file_name}</p>
-                     <audio src="${item.s3_url}" controls autoplay></audio>
-                   </div>`;
+        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
     } else {
-        content = `<div class="p-8 text-center">
-                     <p>Cannot preview this file type.</p>
-                     <a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a>
-                   </div>`;
+        content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
     }
-    
     const options = { width: 640, height: 480 };
     new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
 }
-
-// --- UI Initialization and Rendering ---
 
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
@@ -154,14 +128,9 @@ function initializePageUI(container) {
         updateNavStyling();
     });
 
-    [myFilesBtn, globalFilesBtn, uploadBtn, newFolderBtn].forEach(btn => {
-        const originalBg = btn.id.includes('-files-btn') ? 'transparent' : 'var(--bg-button)';
-        btn.addEventListener('mouseenter', () => { 
-            if(btn.style.backgroundColor === originalBg) btn.style.backgroundColor = 'var(--bg-button-hover)'; 
-        });
-        btn.addEventListener('mouseleave', () => { 
-            if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; 
-        });
+    [myFilesBtn, globalFilesBtn].forEach(btn => {
+        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
+        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
     });
 
     uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
@@ -188,7 +157,6 @@ async function fetchAndRenderLibraryItems(container) {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Failed to fetch files');
-
         fileViewArea.innerHTML = '';
         if (currentPath.length > 1) {
             fileViewArea.appendChild(renderFileItem({ file_name: '..', mime_type: 'folder' }, true));
@@ -196,7 +164,7 @@ async function fetchAndRenderLibraryItems(container) {
 
         if (data.items && data.items.length > 0) {
             data.items.forEach(item => fileViewArea.appendChild(renderFileItem(item)));
-        } else if (currentPath.length === 1 && data.items.length === 0) {
+        } else if (currentPath.length <= 1) {
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
         }
     } catch (error) {
@@ -206,18 +174,13 @@ async function fetchAndRenderLibraryItems(container) {
 
 function renderFileItem(item, isParentFolder = false) {
     const itemDiv = document.createElement('div');
-    itemDiv.className = 'file-item-container flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28';
+    itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28';
     itemDiv.style.color = 'var(--text-primary)';
     
-    // Select on single click
     itemDiv.addEventListener('click', (e) => {
-        // Deselect all others
         document.querySelectorAll('.file-item-container').forEach(el => el.style.backgroundColor = 'transparent');
-        // Select this one
         itemDiv.style.backgroundColor = 'var(--accent-focus)';
     });
-
-    // Open on double click
     itemDiv.addEventListener('dblclick', () => handleItemClick(item, isParentFolder));
 
     let iconHtml = '';
@@ -228,35 +191,38 @@ function renderFileItem(item, isParentFolder = false) {
     } else if (mime.includes('folder')) {
         iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h5.586l2 2H20v10H4V5zm0-2a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-6.414l-2-2H4z"/></svg>`;
     } else if (mime.startsWith('image/')) {
-        iconHtml = `<img src="${item.s3_url}" class="w-16 h-16 object-cover border border-secondary" style="border-color: var(--border-secondary);"/>`;
+        iconHtml = `<img src="${item.s3_url}" class="w-16 h-16 object-cover border" style="border-color: var(--border-secondary);"/>`;
     } else if (mime.startsWith('audio/')) {
         iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55a4.002 4.002 0 00-3-1.55c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`;
     } else {
         iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm7 1.5V9h5.5L13 3.5z"/></svg>`;
     }
 
-    itemDiv.innerHTML = `
-        <div class="relative">${iconHtml}</div>
-        <p class="text-xs mt-2 w-full break-words truncate">${isParentFolder ? '..' : item.file_name}</p>
-    `;
+    itemDiv.innerHTML = `<div class="relative">${iconHtml}</div><p class="text-xs mt-2 w-full break-words truncate">${isParentFolder ? '..' : item.file_name}</p>`;
+
+    const itemContainer = itemDiv.querySelector('.relative');
 
     if (!isParentFolder && currentViewMode === 'my-files' && item.user_id === loggedInUser.id) {
         const shareBtn = document.createElement('button');
-        const iconColor = item.is_public ? 'var(--accent-soloed)' : 'var(--text-secondary)';
-        shareBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" style="color:${iconColor};" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="${item.is_public ? 'Public' : 'Private'}" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5zM9.05.435c.58-.58 1.52-.58 2.1 0l1.5 1.5c.58.58.58 1.519 0 2.098l-7.5 7.5a.5.5 0 0 1-.707 0l-1.5-1.5a.5.5 0 0 1 0-.707l7.5-7.5Z"/></svg>`;
         shareBtn.className = 'absolute top-0 right-0 p-1 rounded-full opacity-60 hover:opacity-100';
-        shareBtn.style.backgroundColor = 'var(--bg-button)';
-        shareBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showShareModal(item);
-        });
-        itemDiv.querySelector('.relative').appendChild(shareBtn);
+        shareBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
+        itemContainer.appendChild(shareBtn);
+    }
+    
+    if (!isParentFolder && item.user_id === loggedInUser.id) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`;
+        deleteBtn.className = 'absolute bottom-0 right-0 p-1 rounded-full opacity-60 hover:opacity-100';
+        deleteBtn.style.backgroundColor = 'var(--bg-button)';
+        deleteBtn.title = "Delete File";
+        deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); showDeleteModal(item); });
+        itemContainer.appendChild(deleteBtn);
     }
 
     return itemDiv;
 }
-
-// --- Core Logic & Event Handlers ---
 
 function handleItemClick(item, isParentFolder) {
     const libWindow = appServices.getWindowById('library');
@@ -274,9 +240,9 @@ function handleItemClick(item, isParentFolder) {
 function showShareModal(item) {
     const newStatus = !item.is_public;
     const actionText = newStatus ? "publicly available" : "private";
-    const modalContent = `<p>Are you sure you want to make '${item.file_name}' ${actionText}?</p>`;
+    const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
     showCustomModal('Confirm Action', modalContent, [
-        { label: 'Cancel', action: () => {} },
+        { label: 'Cancel' },
         { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
     ]);
 }
@@ -291,8 +257,32 @@ async function handleToggleFilePublic(fileId, newStatus) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        
         showNotification('File status updated!', 2000);
+        const libWindow = appServices.getWindowById('library');
+        if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
+}
+
+function showDeleteModal(item) {
+    const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
+    showCustomModal('Confirm Deletion', modalContent, [
+        { label: 'Cancel' },
+        { label: 'Delete', action: () => handleDeleteFile(item.id) }
+    ]);
+}
+
+async function handleDeleteFile(fileId) {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${fileId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification('File deleted!', 2000);
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
@@ -303,24 +293,15 @@ async function handleToggleFilePublic(fileId, newStatus) {
 async function handleFileUpload(files) {
     if (!loggedInUser || files.length === 0) return;
     showNotification(`Uploading ${files.length} file(s)...`, 3000);
-
     for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('is_public', 'false'); // Default to private
         formData.append('path', currentPath.join('/'));
-
         try {
             const token = localStorage.getItem('snugos_token');
-            const response = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
+            const response = await fetch(`${SERVER_URL}/api/files/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
             const result = await response.json();
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Unknown upload error.');
-            }
+            if (!response.ok) throw new Error(result.message);
         } catch (error) {
             showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000);
         }
@@ -332,20 +313,15 @@ async function handleFileUpload(files) {
 function createFolder() {
     if (!loggedInUser) return;
     showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
-        { label: 'Cancel', action: ()=>{} },
+        { label: 'Cancel' },
         { label: 'Create', action: async ()=>{
             const folderName = document.getElementById('folderNameInput').value;
-            if (!folderName || !folderName.trim()) return;
+            if (!folderName) return;
             try {
                 const token = localStorage.getItem('snugos_token');
-                const response = await fetch(`${SERVER_URL}/api/folders`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ name: folderName, path: currentPath.join('/') })
-                });
+                const response = await fetch(`${SERVER_URL}/api/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: folderName, path: currentPath.join('/') }) });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message);
-                
                 showNotification(`Folder '${folderName}' created!`, 2000);
                 const libWindow = appServices.getWindowById('library');
                 if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
@@ -356,13 +332,10 @@ function createFolder() {
     ]);
 }
 
-// --- Desktop Environment and Auth Helpers ---
-
 function updateClockDisplay() {
     const clockDisplay = document.getElementById('taskbarClockDisplay');
     if (clockDisplay) {
-        const now = new Date();
-        clockDisplay.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     setTimeout(updateClockDisplay, 60000);
 }
@@ -397,21 +370,15 @@ function attachEventListeners() {
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
     document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
-    document.getElementById('menuLogin')?.addEventListener('click', () => {
-        toggleStartMenu();
-        showLoginModal();
-    });
-    document.getElementById('menuLogout')?.addEventListener('click', () => {
-        toggleStartMenu();
-        handleLogout();
-    });
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
 }
 
 function checkLocalAuth() {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) return null;
     try {
+        const token = localStorage.getItem('snugos_token');
+        if (!token) return null;
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
             localStorage.removeItem('snugos_token');
@@ -444,9 +411,6 @@ function applyUserThemePreference() {
     }
 }
 
-// showLoginModal still needs its full implementation from your original files
 function showLoginModal() {
-    // The full implementation of your login/register modal would go here.
-    // This is just a placeholder to avoid errors.
-    showCustomModal('Login / Register', '<p class="p-4">Login form would appear here.</p>', [{label: 'Close'}]);
+    showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
 }
