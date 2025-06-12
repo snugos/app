@@ -1,203 +1,264 @@
 // js/profiles/profile.js - Main JavaScript for the independent Profile Page
 
-import { showNotification, showCustomModal } from './profileUtils.js';
-import { storeAsset, getAsset } from './profileDb.js';
-
-let loggedInUser = null; // Manage user state directly on profile page
-const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Your server URL
-
-let currentProfileData = null; // Store fetched profile data
-let isEditing = false; // Track edit mode state
-
-// Helper function to get CSS variable values at runtime
-function getCssVariable(varName) {
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-}
+// NOTE: Utility functions are globally available from utils.js
+let loggedInUser = null;
+const SERVER_URL = 'https://snugos-server-api.onrender.com';
+let currentProfileData = null;
+let isEditing = false; // To track edit mode for the bio
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
+
     if (username) {
-        openProfilePage(username); // Changed from openProfileWindow to openProfilePage
+        loadProfilePage(username);
     } else {
-        document.getElementById('profile-container').innerHTML = `<div class="text-center p-12 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg"><h2 class="text-xl font-bold text-red-700 dark:text-red-300">Error</h2><p class="text-red-600 dark:text-red-400">No username specified in URL (e.g., profile.html?user=yourusername)</p></div>`;
+        const profileContainer = document.getElementById('profile-container');
+        profileContainer.innerHTML = `<div class="text-center p-12"><p style="color:red;">Error: No username specified in URL.</p></div>`;
     }
+
+    // Listener for the hidden avatar file input
+    document.getElementById('avatarUploadInput')?.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleAvatarUpload(e.target.files[0]);
+        }
+    });
 });
 
-// --- Main Profile Page Logic ---
-async function openProfilePage(username) {
-    currentProfileData = null; // Clear previous data
-    isEditing = false; // Always start in view mode
-    document.title = `${username}'s Profile | SnugOS`; // Set page title
+// --- Core Profile Loading and Rendering ---
 
+async function loadProfilePage(username) {
+    isEditing = false;
+    document.title = `${username}'s Profile | SnugOS`;
     const profileContainer = document.getElementById('profile-container');
-    if (!profileContainer) {
-        console.error("Profile container not found in DOM.");
-        return;
-    }
-
     profileContainer.innerHTML = '<div class="text-center p-12"><p>Loading Profile...</p></div>';
 
     try {
+        // Fetch profile data and friend status at the same time
         const token = localStorage.getItem('snugos_token');
-        // Fetch profile data and friend status in parallel
         const [profileRes, friendStatusRes] = await Promise.all([
             fetch(`${SERVER_URL}/api/profiles/${username}`),
-            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }) : Promise.resolve(null)
+            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.resolve(null)
         ]);
 
         const profileData = await profileRes.json();
+        if (!profileRes.ok) throw new Error(profileData.message);
+
         const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null;
 
-        if (!profileRes.ok || !profileData.success) {
-            throw new Error(profileData.message || 'Could not fetch profile.');
-        }
-
-        loggedInUser = checkLocalAuth(); // Check if current user is logged in
-        currentProfileData = profileData.profile; // Store fetched profile data
-        currentProfileData.isFriend = friendStatusData?.isFriend || false; // Add friend status
+        loggedInUser = checkLocalAuth();
+        currentProfileData = profileData.profile;
+        currentProfileData.isFriend = friendStatusData?.isFriend || false;
 
         updateProfileUI(profileContainer, currentProfileData);
-
     } catch (error) {
-        console.error("Failed to load profile:", error);
-        displayError(profileContainer, `Error: ${error.message}`); // Use displayError helper
+        profileContainer.innerHTML = `<div class="text-center p-12"><p style="color:red;">Error loading profile: ${error.message}</p></div>`;
     }
 }
 
-/**
- * Updates the entire profile UI (view or edit mode).
- * @param {HTMLElement} container 
- * @param {object} profileData 
- */
 function updateProfileUI(container, profileData) {
-    const isOwner = loggedInUser && loggedInUser.username === profileData.username;
+    const isOwner = loggedInUser && loggedInUser.id === profileData.id;
+    const joinDate = new Date(profileData.created_at).toLocaleDateString();
 
-    container.innerHTML = '';
-    // Use CSS variables for colors and borders
-    container.className = `max-w-4xl mx-auto my-8 p-4 bg-window text-primary border border-primary rounded-lg shadow-window`;
+    // Avatar display logic
+    let avatarContent = profileData.avatar_url
+        ? `<img src="${profileData.avatar_url}" alt="${profileData.username}'s avatar" class="w-full h-full object-cover">`
+        : `<span class="text-4xl font-bold">${profileData.username.charAt(0).toUpperCase()}</span>`;
 
-    const joinDate = new Date(profileData.memberSince).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-    });
+    // Clickable overlay for avatar upload
+    const uploadOverlay = isOwner
+        ? `<div id="avatarOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" title="Change Profile Picture">...</div>`
+        : '';
+        
+    // Action buttons (Edit, Add Friend, Message)
+    let actionButtons = '';
+    if (isOwner) {
+        actionButtons = `<button id="editProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Edit Profile</button>`;
+    } else if (loggedInUser) {
+        const friendBtnText = profileData.isFriend ? 'Remove Friend' : 'Add Friend';
+        const friendBtnColor = profileData.isFriend ? 'var(--accent-armed)' : 'var(--accent-active)';
+        actionButtons = `
+            <button id="addFriendBtn" class="px-4 py-2 rounded text-white" style="background-color: ${friendBtnColor};">${friendBtnText}</button>
+            <button id="messageBtn" class="px-4 py-2 rounded text-white ml-2" style="background-color: var(--accent-soloed);">Message</button>
+        `;
+    }
 
-    const headerHtml = `
-        <div class="relative h-32 bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden">
-            <!-- Banner Image (Placeholder) -->
-            <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-3xl font-bold">
-                ${profileData.username}'s Profile
+    container.innerHTML = `
+        <div class="bg-window text-primary border border-primary rounded-lg shadow-window">
+            <div class="relative h-40 bg-gray-700 rounded-t-lg bg-cover bg-center" style="background-image: url(${profileData.background_url || ''})">
+                <div id="avatarContainer" class="absolute bottom-0 left-6 transform translate-y-1/2 w-28 h-28 rounded-full border-4 border-window bg-gray-500 flex items-center justify-center text-white overflow-hidden">
+                    ${avatarContent}
+                    ${uploadOverlay}
+                </div>
             </div>
-            <!-- Avatar -->
-            <div class="absolute bottom-0 left-4 translate-y-1/2 w-24 h-24 rounded-full border-4 border-white dark:border-gray-900 bg-gray-500 flex items-center justify-center text-white text-4xl font-bold">
-                ${profileData.username.charAt(0).toUpperCase()}
+            <div class="pt-20 px-6 pb-4 border-b border-secondary flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-bold">${profileData.username}</h2>
+                    <p class="text-sm text-secondary">Member since ${joinDate}</p>
+                </div>
+                <div class="flex space-x-2">${actionButtons}</div>
             </div>
-        </div>
-        <div class="pt-16 px-6 pb-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-end">
-            <div>
-                <h2 class="text-2xl font-bold">${profileData.username}</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Member since ${joinDate}</p>
-            </div>
-            <div class="flex space-x-2">
-                ${isOwner ? `<button id="editProfileBtn" class="px-4 py-2 bg-button text-button border border-button rounded-lg hover:bg-button-hover hover:text-button-hover transition duration-300">Edit Profile</button>` : ''}
-                ${!isOwner && loggedInUser ? `<button id="addFriendBtn" class="px-4 py-2 ${profileData.isFriend ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white rounded-lg transition duration-300">${profileData.isFriend ? 'Remove Friend' : 'Add Friend'}</button>` : ''}
-                ${!isOwner && loggedInUser ? `<button id="messageBtn" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition duration-300">Message</button>` : ''}
-            </div>
+            <div id="profile-body-content" class="p-6">
+                </div>
         </div>
     `;
-    container.insertAdjacentHTML('afterbegin', headerHtml);
 
-    const bodyContentDiv = document.createElement('div');
-    // Use 'panel' class for consistency
-    bodyContentDiv.className = 'p-6 panel';
-    container.appendChild(bodyContentDiv);
-
-    if (isEditing) {
-        renderEditMode(bodyContentDiv, profileData);
+    const profileBody = container.querySelector('#profile-body-content');
+    if (isEditing && isOwner) {
+        renderEditMode(profileBody, profileData);
     } else {
-        renderViewMode(bodyContentDiv, profileData);
+        renderViewMode(profileBody, profileData);
     }
 
-    // Attach event listeners for the new buttons
+    // Attach all event listeners
     if (isOwner) {
-        document.getElementById('editProfileBtn')?.addEventListener('click', () => {
-            isEditing = true;
-            updateProfileUI(container, profileData); // Re-render in edit mode
+        container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
+        container.querySelector('#editProfileBtn')?.addEventListener('click', () => {
+            isEditing = !isEditing;
+            updateProfileUI(container, profileData);
         });
-    }
-    if (!isOwner && loggedInUser) {
-        document.getElementById('addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
-        document.getElementById('messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
+    } else if (loggedInUser) {
+        container.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
+        container.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
     }
 }
 
-/**
- * Renders the profile content in view mode.
- */
 function renderViewMode(container, profileData) {
     container.innerHTML = `
-        <div class="mb-6">
-            <h3 class="font-semibold mb-2">Bio</h3>
-            <p>${profileData.bio || 'No bio yet.'}</p>
-        </div>
-
-        <div>
-            <h3 class="font-semibold">Public Projects</h3>
-            <div id="profile-projects-list" class="mt-4 space-y-3">
-                ${profileData.projects && profileData.projects.length > 0 ? 
-                    profileData.projects.map(project => `<div class="bg-gray-100 dark:bg-gray-800 p-3 rounded shadow"><span class="font-bold">${project.name}</span> - <span>${new Date(project.createdAt).toLocaleDateString()}</span></div>`).join('')
-                    : '<p class="text-gray-500 italic">No public projects yet.</p>'}
-            </div>
-        </div>
+        <h3 class="font-semibold mb-2">Bio</h3>
+        <p class="text-primary whitespace-pre-wrap">${profileData.bio || 'This user has not written a bio yet.'}</p>
     `;
 }
 
-/**
- * Renders the profile content in edit mode.
- */
 function renderEditMode(container, profileData) {
     container.innerHTML = `
         <form id="editProfileForm" class="space-y-4">
             <div>
-                <label for="editBio" class="block font-medium mb-1">Bio</label>
-                <textarea id="editBio" class="w-full p-2 border rounded-md" rows="5">${profileData.bio || ''}</textarea>
+                <label for="editBio" class="block font-medium mb-1">Edit Bio</label>
+                <textarea id="editBio" class="w-full p-2 border rounded-md" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);" rows="5">${profileData.bio || ''}</textarea>
             </div>
-            
             <div class="flex justify-end space-x-2">
-                <button type="button" id="cancelEditBtn" class="px-4 py-2 bg-button text-button border border-button rounded-lg hover:bg-button-hover hover:text-button-hover transition duration-300">Cancel</button>
-                <button type="submit" id="saveProfileBtn" class="px-4 py-2 bg-button text-button border border-button rounded-lg hover:bg-button-hover hover:text-button-hover transition duration-300">Save Changes</button>
+                <button type="button" id="cancelEditBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Cancel</button>
+                <button type="submit" id="saveProfileBtn" class="px-4 py-2 rounded text-white" style="background-color: var(--accent-active);">Save Changes</button>
             </div>
         </form>
     `;
+    container.querySelector('#cancelEditBtn').addEventListener('click', () => {
+        isEditing = false;
+        loadProfilePage(profileData.username);
+    });
+    container.querySelector('#editProfileForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newBio = container.querySelector('#editBio').value;
+        saveProfile(profileData.username, { bio: newBio });
+    });
+}
 
-    // Apply CSS variables to dynamically created input/textarea
-    const editBioTextarea = document.getElementById('editBio');
-    if (editBioTextarea) {
-        editBioTextarea.style.backgroundColor = getCssVariable('--bg-input');
-        editBioTextarea.style.color = getCssVariable('--text-primary');
-        editBioTextarea.style.borderColor = getCssVariable('--border-input');
+// --- Action Handlers (Avatar, Friends, Bio, Messages) ---
+
+async function handleAvatarUpload(file) {
+    if (!loggedInUser) return;
+    const formData = new FormData();
+    formData.append('avatarFile', file);
+    showNotification("Uploading picture...", 2000);
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/profile/avatar`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification("Profile picture updated!", 2000);
+        // Dynamically update the image on the page
+        const avatarContainer = document.getElementById('avatarContainer');
+        if (avatarContainer) {
+            const oldContent = avatarContainer.querySelector('img, span');
+            if(oldContent) oldContent.remove();
+            const newImg = document.createElement('img');
+            newImg.src = result.avatar_url;
+            newImg.className = 'w-full h-full object-cover';
+            avatarContainer.insertAdjacentElement('afterbegin', newImg);
+        }
+    } catch (error) {
+        showNotification(`Upload failed: ${error.message}`, 4000);
     }
-
-    document.getElementById('cancelEditBtn')?.addEventListener('click', cancelEdit);
-    document.getElementById('editProfileForm')?.addEventListener('submit', (e) => saveProfile(e, profileData.username));
 }
 
-/**
- * Displays an error message in the main container.
- */
-function displayError(container, message) {
-    container.innerHTML = `
-        <div class="text-center p-12" style="background-color: ${getCssVariable('--accent-muted')}; border: 1px solid ${getCssVariable('--accent-muted-text')}; color: ${getCssVariable('--accent-muted-text')}; border-radius: 0.5rem;">
-            <h2 class="text-xl font-bold">Error Loading Profile</h2>
-            <p class="mt-2">${message}</p>
-        </div>
+async function saveProfile(username, dataToSave) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return;
+    showNotification("Saving...", 1500);
+    try {
+        const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(dataToSave)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification("Profile saved!", 2000);
+        isEditing = false;
+        loadProfilePage(username);
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
+}
+
+async function handleAddFriendToggle(username, isFriend) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return;
+    const method = isFriend ? 'DELETE' : 'POST';
+    showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
+    try {
+        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
+            method: method,
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification(result.message, 2000);
+        loadProfilePage(username); // Refresh to show new friend status
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
+}
+
+function showMessageModal(recipientUsername) {
+    const modalContent = `
+        <textarea id="messageTextarea" class="w-full p-2 border rounded-md" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);" rows="5" placeholder="Your message..."></textarea>
     `;
+    showCustomModal(`Message ${recipientUsername}`, modalContent, [
+        { label: 'Cancel', action: () => {} },
+        { label: 'Send', action: () => {
+            const content = document.getElementById('messageTextarea').value;
+            if (content) sendMessage(recipientUsername, content);
+        }}
+    ]);
 }
 
-// --- Authentication & User State Logic (Self-contained for Profile Page) ---
-const checkLocalAuth = () => {
+async function sendMessage(recipientUsername, content) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return;
+    showNotification("Sending message...", 1500);
+    try {
+        const response = await fetch(`${SERVER_URL}/api/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+            body: JSON.stringify({ recipientUsername, content })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification("Message sent!", 2000);
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
+}
+
+// --- Auth Helper ---
+function checkLocalAuth() {
     const token = localStorage.getItem('snugos_token');
     if (!token) return null;
     try {
@@ -208,172 +269,7 @@ const checkLocalAuth = () => {
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
-        console.error("Error decoding token:", e);
         localStorage.removeItem('snugos_token');
         return null;
-    }
-};
-
-// --- Profile Editing Actions ---
-async function saveProfile(event, username) {
-    event.preventDefault();
-    const bio = document.getElementById('editBio').value;
-    const token = localStorage.getItem('snugos_token');
-    
-    if (!token) {
-        showNotification("You must be logged in to save changes.", 3000);
-        return;
-    }
-
-    try {
-        showNotification("Saving profile...", 1500);
-        const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ bio })
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Failed to save profile.');
-        }
-
-        showNotification("Profile saved successfully!", 2000);
-        isEditing = false; // Exit edit mode
-        openProfilePage(username); // Re-fetch and re-render to ensure UI is updated with latest data from server
-
-    } catch (error) {
-        showNotification(`Error saving profile: ${error.message}`, 3000);
-        console.error("Save Profile Error:", error);
-    }
-}
-
-function cancelEdit() {
-    isEditing = false; // Exit edit mode
-    openProfilePage(currentProfileData.username); // Re-render to show original profile
-}
-
-// --- Add Friend/Remove Friend Feature ---
-async function handleAddFriendToggle(username, isCurrentlyFriend) {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) {
-        showNotification('You must be logged in to add/remove friends.', 3000);
-        return;
-    }
-
-    const method = isCurrentlyFriend ? 'DELETE' : 'POST';
-    const action = isCurrentlyFriend ? 'Removing friend' : 'Adding friend';
-
-    try {
-        showNotification(`${action} ${username}...`, 1500);
-        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
-            method: method,
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || `${action} failed.`);
-        }
-
-        showNotification(`${action} successful!`, 2000);
-        openProfilePage(username); // Re-fetch and re-render to update UI with new friend state
-
-    } catch (error) {
-        showNotification(`Error ${action.toLowerCase()}: ${error.message}`, 3000);
-        console.error(`${action} Error:`, error);
-    }
-}
-
-// --- Messaging Feature (Modal) ---
-function showMessageModal(recipientUsername) {
-    const senderUsername = loggedInUser?.username;
-    if (!senderUsername) {
-        showNotification('You must be logged in to send messages.', 3000);
-        return;
-    }
-
-    const modalContent = `
-        <div class="space-y-4">
-            <div>
-                <p>Send a message to <strong>${recipientUsername}</strong>:</p>
-                <textarea id="messageTextarea" class="w-full p-2 border rounded-md" rows="5" placeholder="Type your message here..."></textarea>
-            </div>
-        </div>
-    `;
-
-    const buttons = [
-        { label: 'Cancel', action: () => {} }, // Modal will close
-        { label: 'Send Message', action: async () => {
-            const messageContent = document.getElementById('messageTextarea').value;
-            if (messageContent.trim() === '') {
-                showNotification('Message cannot be empty.', 2000);
-                return;
-            }
-            await sendMessage(recipientUsername, messageContent);
-        }}
-    ];
-    
-    const { overlay, contentDiv } = showCustomModal(`Message ${recipientUsername}`, modalContent, buttons);
-
-    // Apply CSS variables to dynamically created input/textarea
-    const messageTextarea = contentDiv.querySelector('#messageTextarea');
-    if (messageTextarea) {
-        messageTextarea.style.backgroundColor = getCssVariable('--bg-input');
-        messageTextarea.style.color = getCssVariable('--text-primary');
-        messageTextarea.style.borderColor = getCssVariable('--border-input');
-    }
-
-    // Apply CSS variables to buttons within modal
-    contentDiv.querySelectorAll('button').forEach(button => {
-        button.style.backgroundColor = getCssVariable('--bg-button');
-        button.style.border = `1px solid ${getCssVariable('--border-button')}`;
-        button.style.color = getCssVariable('--text-button');
-        button.style.padding = '8px 15px';
-        button.style.cursor = 'pointer';
-        button.style.borderRadius = '3px';
-        button.style.transition = 'background-color 0.15s ease';
-        button.addEventListener('mouseover', () => {
-            button.style.backgroundColor = getCssVariable('--bg-button-hover');
-            button.style.color = getCssVariable('--text-button-hover');
-        });
-        button.addEventListener('mouseout', () => {
-            button.style.backgroundColor = getCssVariable('--bg-button');
-            button.style.color = getCssVariable('--text-button');
-        });
-    });
-}
-
-async function sendMessage(recipientUsername, content) {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) {
-        showNotification('Login expired. Please log in again.', 3000);
-        return;
-    }
-
-    try {
-        showNotification('Sending message...', 1500);
-        const response = await fetch(`${SERVER_URL}/api/messages`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ recipientUsername, content })
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || 'Failed to send message.');
-        }
-
-        showNotification('Message sent successfully!', 2000);
-
-    } catch (error) {
-        showNotification(`Error sending message: ${error.message}`, 3000);
-        console.error("Send Message Error:", error);
     }
 }
