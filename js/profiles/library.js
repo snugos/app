@@ -74,10 +74,8 @@ function openLibraryWindow() {
         appServices.getWindowById(windowId).focus();
         return;
     }
-
     const contentHTML = `
         <div class="flex h-full" style="background-color: var(--bg-window-content);">
-            <!-- Sidebar -->
             <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
                 <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
                 <ul>
@@ -85,11 +83,9 @@ function openLibraryWindow() {
                     <li><button id="global-files-btn" class="w-full text-left p-2 rounded" style="color: var(--text-primary);">Global</button></li>
                 </ul>
                 <hr class="my-4" style="border-color: var(--border-secondary);" />
-                <!-- NOTE: Buttons are restored here -->
                 <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
                 <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
             </div>
-            <!-- Main Content -->
             <div class="flex-grow flex flex-col">
                 <div class="p-2 border-b" style="border-color: var(--border-secondary);">
                     <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
@@ -98,11 +94,9 @@ function openLibraryWindow() {
             </div>
         </div>
     `;
-    
     const desktopEl = document.getElementById('desktop');
     const options = { width: Math.max(800, desktopEl.offsetWidth * 0.7), height: Math.max(600, desktopEl.offsetHeight * 0.8), x: desktopEl.offsetWidth * 0.15, y: desktopEl.offsetHeight * 0.05 };
     const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
-    
     initializePageUI(libWindow.element);
 }
 
@@ -111,6 +105,7 @@ function initializePageUI(container) {
     const globalFilesBtn = container.querySelector('#global-files-btn');
     const uploadBtn = container.querySelector('#uploadFileBtn');
     const newFolderBtn = container.querySelector('#createFolderBtn');
+    const actualFileInput = document.getElementById('actualFileInput'); // This is in the main document
 
     const updateNavStyling = () => {
         myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
@@ -137,15 +132,19 @@ function initializePageUI(container) {
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
     });
 
-    // NOTE: Listeners for the restored buttons
-    uploadBtn?.addEventListener('click', () => document.getElementById('actualFileInput').click());
+    // NOTE: These are the listeners that were missing and have now been restored.
+    uploadBtn?.addEventListener('click', () => actualFileInput.click());
+    actualFileInput?.addEventListener('change', e => {
+        handleFileUpload(e.target.files);
+        e.target.value = null; // Clear input after selection
+    });
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
     fetchAndRenderLibraryItems(container);
 }
 
-function attachDesktopEventListeners() {
+function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
     if (!desktop) return;
 
@@ -160,6 +159,15 @@ function attachDesktopEventListeners() {
         ];
         appServices.createContextMenu(e, menuItems);
     });
+}
+
+function attachDesktopEventListeners() {
+    setupDesktopContextMenu();
+    
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
@@ -192,14 +200,8 @@ function attachDesktopEventListeners() {
             showNotification(`Error: ${error.message}`, 4000);
         }
     });
-    
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
 }
 
-// All other functions (fetchAndRenderLibraryItems, renderFileItem, handleItemClick, etc.) remain here...
 async function fetchAndRenderLibraryItems(container) {
     const fileViewArea = container.querySelector('#file-view-area');
     const pathDisplay = container.querySelector('#library-path-display');
