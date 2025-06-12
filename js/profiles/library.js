@@ -39,12 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClockDisplay();
     initAudioOnFirstGesture(); 
     
-    // NOTE: The main file input listener is now more robust.
     const actualFileInput = document.getElementById('actualFileInput');
     actualFileInput?.addEventListener('change', e => {
-        console.log("File input 'change' event fired.");
         handleFileUpload(e.target.files);
-        e.target.value = null; 
+        e.target.value = null;
     });
     
     if (loggedInUser) {
@@ -84,7 +82,6 @@ function openLibraryWindow() {
     }
     const contentHTML = `
         <div class="flex h-full" style="background-color: var(--bg-window-content);">
-            <!-- Sidebar -->
             <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
                 <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
                 <ul>
@@ -95,7 +92,6 @@ function openLibraryWindow() {
                 <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
                 <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
             </div>
-            <!-- Main Content -->
             <div class="flex-grow flex flex-col">
                 <div class="p-2 border-b" style="border-color: var(--border-secondary);">
                     <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
@@ -109,6 +105,30 @@ function openLibraryWindow() {
     const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
     initializePageUI(libWindow.element);
 }
+
+// NOTE: This is the missing function that has been restored.
+function openFileViewerWindow(item) {
+    const windowId = `file-viewer-${item.id}`;
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
+        return;
+    }
+    let content = '';
+    const fileType = item.mime_type || '';
+
+    if (fileType.startsWith('image/')) {
+        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
+    } else if (fileType.startsWith('video/')) {
+        content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
+    } else if (fileType.startsWith('audio/')) {
+        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
+    } else {
+        content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
+    }
+    const options = { width: 640, height: 480 };
+    new SnugWindow(windowId, `View: ${item.file_name}`, content, options, appServices);
+}
+
 
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
@@ -144,7 +164,6 @@ function initializePageUI(container) {
     });
 
     uploadBtn?.addEventListener('click', () => {
-        console.log("Upload button clicked.");
         document.getElementById('actualFileInput').click();
     });
     newFolderBtn?.addEventListener('click', createFolder);
