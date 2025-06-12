@@ -31,7 +31,7 @@ import {
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderDirectoryView, renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, openProfileWindow
+    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob // NOTE: openProfileWindow removed from this line
 } from './ui/ui.js'; // Path updated
 // Removed AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions imports as they are global
 
@@ -333,7 +333,7 @@ async function initializeSnugOS() {
         playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio: storeAudio, dbGetAudio: getAudio, dbDeleteAudio: deleteAudio, // Store/Get/Delete Audio are global
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
-        openProfileWindow, 
+        // openProfileWindow, // REMOVED THIS LINE
         renderSamplePads, updateSliceEditorUI,
         renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfoState,
         renderDirectoryView, renderSoundBrowser,
