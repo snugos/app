@@ -1,6 +1,6 @@
 // js/profiles/library.js - Main JavaScript for the independent Library Page
 
-import { showNotification, showCustomModal } from './profileUtils.js'; // Reusing profileUtils for notifications/modals
+import { showNotification, showCustomModal, getThemeColors } from './profileUtils.js'; // Added getThemeColors
 import { getAsset } from './profileDb.js'; // Reusing profileDb for IndexedDB access (e.g. for user backgrounds)
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Your backend server URL
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!loggedInUser) {
         // Redirect or show message if not logged in
         document.getElementById('library-container').innerHTML = `
-            <div class="text-center p-12">
+            <div class="text-center p-12 bg-window text-primary border border-primary rounded-lg shadow-window">
                 <h1 class="text-2xl font-bold mb-4">Access Denied</h1>
                 <p>You must be logged in to view your library. Please <a href="index.html" class="text-blue-400 hover:underline">login</a> first.</p>
             </div>
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializePageUI() {
+    const colors = getThemeColors(); // Get theme colors
     // Dynamically update top taskbar for logged-in user
     updateAuthUI(loggedInUser);
     applyUserThemePreference(); // Apply user theme
@@ -38,19 +39,28 @@ function initializePageUI() {
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.add('bg-blue-800', 'border-blue-500'); // Highlight dropzone
+        // Use CSS variables for highlight
+        dropZone.style.backgroundColor = colors.bgDropzoneDragover;
+        dropZone.style.borderColor = colors.borderDropzoneDragover;
+        dropZone.style.color = colors.textDropzoneDragover;
     });
 
     dropZone.addEventListener('dragleave', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.remove('bg-blue-800', 'border-blue-500'); // Remove highlight
+        // Revert to normal dropzone colors
+        dropZone.style.backgroundColor = colors.bgDropzone;
+        dropZone.style.borderColor = colors.borderDropzone;
+        dropZone.style.color = colors.textDropzone;
     });
 
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.remove('bg-blue-800', 'border-blue-500'); // Remove highlight
+        // Revert to normal dropzone colors
+        dropZone.style.backgroundColor = colors.bgDropzone;
+        dropZone.style.borderColor = colors.borderDropzone;
+        dropZone.style.color = colors.textDropzone;
         const files = e.dataTransfer.files;
         handleFileUpload(files);
     });
@@ -129,9 +139,14 @@ async function fetchAndRenderMyFiles() {
             if (data.files && data.files.length > 0) {
                 myFilesList.innerHTML = ''; // Clear "Loading files..."
                 data.files.forEach(file => {
+                    const colors = getThemeColors(); // Get theme colors inside loop for dynamic elements
                     const fileDiv = document.createElement('div');
-                    fileDiv.className = 'bg-gray-100 dark:bg-gray-800 p-3 rounded shadow flex flex-col items-center justify-between';
-                    
+                    // Use CSS variables for consistent file item styling
+                    fileDiv.className = 'p-3 rounded shadow flex flex-col items-center justify-between';
+                    fileDiv.style.backgroundColor = colors.bgButton; // Using bg-button for file item background
+                    fileDiv.style.borderColor = colors.borderButton;
+                    fileDiv.style.color = colors.textSecondary; // Text for size/date
+
                     let previewHtml = '';
                     if (file.mime_type.startsWith('image/')) {
                         previewHtml = `<img src="${file.s3_url}" alt="${file.file_name}" class="max-h-24 w-auto object-contain mb-2">`;
@@ -140,13 +155,13 @@ async function fetchAndRenderMyFiles() {
                     } else if (file.mime_type.startsWith('video/')) {
                         previewHtml = `<video controls src="${file.s3_url}" class="max-h-24 w-auto object-contain mb-2"></video>`;
                     } else {
-                        previewHtml = `<span class="text-4xl mb-2">📄</span>`; // Generic file icon
+                        previewHtml = `<span class="text-4xl mb-2" style="color: ${colors.textPrimary};">📄</span>`; // Generic file icon
                     }
 
                     fileDiv.innerHTML = `
                         <div class="text-center w-full">
                             ${previewHtml}
-                            <p class="font-bold text-sm truncate w-full">${file.file_name}</p>
+                            <p class="font-bold text-sm truncate w-full" style="color: ${colors.textPrimary};">${file.file_name}</p>
                             <p class="text-xs text-gray-600 dark:text-gray-400">${(file.file_size / 1024 / 1024).toFixed(2)} MB</p>
                             <p class="text-xs text-gray-600 dark:text-gray-400">${new Date(file.created_at).toLocaleDateString()}</p>
                         </div>
@@ -159,6 +174,26 @@ async function fetchAndRenderMyFiles() {
                         </div>
                     `;
                     myFilesList.appendChild(fileDiv);
+
+                    // Apply dynamic button styles and hover effects
+                    const viewDlBtn = fileDiv.querySelector('a');
+                    viewDlBtn.style.backgroundColor = colors.blue500;
+                    viewDlBtn.style.color = colors.textPrimary;
+                    viewDlBtn.addEventListener('mouseover', () => { viewDlBtn.style.backgroundColor = colors.blue600; });
+                    viewDlBtn.addEventListener('mouseout', () => { viewDlBtn.style.backgroundColor = colors.blue500; });
+
+
+                    const toggleBtn = fileDiv.querySelector('.toggle-public-btn');
+                    toggleBtn.style.backgroundColor = colors.gray500;
+                    toggleBtn.style.color = colors.textPrimary;
+                    toggleBtn.addEventListener('mouseover', () => { toggleBtn.style.backgroundColor = colors.gray600; });
+                    toggleBtn.addEventListener('mouseout', () => { toggleBtn.style.backgroundColor = colors.gray500; });
+
+                    const deleteBtn = fileDiv.querySelector('.delete-file-btn');
+                    deleteBtn.style.backgroundColor = colors.red500;
+                    deleteBtn.style.color = colors.textPrimary;
+                    deleteBtn.addEventListener('mouseover', () => { deleteBtn.style.backgroundColor = colors.red600; });
+                    deleteBtn.addEventListener('mouseout', () => { deleteBtn.style.backgroundColor = colors.red500; });
                 });
 
                 // Attach event listeners for toggle public and delete buttons
@@ -269,31 +304,37 @@ function checkLocalAuth() {
 function updateAuthUI(user = null) {
     const userAuthContainer = document.getElementById('userAuthContainer');
     if (userAuthContainer) {
+        const colors = getThemeColors(); // Get theme colors
         if (user) {
-            userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span> <button id="logoutBtnTop" class="px-3 py-1 border rounded">Logout</button>`;
+            userAuthContainer.innerHTML = `<span class="mr-2" style="color: ${colors.textPrimary};">Welcome, ${user.username}!</span> <button id="logoutBtnTop" class="px-3 py-1 border rounded" style="background-color: ${colors.bgButton}; color: ${colors.textButton}; border-color: ${colors.borderButton};">Logout</button>`;
             userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('click', handleLogout);
+            userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('mouseover', function() { this.style.backgroundColor = colors.bgButtonHover; this.style.color = colors.textButtonHover; });
+            userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('mouseout', function() { this.style.backgroundColor = colors.bgButton; this.style.color = colors.textButton; });
         } else {
-            userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
-            userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal); // Assumes showLoginModal handles full login flow
+            userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded" style="background-color: ${colors.bgButton}; color: ${colors.textButton}; border-color: ${colors.borderButton};">Login</button>`;
+            userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
+            userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('mouseover', function() { this.style.backgroundColor = colors.bgButtonHover; this.style.color = colors.textButtonHover; });
+            userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('mouseout', function() { this.style.backgroundColor = colors.bgButton; this.style.color = colors.textButton; });
         }
     }
 }
 
 // --- Helper: Login Modal (from welcome.js, for independence) ---
 function showLoginModal() {
+    const colors = getThemeColors(); // Get theme colors
     const modalContent = `
         <div class="space-y-4">
             <div>
-                <h3 class="font-bold mb-2">Login</h3>
+                <h3 class="font-bold mb-2" style="color: ${colors.textPrimary};">Login</h3>
                 <form id="loginForm" class="space-y-3">
                     <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
                     <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
                     <button type="submit" class="w-full">Login</button>
                 </form>
             </div>
-            <hr class="border-gray-500">
+            <hr style="border-color: ${colors.borderSecondary};">
             <div>
-                <h3 class="font-bold mb-2">Don't have an account? Register</h3>
+                <h3 class="font-bold mb-2" style="color: ${colors.textPrimary};">Don't have an account? Register</h3>
                 <form id="registerForm" class="space-y-3">
                     <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
                     <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
@@ -306,28 +347,28 @@ function showLoginModal() {
     const { overlay, contentDiv } = showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
-        input.style.backgroundColor = 'var(--bg-input)';
-        input.style.color = 'var(--text-primary)';
-        input.style.border = '1px solid var(--border-input)';
+        input.style.backgroundColor = colors.bgInput;
+        input.style.color = colors.textPrimary;
+        input.style.borderColor = colors.borderInput;
         input.style.padding = '8px';
         input.style.borderRadius = '3px';
     });
 
     contentDiv.querySelectorAll('button').forEach(button => {
-        button.style.backgroundColor = 'var(--bg-button)';
-        button.style.border = '1px solid var(--border-button)';
-        button.style.color = 'var(--text-button)';
+        button.style.backgroundColor = colors.bgButton;
+        button.style.border = `1px solid ${colors.borderButton}`;
+        button.style.color = colors.textButton;
         button.style.padding = '8px 15px';
         button.style.cursor = 'pointer';
         button.style.borderRadius = '3px';
         button.style.transition = 'background-color 0.15s ease';
         button.addEventListener('mouseover', () => {
-            button.style.backgroundColor = 'var(--bg-button-hover)';
-            button.style.color = 'var(--text-button-hover)';
+            button.style.backgroundColor = colors.bgButtonHover;
+            button.style.color = colors.textButtonHover;
         });
         button.addEventListener('mouseout', () => {
-            button.style.backgroundColor = 'var(--bg-button)';
-            button.style.color = 'var(--text-button)';
+            button.style.backgroundColor = colors.bgButton;
+            button.style.color = colors.textButton;
         });
     });
 
