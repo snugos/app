@@ -241,24 +241,6 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
     }
 });
 
-// --- Messaging Endpoints ---
-
-app.post('/api/messages', authenticateToken, async (request, response) => {
-    const { recipientUsername, content } = request.body;
-    const senderId = request.user.id;
-    if (!recipientUsername || !content) return response.status(400).json({ success: false, message: 'Recipient and content are required.' });
-    try {
-        const recipientResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [recipientUsername]);
-        if (recipientResult.rows.length === 0) return response.status(404).json({ success: false, message: 'Recipient not found.' });
-        const recipientId = recipientResult.rows[0].id;
-        const insertMessageQuery = `INSERT INTO messages (sender_id, recipient_id, content) VALUES ($1, $2, $3) RETURNING *;`;
-        const result = await pool.query(insertMessageQuery, [senderId, recipientId, content]);
-        response.status(201).json({ success: true, messageData: result.rows[0] });
-    } catch (error) {
-        response.status(500).json({ success: false, message: 'Server error while sending message.' });
-    }
-});
-
 // --- File Storage Endpoints ---
 
 app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
@@ -274,7 +256,8 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
         const result = await pool.query(insertFileQuery, [userId, path || '/', file.originalname, s3Key, data.Location, file.mimetype, file.size, is_public === 'true']);
         res.status(201).json({ success: true, file: result.rows[0] });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Server error during file upload.' });
+        console.error("[File Upload] Error:", error);
+        res.status(500).json({ success: false, message: 'Error uploading file.' });
     }
 });
 
