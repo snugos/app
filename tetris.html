@@ -20,40 +20,29 @@
             --text-button-hover: #000000;
         }
 
-        /* Make body and html take full height for vertical centering */
-        html, body {
-            height: 100%;
-            margin: 0;
-            overflow: hidden; /* Prevent scrollbars */
-        }
-
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
             text-transform: lowercase;
             display: flex;
-            align-items: center;
             justify-content: center;
-            flex-direction: column;
-            padding: 1rem;
+            padding: 2rem;
             box-sizing: border-box;
+            margin: 0;
         }
 
         h1 {
-            font-weight: 700;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            height: 2.5rem; /* Keep space to prevent layout shift */
+            display: none; /* Title is hidden */
         }
 
         /* --- Game Layout --- */
         .game-container {
             display: flex;
-            gap: 2rem;
+            gap: 1rem;
             align-items: flex-start;
             border: 2px solid var(--border-primary);
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 8px;
         }
 
@@ -63,30 +52,30 @@
         }
 
         .sidebar {
-            width: 150px;
+            width: 120px;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
         }
         
         .info-panel, .controls-panel {
             border: 1px solid var(--border-primary);
-            padding: 1rem;
+            padding: 0.75rem;
             border-radius: 5px;
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
         .info-panel h2, .controls-panel h2 {
             margin: 0 0 0.5rem 0;
-            font-size: 1.2rem;
+            font-size: 1rem;
             border-bottom: 1px solid var(--border-primary);
             padding-bottom: 0.5rem;
         }
 
         .info-panel div {
-            font-size: 1rem;
+            font-size: 0.8rem;
         }
 
         #next-piece-canvas {
@@ -100,11 +89,11 @@
             background-color: var(--bg-button);
             border: 1px solid var(--border-button);
             color: var(--text-button);
-            padding: 10px 15px;
+            padding: 8px 10px;
             border-radius: 3px;
             cursor: pointer;
             transition: background-color 0.15s ease, color 0.15s ease;
-            font-size: 1rem;
+            font-size: 0.9rem;
             text-transform: lowercase;
             width: 100%;
         }
@@ -144,34 +133,6 @@
         .modal-dialog h2 {
             margin-top: 0;
             font-size: 2rem;
-        }
-        
-        /* Responsive styles */
-        @media (max-width: 768px) {
-            body {
-                justify-content: flex-start;
-                padding-top: 2rem;
-            }
-            .game-container {
-                flex-direction: column;
-                align-items: center;
-                padding: 1rem;
-                gap: 1rem;
-                border: none;
-            }
-            .sidebar {
-                width: 100%;
-                max-width: 300px; /* Max width for sidebar on mobile */
-                flex-direction: row;
-                justify-content: space-around;
-                flex-wrap: wrap;
-            }
-            .info-panel, .controls-panel {
-                flex-grow: 1;
-            }
-            h1 {
-                display: none;
-            }
         }
 
     </style>
@@ -220,7 +181,7 @@
         const COLS = 10;
         const ROWS = 20;
         const LINES_PER_LEVEL = 10;
-        let BLOCK_SIZE = 30; // Will be calculated dynamically
+        const BLOCK_SIZE = 15; // Set a fixed, small block size
 
         // --- Colors & Tetrominoes (Shapes) ---
         const PIECE_COLOR = '#FFFFFF';
@@ -260,6 +221,16 @@
         const gameOverModal = document.getElementById('game-over-modal');
         const finalScoreEl = document.getElementById('final-score');
         
+        /**
+         * Sets the size of the game canvases based on the fixed BLOCK_SIZE.
+         */
+        function setGameSize() {
+            boardCanvas.width = COLS * BLOCK_SIZE;
+            boardCanvas.height = ROWS * BLOCK_SIZE;
+            nextCanvas.width = 4 * BLOCK_SIZE;
+            nextCanvas.height = 4 * BLOCK_SIZE;
+        }
+
         // --- Game Logic ---
         
         /**
@@ -505,7 +476,7 @@
             ctx.fillStyle = PIECE_COLOR;
             ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
             ctx.strokeStyle = BORDER_COLOR;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
         }
         
@@ -554,7 +525,7 @@
                         nextCtx.fillStyle = PIECE_COLOR;
                         nextCtx.fillRect(offsetX + x * BLOCK_SIZE, offsetY + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                         nextCtx.strokeStyle = BORDER_COLOR;
-                        nextCtx.lineWidth = 2;
+                        nextCtx.lineWidth = 1;
                         nextCtx.strokeRect(offsetX + x * BLOCK_SIZE, offsetY + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
                     }
                 });
@@ -625,36 +596,6 @@
                 update(lastTime);
             }
         }
-        
-        /**
-         * Recalculates canvas sizes and redraws the game.
-         */
-        function resizeGame() {
-            // Calculate available space, leaving some padding
-            const padding = 32;
-            const sidebarWidth = 150 + (32 * 2); // approx sidebar width + gaps
-            let availableWidth = window.innerWidth - sidebarWidth - padding;
-            if (window.innerWidth <= 768) { // On mobile view, sidebar is below
-                 availableWidth = window.innerWidth - padding;
-            }
-            const availableHeight = window.innerHeight - (document.querySelector('h1').offsetHeight * 2) - padding;
-
-            // Calculate block size based on aspect ratio
-            const blockSizeW = availableWidth / COLS;
-            const blockSizeH = availableHeight / ROWS;
-            BLOCK_SIZE = Math.floor(Math.min(blockSizeW, blockSizeH));
-            
-            // Set main canvas size
-            boardCanvas.width = COLS * BLOCK_SIZE;
-            boardCanvas.height = ROWS * BLOCK_SIZE;
-
-            // Set next piece canvas size
-            nextCanvas.width = 4 * BLOCK_SIZE;
-            nextCanvas.height = 4 * BLOCK_SIZE;
-            
-            // Redraw the game with the new sizes
-            draw();
-        }
 
         startBtn.addEventListener('click', startGame);
         pauseBtn.addEventListener('click', togglePause);
@@ -709,9 +650,9 @@
         });
 
         // --- Initial Game Setup ---
-        window.addEventListener('resize', resizeGame);
+        setGameSize(); // Set the fixed size on load
         resetGame();
-        resizeGame(); // Set initial size
+        draw(); // Draw the initial state
     </script>
 
 </body>
