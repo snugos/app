@@ -242,7 +242,7 @@ async function handleAddFriendToggle(username, isCurrentlyFriend) {
         showNotification(`${action} ${username}...`, 1500);
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
         });
 
         const data = await response.json();
