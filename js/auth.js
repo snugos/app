@@ -4,7 +4,7 @@
 // import * as Constants from './constants.js';
 // import { showNotification, showCustomModal } from './utils.js';
 
-import { showNotification, showCustomModal } from './daw/utils.js'; // CORRECTED PATH
+import { showNotification, showCustomModal } from './daw/utils.js';
 
 let localAppServices = {};
 let loggedInUser = null;
