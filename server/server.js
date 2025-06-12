@@ -242,7 +242,6 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
     }
 });
 
-// NOTE: NEW ENDPOINT TO GET A USER'S FRIEND LIST
 app.get('/api/friends', authenticateToken, async (request, response) => {
     try {
         const userId = request.user.id;
@@ -260,7 +259,6 @@ app.get('/api/friends', authenticateToken, async (request, response) => {
         response.status(500).json({ success: false, message: 'Server error while fetching friends.' });
     }
 });
-
 
 // --- Messaging Endpoints ---
 
@@ -280,7 +278,6 @@ app.post('/api/messages', authenticateToken, async (request, response) => {
     }
 });
 
-// NOTE: NEW ENDPOINT TO GET A FULL CONVERSATION
 app.get('/api/messages/conversation/:username', authenticateToken, async (request, response) => {
     try {
         const userId = request.user.id;
@@ -349,7 +346,12 @@ app.get('/api/files/my', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;
         const path = req.query.path || '/';
-        const query = `SELECT * FROM user_files WHERE user_id = $1 AND path = $2 ORDER BY mime_type, file_name ASC`;
+        const query = `
+            SELECT f.*, p.username as owner_username 
+            FROM user_files f
+            JOIN profiles p ON f.user_id = p.id
+            WHERE f.user_id = $1 AND f.path = $2 
+            ORDER BY f.mime_type, f.file_name ASC`;
         const result = await pool.query(query, [userId, path]);
         res.json({ success: true, items: result.rows });
     } catch (error) {
@@ -360,10 +362,27 @@ app.get('/api/files/my', authenticateToken, async (req, res) => {
 app.get('/api/files/public', authenticateToken, async (req, res) => {
     try {
         const path = req.query.path || '/';
-        const query = `SELECT * FROM user_files WHERE is_public = TRUE AND path = $1 ORDER BY mime_type, file_name ASC`;
-        const result = await pool.query(query, [path]);
+        let query;
+        let queryParams = [path];
+        if (req.user.username === 'snaw') {
+            query = `
+                SELECT f.*, p.username as owner_username 
+                FROM user_files f
+                JOIN profiles p ON f.user_id = p.id
+                WHERE f.path = $1
+                ORDER BY f.created_at DESC`;
+        } else {
+            query = `
+                SELECT f.*, p.username as owner_username 
+                FROM user_files f
+                JOIN profiles p ON f.user_id = p.id
+                WHERE f.is_public = TRUE AND f.path = $1
+                ORDER BY f.mime_type, f.file_name ASC`;
+        }
+        const result = await pool.query(query, queryParams);
         res.json({ success: true, items: result.rows });
     } catch (error) {
+        console.error("[Get Public Files] Error:", error);
         res.status(500).json({ success: false, message: 'Server error fetching public files.' });
     }
 });
