@@ -1,6 +1,10 @@
 // js/daw/ClipManager.js
-// Removed import * as Constants from '../constants.js'; as Constants is global
-// Removed import { storeAudio, getAudio, deleteAudio } from '../db.js'; as these are global
+// NOTE: Tone, Konva, JSZip are loaded globally via script tags in snaw.html.
+
+import * as Constants from '../constants.js'; // Assuming constants.js is now a module or will be. If global, remove this.
+import { storeAudio, getAudio, deleteAudio } from '../db.js'; // Corrected path to db.js
+import { showNotification } from '../utils.js'; // Corrected path to utils.js
+import { captureStateForUndo } from './state/projectState.js'; // Corrected path for state
 
 class ClipManager { // Removed export
     constructor(track, appServices) {
@@ -27,7 +31,7 @@ class ClipManager { // Removed export
         this.timelineClips.push(clipData);
         // Removed renderTimeline call as timeline is removed
         // this.appServices.renderTimeline?.();
-        this.appServices.captureStateForUndo?.(`Add clip ${clipData.name}`);
+        captureStateForUndo?.(`Add clip ${clipData.name}`); // Corrected function name
     }
 
     addMidiClip(sequence, startTime) {
@@ -52,7 +56,7 @@ class ClipManager { // Removed export
 
     async addAudioClip(audioBlob, startTime, clipName) {
         if (this.track.type !== 'Audio') {
-            this.appServices.showNotification?.('Cannot add audio clip to a non-audio track.', 3000); // showNotification is global
+            showNotification?.('Cannot add audio clip to a non-audio track.', 3000); // Corrected function name
             return;
         }
         try {
@@ -72,7 +76,7 @@ class ClipManager { // Removed export
             this.addClip(newClip);
         } catch (error) {
             console.error("[ClipManager.js] Error adding audio clip:", error);
-            this.appServices.showNotification?.('Failed to process and add audio clip.', 3000); // showNotification is global
+            showNotification?.('Failed to process and add audio clip.', 3000); // Corrected function name
         }
     }
     
@@ -90,7 +94,7 @@ class ClipManager { // Removed export
             this.timelineClips.splice(index, 1);
             // Removed renderTimeline call
             // this.appServices.renderTimeline?.();
-            this.appServices.captureStateForUndo?.(`Delete clip ${removedClip.name}`); // captureStateForUndoInternal is global
+            captureStateForUndo?.(`Delete clip ${removedClip.name}`); // Corrected function name
         } else {
             console.warn(`[ClipManager.js] Clip with ID ${clipId} not found for deletion.`);
         }
