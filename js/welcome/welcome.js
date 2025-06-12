@@ -10,18 +10,18 @@ let loggedInUser = null; // Manage user state directly in welcome.js
 const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Server URL for auth
 
 function initializeWelcomePage() {
-    // Populate appServices for welcome page's own use
+    // Basic appServices setup needed for utility functions
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.base64ToBlob = base64ToBlob;
     appServices.storeAsset = storeAsset;
     appServices.getAsset = getAsset;
 
-    // Call these functions with a minimal appServices object if needed
     attachEventListeners();
     updateClockDisplay();
     checkInitialAuthState(); // Will now use functions defined/imported in welcome.js scope
     applyUserThemePreference(); // Will also be self-contained
+    renderDesktopIcons(); // NEW: Call to render desktop icons
 }
 
 function attachEventListeners() {
@@ -34,12 +34,11 @@ function attachEventListeners() {
     document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
     document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
-    document.getElementById('menuLogout')?.addEventListener('click', handleLogout); // Now directly linked to local handleLogout
+    document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
 
-    // Desktop action buttons
-    document.getElementById('launchDawBtn')?.addEventListener('click', launchDaw);
-    document.getElementById('viewProfilesBtn')?.addEventListener('click', viewProfiles);
+    // Removed direct event listeners for 'launchDawBtn' and 'viewProfilesBtn'
+    // as these are now handled by desktop icons.
 
     // Close start menu on click outside
     document.addEventListener('click', (e) => {
@@ -53,16 +52,55 @@ function attachEventListeners() {
     });
 
     // Custom background upload for welcome page
-    // Need to ensure an input with id="customBgInput" exists in welcome.html
     const customBgInput = document.getElementById('customBgInput');
     customBgInput?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            handleBackgroundUpload(file); // Calls local handler
+            handleBackgroundUpload(file);
         }
-        e.target.value = null; // Clear the input
+        e.target.value = null;
     });
 }
+
+/**
+ * Dynamically renders desktop icons and attaches click handlers.
+ */
+function renderDesktopIcons() {
+    const desktopIconsContainer = document.getElementById('desktop-icons-container');
+    if (!desktopIconsContainer) return;
+
+    // Clear existing content
+    desktopIconsContainer.innerHTML = '';
+
+    const icons = [
+        { id: 'snaw-daw-icon', name: 'Snaw DAW', imgSrc: 'assets/snaw-icon.png', action: launchDaw },
+        { id: 'profiles-icon', name: 'Profiles', imgSrc: 'assets/profiles-icon.png', action: viewProfiles },
+        // Add more icons here as needed
+        // { id: 'sound-library-icon', name: 'Sound Library', imgSrc: 'assets/sound-library-icon.png', action: () => showNotification('Sound Library will open here!', 2000) },
+        // { id: 'settings-icon', name: 'Settings', imgSrc: 'assets/settings-icon.png', action: () => showNotification('Settings will open here!', 2000) },
+    ];
+
+    icons.forEach(icon => {
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'desktop-icon'; // Use desktop-icon class for styling
+        iconDiv.dataset.app = icon.id;
+
+        const img = document.createElement('img');
+        img.src = icon.imgSrc;
+        img.alt = icon.name;
+        img.className = 'w-12 h-12 mb-1'; // Tailwind classes for image size
+
+        const span = document.createElement('span');
+        span.textContent = icon.name;
+
+        iconDiv.appendChild(img);
+        iconDiv.appendChild(span);
+
+        iconDiv.addEventListener('click', icon.action);
+        desktopIconsContainer.appendChild(iconDiv);
+    });
+}
+
 
 function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
@@ -134,7 +172,7 @@ function updateAuthUI(user = null) {
     }
 }
 
-export function showLoginModal() {
+function showLoginModal() {
     document.getElementById('startMenu')?.classList.add('hidden');
     const modalContent = `
         <div class="space-y-4">
@@ -158,7 +196,7 @@ export function showLoginModal() {
         </div>
     `;
     
-    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []); // Use appServices.showCustomModal
+    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
@@ -215,12 +253,12 @@ async function handleLogin(username, password) {
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
             await checkInitialAuthState(); // Re-check state after login to update UI and load background
-            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+            showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
-            appServices.showNotification(`Login failed: ${data.message}`, 3000);
+            showNotification(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        showNotification('Network error. Could not connect to server.', 3000);
         console.error("Login Error:", error);
     }
 }
@@ -235,30 +273,30 @@ async function handleRegister(username, password) {
         const data = await response.json();
 
         if (data.success) {
-            appServices.showNotification('Registration successful! Please log in.', 2500);
+            showNotification('Registration successful! Please log in.', 2500);
         } else {
-            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+            showNotification(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        showNotification('Network error. Could not connect to server.', 3000);
         console.error("Register Error:", error);
     }
 }
 
 async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
-        appServices.showNotification('You must be logged in to save a custom background.', 3000);
+        showNotification('You must be logged in to save a custom background.', 3000);
         applyCustomBackground(file); // Still apply temporarily even if not logged in
         return;
     }
 
     try {
-        appServices.showNotification('Saving background...', 1500);
+        showNotification('Saving background...', 1500);
         await appServices.storeAsset(`background-for-user-${loggedInUser.id}`, file);
         applyCustomBackground(file);
-        appServices.showNotification('Background saved locally!', 2000);
+        showNotification('Background saved locally!', 2000);
     } catch (error) {
-        appServices.showNotification(`Error saving background: ${error.message}`, 3000);
+        showNotification(`Error saving background: ${error.message}`, 3000);
         console.error("Background Upload Error:", error);
     }
 }
@@ -271,7 +309,7 @@ function handleLogout() {
     const existingVideo = document.getElementById('desktop-video-bg');
     if (existingVideo) existingVideo.remove();
     
-    appServices.showNotification('You have been logged out.', 2000);
+    showNotification('You have been logged out.', 2000);
 }
 
 function applyCustomBackground(source) {
