@@ -70,7 +70,7 @@ const initializeDatabase = async () => {
             read BOOLEAN DEFAULT FALSE
         );
     `;
-    // NEW: Query to create the user_files table for general file storage
+    // Query to create the user_files table for general file storage
     const createUserFilesTableQuery = `
         CREATE TABLE IF NOT EXISTS user_files (
             id SERIAL PRIMARY KEY,
@@ -169,7 +169,7 @@ app.put('/api/profile/background', authenticateToken, upload.single('backgroundF
     try {
         const file = request.file;
         const userId = request.user.id;
-        const fileName = `backgrounds/${userId}-${Date.now()}-${file.originalname}`;
+        const fileName = `backgrounds/<span class="math-inline">\{userId\}\-</span>{Date.now()}-${file.originalname}`;
         const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: fileName, Body: file.buffer, ACL: 'public-read', ContentType: file.mimetype };
         const data = await s3.upload(uploadParams).promise();
         const backgroundUrl = data.Location;
@@ -230,13 +230,11 @@ app.put('/api/profiles/:username', authenticateToken, async (request, response) 
 
 // === FRIEND SYSTEM ENDPOINTS ===
 
-// POST /api/profiles/:username/friend - Add a friend
 app.post('/api/profiles/:username/friend', authenticateToken, async (request, response) => {
     try {
-        const userId = request.user.id; // The user who is adding the friend
-        const friendUsername = request.params.username; // The username of the friend to add
+        const userId = request.user.id;
+        const friendUsername = request.params.username;
 
-        // Get the ID of the user to be added as a friend
         const friendResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [friendUsername]);
         if (friendResult.rows.length === 0) {
             return response.status(404).json({ success: false, message: 'User to add as friend not found.' });
@@ -247,7 +245,6 @@ app.post('/api/profiles/:username/friend', authenticateToken, async (request, re
             return response.status(400).json({ success: false, message: 'You cannot add yourself as a friend.' });
         }
 
-        // Insert the friend relationship (user_id adds friend_id)
         await pool.query(
             "INSERT INTO friends (user_id, friend_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
             [userId, friendId]
@@ -261,11 +258,10 @@ app.post('/api/profiles/:username/friend', authenticateToken, async (request, re
     }
 });
 
-// DELETE /api/profiles/:username/friend - Remove a friend
 app.delete('/api/profiles/:username/friend', authenticateToken, async (request, response) => {
     try {
-        const userId = request.user.id; // The user who is removing the friend
-        const friendUsername = request.params.username; // The username of the friend to remove
+        const userId = request.user.id;
+        const friendUsername = request.params.username;
 
         const friendResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [friendUsername]);
         if (friendResult.rows.length === 0) {
@@ -273,7 +269,6 @@ app.delete('/api/profiles/:username/friend', authenticateToken, async (request, 
         }
         const friendId = friendResult.rows[0].id;
 
-        // Delete the friend relationship
         await pool.query(
             "DELETE FROM friends WHERE user_id = $1 AND friend_id = $2",
             [userId, friendId]
@@ -287,11 +282,10 @@ app.delete('/api/profiles/:username/friend', authenticateToken, async (request, 
     }
 });
 
-// GET /api/profiles/:username/friend-status - Check if the current user is friends with someone
 app.get('/api/profiles/:username/friend-status', authenticateToken, async (request, response) => {
     try {
-        const userId = request.user.id; // The current logged-in user
-        const checkFriendUsername = request.params.username; // The username whose friend status is being checked
+        const userId = request.user.id;
+        const checkFriendUsername = request.params.username;
 
         const checkFriendResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [checkFriendUsername]);
         if (checkFriendResult.rows.length === 0) {
@@ -314,24 +308,21 @@ app.get('/api/profiles/:username/friend-status', authenticateToken, async (reque
 
 // === Messaging Endpoints ===
 
-// POST /api/messages - Send a new message
 app.post('/api/messages', authenticateToken, async (request, response) => {
     const { recipientUsername, content } = request.body;
-    const senderId = request.user.id; // Sender ID from authenticated token
+    const senderId = request.user.id;
 
     if (!recipientUsername || !content || content.trim() === '') {
         return response.status(400).json({ success: false, message: 'Recipient username and message content are required.' });
     }
 
     try {
-        // Get recipient's ID
         const recipientResult = await pool.query("SELECT id FROM profiles WHERE username = $1", [recipientUsername]);
         if (recipientResult.rows.length === 0) {
             return response.status(404).json({ success: false, message: 'Recipient not found.' });
         }
         const recipientId = recipientResult.rows[0].id;
 
-        // Insert message into a new 'messages' table (need to create this table)
         const insertMessageQuery = `
             INSERT INTO messages (sender_id, recipient_id, content)
             VALUES ($1, $2, $3) RETURNING *;
@@ -347,7 +338,6 @@ app.post('/api/messages', authenticateToken, async (request, response) => {
     }
 });
 
-// GET /api/messages/sent - Get messages sent by the current user
 app.get('/api/messages/sent', authenticateToken, async (request, response) => {
     try {
         const userId = request.user.id;
@@ -366,7 +356,6 @@ app.get('/api/messages/sent', authenticateToken, async (request, response) => {
     }
 });
 
-// GET /api/messages/received - Get messages received by the current user
 app.get('/api/messages/received', authenticateToken, async (request, response) => {
     try {
         const userId = request.user.id;
@@ -388,7 +377,6 @@ app.get('/api/messages/received', authenticateToken, async (request, response) =
 
 // === NEW: General File Storage Endpoints ===
 
-// POST /api/files/upload - Upload any file to S3 and save metadata to DB
 app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file provided for upload.' });
@@ -398,14 +386,14 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
 
     try {
         const file = req.file;
-        const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`; // Use originalname and replace spaces
-        
+        const s3Key = `user-files/<span class="math-inline">\{userId\}/</span>{Date.now()}-${file.originalname.replace(/ /g, '_')}`; // Use originalname and replace spaces
+
         const uploadParams = {
             Bucket: process.env.S3_BUCKET_NAME,
             Key: s3Key,
             Body: file.buffer,
             ContentType: file.mimetype,
-            ACL: 'public-read' // Make file publicly readable via URL
+            // ACL: 'public-read' // REMOVED: Managed by bucket policy now
         };
 
         const data = await s3.upload(uploadParams).promise(); // Upload to S3
