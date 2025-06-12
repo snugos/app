@@ -177,7 +177,7 @@ async function handleRegister(username, password) {
     }
 }
 
-export async function handleBackgroundUpload(file) { // CORRECTED: Added 'export' here
+export async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
         localAppServices.showNotification('You must be logged in to save a custom background.', 3000);
         localAppServices.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
