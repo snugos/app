@@ -7,7 +7,7 @@ import { EffectChain } from '../EffectChain.js';
 import { SequenceManager } from './SequenceManager.js';
 import { ClipManager } from './ClipManager.js';
 
-import * as Constants from './constants.js'; // CORRECTED: Path to js/daw/constants.js
+import * as Constants from './constants.js';
 import { createEffectInstance, AVAILABLE_EFFECTS } from './effectsRegistry.js';
 import { getMasterBusInputNode } from './audio/audio.js';
 import { captureStateForUndo } from './state/projectState.js';
@@ -15,7 +15,7 @@ import { getWindowById } from './state/windowState.js';
 import { showNotification, drawWaveform } from './utils.js';
 
 
-class Track {
+export class Track { // CORRECTED: Added 'export' here
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
@@ -65,25 +65,6 @@ class Track {
         this.effects.initialize(initialData?.activeEffects);
         this.sequences.initialize(initialData?.sequences, initialData?.activeSequenceId);
         this.clips.initialize(initialData?.timelineClips);
-
-        if (this.type === 'Synth') {
-            this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
-            this.synthParams = initialData?.synthParams ? JSON.parse(JSON.stringify(initialData.synthParams)) : this.getDefaultSynthParams();
-        } else if (this.type === 'Sampler') {
-            this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
-            this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
-            this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
-        } else if (this.type === 'DrumSampler') {
-            this.drumSamplerPads = Array.from({ length: Constants.numDrumSamplerPads || 16 }, (_, i) =>
-                initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null }
-            );
-            this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
-        } else if (this.type === 'InstrumentSampler') {
-            this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || {
-                originalFileName: null, dbKey: null, rootNote: 'C4', pitchShift: 0, loop: false, loopStart: 0, loopEnd: 0,
-                envelope: { attack: 0.003, decay: 2.0, sustain: 1.0, release: 5.0 }, status: 'empty'
-            };
-        }
 
         if (this.type !== 'Audio' && this.sequences.sequences.length === 0) {
             this.sequences.createNewSequence("Sequence 1", 64, true);
@@ -251,7 +232,7 @@ class Track {
     updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity) { return this.sequences.updateNoteVelocity(sequenceId, pitchIndex, timeStep, newVelocity); }
     clearSequence(sequenceId) { return this.sequences.clearSequence(sequenceId); }
     duplicateSequence(sequenceId) { return this.sequences.duplicateSequence(sequenceId); }
-    copyNotesToClipboard(sequenceId, notesToCopy) { return this.sequences.copyNotes.toClipboard(sequenceId, notesToCopy); }
+    copyNotesToClipboard(sequenceId, notesToCopy) { return this.sequences.copyNotesToClipboard(sequenceId, notesToCopy); }
     pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) { return this.sequences.pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep); }
     recreateToneSequence() { return this.sequences.recreateToneSequence(); }
     startSequence() { return this.sequences.startSequence(); }
