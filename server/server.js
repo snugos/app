@@ -18,7 +18,8 @@ const pool = new Pool({
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION
+    region: process.env.AWS_REGION,
+    signatureVersion: 'v4'
 });
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -259,26 +260,6 @@ app.post('/api/messages', authenticateToken, async (request, response) => {
     }
 });
 
-app.get('/api/messages/sent', authenticateToken, async (request, response) => {
-    try {
-        const userId = request.user.id;
-        const messages = await pool.query("SELECT m.id, r.username as recipient_username, m.content, m.timestamp, m.read FROM messages m JOIN profiles r ON m.recipient_id = r.id WHERE m.sender_id = $1 ORDER BY m.timestamp DESC", [userId]);
-        response.json({ success: true, messages: messages.rows });
-    } catch (error) {
-        response.status(500).json({ success: false, message: 'Server error while fetching sent messages.' });
-    }
-});
-
-app.get('/api/messages/received', authenticateToken, async (request, response) => {
-    try {
-        const userId = request.user.id;
-        const messages = await pool.query("SELECT m.id, s.username as sender_username, m.content, m.timestamp, m.read FROM messages m JOIN profiles s ON m.sender_id = s.id WHERE m.recipient_id = $1 ORDER BY m.timestamp DESC", [userId]);
-        response.json({ success: true, messages: messages.rows });
-    } catch (error) {
-        response.status(500).json({ success: false, message: 'Server error while fetching received messages.' });
-    }
-});
-
 // --- File Storage Endpoints ---
 
 app.post('/api/files/upload', authenticateToken, upload.single('file'), async (req, res) => {
@@ -288,7 +269,6 @@ app.post('/api/files/upload', authenticateToken, upload.single('file'), async (r
     try {
         const file = req.file;
         const s3Key = `user-files/${userId}/${Date.now()}-${file.originalname.replace(/ /g, '_')}`;
-        // NOTE: I am removing ACL from the upload params as a potential fix for S3 issues.
         const uploadParams = { Bucket: process.env.S3_BUCKET_NAME, Key: s3Key, Body: file.buffer, ContentType: file.mimetype };
         const data = await s3.upload(uploadParams).promise();
         const insertFileQuery = `INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
@@ -370,6 +350,27 @@ app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
         res.json({ success: true, message: 'File deleted successfully.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error while deleting file.' });
+    }
+});
+
+app.get('/api/files/:fileId/share-link', authenticateToken, async (req, res) => {
+    const { fileId } = req.params;
+    const userId = req.user.id;
+    try {
+        const fileQuery = await pool.query("SELECT user_id, s3_key, is_public FROM user_files WHERE id = $1", [fileId]);
+        if (fileQuery.rows.length === 0) return res.status(404).json({ success: false, message: "File not found." });
+        
+        const file = fileQuery.rows[0];
+        if (!file.is_public && file.user_id !== userId) {
+            return res.status(403).json({ success: false, message: "You do not have permission to share this file." });
+        }
+        
+        const params = { Bucket: process.env.S3_BUCKET_NAME, Key: file.s3_key, Expires: 3600 };
+        const shareUrl = await s3.getSignedUrlPromise('getObject', params);
+        res.json({ success: true, shareUrl: shareUrl });
+    } catch (error) {
+        console.error("[Share Link] Error:", error);
+        res.status(500).json({ success: false, message: "Could not generate share link." });
     }
 });
 
