@@ -1,20 +1,24 @@
 // js/daw/ui/mixerUI.js
 
-// Removed imports as functions will be global or accessed via localAppServices
+// Import state functions directly for mixerUI.js module
+import { getTracks, getSoloedTrackId } from '../../state/trackState.js';
+import { getMasterGainValue, setMasterGainValue } from '../../state/masterState.js';
+import { getOpenWindows, getWindowById } from '../../state/windowState.js';
+
 
 let localAppServices = {};
 
-export function initializeMixerUI(appServices) { // Export re-added
+export function initializeMixerUI(appServices) {
     localAppServices = appServices;
 }
 
-export function openMixerWindow(savedState = null) { // Export re-added
+export function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
     // getOpenWindowsState is global
-    const openWindows = getOpenWindowsState();
+    const openWindows = getOpenWindows(); // Now imports from windowState.js
     if (openWindows.has(windowId) && !savedState) {
         // getWindowByIdState is global
-        getWindowByIdState(windowId).restore();
+        getWindowById(windowId).restore(); // Now imports from windowState.js
         return;
     }
 
@@ -40,7 +44,7 @@ export function openMixerWindow(savedState = null) { // Export re-added
     }
 }
 
-export function updateMixerWindow() { // Export re-added
+export function updateMixerWindow() {
     // --- DEBUGGING LOG ---
     console.log('[mixerUI.js] updateMixerWindow called.');
     const container = document.getElementById('mixerContentContainer');
@@ -50,8 +54,7 @@ export function updateMixerWindow() { // Export re-added
 }
 
 function renderMixerTracks(container) {
-    // getTracksState is global
-    const tracks = getTracksState?.() || [];
+    const tracks = getTracks(); // Now imports from trackState.js
     // --- DEBUGGING LOG ---
     console.log(`%c[mixerUI.js] renderMixerTracks called with ${tracks.length} tracks.`, 'color: #f39c12; font-weight: bold;');
 
@@ -69,12 +72,12 @@ function renderMixerTracks(container) {
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
     if (masterVolKnobPlaceholder) {
         // createKnob is global
-        const masterVolKnob = createKnob({
+        const masterVolKnob = localAppServices.createKnob({ // Use appServices.createKnob
             label: 'Master', min: 0, max: 1, step: 0.01,
             // getMasterGainValueState is global
-            initialValue: getMasterGainValueState(),
+            initialValue: getMasterGainValue(), // Now imports from masterState.js
             // setMasterGainValueState is global
-            onValueChange: (val) => setMasterGainValueState(val)
+            onValueChange: (val) => setMasterGainValue(val) // Now imports from masterState.js
         });
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
@@ -101,7 +104,7 @@ function renderMixerTracks(container) {
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
             // createKnob is global
-            const volKnob = createKnob({
+            const volKnob = localAppServices.createKnob({ // Use appServices.createKnob
                 label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
@@ -114,8 +117,7 @@ function renderMixerTracks(container) {
         if (mixerMuteBtn) {
             mixerMuteBtn.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
             // Update initial state for mute button style
-            // getSoloedTrackIdState is global
-            const soloedTrackId = getSoloedTrackIdState?.();
+            const soloedTrackId = getSoloedTrackId(); // Now imports from trackState.js
             mixerMuteBtn.classList.toggle('muted', track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id));
         }
 
