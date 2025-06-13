@@ -2,6 +2,7 @@ import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpl
 import { SnugWindow } from '../daw/SnugWindow.js'; 
 import { storeAsset, getAsset } from './profileDb.js';
 import { showNotification, showCustomModal } from './profileUtils.js';
+import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from '../state/windowState.js';
 
 
 let loggedInUser = null; 
@@ -12,32 +13,49 @@ const appServices = {};
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("[profile.js] DOMContentLoaded fired. Starting appServices initialization...");
+
     // --- CRITICAL: Populate appServices first and ensure functions are defined ---
-    appServices.addWindowToStore = addWindowToStoreState;
-    appServices.removeWindowFromStore = removeWindowFromStoreState;
-    appServices.incrementHighestZ = incrementHighestZState;
-    appServices.getHighestZ = getHighestZState;
-    appServices.setHighestZ = setHighestZState;
-    appServices.getOpenWindows = getOpenWindowsState;
-    appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu;
+    // Core utilities (from profileUtils.js or utils.js, assumed globally available)
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
+    appServices.createContextMenu = createContextMenu; // Assuming createContextMenu is globally available
 
-    // Background Manager specific appServices assignments
+    // Window State functions (imported directly from windowState.js)
+    appServices.addWindowToStore = addWindowToStore;
+    appServices.removeWindowFromStore = removeWindowFromStore;
+    appServices.incrementHighestZ = incrementHighestZ;
+    appServices.getHighestZ = getHighestZ;
+    appServices.setHighestZ = setHighestZ;
+    appServices.getOpenWindows = getOpenWindows;
+    appServices.getWindowById = getWindowById;
+    
+    // Auth related services (auth.js will implement the logic)
+    // These getters/setters allow auth.js to update loggedInUser state
     appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; 
+
+    // Background Management services (from backgroundManager.js)
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
     appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
+    // Data persistence for assets (from profileDb.js)
     appServices.storeAsset = storeAsset; 
     appServices.getAsset = getAsset;     
 
     // Initialize background manager module with the main load function
     initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
+    console.log("[profile.js] backgroundManager initialized. appServices.loadAndApplyUserBackground defined:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Now proceed with logic that might rely on appServices being fully populated
-    loggedInUser = checkLocalAuth(); 
+    // Now call checkLocalAuth (from auth.js) which will use appServices
+    // This will set `loggedInUser` via `appServices.setLoggedInUser`
+    checkLocalAuth(); 
+    console.log("[profile.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
+
+    // Call loadAndApplyUserBackground AFTER loggedInUser is set and appServices is populated
     appServices.loadAndApplyUserBackground(); 
+    console.log("[profile.js] loadAndApplyUserBackground called after auth check.");
+    
     attachDesktopEventListeners(); 
     updateClockDisplay();
     updateAuthUI(loggedInUser);
@@ -324,7 +342,7 @@ function attachDesktopEventListeners() {
     });
 
     // The customBgInput change event listener for background upload
-    customBgInput.addEventListener('change', async (e) => { // Removed `?` to make it non-optional
+    customBgInput.addEventListener('change', async (e) => { 
         console.log("[profile.js] customBgInput change event fired.");
         // Ensure that a file was selected
         if (!e.target.files || !e.target.files[0]) {
@@ -336,13 +354,20 @@ function attachDesktopEventListeners() {
             console.log("[profile.js] Calling appServices.handleBackgroundUpload.");
             await appServices.handleBackgroundUpload(file);
         } else {
-            console.error("[profile.js] appServices.handleBackgroundUpload is NOT defined!");
+            console.error("[profile.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
             appServices.showNotification("Error: Background upload function not available.", 3000);
         }
         // Clear the file input value to allow selecting the same file again if needed
         e.target.value = null; 
     });
     
+    // Start Menu background option listener
+    document.getElementById('menuChangeBackground')?.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default link behavior
+        document.getElementById('startMenu')?.classList.add('hidden'); // Hide start menu
+        customBgInput.click(); // Trigger background input
+    });
+
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
@@ -361,6 +386,7 @@ function checkLocalAuth() {
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
+        console.error("[profile.js] Error parsing token in checkLocalAuth:", e);
         localStorage.removeItem('snugos_token');
         return null;
     }
