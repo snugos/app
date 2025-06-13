@@ -1,9 +1,12 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
+// NEW: Import from backgroundManager
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+
 
 const appServices = {};
-let loggedInUser = null;
+let loggedInUser = null; // This will now be managed by appServices.getLoggedInUser()
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
@@ -22,7 +25,6 @@ function openGameWindow() {
     content.style.height = '100%';
     content.style.border = 'none';
 
-    // NOTE: The window size has been adjusted for a tighter fit around the game content.
     const options = {
         width: 500,
         height: 680,
@@ -35,10 +37,17 @@ function openGameWindow() {
 
 
 function initializeWelcomePage() {
+    // Expose appServices for use by backgroundManager and other modules
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.storeAsset = storeAsset;
     appServices.getAsset = getAsset;
+    // Provide a way for backgroundManager to get the current logged in user
+    appServices.getLoggedInUser = () => loggedInUser; 
+    // Expose background functions through appServices
+    appServices.applyCustomBackground = applyCustomBackground;
+    appServices.handleBackgroundUpload = handleBackgroundUpload;
+
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
     if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
@@ -46,6 +55,9 @@ function initializeWelcomePage() {
     if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
     if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
     if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
+
+    // Initialize background manager module
+    initializeBackgroundManager(appServices);
 
     attachEventListeners();
     updateClockDisplay();
@@ -87,8 +99,8 @@ function attachEventListeners() {
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('customBgInput')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) handleBackgroundUpload(file);
-        e.target.value = null;
+        if (file) appServices.handleBackgroundUpload(file); // Use appServices function
+        e.target.value = null; // Clear the input after file selection
     });
 }
 
@@ -112,7 +124,7 @@ function renderDesktopIcons() {
                 if (loggedInUser) {
                     window.location.href = `profile.html?user=${loggedInUser.username}`;
                 } else {
-                    showNotification('Please log in to view your profile.', 3000);
+                    appServices.showNotification('Please log in to view your profile.', 3000);
                 }
             },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
@@ -184,6 +196,7 @@ async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
         updateAuthUI(null);
+        appServices.loadAndApplyUserBackground(); // Load default if no user
         return;
     }
 
@@ -195,11 +208,7 @@ async function checkInitialAuthState() {
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
-
-        const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
-        if (backgroundBlob) {
-            applyCustomBackground(backgroundBlob);
-        }
+        appServices.loadAndApplyUserBackground(); // Load user background
 
     } catch (e) {
         console.error("Error during initial auth state check:", e);
@@ -247,7 +256,7 @@ function showLoginModal() {
             </div>
         </div>
     `;
-    const { overlay } = showCustomModal('Login or Register', modalContent, []);
+    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []); // Use appServices.showCustomModal
     overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#loginUsername').value;
@@ -274,13 +283,15 @@ async function handleLogin(username, password) {
         const data = await response.json();
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
+            // After successful login, ensure all necessary appServices are available
+            // and re-initialize auth to reload user data and background
             await checkInitialAuthState();
-            showNotification(`Welcome back, ${data.user.username}!`, 2000);
+            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
-            showNotification(`Login failed: ${data.message}`, 3000);
+            appServices.showNotification(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        showNotification('Network error.', 3000);
+        appServices.showNotification('Network error.', 3000);
         console.error("Login Error:", error);
     }
 }
@@ -294,77 +305,27 @@ async function handleRegister(username, password) {
         });
         const data = await response.json();
         if (data.success) {
-            showNotification('Registration successful! Please log in.', 2500);
+            appServices.showNotification('Registration successful! Please log in.', 2500);
         } else {
-            showNotification(`Registration failed: ${data.message}`, 3000);
+            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        showNotification('Network error.', 3000);
+        appServices.showNotification('Network error.', 3000);
         console.error("Register Error:", error);
     }
 }
 
-async function handleBackgroundUpload(file) {
-    if (!loggedInUser) {
-        showNotification('You must be logged in to save a background.', 3000);
-        applyCustomBackground(file);
-        return;
-    }
-    try {
-        await storeAsset(`background-for-user-${loggedInUser.id}`, file);
-        applyCustomBackground(file);
-        showNotification('Background saved locally!', 2000);
-    } catch (error) {
-        showNotification(`Error saving background: ${error.message}`, 3000);
-    }
-}
+// Removed handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
 
 function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
-    document.getElementById('desktop').style.backgroundImage = '';
-    const existingVideo = document.getElementById('desktop-video-bg');
-    if (existingVideo) existingVideo.remove();
-    showNotification('You have been logged out.', 2000);
+    appServices.applyCustomBackground(''); // Clear background on logout
+    appServices.showNotification('You have been logged out.', 2000);
 }
 
-function applyCustomBackground(source) {
-    const desktopEl = document.getElementById('desktop');
-    if (!desktopEl) return;
-    desktopEl.style.backgroundImage = '';
-    const existingVideo = desktopEl.querySelector('#desktop-video-bg');
-    if (existingVideo) existingVideo.remove();
-    let url, fileType;
-    if (typeof source === 'string') {
-        url = source;
-        const extension = source.split('.').pop().toLowerCase().split('?')[0];
-        fileType = ['mp4', 'webm', 'mov'].includes(extension) ? `video/${extension}` : 'image/jpeg';
-    } else if (source instanceof Blob || source instanceof File) {
-        url = URL.createObjectURL(source);
-        fileType = source.type;
-    } else { return; }
-    if (fileType.startsWith('image/')) {
-        desktopEl.style.backgroundImage = `url(${url})`;
-        desktopEl.style.backgroundSize = 'cover';
-        desktopEl.style.backgroundPosition = 'center';
-    } else if (fileType.startsWith('video/')) {
-        const videoEl = document.createElement('video');
-        videoEl.id = 'desktop-video-bg';
-        videoEl.style.position = 'absolute';
-        videoEl.style.top = '0';
-        videoEl.style.left = '0';
-        videoEl.style.width = '100%';
-        videoEl.style.height = '100%';
-        videoEl.style.objectFit = 'cover';
-        videoEl.src = url;
-        videoEl.autoplay = true;
-        videoEl.loop = true;
-        videoEl.muted = true;
-        videoEl.playsInline = true;
-        desktopEl.appendChild(videoEl);
-    }
-}
+// Removed applyCustomBackground from here, it's now in backgroundManager.js
 
 function toggleTheme() {
     const body = document.body;
@@ -397,7 +358,7 @@ function applyUserThemePreference() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
+            appServices.showNotification(`Error: ${err.message}`, 3000);
         });
     } else {
         if (document.exitFullscreen) {
