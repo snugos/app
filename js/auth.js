@@ -1,7 +1,8 @@
 // js/auth.js - Auth module for SnugOS
 
 // Corrected import path for backgroundManager.js
-import { applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
+// Only import the functions you need to expose via appServices or call directly
+import { loadAndApplyUserBackground } from './backgroundManager.js'; 
 
 let localAppServices = {};
 let loggedInUser = null; 
@@ -20,7 +21,6 @@ export function initializeAuth(appServicesFromMain) {
     localAppServices.getLoggedInUser = () => loggedInUser;
     localAppServices.setLoggedInUser = (user) => { 
         loggedInUser = user; 
-        // Optional: Trigger UI update here if needed, but `updateAuthUI` already does it.
     };
 
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
@@ -235,11 +235,13 @@ async function handleRegister(username, password) {
 
 /**
  * Handles background file uploads. This function is exposed via `appServices`.
- * It now calls the centralized `handleBackgroundUpload` from `backgroundManager.js`.
+ * It calls the centralized `handleBackgroundUpload` from `backgroundManager.js`.
+ * This function is deliberately *not* an `export function` here to prevent re-declaration issues.
+ * Other modules should call `appServices.handleBackgroundUpload` directly.
  * @param {File} file 
  */
-export function handleBackgroundUpload(file) { 
-    if (localAppServices.handleBackgroundUpload) { // Check if the service is available
+function callBackgroundUploadService(file) { // Renamed to avoid conflicts, not exported
+    if (localAppServices.handleBackgroundUpload) { 
         localAppServices.handleBackgroundUpload(file);
     } else {
         console.error("[auth.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
