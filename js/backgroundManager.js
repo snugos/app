@@ -6,9 +6,14 @@ let localAppServices = {}; // To hold references to showNotification, getLoggedI
 /**
  * Initializes the background manager with necessary app services.
  * @param {object} appServicesFromMain - The main app services object.
+ * @param {function} loadAndApplyUserBackgroundFn - The actual function to load and apply background.
  */
-export function initializeBackgroundManager(appServicesFromMain) {
+export function initializeBackgroundManager(appServicesFromMain, loadAndApplyUserBackgroundFn) {
     localAppServices = appServicesFromMain;
+    // Ensure the function is available via localAppServices if it wasn't already set
+    if (!localAppServices.loadAndApplyUserBackground) {
+        localAppServices.loadAndApplyUserBackground = loadAndApplyUserBackgroundFn;
+    }
 }
 
 /**
@@ -186,6 +191,9 @@ export async function loadAndApplyUserBackground() {
                 applyCustomBackground(data.profile.background_url);
                 // Optionally, store this URL's content locally for next time
                 // This would involve fetching the URL content as a Blob and saving it.
+            } else {
+                // If logged in but no background_url on server, ensure default is applied
+                applyCustomBackground('');
             }
         } catch (error) {
             console.error("[BackgroundManager] Could not apply global settings from server:", error);
@@ -213,17 +221,6 @@ function initializeBroadcastChannel() {
             }
         };
         console.log("[BackgroundManager] BroadcastChannel initialized for background updates.");
-    }
-}
-
-/**
- * Broadcasts a background change to other open SnugOS pages.
- * @param {string} url - The URL of the new background.
- */
-function broadcastBackgroundChange(url) {
-    if (backgroundChannel) {
-        backgroundChannel.postMessage({ type: 'background_updated', url: url });
-        console.log("[BackgroundManager] Broadcasted background update:", url);
     }
 }
 
