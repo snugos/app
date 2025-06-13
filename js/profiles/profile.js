@@ -1,6 +1,6 @@
-// NEW: Import from backgroundManager
+// CORRECTED PATH
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { SnugWindow } from '../daw/SnugWindow.js'; // Ensure SnugWindow is imported
+import { SnugWindow } from '../daw/SnugWindow.js'; 
 import { storeAsset, getAsset } from './profileDb.js';
 import { showNotification, showCustomModal } from './profileUtils.js';
 
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loggedInUser = checkLocalAuth(); 
     appServices.loadAndApplyUserBackground(); 
-    attachDesktopEventListeners(); // NEW: Call setupDesktopContextMenu here
+    attachDesktopEventListeners(); 
     updateClockDisplay();
     updateAuthUI(loggedInUser);
 
@@ -315,7 +315,7 @@ function attachDesktopEventListeners() {
     customBgInput?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0]) return;
         appServices.handleBackgroundUpload(e.target.files[0]);
-        e.target.value = null; // Clear the input after selection
+        e.target.value = null; 
     });
     
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
