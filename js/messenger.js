@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.handleBackgroundUpload = handleBackgroundUpload;
     appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
 
-    // Initialize background manager module (it will use the appServices it receives)
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // Pass loadAndApplyUserBackground reference
+    // Initialize background manager module with the main load function
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // PASSED loadAndApplyUserBackground
 
     // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth();
