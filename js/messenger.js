@@ -1,12 +1,16 @@
-import { SnugWindow } from './daw/SnugWindow.js';
+// NEW: Import from backgroundManager
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { SnugWindow } from './daw/SnugWindow.js'; // Ensure SnugWindow is imported
+
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
-let loggedInUser = null;
+let loggedInUser = null; // This will now be managed by appServices.getLoggedInUser()
 let appServices = {};
 let currentChatPartner = null;
 let messagePollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Expose appServices for use by backgroundManager and other modules
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -17,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.createContextMenu = createContextMenu;
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
+    appServices.getLoggedInUser = () => loggedInUser; // Provide a way for backgroundManager to get the current logged in user
+    // Expose background functions through appServices
+    appServices.applyCustomBackground = applyCustomBackground;
+    appServices.handleBackgroundUpload = handleBackgroundUpload;
+
+    // Initialize background manager module
+    initializeBackgroundManager(appServices);
 
     loggedInUser = checkLocalAuth();
     
@@ -27,11 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (loggedInUser) {
         openMessengerWindow();
-        loadAndApplyGlobals();
+        appServices.loadAndApplyUserBackground(); // Load user background
     } else {
         const desktop = document.getElementById('desktop');
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl">Please log in to use Messenger.</p></div>`;
+            appServices.loadAndApplyUserBackground(); // Load default/last background even if not logged in
         }
     }
 });
@@ -46,13 +58,13 @@ function attachDesktopEventListeners() {
                 label: 'Change Background',
                 action: () => document.getElementById('customBgInput').click()
             }];
-            appServices.createContextMenu(e, menuItems);
+            appServices.createContextMenu(e, menuItems, appServices); // Pass appServices
         });
     }
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        handleBackgroundUpload(e.target.files[0]);
+        if(!e.target.files || !e.target.files[0]) return; // Removed loggedInUser check here, it's in handleBackgroundUpload
+        appServices.handleBackgroundUpload(e.target.files[0]); // Use appServices function
     });
 
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -62,51 +74,9 @@ function attachDesktopEventListeners() {
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
 }
 
-async function handleBackgroundUpload(file) {
-    if (!loggedInUser) return;
-    showNotification("Uploading background...", 2000);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('path', '/backgrounds/');
-    try {
-        const token = localStorage.getItem('snugos_token');
-        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-        });
-        const uploadResult = await uploadResponse.json();
-        if (!uploadResult.success) throw new Error(uploadResult.message);
+// Removed handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
 
-        const newBgUrl = uploadResult.file.s3_url;
-        await fetch(`${SERVER_URL}/api/profile/settings`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ background_url: newBgUrl })
-        });
-        showNotification("Background updated!", 2000);
-        loadAndApplyGlobals();
-    } catch(error) {
-        showNotification(`Error: ${error.message}`, 4000);
-    }
-}
-
-async function loadAndApplyGlobals() {
-    if (!loggedInUser) return;
-    try {
-        const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}/api/profile/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.success && data.profile.background_url) {
-            document.getElementById('desktop').style.backgroundImage = `url(${data.profile.background_url})`;
-            document.getElementById('desktop').style.backgroundSize = 'cover';
-        }
-    } catch (error) {
-        console.error("Could not apply global settings:", error);
-    }
-}
+// Removed loadAndApplyGlobals, replaced by loadAndApplyUserBackground call in DOMContentLoaded
 
 async function openMessengerWindow() {
     const windowId = 'messenger';
@@ -250,7 +220,7 @@ function toggleStartMenu() {
 
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => { showNotification(`Error: ${err.message}`, 3000); });
+        document.documentElement.requestFullscreen().catch(err => { appServices.showNotification(`Error: ${err.message}`, 3000); });
     } else {
         if(document.exitFullscreen) document.exitFullscreen();
     }
@@ -305,17 +275,121 @@ function updateAuthUI(user) {
 function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
-    window.location.reload();
+    updateAuthUI(null);
+    appServices.applyCustomBackground(''); // Clear background on logout
+    window.location.reload(); // Reloads the page to reset all messenger state
 }
 
 function showLoginModal() {
-    // Full login/register form implementation
+    // Reusing the modal content from welcome.js/index.html for consistency
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
+                    <button type="submit" class="w-full">Login</button>
+                </form>
+            </div>
+            <hr class="border-gray-500">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
+                    <button type="submit" class="w-full">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
+
+    // Apply styles to inputs and buttons within the modal for consistency
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove();
+    });
+
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove();
+    });
 }
 
 async function handleLogin(username, password) {
-    // Full login logic
+    try {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            localStorage.setItem('snugos_token', data.token);
+            loggedInUser = { id: data.user.id, username: data.user.username }; // Update loggedInUser
+            updateAuthUI(loggedInUser); // Update UI based on new loggedInUser
+            appServices.loadAndApplyUserBackground(); // Load user background
+            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+        } else {
+            appServices.showNotification(`Login failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Login Error:", error);
+    }
 }
 
 async function handleRegister(username, password) {
-    // Full register logic
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            appServices.showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Register Error:", error);
+    }
 }
