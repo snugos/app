@@ -205,6 +205,12 @@ function setupDesktopContextMenu() {
 }
 
 /**
+ * Handles the upload of a custom background image.
+ * @param {File} file The image file to upload.
+ */
+// Removed handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
+
+/**
  * Fetches and renders library items (files and folders) based on current view mode and path.
  * @param {HTMLElement} container The main container element of the library window.
  */
@@ -220,7 +226,7 @@ async function fetchAndRenderLibraryItems(container) {
     const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public';
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`<span class="math-inline">\{SERVER\_URL\}</span>{endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
+        const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -279,8 +285,8 @@ function renderFileItem(item, isParentFolder = false) {
 
     // Set inner HTML for the item
     itemDiv.innerHTML = `
-        <div class="relative"><span class="math-inline">\{iconHtml\}</div\>
-<p class\="text\-xs mt\-1 w\-full break\-words truncate" title\="</span>{isParentFolder ? '..' : item.file_name}">${isParentFolder ? '..' : item.file_name}</p>
+        <div class="relative">${iconHtml}</div>
+        <p class="text-xs mt-1 w-full break-words truncate" title="${isParentFolder ? '..' : item.file_name}">${isParentFolder ? '..' : item.file_name}</p>
         ${(currentViewMode === 'global' && item.owner_username) ? `<p class="text-xs opacity-60 truncate">by ${item.owner_username}</p>` : ''}
     `;
 
@@ -357,11 +363,11 @@ function openFileViewerWindow(item) {
     const fileType = item.mime_type || '';
     // Generate content based on file type
     if (fileType.startsWith('image/')) {
-        content = `<img src="<span class="math-inline">\{item\.s3\_url\}" alt\="</span>{item.file_name}" class="w-full h-full object-contain">`;
+        content = `<img src="${item.s3_url}" alt="${item.file_name}" class="w-full h-full object-contain">`;
     } else if (fileType.startsWith('video/')) {
         content = `<video src="${item.s3_url}" controls autoplay class="w-full h-full bg-black"></video>`;
     } else if (fileType.startsWith('audio/')) {
-        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold"><span class="math-inline">\{item\.file\_name\}</p\><audio src\="</span>{item.s3_url}" controls autoplay></audio></div>`;
+        content = `<div class="p-8 flex flex-col items-center justify-center h-full"><p class="mb-4 font-bold">${item.file_name}</p><audio src="${item.s3_url}" controls autoplay></audio></div>`;
     } else {
         content = `<div class="p-8 text-center"><p>Cannot preview this file type.</p><a href="${item.s3_url}" target="_blank" class="text-blue-400 hover:underline">Download file</a></div>`;
     }
@@ -377,7 +383,7 @@ async function handleShareFile(item) {
     appServices.showNotification("Generating secure link...", 1500); // Use appServices
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`<span class="math-inline">\{SERVER\_URL\}/api/files/</span>{item.id}/share-link`, {
+        const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
@@ -390,4 +396,385 @@ async function handleShareFile(item) {
             appServices.showNotification("Failed to copy link to clipboard. Please copy manually from console.", 4000);
             console.log("Share URL:", result.shareUrl);
         });
+    } catch (error) {
+        appServices.showNotification(`Could not generate link: ${error.message}`, 4000); // Use appServices
     }
+}
+
+/**
+ * Shows a confirmation modal for changing a file's public/private status.
+ * @param {Object} item The file object to modify.
+ */
+function showShareModal(item) {
+    const newStatus = !item.is_public;
+    const actionText = newStatus ? "publicly available" : "private";
+    const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
+    appServices.showCustomModal('Confirm Action', modalContent, [ 
+        { label: 'Cancel' },
+        { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
+    ]);
+}
+
+/**
+ * Toggles the public/private status of a file.
+ * @param {string} fileId The ID of the file to modify.
+ * @param {boolean} newStatus The new public status (true for public, false for private).
+ */
+async function handleToggleFilePublic(fileId, newStatus) {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${fileId}/toggle-public`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ is_public: newStatus })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        appServices.showNotification('File status updated!', 2000); 
+        // Refresh the library window to reflect changes
+        const libWindow = appServices.getWindowById('library');
+        if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+    } catch (error) {
+        appServices.showNotification(`Error: ${error.message}`, 4000); 
+    }
+}
+
+/**
+ * Shows a confirmation modal before deleting a file.
+ * @param {Object} item The file object to delete.
+ */
+function showDeleteModal(item) {
+    const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
+    appServices.showCustomModal('Confirm Deletion', modalContent, [ 
+        { label: 'Cancel' },
+        { label: 'Delete', action: () => handleDeleteFile(item.id) }
+    ]);
+}
+
+/**
+ * Deletes a file from the server and refreshes the library.
+ * @param {string} fileId The ID of the file to delete.
+ */
+async function handleDeleteFile(fileId) {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${fileId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        appServices.showNotification('File deleted!', 2000); 
+        // Refresh the library window to reflect changes
+        const libWindow = appServices.getWindowById('library');
+        if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+    } catch (error) {
+        appServices.showNotification(`Error: ${error.message}`, 4000); 
+    }
+}
+
+/**
+ * Handles the upload of multiple files to the current path.
+ * @param {FileList} files The files to upload.
+ */
+async function handleFileUpload(files) {
+    if (!loggedInUser || files.length === 0) return;
+    appServices.showNotification(`Uploading ${files.length} file(s)...`, 3000); 
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', currentPath.join('/')); // Upload to the current path
+        try {
+            const token = localStorage.getItem('snugos_token');
+            const response = await fetch(`${SERVER_URL}/api/files/upload`, { 
+                method: 'POST', 
+                headers: { 'Authorization': `Bearer ${token}` }, 
+                body: formData 
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+        } catch (error) {
+            appServices.showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000); 
+        }
+    }
+    // Refresh the library window after all uploads
+    const libWindow = appServices.getWindowById('library');
+    if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+}
+
+/**
+ * Prompts the user for a new folder name and creates it.
+ */
+function createFolder() {
+    if (!loggedInUser) return;
+    appServices.showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [ 
+        { label: 'Cancel' },
+        { label: 'Create', action: async ()=>{
+            const folderName = document.getElementById('folderNameInput').value;
+            if (!folderName) return;
+            try {
+                const token = localStorage.getItem('snugos_token');
+                const response = await fetch(`${SERVER_URL}/api/folders`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify({ name: folderName, path: currentPath.join('/') }) // Create folder at current path
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                appServices.showNotification(`Folder '${folderName}' created!`, 2000); 
+                // Refresh the library window after folder creation
+                const libWindow = appServices.getWindowById('library');
+                if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+            } catch (error) {
+                appServices.showNotification(`Error: ${error.message}`, 5000); 
+            }
+        }}
+    ]);
+}
+
+/**
+ * Updates the clock display in the taskbar every minute.
+ */
+function updateClockDisplay() {
+    const clockDisplay = document.getElementById('taskbarClockDisplay');
+    if (clockDisplay) {
+        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setTimeout(updateClockDisplay, 60000); // Update every minute
+}
+
+/**
+ * Toggles the visibility of the start menu.
+ */
+function toggleStartMenu() {
+    document.getElementById('startMenu')?.classList.toggle('hidden');
+}
+
+/**
+ * Toggles full-screen mode for the document.
+ */
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            appServices.showNotification(`Error: ${err.message}`, 3000); 
+        });
+    } else {
+        if(document.exitFullscreen) document.exitFullscreen();
+    }
+}
+
+/**
+ * Checks for a valid authentication token in local storage and returns user info if valid.
+ * @returns {Object|null} The logged-in user's ID and username, or null if no valid token.
+ */
+function checkLocalAuth() {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        if (!token) return null;
+        // Decode JWT payload
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        // Check token expiration
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('snugos_token'); // Remove expired token
+            return null;
+        }
+        return { id: payload.id, username: payload.username };
+    } catch (e) {
+        localStorage.removeItem('snugos_token'); // Clear token on error
+        return null;
+    }
+}
+
+/**
+ * Handles user logout: clears token, updates UI, and reloads the page.
+ */
+function handleLogout() {
+    localStorage.removeItem('snugos_token');
+    loggedInUser = null;
+    updateAuthUI(null); // Update UI to logged-out state
+    appServices.applyCustomBackground(''); // Clear background on logout
+    appServices.showNotification('You have been logged out.', 2000); // Use appServices
+    window.location.reload(); // Reload page to reset state
+}
+
+/**
+ * Updates the authentication-related UI elements (login/logout buttons, welcome message).
+ * @param {Object|null} user The logged-in user object, or null if logged out.
+ */
+function updateAuthUI(user) {
+    const userAuthContainer = document.getElementById('userAuthContainer');
+    const menuLogin = document.getElementById('menuLogin');
+    const menuLogout = document.getElementById('menuLogout');
+
+    if (user && userAuthContainer) {
+        userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span> <button id="logoutBtnTop" class="px-3 py-1 border rounded">Logout</button>`;
+        userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('click', handleLogout);
+        if (menuLogin) menuLogin.style.display = 'none';
+        if (menuLogout) menuLogout.style.display = 'block';
+    } else if (userAuthContainer) {
+        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
+        userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
+        if (menuLogin) menuLogin.style.display = 'block';
+        if (menuLogout) menuLogout.style.display = 'none';
+    }
+}
+
+/**
+ * Applies the user's saved theme preference (light/dark).
+ */
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light'); // Default to system preference
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+    }
+}
+
+/**
+ * Toggles between light and dark themes and saves the preference.
+ */
+function toggleTheme() {
+    const body = document.body;
+    const isLightTheme = body.classList.contains('theme-light');
+    if (isLightTheme) {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    } else {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    }
+}
+
+/**
+ * Shows the login/registration modal.
+ */
+function showLoginModal() {
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
+                    <button type="submit" class="w-full">Login</button>
+                </form>
+            </div>
+            <hr class="border-gray-500">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
+                    <button type="submit" class="w-full">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
+
+    // Apply styles to inputs and buttons within the modal for consistency
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove();
+    });
+
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove();
+    });
+}
+
+/**
+ * Handles user login.
+ * @param {string} username 
+ * @param {string} password 
+ */
+async function handleLogin(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            localStorage.setItem('snugos_token', data.token);
+            loggedInUser = { id: data.user.id, username: data.user.username };
+            updateAuthUI(loggedInUser);
+            appServices.loadAndApplyUserBackground(); 
+            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+        } else {
+            appServices.showNotification(`Login failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Login Error:", error);
+    }
+}
+
+/**
+ * Handles user registration.
+ * @param {string} username 
+ * @param {string} password 
+ */
+async function handleRegister(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            appServices.showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Register Error:", error);
+    }
+}
