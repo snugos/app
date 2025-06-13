@@ -1,4 +1,4 @@
-// js/daw/utils.js - Utility Functions Module
+// js/utils.js - Utility Functions Module
 
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
@@ -76,7 +76,8 @@ export function showCustomModal(title, contentHTML, buttonsConfig = []) {
     return { overlay, contentDiv };
 }
 
-export function createContextMenu(event, menuItems, appServices) {
+// THIS IS THE FUNCTION THAT MUST BE EXPORTED
+export function createContextMenu(event, menuItems, appServices) { // appServices parameter is crucial for context
     // Remove any existing context menus
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
