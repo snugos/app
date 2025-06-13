@@ -10,6 +10,7 @@ let currentChatPartner = null;
 let messagePollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- CRITICAL: Populate appServices first and ensure functions are defined ---
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -18,14 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
     appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
-    appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.showNotification = showNotification; // Assuming showNotification is globally available or imported
+    appServices.showCustomModal = showCustomModal;   // Assuming showCustomModal is globally available or imported
+    
+    // Background Manager specific appServices assignments
+    appServices.getLoggedInUser = () => loggedInUser; // Pass a getter for loggedInUser
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
 
-    initializeBackgroundManager(appServices);
+    // Initialize background manager module (it will use the appServices it receives)
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // Pass loadAndApplyUserBackground reference
 
+    // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth();
     
     attachDesktopEventListeners();
@@ -61,7 +67,6 @@ function attachDesktopEventListeners() {
         });
     }
 
-    // Central listener for the hidden file input
     customBgInput?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0]) return; 
         appServices.handleBackgroundUpload(e.target.files[0]); 
@@ -343,48 +348,4 @@ function showLoginModal() {
         await handleRegister(username, password);
         overlay.remove();
     });
-}
-
-async function handleLogin(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            localStorage.setItem('snugos_token', data.token);
-            loggedInUser = { id: data.user.id, username: data.user.username }; 
-            updateAuthUI(loggedInUser); 
-            appServices.loadAndApplyUserBackground(); 
-            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
-        } else {
-            appServices.showNotification(`Login failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        appServices.showNotification('Network error. Could not connect to server.', 3000);
-        console.error("Login Error:", error);
-    }
-}
-
-async function handleRegister(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            appServices.showNotification('Registration successful! Please log in.', 2500);
-        } else {
-            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        appServices.showNotification('Network error. Could not connect to server.', 3000);
-        console.error("Register Error:", error);
-    }
 }
