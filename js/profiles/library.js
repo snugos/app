@@ -1,8 +1,11 @@
-import { SnugWindow } from '../daw/SnugWindow.js';
+// NEW: Import from backgroundManager
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { SnugWindow } from '../daw/SnugWindow.js'; // Ensure SnugWindow is imported
+
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-let loggedInUser = null;
+let loggedInUser = null; // This will now be managed by appServices.getLoggedInUser()
 let currentPath = ['/'];
 let currentViewMode = 'my-files';
 let appServices = {};
@@ -32,6 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.createContextMenu = createContextMenu; // Global context menu function
     appServices.showNotification = showNotification;   // Global notification function
     appServices.showCustomModal = showCustomModal;     // Global custom modal function
+    appServices.getLoggedInUser = () => loggedInUser; // Provide a way for backgroundManager to get the current logged in user
+    // Expose background functions through appServices
+    appServices.applyCustomBackground = applyCustomBackground;
+    appServices.handleBackgroundUpload = handleBackgroundUpload;
+
+    // Initialize background manager module
+    initializeBackgroundManager(appServices);
 
     // Check for existing local authentication token
     loggedInUser = checkLocalAuth();
@@ -57,36 +67,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Open the library window if a user is logged in, otherwise show a login prompt
     if (loggedInUser) {
         openLibraryWindow();
-        loadAndApplyGlobals(); // Load user-specific global settings like background
+        appServices.loadAndApplyUserBackground(); // Load user-specific global settings like background
     } else {
-        showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
+        appServices.showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
+        appServices.loadAndApplyUserBackground(); // Load default/last background even if not logged in
     }
 });
 
 /**
  * Loads and applies global settings for the logged-in user, such as custom background.
  */
-async function loadAndApplyGlobals() {
-    if (!loggedInUser) return; // Only proceed if a user is logged in
-    try {
-        const token = localStorage.getItem('snugos_token'); // Retrieve authentication token
-        const response = await fetch(`${SERVER_URL}/api/profile/me`, {
-            headers: { 'Authorization': `Bearer ${token}` } // Authorize the request
-        });
-        const data = await response.json();
-        if (data.success && data.profile.background_url) {
-            const desktop = document.getElementById('desktop');
-            if(desktop) {
-                // Apply background image if available
-                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
-                desktop.style.backgroundSize = 'cover';
-                desktop.style.backgroundPosition = 'center';
-            }
-        }
-    } catch (error) {
-        console.error("Could not apply global settings:", error);
-    }
-}
+// Removed loadAndApplyGlobals, replaced by loadAndApplyUserBackground call in DOMContentLoaded
 
 /**
  * Opens the main Library window or focuses it if already open.
@@ -122,10 +113,10 @@ function openLibraryWindow() {
     const desktopEl = document.getElementById('desktop');
     // Calculate optimal window size and position
     const options = { 
-        width: Math.max(800, desktopEl.offsetWidth * 0.7), 
-        height: Math.max(600, desktopEl.offsetHeight * 0.8), 
-        x: desktopEl.offsetWidth * 0.15, 
-        y: desktopEl.offsetHeight * 0.05 
+        width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40), 
+        height: Math.min(600, (desktopEl?.offsetHeight || 600) - 40), 
+        x: (desktopEl?.offsetWidth || 0) * 0.15, 
+        y: (desktopEl?.offsetHeight || 0) * 0.05 
     };
     // Create a new SnugWindow instance for the library
     const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
@@ -196,8 +187,8 @@ function attachDesktopEventListeners() {
 
     // Event listener for custom background upload
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        handleBackgroundUpload(e.target.files[0]);
+        if(!e.target.files || !e.target.files[0]) return; // Removed loggedInUser check
+        appServices.handleBackgroundUpload(e.target.files[0]); // Use appServices function
     });
 }
 
@@ -217,7 +208,7 @@ function setupDesktopContextMenu() {
             { type: 'separator' }, // Separator line in the menu
             { label: 'Change Background', action: () => document.getElementById('customBgInput').click() }
         ];
-        appServices.createContextMenu(e, menuItems); // Use global context menu function
+        appServices.createContextMenu(e, menuItems, appServices); // Use global context menu function
     });
 }
 
@@ -225,38 +216,11 @@ function setupDesktopContextMenu() {
  * Handles the upload of a custom background image.
  * @param {File} file The image file to upload.
  */
-async function handleBackgroundUpload(file) {
-    if (!loggedInUser) return;
-    showNotification("Uploading background...", 2000);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('path', '/backgrounds/'); // Specify upload path for backgrounds
-    try {
-        const token = localStorage.getItem('snugos_token');
-        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-        });
-        const uploadResult = await uploadResponse.json();
-        if (!uploadResult.success) throw new Error(uploadResult.message);
-        const newBgUrl = uploadResult.file.s3_url;
-        // Update user's profile with the new background URL
-        await fetch(`${SERVER_URL}/api/profile/settings`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ background_url: newBgUrl })
-        });
-        showNotification("Background updated!", 2000);
-        loadAndApplyGlobals(); // Re-apply global settings to reflect new background
-    } catch(error) {
-        showNotification(`Error: ${error.message}`, 4000);
-    }
-}
+// Removed handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
 
 /**
  * Fetches and renders library items (files and folders) based on current view mode and path.
- * @param {HTMLElement} container The container where files will be rendered.
+ * @param {HTMLElement} container The main container element of the library window.
  */
 async function fetchAndRenderLibraryItems(container) {
     const fileViewArea = container.querySelector('#file-view-area');
@@ -424,7 +388,7 @@ function openFileViewerWindow(item) {
  * @param {Object} item The file object to share.
  */
 async function handleShareFile(item) {
-    showNotification("Generating secure link...", 1500);
+    appServices.showNotification("Generating secure link...", 1500); // Use appServices
     try {
         const token = localStorage.getItem('snugos_token');
         const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
@@ -433,10 +397,15 @@ async function handleShareFile(item) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         // Copy the generated share URL to clipboard
-        document.execCommand('copy', false, result.shareUrl); // Using execCommand for broader compatibility within iframes
-        showNotification("Sharable link copied! It expires in 1 hour.", 4000);
+        navigator.clipboard.writeText(result.shareUrl).then(() => { // Using modern clipboard API
+            appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000); // Use appServices
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            appServices.showNotification("Failed to copy link to clipboard. Please copy manually from console.", 4000);
+            console.log("Share URL:", result.shareUrl);
+        });
     } catch (error) {
-        showNotification(`Could not generate link: ${error.message}`, 4000);
+        appServices.showNotification(`Could not generate link: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -448,7 +417,7 @@ function showShareModal(item) {
     const newStatus = !item.is_public;
     const actionText = newStatus ? "publicly available" : "private";
     const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
-    appServices.showCustomModal('Confirm Action', modalContent, [
+    appServices.showCustomModal('Confirm Action', modalContent, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
     ]);
@@ -469,12 +438,12 @@ async function handleToggleFilePublic(fileId, newStatus) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification('File status updated!', 2000);
+        appServices.showNotification('File status updated!', 2000); // Use appServices
         // Refresh the library window to reflect changes
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -484,7 +453,7 @@ async function handleToggleFilePublic(fileId, newStatus) {
  */
 function showDeleteModal(item) {
     const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
-    appServices.showCustomModal('Confirm Deletion', modalContent, [
+    appServices.showCustomModal('Confirm Deletion', modalContent, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Delete', action: () => handleDeleteFile(item.id) }
     ]);
@@ -503,12 +472,12 @@ async function handleDeleteFile(fileId) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification('File deleted!', 2000);
+        appServices.showNotification('File deleted!', 2000); // Use appServices
         // Refresh the library window to reflect changes
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -518,7 +487,7 @@ async function handleDeleteFile(fileId) {
  */
 async function handleFileUpload(files) {
     if (!loggedInUser || files.length === 0) return;
-    showNotification(`Uploading ${files.length} file(s)...`, 3000);
+    appServices.showNotification(`Uploading ${files.length} file(s)...`, 3000); // Use appServices
     for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
@@ -533,7 +502,7 @@ async function handleFileUpload(files) {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message);
         } catch (error) {
-            showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000);
+            appServices.showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000); // Use appServices
         }
     }
     // Refresh the library window after all uploads
@@ -546,7 +515,7 @@ async function handleFileUpload(files) {
  */
 function createFolder() {
     if (!loggedInUser) return;
-    appServices.showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
+    appServices.showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Create', action: async ()=>{
             const folderName = document.getElementById('folderNameInput').value;
@@ -560,12 +529,12 @@ function createFolder() {
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message);
-                showNotification(`Folder '${folderName}' created!`, 2000);
+                appServices.showNotification(`Folder '${folderName}' created!`, 2000); // Use appServices
                 // Refresh the library window after folder creation
                 const libWindow = appServices.getWindowById('library');
                 if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
             } catch (error) {
-                showNotification(`Error: ${error.message}`, 5000);
+                appServices.showNotification(`Error: ${error.message}`, 5000); // Use appServices
             }
         }}
     ]);
@@ -595,7 +564,7 @@ function toggleStartMenu() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
+            appServices.showNotification(`Error: ${err.message}`, 3000); // Use appServices
         });
     } else {
         if(document.exitFullscreen) document.exitFullscreen();
@@ -631,7 +600,8 @@ function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null); // Update UI to logged-out state
-    showNotification('You have been logged out.', 2000);
+    appServices.applyCustomBackground(''); // Clear background on logout
+    appServices.showNotification('You have been logged out.', 2000); // Use appServices
     window.location.reload(); // Reload page to reset state
 }
 
@@ -695,6 +665,115 @@ function toggleTheme() {
  * Shows a placeholder modal for login/registration functionality.
  */
 function showLoginModal() {
-    appServices.showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
+    // Reusing the modal content from welcome.js/index.html for consistency
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
+                    <button type="submit" class="w-full">Login</button>
+                </form>
+            </div>
+            <hr class="border-gray-500">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
+                    <button type="submit" class="w-full">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
+
+    // Apply styles to inputs and buttons within the modal for consistency
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove();
+    });
+
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove();
+    });
 }
 
+async function handleLogin(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            localStorage.setItem('snugos_token', data.token);
+            loggedInUser = { id: data.user.id, username: data.user.username }; // Update loggedInUser
+            updateAuthUI(loggedInUser); // Update UI based on new loggedInUser
+            appServices.loadAndApplyUserBackground(); // Load user background
+            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+        } else {
+            appServices.showNotification(`Login failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Login Error:", error);
+    }
+}
+
+async function handleRegister(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            appServices.showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+        console.error("Register Error:", error);
+    }
+}
