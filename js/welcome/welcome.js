@@ -1,6 +1,7 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
+// CORRECTED PATH
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 
 
@@ -36,6 +37,7 @@ function openGameWindow() {
 
 
 function initializeWelcomePage() {
+    // --- IMPORTANT: Populate appServices BEFORE calling functions that use them ---
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.storeAsset = storeAsset;
@@ -43,6 +45,7 @@ function initializeWelcomePage() {
     appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
 
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
@@ -55,11 +58,10 @@ function initializeWelcomePage() {
     initializeBackgroundManager(appServices);
 
     attachEventListeners();
-    // NEW: Attach desktop context menu listener here
     setupDesktopContextMenu(); 
     updateClockDisplay();
-    checkInitialAuthState(); // This will call loadAndApplyUserBackground
-    applyUserThemePreference(); // This will call applyUserThemePreference
+    checkInitialAuthState();
+    applyUserThemePreference(); 
     renderDesktopIcons();
     initAudioOnFirstGesture();
 }
@@ -94,43 +96,33 @@ function attachEventListeners() {
         handleLogout();
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    // REMOVED: This listener is now handled by the generic customBgInput listener below
-    // document.getElementById('customBgInput')?.addEventListener('change', (e) => {
-    //     const file = e.target.files[0];
-    //     if (file) appServices.handleBackgroundUpload(file); 
-    //     e.target.value = null; 
-    // });
 }
 
-// NEW: Function to set up desktop context menu
 function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
-    const customBgInput = document.getElementById('customBgInput'); // Get the input element
+    const customBgInput = document.getElementById('customBgInput'); 
 
     if (!desktop || !customBgInput) return;
 
     desktop.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        // Prevent showing context menu if clicking inside a SnugWindow
         if (e.target.closest('.window')) return; 
 
         const menuItems = [
             {
                 label: 'Change Background',
-                action: () => customBgInput.click() // Trigger the file input
+                action: () => customBgInput.click() 
             }
-            // Add other desktop context menu items here if needed
         ];
         appServices.createContextMenu(e, menuItems, appServices);
     });
 
-    // Central listener for the hidden file input
     customBgInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            appServices.handleBackgroundUpload(file); // Use the centralized handler
+            appServices.handleBackgroundUpload(file); 
         }
-        e.target.value = null; // Clear the input after file selection
+        e.target.value = null; 
     });
 }
 
@@ -344,17 +336,13 @@ async function handleRegister(username, password) {
     }
 }
 
-// REMOVED handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
-
 function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
-    appServices.applyCustomBackground(''); // Clear background on logout
+    appServices.applyCustomBackground(''); 
     appServices.showNotification('You have been logged out.', 2000);
 }
-
-// REMOVED applyCustomBackground from here, it's now in backgroundManager.js
 
 function toggleTheme() {
     const body = document.body;
