@@ -24,6 +24,7 @@ function initAudioOnFirstGesture() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- CRITICAL: Populate appServices first and ensure functions are defined ---
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -34,12 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.createContextMenu = createContextMenu; 
     appServices.showNotification = showNotification;   
     appServices.showCustomModal = showCustomModal;     
+    
+    // Background Manager specific appServices assignments
     appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
 
-    initializeBackgroundManager(appServices);
+    // Initialize background manager module with the main load function
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // PASSED loadAndApplyUserBackground
 
+    // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth();
     
     attachDesktopEventListeners();
