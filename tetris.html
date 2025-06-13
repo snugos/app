@@ -36,7 +36,7 @@
         }
 
         /* --- Game Layout --- */
-        .game-container {
+        .game-wrapper {
             display: flex;
             gap: 2rem;
             align-items: flex-start;
@@ -45,6 +45,8 @@
             padding: 1.5rem;
             background-color: #a7a899;
             box-shadow: inset 0 0 0 4px #8f907e;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         #game-board {
@@ -175,36 +177,11 @@
             font-size: 2rem;
         }
         
-        /* Responsive styles */
-        @media (max-width: 850px) {
-            body { padding: 0.5rem; }
-            .game-container {
-                flex-direction: column;
-                align-items: center;
-                border: none;
-                padding: 0;
-                background-color: transparent;
-                box-shadow: none;
-                gap: 1rem;
-            }
-            .sidebar {
-                width: 100%;
-                max-width: 300px;
-                flex-direction: row;
-                justify-content: space-around;
-                flex-wrap: wrap;
-                order: 1; 
-            }
-             .left-sidebar { order: 2; }
-             #game-board { order: 0; }
-            .panel { flex-grow: 1; }
-        }
-
     </style>
 </head>
 <body>
 
-    <div class="game-container">
+    <div class="game-wrapper">
         <div class="sidebar left-sidebar">
             <div class="panel">
                 <div class="panel-title">CONTROLS</div>
@@ -321,22 +298,23 @@
         };
         
         function resizeGame() {
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
-            const bodyPadding = 32;
-
-            // Calculate the maximum block size that fits the height and width of the viewport
-            const blockSizeH = (viewportHeight - bodyPadding) / ROWS;
-            const blockSizeW = (viewportWidth - bodyPadding) / COLS;
-
-            // Choose the smaller of the two to maintain the aspect ratio and ensure it fits
-            BLOCK_SIZE = Math.floor(Math.min(blockSizeW, blockSizeH));
+            const padding = 32;
+            const availableHeight = window.innerHeight - padding;
+            const availableWidth = window.innerWidth - padding;
+            
+            // Determine block size based on aspect ratio of the viewport
+            // We add extra columns to the calculation to account for the sidebars
+            const blockSizeByHeight = availableHeight / ROWS;
+            const blockSizeByWidth = availableWidth / (COLS + 15); // Add ~15 cols for sidebars and gaps
+            
+            BLOCK_SIZE = Math.floor(Math.min(blockSizeByHeight, blockSizeByWidth));
 
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
+
             nextCanvas.width = 4 * BLOCK_SIZE;
             nextCanvas.height = 4 * BLOCK_SIZE;
-
+            
             if (!isPaused) draw();
         }
         
