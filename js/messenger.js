@@ -2,19 +2,21 @@
 
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { SnugWindow } from './daw/SnugWindow.js'; 
-// Assuming these are globally available or properly imported elsewhere for their base functions
-// import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; 
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
-let loggedInUser = null; // This will be set by auth.js via appServices
+let loggedInUser = null; 
 let appServices = {};
 let currentChatPartner = null;
 let messagePollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("[messenger.js] DOMContentLoaded fired. Starting appServices initialization...");
+
     // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
     // Ensure core utilities are available through appServices
+    // Assuming showNotification, showCustomModal, createContextMenu are globally available
+    // or loaded via a script tag before this module, as per HTML structure.
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
     appServices.createContextMenu = createContextMenu;
@@ -29,14 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getWindowById = getWindowByIdState;
     
     // Auth related services (auth.js will implement the logic)
-    appServices.getLoggedInUser = () => loggedInUser; // Expose local loggedInUser state
-    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; // Expose setter for auth.js
+    // These getters/setters allow auth.js to update loggedInUser state
+    appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; 
 
     // Background Management services (from backgroundManager.js)
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
     appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
-    // Assuming storeAsset and getAsset are globally available or exposed via other core modules
+    // Assuming storeAsset and getAsset are globally available from db.js
     // appServices.storeAsset = storeAsset; 
     // appServices.getAsset = getAsset; 
 
@@ -44,18 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
     console.log("[messenger.js] appServices initialized for background:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Now call checkLocalAuth (from global scope) which will use appServices
-    loggedInUser = checkLocalAuth(); // This will use appServices.setLoggedInUser
-    console.log("[messenger.js] checkLocalAuth completed. loggedInUser:", loggedInUser);
+    // Now call checkLocalAuth (from global scope via auth.js) which will use appServices
+    // This will set `loggedInUser` via `appServices.setLoggedInUser`
+    checkLocalAuth(); 
+    console.log("[messenger.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
 
     // Call loadAndApplyUserBackground AFTER loggedInUser is set and appServices is populated
+    // This is also triggered inside checkLocalAuth, but calling it here ensures it runs
+    // after all appServices setup if checkLocalAuth finishes synchronously (which it usually does).
+    // If checkLocalAuth already called it, this will just re-apply the same background.
     appServices.loadAndApplyUserBackground(); 
     console.log("[messenger.js] loadAndApplyUserBackground called after auth check.");
     
     attachDesktopEventListeners();
     applyUserThemePreference();
     updateClockDisplay();
-    updateAuthUI(loggedInUser);
+    updateAuthUI(loggedInUser); // Update UI based on initial loggedInUser status
     
     if (loggedInUser) {
         openMessengerWindow();
@@ -101,10 +108,17 @@ function attachDesktopEventListeners() {
             console.log("[messenger.js] Calling appServices.handleBackgroundUpload.");
             await appServices.handleBackgroundUpload(file); 
         } else {
-            console.error("[messenger.js] appServices.handleBackgroundUpload is NOT defined!");
+            console.error("[messenger.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
             appServices.showNotification("Error: Background upload function not available.", 3000);
         }
         e.target.value = null; // Clear the file input value to allow selecting the same file again if needed
+    });
+
+    // Start Menu background option listener
+    document.getElementById('menuChangeBackground')?.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default link behavior
+        document.getElementById('startMenu')?.classList.add('hidden'); // Hide start menu
+        customBgInput.click(); // Trigger background input
     });
 
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -116,7 +130,10 @@ function attachDesktopEventListeners() {
 
 async function openMessengerWindow() {
     const windowId = 'messenger';
-    if (appServices.getWindowById(windowId)) return;
+    if (appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
+        return;
+    }
 
     const contentHTML = `
         <div class="flex h-full text-sm">
@@ -135,7 +152,7 @@ async function openMessengerWindow() {
     `;
     const desktopEl = document.getElementById('desktop');
     const options = { width: 700, height: 500, x: 150, y: 50 };
-    const messengerWindow = new SnugWindow(windowId, 'Messenger', contentHTML, options, appServices);
+    const messengerWindow = new SnugWindow(windowId, 'SnugOS Messenger', contentHTML, options, appServices);
     
     await populateFriendList(messengerWindow.element);
 }
