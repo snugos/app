@@ -1,7 +1,7 @@
 // js/auth.js - Auth module for SnugOS
 
 // Corrected import path for backgroundManager.js
-import { applyCustomBackground, handleBackgroundUpload as handleBackgroundUploadService, loadAndApplyUserBackground } from './backgroundManager.js';
+import { applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
 
 let localAppServices = {};
 let loggedInUser = null; 
@@ -20,6 +20,7 @@ export function initializeAuth(appServicesFromMain) {
     localAppServices.getLoggedInUser = () => loggedInUser;
     localAppServices.setLoggedInUser = (user) => { 
         loggedInUser = user; 
+        // Optional: Trigger UI update here if needed, but `updateAuthUI` already does it.
     };
 
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
@@ -238,7 +239,7 @@ async function handleRegister(username, password) {
  * @param {File} file 
  */
 export function handleBackgroundUpload(file) { 
-    if (localAppServices.handleBackgroundUpload) { 
+    if (localAppServices.handleBackgroundUpload) { // Check if the service is available
         localAppServices.handleBackgroundUpload(file);
     } else {
         console.error("[auth.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
@@ -257,7 +258,7 @@ export function handleLogout() {
 
     updateAuthUI(null); // Update UI
     
-    if (localAppServices.applyCustomBackground) { 
+    if (localAppServices.applyCustomBackground) { // Check service availability
         localAppServices.applyCustomBackground(''); // Clear background
     } else {
         console.error("[auth.js] CRITICAL: appServices.applyCustomBackground is NOT defined during logout!");
