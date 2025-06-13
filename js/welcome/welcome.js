@@ -1,8 +1,7 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
-// CORRECTED PATH
-import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js'; // Corrected import path
 
 
 const appServices = {};
@@ -45,7 +44,7 @@ function initializeWelcomePage() {
     appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Make sure this is set early
 
     if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
     if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
@@ -55,12 +54,13 @@ function initializeWelcomePage() {
     if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
     if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
 
-    initializeBackgroundManager(appServices);
+    // Initialize background manager module with the main load function
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // Pass loadAndApplyUserBackground
 
     attachEventListeners();
     setupDesktopContextMenu(); 
     updateClockDisplay();
-    checkInitialAuthState();
+    checkInitialAuthState(); 
     applyUserThemePreference(); 
     renderDesktopIcons();
     initAudioOnFirstGesture();
