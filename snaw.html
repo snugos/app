@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnAW (Under Construction)</title> <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
+    <title>Snaw</title> <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="apple-icon-72x72.png">
     <link rel="apple-touch-icon" sizes="76x76" href="apple-icon-76x76.png">
@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/pianoroll.css">
+    <link rel="stylesheet" href="css/timeline.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -141,6 +142,8 @@
             <li id="menuLoadProject">Load Project (.snug)</li>
             <li id="menuExportWav">Export to WAV</li>
             <li><hr></li>
+            <li id="menuChangeBackground"><a href="#" style="text-decoration:none; color:inherit; display:block;">Change Background</a></li>
+            <li><hr></li>
             <li id="menuOpenTestProfile">Open Test Profile</li>
             <li id="menuLogin">Login / Register</li>
             <li id="menuLogout" class="hidden">Logout</li>
@@ -159,10 +162,7 @@
     <div id="modalContainer"></div>
 
     <script src="js/constants.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/effectsRegistry.js"></script>
-    <script src="js/utils.js"></script>
-    <script type="module" src="js/auth.js"></script> <script type="module" src="js/daw/main.js"></script>
+    <script src="js/utils.js"></script> <script src="js/db.js"></script>    <script src="js/effectsRegistry.js"></script> <script type="module" src="js/daw/SnugWindow.js"></script> <script type="module" src="js/backgroundManager.js"></script> <script type="module" src="js/auth.js"></script> <script type="module" src="js/daw/main.js"></script>
 
 </body>
 </html>
