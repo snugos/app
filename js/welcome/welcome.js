@@ -16,12 +16,12 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com';
  * Creates and opens a new window containing the Tetris game.
  */
 function openGameWindow() {
+    const windowId = 'tetrisGame';
     // CRITICAL: Ensure appServices.getWindowById is defined before calling
     if (appServices.getWindowById && appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
-    const windowId = 'tetrisGame'; // Define windowId here
 
     const content = document.createElement('iframe');
     content.src = 'tetris.html';
@@ -264,7 +264,12 @@ async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
         updateAuthUI(null);
-        appServices.loadAndApplyUserBackground(); 
+        // Ensure appServices.loadAndApplyUserBackground is available before calling
+        if (appServices.loadAndApplyUserBackground) { 
+            appServices.loadAndApplyUserBackground(); 
+        } else {
+            console.error("[welcome.js] CRITICAL: appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (no token)!");
+        }
         return;
     }
 
@@ -276,7 +281,12 @@ async function checkInitialAuthState() {
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
-        appServices.loadAndApplyUserBackground(); 
+        // Ensure appServices.loadAndApplyUserBackground is available before calling
+        if (appServices.loadAndApplyUserBackground) {
+            appServices.loadAndApplyUserBackground(); 
+        } else {
+            console.error("[welcome.js] CRITICAL: appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (token found)!");
+        }
 
     } catch (e) {
         console.error("Error during initial auth state check:", e);
@@ -356,4 +366,77 @@ async function handleLogin(username, password) {
         } else {
             appServices.showNotification(`Login failed: ${data.message}`, 3000);
         }
+    } catch (error) { // Added missing catch block
+        console.error("Login Error:", error);
+        appServices.showNotification('Network error.', 3000);
     }
+}
+
+async function handleRegister(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            appServices.showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        console.error("Register Error:", error);
+        appServices.showNotification('Network error.', 3000);
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('snugos_token');
+    loggedInUser = null;
+    updateAuthUI(null);
+    appServices.applyCustomBackground(''); 
+    appServices.showNotification('You have been logged out.', 2000);
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const isLightTheme = body.classList.contains('theme-light');
+    if (isLightTheme) {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    } else {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    }
+}
+
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+    }
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            appServices.showNotification(`Error: ${err.message}`, 3000);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initializeWelcomePage);
