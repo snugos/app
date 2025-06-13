@@ -4,13 +4,12 @@ import { SnugWindow } from './daw/SnugWindow.js'; // Ensure SnugWindow is import
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
-let loggedInUser = null; // This will now be managed by appServices.getLoggedInUser()
+let loggedInUser = null; 
 let appServices = {};
 let currentChatPartner = null;
 let messagePollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Expose appServices for use by backgroundManager and other modules
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -21,12 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.createContextMenu = createContextMenu;
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
-    appServices.getLoggedInUser = () => loggedInUser; // Provide a way for backgroundManager to get the current logged in user
-    // Expose background functions through appServices
+    appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
 
-    // Initialize background manager module
     initializeBackgroundManager(appServices);
 
     loggedInUser = checkLocalAuth();
@@ -38,33 +35,37 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (loggedInUser) {
         openMessengerWindow();
-        appServices.loadAndApplyUserBackground(); // Load user background
+        appServices.loadAndApplyUserBackground(); 
     } else {
         const desktop = document.getElementById('desktop');
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl">Please log in to use Messenger.</p></div>`;
-            appServices.loadAndApplyUserBackground(); // Load default/last background even if not logged in
+            appServices.loadAndApplyUserBackground(); 
         }
     }
 });
 
 function attachDesktopEventListeners() {
     const desktop = document.getElementById('desktop');
+    const customBgInput = document.getElementById('customBgInput');
+
     if (desktop) {
         desktop.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             if (e.target.closest('.window')) return;
             const menuItems = [{
                 label: 'Change Background',
-                action: () => document.getElementById('customBgInput').click()
+                action: () => customBgInput.click() // Trigger the file input
             }];
-            appServices.createContextMenu(e, menuItems, appServices); // Pass appServices
+            appServices.createContextMenu(e, menuItems, appServices); 
         });
     }
 
-    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0]) return; // Removed loggedInUser check here, it's in handleBackgroundUpload
-        appServices.handleBackgroundUpload(e.target.files[0]); // Use appServices function
+    // Central listener for the hidden file input
+    customBgInput?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0]) return; 
+        appServices.handleBackgroundUpload(e.target.files[0]); 
+        e.target.value = null; // Clear the input after selection
     });
 
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -73,10 +74,6 @@ function attachDesktopEventListeners() {
     document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
 }
-
-// Removed handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
-
-// Removed loadAndApplyGlobals, replaced by loadAndApplyUserBackground call in DOMContentLoaded
 
 async function openMessengerWindow() {
     const windowId = 'messenger';
@@ -276,12 +273,11 @@ function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
-    appServices.applyCustomBackground(''); // Clear background on logout
-    window.location.reload(); // Reloads the page to reset all messenger state
+    appServices.applyCustomBackground(''); 
+    window.location.reload();
 }
 
 function showLoginModal() {
-    // Reusing the modal content from welcome.js/index.html for consistency
     const modalContent = `
         <div class="space-y-4">
             <div>
@@ -306,7 +302,6 @@ function showLoginModal() {
     
     const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
 
-    // Apply styles to inputs and buttons within the modal for consistency
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
         input.style.color = 'var(--text-primary)';
@@ -361,9 +356,9 @@ async function handleLogin(username, password) {
 
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
-            loggedInUser = { id: data.user.id, username: data.user.username }; // Update loggedInUser
-            updateAuthUI(loggedInUser); // Update UI based on new loggedInUser
-            appServices.loadAndApplyUserBackground(); // Load user background
+            loggedInUser = { id: data.user.id, username: data.user.username }; 
+            updateAuthUI(loggedInUser); 
+            appServices.loadAndApplyUserBackground(); 
             appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             appServices.showNotification(`Login failed: ${data.message}`, 3000);
