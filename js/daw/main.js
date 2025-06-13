@@ -10,8 +10,8 @@ import {
 
 // Global files loaded via script tags in snaw.html.
 // Their contents are globally available, but for modularity, some are explicitly imported or accessed via appServices.
-// Tone, Konva, JSZip are global.
-// Constants, db, effectsRegistry, utils, auth are also loaded globally.
+// Tone, Konva, JSZip are global via script tags.
+// Constants, db, effectsRegistry, utils are also loaded globally via script tags.
 
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
@@ -37,50 +37,47 @@ import {
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
-// NEW: Import from backgroundManager
+// NEW: Import from backgroundManager and auth.js
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-// Removed specific auth imports as it's primarily used for handling loggedInUser state, now centralized.
-// import { initializeAuth, handleBackgroundUpload } from '../auth.js'; 
+import { initializeAuth, checkLocalAuth } from '../auth.js'; 
 
-
-// Import the new state modules
+// Import all state management modules
 import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState } from './state/appState.js';
 import { initializeMasterState, getMasterEffects, setMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
-import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
+import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
 import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ } from './state/windowState.js';
-import { initializeAuth as initializeAuthFromAuthModule, checkLocalAuth } from '../auth.js'; // Re-import initializeAuth and checkLocalAuth
-import { storeAsset, getAsset } from '../db.js'; // Re-import from central db.js for local storage
 
 
 let appServices = {};
-let loggedInUser = null; // Will be set after auth check
-
-// Removed applyCustomBackground from here, it's now in backgroundManager.js
+let loggedInUser = null; 
 
 function openDefaultLayout() {
     setTimeout(() => {
-        const desktopEl = document.getElementById('desktop');
-        if (!desktopEl) return;
+        const desktopEl = appServices.uiElementsCache?.desktop || document.getElementById('desktop');
+        if (!desktopEl) {
+            console.error("[main.js] Desktop element not found for openDefaultLayout.");
+            return;
+        }
 
         const rect = desktopEl.getBoundingClientRect();
         const margin = 10;
         const gap = 10;
 
-        const timelineHeight = 0; // Set to 0 as timeline is removed
-        // Adjusted heights to fill remaining vertical space when timeline is removed
-        const availableHeight = rect.height - appServices.uiElementsCache.topTaskbar.offsetHeight - appServices.uiElementsCache.taskbar.offsetHeight - (margin * 2);
+        const topTaskbarHeight = appServices.uiElementsCache.topTaskbar?.offsetHeight || 40;
+        const taskbarHeight = appServices.uiElementsCache.taskbar?.offsetHeight || 32;
+
+        const availableHeight = rect.height - topTaskbarHeight - taskbarHeight - (margin * 2);
 
         const mixerHeight = Math.floor(availableHeight * 0.5); 
-        const masterEffectsHeight = availableHeight - mixerHeight - gap; // Remaining height for Master Effects
+        const masterEffectsHeight = availableHeight - mixerHeight - gap; 
 
         const sidePanelWidth = 350;
         const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
-        const row1Y = appServices.uiElementsCache.topTaskbar.offsetHeight + margin; // Top-most row starts at margin below top taskbar
+        const row1Y = topTaskbarHeight + margin; 
 
-        // Mixer now starts higher and potentially fills more vertical space
         appServices.openMixerWindow({
             x: margin,
             y: row1Y,
@@ -88,47 +85,44 @@ function openDefaultLayout() {
             height: mixerHeight
         });
 
-        // Master Effects Rack also adjusts its position and height
         appServices.openMasterEffectsRackWindow({
             x: margin,
-            y: row1Y + mixerHeight + gap, // Position below mixer
+            y: row1Y + mixerHeight + gap, 
             width: leftPanelWidth,
-            height: masterEffectsHeight // Adjust height to fill remaining space
+            height: masterEffectsHeight 
         });
 
-        // Sound Browser also adjusts its position and height
         const soundBrowserX = rect.width - sidePanelWidth - margin;
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
             y: row1Y,
-            height: availableHeight // Use full available height for side panel
+            height: availableHeight 
         });
     }, 100);
 }
 
-
 function handleMasterEffectsUIUpdate() {
-    const rackWindow = getWindowById('masterEffectsRack');
+    const rackWindow = appServices.getWindowById('masterEffectsRack');
     if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
         rackWindow.refresh();
     }
 }
 
 function handleTrackUIUpdate(trackId, reason, detail) {
-    const track = getTrackById(trackId);
+    const track = appServices.getTrackById(trackId);
     if (!track) return;
 
-    const soloedTrackId = getSoloedTrackId();
+    const soloedTrackId = appServices.getSoloedTrackId();
     const isEffectivelyMuted = track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id);
 
-    const inspectorWindow = getWindowById(`trackInspector-${track.id}`);
+    const inspectorWindow = appServices.getWindowById(`trackInspector-${track.id}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
         const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
         const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
 
         if (reason === 'armChanged') {
-            if (armBtn) armBtn.classList.toggle('armed', getArmedTrackId() === track.id);
+            if (armBtn) armBtn.classList.toggle('armed', appServices.getArmedTrackId() === track.id);
         }
         if (reason === 'soloChanged' || reason === 'muteChanged') {
             if (muteBtn) {
@@ -148,12 +142,12 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         if (reason === 'instrumentSamplerLoaded') {
             const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
             if (canvas && track.instrumentSamplerSettings.audioBuffer) {
-                appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer); // Use appServices
+                appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer); 
             }
         }
     }
 
-    const mixerWindow = getWindowById('mixer');
+    const mixerWindow = appServices.getWindowById('mixer');
     if (mixerWindow && mixerWindow.element && !mixerWindow.isMinimized) {
         const trackDiv = mixerWindow.element.querySelector(`.mixer-track[data-track-id='${track.id}']`);
         if(trackDiv) {
@@ -170,14 +164,14 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
 
     if (reason === 'effectsChanged') {
-        const rackWindow = getWindowById(`effectsRack-${trackId}`);
+        const rackWindow = appServices.getWindowById(`effectsRack-${trackId}`);
         rackWindow?.refresh();
     }
 }
 
 function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
-    const tracks = getTracks();
+    const tracks = appServices.getTracks();
 
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop();
@@ -195,6 +189,7 @@ function onPlaybackModeChange(newMode, oldMode) {
 }
 
 async function initializeSnugOS() {
+    console.log("[main.js] Initializing SnugOS...");
 
     // Cache UI elements that are accessed frequently for performance
     appServices.uiElementsCache = {
@@ -218,230 +213,94 @@ async function initializeSnugOS() {
         if (typeof Tone !== 'undefined') {
             const transportTime = Tone.Transport.seconds;
             
-            const mode = getPlaybackMode();
-            appServices.updatePianoRollPlayhead(transportTime); // CORRECTED: Access via appServices
+            const mode = appServices.getPlaybackMode(); // Access via appServices
+            appServices.updatePianoRollPlayhead(transportTime); 
             
-            updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, getTracks());
+            appServices.updateMeters(appServices.uiElementsCache.masterMeterBarGlobalTop, null, appServices.getTracks());
         }
         requestAnimationFrame(drawLoop);
     }
 
-    // Assign core app services
-    Object.assign(appServices, {
-        // Core OS-like services
-        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
-        showNotification: showNotification, // From utils.js
-        showCustomModal: showCustomModal,   // From utils.js
-        createContextMenu: createContextMenu, // From utils.js
+    // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
+    // Core utilities (from utils.js, assumed globally available)
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
+    appServices.createContextMenu = createContextMenu;
+    appServices.drawWaveform = drawWaveform; // From utils.js
+    
+    // Window State functions (imported from windowState.js)
+    appServices.addWindowToStore = addWindowToStore;
+    appServices.removeWindowFromStore = removeWindowFromStore;
+    appServices.incrementHighestZ = incrementHighestZ;
+    appServices.getHighestZ = getHighestZ;
+    appServices.setHighestZ = setHighestZ;
+    appServices.getOpenWindows = getOpenWindows;
+    appServices.getWindowById = getWindowById;
 
-        // Background Management
-        applyCustomBackground: applyCustomBackground, // From backgroundManager.js
-        handleBackgroundUpload: handleBackgroundUpload, // From backgroundManager.js
-        loadAndApplyUserBackground: loadAndApplyUserBackground, // From backgroundManager.js
+    // Auth related services (auth.js will implement the logic)
+    appServices.getLoggedInUser = () => loggedInUser; // Exposed for other modules
+    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; // Exposed for auth.js to set
 
-        // Authentication & User State (managed by auth.js)
-        getLoggedInUser: () => { /* This will be set by initializeAuth */ }, // Placeholder
-        
-        // Theme Management
-        getCurrentUserThemePreference: getCurrentUserThemePreference,
-        setCurrentUserThemePreference: setCurrentUserThemePreference,
-        // The actual applyUserThemePreference function will be called via appServices.applyUserThemePreference
-        // in appState.js when the preference changes.
+    // Background Management services (from backgroundManager.js)
+    appServices.applyCustomBackground = applyCustomBackground;
+    appServices.handleBackgroundUpload = handleBackgroundUpload;
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
+    
+    // IndexedDB Access (from db.js, assumed globally available)
+    appServices.dbStoreAudio = storeAudio;
+    appServices.dbGetAudio = getAudio;
+    appServices.dbDeleteAudio = deleteAudio;
+    appServices.storeAsset = storeAsset; // For local user assets like background
+    appServices.getAsset = getAsset;     // For local user assets like background
 
-        // Global Track State Management
-        getTracks: getTracks,
-        getTrackById: getTrackById,
-        addTrack: addTrack,
-        removeTrack: removeTrack,
-        setTracks: setTracks,
-        setTrackIdCounter: setTrackIdCounter,
-        getSoloedTrackId: getSoloedTrackId,
-        setSoloedTrackId: setSoloedTrackId,
-        getArmedTrackId: getArmedTrackId,
-        setArmedTrackId: setArmedTrackId,
-        isRecording: isRecording,
-        setIsRecording: setIsRecording,
-        getRecordingTrackId: getRecordingTrackId,
-        setRecordingTrackId: setRecordingTrackId,
-        setRecordingStartTime: setRecordingStartTime, // This is a setter, not a getter for the value
-        
-        // Master Audio State Management
-        getMasterEffects: getMasterEffects,
-        setMasterEffects: setMasterEffects,
-        addMasterEffect: addMasterEffect,
-        removeMasterEffect: removeMasterEffect,
-        updateMasterEffectParam: updateMasterEffectParam,
-        reorderMasterEffect: reorderMasterEffect,
-        getMasterGainValue: getMasterGainValue,
-        setMasterGainValue: setMasterGainValue, // This is a setter, not a getter for the value
-
-        // App-wide State
-        getMidiAccess: getMidiAccess,
-        setMidiAccess: setMidiAccess,
-        getActiveMIDIInput: getActiveMIDIInput,
-        setActiveMIDIInput: setActiveMIDIInput,
-        getPlaybackMode: getPlaybackMode,
-        setPlaybackMode: setPlaybackMode,
-        getMidiRecordModeState: getMidiRecordModeState,
-        setMidiRecordModeState: setMidiRecordModeState,
-        getSelectedTimelineClipInfo: getSelectedTimelineClipInfo,
-        setSelectedTimelineClipInfo: setSelectedTimelineClipInfo,
-
-        // Window State Management
-        getOpenWindows: getOpenWindows,
-        getWindowById: getWindowById,
-        addWindowToStore: addWindowToStore,
-        removeWindowFromStore: removeWindowFromStore,
-        getHighestZ: getHighestZ,
-        setHighestZ: setHighestZ, // This is a setter, not a getter for the value
-        incrementHighestZ: incrementHighestZ,
-
-        // Project State Management (Undo/Redo, Save/Load)
-        getIsReconstructingDAW: getIsReconstructingDAW,
-        setIsReconstructingDAW: setIsReconstructingDAW,
-        getUndoStack: getUndoStack,
-        getRedoStack: getRedoStack,
-        getClipboardData: getClipboardData,
-        setClipboardData: setClipboardData,
-        captureStateForUndo: captureStateForUndo,
-        undoLastAction: undoLastAction,
-        redoLastAction: redoLastAction,
-        gatherProjectData: gatherProjectData,
-        reconstructDAW: reconstructDAW,
-        saveProject: saveProject,
-        loadProject: loadProject,
-        handleProjectFileLoad: handleProjectFileLoad,
-        exportToWav: exportToWav,
-        
-        // Sound Library State
-        getLoadedZipFiles: getLoadedZipFiles,
-        setLoadedZipFiles: setLoadedZipFiles,
-        getSoundLibraryFileTrees: getSoundLibraryFileTrees,
-        setSoundLibraryFileTrees: setSoundLibraryFileTrees,
-        getCurrentLibraryName: getCurrentLibraryName,
-        setCurrentLibraryName: setCurrentLibraryName,
-        getCurrentSoundBrowserPath: getCurrentSoundBrowserPath,
-        setCurrentSoundBrowserPath: setCurrentSoundBrowserPath,
-        getPreviewPlayer: getPreviewPlayer,
-        setPreviewPlayer: setPreviewPlayer, // This is a setter, not a getter for the value
-        addFileToSoundLibrary: addFileToSoundLibrary, // Note: this is for local IndexedDB
-
-        // Audio Engine Interactions (from audio.js)
-        initAudioContextAndMasterMeter: initAudioContextAndMasterMeter,
-        getMasterBusInputNode: getMasterBusInputNode,
-        updateMeters: updateMeters,
-        rebuildMasterEffectChain: rebuildMasterEffectChain,
-        addMasterEffectToAudio: addMasterEffectToAudio,
-        removeMasterEffectFromAudio: removeMasterEffectFromAudio,
-        updateMasterEffectParamInAudio: updateMasterEffectParamInAudio,
-        reorderMasterEffectInAudio: reorderMasterEffectInAudio,
-        setActualMasterVolume: setActualMasterVolume,
-        forceStopAllAudio: forceStopAllAudio,
-
-        // Playback (from playback.js)
-        playSlicePreview: playSlicePreview,
-        playDrumSamplerPadPreview: playDrumSamplerPadPreview,
-        scheduleTimelinePlayback: scheduleTimelinePlayback, // Only used when playbackMode is 'timeline'
-        onPlaybackModeChange: onPlaybackModeChange, // Callback for when playback mode changes
-
-        // Recording (from recording.js)
-        startAudioRecording: startAudioRecording,
-        stopAudioRecording: stopAudioRecording,
-
-        // Sample Management (from sampleManager.js)
-        loadSampleFile: loadSampleFile,
-        loadDrumSamplerPadFile: loadDrumSamplerPadFile,
-        loadSoundFromBrowserToTarget: loadSoundFromBrowserToTarget,
-        getAudioBlobFromSoundBrowserItem: getAudioBlobFromSoundBrowserItem,
-        autoSliceSample: autoSliceSample,
-        fetchSoundLibrary: fetchSoundLibrary, // For loading zip libraries
-
-        // IndexedDB Access (direct from db.js)
-        dbStoreAudio: storeAudio,
-        dbGetAudio: getAudio,
-        dbDeleteAudio: deleteAudio,
-        storeAsset: storeAsset, // For local user assets like background
-        getAsset: getAsset,     // For local user assets like background
-
-        // UI Interactions (from ui.js and sub-modules)
-        openTrackInspectorWindow: openTrackInspectorWindow,
-        openMixerWindow: openMixerWindow,
-        updateMixerWindow: updateMixerWindow,
-        openTrackEffectsRackWindow: openTrackEffectsRackWindow,
-        openMasterEffectsRackWindow: openMasterEffectsRackWindow,
-        renderEffectsList: renderEffectsList,
-        renderEffectControls: renderEffectControls,
-        openSoundBrowserWindow: openSoundBrowserWindow,
-        renderSoundBrowser: renderSoundBrowser,
-        renderDirectoryView: renderDirectoryView,
-        openPianoRollWindow: openPianoRollWindow,
-        updatePianoRollPlayhead: updatePianoRollPlayhead,
-        openYouTubeImporterWindow: openYouTubeImporterWindow,
-        renderSamplePads: renderSamplePads,
-        updateSliceEditorUI: updateSliceEditorUI,
-        renderDrumSamplerPads: renderDrumSamplerPads,
-        updateDrumPadControlsUI: updateDrumPadControlsUI,
-        drawWaveform: drawWaveform, // From utils.js
-        createKnob: createKnob, // From knobUI.js
-
-        // DAW-specific Event Handlers (from eventHandlers.js)
-        handleTrackMute: handleTrackMute,
-        handleTrackSolo: handleTrackSolo,
-        handleTrackArm: handleTrackArm,
-        handleRemoveTrack: handleRemoveTrack,
-        handleOpenEffectsRack: handleOpenEffectsRack,
-        handleOpenPianoRoll: handleOpenPianoRoll,
-        handleTimelineLaneDrop: handleTimelineLaneDrop,
-        handleOpenYouTubeImporter: handleOpenYouTubeImporter,
-
-        // Metronome
-        toggleMetronome: toggleMetronome,
-
-        // Access to effect definitions and synth controls
-        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
-
-        // Tone.js context (direct access)
-        context: Tone.context,
-
-        // Placeholder for the logged-in user object. This will be set by the auth module.
-        // It's defined here for appServices.getLoggedInUser.
-        setLoggedInUser: (user) => { loggedInUser = user; }
-    });
-
-    // Initialize state management modules
+    // Initialize core state management modules
     initializeAppState(appServices);
     initializeMasterState(appServices);
     initializeProjectState(appServices);
     initializeSoundLibraryState(appServices);
     initializeTrackState(appServices);
-    initializeWindowState(appServices);
+    initializeWindowState(appServices); // Important for windowState functions
+    console.log("[main.js] Core state modules initialized.");
 
-    // Initialize core application modules
+    // Initialize background manager module (it depends on appServices, but also takes loadAndApplyUserBackground)
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
+    console.log("[main.js] backgroundManager initialized.");
+
+    // Initialize core application modules, passing appServices
     initializeAudioModule(appServices);
     initializePlayback(appServices);
     initializeRecording(appServices);
     initializeSampleManager(appServices);
     initializeMetronome(appServices);
-    
+    console.log("[main.js] Audio and core modules initialized.");
+
     // Initialize UI modules, passing the full appServices object
     initializeUIModule(appServices);
+    console.log("[main.js] UI modules initialized.");
 
     // Initialize Event Handlers (relying on fully populated appServices)
     initializeEventHandlersModule(appServices);
     initializePrimaryEventListeners(); // Attaches main document listeners
     attachGlobalControlEvents({}); // Attaches DAW control listeners (play, stop, record, etc.)
     setupMIDI(); // Sets up MIDI input
+    console.log("[main.js] Event handlers and MIDI setup complete.");
 
-    // Initialize Auth (this will set the loggedInUser and load the background)
-    initializeAuthFromAuthModule(appServices); // Renamed from initializeAuth to avoid conflict
+    // Initialize Auth (this will set the loggedInUser and load the background via appServices)
+    initializeAuth(appServices); // From ../auth.js
+    console.log("[main.js] Auth module initialized.");
 
-    // Apply initial theme preference
+    // Apply initial theme preference (theme state managed by appState/auth)
     // The actual background loading is now handled by initializeAuth which calls loadAndApplyUserBackground
-    // applyUserThemePreference(); // This should be called by the auth module's initialization
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference); // Use appServices for consistency
+    // `applyUserThemePreference` is a function from auth.js, but also potentially in other files.
+    // Ensure the one called is the auth module's one or a consistent one.
+    // window.matchMedia is for system theme changes, typically handled in auth or central theme module.
+    // For consistency, ensure `applyUserThemePreference` is accessible via appServices if needed.
+    // (This line might need to be removed if it's already handled within `auth.js` or elsewhere)
+    // window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference); 
 
     // Open default layout windows
     openDefaultLayout();
+    console.log("[main.js] Default layout opened.");
 
     console.log("SnugOS Initialized Successfully.");
 
@@ -453,6 +312,7 @@ async function initializeSnugOS() {
 
     // Start main drawing loop
     drawLoop();
+    console.log("[main.js] Draw loop started.");
 }
 
 document.addEventListener('DOMContentLoaded', initializeSnugOS);
