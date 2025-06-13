@@ -1,6 +1,5 @@
-// CORRECTED PATH
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { SnugWindow } from './daw/SnugWindow.js'; 
+import { SnugWindow } from './daw/SnugWindow.js'; // Ensure SnugWindow is imported
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
@@ -19,17 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
     appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification; // Assuming showNotification is globally available or imported
-    appServices.showCustomModal = showCustomModal;   // Assuming showCustomModal is globally available or imported
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
     
     // Background Manager specific appServices assignments
-    appServices.getLoggedInUser = () => loggedInUser; // Pass a getter for loggedInUser
+    appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
 
     // Initialize background manager module with the main load function
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // PASSED loadAndApplyUserBackground
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
 
     // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth();
@@ -307,6 +306,7 @@ function showLoginModal() {
     
     const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
 
+    // Apply styles to inputs and buttons within the modal for consistency
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
         input.style.color = 'var(--text-primary)';
