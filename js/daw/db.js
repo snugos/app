@@ -6,7 +6,7 @@ const STORES = {
     AUDIO: 'audioFiles',
     ASSETS: 'userAssets'
 };
-const DB_VERSION = 2;
+const DB_VERSION = 2; // MUST be incremented if you change store structure (e.g., adding STORES.ASSETS)
 
 let dbPromise = null;
 
@@ -111,23 +111,23 @@ async function deleteValue(storeName, key) {
 
 // --- Specific Implementations ---
 
-export function storeAudio(key, audioBlob) { // Added 'export'
+export function storeAudio(key, audioBlob) {
     return storeValue(STORES.AUDIO, key, audioBlob);
 }
 
-export function getAudio(key) { // Added 'export'
+export function getAudio(key) {
     return getValue(STORES.AUDIO, key);
 }
 
-export function deleteAudio(key) { // Added 'export'
+export function deleteAudio(key) {
     return deleteValue(STORES.AUDIO, key);
 }
 
 // NEW: Functions for storing and retrieving user assets like backgrounds
-export function storeAsset(key, assetBlob) { // Added 'export'
+export function storeAsset(key, assetBlob) {
     return storeValue(STORES.ASSETS, key, assetBlob);
 }
 
-export function getAsset(key) { // Added 'export'
+export function getAsset(key) {
     return getValue(STORES.ASSETS, key);
 }
