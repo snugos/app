@@ -1,4 +1,5 @@
-// CORRECTED PATH
+// js/profiles/library.js - Complete and Corrected for upload and background
+
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { SnugWindow } from '../daw/SnugWindow.js'; 
 
@@ -24,7 +25,17 @@ function initAudioOnFirstGesture() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- CRITICAL: Populate appServices first and ensure functions are defined ---
+    console.log("[library.js] DOMContentLoaded fired. Starting appServices initialization...");
+
+    // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
+    // Ensure core utilities are available through appServices
+    // Assuming showNotification, showCustomModal, createContextMenu are globally available
+    // or loaded via a script tag before this module, as per HTML structure.
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
+    appServices.createContextMenu = createContextMenu;
+    
+    // Window State functions (assuming these are globally available)
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -32,37 +43,43 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.setHighestZ = setHighestZState;
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu; 
-    appServices.showNotification = showNotification;   
-    appServices.showCustomModal = showCustomModal;     
     
-    // Background Manager specific appServices assignments
+    // Auth related services (auth.js will implement the logic)
+    // These getters/setters allow auth.js to update loggedInUser state
     appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; 
+
+    // Background Management services (from backgroundManager.js)
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
+    // Assuming storeAsset and getAsset are globally available from db.js
+    appServices.storeAsset = storeAsset; 
+    appServices.getAsset = getAsset; 
 
-    // Initialize background manager module with the main load function
+    // Initialize background manager module, passing the fully prepared appServices object
     initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
+    console.log("[library.js] appServices initialized for background:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Now proceed with logic that might rely on appServices being fully populated
-    loggedInUser = checkLocalAuth();
-    console.log("[library.js] checkLocalAuth completed. loggedInUser:", loggedInUser);
+    // Now call checkLocalAuth (from global scope via auth.js) which will use appServices
+    // This will set `loggedInUser` via `appServices.setLoggedInUser`
+    checkLocalAuth(); 
+    console.log("[library.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
 
+    // Call loadAndApplyUserBackground AFTER loggedInUser is set and appServices is populated
     appServices.loadAndApplyUserBackground(); 
     console.log("[library.js] loadAndApplyUserBackground called after auth check.");
     
     attachDesktopEventListeners();
     applyUserThemePreference();
     updateClockDisplay();
-    updateAuthUI(loggedInUser);
+    updateAuthUI(loggedInUser); // Update UI based on initial loggedInUser status
     
     if (loggedInUser) {
         openLibraryWindow();
     } else {
         appServices.showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
-        // If not logged in, load default background anyway
-        appServices.loadAndApplyUserBackground(); 
+        // If not logged in, load default background anyway (this is handled by loadAndApplyUserBackground)
     }
 });
 
@@ -205,19 +222,19 @@ function setupDesktopContextMenu() {
     });
 
     // Central listener for the hidden file input
-    customBgInput.addEventListener('change', async (e) => { // Removed `?` to make it non-optional
+    customBgInput.addEventListener('change', async (e) => { 
         console.log("[library.js] customBgInput change event fired.");
         // Ensure that a file was selected
         if (!e.target.files || !e.target.files[0]) {
             console.log("[library.js] No file selected or file list empty.");
-            return;
+            return; 
         }
         const file = e.target.files[0];
         if (appServices.handleBackgroundUpload) {
             console.log("[library.js] Calling appServices.handleBackgroundUpload.");
             await appServices.handleBackgroundUpload(file); 
         } else {
-            console.error("[library.js] appServices.handleBackgroundUpload is NOT defined!");
+            console.error("[library.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
             appServices.showNotification("Error: Background upload function not available.", 3000);
         }
         // Clear the file input value to allow selecting the same file again if needed
@@ -230,27 +247,38 @@ function setupDesktopContextMenu() {
  * @param {HTMLElement} container The main container element of the library window.
  */
 async function fetchAndRenderLibraryItems(container) {
+    console.log("[library.js] fetchAndRenderLibraryItems called. Current path:", currentPath.join('/'));
     const fileViewArea = container.querySelector('#file-view-area');
     const pathDisplay = container.querySelector('#library-path-display');
-    if (!fileViewArea || !pathDisplay) return;
+    if (!fileViewArea || !pathDisplay) {
+        console.warn("[library.js] File view area or path display not found.");
+        return;
+    }
 
     fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">Loading...</p>`;
     pathDisplay.textContent = currentPath.join(''); // Update path display
 
-    // Determine the API endpoint based on current view mode
     const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public';
     try {
         const token = localStorage.getItem('snugos_token');
         if (!token) {
+            console.warn("[library.js] Not logged in. Cannot fetch files.");
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">Not logged in. Cannot fetch files.</p>`;
             return;
         }
+        console.log(`[library.js] Fetching files from ${endpoint} with path: ${currentPath.join('/')}`);
         const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Failed to fetch files');
         
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("[library.js] Failed to fetch files from server:", response.status, errorText);
+            throw new Error(data.message || `Failed to fetch files with status: ${response.status}`);
+        }
+        
+        console.log("[library.js] Files fetched successfully. Items count:", data.items ? data.items.length : 0);
         fileViewArea.innerHTML = ''; // Clear previous content
         // Add ".." (parent folder) item if not at root
         if (currentPath.length > 1) {
@@ -263,8 +291,9 @@ async function fetchAndRenderLibraryItems(container) {
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
         }
     } catch (error) {
-        console.error("[library.js] Error fetching library items:", error);
-        fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">${error.message}</p>`;
+        console.error("[library.js] Error during file fetching:", error);
+        fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">Error: ${error.message}</p>`;
+        appServices.showNotification(`Error loading files: ${error.message}`, 5000);
     }
 }
 
@@ -355,6 +384,7 @@ function renderFileItem(item, isParentFolder = false) {
  * Navigates into folders or opens the file viewer for files.
  * @param {Object} item The clicked file or folder object.
  * @param {boolean} isParentFolder True if the item is the ".." parent folder.
+ * @returns {void}
  */
 function handleItemClick(item, isParentFolder) {
     const libWindow = appServices.getWindowById('library');
@@ -372,6 +402,7 @@ function handleItemClick(item, isParentFolder) {
 /**
  * Opens a new window to view the selected file.
  * @param {Object} item The file object to view.
+ * @returns {void}
  */
 function openFileViewerWindow(item) {
     const windowId = `file-viewer-${item.id}`;
@@ -398,32 +429,41 @@ function openFileViewerWindow(item) {
 /**
  * Generates and copies a shareable link for a file.
  * @param {Object} item The file object to share.
+ * @returns {Promise<void>}
  */
 async function handleShareFile(item) {
-    appServices.showNotification("Generating secure link...", 1500); // Use appServices
+    appServices.showNotification("Generating secure link...", 1500); 
     try {
         const token = localStorage.getItem('snugos_token');
+        if (!token) {
+            throw new Error("Authentication token missing.");
+        }
         const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
-        // Copy the generated share URL to clipboard
-        navigator.clipboard.writeText(result.shareUrl).then(() => { // Using modern clipboard API
-            appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000); // Use appServices
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("[library.js] Share link server error:", response.status, errorText);
+            throw new Error(result.message || `Failed to generate share link with status: ${response.status}`);
+        }
+        navigator.clipboard.writeText(result.shareUrl).then(() => { 
+            appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000); 
         }).catch(err => {
-            console.error('Failed to copy text: ', err);
+            console.error('[library.js] Failed to copy text: ', err);
             appServices.showNotification("Failed to copy link to clipboard. Please copy manually from console.", 4000);
-            console.log("Share URL:", result.shareUrl);
+            console.log("[library.js] Share URL:", result.shareUrl);
         });
     } catch (error) {
-        appServices.showNotification(`Could not generate link: ${error.message}`, 4000); // Use appServices
+        console.error("[library.js] Error generating share link:", error);
+        appServices.showNotification(`Could not generate link: ${error.message}`, 4000); 
     }
 }
 
 /**
  * Shows a confirmation modal for changing a file's public/private status.
  * @param {Object} item The file object to modify.
+ * @returns {void}
  */
 function showShareModal(item) {
     const newStatus = !item.is_public;
@@ -439,22 +479,31 @@ function showShareModal(item) {
  * Toggles the public/private status of a file.
  * @param {string} fileId The ID of the file to modify.
  * @param {boolean} newStatus The new public status (true for public, false for private).
+ * @returns {Promise<void>}
  */
 async function handleToggleFilePublic(fileId, newStatus) {
     try {
         const token = localStorage.getItem('snugos_token');
+        if (!token) {
+            throw new Error("Authentication token missing.");
+        }
         const response = await fetch(`${SERVER_URL}/api/files/${fileId}/toggle-public`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ is_public: newStatus })
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("[library.js] Toggle public status server error:", response.status, errorText);
+            throw new Error(result.message || `Failed to update file status with status: ${response.status}`);
+        }
         appServices.showNotification('File status updated!', 2000); 
         // Refresh the library window to reflect changes
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
+        console.error("[library.js] Error toggling file public status:", error);
         appServices.showNotification(`Error: ${error.message}`, 4000); 
     }
 }
@@ -462,6 +511,7 @@ async function handleToggleFilePublic(fileId, newStatus) {
 /**
  * Shows a confirmation modal before deleting a file.
  * @param {Object} item The file object to delete.
+ * @returns {void}
  */
 function showDeleteModal(item) {
     const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
@@ -474,21 +524,30 @@ function showDeleteModal(item) {
 /**
  * Deletes a file from the server and refreshes the library.
  * @param {string} fileId The ID of the file to delete.
+ * @returns {Promise<void>}
  */
 async function handleDeleteFile(fileId) {
     try {
         const token = localStorage.getItem('snugos_token');
+        if (!token) {
+            throw new Error("Authentication token missing.");
+        }
         const response = await fetch(`${SERVER_URL}/api/files/${fileId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.message);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("[library.js] Delete file server error:", response.status, errorText);
+            throw new Error(result.message || `Failed to delete file with status: ${response.status}`);
+        }
         appServices.showNotification('File deleted!', 2000); 
         // Refresh the library window to reflect changes
         const libWindow = appServices.getWindowById('library');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
+        console.error("[library.js] Error deleting file:", error);
         appServices.showNotification(`Error: ${error.message}`, 4000); 
     }
 }
@@ -496,15 +555,21 @@ async function handleDeleteFile(fileId) {
 /**
  * Handles the upload of multiple files to the current path.
  * @param {FileList} files The files to upload.
+ * @returns {Promise<void>}
  */
 async function handleFileUpload(files) {
     console.log("[library.js] handleFileUpload called with files:", files.length);
     const loggedInUser = appServices.getLoggedInUser?.(); // Get user state via appServices
-    if (!loggedInUser || files.length === 0) {
-        console.warn("[library.js] handleFileUpload: Not logged in or no files selected.");
+    if (!loggedInUser) {
+        console.warn("[library.js] handleFileUpload: Not logged in. Cannot upload files.");
         appServices.showNotification("You must be logged in to upload files.", 3000);
         return;
     }
+    if (files.length === 0) {
+        console.log("[library.js] handleFileUpload: No files selected to upload.");
+        return;
+    }
+
     appServices.showNotification(`Uploading ${files.length} file(s)...`, 3000); 
     
     const token = localStorage.getItem('snugos_token');
@@ -518,8 +583,9 @@ async function handleFileUpload(files) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('path', currentPath.join('/')); // Upload to the current path
+        
         try {
-            console.log(`[library.js] Attempting upload of file: ${file.name}`);
+            console.log(`[library.js] Attempting upload of file: ${file.name}, size: ${file.size} bytes`);
             const response = await fetch(`${SERVER_URL}/api/files/upload`, { 
                 method: 'POST', 
                 headers: { 'Authorization': `Bearer ${token}` }, 
@@ -528,7 +594,7 @@ async function handleFileUpload(files) {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`[library.js] Upload failed for ${file.name}:`, response.status, errorText);
+                console.error(`[library.js] Upload failed for ${file.name}:`, response.status, response.statusText, errorText);
                 throw new Error(errorText || `Upload failed with status: ${response.status}`);
             }
             const result = await response.json();
@@ -550,6 +616,7 @@ async function handleFileUpload(files) {
 
 /**
  * Prompts the user for a new folder name and creates it.
+ * @returns {void}
  */
 function createFolder() {
     const loggedInUser = appServices.getLoggedInUser?.(); // Get user state via appServices
@@ -565,11 +632,13 @@ function createFolder() {
                 appServices.showNotification("Folder name cannot be empty.", 2000);
                 return;
             }
+            const token = localStorage.getItem('snugos_token');
+            if (!token) {
+                appServices.showNotification("Authentication token missing. Please log in again.", 3000);
+                return;
+            }
             try {
-                const token = localStorage.getItem('snugos_token');
-                if (!token) {
-                    throw new Error("Authentication token missing.");
-                }
+                console.log(`[library.js] Attempting to create folder: ${folderName} at path: ${currentPath.join('/')}`);
                 const response = await fetch(`${SERVER_URL}/api/folders`, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
@@ -600,6 +669,7 @@ function createFolder() {
 
 /**
  * Updates the clock display in the taskbar every minute.
+ * @returns {void}
  */
 function updateClockDisplay() {
     const clockDisplay = document.getElementById('taskbarClockDisplay');
@@ -611,6 +681,7 @@ function updateClockDisplay() {
 
 /**
  * Toggles the visibility of the start menu.
+ * @returns {void}
  */
 function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
@@ -618,6 +689,7 @@ function toggleStartMenu() {
 
 /**
  * Toggles full-screen mode for the document.
+ * @returns {void}
  */
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
@@ -646,6 +718,7 @@ function checkLocalAuth() {
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
+        console.error("[library.js] Error parsing token in checkLocalAuth:", e);
         localStorage.removeItem('snugos_token'); // Clear token on error
         return null;
     }
@@ -653,6 +726,7 @@ function checkLocalAuth() {
 
 /**
  * Handles user logout: clears token, updates UI, and reloads the page.
+ * @returns {void}
  */
 function handleLogout() {
     localStorage.removeItem('snugos_token');
@@ -666,6 +740,7 @@ function handleLogout() {
 /**
  * Updates the authentication-related UI elements (login/logout buttons, welcome message).
  * @param {Object|null} user The logged-in user object, or null if logged out.
+ * @returns {void}
  */
 function updateAuthUI(user) {
     const userAuthContainer = document.getElementById('userAuthContainer');
@@ -687,6 +762,7 @@ function updateAuthUI(user) {
 
 /**
  * Applies the user's saved theme preference (light/dark).
+ * @returns {void}
  */
 function applyUserThemePreference() {
     const preference = localStorage.getItem('snugos-theme');
@@ -704,6 +780,7 @@ function applyUserThemePreference() {
 
 /**
  * Toggles between light and dark themes and saves the preference.
+ * @returns {void}
  */
 function toggleTheme() {
     const body = document.body;
@@ -721,6 +798,7 @@ function toggleTheme() {
 
 /**
  * Shows the login/registration modal.
+ * @returns {void}
  */
 function showLoginModal() {
     const modalContent = `
@@ -745,9 +823,14 @@ function showLoginModal() {
         </div>
     `;
     
+    // Check if appServices.showCustomModal is defined before calling
+    if (!appServices.showCustomModal) {
+        console.error("[library.js] CRITICAL: appServices.showCustomModal is NOT defined! Cannot show login modal.");
+        alert("Error: Core UI functions not available.");
+        return;
+    }
     const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
 
-    // Apply styles to inputs and buttons within the modal for consistency
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
         input.style.color = 'var(--text-primary)';
@@ -789,4 +872,61 @@ function showLoginModal() {
         await handleRegister(username, password);
         overlay.remove();
     });
+}
+
+/**
+ * Handles user login.
+ * @param {string} username 
+ * @param {string} password 
+ * @returns {Promise<void>}
+ */
+async function handleLogin(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            localStorage.setItem('snugos_token', data.token);
+            // After successful login, check state again to properly update loggedInUser and UI
+            checkLocalAuth(); // Update loggedInUser in this module
+            updateAuthUI(loggedInUser); // Update UI
+            appServices.loadAndApplyUserBackground(); // Load user background
+            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+        } else {
+            appServices.showNotification(`Login failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        console.error("[library.js] Login Error:", error);
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+    }
+}
+
+/**
+ * Handles user registration.
+ * @param {string} username 
+ * @param {string} password 
+ * @returns {Promise<void>}
+ */
+async function handleRegister(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            appServices.showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        console.error("[library.js] Register Error:", error);
+        appServices.showNotification('Network error. Could not connect to server.', 3000);
+    }
 }
