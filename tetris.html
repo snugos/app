@@ -222,6 +222,14 @@
             nextCanvas.height = 4 * BLOCK_SIZE;
         }
 
+        /**
+         * A helper function to create a delay using Promises.
+         * @param {number} ms - The delay time in milliseconds.
+         */
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         // --- Game Logic ---
         
         class Piece {
@@ -244,6 +252,10 @@
         }
 
         function resetGame() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             grid = createEmptyGrid();
             score = 0;
             lines = 0;
@@ -263,26 +275,23 @@
         }
         
         function update(time = 0) {
-            // Core game loop logic for piece dropping
-            if (!isPaused && !isGameOver && !isAnimating) {
-                const deltaTime = time - lastTime;
-                lastTime = time;
-                
-                dropCounter += deltaTime;
-                
-                dropInterval = 1000 - (level - 1) * 50;
-                if (dropInterval < 100) dropInterval = 100;
-
-                if (dropCounter > dropInterval) {
-                     pieceDrop();
-                }
-            }
-           
-            // Drawing happens every frame to keep animations smooth
-            draw();
-            
-            // The loop continues unless the game is over
             if (!isGameOver) {
+                 // Game logic only runs if not paused or animating
+                if (!isPaused && !isAnimating) {
+                    const deltaTime = time - lastTime;
+                    lastTime = time;
+                    
+                    dropCounter += deltaTime;
+                    
+                    dropInterval = 1000 - (level - 1) * 50;
+                    if (dropInterval < 100) dropInterval = 100;
+
+                    if (dropCounter > dropInterval) {
+                        pieceDrop();
+                    }
+                }
+                
+                draw();
                 animationFrameId = requestAnimationFrame(update);
             }
         }
@@ -292,7 +301,7 @@
              currentPiece.y++;
              if (checkCollision(grid, currentPiece)) {
                  currentPiece.y--;
-                 lockPiece();
+                 handlePieceLanded();
              } else {
                  dropCounter = 0;
              }
@@ -304,22 +313,19 @@
                 currentPiece.y++;
             }
             currentPiece.y--; 
-            lockPiece();
+            handlePieceLanded();
         }
 
-        function lockPiece() {
+        async function handlePieceLanded() {
             if (isAnimating) return;
             isAnimating = true;
+
+            // 1. Lock Flash Animation
             currentPiece.isLocking = true;
+            await delay(100);
+            currentPiece.isLocking = false;
 
-            setTimeout(() => {
-                currentPiece.isLocking = false;
-                processLandedPiece();
-            }, 100);
-        }
-
-        function processLandedPiece() {
-            // Merge piece into the grid data
+            // 2. Merge piece into the grid data
             currentPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
@@ -328,39 +334,37 @@
                 });
             });
 
-            // Check for line clears
+            // 3. Check for and animate line clears
             let rowsToClear = [];
             outer: for (let y = ROWS - 1; y >= 0; y--) {
                 for (let x = 0; x < COLS; x++) {
-                    if (grid[y][x].value === 0) {
-                        continue outer;
-                    }
+                    if (grid[y][x].value === 0) continue outer;
                 }
                 rowsToClear.push(y);
                 grid[y].forEach(cell => cell.isClearing = true);
             }
 
             if (rowsToClear.length > 0) {
-                setTimeout(() => {
-                    // Remove cleared lines from grid data
-                    rowsToClear.forEach(y => {
-                        grid.splice(y, 1);
-                        grid.unshift(Array.from({length: COLS}, () => ({ value: 0, isClearing: false })));
-                    });
-                    
-                    const points = [0, 100, 300, 500, 800];
-                    score += points[rowsToClear.length] * level;
-                    lines += rowsToClear.length;
-                    
-                    if (lines >= level * LINES_PER_LEVEL) {
-                        level++;
-                    }
-                    updateUI();
-                    spawnNewPiece();
-                }, 200);
-            } else {
-                spawnNewPiece();
+                await delay(200); // Line clear animation
+
+                // Remove cleared lines from grid data
+                rowsToClear.sort((a, b) => a - b).forEach((y, index) => {
+                    grid.splice(y - index, 1);
+                    grid.unshift(Array.from({length: COLS}, () => ({ value: 0, isClearing: false })));
+                });
+                
+                const points = [0, 100, 300, 500, 800];
+                score += points[rowsToClear.length] * level;
+                lines += rowsToClear.length;
+                
+                if (lines >= level * LINES_PER_LEVEL) {
+                    level++;
+                }
+                updateUI();
             }
+
+            // 4. Spawn the next piece
+            spawnNewPiece();
         }
 
         function checkCollision(grid, piece) {
@@ -385,12 +389,11 @@
         function spawnNewPiece() {
             currentPiece = nextPiece;
             nextPiece = generatePiece();
-            isAnimating = false; 
+            isAnimating = false; // The game can now continue
             
             if (checkCollision(grid, currentPiece)) {
                 gameOver();
             }
-
             dropCounter = 0;
         }
 
@@ -518,26 +521,20 @@
         // --- Event Handlers ---
         
         function startGame() {
-            if (isGameOver) {
-                resetGame();
-            }
-            if (!animationFrameId) {
-                isPaused = false;
-                pauseBtn.textContent = 'pause';
-                lastTime = performance.now(); 
-                animationFrameId = requestAnimationFrame(update);
-            }
+            // Only start if there isn't already a game running
+            if (animationFrameId) return;
+            resetGame();
+            lastTime = performance.now(); 
+            animationFrameId = requestAnimationFrame(update);
         }
         
         function togglePause() {
-            if (isGameOver || isAnimating) return; 
+            if (isGameOver) return; 
             
             isPaused = !isPaused;
             if (isPaused) {
-                // The loop will now naturally stop calling the game logic
                 pauseBtn.textContent = 'resume';
             } else {
-                // Reset the time to avoid a huge jump after unpausing
                 lastTime = performance.now();
                 pauseBtn.textContent = 'pause';
             }
@@ -545,12 +542,15 @@
 
         startBtn.addEventListener('click', startGame);
         pauseBtn.addEventListener('click', togglePause);
-        restartBtn.addEventListener('click', () => {
-            resetGame();
-            startGame();
-        });
+        restartBtn.addEventListener('click', startGame);
         
         document.addEventListener('keydown', event => {
+            // If the game hasn't started yet (initial state), any key press starts it.
+            if (!animationFrameId && !isGameOver) {
+                startGame();
+                return;
+            }
+
             if (isPaused || isGameOver || isAnimating) {
                 return;
             }
@@ -588,10 +588,6 @@
                     event.preventDefault(); 
                     hardDrop();
                     break;
-            }
-            
-            if (moved) {
-                draw();
             }
         });
 
