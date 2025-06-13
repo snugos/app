@@ -1,7 +1,0 @@
-/js/*.js
-  Content-Type: application/javascript
-  X-Content-Type-Options: nosniff
-
-/js/state/*.js
-  Content-Type: application/javascript
-  X-Content-Type-Options: nosniff

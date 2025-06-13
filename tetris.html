@@ -67,6 +67,13 @@
             gap: 0.5rem;
         }
 
+        .info-panel h2, .controls-panel h2 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--border-primary);
+            padding-bottom: 0.5rem;
+        }
+
         .info-panel div {
             font-size: 0.8rem;
         }
@@ -171,14 +178,13 @@
         const COLS = 10;
         const ROWS = 20;
         const LINES_PER_LEVEL = 10;
-        const BLOCK_SIZE = 15;
+        const BLOCK_SIZE = 15; // Set a fixed, small block size
 
-        // --- Colors & Tetrominoes ---
+        // --- Colors & Tetrominoes (Shapes) ---
         const PIECE_COLOR = '#FFFFFF';
         const BORDER_COLOR = '#444444'; 
-        const GRID_COLOR = '#333333';
-        const LOCKING_COLOR = '#888888'; 
-        const CLEARING_COLOR = '#AAAAAA'; 
+        const LOCKING_COLOR = '#888888'; // Color for the lock flash
+        const CLEARING_COLOR = '#AAAAAA'; // Color for clearing line flash
         const TETROMINOES = {
             'I': [[1, 1, 1, 1]],
             'J': [[1, 0, 0], [1, 1, 1]],
@@ -203,7 +209,7 @@
         let isPaused = false;
         let isGameOver = false;
         let animationFrameId;
-        let isAnimating = false;
+        let isAnimating = false; // Flag to pause logic during animations
 
         // --- UI Elements ---
         const scoreEl = document.getElementById('score');
@@ -215,6 +221,9 @@
         const gameOverModal = document.getElementById('game-over-modal');
         const finalScoreEl = document.getElementById('final-score');
         
+        /**
+         * Sets the size of the game canvases based on the fixed BLOCK_SIZE.
+         */
         function setGameSize() {
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
@@ -229,7 +238,7 @@
                 this.shape = shape;
                 this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
                 this.y = 0;
-                this.isLocking = false;
+                this.isLocking = false; // Add locking state to piece
             }
         }
         
@@ -263,32 +272,29 @@
         }
         
         function update(time = 0) {
-            // Core game loop logic for piece dropping
-            if (!isPaused && !isGameOver && !isAnimating) {
-                const deltaTime = time - lastTime;
-                lastTime = time;
-                
-                dropCounter += deltaTime;
-                
-                dropInterval = 1000 - (level - 1) * 50;
-                if (dropInterval < 100) dropInterval = 100;
+            if (isPaused || isGameOver || isAnimating) {
+                if (!isAnimating) draw();
+                return;
+            }
 
-                if (dropCounter > dropInterval) {
-                     pieceDrop();
-                }
+            const deltaTime = time - lastTime;
+            lastTime = time;
+            
+            dropCounter += deltaTime;
+            
+            dropInterval = 1000 - (level - 1) * 50;
+            if (dropInterval < 100) dropInterval = 100;
+
+            if (dropCounter > dropInterval) {
+                 pieceDrop();
             }
            
-            // Drawing happens every frame to keep animations smooth
             draw();
-            
-            // The loop continues unless the game is over
-            if (!isGameOver) {
-                animationFrameId = requestAnimationFrame(update);
-            }
+            animationFrameId = requestAnimationFrame(update);
         }
         
         function pieceDrop() {
-             if (isPaused || isAnimating) return;
+             if (isPaused) return;
              currentPiece.y++;
              if (checkCollision(grid, currentPiece)) {
                  currentPiece.y--;
@@ -299,11 +305,13 @@
         }
 
         function hardDrop() {
-            if (isPaused || isGameOver || isAnimating) return;
+            if (isPaused || isGameOver) return;
+
             while (!checkCollision(grid, currentPiece)) {
                 currentPiece.y++;
             }
             currentPiece.y--; 
+
             lockPiece();
         }
 
@@ -311,56 +319,20 @@
             if (isAnimating) return;
             isAnimating = true;
             currentPiece.isLocking = true;
+            draw(); // Redraw immediately to show locking color
 
             setTimeout(() => {
-                currentPiece.isLocking = false;
-                processLandedPiece();
-            }, 100);
-        }
-
-        function processLandedPiece() {
-            // Merge piece into the grid data
-            currentPiece.shape.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        grid[currentPiece.y + y][currentPiece.x + x].value = 1;
-                    }
-                });
-            });
-
-            // Check for line clears
-            let rowsToClear = [];
-            outer: for (let y = ROWS - 1; y >= 0; y--) {
-                for (let x = 0; x < COLS; x++) {
-                    if (grid[y][x].value === 0) {
-                        continue outer;
-                    }
-                }
-                rowsToClear.push(y);
-                grid[y].forEach(cell => cell.isClearing = true);
-            }
-
-            if (rowsToClear.length > 0) {
-                setTimeout(() => {
-                    // Remove cleared lines from grid data
-                    rowsToClear.forEach(y => {
-                        grid.splice(y, 1);
-                        grid.unshift(Array.from({length: COLS}, () => ({ value: 0, isClearing: false })));
+                currentPiece.shape.forEach((row, y) => {
+                    row.forEach((value, x) => {
+                        if (value !== 0) {
+                            grid[currentPiece.y + y][currentPiece.x + x].value = 1;
+                        }
                     });
-                    
-                    const points = [0, 100, 300, 500, 800];
-                    score += points[rowsToClear.length] * level;
-                    lines += rowsToClear.length;
-                    
-                    if (lines >= level * LINES_PER_LEVEL) {
-                        level++;
-                    }
-                    updateUI();
-                    spawnNewPiece();
-                }, 200);
-            } else {
-                spawnNewPiece();
-            }
+                });
+                
+                currentPiece.isLocking = false;
+                removeFullRows(); // This will handle the next step (line clear or new piece)
+            }, 100); // Lock animation duration
         }
 
         function checkCollision(grid, piece) {
@@ -382,19 +354,57 @@
             return false;
         }
         
+        function removeFullRows() {
+            let rowsToClear = [];
+            outer: for (let y = ROWS - 1; y >= 0; y--) {
+                for (let x = 0; x < COLS; x++) {
+                    if (grid[y][x].value === 0) {
+                        continue outer;
+                    }
+                }
+                rowsToClear.push(y);
+                grid[y].forEach(cell => cell.isClearing = true);
+            }
+
+            if (rowsToClear.length > 0) {
+                isAnimating = true;
+                draw(); // Show the clearing flash
+                
+                setTimeout(() => {
+                    rowsToClear.forEach(y => {
+                        grid.splice(y, 1);
+                        grid.unshift(Array.from({length: COLS}, () => ({ value: 0, isClearing: false })));
+                    });
+                    
+                    const points = [0, 100, 300, 500, 800];
+                    score += points[rowsToClear.length] * level;
+                    lines += rowsToClear.length;
+                    
+                    if (lines >= level * LINES_PER_LEVEL) {
+                        level++;
+                    }
+                    updateUI();
+                    spawnNewPiece();
+                }, 200); // Line clear animation duration
+            } else {
+                spawnNewPiece();
+            }
+        }
+        
         function spawnNewPiece() {
             currentPiece = nextPiece;
             nextPiece = generatePiece();
-            isAnimating = false; 
             
             if (checkCollision(grid, currentPiece)) {
                 gameOver();
             }
 
+            isAnimating = false;
             dropCounter = 0;
+            draw();
         }
 
-        function rotatePiece() {
+        function rotatePiece(dir) {
             if (isAnimating) return;
             const shape = currentPiece.shape;
             const newShape = [];
@@ -422,23 +432,6 @@
         }
         
         // --- Drawing Functions ---
-        
-        function drawGrid() {
-            boardCtx.strokeStyle = GRID_COLOR;
-            boardCtx.lineWidth = 1;
-            for (let x = 0; x <= COLS; x++) {
-                boardCtx.beginPath();
-                boardCtx.moveTo(x * BLOCK_SIZE, 0);
-                boardCtx.lineTo(x * BLOCK_SIZE, ROWS * BLOCK_SIZE);
-                boardCtx.stroke();
-            }
-            for (let y = 0; y <= ROWS; y++) {
-                boardCtx.beginPath();
-                boardCtx.moveTo(0, y * BLOCK_SIZE);
-                boardCtx.lineTo(COLS * BLOCK_SIZE, y * BLOCK_SIZE);
-                boardCtx.stroke();
-            }
-        }
         
         function drawBlock(ctx, x, y, color = PIECE_COLOR) {
             ctx.fillStyle = color;
@@ -495,7 +488,6 @@
         
         function draw() {
             boardCtx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
-            drawGrid();
             drawBoard();
             drawCurrentPiece();
             drawNextPiece();
@@ -530,16 +522,17 @@
         }
         
         function togglePause() {
-            if (isGameOver || isAnimating) return; 
+            if (isGameOver || (!animationFrameId && !isPaused) || isAnimating) return; 
             
             isPaused = !isPaused;
             if (isPaused) {
-                // The loop will now naturally stop calling the game logic
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
                 pauseBtn.textContent = 'resume';
             } else {
-                // Reset the time to avoid a huge jump after unpausing
-                lastTime = performance.now();
                 pauseBtn.textContent = 'pause';
+                lastTime = performance.now(); 
+                update(lastTime);
             }
         }
 
