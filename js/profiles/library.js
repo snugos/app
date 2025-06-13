@@ -1,6 +1,6 @@
-// NEW: Import from backgroundManager
+// CORRECTED PATH
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { SnugWindow } from '../daw/SnugWindow.js'; // Ensure SnugWindow is imported
+import { SnugWindow } from '../daw/SnugWindow.js'; 
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
@@ -74,7 +74,7 @@ function openLibraryWindow() {
                 <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
                 <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
             </div>
-            <div class="flex-grow flex flex-col">
+            <div class="flex-grow flex-col">
                 <div class="p-2 border-b" style="border-color: var(--border-secondary);">
                     <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
                 </div>
@@ -134,7 +134,6 @@ function initializePageUI(container) {
 }
 
 function attachDesktopEventListeners() {
-    // NEW: Attach desktop context menu listener here
     setupDesktopContextMenu(); 
     
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -143,42 +142,33 @@ function attachDesktopEventListeners() {
     document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 
-    // REMOVED: This listener is now handled by the generic customBgInput listener below
-    // document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-    //     if(!e.target.files || !e.target.files[0]) return; 
-    //     appServices.handleBackgroundUpload(e.target.files[0]); 
-    // });
 }
 
-// NEW: Function to set up desktop context menu
 function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
-    const customBgInput = document.getElementById('customBgInput'); // Get the input element
+    const customBgInput = document.getElementById('customBgInput');
 
     if (!desktop || !customBgInput) return;
 
     desktop.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        // Prevent showing context menu if clicking inside a SnugWindow
         if (e.target.closest('.window')) return; 
 
         const menuItems = [
             {
                 label: 'Change Background',
-                action: () => customBgInput.click() // Trigger the file input
+                action: () => customBgInput.click() 
             }
-            // Add other desktop context menu items here if needed
         ];
         appServices.createContextMenu(e, menuItems, appServices);
     });
 
-    // Central listener for the hidden file input
     customBgInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
-            appServices.handleBackgroundUpload(file); // Use the centralized handler
+            appServices.handleBackgroundUpload(file); 
         }
-        e.target.value = null; // Clear the input after file selection
+        e.target.value = null; 
     });
 }
 
