@@ -1,6 +1,5 @@
 // js/auth.js - Auth module for SnugOS
 
-// Corrected import path for backgroundManager.js
 import { applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
 
 let localAppServices = {};
@@ -36,14 +35,16 @@ export function initializeAuth(appServicesFromMain) {
  * Updates `loggedInUser` state and the UI.
  */
 export async function checkInitialAuthState() {
+    console.log("[auth.js] checkInitialAuthState called.");
     const token = localStorage.getItem('snugos_token');
     if (!token) {
         loggedInUser = null; // Ensure state is cleared
         updateAuthUI(null); // Update UI for logged out state
         if (localAppServices.loadAndApplyUserBackground) {
+            console.log("[auth.js] Calling appServices.loadAndApplyUserBackground (logged out path).");
             localAppServices.loadAndApplyUserBackground(); // Load default background
         } else {
-            console.error("[auth.js] appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState initial load!");
+            console.error("[auth.js] CRITICAL: appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState initial load!");
         }
         return;
     }
@@ -51,19 +52,21 @@ export async function checkInitialAuthState() {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
+            console.log("[auth.js] Token expired.");
             return handleLogout(); // Token expired
         }
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser); // Update UI
         if (localAppServices.loadAndApplyUserBackground) {
+            console.log("[auth.js] Calling appServices.loadAndApplyUserBackground (logged in path).");
             localAppServices.loadAndApplyUserBackground(); // Load user's custom background
         } else {
-            console.error("[auth.js] appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (logged in)!");
+            console.error("[auth.js] CRITICAL: appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (logged in)!");
         }
 
     } catch (e) {
-        console.error("Error during initial auth state check:", e);
+        console.error("[auth.js] Error during initial auth state check:", e);
         handleLogout(); // Malformed token
     }
 }
@@ -98,6 +101,7 @@ function updateAuthUI(user = null) {
  * Displays the login/register modal.
  */
 function showLoginModal() {
+    console.log("[auth.js] showLoginModal called.");
     document.getElementById('startMenu')?.classList.add('hidden');
     // Reusing the modal content from welcome.js/index.html for consistency
     const modalContent = `
@@ -124,7 +128,7 @@ function showLoginModal() {
     
     // Use appServices.showCustomModal, ensuring it's available
     if (!localAppServices.showCustomModal) {
-        console.error("[auth.js] appServices.showCustomModal is NOT defined!");
+        console.error("[auth.js] CRITICAL: appServices.showCustomModal is NOT defined!");
         alert("Error: Core UI functions not available."); // Fallback
         return;
     }
@@ -179,6 +183,7 @@ function showLoginModal() {
  * @param {string} password 
  */
 async function handleLogin(username, password) {
+    console.log("[auth.js] handleLogin called.");
     try {
         const response = await fetch(`${SERVER_URL}/api/login`, {
             method: 'POST',
@@ -190,14 +195,14 @@ async function handleLogin(username, password) {
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
             // On successful login, check state again to properly update loggedInUser and UI
-            await checkInitialAuthState(); 
+            await checkInitialAuthState(); // This will update loggedInUser and call appServices.loadAndApplyUserBackground
             localAppServices.showNotification?.(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             localAppServices.showNotification?.(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
+        console.error("[auth.js] Login Error:", error);
         localAppServices.showNotification?.('Network error. Could not connect to server.', 3000);
-        console.error("Login Error:", error);
     }
 }
 
@@ -207,6 +212,7 @@ async function handleLogin(username, password) {
  * @param {string} password 
  */
 async function handleRegister(username, password) {
+    console.log("[auth.js] handleRegister called.");
     try {
         const response = await fetch(`${SERVER_URL}/api/register`, {
             method: 'POST',
@@ -221,8 +227,8 @@ async function handleRegister(username, password) {
             localAppServices.showNotification?.(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
+        console.error("[auth.js] Register Error:", error);
         localAppServices.showNotification?.('Network error. Could not connect to server.', 3000);
-        console.error("Register Error:", error);
     }
 }
 
@@ -231,11 +237,11 @@ async function handleRegister(username, password) {
  * It now calls the centralized `handleBackgroundUpload` from `backgroundManager.js`.
  * @param {File} file 
  */
-export function handleBackgroundUpload(file) { // Exported for direct call from UI/menu
-    if (localAppServices.handleBackgroundUpload) { // Check if the service is available
+export function handleBackgroundUpload(file) { 
+    if (localAppServices.handleBackgroundUpload) { 
         localAppServices.handleBackgroundUpload(file);
     } else {
-        console.error("[auth.js] appServices.handleBackgroundUpload is NOT defined!");
+        console.error("[auth.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
         localAppServices.showNotification?.("Error: Background upload service not available.", 3000);
     }
 }
@@ -243,28 +249,26 @@ export function handleBackgroundUpload(file) { // Exported for direct call from 
 /**
  * Handles user logout.
  */
-export function handleLogout() { // Exported for direct call from UI/menu
+export function handleLogout() { 
+    console.log("[auth.js] handleLogout called.");
     localStorage.removeItem('snugos_token');
     loggedInUser = null; // Clear local state
     localAppServices.setLoggedInUser?.(null); // Clear state in appServices
 
     updateAuthUI(null); // Update UI
     
-    if (localAppServices.applyCustomBackground) { // Check service availability
+    if (localAppServices.applyCustomBackground) { 
         localAppServices.applyCustomBackground(''); // Clear background
     } else {
-        console.error("[auth.js] appServices.applyCustomBackground is NOT defined during logout!");
+        console.error("[auth.js] CRITICAL: appServices.applyCustomBackground is NOT defined during logout!");
     }
 
     localAppServices.showNotification?.('You have been logged out.', 2000);
 
-    // Depending on the page, you might want to reload or redirect after logout
-    // For general purpose, a reload is simplest to clear all app state.
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-        // If on the main desktop, just update UI and background
-        // (backgroundManager handles propagation, no need to reload)
-    } else {
-        // If on an app page (e.g., messenger, library, snaw), reload to reset app state
+    // Reload behavior based on page:
+    // If on index.html (main desktop), no reload is needed, broadcast takes care of it.
+    // If on an app page (messenger, library, snaw, profile), reload to reset app state.
+    if (!window.location.pathname.includes('index.html') && window.location.pathname !== '/') {
         window.location.reload(); 
     }
 }
@@ -274,12 +278,13 @@ export function handleLogout() { // Exported for direct call from UI/menu
  * This is primarily used internally by auth.js for initial state checks.
  * @returns {Object|null} The logged-in user's ID and username, or null if no valid token.
  */
-export function checkLocalAuth() { // Exported for use in main scripts' DOMContentLoaded
+export function checkLocalAuth() { 
     try {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
+            console.log("[auth.js] Token found but expired in checkLocalAuth.");
             localStorage.removeItem('snugos_token');
             return null;
         }
