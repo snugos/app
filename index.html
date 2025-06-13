@@ -58,12 +58,9 @@
         </div>
     </div>
 
-    <!-- NOTE: This div now uses flexbox to center its content. -->
     <div id="desktop" class="relative h-full w-full flex items-center justify-center">
-        <!-- The icon container is now a simple grid that will be centered by the flex parent. -->
         <div id="desktop-icons-container" class="grid grid-cols-2 sm:grid-cols-4 gap-8">
-            <!-- Desktop icons will be rendered here by welcome.js -->
-        </div>
+            </div>
     </div>
 
     <div id="taskbar" class="select-none">
@@ -80,6 +77,8 @@
             <li><hr></li>
             <li id="menuViewProfiles"><a href="library.html" style="text-decoration:none; color:inherit; display:block;">Library</a></li>
             <li><hr></li>
+            <li id="menuChangeBackground"><a href="#" style="text-decoration:none; color:inherit; display:block;">Change Background</a></li>
+            <li><hr></li>
             <li id="menuLogin">Login / Register</li>
             <li id="menuLogout" class="hidden">Logout</li>
             <li><hr></li>
@@ -92,14 +91,7 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/state.js"></script>
-    <script type="module" src="js/daw/SnugWindow.js"></script>
-
-    <script type="module" src="js/welcome/welcomeUtils.js"></script>
-    <script type="module" src="js/welcome/welcomeDb.js"></script>
-    <script type="module" src="js/welcome/welcome.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script> <script src="js/utils.js"></script> <script src="js/db.js"></script>    <script type="module" src="js/daw/SnugWindow.js"></script> <script type="module" src="js/backgroundManager.js"></script> <script type="module" src="js/auth.js"></script> <script type="module" src="js/welcome/welcome.js"></script>
 
 </body>
 </html>
