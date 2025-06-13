@@ -1,52 +1,81 @@
-// CORRECTED PATH
-import { applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
+// js/auth.js - Auth module for SnugOS
 
+// Corrected import path for backgroundManager.js
+import { applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
 
 let localAppServices = {};
 let loggedInUser = null; 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
+/**
+ * Initializes the authentication module and attaches event listeners.
+ * Should be called once on page load.
+ * @param {object} appServicesFromMain - The main app services object.
+ */
 export function initializeAuth(appServicesFromMain) { 
     localAppServices = appServicesFromMain;
+    
+    // Ensure appServices always has the correct getters/setters for loggedInUser
     localAppServices.getLoggedInUser = () => loggedInUser;
-    localAppServices.setLoggedInUser = (user) => { loggedInUser = user; }; // Ensure setter is exposed
+    localAppServices.setLoggedInUser = (user) => { 
+        loggedInUser = user; 
+        // Optional: Trigger UI update here if needed, but `updateAuthUI` already does it.
+    };
 
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
     
+    // Check initial auth state, which will also trigger background loading via appServices
     checkInitialAuthState();
 }
 
+/**
+ * Checks for a local authentication token and validates it.
+ * Updates `loggedInUser` state and the UI.
+ */
 export async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
-        loggedInUser = null;
-        updateAuthUI(null);
-        localAppServices.loadAndApplyUserBackground?.(); 
+        loggedInUser = null; // Ensure state is cleared
+        updateAuthUI(null); // Update UI for logged out state
+        if (localAppServices.loadAndApplyUserBackground) {
+            localAppServices.loadAndApplyUserBackground(); // Load default background
+        } else {
+            console.error("[auth.js] appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState initial load!");
+        }
         return;
     }
 
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            return handleLogout(); 
+            return handleLogout(); // Token expired
         }
         
         loggedInUser = { id: payload.id, username: payload.username };
-        updateAuthUI(loggedInUser);
-        localAppServices.loadAndApplyUserBackground?.(); 
+        updateAuthUI(loggedInUser); // Update UI
+        if (localAppServices.loadAndApplyUserBackground) {
+            localAppServices.loadAndApplyUserBackground(); // Load user's custom background
+        } else {
+            console.error("[auth.js] appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (logged in)!");
+        }
 
     } catch (e) {
         console.error("Error during initial auth state check:", e);
-        handleLogout(); 
+        handleLogout(); // Malformed token
     }
 }
 
+/**
+ * Updates the UI elements related to user authentication (login/logout buttons, welcome message).
+ * @param {object|null} user - The logged-in user object, or null if logged out.
+ */
 function updateAuthUI(user = null) {
+    // Update loggedInUser in this module and propagate to appServices
     loggedInUser = user;
-    localAppServices.setLoggedInUser?.(user); // Call the setter to update appServices reference
+    localAppServices.setLoggedInUser?.(user);
 
     const userAuthContainer = document.getElementById('userAuthContainer');
     const menuLogin = document.getElementById('menuLogin');
@@ -65,8 +94,12 @@ function updateAuthUI(user = null) {
     }
 }
 
+/**
+ * Displays the login/register modal.
+ */
 function showLoginModal() {
     document.getElementById('startMenu')?.classList.add('hidden');
+    // Reusing the modal content from welcome.js/index.html for consistency
     const modalContent = `
         <div class="space-y-4">
             <div>
@@ -89,6 +122,12 @@ function showLoginModal() {
         </div>
     `;
     
+    // Use appServices.showCustomModal, ensuring it's available
+    if (!localAppServices.showCustomModal) {
+        console.error("[auth.js] appServices.showCustomModal is NOT defined!");
+        alert("Error: Core UI functions not available."); // Fallback
+        return;
+    }
     const { overlay, contentDiv } = localAppServices.showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
@@ -134,6 +173,11 @@ function showLoginModal() {
     });
 }
 
+/**
+ * Handles user login.
+ * @param {string} username 
+ * @param {string} password 
+ */
 async function handleLogin(username, password) {
     try {
         const response = await fetch(`${SERVER_URL}/api/login`, {
@@ -145,9 +189,8 @@ async function handleLogin(username, password) {
 
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
-            loggedInUser = { id: data.user.id, username: data.user.username };
-            updateAuthUI(loggedInUser); // This will update loggedInUser and call setLoggedInUser
-            localAppServices.loadAndApplyUserBackground?.(); 
+            // On successful login, check state again to properly update loggedInUser and UI
+            await checkInitialAuthState(); 
             localAppServices.showNotification?.(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             localAppServices.showNotification?.(`Login failed: ${data.message}`, 3000);
@@ -158,6 +201,11 @@ async function handleLogin(username, password) {
     }
 }
 
+/**
+ * Handles user registration.
+ * @param {string} username 
+ * @param {string} password 
+ */
 async function handleRegister(username, password) {
     try {
         const response = await fetch(`${SERVER_URL}/api/register`, {
@@ -178,25 +226,55 @@ async function handleRegister(username, password) {
     }
 }
 
-export function handleBackgroundUpload(file) {
-    // This function is now just a pass-through to the centralized manager
-    localAppServices.handleBackgroundUpload(file);
+/**
+ * Handles background file uploads. This function is exposed via `appServices`.
+ * It now calls the centralized `handleBackgroundUpload` from `backgroundManager.js`.
+ * @param {File} file 
+ */
+export function handleBackgroundUpload(file) { // Exported for direct call from UI/menu
+    if (localAppServices.handleBackgroundUpload) { // Check if the service is available
+        localAppServices.handleBackgroundUpload(file);
+    } else {
+        console.error("[auth.js] appServices.handleBackgroundUpload is NOT defined!");
+        localAppServices.showNotification?.("Error: Background upload service not available.", 3000);
+    }
 }
 
-export function handleLogout() { 
+/**
+ * Handles user logout.
+ */
+export function handleLogout() { // Exported for direct call from UI/menu
     localStorage.removeItem('snugos_token');
-    loggedInUser = null;
-    updateAuthUI(null); 
-    localAppServices.applyCustomBackground?.(''); 
+    loggedInUser = null; // Clear local state
+    localAppServices.setLoggedInUser?.(null); // Clear state in appServices
+
+    updateAuthUI(null); // Update UI
+    
+    if (localAppServices.applyCustomBackground) { // Check service availability
+        localAppServices.applyCustomBackground(''); // Clear background
+    } else {
+        console.error("[auth.js] appServices.applyCustomBackground is NOT defined during logout!");
+    }
+
     localAppServices.showNotification?.('You have been logged out.', 2000);
 
+    // Depending on the page, you might want to reload or redirect after logout
+    // For general purpose, a reload is simplest to clear all app state.
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        // If on the main desktop, just update UI and background
+        // (backgroundManager handles propagation, no need to reload)
     } else {
+        // If on an app page (e.g., messenger, library, snaw), reload to reset app state
         window.location.reload(); 
     }
 }
 
-export function checkLocalAuth() {
+/**
+ * Checks for a valid authentication token in local storage and returns user info if valid.
+ * This is primarily used internally by auth.js for initial state checks.
+ * @returns {Object|null} The logged-in user's ID and username, or null if no valid token.
+ */
+export function checkLocalAuth() { // Exported for use in main scripts' DOMContentLoaded
     try {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
@@ -207,6 +285,7 @@ export function checkLocalAuth() {
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
+        console.error("[auth.js] Error parsing token in checkLocalAuth:", e);
         localStorage.removeItem('snugos_token');
         return null;
     }
