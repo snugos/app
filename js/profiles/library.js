@@ -2,6 +2,10 @@
 
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { SnugWindow } from '../daw/SnugWindow.js'; 
+// Import window state functions directly from windowState.js
+import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from '../state/windowState.js';
+// Assuming showNotification, showCustomModal, createContextMenu are globally available from utils.js
+import { storeAudio, getAudio, deleteAudio } from '../db.js';
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
@@ -28,21 +32,19 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("[library.js] DOMContentLoaded fired. Starting appServices initialization...");
 
     // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Ensure core utilities are available through appServices
-    // Assuming showNotification, showCustomModal, createContextMenu are globally available
-    // or loaded via a script tag before this module, as per HTML structure.
+    // Core utilities (from utils.js, assumed globally available)
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
     appServices.createContextMenu = createContextMenu;
-    
-    // Window State functions (assuming these are globally available)
-    appServices.addWindowToStore = addWindowToStoreState;
-    appServices.removeWindowFromStore = removeWindowFromStoreState;
-    appServices.incrementHighestZ = incrementHighestZState;
-    appServices.getHighestZ = getHighestZState;
-    appServices.setHighestZ = setHighestZState;
-    appServices.getOpenWindows = getOpenWindowsState;
-    appServices.getWindowById = getWindowByIdState;
+
+    // Window State functions (imported directly from windowState.js)
+    appServices.addWindowToStore = addWindowToStore;
+    appServices.removeWindowFromStore = removeWindowFromStore;
+    appServices.incrementHighestZ = incrementHighestZ;
+    appServices.getHighestZ = getHighestZ;
+    appServices.setHighestZ = setHighestZ;
+    appServices.getOpenWindows = getOpenWindows;
+    appServices.getWindowById = getWindowById;
     
     // Auth related services (auth.js will implement the logic)
     // These getters/setters allow auth.js to update loggedInUser state
@@ -52,16 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Background Management services (from backgroundManager.js)
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
-    // Assuming storeAsset and getAsset are globally available from db.js
-    appServices.storeAsset = storeAsset; 
-    appServices.getAsset = getAsset; 
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
+    // Data persistence for assets (from db.js)
+    appServices.storeAsset = storeAsset; // Assuming storeAsset is globally available from db.js
+    appServices.getAsset = getAsset;     // Assuming getAsset is globally available from db.js
 
     // Initialize background manager module, passing the fully prepared appServices object
     initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
-    console.log("[library.js] appServices initialized for background:", appServices.loadAndApplyUserBackground !== undefined);
+    console.log("[library.js] backgroundManager initialized. appServices.loadAndApplyUserBackground defined:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Now call checkLocalAuth (from global scope via auth.js) which will use appServices
+    // Now call checkLocalAuth (from auth.js) which will use appServices
     // This will set `loggedInUser` via `appServices.setLoggedInUser`
     checkLocalAuth(); 
     console.log("[library.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
@@ -240,6 +242,13 @@ function setupDesktopContextMenu() {
         // Clear the file input value to allow selecting the same file again if needed
         e.target.value = null; 
     });
+
+    // Start Menu background option listener
+    document.getElementById('menuChangeBackground')?.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default link behavior
+        document.getElementById('startMenu')?.classList.add('hidden'); // Hide start menu
+        customBgInput.click(); // Trigger background input
+    });
 }
 
 /**
@@ -266,7 +275,7 @@ async function fetchAndRenderLibraryItems(container) {
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">Not logged in. Cannot fetch files.</p>`;
             return;
         }
-        console.log(`[library.js] Fetching files from ${endpoint} with path: ${currentPath.join('/')}`);
+        console.log(`[library.js] Fetching files from ${endpoint} with path: ${encodeURIComponent(currentPath.join('/'))}`);
         const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -292,8 +301,8 @@ async function fetchAndRenderLibraryItems(container) {
         }
     } catch (error) {
         console.error("[library.js] Error during file fetching:", error);
-        fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">Error: ${error.message}</p>`;
         appServices.showNotification(`Error loading files: ${error.message}`, 5000);
+        fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">Error: ${error.message}</p>`;
     }
 }
 
@@ -383,7 +392,7 @@ function renderFileItem(item, isParentFolder = false) {
  * Handles clicks (and double clicks) on file and folder items.
  * Navigates into folders or opens the file viewer for files.
  * @param {Object} item The clicked file or folder object.
- * @param {boolean} isParentFolder True if the item is the ".." parent folder.
+ * @param {boolean} isParentFolder True if this item represents the ".." parent folder.
  * @returns {void}
  */
 function handleItemClick(item, isParentFolder) {
@@ -439,6 +448,7 @@ async function handleShareFile(item) {
             throw new Error("Authentication token missing.");
         }
         const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
+            method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
@@ -713,6 +723,7 @@ function checkLocalAuth() {
         const payload = JSON.parse(atob(token.split('.')[1]));
         // Check token expiration
         if (payload.exp * 1000 < Date.now()) {
+            console.log("[library.js] Token found but expired in checkLocalAuth.");
             localStorage.removeItem('snugos_token'); // Remove expired token
             return null;
         }
