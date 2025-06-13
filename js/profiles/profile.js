@@ -305,26 +305,40 @@ function attachDesktopEventListeners() {
     const desktop = document.getElementById('desktop');
     const customBgInput = document.getElementById('customBgInput');
 
-    if (!desktop || !customBgInput) return;
+    if (!desktop || !customBgInput) {
+        console.warn("[profile.js] Desktop or customBgInput not found for event listeners.");
+        return;
+    }
 
     desktop.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         if (e.target.closest('.window')) return;
         const menuItems = [{
             label: 'Change Background',
-            action: () => customBgInput.click()
+            action: () => {
+                console.log("[profile.js] Context menu: Change Background clicked.");
+                customBgInput.click(); // Programmatically click the hidden file input
+            }
         }];
         appServices.createContextMenu(e, menuItems, appServices);
     });
 
     // The customBgInput change event listener for background upload
-    customBgInput?.addEventListener('change', async (e) => {
+    customBgInput.addEventListener('change', async (e) => { // Removed `?` to make it non-optional
+        console.log("[profile.js] customBgInput change event fired.");
         // Ensure that a file was selected
         if (!e.target.files || !e.target.files[0]) {
+            console.log("[profile.js] No file selected or file list empty.");
             return;
         }
-        // Use the centralized handleBackgroundUpload function via appServices
-        appServices.handleBackgroundUpload(e.target.files[0]);
+        const file = e.target.files[0];
+        if (appServices.handleBackgroundUpload) {
+            console.log("[profile.js] Calling appServices.handleBackgroundUpload.");
+            await appServices.handleBackgroundUpload(file);
+        } else {
+            console.error("[profile.js] appServices.handleBackgroundUpload is NOT defined!");
+            appServices.showNotification("Error: Background upload function not available.", 3000);
+        }
         // Clear the file input value to allow selecting the same file again if needed
         e.target.value = null; 
     });
