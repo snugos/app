@@ -15,7 +15,7 @@ export class SnugWindow { // This class is exported
         this.onCloseCallback = options.onCloseCallback || (() => {});
         this.onRefreshCallback = options.onRefresh || null;
         this.isMaximized = false;
-        this.restoreState = {};
+        this.restoreState = {}; // To store position/size when maximized or minimized
         this.appServices = appServices; // Ensure appServices is assigned
         this._isDragging = false; 
         this._isResizing = false;
@@ -55,6 +55,7 @@ export class SnugWindow { // This class is exported
 
         this.element.appendChild(this.titleBar);
         this.element.appendChild(this.contentContainer);
+        this.element.appendChild(this.createResizeHandle()); // Add resize handle here
 
         this.applyStyles(desktopEl, taskbarHeightVal);
         this.createTaskbarButton();
@@ -62,7 +63,7 @@ export class SnugWindow { // This class is exported
         desktopEl.appendChild(this.element);
 
         this.makeDraggable();
-        this.makeResizable();
+        this.makeResizable(); // Now this method will have functionality
 
         this.element.addEventListener('mousedown', () => this.focus());
 
@@ -102,12 +103,29 @@ export class SnugWindow { // This class is exported
         return titleBar;
     }
 
+    createResizeHandle() {
+        const resizer = document.createElement('div');
+        resizer.className = 'window-resizer'; // Your existing CSS class
+        return resizer;
+    }
+
     applyStyles(desktopEl, taskbarHeight) {
+        // Ensure initial position is within bounds
+        let initialX = this.options.x;
+        let initialY = this.options.y;
+
+        // Clamp to desktop bounds (considering taskbar height)
+        const maxX = desktopEl.offsetWidth - this.options.width;
+        const maxY = desktopEl.offsetHeight - taskbarHeight - this.options.height; // Account for bottom taskbar
+
+        initialX = Math.max(0, Math.min(initialX, maxX));
+        initialY = Math.max(0, Math.min(initialY, maxY));
+
         Object.assign(this.element.style, {
             width: `${this.options.width}px`,
             height: `${this.options.height}px`,
-            left: `${Math.max(0, Math.min(this.options.x, desktopEl.offsetWidth - this.options.width))}px`,
-            top: `${Math.max(0, Math.min(this.options.y, desktopEl.offsetHeight - this.options.height))}px`,
+            left: `${initialX}px`,
+            top: `${initialY}px`,
             minWidth: `${this.options.minWidth}px`,
             minHeight: `${this.options.minHeight}px`,
         });
@@ -124,7 +142,11 @@ export class SnugWindow { // This class is exported
         this.taskbarButton.addEventListener('click', () => {
             if (this.isMinimized) {
                 this.restore();
+            } else if (this.element.style.zIndex === this.appServices.getHighestZ().toString()) {
+                // If it's already focused, minimize it
+                this.minimize();
             } else {
+                // If it's not focused, bring it to front
                 this.focus();
             }
         });
@@ -135,7 +157,7 @@ export class SnugWindow { // This class is exported
     makeDraggable() {
         let offsetX, offsetY;
         const onMouseMove = (e) => {
-            if (!this._isDragging) return;
+            if (!this._isDragging || this.isMaximized) return; // Prevent dragging when maximized
             this.element.style.left = `${e.clientX - offsetX}px`;
             this.element.style.top = `${e.clientY - offsetY}px`;
         };
@@ -143,21 +165,69 @@ export class SnugWindow { // This class is exported
             this._isDragging = false;
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
+            this.titleBar.style.cursor = 'grab'; // Restore cursor
         };
         this.titleBar.addEventListener('mousedown', (e) => {
-            if (e.target.tagName === 'BUTTON') return;
+            if (e.target.tagName === 'BUTTON' || this.isMaximized) return; // Prevent dragging when maximized
             this._isDragging = true;
             offsetX = e.clientX - this.element.offsetLeft;
             offsetY = e.clientY - this.element.offsetTop;
+            this.titleBar.style.cursor = 'grabbing'; // Change cursor during drag
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         });
     }
     
     makeResizable() {
-        // This function is declared but currently empty.
-        // You would add the resize handle elements and their drag logic here.
-        // For example, creating a corner div that changes width/height on drag.
+        const resizer = this.element.querySelector('.window-resizer');
+        if (!resizer) return;
+
+        let startX, startY, startWidth, startHeight, startLeft, startTop;
+
+        const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
+        const taskbarEl = this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar');
+        const taskbarHeight = taskbarEl?.offsetHeight > 0 ? taskbarEl.offsetHeight : 32;
+
+        const onMouseMove = (e) => {
+            if (!this._isResizing || this.isMaximized) return; // Prevent resizing when maximized
+
+            let newWidth = startWidth + (e.clientX - startX);
+            let newHeight = startHeight + (e.clientY - startY);
+
+            // Clamp width/height to min/max
+            newWidth = Math.max(newWidth, this.options.minWidth);
+            newHeight = Math.max(newHeight, this.options.minHeight);
+
+            // Prevent resizing outside desktop bounds
+            newWidth = Math.min(newWidth, desktopEl.offsetWidth - startLeft);
+            newHeight = Math.min(newHeight, desktopEl.offsetHeight - taskbarHeight - startTop);
+
+            this.element.style.width = `${newWidth}px`;
+            this.element.style.height = `${newHeight}px`;
+        };
+
+        const onMouseUp = () => {
+            this._isResizing = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            resizer.style.cursor = 'nwse-resize'; // Restore cursor
+        };
+
+        resizer.addEventListener('mousedown', (e) => {
+            if (this.isMaximized) return; // Prevent resizing when maximized
+            e.preventDefault();
+            this._isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = this.element.offsetWidth;
+            startHeight = this.element.offsetHeight;
+            startLeft = this.element.offsetLeft;
+            startTop = this.element.offsetTop;
+
+            resizer.style.cursor = 'grabbing'; // Change cursor during resize
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     }
 
     focus() {
@@ -179,10 +249,33 @@ export class SnugWindow { // This class is exported
     }
 
     minimize(isSilent = false) {
+        if (this.isMaximized) {
+            // If maximized, first restore to original size before minimizing
+            this.toggleMaximize();
+        }
         this.isMinimized = true;
         this.element.style.display = 'none';
         this.taskbarButton?.classList.add('minimized-on-taskbar');
         this.taskbarButton?.classList.remove('active');
+        // If this window was focused, find another window to focus (or none)
+        const openWindows = Array.from(this.appServices.getOpenWindows().values());
+        if (openWindows.length > 0) {
+            // Find the highest z-index among visible windows and focus it
+            let highestZWindow = null;
+            let maxZ = 0;
+            openWindows.forEach(win => {
+                if (!win.isMinimized && win.element && win.element.style.zIndex > maxZ) {
+                    maxZ = win.element.style.zIndex;
+                    highestZWindow = win;
+                }
+            });
+            if (highestZWindow) {
+                highestZWindow.focus();
+            } else {
+                // No other windows to focus, remove active state from all taskbar buttons
+                document.querySelectorAll('.taskbar-button').forEach(btn => btn.classList.remove('active'));
+            }
+        }
     }
 
     restore() {
@@ -193,12 +286,47 @@ export class SnugWindow { // This class is exported
     }
     
     toggleMaximize() {
-        // Implementation for maximizing/restoring window...
+        const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
+        const taskbarEl = this.appServices.uiElementsCache?.taskbar || document.getElementById('taskbar');
+        const topTaskbarEl = this.appServices.uiElementsCache?.topTaskbar || document.getElementById('topTaskbar');
+
+        const topTaskbarHeight = topTaskbarEl?.offsetHeight > 0 ? topTaskbarEl.offsetHeight : 40;
+        const taskbarHeight = taskbarEl?.offsetHeight > 0 ? taskbarEl.offsetHeight : 32;
+
+        if (this.isMaximized) {
+            // Restore from maximized state
+            this.element.style.left = `${this.restoreState.x}px`;
+            this.element.style.top = `${this.restoreState.y}px`;
+            this.element.style.width = `${this.restoreState.width}px`;
+            this.element.style.height = `${this.restoreState.height}px`;
+            this.isMaximized = false;
+        } else {
+            // Maximize
+            this.restoreState = {
+                x: this.element.offsetLeft,
+                y: this.element.offsetTop,
+                width: this.element.offsetWidth,
+                height: this.element.offsetHeight,
+            };
+            this.element.style.left = '0px';
+            this.element.style.top = `${topTaskbarHeight}px`; // Below top taskbar
+            this.element.style.width = `${desktopEl.offsetWidth}px`;
+            this.element.style.height = `${desktopEl.offsetHeight - topTaskbarHeight - taskbarHeight}px`;
+            this.isMaximized = true;
+        }
+        this.focus(); // Bring to front after state change
+        this.refresh(); // Trigger refresh for content that might need to adapt to new size
     }
     
     showTaskbarContextMenu(e) {
+        e.preventDefault(); // Prevent default browser context menu
+        const menuItems = [
+            { label: 'Minimize', action: () => this.minimize() },
+            { label: 'Maximize', action: () => this.toggleMaximize() },
+            { label: 'Close', action: () => this.close() }
+        ];
         // createContextMenu is global
-        createContextMenu(e, [], this.appServices);
+        this.appServices.createContextMenu(e, menuItems, this.appServices);
     }
 
     // NEW: Method to get the current state of the window for serialization/restoration
@@ -211,6 +339,8 @@ export class SnugWindow { // This class is exported
             isMinimized: this.isMinimized,
             isMaximized: this.isMaximized,
             // Add other state properties you want to persist/restore here if necessary
+            // For example, if you want to store the restoreState when minimized but not maximized:
+            restoreState: this.isMaximized ? this.restoreState : undefined,
         };
     }
 }
