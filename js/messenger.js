@@ -1,7 +1,11 @@
 // js/messenger.js - Complete and Corrected
 
+// Corrected import path for backgroundManager.js
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { SnugWindow } from './daw/SnugWindow.js'; 
+// Import window state functions directly
+import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from './state/windowState.js';
+// Assuming showNotification, showCustomModal, createContextMenu are globally available from utils.js
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
@@ -14,21 +18,19 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("[messenger.js] DOMContentLoaded fired. Starting appServices initialization...");
 
     // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Ensure core utilities are available through appServices
-    // Assuming showNotification, showCustomModal, createContextMenu are globally available
-    // or loaded via a script tag before this module, as per HTML structure.
+    // Core utilities (from utils.js, assumed globally available)
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
     appServices.createContextMenu = createContextMenu;
 
-    // Window State functions
-    appServices.addWindowToStore = addWindowToStoreState;
-    appServices.removeWindowFromStore = removeWindowFromStoreState;
-    appServices.incrementHighestZ = incrementHighestZState;
-    appServices.getHighestZ = getHighestZState;
-    appServices.setHighestZ = setHighestZState;
-    appServices.getOpenWindows = getOpenWindowsState;
-    appServices.getWindowById = getWindowByIdState;
+    // Window State functions (imported directly from windowState.js)
+    appServices.addWindowToStore = addWindowToStore;
+    appServices.removeWindowFromStore = removeWindowFromStore;
+    appServices.incrementHighestZ = incrementHighestZ;
+    appServices.getHighestZ = getHighestZ;
+    appServices.setHighestZ = setHighestZ;
+    appServices.getOpenWindows = getOpenWindows;
+    appServices.getWindowById = getWindowById;
     
     // Auth related services (auth.js will implement the logic)
     // These getters/setters allow auth.js to update loggedInUser state
@@ -45,9 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize background manager module, passing the fully prepared appServices object
     initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
-    console.log("[messenger.js] appServices initialized for background:", appServices.loadAndApplyUserBackground !== undefined);
+    console.log("[messenger.js] backgroundManager initialized. appServices.loadAndApplyUserBackground defined:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Now call checkLocalAuth (from global scope via auth.js) which will use appServices
+    // Now call checkLocalAuth (from auth.js) which will use appServices
     // This will set `loggedInUser` via `appServices.setLoggedInUser`
     checkLocalAuth(); 
     console.log("[messenger.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
