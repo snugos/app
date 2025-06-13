@@ -1,6 +1,5 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
-// CORRECTED IMPORTS: Import from main utils.js for shared functions
-import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Changed from './welcomeUtils.js'
+import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Ensure these are imported or globally available
 import { storeAsset, getAsset } from './welcomeDb.js';
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { checkLocalAuth } from '../auth.js'; 
@@ -45,10 +44,10 @@ function initializeWelcomePage() {
     console.log("[welcome.js] DOMContentLoaded fired. Starting appServices initialization...");
 
     // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Core utilities (now imported from main utils.js)
+    // Core utilities (from welcomeUtils.js, assumed imported or globally available)
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
-    appServices.createContextMenu = createContextMenu;
+    appServices.createContextMenu = createContextMenu; // Still needed for SnugWindow's taskbar context menu
 
     // Window State functions (imported directly from windowState.js)
     appServices.addWindowToStore = addWindowToStore;
@@ -85,7 +84,7 @@ function initializeWelcomePage() {
     console.log("[welcome.js] loadAndApplyUserBackground called after auth check.");
     
     attachEventListeners();
-    setupDesktopContextMenu(); 
+    // REMOVED: setupDesktopContextMenu() call is no longer needed as context menu removed
     updateClockDisplay();
     applyUserThemePreference(); 
     renderDesktopIcons(); // Desktop icons will now call openGameWindow after appServices is ready
@@ -108,6 +107,9 @@ function initAudioOnFirstGesture() {
 }
 
 function attachEventListeners() {
+    const desktop = document.getElementById('desktop'); // Get desktop element here
+    const customBgInput = document.getElementById('customBgInput');
+
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -125,51 +127,49 @@ function attachEventListeners() {
     document.getElementById('menuChangeBackground')?.addEventListener('click', (e) => {
         e.preventDefault(); // Prevent default link behavior
         document.getElementById('startMenu')?.classList.add('hidden'); // Hide start menu
-        document.getElementById('customBgInput').click(); // Trigger background input
+        customBgInput.click(); // Trigger background input
     });
-}
 
-function setupDesktopContextMenu() {
-    const desktop = document.getElementById('desktop');
-    const customBgInput = document.getElementById('customBgInput'); 
+    // Desktop right-click context menu (REMOVED)
+    // if (desktop) {
+    //     desktop.addEventListener('contextmenu', (e) => {
+    //         e.preventDefault();
+    //         if (e.target.closest('.window')) return; 
+    //         const menuItems = [{
+    //             label: 'Change Background',
+    //             action: () => {
+    //                 console.log("[welcome.js] Context menu: Change Background clicked.");
+    //                 customBgInput.click(); 
+    //             }
+    //         }];
+    //         appServices.createContextMenu(e, menuItems, appServices);
+    //     });
+    // } else {
+    //     console.warn("[welcome.js] Desktop element not found for context menu listener.");
+    // }
 
-    if (!desktop || !customBgInput) {
-        console.warn("[welcome.js] Desktop or customBgInput not found for event listeners.");
-        return;
-    }
 
-    desktop.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (e.target.closest('.window')) return; 
-
-        const menuItems = [
-            {
-                label: 'Change Background',
-                action: () => {
-                    console.log("[welcome.js] Context menu: Change Background clicked.");
-                    customBgInput.click(); 
-                }
+    // Central listener for the hidden file input (for background change)
+    if (customBgInput) {
+        customBgInput.addEventListener('change', async (e) => {
+            console.log("[welcome.js] customBgInput change event fired.");
+            if(!e.target.files || !e.target.files[0]) {
+                console.log("[welcome.js] No file selected or file list empty.");
+                return; 
             }
-        ];
-        appServices.createContextMenu(e, menuItems, appServices);
-    });
-
-    customBgInput.addEventListener('change', async (e) => {
-        console.log("[welcome.js] customBgInput change event fired.");
-        if(!e.target.files || !e.target.files[0]) {
-            console.log("[welcome.js] No file selected or file list empty.");
-            return; 
-        }
-        const file = e.target.files[0];
-        if (appServices.handleBackgroundUpload) {
-            console.log("[welcome.js] Calling appServices.handleBackgroundUpload.");
-            await appServices.handleBackgroundUpload(file); 
-        } else {
-            console.error("[welcome.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
-            appServices.showNotification("Error: Background upload function not available.", 3000);
-        }
-        e.target.value = null; 
-    });
+            const file = e.target.files[0];
+            if (appServices.handleBackgroundUpload) {
+                console.log("[welcome.js] Calling appServices.handleBackgroundUpload.");
+                await appServices.handleBackgroundUpload(file); 
+            } else {
+                console.error("[welcome.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
+                appServices.showNotification("Error: Background upload function not available.", 3000);
+            }
+            e.target.value = null; 
+        });
+    } else {
+        console.warn("[welcome.js] customBgInput not found for event listener.");
+    }
 }
 
 
