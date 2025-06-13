@@ -1,4 +1,4 @@
-// js/backgroundManager.js
+// js/backgroundManager.js - Corrected and Enhanced Logging
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let localAppServices = {}; // To hold references to showNotification, getLoggedInUser, etc.
@@ -14,6 +14,7 @@ export function initializeBackgroundManager(appServicesFromMain, loadAndApplyUse
     if (!localAppServices.loadAndApplyUserBackground) {
         localAppServices.loadAndApplyUserBackground = loadAndApplyUserBackgroundFn;
     }
+    console.log("[BackgroundManager] Initialized. loadAndApplyUserBackgroundFn attached:", loadAndApplyUserBackgroundFn !== undefined);
 }
 
 /**
@@ -22,6 +23,7 @@ export function initializeBackgroundManager(appServicesFromMain, loadAndApplyUse
  * @param {Blob|File|string} source - The background data (File/Blob object or URL string).
  */
 export function applyCustomBackground(source) {
+    console.log("[BackgroundManager] applyCustomBackground called with source:", typeof source === 'string' ? source.substring(0, 50) + '...' : source);
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) {
         console.warn("[BackgroundManager] Desktop element not found to apply background.");
@@ -33,6 +35,7 @@ export function applyCustomBackground(source) {
     const existingVideo = desktopEl.querySelector('#desktop-video-bg');
     if (existingVideo) {
         existingVideo.remove();
+        console.log("[BackgroundManager] Removed existing video background.");
     }
 
     let url;
@@ -43,10 +46,12 @@ export function applyCustomBackground(source) {
         url = source;
         const extension = source.split('.').pop().toLowerCase().split('?')[0];
         fileType = ['mp4', 'webm', 'mov', 'ogg'].includes(extension) ? `video/${extension}` : 'image';
+        console.log(`[BackgroundManager] Source is URL. Type: ${fileType}. URL: ${url.substring(0, 50)}...`);
     } else if (source instanceof Blob || source instanceof File) {
         url = URL.createObjectURL(source);
         fileType = source.type;
         revokeObjectURL = true; // Need to revoke this URL later
+        console.log(`[BackgroundManager] Source is Blob/File. Type: ${fileType}. Temp URL: ${url.substring(0, 50)}...`);
     } else {
         console.warn("[BackgroundManager] Invalid source type for applyCustomBackground:", source);
         return;
@@ -57,6 +62,7 @@ export function applyCustomBackground(source) {
         desktopEl.style.backgroundSize = 'cover';
         desktopEl.style.backgroundPosition = 'center';
         desktopEl.style.backgroundRepeat = 'no-repeat';
+        console.log("[BackgroundManager] Applied image background.");
     } else if (fileType.startsWith('video/')) {
         const videoEl = document.createElement('video');
         videoEl.id = 'desktop-video-bg';
@@ -72,18 +78,27 @@ export function applyCustomBackground(source) {
         videoEl.muted = true;
         videoEl.playsInline = true; // Important for mobile autoplay
 
-        // Optional: Remove background image if video is loaded and ready
         videoEl.addEventListener('loadeddata', () => {
             desktopEl.style.backgroundImage = 'none';
+            console.log("[BackgroundManager] Video loaded, hiding image background.");
+        });
+        videoEl.addEventListener('error', (e) => {
+            console.error("[BackgroundManager] Video playback error:", e);
+            desktopEl.style.backgroundImage = 'none'; // Fallback
+            localAppServices.showNotification?.('Video background failed to load. Using default.', 3000);
         });
 
         desktopEl.appendChild(videoEl);
+        console.log("[BackgroundManager] Applied video background.");
     }
 
     // Revoke the temporary URL if it was created from a Blob/File
     if (revokeObjectURL) {
         // Delay revocation to allow rendering to complete
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+            console.log("[BackgroundManager] Revoked temporary object URL.");
+        }, 5000);
     }
 }
 
@@ -93,64 +108,101 @@ export function applyCustomBackground(source) {
  * @param {File} file - The image or video file selected by the user.
  */
 export async function handleBackgroundUpload(file) {
-    const loggedInUser = localAppServices.getLoggedInUser?.(); // Assuming this is now available in appServices
+    console.log("[BackgroundManager] handleBackgroundUpload called with file:", file.name);
+
+    const loggedInUser = localAppServices.getLoggedInUser?.(); 
     if (!loggedInUser) {
         localAppServices.showNotification?.('You must be logged in to save a custom background.', 3000);
-        // Still apply temporarily for the current session even if not logged in
-        applyCustomBackground(file);
+        applyCustomBackground(file); // Still apply temporarily for the current session
+        console.log("[BackgroundManager] User not logged in, applying temporarily.");
         return;
     }
 
     localAppServices.showNotification?.('Saving background...', 2000);
+    console.log("[BackgroundManager] Starting background upload process for user:", loggedInUser.username);
 
     try {
-        // 1. Upload to S3 via your server
+        // 1. Prepare FormData and Authentication Token
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('path', '/backgrounds/'); // A dedicated folder for backgrounds
-        formData.append('is_public', 'false'); // Backgrounds are typically not public files
+        formData.append('path', '/backgrounds/'); 
+        formData.append('is_public', 'false'); 
 
         const token = localStorage.getItem('snugos_token');
+        if (!token) {
+            console.error("[BackgroundManager] Authentication token not found. Cannot upload background.");
+            throw new Error("Authentication token missing. Please log in again.");
+        }
+
+        // 2. Upload file to S3 via your server
+        console.log("[BackgroundManager] Attempting file upload to server /api/files/upload...");
         const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
-        const uploadResult = await uploadResponse.json();
-
-        if (!uploadResult.success) {
-            throw new Error(uploadResult.message || 'File upload failed.');
+        
+        if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error("[BackgroundManager] File upload server error:", uploadResponse.status, uploadResponse.statusText, errorText);
+            throw new Error(`File upload failed: ${uploadResponse.status} ${uploadResponse.statusText}. Server response: ${errorText.substring(0, 200)}...`);
         }
 
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) {
+            console.error("[BackgroundManager] File upload API returned success: false", uploadResult.message);
+            throw new Error(uploadResult.message || 'File upload failed on server.');
+        }
         const newBgUrl = uploadResult.file.s3_url;
+        console.log("[BackgroundManager] File successfully uploaded to S3. URL:", newBgUrl.substring(0, 50) + '...');
 
-        // 2. Update user's profile with the new background URL
+        // 3. Update user's profile with the new background URL
+        console.log("[BackgroundManager] Updating user profile /api/profile/settings with new background URL...");
         const settingsResponse = await fetch(`${SERVER_URL}/api/profile/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ background_url: newBgUrl })
         });
-        const settingsResult = await settingsResponse.json();
-
-        if (!settingsResult.success) {
-            throw new Error(settingsResult.message || 'Profile update failed.');
+        
+        if (!settingsResponse.ok) {
+             const errorText = await settingsResponse.text();
+             console.error("[BackgroundManager] Profile update server error:", settingsResponse.status, settingsResponse.statusText, errorText);
+             throw new Error(`Profile update failed: ${settingsResponse.status} ${settingsResponse.statusText}. Server response: ${errorText.substring(0, 200)}...`);
         }
 
-        // 3. Store locally in IndexedDB for quicker loading next time
-        // This assumes storeAsset is available via appServices (from db.js or welcomeDb.js/profileDb.js)
-        await localAppServices.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
+        const settingsResult = await settingsResponse.json();
+        if (!settingsResult.success) {
+            console.error("[BackgroundManager] Profile update API returned success: false", settingsResult.message);
+            throw new Error(settingsResult.message || 'Profile update failed on server.');
+        }
+        console.log("[BackgroundManager] User profile successfully updated with new background URL.");
 
-        // 4. Apply the background to the current page
+        // 4. Store locally in IndexedDB for quicker loading next time
+        if (localAppServices.storeAsset) {
+            try {
+                await localAppServices.storeAsset(`background-for-user-${loggedInUser.id}`, file);
+                console.log("[BackgroundManager] Background stored locally in IndexedDB.");
+            } catch (indexedDBError) {
+                console.warn("[BackgroundManager] IndexedDB storage failed:", indexedDBError);
+                localAppServices.showNotification?.('Background saved to server, but not locally (IndexedDB error).', 3000);
+            }
+        } else {
+            console.warn("[BackgroundManager] localAppServices.storeAsset is not available. Skipping local IndexedDB storage.");
+        }
+
+        // 5. Apply the background to the current page immediately
         applyCustomBackground(newBgUrl);
-
         localAppServices.showNotification?.('Background updated and saved!', 2500);
 
-        // 5. Broadcast the change to other open SnugOS pages
+        // 6. Broadcast the change to other open SnugOS pages
         broadcastBackgroundChange(newBgUrl);
+        console.log("[BackgroundManager] Background change broadcasted to other pages.");
 
     } catch (error) {
-        console.error("[BackgroundManager] Background upload/update error:", error);
-        localAppServices.showNotification?.(`Error setting background: ${error.message}`, 4000);
+        console.error("[BackgroundManager] CRITICAL: Background upload/update process failed:", error);
+        localAppServices.showNotification?.(`Error setting background: ${error.message}`, 8000);
+        // Attempt to revert to a default/empty background on failure
+        applyCustomBackground('');
     }
 }
 
@@ -159,9 +211,16 @@ export async function handleBackgroundUpload(file) {
  * and applies it when a page initializes.
  */
 export async function loadAndApplyUserBackground() {
+    console.log("[BackgroundManager] loadAndApplyUserBackground called.");
     const loggedInUser = localAppServices.getLoggedInUser?.();
     const desktopEl = document.getElementById('desktop');
-    if (!desktopEl) return;
+    if (!desktopEl) {
+        console.warn("[BackgroundManager] Desktop element not found for loadAndApplyUserBackground.");
+        return;
+    }
+
+    // Clear any existing background before loading a new one to prevent flicker/duplicates
+    applyCustomBackground(''); 
 
     // First, try to load from local IndexedDB (fastest)
     if (loggedInUser && localAppServices.getAsset) {
@@ -179,30 +238,34 @@ export async function loadAndApplyUserBackground() {
 
     // Fallback: Fetch from server if not found locally or not logged in
     if (loggedInUser) {
+        const token = localStorage.getItem('snugos_token');
+        if (!token) { 
+            console.warn("[BackgroundManager] No token found for loggedInUser, skipping server background fetch.");
+            applyCustomBackground(''); // Ensure default if no token
+            return;
+        }
+
         try {
-            const token = localStorage.getItem('snugos_token');
+            console.log("[BackgroundManager] Fetching background URL from server for user:", loggedInUser.username);
             const response = await fetch(`${SERVER_URL}/api/profile/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
 
             if (data.success && data.profile.background_url) {
-                console.log("[BackgroundManager] Applying background from server.");
+                console.log("[BackgroundManager] Applying background from server URL:", data.profile.background_url.substring(0, 50) + '...');
                 applyCustomBackground(data.profile.background_url);
-                // Optionally, store this URL's content locally for next time
-                // This would involve fetching the URL content as a Blob and saving it.
             } else {
-                // If logged in but no background_url on server, ensure default is applied
-                applyCustomBackground('');
+                console.log("[BackgroundManager] No custom background URL found on server or fetch failed. Applying default.");
+                applyCustomBackground(''); 
             }
         } catch (error) {
-            console.error("[BackgroundManager] Could not apply global settings from server:", error);
-            // Revert to default background if server fetch fails
-            applyCustomBackground(''); // Clear any old background if loading fails
+            console.error("[BackgroundManager] Could not fetch/apply background from server:", error);
+            applyCustomBackground(''); 
         }
     } else {
-        // If no user is logged in, ensure default background
-        applyCustomBackground(''); // Clear any old background
+        console.log("[BackgroundManager] No user logged in. Applying default background.");
+        applyCustomBackground(''); 
     }
 }
 
@@ -216,11 +279,15 @@ function initializeBroadcastChannel() {
         backgroundChannel = new BroadcastChannel('snugos-background-update');
         backgroundChannel.onmessage = (event) => {
             if (event.data && event.data.type === 'background_updated') {
-                console.log("[BackgroundManager] Received background update broadcast:", event.data.url);
+                console.log("[BackgroundManager] Received background update broadcast:", event.data.url.substring(0, 50) + '...');
                 applyCustomBackground(event.data.url);
             }
         };
         console.log("[BackgroundManager] BroadcastChannel initialized for background updates.");
+    } else if ('BroadcastChannel' in window) {
+        console.log("[BackgroundManager] BroadcastChannel already initialized.");
+    } else {
+        console.warn("[BackgroundManager] BroadcastChannel not supported in this browser.");
     }
 }
 
