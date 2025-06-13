@@ -1,5 +1,6 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
-import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Ensure these are imported or globally available
+// CORRECTED IMPORTS: Import from main utils.js for shared functions
+import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Changed from './welcomeUtils.js'
 import { storeAsset, getAsset } from './welcomeDb.js';
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { checkLocalAuth } from '../auth.js'; 
@@ -44,10 +45,10 @@ function initializeWelcomePage() {
     console.log("[welcome.js] DOMContentLoaded fired. Starting appServices initialization...");
 
     // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Core utilities (from welcomeUtils.js, assumed imported or globally available)
+    // Core utilities (now imported from main utils.js)
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
-    appServices.createContextMenu = createContextMenu; // Still needed for SnugWindow's taskbar context menu
+    appServices.createContextMenu = createContextMenu;
 
     // Window State functions (imported directly from windowState.js)
     appServices.addWindowToStore = addWindowToStore;
@@ -84,7 +85,7 @@ function initializeWelcomePage() {
     console.log("[welcome.js] loadAndApplyUserBackground called after auth check.");
     
     attachEventListeners();
-    // REMOVED: setupDesktopContextMenu() call is no longer needed as context menu removed
+    setupDesktopContextMenu(); 
     updateClockDisplay();
     applyUserThemePreference(); 
     renderDesktopIcons(); // Desktop icons will now call openGameWindow after appServices is ready
@@ -107,7 +108,7 @@ function initAudioOnFirstGesture() {
 }
 
 function attachEventListeners() {
-    const desktop = document.getElementById('desktop'); // Get desktop element here
+    const desktop = document.getElementById('desktop'); 
     const customBgInput = document.getElementById('customBgInput');
 
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
@@ -130,24 +131,7 @@ function attachEventListeners() {
         customBgInput.click(); // Trigger background input
     });
 
-    // Desktop right-click context menu (REMOVED)
-    // if (desktop) {
-    //     desktop.addEventListener('contextmenu', (e) => {
-    //         e.preventDefault();
-    //         if (e.target.closest('.window')) return; 
-    //         const menuItems = [{
-    //             label: 'Change Background',
-    //             action: () => {
-    //                 console.log("[welcome.js] Context menu: Change Background clicked.");
-    //                 customBgInput.click(); 
-    //             }
-    //         }];
-    //         appServices.createContextMenu(e, menuItems, appServices);
-    //     });
-    // } else {
-    //     console.warn("[welcome.js] Desktop element not found for context menu listener.");
-    // }
-
+    setupDesktopContextMenu(); // Moved out of `if (desktop)` to ensure listener attachment for context menu
 
     // Central listener for the hidden file input (for background change)
     if (customBgInput) {
@@ -170,6 +154,32 @@ function attachEventListeners() {
     } else {
         console.warn("[welcome.js] customBgInput not found for event listener.");
     }
+}
+
+function setupDesktopContextMenu() {
+    const desktop = document.getElementById('desktop');
+    const customBgInput = document.getElementById('customBgInput'); 
+
+    if (!desktop || !customBgInput) {
+        console.warn("[welcome.js] Desktop or customBgInput not found for context menu listener.");
+        return;
+    }
+
+    desktop.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (e.target.closest('.window')) return; 
+
+        const menuItems = [
+            {
+                label: 'Change Background',
+                action: () => {
+                    console.log("[welcome.js] Context menu: Change Background clicked.");
+                    customBgInput.click(); 
+                }
+            }
+        ];
+        appServices.createContextMenu(e, menuItems, appServices);
+    });
 }
 
 
