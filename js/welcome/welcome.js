@@ -1,12 +1,11 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
-// NEW: Import from backgroundManager
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 
 
 const appServices = {};
-let loggedInUser = null; // This will now be managed by appServices.getLoggedInUser()
+let loggedInUser = null; 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
@@ -37,14 +36,11 @@ function openGameWindow() {
 
 
 function initializeWelcomePage() {
-    // Expose appServices for use by backgroundManager and other modules
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
     appServices.storeAsset = storeAsset;
     appServices.getAsset = getAsset;
-    // Provide a way for backgroundManager to get the current logged in user
     appServices.getLoggedInUser = () => loggedInUser; 
-    // Expose background functions through appServices
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
 
@@ -56,13 +52,14 @@ function initializeWelcomePage() {
     if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
     if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
 
-    // Initialize background manager module
     initializeBackgroundManager(appServices);
 
     attachEventListeners();
+    // NEW: Attach desktop context menu listener here
+    setupDesktopContextMenu(); 
     updateClockDisplay();
-    checkInitialAuthState();
-    applyUserThemePreference();
+    checkInitialAuthState(); // This will call loadAndApplyUserBackground
+    applyUserThemePreference(); // This will call applyUserThemePreference
     renderDesktopIcons();
     initAudioOnFirstGesture();
 }
@@ -97,12 +94,46 @@ function attachEventListeners() {
         handleLogout();
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('customBgInput')?.addEventListener('change', (e) => {
+    // REMOVED: This listener is now handled by the generic customBgInput listener below
+    // document.getElementById('customBgInput')?.addEventListener('change', (e) => {
+    //     const file = e.target.files[0];
+    //     if (file) appServices.handleBackgroundUpload(file); 
+    //     e.target.value = null; 
+    // });
+}
+
+// NEW: Function to set up desktop context menu
+function setupDesktopContextMenu() {
+    const desktop = document.getElementById('desktop');
+    const customBgInput = document.getElementById('customBgInput'); // Get the input element
+
+    if (!desktop || !customBgInput) return;
+
+    desktop.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        // Prevent showing context menu if clicking inside a SnugWindow
+        if (e.target.closest('.window')) return; 
+
+        const menuItems = [
+            {
+                label: 'Change Background',
+                action: () => customBgInput.click() // Trigger the file input
+            }
+            // Add other desktop context menu items here if needed
+        ];
+        appServices.createContextMenu(e, menuItems, appServices);
+    });
+
+    // Central listener for the hidden file input
+    customBgInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) appServices.handleBackgroundUpload(file); // Use appServices function
+        if (file) {
+            appServices.handleBackgroundUpload(file); // Use the centralized handler
+        }
         e.target.value = null; // Clear the input after file selection
     });
 }
+
 
 function renderDesktopIcons() {
     const desktopIconsContainer = document.getElementById('desktop-icons-container');
@@ -196,7 +227,7 @@ async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
         updateAuthUI(null);
-        appServices.loadAndApplyUserBackground(); // Load default if no user
+        appServices.loadAndApplyUserBackground(); 
         return;
     }
 
@@ -208,7 +239,7 @@ async function checkInitialAuthState() {
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
-        appServices.loadAndApplyUserBackground(); // Load user background
+        appServices.loadAndApplyUserBackground(); 
 
     } catch (e) {
         console.error("Error during initial auth state check:", e);
@@ -256,7 +287,7 @@ function showLoginModal() {
             </div>
         </div>
     `;
-    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []); // Use appServices.showCustomModal
+    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []); 
     overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#loginUsername').value;
@@ -283,8 +314,6 @@ async function handleLogin(username, password) {
         const data = await response.json();
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
-            // After successful login, ensure all necessary appServices are available
-            // and re-initialize auth to reload user data and background
             await checkInitialAuthState();
             appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
@@ -315,7 +344,7 @@ async function handleRegister(username, password) {
     }
 }
 
-// Removed handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
+// REMOVED handleBackgroundUpload from here, it's now in backgroundManager.js and called via appServices.handleBackgroundUpload
 
 function handleLogout() {
     localStorage.removeItem('snugos_token');
@@ -325,7 +354,7 @@ function handleLogout() {
     appServices.showNotification('You have been logged out.', 2000);
 }
 
-// Removed applyCustomBackground from here, it's now in backgroundManager.js
+// REMOVED applyCustomBackground from here, it's now in backgroundManager.js
 
 function toggleTheme() {
     const body = document.body;
