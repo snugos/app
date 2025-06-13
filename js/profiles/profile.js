@@ -1,4 +1,3 @@
-// CORRECTED PATH
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { SnugWindow } from '../daw/SnugWindow.js'; 
 import { storeAsset, getAsset } from './profileDb.js';
@@ -22,19 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
     appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification; // Assuming showNotification is globally available or imported
-    appServices.showCustomModal = showCustomModal;   // Assuming showCustomModal is globally available or imported
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
 
     // Background Manager specific appServices assignments
     appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
-    appServices.storeAsset = storeAsset; // For local background saving
-    appServices.getAsset = getAsset;     // For local background retrieval
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
+    appServices.storeAsset = storeAsset; 
+    appServices.getAsset = getAsset;     
 
     // Initialize background manager module with the main load function
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // PASSED loadAndApplyUserBackground
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
 
     // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth(); 
@@ -297,8 +296,6 @@ async function sendMessage(recipientUsername, content) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         appServices.showNotification("Message sent!", 2000); 
-    } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000); 
     }
 }
 
