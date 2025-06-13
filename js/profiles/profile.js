@@ -13,6 +13,7 @@ const appServices = {};
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    // --- CRITICAL: Populate appServices first and ensure functions are defined ---
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -21,16 +22,21 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
     appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
-    appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.showNotification = showNotification; // Assuming showNotification is globally available or imported
+    appServices.showCustomModal = showCustomModal;   // Assuming showCustomModal is globally available or imported
+
+    // Background Manager specific appServices assignments
+    appServices.getLoggedInUser = () => loggedInUser; // Pass a getter for loggedInUser
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.storeAsset = storeAsset; 
-    appServices.getAsset = getAsset;     
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
+    appServices.storeAsset = storeAsset; // For local background saving
+    appServices.getAsset = getAsset;     // For local background retrieval
 
-    initializeBackgroundManager(appServices);
+    // Initialize background manager module with the main load function
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // <--- PASSED loadAndApplyUserBackground
 
+    // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth(); 
     appServices.loadAndApplyUserBackground(); 
     attachDesktopEventListeners(); 
