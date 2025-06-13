@@ -1,6 +1,7 @@
 // js/auth.js - Auth module for SnugOS
 
-import { applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
+// Corrected import path for backgroundManager.js
+import { applyCustomBackground, handleBackgroundUpload as handleBackgroundUploadService, loadAndApplyUserBackground } from './backgroundManager.js';
 
 let localAppServices = {};
 let loggedInUser = null; 
@@ -19,7 +20,6 @@ export function initializeAuth(appServicesFromMain) {
     localAppServices.getLoggedInUser = () => loggedInUser;
     localAppServices.setLoggedInUser = (user) => { 
         loggedInUser = user; 
-        // Optional: Trigger UI update here if needed, but `updateAuthUI` already does it.
     };
 
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
