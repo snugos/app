@@ -1,4 +1,4 @@
-import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
 import { SnugWindow } from './daw/SnugWindow.js'; // Ensure SnugWindow is imported
 
 
