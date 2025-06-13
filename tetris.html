@@ -497,7 +497,6 @@
         // --- Event Handlers ---
         
         function startGame() {
-            if (animationFrameId) return;
             resetGame();
             lastTime = performance.now(); 
             animationFrameId = requestAnimationFrame(update);
@@ -508,9 +507,15 @@
             
             isPaused = !isPaused;
             if (isPaused) {
+                // To pause, we simply stop the update loop by not requesting a new frame.
+                // The current animationFrameId is cleared.
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
                 pauseBtn.textContent = 'resume';
             } else {
+                // To resume, we reset the timer and start the loop again.
                 lastTime = performance.now();
+                animationFrameId = requestAnimationFrame(update);
                 pauseBtn.textContent = 'pause';
             }
         }
