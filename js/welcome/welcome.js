@@ -1,8 +1,9 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
-import { showNotification, showCustomModal, createContextMenu } from './welcomeUtils.js'; // Ensure these are imported or globally available
+// CORRECTED IMPORTS: Import from main utils.js for shared functions
+import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Changed from './welcomeUtils.js'
 import { storeAsset, getAsset } from './welcomeDb.js';
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { checkLocalAuth } from '../auth.js'; // Import checkLocalAuth from auth.js
+import { checkLocalAuth } from '../auth.js'; 
 
 // Import window state functions directly from windowState.js
 import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from '../state/windowState.js';
@@ -44,7 +45,7 @@ function initializeWelcomePage() {
     console.log("[welcome.js] DOMContentLoaded fired. Starting appServices initialization...");
 
     // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Core utilities (from welcomeUtils.js, assumed imported or globally available)
+    // Core utilities (now imported from main utils.js)
     appServices.showNotification = showNotification; 
     appServices.showCustomModal = showCustomModal;   
     appServices.createContextMenu = createContextMenu;
