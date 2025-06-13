@@ -1,173 +1,498 @@
-// js/profile.js
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { SnugWindow } from '../daw/SnugWindow.js'; 
+import { storeAsset, getAsset } from './profileDb.js';
+import { showNotification, showCustomModal } from './profileUtils.js';
 
-/**
- * Main function that runs when the profile page loads.
- */
-function initProfilePage() {
-    // Determine which user's profile to load from the URL
+
+let loggedInUser = null; 
+const SERVER_URL = 'https://snugos-server-api.onrender.com';
+let currentProfileData = null;
+let isEditing = false;
+const appServices = {}; 
+
+// --- Initialization ---
+document.addEventListener('DOMContentLoaded', () => {
+    // --- CRITICAL: Populate appServices first and ensure functions are defined ---
+    appServices.addWindowToStore = addWindowToStoreState;
+    appServices.removeWindowFromStore = removeWindowFromStoreState;
+    appServices.incrementHighestZ = incrementHighestZState;
+    appServices.getHighestZ = getHighestZState;
+    appServices.setHighestZ = setHighestZState;
+    appServices.getOpenWindows = getOpenWindowsState;
+    appServices.getWindowById = getWindowByIdState;
+    appServices.createContextMenu = createContextMenu;
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
+
+    // Background Manager specific appServices assignments
+    appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.applyCustomBackground = applyCustomBackground;
+    appServices.handleBackgroundUpload = handleBackgroundUpload;
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
+    appServices.storeAsset = storeAsset; 
+    appServices.getAsset = getAsset;     
+
+    // Initialize background manager module with the main load function
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
+
+    // Now proceed with logic that might rely on appServices being fully populated
+    loggedInUser = checkLocalAuth(); 
+    appServices.loadAndApplyUserBackground(); 
+    attachDesktopEventListeners(); 
+    updateClockDisplay();
+    updateAuthUI(loggedInUser);
+
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
+    if (username) {
+        openProfileWindow(username);
+    } else {
+        appServices.showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
+    }
     
-    const profileContainer = document.getElementById('profile-container');
+    document.getElementById('avatarUploadInput')?.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleAvatarUpload(e.target.files[0]);
+        }
+    });
+});
 
-    if (!username) {
-        displayError(profileContainer, 'No user specified.');
+// --- Main Window and UI Functions ---
+
+async function openProfileWindow(username) {
+    const windowId = `profile-${username}`;
+    if(appServices.getWindowById(windowId)) {
+        appServices.getWindowById(windowId).focus();
         return;
     }
 
-    document.title = `${username}'s Profile | SnugOS`;
-    fetchProfileData(username, profileContainer);
-}
+    const placeholderContent = document.createElement('div');
+    placeholderContent.innerHTML = '<p class="p-8 text-center">Loading Profile...</p>';
+    
+    const desktopEl = document.getElementById('desktop');
+    const options = {
+        width: Math.min(600, desktopEl.offsetWidth - 40),
+        height: Math.min(700, desktopEl.offsetHeight - 40),
+        x: (desktopEl.offsetWidth - Math.min(600, desktopEl.offsetWidth - 40)) / 2,
+        y: (desktopEl.offsetHeight - Math.min(700, desktopEl.offsetHeight - 40)) / 2
+    };
 
-/**
- * Fetches profile data and follow status from the server.
- * @param {string} username The username to fetch.
- * @param {HTMLElement} container The HTML element to render the profile into.
- */
-async function fetchProfileData(username, container) {
-    const serverUrl = 'https://snugos-server-api.onrender.com';
-    const token = localStorage.getItem('snugos_token');
-
+    const profileWindow = new SnugWindow(windowId, `${username}'s Profile`, placeholderContent, options, appServices);
+    
     try {
-        // Fetch profile data and follow status in parallel
-        const [profileRes, followStatusRes] = await Promise.all([
-            fetch(`${serverUrl}/api/profiles/${username}`),
-            token ? fetch(`${serverUrl}/api/profiles/${username}/follow-status`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            }) : Promise.resolve(null)
+        const token = localStorage.getItem('snugos_token');
+        const [profileRes, friendStatusRes] = await Promise.all([
+            fetch(`${SERVER_URL}/api/profiles/${username}`),
+            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.resolve(null)
         ]);
 
         const profileData = await profileRes.json();
-        if (!profileRes.ok || !profileData.success) {
-            throw new Error(profileData.message || 'Could not fetch profile.');
-        }
+        if (!profileRes.ok) throw new Error(profileData.message);
+        
+        const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null;
+        
+        currentProfileData = profileData.profile;
+        currentProfileData.isFriend = friendStatusData?.isFriend || false;
 
-        let isFollowing = false;
-        if (followStatusRes && followStatusRes.ok) {
-            const followStatusData = await followStatusRes.json();
-            isFollowing = followStatusData.isFollowing;
-        }
-
-        renderProfile(container, profileData.profile, profileData.projects, isFollowing);
+        updateProfileUI(profileWindow, currentProfileData);
 
     } catch (error) {
-        console.error("Failed to load profile:", error);
-        displayError(container, `Error: ${error.message}`);
+        profileWindow.contentContainer.innerHTML = `<p class="p-8 text-center" style="color:red;">Error: ${error.message}</p>`;
     }
 }
 
-/**
- * Renders the profile UI, including the dynamic follow/unfollow button.
- * @param {HTMLElement} container The HTML element to render into.
- * @param {object} profileData The user's profile data.
- * @param {Array} projectsData A list of the user's public projects.
- * @param {boolean} isFollowing The current follow status.
- */
-function renderProfile(container, profileData, projectsData, isFollowing) {
-    container.innerHTML = ''; // Clear the "Loading..." message
-    container.className = 'p-0 overflow-y-auto h-full';
+function updateProfileUI(profileWindow, profileData) {
+    const isOwner = loggedInUser && loggedInUser.id === profileData.id;
+    const joinDate = new Date(profileData.created_at).toLocaleDateString();
 
-    const joinDate = new Date(profileData.memberSince).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-    });
+    let avatarContent = profileData.avatar_url
+        ? `<img src="${profileData.avatar_url}" alt="${profileData.username}'s avatar" class="w-full h-full object-cover">`
+        : `<span class="text-4xl font-bold">${profileData.username.charAt(0).toUpperCase()}</span>`;
 
-    const followButtonHtml = `
-        <button id="followBtn" class="px-5 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-75 ${
-            isFollowing 
-                ? 'bg-gray-500 hover:bg-gray-600 focus:ring-gray-400' 
-                : 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-400'
-        }">
-            ${isFollowing ? 'Unfollow' : 'Follow'}
-        </button>
-    `;
+    const uploadOverlay = isOwner ? `<div id="avatarOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" title="Change Profile Picture"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 11.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 6.5 12 6.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/></svg></div>` : '';
+        
+    let actionButtons = '';
+    if (isOwner) {
+        actionButtons = `<button id="editProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Edit Profile</button>`;
+    } else if (loggedInUser) {
+        const friendBtnText = profileData.isFriend ? 'Remove Friend' : 'Add Friend';
+        const friendBtnStyle = `background-color: ${profileData.isFriend ? 'var(--accent-armed)' : 'var(--accent-active)'}; color: var(--accent-active-text);`;
+        actionButtons = `
+            <button id="addFriendBtn" class="px-4 py-2 rounded" style="${friendBtnStyle}">${friendBtnText}</button>
+            <button id="messageBtn" class="px-4 py-2 rounded ml-2" style="background-color: var(--accent-soloed); color: var(--accent-active-text);">Message</button>
+        `;
+    }
 
-    const profileHTML = `
-        <div class="w-full">
-            <header class="relative h-40 md:h-48 bg-gray-200 dark:bg-gray-700 rounded-lg">
-                <!-- Banner Image Placeholder -->
-                <div class="absolute bottom-0 left-6 transform translate-y-1/2">
-                    <div class="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-black bg-gray-500 flex items-center justify-center text-white text-5xl font-bold">
-                        ${profileData.username.charAt(0).toUpperCase()}
-                    </div>
+    const newContent = document.createElement('div');
+    newContent.className = "h-full w-full";
+    newContent.innerHTML = `
+        <div class="bg-window text-primary h-full flex flex-col">
+            <div class="relative h-40 bg-gray-700 bg-cover bg-center flex-shrink-0" style="background-image: url(${profileData.background_url || ''})">
+                <div id="avatarContainer" class="absolute bottom-0 left-6 transform translate-y-1/2 w-28 h-28 rounded-full border-4 border-window bg-gray-500 flex items-center justify-center text-white overflow-hidden">
+                    ${avatarContent}${uploadOverlay}
                 </div>
-            </header>
-
-            <section class="mt-20 px-6 pb-4">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-3xl font-bold">${profileData.username}</h1>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Member since ${joinDate}</p>
-                    </div>
-                    <div id="follow-button-container">
-                        ${followButtonHtml}
-                    </div>
-                </div>
-            </section>
-            
-            <hr class="my-6 border-gray-200 dark:border-gray-700">
-
-            <section class="px-6">
-                <h2 class="text-2xl font-semibold mb-4">Public Projects</h2>
-                <div id="profile-projects-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <p class="text-gray-500 italic">No public projects yet.</p>
-                </div>
-            </section>
+            </div>
+            <div class="pt-20 px-6 pb-4 border-b border-secondary flex justify-between items-end flex-shrink-0">
+                <div><h2 class="text-2xl font-bold">${profileData.username}</h2><p class="text-sm text-secondary">Member since ${joinDate}</p></div>
+                <div class="flex space-x-2">${actionButtons}</div>
+            </div>
+            <div id="profile-body-content" class="p-6 overflow-y-auto flex-grow"></div>
         </div>
     `;
 
-    container.innerHTML = profileHTML;
+    const profileBody = newContent.querySelector('#profile-body-content');
+    if (isEditing && isOwner) {
+        renderEditMode(profileBody, profileData);
+    } else {
+        renderViewMode(profileBody, profileData);
+    }
+    
+    profileWindow.contentContainer.innerHTML = '';
+    profileWindow.contentContainer.appendChild(newContent);
+    
+    if (isOwner) {
+        profileWindow.contentContainer.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
+        profileWindow.contentContainer.querySelector('#editProfileBtn')?.addEventListener('click', () => {
+            isEditing = !isEditing;
+            updateProfileUI(profileWindow, profileData);
+        });
+    } else if (loggedInUser) {
+        profileWindow.contentContainer.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
+        profileWindow.contentContainer.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
+    }
+}
 
-    // Add event listener to the new follow button
-    const followBtn = document.getElementById('followBtn');
-    followBtn?.addEventListener('click', () => {
-        handleFollowToggle(profileData.username, isFollowing);
+function renderViewMode(container, profileData) {
+    container.innerHTML = `
+        <h3 class="font-semibold mb-2">Bio</h3>
+        <p class="text-primary whitespace-pre-wrap">${profileData.bio || 'This user has not written a bio yet.'}</p>
+    `;
+}
+
+function renderEditMode(container, profileData) {
+    container.innerHTML = `
+        <form id="editProfileForm" class="space-y-4">
+            <div>
+                <label for="editBio" class="block font-medium mb-1">Edit Bio</label>
+                <textarea id="editBio" class="w-full p-2 border rounded-md" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);" rows="5">${profileData.bio || ''}</textarea>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="cancelEditBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Cancel</button>
+                <button type="submit" id="saveProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--accent-active); color: var(--accent-active-text);">Save Changes</button>
+            </div>
+        </form>
+    `;
+    container.querySelector('#cancelEditBtn').addEventListener('click', () => {
+        isEditing = false;
+        const profileWindow = appServices.getWindowById(`profile-${profileData.username}`);
+        if(profileWindow) updateProfileUI(profileWindow, profileData);
+    });
+    container.querySelector('#editProfileForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newBio = container.querySelector('#editBio').value;
+        saveProfile(profileData.username, { bio: newBio });
     });
 }
 
-/**
- * Handles the logic for sending follow or unfollow requests to the server.
- * @param {string} username - The username of the profile to follow/unfollow.
- * @param {boolean} isCurrentlyFollowing - The current follow state.
- */
-async function handleFollowToggle(username, isCurrentlyFollowing) {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) {
-        alert('You must be logged in to follow users.');
-        return;
-    }
-
-    const serverUrl = 'https://snugos-server-api.onrender.com';
-    const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
-
+async function handleAvatarUpload(file) {
+    if (!loggedInUser) return;
+    appServices.showNotification("Uploading picture...", 2000); 
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', '/avatars/');
     try {
-        const response = await fetch(`${serverUrl}/api/profiles/${username}/follow`, {
+        const token = localStorage.getItem('snugos_token');
+        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) throw new Error(uploadResult.message);
+        
+        const newAvatarUrl = uploadResult.file.s3_url;
+        
+        const settingsResponse = await fetch(`${SERVER_URL}/api/profile/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ avatar_url: newAvatarUrl })
+        });
+        const settingsResult = await settingsResponse.json();
+        if (!settingsResult.success) throw new Error(settingsResult.message);
+
+        appServices.showNotification("Profile picture updated!", 2000); 
+        openProfileWindow(loggedInUser.username);
+
+    } catch (error) {
+        appServices.showNotification(`Update failed: ${error.message}`, 4000); 
+    }
+}
+
+async function saveProfile(username, dataToSave) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return;
+    appServices.showNotification("Saving...", 1500); 
+    try {
+        const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(dataToSave)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        appServices.showNotification("Profile saved!", 2000); 
+        isEditing = false;
+        const profileWindow = appServices.getWindowById(`profile-${username}`);
+        if (profileWindow) {
+            currentProfileData.bio = result.profile.bio;
+            updateProfileUI(profileWindow, currentProfileData);
+        }
+    } catch (error) {
+        appServices.showNotification(`Error: ${error.message}`, 4000); 
+    }
+}
+
+async function handleAddFriendToggle(username, isFriend) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return;
+    const method = isFriend ? 'DELETE' : 'POST';
+    appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500); 
+    try {
+        const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
             headers: { 'Authorization': `Bearer ${token}` }
         });
-
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message);
-        }
-
-        // Re-fetch profile data to update the UI with the new follow state
-        fetchProfileData(username, document.getElementById('profile-container'));
-
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        appServices.showNotification(result.message, 2000); 
+        const profileWindow = appServices.getWindowById(`profile-${username}`);
+        if (profileWindow) openProfileWindow(username);
     } catch (error) {
-        alert(`Error: ${error.message}`);
+        appServices.showNotification(`Error: ${error.message}`, 4000); 
     }
 }
 
-/**
- * Displays an error message in the main container.
- */
-function displayError(container, message) {
-    container.innerHTML = `
-        <div class="text-center p-12 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg">
-            <h2 class="text-xl font-bold text-red-800 dark:text-red-200">Could not load profile</h2>
-            <p class="text-red-600 dark:text-red-300 mt-2">${message}</p>
-        </div>
-    `;
+function showMessageModal(recipientUsername) {
+    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);"></textarea>`;
+    appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [ 
+        { label: 'Cancel' },
+        { label: 'Send', action: () => {
+            const content = document.getElementById('messageTextarea').value;
+            if (content) sendMessage(recipientUsername, content);
+        }}
+    ]);
 }
 
-document.addEventListener('DOMContentLoaded', initProfilePage);
+async function sendMessage(recipientUsername, content) {
+    const token = localStorage.getItem('snugos_token');
+    if (!token) return;
+    appServices.showNotification("Sending...", 1500); 
+    try {
+        const response = await fetch(`${SERVER_URL}/api/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+            body: JSON.stringify({ recipientUsername, content })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        appServices.showNotification("Message sent!", 2000); 
+    } catch (error) {
+        appServices.showNotification(`Error: ${error.message}`, 4000); 
+    }
+}
+
+function attachDesktopEventListeners() {
+    const desktop = document.getElementById('desktop');
+    const customBgInput = document.getElementById('customBgInput');
+
+    if (!desktop || !customBgInput) return;
+
+    desktop.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (e.target.closest('.window')) return;
+        const menuItems = [{
+            label: 'Change Background',
+            action: () => customBgInput.click()
+        }];
+        appServices.createContextMenu(e, menuItems, appServices);
+    });
+
+    // The customBgInput change event listener for background upload
+    customBgInput?.addEventListener('change', async (e) => {
+        // Ensure that a file was selected
+        if (!e.target.files || !e.target.files[0]) {
+            return;
+        }
+        // Use the centralized handleBackgroundUpload function via appServices
+        appServices.handleBackgroundUpload(e.target.files[0]);
+        // Clear the file input value to allow selecting the same file again if needed
+        e.target.value = null; 
+    });
+    
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
+    document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
+}
+
+function checkLocalAuth() {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        if (!token) return null;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('snugos_token');
+            return null;
+        }
+        return { id: payload.id, username: payload.username };
+    } catch (e) {
+        localStorage.removeItem('snugos_token');
+        return null;
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('snugos_token');
+    loggedInUser = null;
+    updateAuthUI(null);
+    appServices.applyCustomBackground(''); 
+    appServices.showNotification('You have been logged out.', 2000);
+    window.location.reload();
+}
+
+function updateClockDisplay() {
+    const clockDisplay = document.getElementById('taskbarClockDisplay');
+    if (clockDisplay) {
+        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setTimeout(updateClockDisplay, 60000);
+}
+
+function toggleStartMenu() {
+    document.getElementById('startMenu')?.classList.toggle('hidden');
+}
+
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            appServices.showNotification(`Error: ${err.message}`, 3000);
+        });
+    } else {
+        if(document.exitFullscreen) document.exitFullscreen();
+    }
+}
+
+function updateAuthUI(user) {
+    const userAuthContainer = document.getElementById('userAuthContainer');
+    const menuLogin = document.getElementById('menuLogin');
+    const menuLogout = document.getElementById('menuLogout');
+
+    if (user && userAuthContainer) {
+        userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span> <button id="logoutBtnTop" class="px-3 py-1 border rounded">Logout</button>`;
+        userAuthContainer.querySelector('#logoutBtnTop')?.addEventListener('click', handleLogout);
+        if (menuLogin) menuLogin.style.display = 'none';
+        if (menuLogout) menuLogout.style.display = 'block';
+    } else if (userAuthContainer) {
+        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
+        userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
+        if (menuLogin) menuLogin.style.display = 'block';
+        if (menuLogout) menuLogout.style.display = 'none';
+    }
+}
+
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const isLightTheme = body.classList.contains('theme-light');
+    if (isLightTheme) {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    } else {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    }
+}
+
+function showLoginModal() {
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
+                    <button type="submit" class="w-full">Login</button>
+                </form>
+            </div>
+            <hr class="border-gray-500">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
+                    <button type="submit" class="w-full">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
+
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove();
+    });
+
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove();
+    });
+}
