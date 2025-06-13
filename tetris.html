@@ -177,6 +177,8 @@
         const PIECE_COLOR = '#FFFFFF';
         const BORDER_COLOR = '#444444'; 
         const GRID_COLOR = '#333333';
+        const LOCKING_COLOR = '#888888'; 
+        const CLEARING_COLOR = '#AAAAAA'; 
         const TETROMINOES = {
             'I': [[1, 1, 1, 1]],
             'J': [[1, 0, 0], [1, 1, 1]],
@@ -201,6 +203,7 @@
         let isPaused = false;
         let isGameOver = false;
         let animationFrameId;
+        let isAnimating = false;
 
         // --- UI Elements ---
         const scoreEl = document.getElementById('score');
@@ -218,7 +221,7 @@
             nextCanvas.width = 4 * BLOCK_SIZE;
             nextCanvas.height = 4 * BLOCK_SIZE;
         }
-        
+
         // --- Game Logic ---
         
         class Piece {
@@ -226,11 +229,12 @@
                 this.shape = shape;
                 this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
                 this.y = 0;
+                this.isLocking = false;
             }
         }
         
         function createEmptyGrid() {
-            return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+            return Array.from({ length: ROWS }, () => Array.from({length: COLS}, () => ({ value: 0, isClearing: false })) );
         }
         
         function generatePiece() {
@@ -240,10 +244,6 @@
         }
 
         function resetGame() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
             grid = createEmptyGrid();
             score = 0;
             lines = 0;
@@ -253,6 +253,7 @@
             lastTime = 0;
             isPaused = false;
             isGameOver = false;
+            isAnimating = false;
             
             currentPiece = generatePiece();
             nextPiece = generatePiece();
@@ -262,61 +263,104 @@
         }
         
         function update(time = 0) {
-            if (isPaused || isGameOver) {
-                return;
-            }
+            // Core game loop logic for piece dropping
+            if (!isPaused && !isGameOver && !isAnimating) {
+                const deltaTime = time - lastTime;
+                lastTime = time;
+                
+                dropCounter += deltaTime;
+                
+                dropInterval = 1000 - (level - 1) * 50;
+                if (dropInterval < 100) dropInterval = 100;
 
-            const deltaTime = time - lastTime;
-            lastTime = time;
-            
-            dropCounter += deltaTime;
-            
-            dropInterval = 1000 - (level - 1) * 50;
-            if (dropInterval < 100) dropInterval = 100;
-
-            if (dropCounter > dropInterval) {
-                pieceDrop();
+                if (dropCounter > dropInterval) {
+                     pieceDrop();
+                }
             }
            
+            // Drawing happens every frame to keep animations smooth
             draw();
-            animationFrameId = requestAnimationFrame(update);
+            
+            // The loop continues unless the game is over
+            if (!isGameOver) {
+                animationFrameId = requestAnimationFrame(update);
+            }
         }
         
         function pieceDrop() {
-             if (isPaused) return;
+             if (isPaused || isAnimating) return;
              currentPiece.y++;
              if (checkCollision(grid, currentPiece)) {
                  currentPiece.y--;
-                 handlePieceLanded();
+                 lockPiece();
              } else {
                  dropCounter = 0;
              }
         }
 
         function hardDrop() {
-            if (isPaused || isGameOver) return;
+            if (isPaused || isGameOver || isAnimating) return;
             while (!checkCollision(grid, currentPiece)) {
                 currentPiece.y++;
             }
             currentPiece.y--; 
-            handlePieceLanded();
+            lockPiece();
         }
 
-        function handlePieceLanded() {
+        function lockPiece() {
+            if (isAnimating) return;
+            isAnimating = true;
+            currentPiece.isLocking = true;
+
+            setTimeout(() => {
+                currentPiece.isLocking = false;
+                processLandedPiece();
+            }, 100);
+        }
+
+        function processLandedPiece() {
             // Merge piece into the grid data
             currentPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
-                        grid[currentPiece.y + y][currentPiece.x + x] = 1;
+                        grid[currentPiece.y + y][currentPiece.x + x].value = 1;
                     }
                 });
             });
 
-            // Check for and remove full rows instantly
-            removeFullRows();
+            // Check for line clears
+            let rowsToClear = [];
+            outer: for (let y = ROWS - 1; y >= 0; y--) {
+                for (let x = 0; x < COLS; x++) {
+                    if (grid[y][x].value === 0) {
+                        continue outer;
+                    }
+                }
+                rowsToClear.push(y);
+                grid[y].forEach(cell => cell.isClearing = true);
+            }
 
-            // Spawn the next piece
-            spawnNewPiece();
+            if (rowsToClear.length > 0) {
+                setTimeout(() => {
+                    // Remove cleared lines from grid data
+                    rowsToClear.forEach(y => {
+                        grid.splice(y, 1);
+                        grid.unshift(Array.from({length: COLS}, () => ({ value: 0, isClearing: false })));
+                    });
+                    
+                    const points = [0, 100, 300, 500, 800];
+                    score += points[rowsToClear.length] * level;
+                    lines += rowsToClear.length;
+                    
+                    if (lines >= level * LINES_PER_LEVEL) {
+                        level++;
+                    }
+                    updateUI();
+                    spawnNewPiece();
+                }, 200);
+            } else {
+                spawnNewPiece();
+            }
         }
 
         function checkCollision(grid, piece) {
@@ -328,7 +372,7 @@
                         if (
                             newX < 0 || newX >= COLS ||
                             newY >= ROWS ||
-                            (grid[newY] && grid[newY][newX] !== 0)
+                            (grid[newY] && grid[newY][newX].value !== 0)
                         ) {
                             return true;
                         }
@@ -338,45 +382,20 @@
             return false;
         }
         
-        function removeFullRows() {
-            let rowsCleared = 0;
-            outer: for (let y = ROWS - 1; y >= 0; y--) {
-                for (let x = 0; x < COLS; x++) {
-                    if (grid[y][x] === 0) {
-                        continue outer;
-                    }
-                }
-                
-                // If we get here, the row is full
-                const row = grid.splice(y, 1)[0].fill(0);
-                grid.unshift(row);
-                rowsCleared++;
-                y++; // Re-check the same row index since we shifted everything down
-            }
-
-            if (rowsCleared > 0) {
-                const points = [0, 100, 300, 500, 800];
-                score += points[rowsCleared] * level;
-                lines += rowsCleared;
-                
-                if (lines >= level * LINES_PER_LEVEL) {
-                    level++;
-                }
-                updateUI();
-            }
-        }
-
         function spawnNewPiece() {
             currentPiece = nextPiece;
             nextPiece = generatePiece();
+            isAnimating = false; 
             
             if (checkCollision(grid, currentPiece)) {
                 gameOver();
             }
+
             dropCounter = 0;
         }
 
         function rotatePiece() {
+            if (isAnimating) return;
             const shape = currentPiece.shape;
             const newShape = [];
             for (let y = 0; y < shape[0].length; y++) {
@@ -431,9 +450,10 @@
         
         function drawBoard() {
             grid.forEach((row, y) => {
-                row.forEach((value, x) => {
-                    if (value !== 0) {
-                        drawBlock(boardCtx, x, y);
+                row.forEach((cell, x) => {
+                    if (cell.value !== 0) {
+                        const color = cell.isClearing ? CLEARING_COLOR : PIECE_COLOR;
+                        drawBlock(boardCtx, x, y, color);
                     }
                 });
             });
@@ -441,10 +461,11 @@
         
         function drawCurrentPiece() {
             if (!currentPiece) return;
+            const color = currentPiece.isLocking ? LOCKING_COLOR : PIECE_COLOR;
             currentPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value !== 0) {
-                        drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y);
+                        drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y, color);
                     }
                 });
             });
@@ -497,40 +518,40 @@
         // --- Event Handlers ---
         
         function startGame() {
-            resetGame();
-            lastTime = performance.now(); 
-            animationFrameId = requestAnimationFrame(update);
+            if (isGameOver) {
+                resetGame();
+            }
+            if (!animationFrameId) {
+                isPaused = false;
+                pauseBtn.textContent = 'pause';
+                lastTime = performance.now(); 
+                animationFrameId = requestAnimationFrame(update);
+            }
         }
         
         function togglePause() {
-            if (isGameOver) return; 
+            if (isGameOver || isAnimating) return; 
             
             isPaused = !isPaused;
             if (isPaused) {
-                // To pause, we simply stop the update loop by not requesting a new frame.
-                // The current animationFrameId is cleared.
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
+                // The loop will now naturally stop calling the game logic
                 pauseBtn.textContent = 'resume';
             } else {
-                // To resume, we reset the timer and start the loop again.
+                // Reset the time to avoid a huge jump after unpausing
                 lastTime = performance.now();
-                animationFrameId = requestAnimationFrame(update);
                 pauseBtn.textContent = 'pause';
             }
         }
 
         startBtn.addEventListener('click', startGame);
         pauseBtn.addEventListener('click', togglePause);
-        restartBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', () => {
+            resetGame();
+            startGame();
+        });
         
         document.addEventListener('keydown', event => {
-            if (!animationFrameId && !isGameOver) {
-                startGame();
-                return;
-            }
-
-            if (isPaused || isGameOver) {
+            if (isPaused || isGameOver || isAnimating) {
                 return;
             }
 
@@ -567,6 +588,10 @@
                     event.preventDefault(); 
                     hardDrop();
                     break;
+            }
+            
+            if (moved) {
+                draw();
             }
         });
 

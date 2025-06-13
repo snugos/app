@@ -1,16 +1,9 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
-// CORRECTED IMPORTS: Import from main utils.js for shared functions
-import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Changed from './welcomeUtils.js'
+import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
-import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { checkLocalAuth } from '../auth.js'; 
-
-// Import window state functions directly from windowState.js
-import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from '../state/windowState.js';
-
 
 const appServices = {};
-let loggedInUser = null; 
+let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
@@ -18,8 +11,7 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com';
  */
 function openGameWindow() {
     const windowId = 'tetrisGame';
-    // CRITICAL: Ensure appServices.getWindowById is defined before calling
-    if (appServices.getWindowById && appServices.getWindowById(windowId)) {
+    if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
@@ -30,6 +22,7 @@ function openGameWindow() {
     content.style.height = '100%';
     content.style.border = 'none';
 
+    // NOTE: The window size has been adjusted for a tighter fit around the game content.
     const options = {
         width: 500,
         height: 680,
@@ -42,53 +35,23 @@ function openGameWindow() {
 
 
 function initializeWelcomePage() {
-    console.log("[welcome.js] DOMContentLoaded fired. Starting appServices initialization...");
+    appServices.showNotification = showNotification;
+    appServices.showCustomModal = showCustomModal;
+    appServices.storeAsset = storeAsset;
+    appServices.getAsset = getAsset;
+    if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
+    if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
+    if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
+    if (typeof getWindowByIdState !== 'undefined') appServices.getWindowById = getWindowByIdState;
+    if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
+    if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
+    if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
 
-    // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Core utilities (now imported from main utils.js)
-    appServices.showNotification = showNotification; 
-    appServices.showCustomModal = showCustomModal;   
-    appServices.createContextMenu = createContextMenu;
-
-    // Window State functions (imported directly from windowState.js)
-    appServices.addWindowToStore = addWindowToStore;
-    appServices.removeWindowFromStore = removeWindowFromStore;
-    appServices.incrementHighestZ = incrementHighestZ;
-    appServices.getHighestZ = getHighestZ;
-    appServices.setHighestZ = setHighestZ;
-    appServices.getOpenWindows = getOpenWindows;
-    appServices.getWindowById = getWindowById;
-    
-    // Auth related services (auth.js will implement the logic)
-    appServices.getLoggedInUser = () => loggedInUser; 
-    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; 
-
-    // Background Management services (from backgroundManager.js)
-    appServices.applyCustomBackground = applyCustomBackground;
-    appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
-    // Data persistence for assets (from welcomeDb.js)
-    appServices.storeAsset = storeAsset; 
-    appServices.getAsset = getAsset; 
-
-    // Initialize background manager module, passing the fully prepared appServices object
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
-    console.log("[welcome.js] backgroundManager initialized. appServices.loadAndApplyUserBackground defined:", appServices.loadAndApplyUserBackground !== undefined);
-
-    // Now call checkLocalAuth (from auth.js) which will use appServices
-    // This will set `loggedInUser` via `appServices.setLoggedInUser`
-    checkLocalAuth(); 
-    console.log("[welcome.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
-
-    // Call loadAndApplyUserBackground AFTER loggedInUser is set and appServices is populated
-    appServices.loadAndApplyUserBackground(); 
-    console.log("[welcome.js] loadAndApplyUserBackground called after auth check.");
-    
     attachEventListeners();
-    setupDesktopContextMenu(); 
     updateClockDisplay();
-    applyUserThemePreference(); 
-    renderDesktopIcons(); // Desktop icons will now call openGameWindow after appServices is ready
+    checkInitialAuthState();
+    applyUserThemePreference();
+    renderDesktopIcons();
     initAudioOnFirstGesture();
 }
 
@@ -108,9 +71,6 @@ function initAudioOnFirstGesture() {
 }
 
 function attachEventListeners() {
-    const desktop = document.getElementById('desktop'); 
-    const customBgInput = document.getElementById('customBgInput');
-
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -125,63 +85,12 @@ function attachEventListeners() {
         handleLogout();
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuChangeBackground')?.addEventListener('click', (e) => {
-        e.preventDefault(); // Prevent default link behavior
-        document.getElementById('startMenu')?.classList.add('hidden'); // Hide start menu
-        customBgInput.click(); // Trigger background input
-    });
-
-    setupDesktopContextMenu(); // Moved out of `if (desktop)` to ensure listener attachment for context menu
-
-    // Central listener for the hidden file input (for background change)
-    if (customBgInput) {
-        customBgInput.addEventListener('change', async (e) => {
-            console.log("[welcome.js] customBgInput change event fired.");
-            if(!e.target.files || !e.target.files[0]) {
-                console.log("[welcome.js] No file selected or file list empty.");
-                return; 
-            }
-            const file = e.target.files[0];
-            if (appServices.handleBackgroundUpload) {
-                console.log("[welcome.js] Calling appServices.handleBackgroundUpload.");
-                await appServices.handleBackgroundUpload(file); 
-            } else {
-                console.error("[welcome.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
-                appServices.showNotification("Error: Background upload function not available.", 3000);
-            }
-            e.target.value = null; 
-        });
-    } else {
-        console.warn("[welcome.js] customBgInput not found for event listener.");
-    }
-}
-
-function setupDesktopContextMenu() {
-    const desktop = document.getElementById('desktop');
-    const customBgInput = document.getElementById('customBgInput'); 
-
-    if (!desktop || !customBgInput) {
-        console.warn("[welcome.js] Desktop or customBgInput not found for context menu listener.");
-        return;
-    }
-
-    desktop.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (e.target.closest('.window')) return; 
-
-        const menuItems = [
-            {
-                label: 'Change Background',
-                action: () => {
-                    console.log("[welcome.js] Context menu: Change Background clicked.");
-                    customBgInput.click(); 
-                }
-            }
-        ];
-        appServices.createContextMenu(e, menuItems, appServices);
+    document.getElementById('customBgInput')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleBackgroundUpload(file);
+        e.target.value = null;
     });
 }
-
 
 function renderDesktopIcons() {
     const desktopIconsContainer = document.getElementById('desktop-icons-container');
@@ -203,7 +112,7 @@ function renderDesktopIcons() {
                 if (loggedInUser) {
                     window.location.href = `profile.html?user=${loggedInUser.username}`;
                 } else {
-                    appServices.showNotification('Please log in to view your profile.', 3000);
+                    showNotification('Please log in to view your profile.', 3000);
                 }
             },
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
@@ -225,7 +134,7 @@ function renderDesktopIcons() {
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow, // This calls the openGameWindow function
+            action: openGameWindow,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -275,12 +184,6 @@ async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
         updateAuthUI(null);
-        // Ensure appServices.loadAndApplyUserBackground is available before calling
-        if (appServices.loadAndApplyUserBackground) { 
-            appServices.loadAndApplyUserBackground(); 
-        } else {
-            console.error("[welcome.js] CRITICAL: appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (no token)!");
-        }
         return;
     }
 
@@ -292,11 +195,10 @@ async function checkInitialAuthState() {
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
-        // Ensure appServices.loadAndApplyUserBackground is available before calling
-        if (appServices.loadAndApplyUserBackground) {
-            appServices.loadAndApplyUserBackground(); 
-        } else {
-            console.error("[welcome.js] CRITICAL: appServices.loadAndApplyUserBackground is NOT defined during checkInitialAuthState (token found)!");
+
+        const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
+        if (backgroundBlob) {
+            applyCustomBackground(backgroundBlob);
         }
 
     } catch (e) {
@@ -345,7 +247,7 @@ function showLoginModal() {
             </div>
         </div>
     `;
-    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []); 
+    const { overlay } = showCustomModal('Login or Register', modalContent, []);
     overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#loginUsername').value;
@@ -373,13 +275,13 @@ async function handleLogin(username, password) {
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
             await checkInitialAuthState();
-            appServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+            showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
-            appServices.showNotification(`Login failed: ${data.message}`, 3000);
+            showNotification(`Login failed: ${data.message}`, 3000);
         }
-    } catch (error) { // Added missing catch block
+    } catch (error) {
+        showNotification('Network error.', 3000);
         console.error("Login Error:", error);
-        appServices.showNotification('Network error.', 3000);
     }
 }
 
@@ -392,13 +294,28 @@ async function handleRegister(username, password) {
         });
         const data = await response.json();
         if (data.success) {
-            appServices.showNotification('Registration successful! Please log in.', 2500);
+            showNotification('Registration successful! Please log in.', 2500);
         } else {
-            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
+            showNotification(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
+        showNotification('Network error.', 3000);
         console.error("Register Error:", error);
-        appServices.showNotification('Network error.', 3000);
+    }
+}
+
+async function handleBackgroundUpload(file) {
+    if (!loggedInUser) {
+        showNotification('You must be logged in to save a background.', 3000);
+        applyCustomBackground(file);
+        return;
+    }
+    try {
+        await storeAsset(`background-for-user-${loggedInUser.id}`, file);
+        applyCustomBackground(file);
+        showNotification('Background saved locally!', 2000);
+    } catch (error) {
+        showNotification(`Error saving background: ${error.message}`, 3000);
     }
 }
 
@@ -406,8 +323,47 @@ function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
-    appServices.applyCustomBackground(''); 
-    appServices.showNotification('You have been logged out.', 2000);
+    document.getElementById('desktop').style.backgroundImage = '';
+    const existingVideo = document.getElementById('desktop-video-bg');
+    if (existingVideo) existingVideo.remove();
+    showNotification('You have been logged out.', 2000);
+}
+
+function applyCustomBackground(source) {
+    const desktopEl = document.getElementById('desktop');
+    if (!desktopEl) return;
+    desktopEl.style.backgroundImage = '';
+    const existingVideo = desktopEl.querySelector('#desktop-video-bg');
+    if (existingVideo) existingVideo.remove();
+    let url, fileType;
+    if (typeof source === 'string') {
+        url = source;
+        const extension = source.split('.').pop().toLowerCase().split('?')[0];
+        fileType = ['mp4', 'webm', 'mov'].includes(extension) ? `video/${extension}` : 'image/jpeg';
+    } else if (source instanceof Blob || source instanceof File) {
+        url = URL.createObjectURL(source);
+        fileType = source.type;
+    } else { return; }
+    if (fileType.startsWith('image/')) {
+        desktopEl.style.backgroundImage = `url(${url})`;
+        desktopEl.style.backgroundSize = 'cover';
+        desktopEl.style.backgroundPosition = 'center';
+    } else if (fileType.startsWith('video/')) {
+        const videoEl = document.createElement('video');
+        videoEl.id = 'desktop-video-bg';
+        videoEl.style.position = 'absolute';
+        videoEl.style.top = '0';
+        videoEl.style.left = '0';
+        videoEl.style.width = '100%';
+        videoEl.style.height = '100%';
+        videoEl.style.objectFit = 'cover';
+        videoEl.src = url;
+        videoEl.autoplay = true;
+        videoEl.loop = true;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        desktopEl.appendChild(videoEl);
+    }
 }
 
 function toggleTheme() {
@@ -441,7 +397,7 @@ function applyUserThemePreference() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            appServices.showNotification(`Error: ${err.message}`, 3000);
+            showNotification(`Error: ${err.message}`, 3000);
         });
     } else {
         if (document.exitFullscreen) {

@@ -13,6 +13,7 @@
     <link rel="apple-touch-icon" sizes="120x120" href="assets/apple-icon-120x120.png">
     <link rel="apple-touch-icon" sizes="144x144" href="assets/apple-icon-144x144.png">
     <link rel="apple-touch-icon" sizes="152x152" href="assets/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-icon-180x180.png">
     <link rel="icon" type="image/png" sizes="192x192"  href="assets/android-icon-192x192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon-96x96.png">
@@ -46,7 +47,9 @@
 
     <div id="topTaskbar" class="select-none">
         <div style="flex-grow: 1;"></div> 
-        <div id="userAuthContainer" class="flex items-center text-sm ml-4"></div>
+        <div id="userAuthContainer" class="flex items-center text-sm ml-4">
+            <button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>
+        </div>
         <div id="themeToggleContainerTopRight">
             <button id="themeToggleBtn" title="Toggle Theme">
                 <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -55,9 +58,12 @@
         </div>
     </div>
 
+    <!-- NOTE: This div now uses flexbox to center its content. -->
     <div id="desktop" class="relative h-full w-full flex items-center justify-center">
+        <!-- The icon container is now a simple grid that will be centered by the flex parent. -->
         <div id="desktop-icons-container" class="grid grid-cols-2 sm:grid-cols-4 gap-8">
-            </div>
+            <!-- Desktop icons will be rendered here by welcome.js -->
+        </div>
     </div>
 
     <div id="taskbar" class="select-none">
@@ -74,8 +80,6 @@
             <li><hr></li>
             <li id="menuViewProfiles"><a href="library.html" style="text-decoration:none; color:inherit; display:block;">Library</a></li>
             <li><hr></li>
-            <li id="menuChangeBackground"><a href="#" style="text-decoration:none; color:inherit; display:block;">Change Background</a></li>
-            <li><hr></li>
             <li id="menuLogin">Login / Register</li>
             <li id="menuLogout" class="hidden">Logout</li>
             <li><hr></li>
@@ -88,14 +92,13 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script type="module" src="js/daw/SnugWindow.js"></script>
 
-    <script type="module" src="js/utils.js"></script> 
-    <script type="module" src="js/db.js"></script>    
-    <script type="module" src="js/state/windowState.js"></script> 
-    <script type="module" src="js/backgroundManager.js"></script> 
-    <script type="module" src="js/auth.js"></script> 
-    
+    <script type="module" src="js/welcome/welcomeUtils.js"></script>
+    <script type="module" src="js/welcome/welcomeDb.js"></script>
     <script type="module" src="js/welcome/welcome.js"></script>
 
 </body>

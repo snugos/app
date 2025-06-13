@@ -10,8 +10,8 @@ import {
 
 // Global files loaded via script tags in snaw.html.
 // Their contents are globally available, but for modularity, some are explicitly imported or accessed via appServices.
-// Tone, Konva, JSZip are global via script tags.
-// Constants, db, effectsRegistry, utils are also loaded globally via script tags.
+// Tone, Konva, JSZip are global.
+// Constants, db, effectsRegistry, utils, auth are also loaded globally.
 
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
@@ -37,92 +37,159 @@ import {
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
-// NEW: Import from backgroundManager and auth.js
-import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { initializeAuth, checkLocalAuth } from '../auth.js'; 
+// NEW: Explicitly import functions from auth.js as it is now a module
+import { initializeAuth, handleBackgroundUpload } from '../auth.js';
 
-// Import all state management modules
-import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState } from './state/appState.js';
+// Import the new state modules
+import { initializeAppState, getMidiAccess, setActiveMIDIInput, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiRecordModeState, setMidiRecordModeState, setMidiAccess } from './state/appState.js';
 import { initializeMasterState, getMasterEffects, setMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
-import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
+import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
 import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ } from './state/windowState.js';
 
 
 let appServices = {};
-let loggedInUser = null; 
+
+// applyCustomBackground is now global
+function applyCustomBackground(source) {
+    const desktopEl = document.getElementById('desktop');
+    if (!desktopEl) return;
+
+    desktopEl.style.backgroundImage = '';
+    const existingVideo = desktopEl.querySelector('#desktop-video-bg');
+    if (existingVideo) {
+        existingVideo.remove();
+    }
+
+    let url;
+    let fileType;
+
+    if (typeof source === 'string') {
+        url = source;
+        const extension = source.split('.').pop().toLowerCase().split('?')[0];
+        if (['mp4', 'webm', 'mov'].includes(extension)) {
+            fileType = `video/${extension}`;
+        } else {
+            fileType = 'image/jpeg'; // Assume image for other URLs
+        }
+    } else { // It's a File object
+        url = URL.createObjectURL(source);
+        fileType = source.type;
+    }
+
+    if (fileType.startsWith('image/')) {
+        desktopEl.style.backgroundImage = `url(${url})`;
+        desktopEl.style.backgroundSize = 'cover';
+        desktopEl.style.backgroundPosition = 'center';
+    } else if (fileType.startsWith('video/')) {
+        const videoEl = document.createElement('video');
+        videoEl.id = 'desktop-video-bg';
+        videoEl.style.position = 'absolute';
+        videoEl.style.top = '0';
+        videoEl.style.left = '0';
+        videoEl.style.width = '100%';
+        videoEl.style.height = '100%';
+        videoEl.style.objectFit = 'cover';
+        videoEl.src = url;
+        videoEl.autoplay = true;
+        videoEl.loop = true;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        desktopEl.appendChild(videoEl);
+    }
+}
+
 
 function openDefaultLayout() {
     setTimeout(() => {
-        const desktopEl = appServices.uiElementsCache?.desktop || document.getElementById('desktop');
-        if (!desktopEl) {
-            console.error("[main.js] Desktop element not found for openDefaultLayout.");
-            return;
-        }
+        const desktopEl = document.getElementById('desktop');
+        if (!desktopEl) return;
 
         const rect = desktopEl.getBoundingClientRect();
         const margin = 10;
         const gap = 10;
 
-        const topTaskbarHeight = appServices.uiElementsCache.topTaskbar?.offsetHeight || 40;
-        const taskbarHeight = appServices.uiElementsCache.taskbar?.offsetHeight || 32;
-
-        const availableHeight = rect.height - topTaskbarHeight - taskbarHeight - (margin * 2);
-
-        const mixerHeight = Math.floor(availableHeight * 0.5); 
-        const masterEffectsHeight = availableHeight - mixerHeight - gap; 
-
+        const timelineHeight = 0; // Set to 0 as timeline is removed
+        const mixerHeight = Math.floor((rect.height - 40 - 32 - (margin * 2) - gap) * 0.5); // Use full remaining height
+        const sidePanelHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap); // Use full remaining height
         const sidePanelWidth = 350;
         const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
-        const row1Y = topTaskbarHeight + margin; 
+        const row1Y = margin; // Top-most row starts at margin
+        const row2Y = row1Y + mixerHeight + gap; // Second row starts after mixer + gap
 
+        // Removed openTimelineWindow call
+        // appServices.openTimelineWindow({
+        //     x: margin,
+        //     y: row1Y,
+        //     width: rect.width - (margin * 2),
+        //     height: timelineHeight
+        // });
+
+        // Mixer now starts higher and potentially fills more vertical space
         appServices.openMixerWindow({
             x: margin,
-            y: row1Y,
+            y: row1Y, // Starts at the top now
             width: leftPanelWidth,
             height: mixerHeight
         });
 
+        // Master Effects Rack also adjusts its position and height
         appServices.openMasterEffectsRackWindow({
             x: margin,
-            y: row1Y + mixerHeight + gap, 
+            y: row1Y + mixerHeight + gap, // Position below mixer
             width: leftPanelWidth,
-            height: masterEffectsHeight 
+            height: sidePanelHeight - mixerHeight - gap // Adjust height to fill remaining space
         });
 
+        // Sound Browser also adjusts its position and height
         const soundBrowserX = rect.width - sidePanelWidth - margin;
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
-            y: row1Y,
-            height: availableHeight 
+            y: row1Y, // Starts at the top now
+            height: sidePanelHeight // Use full remaining height for side panel
         });
     }, 100);
 }
 
+
+function applyUserTheme() {
+    const preference = getCurrentUserThemePreference();
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (preference === 'light' || (preference === 'system' && !prefersDark)) {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+    }
+}
+
 function handleMasterEffectsUIUpdate() {
-    const rackWindow = appServices.getWindowById('masterEffectsRack');
+    const rackWindow = getWindowById('masterEffectsRack');
     if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
         rackWindow.refresh();
     }
 }
 
 function handleTrackUIUpdate(trackId, reason, detail) {
-    const track = appServices.getTrackById(trackId);
+    const track = getTrackById(trackId);
     if (!track) return;
 
-    const soloedTrackId = appServices.getSoloedTrackId();
+    const soloedTrackId = getSoloedTrackId();
     const isEffectivelyMuted = track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id);
 
-    const inspectorWindow = appServices.getWindowById(`trackInspector-${track.id}`);
+    const inspectorWindow = getWindowById(`trackInspector-${track.id}`);
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
         const soloBtn = inspectorWindow.element.querySelector(`#soloBtn-${track.id}`);
         const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
 
         if (reason === 'armChanged') {
-            if (armBtn) armBtn.classList.toggle('armed', appServices.getArmedTrackId() === track.id);
+            if (armBtn) armBtn.classList.toggle('armed', getArmedTrackId() === track.id);
         }
         if (reason === 'soloChanged' || reason === 'muteChanged') {
             if (muteBtn) {
@@ -142,12 +209,12 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         if (reason === 'instrumentSamplerLoaded') {
             const canvas = inspectorWindow.element.querySelector(`#waveform-canvas-instrument-${track.id}`);
             if (canvas && track.instrumentSamplerSettings.audioBuffer) {
-                appServices.drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer); 
+                drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
             }
         }
     }
 
-    const mixerWindow = appServices.getWindowById('mixer');
+    const mixerWindow = getWindowById('mixer');
     if (mixerWindow && mixerWindow.element && !mixerWindow.isMinimized) {
         const trackDiv = mixerWindow.element.querySelector(`.mixer-track[data-track-id='${track.id}']`);
         if(trackDiv) {
@@ -164,14 +231,14 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
 
     if (reason === 'effectsChanged') {
-        const rackWindow = appServices.getWindowById(`effectsRack-${trackId}`);
+        const rackWindow = getWindowById(`effectsRack-${trackId}`);
         rackWindow?.refresh();
     }
 }
 
 function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
-    const tracks = appServices.getTracks();
+    const tracks = getTracks();
 
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop();
@@ -189,130 +256,116 @@ function onPlaybackModeChange(newMode, oldMode) {
 }
 
 async function initializeSnugOS() {
-    console.log("[main.js] Initializing SnugOS...");
-
-    // Cache UI elements that are accessed frequently for performance
-    appServices.uiElementsCache = {
-        desktop: document.getElementById('desktop'),
-        taskbar: document.getElementById('taskbar'),
-        topTaskbar: document.getElementById('topTaskbar'),
-        taskbarButtons: document.getElementById('taskbarButtons'),
-        startButton: document.getElementById('startButton'),
-        startMenu: document.getElementById('startMenu'),
-        taskbarClockDisplay: document.getElementById('taskbarClockDisplay'),
-        userAuthContainer: document.getElementById('userAuthContainer'),
-        themeToggleBtn: document.getElementById('themeToggleBtn'),
-        notificationArea: document.getElementById('notification-area'),
-        modalContainer: document.getElementById('modalContainer'),
-        customBgInput: document.getElementById('customBgInput'),
-        loadProjectInput: document.getElementById('loadProjectInput'),
-        sampleFileInput: document.getElementById('sampleFileInput'),
-    };
 
     function drawLoop() {
         if (typeof Tone !== 'undefined') {
             const transportTime = Tone.Transport.seconds;
             
-            const mode = appServices.getPlaybackMode(); // Access via appServices
-            appServices.updatePianoRollPlayhead(transportTime); 
+            const mode = getPlaybackMode();
+            appServices.updatePianoRollPlayhead(transportTime); // CORRECTED: Access via appServices
             
-            appServices.updateMeters(appServices.uiElementsCache.masterMeterBarGlobalTop, null, appServices.getTracks());
+            updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, getTracks());
         }
         requestAnimationFrame(drawLoop);
     }
 
-    // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
-    // Core utilities (from utils.js, assumed globally available)
-    appServices.showNotification = showNotification; 
-    appServices.showCustomModal = showCustomModal;   
-    appServices.createContextMenu = createContextMenu;
-    appServices.drawWaveform = drawWaveform; // From utils.js
-    
-    // Window State functions (imported from windowState.js)
-    appServices.addWindowToStore = addWindowToStore;
-    appServices.removeWindowFromStore = removeWindowFromStore;
-    appServices.incrementHighestZ = incrementHighestZ;
-    appServices.getHighestZ = getHighestZ;
-    appServices.setHighestZ = setHighestZ;
-    appServices.getOpenWindows = getOpenWindows;
-    appServices.getWindowById = getWindowById;
+    appServices = {
+        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
+        showNotification: showNotification, createContextMenu: createContextMenu, updateTrackUI: handleTrackUIUpdate,
+        showCustomModal: showCustomModal, applyUserThemePreference: applyUserTheme, updateMasterEffectsUI: handleMasterEffectsUIUpdate,
+        applyCustomBackground: applyCustomBackground,
+        handleBackgroundUpload: handleBackgroundUpload,
+        getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack,
+        removeTrack: removeTrack, getOpenWindows: getOpenWindows, getWindowById: getWindowById,
+        getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ,
+        addWindowToStore: addWindowToStore, removeWindowFromStore: removeWindowFromStore,
+        getMidiAccess: getMidiAccess, setMidiAccess: setMidiAccess,
+        getArmedTrackId: getArmedTrackId,
+        setArmedTrackId: setArmedTrackId,
+        getSoloedTrackId: getSoloedTrackId, setSoloedTrackId: setSoloedTrackId,
+        getMasterEffects: getMasterEffects, addMasterEffect: addMasterEffect,
+        removeMasterEffect: removeMasterEffect, updateMasterEffectParam: updateMasterEffectParam,
+        reorderMasterEffect: reorderMasterEffect, getMasterGainValue: getMasterGainValue,
+        setMasterGainValue: setMasterGainValue, getPlaybackMode: getPlaybackMode,
+        setPlaybackMode: setPlaybackMode, setIsRecording: setIsRecording,
+        isTrackRecording: isRecording, setRecordingTrackId: setRecordingTrackId,
+        getRecordingTrackId: getRecordingTrackId, setRecordingStartTime: getRecordingStartTime,
+        setCurrentUserThemePreference: setCurrentUserThemePreference,
+        getIsReconstructingDAW: getIsReconstructingDAW, setIsReconstructingDAW: setIsReconstructingDAW,
+        captureStateForUndo: captureStateForUndo, undoLastAction: undoLastAction,
+        redoLastAction: redoLastAction, gatherProjectData: gatherProjectData,
+        reconstructDAW: reconstructDAW, saveProject: saveProject, loadProject: loadProject,
+        handleProjectFileLoad: handleProjectFileLoad, exportToWav: exportToWav,
+        initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
+        addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio,
+        reorderMasterEffectInAudio, setActualMasterVolume, startAudioRecording, stopAudioRecording,
+        forceStopAllAudio,
+        addFileToSoundLibrary: addFileToSoundLibrary,
+        fetchSoundLibrary, getLoadedZipFiles: getLoadedZipFiles, setLoadedZipFiles: setLoadedZipFiles,
+        getSoundLibraryFileTrees: getSoundLibraryFileTrees, setSoundLibraryFileTrees: setSoundLibraryFileTrees,
+        setCurrentLibraryName: setCurrentLibraryName, getCurrentLibraryName: getCurrentLibraryName,
+        setCurrentSoundBrowserPath: setCurrentSoundBrowserPath, getPreviewPlayer: getPreviewPlayer,
+        setPreviewPlayer: setPreviewPlayer, loadSampleFile, loadDrumSamplerPadFile,
+        loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
+        playSlicePreview, playDrumSamplerPadPreview, dbStoreAudio: storeAudio, dbGetAudio: getAudio, dbDeleteAudio: deleteAudio,
+        openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
+        openMasterEffectsRackWindow, openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, openYouTubeImporterWindow,
+        renderSamplePads, updateSliceEditorUI,
+        renderDrumSamplerPads, updateDrumPadControlsUI, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo,
+        renderDirectoryView, renderSoundBrowser,
+        drawWaveform: drawWaveform,
+        handleTrackMute: handleTrackMute, handleTrackSolo: handleTrackSolo, handleTrackArm: handleTrackArm, handleRemoveTrack: handleRemoveTrack,
+        handleOpenEffectsRack: handleOpenEffectsRack,
+        handleOpenPianoRoll: handleOpenPianoRoll,
+        onPlaybackModeChange: onPlaybackModeChange,
+        handleTimelineLaneDrop: handleTimelineLaneDrop,
+        handleOpenYouTubeImporter: handleOpenYouTubeImporter,
+        toggleMetronome: toggleMetronome,
+        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions },
+        uiElementsCache: {},
+        context: Tone.context,
+        getMidiRecordModeState: getMidiRecordModeState,
+        setMidiRecordModeState: setMidiRecordModeState
+    };
 
-    // Auth related services (auth.js will implement the logic)
-    appServices.getLoggedInUser = () => loggedInUser; // Exposed for other modules
-    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; // Exposed for auth.js to set
-
-    // Background Management services (from backgroundManager.js)
-    appServices.applyCustomBackground = applyCustomBackground;
-    appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
-    
-    // IndexedDB Access (from db.js, assumed globally available)
-    appServices.dbStoreAudio = storeAudio;
-    appServices.dbGetAudio = getAudio;
-    appServices.dbDeleteAudio = deleteAudio;
-    appServices.storeAsset = storeAsset; // For local user assets like background
-    appServices.getAsset = getAsset;     // For local user assets like background
-
-    // Initialize core state management modules
     initializeAppState(appServices);
     initializeMasterState(appServices);
     initializeProjectState(appServices);
     initializeSoundLibraryState(appServices);
     initializeTrackState(appServices);
-    initializeWindowState(appServices); // Important for windowState functions
-    console.log("[main.js] Core state modules initialized.");
+    initializeWindowState(appServices);
 
-    // Initialize background manager module (it depends on appServices, but also takes loadAndApplyUserBackground)
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
-    console.log("[main.js] backgroundManager initialized.");
-
-    // Initialize core application modules, passing appServices
     initializeAudioModule(appServices);
     initializePlayback(appServices);
     initializeRecording(appServices);
     initializeSampleManager(appServices);
-    initializeMetronome(appServices);
-    console.log("[main.js] Audio and core modules initialized.");
-
-    // Initialize UI modules, passing the full appServices object
     initializeUIModule(appServices);
-    console.log("[main.js] UI modules initialized.");
-
-    // Initialize Event Handlers (relying on fully populated appServices)
     initializeEventHandlersModule(appServices);
-    initializePrimaryEventListeners(); // Attaches main document listeners
-    attachGlobalControlEvents({}); // Attaches DAW control listeners (play, stop, record, etc.)
-    setupMIDI(); // Sets up MIDI input
-    console.log("[main.js] Event handlers and MIDI setup complete.");
+    initializeMetronome(appServices);
+    initializeAuth(appServices);
 
-    // Initialize Auth (this will set the loggedInUser and load the background via appServices)
-    initializeAuth(appServices); // From ../auth.js
-    console.log("[main.js] Auth module initialized.");
+    initializePrimaryEventListeners();
+    attachGlobalControlEvents({});
+    setupMIDI();
 
-    // Apply initial theme preference (theme state managed by appState/auth)
-    // The actual background loading is now handled by initializeAuth which calls loadAndApplyUserBackground
-    // `applyUserThemePreference` is a function from auth.js, but also potentially in other files.
-    // Ensure the one called is the auth module's one or a consistent one.
-    // window.matchMedia is for system theme changes, typically handled in auth or central theme module.
-    // For consistency, ensure `applyUserThemePreference` is accessible via appServices if needed.
-    // (This line might need to be removed if it's already handled within `auth.js` or elsewhere)
-    // window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference); 
+    const savedTheme = localStorage.getItem('snugos-theme');
+    if (savedTheme) {
+        setCurrentUserThemePreference(savedTheme);
+    } else {
+        applyUserTheme();
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyUserTheme);
 
-    // Open default layout windows
     openDefaultLayout();
-    console.log("[main.js] Default layout opened.");
 
     console.log("SnugOS Initialized Successfully.");
 
-    // Tone.js settings
     appServices.context.lookAhead = 0.02;
     appServices.context.updateInterval = 0.01;
     console.log(`[Latency] lookAhead set to: ${appServices.context.lookAhead}`);
     console.log(`[Latency] updateInterval set to: ${appServices.context.updateInterval}`);
 
-    // Start main drawing loop
     drawLoop();
-    console.log("[main.js] Draw loop started.");
 }
 
 document.addEventListener('DOMContentLoaded', initializeSnugOS);
