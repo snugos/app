@@ -296,6 +296,8 @@ async function sendMessage(recipientUsername, content) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         appServices.showNotification("Message sent!", 2000); 
+    } catch (error) {
+        appServices.showNotification(`Error: ${error.message}`, 4000); 
     }
 }
 
@@ -315,9 +317,15 @@ function attachDesktopEventListeners() {
         appServices.createContextMenu(e, menuItems, appServices);
     });
 
+    // The customBgInput change event listener for background upload
     customBgInput?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0]) return;
+        // Ensure that a file was selected
+        if (!e.target.files || !e.target.files[0]) {
+            return;
+        }
+        // Use the centralized handleBackgroundUpload function via appServices
         appServices.handleBackgroundUpload(e.target.files[0]);
+        // Clear the file input value to allow selecting the same file again if needed
         e.target.value = null; 
     });
     
