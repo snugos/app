@@ -1,7 +1,11 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
-import { showNotification, showCustomModal } from './welcomeUtils.js';
+import { showNotification, showCustomModal, createContextMenu } from './welcomeUtils.js'; // Ensure these are imported or globally available
 import { storeAsset, getAsset } from './welcomeDb.js';
-import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js'; // Corrected import path
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { checkLocalAuth } from '../auth.js'; // Import checkLocalAuth from auth.js
+
+// Import window state functions directly from windowState.js
+import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from '../state/windowState.js';
 
 
 const appServices = {};
@@ -12,11 +16,12 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com';
  * Creates and opens a new window containing the Tetris game.
  */
 function openGameWindow() {
-    const windowId = 'tetrisGame';
-    if (appServices.getWindowById(windowId)) {
+    // CRITICAL: Ensure appServices.getWindowById is defined before calling
+    if (appServices.getWindowById && appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
+    const windowId = 'tetrisGame'; // Define windowId here
 
     const content = document.createElement('iframe');
     content.src = 'tetris.html';
@@ -36,33 +41,53 @@ function openGameWindow() {
 
 
 function initializeWelcomePage() {
-    // --- IMPORTANT: Populate appServices BEFORE calling functions that use them ---
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
-    appServices.storeAsset = storeAsset;
-    appServices.getAsset = getAsset;
+    console.log("[welcome.js] DOMContentLoaded fired. Starting appServices initialization...");
+
+    // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
+    // Core utilities (from welcomeUtils.js, assumed imported or globally available)
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
+    appServices.createContextMenu = createContextMenu;
+
+    // Window State functions (imported directly from windowState.js)
+    appServices.addWindowToStore = addWindowToStore;
+    appServices.removeWindowFromStore = removeWindowFromStore;
+    appServices.incrementHighestZ = incrementHighestZ;
+    appServices.getHighestZ = getHighestZ;
+    appServices.setHighestZ = setHighestZ;
+    appServices.getOpenWindows = getOpenWindows;
+    appServices.getWindowById = getWindowById;
+    
+    // Auth related services (auth.js will implement the logic)
     appServices.getLoggedInUser = () => loggedInUser; 
+    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; 
+
+    // Background Management services (from backgroundManager.js)
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Make sure this is set early
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
+    // Data persistence for assets (from welcomeDb.js)
+    appServices.storeAsset = storeAsset; 
+    appServices.getAsset = getAsset; 
 
-    if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
-    if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
-    if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
-    if (typeof getWindowByIdState !== 'undefined') appServices.getWindowById = getWindowByIdState;
-    if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
-    if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
-    if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
+    // Initialize background manager module, passing the fully prepared appServices object
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
+    console.log("[welcome.js] backgroundManager initialized. appServices.loadAndApplyUserBackground defined:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Initialize background manager module with the main load function
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // Pass loadAndApplyUserBackground
+    // Now call checkLocalAuth (from auth.js) which will use appServices
+    // This will set `loggedInUser` via `appServices.setLoggedInUser`
+    checkLocalAuth(); 
+    console.log("[welcome.js] checkLocalAuth completed. current loggedInUser:", loggedInUser);
 
+    // Call loadAndApplyUserBackground AFTER loggedInUser is set and appServices is populated
+    appServices.loadAndApplyUserBackground(); 
+    console.log("[welcome.js] loadAndApplyUserBackground called after auth check.");
+    
     attachEventListeners();
     setupDesktopContextMenu(); 
     updateClockDisplay();
-    checkInitialAuthState(); 
     applyUserThemePreference(); 
-    renderDesktopIcons();
+    renderDesktopIcons(); // Desktop icons will now call openGameWindow after appServices is ready
     initAudioOnFirstGesture();
 }
 
@@ -96,13 +121,21 @@ function attachEventListeners() {
         handleLogout();
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+    document.getElementById('menuChangeBackground')?.addEventListener('click', (e) => {
+        e.preventDefault(); // Prevent default link behavior
+        document.getElementById('startMenu')?.classList.add('hidden'); // Hide start menu
+        document.getElementById('customBgInput').click(); // Trigger background input
+    });
 }
 
 function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
     const customBgInput = document.getElementById('customBgInput'); 
 
-    if (!desktop || !customBgInput) return;
+    if (!desktop || !customBgInput) {
+        console.warn("[welcome.js] Desktop or customBgInput not found for event listeners.");
+        return;
+    }
 
     desktop.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -111,16 +144,28 @@ function setupDesktopContextMenu() {
         const menuItems = [
             {
                 label: 'Change Background',
-                action: () => customBgInput.click() 
+                action: () => {
+                    console.log("[welcome.js] Context menu: Change Background clicked.");
+                    customBgInput.click(); 
+                }
             }
         ];
         appServices.createContextMenu(e, menuItems, appServices);
     });
 
-    customBgInput.addEventListener('change', (e) => {
+    customBgInput.addEventListener('change', async (e) => {
+        console.log("[welcome.js] customBgInput change event fired.");
+        if(!e.target.files || !e.target.files[0]) {
+            console.log("[welcome.js] No file selected or file list empty.");
+            return; 
+        }
         const file = e.target.files[0];
-        if (file) {
-            appServices.handleBackgroundUpload(file); 
+        if (appServices.handleBackgroundUpload) {
+            console.log("[welcome.js] Calling appServices.handleBackgroundUpload.");
+            await appServices.handleBackgroundUpload(file); 
+        } else {
+            console.error("[welcome.js] CRITICAL: appServices.handleBackgroundUpload is NOT defined!");
+            appServices.showNotification("Error: Background upload function not available.", 3000);
         }
         e.target.value = null; 
     });
@@ -169,7 +214,7 @@ function renderDesktopIcons() {
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow,
+            action: openGameWindow, // This calls the openGameWindow function
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12" viewBox="0 0 24 24" fill="currentColor"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -311,77 +356,4 @@ async function handleLogin(username, password) {
         } else {
             appServices.showNotification(`Login failed: ${data.message}`, 3000);
         }
-    } catch (error) {
-        appServices.showNotification('Network error.', 3000);
-        console.error("Login Error:", error);
     }
-}
-
-async function handleRegister(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (data.success) {
-            appServices.showNotification('Registration successful! Please log in.', 2500);
-        } else {
-            appServices.showNotification(`Registration failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        appServices.showNotification('Network error.', 3000);
-        console.error("Register Error:", error);
-    }
-}
-
-function handleLogout() {
-    localStorage.removeItem('snugos_token');
-    loggedInUser = null;
-    updateAuthUI(null);
-    appServices.applyCustomBackground(''); 
-    appServices.showNotification('You have been logged out.', 2000);
-}
-
-function toggleTheme() {
-    const body = document.body;
-    const isLightTheme = body.classList.contains('theme-light');
-    if (isLightTheme) {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        localStorage.setItem('snugos-theme', 'dark');
-    } else {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        localStorage.setItem('snugos-theme', 'light');
-    }
-}
-
-function applyUserThemePreference() {
-    const preference = localStorage.getItem('snugos-theme');
-    const body = document.body;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
-    if (themeToApply === 'light') {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-    } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-    }
-}
-
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            appServices.showNotification(`Error: ${err.message}`, 3000);
-        });
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        }
-    }
-}
-
-document.addEventListener('DOMContentLoaded', initializeWelcomePage);
