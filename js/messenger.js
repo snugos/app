@@ -1,15 +1,25 @@
-import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from './backgroundManager.js';
-import { SnugWindow } from './daw/SnugWindow.js'; // Ensure SnugWindow is imported
+// js/messenger.js - Complete and Corrected
+
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { SnugWindow } from './daw/SnugWindow.js'; 
+// Assuming these are globally available or properly imported elsewhere for their base functions
+// import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; 
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
-let loggedInUser = null; 
+let loggedInUser = null; // This will be set by auth.js via appServices
 let appServices = {};
 let currentChatPartner = null;
 let messagePollingInterval = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- CRITICAL: Populate appServices first and ensure functions are defined ---
+    // --- CRITICAL: Populate appServices with ALL necessary functions immediately ---
+    // Ensure core utilities are available through appServices
+    appServices.showNotification = showNotification; 
+    appServices.showCustomModal = showCustomModal;   
+    appServices.createContextMenu = createContextMenu;
+
+    // Window State functions
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -17,21 +27,30 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.setHighestZ = setHighestZState;
     appServices.getOpenWindows = getOpenWindowsState;
     appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification; 
-    appServices.showCustomModal = showCustomModal;   
     
-    // Background Manager specific appServices assignments
-    appServices.getLoggedInUser = () => loggedInUser; 
+    // Auth related services (auth.js will implement the logic)
+    appServices.getLoggedInUser = () => loggedInUser; // Expose local loggedInUser state
+    appServices.setLoggedInUser = (user) => { loggedInUser = user; }; // Expose setter for auth.js
+
+    // Background Management services (from backgroundManager.js)
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
-    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; 
+    appServices.loadAndApplyUserBackground = loadAndApplyUserBackground;
+    // Assuming storeAsset and getAsset are globally available or exposed via other core modules
+    // appServices.storeAsset = storeAsset; 
+    // appServices.getAsset = getAsset; 
 
-    // Initialize background manager module with the main load function
+    // Initialize background manager module, passing the fully prepared appServices object
     initializeBackgroundManager(appServices, loadAndApplyUserBackground); 
+    console.log("[messenger.js] appServices initialized for background:", appServices.loadAndApplyUserBackground !== undefined);
 
-    // Now proceed with logic that might rely on appServices being fully populated
-    loggedInUser = checkLocalAuth();
+    // Now call checkLocalAuth (from global scope) which will use appServices
+    loggedInUser = checkLocalAuth(); // This will use appServices.setLoggedInUser
+    console.log("[messenger.js] checkLocalAuth completed. loggedInUser:", loggedInUser);
+
+    // Call loadAndApplyUserBackground AFTER loggedInUser is set and appServices is populated
+    appServices.loadAndApplyUserBackground(); 
+    console.log("[messenger.js] loadAndApplyUserBackground called after auth check.");
     
     attachDesktopEventListeners();
     applyUserThemePreference();
@@ -40,12 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (loggedInUser) {
         openMessengerWindow();
-        appServices.loadAndApplyUserBackground(); 
     } else {
         const desktop = document.getElementById('desktop');
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl">Please log in to use Messenger.</p></div>`;
-            appServices.loadAndApplyUserBackground(); 
         }
     }
 });
@@ -54,22 +71,40 @@ function attachDesktopEventListeners() {
     const desktop = document.getElementById('desktop');
     const customBgInput = document.getElementById('customBgInput');
 
-    if (desktop) {
-        desktop.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            if (e.target.closest('.window')) return;
-            const menuItems = [{
-                label: 'Change Background',
-                action: () => customBgInput.click() 
-            }];
-            appServices.createContextMenu(e, menuItems, appServices); 
-        });
+    if (!desktop || !customBgInput) {
+        console.warn("[messenger.js] Desktop or customBgInput not found for event listeners.");
+        return;
     }
 
-    customBgInput?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0]) return; 
-        appServices.handleBackgroundUpload(e.target.files[0]); 
-        e.target.value = null; 
+    desktop.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (e.target.closest('.window')) return;
+        const menuItems = [{
+            label: 'Change Background',
+            action: () => {
+                console.log("[messenger.js] Context menu: Change Background clicked.");
+                customBgInput.click(); // Programmatically click the hidden file input
+            }
+        }];
+        appServices.createContextMenu(e, menuItems, appServices); 
+    });
+
+    // Central listener for the hidden file input
+    customBgInput.addEventListener('change', async (e) => {
+        console.log("[messenger.js] customBgInput change event fired.");
+        if(!e.target.files || !e.target.files[0]) {
+            console.log("[messenger.js] No file selected or file list empty.");
+            return; 
+        }
+        const file = e.target.files[0];
+        if (appServices.handleBackgroundUpload) {
+            console.log("[messenger.js] Calling appServices.handleBackgroundUpload.");
+            await appServices.handleBackgroundUpload(file); 
+        } else {
+            console.error("[messenger.js] appServices.handleBackgroundUpload is NOT defined!");
+            appServices.showNotification("Error: Background upload function not available.", 3000);
+        }
+        e.target.value = null; // Clear the file input value to allow selecting the same file again if needed
     });
 
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -306,7 +341,6 @@ function showLoginModal() {
     
     const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
 
-    // Apply styles to inputs and buttons within the modal for consistency
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
         input.style.color = 'var(--text-primary)';
