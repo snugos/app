@@ -1,6 +1,6 @@
-// NEW: Import from backgroundManager
+// CORRECTED PATH
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
-import { SnugWindow } from './daw/SnugWindow.js'; // Ensure SnugWindow is imported
+import { SnugWindow } from './daw/SnugWindow.js'; 
 
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
@@ -55,7 +55,7 @@ function attachDesktopEventListeners() {
             if (e.target.closest('.window')) return;
             const menuItems = [{
                 label: 'Change Background',
-                action: () => customBgInput.click() // Trigger the file input
+                action: () => customBgInput.click() 
             }];
             appServices.createContextMenu(e, menuItems, appServices); 
         });
@@ -65,7 +65,7 @@ function attachDesktopEventListeners() {
     customBgInput?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0]) return; 
         appServices.handleBackgroundUpload(e.target.files[0]); 
-        e.target.value = null; // Clear the input after selection
+        e.target.value = null; 
     });
 
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -274,7 +274,7 @@ function handleLogout() {
     loggedInUser = null;
     updateAuthUI(null);
     appServices.applyCustomBackground(''); 
-    window.location.reload();
+    window.location.reload(); 
 }
 
 function showLoginModal() {
