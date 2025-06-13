@@ -1,5 +1,5 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
-import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Ensure these are imported or globally available
+import { showNotification, showCustomModal, createContextMenu } from './utils.js'; // Ensure these are imported or globally available
 import { storeAsset, getAsset } from './welcomeDb.js';
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { checkLocalAuth } from '../auth.js'; 
