@@ -1,13 +1,20 @@
-import { SnugWindow } from '../daw/SnugWindow.js';
+// NEW: Import from backgroundManager
+import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
+import { SnugWindow } from '../daw/SnugWindow.js'; // Ensure SnugWindow is imported
+// NEW: Import from profileDb and profileUtils
+import { storeAsset, getAsset } from './profileDb.js';
+import { showNotification, showCustomModal } from './profileUtils.js';
 
-let loggedInUser = null;
+
+let loggedInUser = null; // This will now be managed by appServices.getLoggedInUser()
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let currentProfileData = null;
 let isEditing = false;
-const appServices = {};
+const appServices = {}; // Define appServices as an empty object here
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Expose appServices for use by backgroundManager and other modules
     appServices.addWindowToStore = addWindowToStoreState;
     appServices.removeWindowFromStore = removeWindowFromStoreState;
     appServices.incrementHighestZ = incrementHighestZState;
@@ -18,9 +25,18 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.createContextMenu = createContextMenu;
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
+    appServices.getLoggedInUser = () => loggedInUser; // Provide a way for backgroundManager to get the current logged in user
+    // Expose background functions through appServices
+    appServices.applyCustomBackground = applyCustomBackground;
+    appServices.handleBackgroundUpload = handleBackgroundUpload;
+    appServices.storeAsset = storeAsset; // For local background saving
+    appServices.getAsset = getAsset;     // For local background retrieval
 
-    loggedInUser = checkLocalAuth();
-    loadAndApplyGlobals();
+    // Initialize background manager module
+    initializeBackgroundManager(appServices);
+
+    loggedInUser = checkLocalAuth(); // Check local auth first
+    appServices.loadAndApplyUserBackground(); // Then load background based on auth status
     attachDesktopEventListeners();
     updateClockDisplay();
     updateAuthUI(loggedInUser);
@@ -30,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (username) {
         openProfileWindow(username);
     } else {
-        showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
+        appServices.showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
     }
     
     document.getElementById('avatarUploadInput')?.addEventListener('change', (e) => {
@@ -179,7 +195,7 @@ function renderEditMode(container, profileData) {
 
 async function handleAvatarUpload(file) {
     if (!loggedInUser) return;
-    showNotification("Uploading picture...", 2000);
+    appServices.showNotification("Uploading picture...", 2000); // Use appServices
     const formData = new FormData();
     formData.append('file', file);
     formData.append('path', '/avatars/');
@@ -203,18 +219,18 @@ async function handleAvatarUpload(file) {
         const settingsResult = await settingsResponse.json();
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
-        showNotification("Profile picture updated!", 2000);
+        appServices.showNotification("Profile picture updated!", 2000); // Use appServices
         openProfileWindow(loggedInUser.username);
 
     } catch (error) {
-        showNotification(`Update failed: ${error.message}`, 4000);
+        appServices.showNotification(`Update failed: ${error.message}`, 4000); // Use appServices
     }
 }
 
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    showNotification("Saving...", 1500);
+    appServices.showNotification("Saving...", 1500); // Use appServices
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
             method: 'PUT',
@@ -223,7 +239,7 @@ async function saveProfile(username, dataToSave) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification("Profile saved!", 2000);
+        appServices.showNotification("Profile saved!", 2000); // Use appServices
         isEditing = false;
         const profileWindow = appServices.getWindowById(`profile-${username}`);
         if (profileWindow) {
@@ -231,7 +247,7 @@ async function saveProfile(username, dataToSave) {
             updateProfileUI(profileWindow, currentProfileData);
         }
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -239,7 +255,7 @@ async function handleAddFriendToggle(username, isFriend) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
     const method = isFriend ? 'DELETE' : 'POST';
-    showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
+    appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500); // Use appServices
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
@@ -247,17 +263,17 @@ async function handleAddFriendToggle(username, isFriend) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification(result.message, 2000);
+        appServices.showNotification(result.message, 2000); // Use appServices
         const profileWindow = appServices.getWindowById(`profile-${username}`);
         if (profileWindow) openProfileWindow(username);
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
 function showMessageModal(recipientUsername) {
     const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);"></textarea>`;
-    showCustomModal(`Message ${recipientUsername}`, modalContent, [
+    appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Send', action: () => {
             const content = document.getElementById('messageTextarea').value;
@@ -269,7 +285,7 @@ function showMessageModal(recipientUsername) {
 async function sendMessage(recipientUsername, content) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    showNotification("Sending...", 1500);
+    appServices.showNotification("Sending...", 1500); // Use appServices
     try {
         const response = await fetch(`${SERVER_URL}/api/messages`, {
             method: 'POST',
@@ -278,9 +294,9 @@ async function sendMessage(recipientUsername, content) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification("Message sent!", 2000);
+        appServices.showNotification("Message sent!", 2000); // Use appServices
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -295,39 +311,12 @@ function attachDesktopEventListeners() {
             label: 'Change Background',
             action: () => document.getElementById('customBgInput').click()
         }];
-        appServices.createContextMenu(e, menuItems);
+        appServices.createContextMenu(e, menuItems, appServices); // Pass appServices
     });
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        const file = e.target.files[0];
-        
-        showNotification("Uploading background...", 2000);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', '/backgrounds/');
-        try {
-            const token = localStorage.getItem('snugos_token');
-            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResult.success) throw new Error(uploadResult.message);
-
-            const newBgUrl = uploadResult.file.s3_url;
-            await fetch(`${SERVER_URL}/api/profile/settings`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ background_url: newBgUrl })
-            });
-
-            showNotification("Background updated!", 2000);
-            loadAndApplyGlobals();
-        } catch(error) {
-            showNotification(`Error: ${error.message}`, 4000);
-        }
+        if(!e.target.files || !e.target.files[0]) return; // Removed loggedInUser check
+        appServices.handleBackgroundUpload(e.target.files[0]); // Use appServices function
     });
     
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
@@ -337,24 +326,7 @@ function attachDesktopEventListeners() {
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
 }
 
-async function loadAndApplyGlobals() {
-    if (!loggedInUser) return;
-    try {
-        const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await response.json();
-        if (data.success && data.profile.background_url) {
-            const desktop = document.getElementById('desktop');
-            if(desktop) {
-                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
-                desktop.style.backgroundSize = 'cover';
-                desktop.style.backgroundPosition = 'center';
-            }
-        }
-    } catch (error) {
-        console.error("Could not apply global settings:", error);
-    }
-}
+// Removed loadAndApplyGlobals, replaced by loadAndApplyUserBackground call in DOMContentLoaded
 
 function checkLocalAuth() {
     try {
@@ -374,8 +346,10 @@ function checkLocalAuth() {
 
 function handleLogout() {
     localStorage.removeItem('snugos_token');
-    showNotification('You have been logged out.', 2000);
-    window.location.reload();
+    loggedInUser = null;
+    appServices.updateAuthUI(null); // Use appServices for consistency
+    appServices.applyCustomBackground(''); // Clear background on logout
+    window.location.reload(); // Reloads the page to reset all messenger state
 }
 
 function updateClockDisplay() {
@@ -393,7 +367,7 @@ function toggleStartMenu() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
+            appServices.showNotification(`Error: ${err.message}`, 3000);
         });
     } else {
         if(document.exitFullscreen) document.exitFullscreen();
@@ -446,8 +420,72 @@ function toggleTheme() {
     }
 }
 
-
 function showLoginModal() {
-    // This needs the full login/register form HTML
-    showCustomModal('Login / Register', '<p class="p-4">Login/Register form would appear here.</p>', [{label: 'Close'}]);
+    // Reusing the modal content from welcome.js/index.html for consistency
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full">
+                    <button type="submit" class="w-full">Login</button>
+                </form>
+            </div>
+            <hr class="border-gray-500">
+            <div>
+                <h3 class="text-lg font-bold mb-2">Don't have an account? Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6 characters)" required class="w-full">
+                    <button type="submit" class="w-full">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    const { overlay, contentDiv } = appServices.showCustomModal('Login or Register', modalContent, []);
+
+    // Apply styles to inputs and buttons within the modal for consistency
+    contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
+    });
+
+    contentDiv.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove();
+    });
+
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove();
+    });
 }
