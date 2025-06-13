@@ -1,8 +1,9 @@
 // js/messenger.js - Complete and Corrected
 
+// Corrected import path for backgroundManager.js
 import { initializeBackgroundManager, applyCustomBackground, handleBackgroundUpload, loadAndApplyUserBackground } from '../backgroundManager.js';
 import { SnugWindow } from './daw/SnugWindow.js'; 
-// Import window state functions directly from their module
+// Import window state functions directly from windowState.js
 import { addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, getWindowById } from './state/windowState.js';
 // Assuming showNotification, showCustomModal, createContextMenu are globally available from utils.js
 
