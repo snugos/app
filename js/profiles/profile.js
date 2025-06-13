@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.showCustomModal = showCustomModal;   // Assuming showCustomModal is globally available or imported
 
     // Background Manager specific appServices assignments
-    appServices.getLoggedInUser = () => loggedInUser; // Pass a getter for loggedInUser
+    appServices.getLoggedInUser = () => loggedInUser; 
     appServices.applyCustomBackground = applyCustomBackground;
     appServices.handleBackgroundUpload = handleBackgroundUpload;
     appServices.loadAndApplyUserBackground = loadAndApplyUserBackground; // Ensure this is set on appServices
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getAsset = getAsset;     // For local background retrieval
 
     // Initialize background manager module with the main load function
-    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // <--- PASSED loadAndApplyUserBackground
+    initializeBackgroundManager(appServices, loadAndApplyUserBackground); // PASSED loadAndApplyUserBackground
 
     // Now proceed with logic that might rely on appServices being fully populated
     loggedInUser = checkLocalAuth(); 
