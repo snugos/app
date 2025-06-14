@@ -1,62 +1,52 @@
-// NOTE: This import statement is the fix. It makes the SnugWindow class
-// available for use within this file.
-import { SnugWindow } from '../daw/SnugWindow.js';
+// js/profile.js
+// NOTE: This file is designed to run within an iframe, hosted by index.html.
+// It receives `appServices` from its parent window.
 
+// Removed imports like SnugWindow as it's provided by the parent.
+// Removed other direct imports like state accessors, showNotification etc.
+// as they are accessed via the injected `appServices` object.
+
+let appServices = {}; // Will be populated by the parent window.
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let currentProfileData = null;
 let isEditing = false;
-const appServices = {};
 
-// --- Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
-    appServices.addWindowToStore = addWindowToStoreState;
-    appServices.removeWindowFromStore = removeWindowFromStoreState;
-    appServices.incrementHighestZ = incrementHighestZState;
-    appServices.getHighestZ = getHighestZState;
-    appServices.setHighestZ = setHighestZState;
-    appServices.getOpenWindows = getOpenWindowsState;
-    appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
+// This is the new entry point for when the iframe content is loaded by the parent.
+// It will be called by `initializePage` in `profile.html`.
+function initProfilePageInIframe(injectedAppServices) {
+    appServices = injectedAppServices;
 
+    // Use appServices for window/modal management
+    appServices.showNotification = appServices.showNotification || window.parent.showNotification;
+    appServices.showCustomModal = appServices.showCustomModal || window.parent.showCustomModal;
+    appServices.createContextMenu = appServices.createContextMenu || window.parent.createContextMenu; // Assuming this exists globally in parent or via main.js
+    
+    // Check local auth, but apply global settings via injected appServices.
     loggedInUser = checkLocalAuth();
-    loadAndApplyGlobals();
-    attachDesktopEventListeners();
-    updateClockDisplay();
+    loadAndApplyGlobals(); // Will use appServices.getAsset and appServices.applyCustomBackground
 
+    attachProfileWindowListeners(); // Attach listeners relevant to profile content
+    
+    // Get username from URL (still relevant for individual profile pages)
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
+
     if (username) {
-        openProfileWindow(username);
+        // No need to open a SnugWindow, we are already IN the SnugWindow iframe.
+        // Just fetch and render the profile content directly into `#profile-container`.
+        fetchProfileData(username, document.getElementById('profile-container'));
     } else {
-        showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
+        appServices.showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
     }
-});
+}
 
-// --- Main Window and UI Functions ---
+// --- Main Profile Content Loading and Rendering ---
 
-async function openProfileWindow(username) {
-    const windowId = `profile-${username}`;
-    if(appServices.getWindowById(windowId)) {
-        appServices.getWindowById(windowId).focus();
-        return;
-    }
+async function fetchProfileData(username, container) {
+    // container is now #profile-container directly within this iframe
+    container.innerHTML = '<p class="p-8 text-center">Loading Profile...</p>';
 
-    const placeholderContent = document.createElement('div');
-    placeholderContent.innerHTML = '<p class="p-8 text-center">Loading Profile...</p>';
-    
-    const desktopEl = document.getElementById('desktop');
-    const options = {
-        width: Math.min(600, desktopEl.offsetWidth - 40),
-        height: Math.min(700, desktopEl.offsetHeight - 40),
-        x: (desktopEl.offsetWidth - Math.min(600, desktopEl.offsetWidth - 40)) / 2,
-        y: (desktopEl.offsetHeight - Math.min(700, desktopEl.offsetHeight - 40)) / 2
-    };
-
-    const profileWindow = new SnugWindow(windowId, `${username}'s Profile`, placeholderContent, options, appServices);
-    
     try {
         const token = localStorage.getItem('snugos_token');
         const [profileRes, friendStatusRes] = await Promise.all([
@@ -72,14 +62,14 @@ async function openProfileWindow(username) {
         currentProfileData = profileData.profile;
         currentProfileData.isFriend = friendStatusData?.isFriend || false;
 
-        updateProfileUI(profileWindow, currentProfileData);
+        updateProfileUI(document.getElementById('profile-container'), currentProfileData);
 
     } catch (error) {
-        profileWindow.contentContainer.innerHTML = `<p class="p-8 text-center" style="color:red;">Error: ${error.message}</p>`;
+        document.getElementById('profile-container').innerHTML = `<p class="p-8 text-center" style="color:red;">Error: ${error.message}</p>`;
     }
 }
 
-function updateProfileUI(profileWindow, profileData) {
+function updateProfileUI(container, profileData) {
     const isOwner = loggedInUser && loggedInUser.id === profileData.id;
     const joinDate = new Date(profileData.created_at).toLocaleDateString();
 
@@ -125,18 +115,20 @@ function updateProfileUI(profileWindow, profileData) {
         renderViewMode(profileBody, profileData);
     }
     
-    profileWindow.contentContainer.innerHTML = '';
-    profileWindow.contentContainer.appendChild(newContent);
+    container.innerHTML = '';
+    container.appendChild(newContent);
     
+    // Attach listeners for buttons and avatar upload
     if (isOwner) {
-        profileWindow.contentContainer.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
-        profileWindow.contentContainer.querySelector('#editProfileBtn')?.addEventListener('click', () => {
+        // avatarUploadInput is still in the profile.html body
+        container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
+        container.querySelector('#editProfileBtn')?.addEventListener('click', () => {
             isEditing = !isEditing;
-            updateProfileUI(profileWindow, profileData);
+            updateProfileUI(container, profileData);
         });
     } else if (loggedInUser) {
-        profileWindow.contentContainer.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
-        profileWindow.contentContainer.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
+        container.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
+        container.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
     }
 }
 
@@ -162,8 +154,7 @@ function renderEditMode(container, profileData) {
     `;
     container.querySelector('#cancelEditBtn').addEventListener('click', () => {
         isEditing = false;
-        const profileWindow = appServices.getWindowById(`profile-${profileData.username}`);
-        if(profileWindow) updateProfileUI(profileWindow, profileData);
+        updateProfileUI(container, profileData); // Pass the container to re-render
     });
     container.querySelector('#editProfileForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -172,9 +163,54 @@ function renderEditMode(container, profileData) {
     });
 }
 
+// Global scope listener to avoid re-attaching on UI updates
+// This is specific to the iframe, not the main index.html desktop
+function attachProfileWindowListeners() {
+    // This is the file input that lives in profile.html body
+    document.getElementById('avatarUploadInput')?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+        const file = e.target.files[0];
+        handleAvatarUpload(file);
+        e.target.value = null; // Clear input
+    });
+
+    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+        const file = e.target.files[0];
+        
+        appServices.showNotification("Uploading background...", 2000); // Use appServices
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', '/backgrounds/');
+        try {
+            const token = localStorage.getItem('snugos_token');
+            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const uploadResult = await uploadResponse.json();
+            if (!uploadResult.success) throw new Error(uploadResult.message);
+
+            const newBgUrl = uploadResult.file.s3_url;
+            await fetch(`${SERVER_URL}/api/profile/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ background_url: newBgUrl })
+            });
+
+            appServices.showNotification("Background updated!", 2000); // Use appServices
+            loadAndApplyGlobals(); // Re-apply to parent desktop if necessary via appServices
+        } catch(error) {
+            appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+        }
+    });
+}
+
+
 async function handleAvatarUpload(file) {
     if (!loggedInUser) return;
-    showNotification("Uploading picture...", 2000);
+    appServices.showNotification("Uploading picture...", 2000); // Use appServices
     const formData = new FormData();
     formData.append('file', file);
     formData.append('path', '/avatars/');
@@ -198,19 +234,19 @@ async function handleAvatarUpload(file) {
         const settingsResult = await settingsResponse.json();
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
-        showNotification("Profile picture updated!", 2000);
-        const profileWindow = appServices.getWindowById(`profile-${loggedInUser.username}`);
-        if(profileWindow) openProfileWindow(loggedInUser.username);
+        appServices.showNotification("Profile picture updated!", 2000); // Use appServices
+        // Re-fetch profile data to update UI
+        fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
 
     } catch (error) {
-        showNotification(`Update failed: ${error.message}`, 4000);
+        appServices.showNotification(`Update failed: ${error.message}`, 4000); // Use appServices
     }
 }
 
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    showNotification("Saving...", 1500);
+    appServices.showNotification("Saving...", 1500); // Use appServices
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
             method: 'PUT',
@@ -219,12 +255,11 @@ async function saveProfile(username, dataToSave) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification("Profile saved!", 2000);
+        appServices.showNotification("Profile saved!", 2000); // Use appServices
         isEditing = false;
-        const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) openProfileWindow(username);
+        fetchProfileData(username, document.getElementById('profile-container'));
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -232,7 +267,7 @@ async function handleAddFriendToggle(username, isFriend) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
     const method = isFriend ? 'DELETE' : 'POST';
-    showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
+    appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500); // Use appServices
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
@@ -240,17 +275,17 @@ async function handleAddFriendToggle(username, isFriend) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification(result.message, 2000);
-        const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) openProfileWindow(username);
+        appServices.showNotification(result.message, 2000); // Use appServices
+        // Re-fetch profile data to update UI
+        fetchProfileData(username, document.getElementById('profile-container'));
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
 function showMessageModal(recipientUsername) {
     const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5"></textarea>`;
-    showCustomModal(`Message ${recipientUsername}`, modalContent, [
+    appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Send', action: () => {
             const content = document.getElementById('messageTextarea').value;
@@ -262,7 +297,7 @@ function showMessageModal(recipientUsername) {
 async function sendMessage(recipientUsername, content) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    showNotification("Sending...", 1500);
+    appServices.showNotification("Sending...", 1500); // Use appServices
     try {
         const response = await fetch(`${SERVER_URL}/api/messages`, {
             method: 'POST',
@@ -271,62 +306,10 @@ async function sendMessage(recipientUsername, content) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification("Message sent!", 2000);
+        appServices.showNotification("Message sent!", 2000); // Use appServices
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
-}
-
-function attachDesktopEventListeners() {
-    const desktop = document.getElementById('desktop');
-    if (!desktop) return;
-
-    desktop.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (e.target.closest('.window')) return;
-        const menuItems = [{
-            label: 'Change Background',
-            action: () => document.getElementById('customBgInput').click()
-        }];
-        appServices.createContextMenu(e, menuItems);
-    });
-
-    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        const file = e.target.files[0];
-        
-        showNotification("Uploading background...", 2000);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', '/backgrounds/');
-        try {
-            const token = localStorage.getItem('snugos_token');
-            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResult.success) throw new Error(uploadResult.message);
-
-            const newBgUrl = uploadResult.file.s3_url;
-            await fetch(`${SERVER_URL}/api/profile/settings`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ background_url: newBgUrl })
-            });
-
-            showNotification("Background updated!", 2000);
-            loadAndApplyGlobals();
-        } catch(error) {
-            showNotification(`Error: ${error.message}`, 4000);
-        }
-    });
-    
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
 }
 
 async function loadAndApplyGlobals() {
@@ -336,12 +319,8 @@ async function loadAndApplyGlobals() {
         const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            const desktop = document.getElementById('desktop');
-            if(desktop) {
-                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
-                desktop.style.backgroundSize = 'cover';
-                desktop.style.backgroundPosition = 'center';
-            }
+            // Apply background to the parent window's desktop
+            appServices.applyCustomBackground(data.profile.background_url); // Use appServices
         }
     } catch (error) {
         console.error("Could not apply global settings:", error);
@@ -362,36 +341,4 @@ function checkLocalAuth() {
         localStorage.removeItem('snugos_token');
         return null;
     }
-}
-
-function handleLogout() {
-    localStorage.removeItem('snugos_token');
-    showNotification('You have been logged out.', 2000);
-    window.location.reload();
-}
-
-function updateClockDisplay() {
-    const clockDisplay = document.getElementById('taskbarClockDisplay');
-    if (clockDisplay) {
-        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    setTimeout(updateClockDisplay, 60000);
-}
-
-function toggleStartMenu() {
-    document.getElementById('startMenu')?.classList.toggle('hidden');
-}
-
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
-        });
-    } else {
-        if(document.exitFullscreen) document.exitFullscreen();
-    }
-}
-
-function showLoginModal() {
-    showCustomModal('Login / Register', '<p class="p-4">Login functionality would go here.</p>', [{label: 'Close'}]);
 }
