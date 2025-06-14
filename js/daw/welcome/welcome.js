@@ -1,9 +1,15 @@
-import { SnugWindow } from '../daw/SnugWindow.js';
+// js/daw/welcome/welcome.js
+// NOTE: This file is designed to run within the main index.html context.
+// It sets up the desktop icons and application launching via SnugWindows.
+
+import { SnugWindow } from '../SnugWindow.js';
+// Corrected imports for welcome-specific utils and db
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
-import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js'; // Import auth functions
+// Corrected import for auth functions (now a module)
+import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js';
 
-// Import necessary state accessors (since welcome.js now runs on index.html)
+// Import necessary state accessors (since welcome.js now runs on index.html and populates appServices)
 import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ } from '../state/windowState.js';
 import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '../state/appState.js';
 
@@ -42,6 +48,7 @@ function openAppInWindow(windowId, windowTitle, iframeSrc, options = {}, injectA
                 if (content.contentWindow && content.contentWindow.document) {
                     content.contentWindow.appServices = appServices;
                     // If the iframe has an initialization function, call it
+                    // This is the pattern for profile.html and library.html to pick up appServices
                     if (content.contentWindow.initializePage) {
                         content.contentWindow.initializePage(appServices);
                     }
@@ -81,7 +88,7 @@ function initializeWelcomePage() {
     appServices.applyCustomBackground = applyCustomBackground; // Local function in welcome.js
     appServices.handleBackgroundUpload = handleBackgroundUpload; // Imported from auth.js
 
-    // Global utility access (from utils.js, assumed globally loaded)
+    // Global utility access (from utils.js, assumed globally loaded in index.html)
     appServices.createContextMenu = createContextMenu;
     appServices.showConfirmationDialog = showConfirmationDialog; // Assuming utils.js provides this
 
@@ -103,13 +110,9 @@ function initializeWelcomePage() {
  */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
-        try {
-            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-                await Tone.start();
-                console.log('AudioContext started successfully.');
-            }
-        } catch (e) {
-            console.error('Could not start AudioContext:', e);
+        if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+            await Tone.start();
+            console.log('AudioContext started successfully.');
         }
         document.body.removeEventListener('mousedown', startAudio);
     };
@@ -131,7 +134,8 @@ function attachEventListeners() {
     
     document.getElementById('menuLogin')?.addEventListener('click', () => {
         toggleStartMenu();
-        showLoginModal(); // Auth handles this
+        // auth.js's showLoginModal will be called by initializeAuth and will handle form submits
+        // No direct call needed here.
     });
     document.getElementById('menuLogout')?.addEventListener('click', () => {
         toggleStartMenu();
@@ -179,19 +183,19 @@ function renderDesktopIcons() {
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: viewProfiles, // Now uses the new function to open in SnugWindow
+            action: viewProfiles,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
         },
         {
             id: 'sound-library-icon',
             name: 'Library',
-            action: openLibraryWindow, // Now uses the new function to open in SnugWindow
+            action: openLibraryWindow,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow, // Now uses the new function to open in SnugWindow
+            action: openGameWindow,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -229,15 +233,14 @@ function launchDaw() {
 // Rewritten to open Profiles in a SnugWindow iframe
 function viewProfiles() {
     toggleStartMenu();
-    // Retrieve logged-in user if available to pass to profile.html
     const profileUsername = loggedInUser ? loggedInUser.username : 'guest'; // Default to guest or handle login
-    openAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `profile.html?user=${profileUsername}`, { width: 600, height: 700 });
+    openAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
 }
 
 // NEW: Function to open Library in a SnugWindow iframe
 function openLibraryWindow() {
     toggleStartMenu();
-    openAppInWindow('libraryApp', 'SnugOS Library', 'library.html', { width: 800, height: 600 });
+    openAppInWindow('libraryApp', 'SnugOS Library', 'js/daw/profiles/library.html', { width: 800, height: 600 });
 }
 
 // Rewritten to open Tetris in a SnugWindow iframe
@@ -318,7 +321,7 @@ function showLoginModal() {
             </div>
         </div>
     `;
-    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []); // Use appServices.showCustomModal
+    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []);
     overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = overlay.querySelector('#loginUsername').value;
@@ -341,7 +344,7 @@ function toggleTheme() {
     const body = document.body;
     const isLightTheme = body.classList.contains('theme-light');
     const newTheme = isLightTheme ? 'dark' : 'light';
-    appServices.setCurrentUserThemePreference(newTheme); // Use appServices
+    appServices.setCurrentUserThemePreference(newTheme);
 }
 
 // Now this function is a local helper, appServices handles applying it
@@ -362,7 +365,7 @@ function applyUserThemePreference() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            appServices.showNotification(`Error: ${err.message}`, 3000); // Use appServices
+            appServices.showNotification(`Error: ${err.message}`, 3000);
         });
     } else {
         if (document.exitFullscreen) {
