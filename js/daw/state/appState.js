@@ -1,4 +1,6 @@
-// js/state/appState.js
+// js/daw/state/appState.js
+
+// No direct imports to correct here as it only uses localAppServices and Tone
 
 let midiAccess = null;
 let activeMIDIInput = null;
