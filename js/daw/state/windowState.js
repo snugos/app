@@ -1,4 +1,6 @@
-// js/state/windowState.js
+// js/daw/state/windowState.js
+
+// No direct imports to correct here as it only uses localAppServices and local variables
 
 let openWindowsMap = new Map();
 let highestZ = 100;
