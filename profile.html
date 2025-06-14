@@ -26,39 +26,28 @@
     </script>
 </head>
 <body class="theme-dark">
-
-    <div id="desktop"></div>
-
-    <div id="taskbar" class="select-none">
-        <button id="startButton">Start</button>
-        <div id="taskbarButtons"></div>
-        <div style="flex-grow: 1;"></div> 
-        <div id="taskbarClockDisplay" class="text-right px-2"></div>
+    <div id="profile-container" class="w-full h-full p-0 overflow-y-auto" style="background-color: var(--bg-window-content); color: var(--text-primary);">
+        <p class="p-8 text-center">Loading Profile...</p>
     </div>
 
-    <div id="startMenu" class="hidden select-none">
-        <ul>
-            <li><a href="snaw.html" style="text-decoration: none; color: inherit; display: block;">Launch DAW</a></li>
-            <li><a href="library.html" style="text-decoration: none; color: inherit; display: block;">Open Library</a></li>
-            <li><hr></li>
-            <li id="menuLogin">Login / Register</li>
-            <li id="menuLogout" class="hidden">Logout</li>
-            <li><hr></li>
-            <li id="menuToggleFullScreen">Toggle Full Screen</li>
-        </ul>
-    </div>
-    
-    <div id="notification-area"></div>
-    <div id="modalContainer"></div>
-    
     <input type="file" id="avatarUploadInput" class="hidden" accept="image/*">
     <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
 
-    <script src="js/utils.js"></script>
-    <script src="js/state.js"></script>
-    <script type="module" src="js/daw/SnugWindow.js"></script>
-    
+    <script src="js/profiles/profileUtils.js"></script>
+    <script src="js/profiles/profileDb.js"></script>
     <script type="module" src="js/profiles/profile.js"></script>
 
+    <script>
+        // This global function is expected to be called by the parent iframe host
+        function initializePage(appServices) {
+            // Now, profile.js can be properly initialized with the correct appServices context.
+            // Call the existing profile.js DOMContentLoaded logic here.
+            document.addEventListener('DOMContentLoaded', () => {
+                // Manually re-trigger the DOMContentLoaded logic in profile.js if it expects it
+                // Or, adapt profile.js to directly use the passed appServices
+                initProfilePageInIframe(appServices); // A new function in profile.js (see below)
+            });
+        }
+    </script>
 </body>
 </html>
