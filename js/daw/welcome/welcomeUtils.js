@@ -1,4 +1,4 @@
-// js/welcome/welcomeUtils.js - Minimal utility functions for the Welcome Page
+// js/daw/welcome/welcomeUtils.js - Minimal utility functions for the Welcome Page
 
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
@@ -16,7 +16,7 @@ export function showNotification(message, duration = 3000) {
 
         setTimeout(() => {
             notification.classList.add('show');
-        }, 10); 
+        }, 10);
 
         setTimeout(() => {
             notification.classList.remove('show');
