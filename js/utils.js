@@ -76,6 +76,26 @@ function showCustomModal(title, contentHTML, buttonsConfig = []) {
     return { overlay, contentDiv };
 }
 
+// NEW: Basic implementation for showConfirmationDialog
+function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
+    const buttons = [
+        {
+            label: 'Cancel',
+            action: () => {
+                if (onCancel) onCancel();
+            }
+        },
+        {
+            label: 'Confirm',
+            action: () => {
+                onConfirm();
+            }
+        }
+    ];
+    showCustomModal(title, `<p class="p-4">${message}</p>`, buttons);
+}
+
+
 function createContextMenu(event, menuItems, appServices) {
     // Remove any existing context menus
     const existingMenu = document.querySelector('.context-menu');
@@ -229,4 +249,14 @@ function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
     if (fileInput) {
         dropZoneElement.addEventListener('click', () => fileInput.click());
     }
+}
+
+// Function to create drop zone HTML - needed in inspectorUI
+function createDropZoneHTML(inputId, labelText = 'Drag & Drop Audio Here') {
+    return `
+        <div class="drop-zone">
+            <input type="file" id="${inputId}" class="hidden" accept="audio/*">
+            <p>${labelText} or <label for="${inputId}" class="cursor-pointer">click to browse</label></p>
+        </div>
+    `;
 }
