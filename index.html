@@ -60,8 +60,7 @@
 
     <div id="desktop" class="relative h-full w-full">
         <div id="desktop-icons-container" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            <!-- Desktop icons will be rendered here by welcome.js -->
-        </div>
+            </div>
     </div>
 
     <div id="taskbar" class="select-none">
@@ -74,9 +73,10 @@
 
     <div id="startMenu" class="hidden select-none">
         <ul>
-            <li id="menuLaunchDaw"><a href="snaw.html" style="text-decoration:none; color:inherit; display:block;">Launch DAW</a></li>
+            <li id="menuLaunchDaw">Launch DAW</li>
             <li><hr></li>
-            <li id="menuViewProfiles"><a href="library.html" style="text-decoration:none; color:inherit; display:block;">Library</a></li>
+            <li id="menuViewProfiles">View Profiles</li>
+            <li id="menuOpenLibrary">Library</li>
             <li><hr></li>
             <li id="menuLogin">Login / Register</li>
             <li id="menuLogout" class="hidden">Logout</li>
@@ -90,16 +90,36 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
-    <!-- NOTE: The order of these scripts is important. Tone.js must load before state.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    
     <script src="js/utils.js"></script>
-    <script src="js/state.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/effectsRegistry.js"></script>
+    <script src="js/constants.js"></script>
+    
+    <script type="module" src="js/state/appState.js"></script>
+    <script type="module" src="js/state/masterState.js"></script>
+    <script type="module" src="js/state/projectState.js"></script>
+    <script type="module" src="js/state/soundLibraryState.js"></script>
+    <script type="module" src="js/state/trackState.js"></script>
+    <script type="module" src="js/state/windowState.js"></script>
+
     <script type="module" src="js/daw/SnugWindow.js"></script>
 
-    <!-- Scripts specific to the Welcome page -->
-    <script type="module" src="js/welcome/welcomeUtils.js"></script>
+    <script type="module" src="js/daw/ui/knobUI.js"></script>
+    <script type="module" src="js/daw/ui/effectsRackUI.js"></script>
+    <script type="module" src="js/daw/ui/inspectorUI.js"></script>
+    <script type="module" src="js/daw/ui/mixerUI.js"></script>
+    <script type="module" src="js/daw/ui/pianoRollUI.js"></script>
+    <script type="module" src="js/daw/ui/soundBrowserUI.js"></script>
+    <script type="module" src="js/daw/ui/youtubeImporterUI.js"></script>
+    <script type="module" src="js/daw/ui/fileViewerUI.js"></script>
+    <script type="module" src="js/daw/ui/ui.js"></script>
+
     <script type="module" src="js/welcome/welcomeDb.js"></script>
+    <script type="module" src="js/welcome/welcomeUtils.js"></script>
     <script type="module" src="js/welcome/welcome.js"></script>
+    <script type="module" src="js/auth.js"></script>
 
 </body>
 </html>
