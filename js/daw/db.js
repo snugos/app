@@ -1,7 +1,6 @@
-// js/db.js - IndexedDB Helper Module
+// js/daw/db.js - IndexedDB Helper Module
 
 const DB_NAME = 'SnugOSAudioDB';
-// ADDED a new store name for assets and incremented DB version
 const STORES = {
     AUDIO: 'audioFiles',
     ASSETS: 'userAssets'
@@ -33,7 +32,6 @@ function getDB() {
                     db.createObjectStore(STORES.AUDIO);
                     console.log(`[DB] Object store "${STORES.AUDIO}" created.`);
                 }
-                // NEW: Create the userAssets store if it doesn't exist
                 if (!db.objectStoreNames.contains(STORES.ASSETS)) {
                     db.createObjectStore(STORES.ASSETS);
                     console.log(`[DB] Object store "${STORES.ASSETS}" created.`);
@@ -110,24 +108,23 @@ async function deleteValue(storeName, key) {
 
 
 // --- Specific Implementations ---
-
-function storeAudio(key, audioBlob) {
+// Export these functions for other modules to import
+export function storeAudio(key, audioBlob) {
     return storeValue(STORES.AUDIO, key, audioBlob);
 }
 
-function getAudio(key) {
+export function getAudio(key) {
     return getValue(STORES.AUDIO, key);
 }
 
-function deleteAudio(key) {
+export function deleteAudio(key) {
     return deleteValue(STORES.AUDIO, key);
 }
 
-// NEW: Functions for storing and retrieving user assets like backgrounds
-function storeAsset(key, assetBlob) {
+export function storeAsset(key, assetBlob) {
     return storeValue(STORES.ASSETS, key, assetBlob);
 }
 
-function getAsset(key) {
+export function getAsset(key) {
     return getValue(STORES.ASSETS, key);
 }
