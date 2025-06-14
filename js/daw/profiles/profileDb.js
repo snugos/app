@@ -1,4 +1,4 @@
-// js/profiles/profileDb.js - Minimal IndexedDB Helper for Profile Page
+// js/daw/profiles/profileDb.js - Minimal IndexedDB Helper for Profile Page
 
 const DB_NAME = 'SnugOSAudioDB';
 const STORES = {
