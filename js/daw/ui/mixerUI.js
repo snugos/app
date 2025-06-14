@@ -1,9 +1,9 @@
 // js/daw/ui/mixerUI.js
 
 // Corrected imports for state modules
-import { getTracks, getSoloedTrackId } from '../state/trackState.js'; // Corrected path
-import { getMasterGainValue, setMasterGainValue } from '../state/masterState.js'; // Corrected path
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
+import { getTracks, getSoloedTrackId } from '../state/trackState.js';
+import { getMasterGainValue, setMasterGainValue } from '../state/masterState.js';
+import { getOpenWindows, getWindowById } from '../state/windowState.js';
 
 let localAppServices = {};
 
@@ -24,12 +24,12 @@ export function openMixerWindow(savedState = null) {
     contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-white dark:bg-black';
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
-    const mixerOptions = { 
-        width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40), 
-        height: 300, 
-        minWidth: 300, 
-        minHeight: 200, 
-        initialContentKey: windowId 
+    const mixerOptions = {
+        width: Math.min(800, (desktopEl?.offsetWidth || 800) - 40),
+        height: 300,
+        minWidth: 300,
+        minHeight: 200,
+        initialContentKey: windowId
     };
 
     if (savedState) Object.assign(mixerOptions, savedState);
@@ -66,7 +66,10 @@ function renderMixerTracks(container) {
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
     if (masterVolKnobPlaceholder) {
         const masterVolKnob = localAppServices.createKnob({
-            label: 'Master', min: 0, max: 1, step: 0.01,
+            label: 'Master',
+            min: 0,
+            max: 1,
+            step: 0.01,
             initialValue: getMasterGainValue(),
             onValueChange: (val) => setMasterGainValue(val)
         });
@@ -94,7 +97,10 @@ function renderMixerTracks(container) {
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
             const volKnob = localAppServices.createKnob({
-                label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01,
+                label: `Vol ${track.id}`,
+                min: 0,
+                max: 1.2,
+                step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
             });
