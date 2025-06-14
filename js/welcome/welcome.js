@@ -1,60 +1,98 @@
 import { SnugWindow } from '../daw/SnugWindow.js';
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
+import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js'; // Import auth functions
 
-const appServices = {};
+// Import necessary state accessors (since welcome.js now runs on index.html)
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ } from '../state/windowState.js';
+import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '../state/appState.js';
+
+let appServices = {};
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
- * Creates and opens a new window containing the Tetris game.
- * The game itself is loaded from tetris.html into an iframe.
+ * Creates and opens a new window containing an HTML page loaded into an iframe.
+ * @param {string} windowId Unique ID for the SnugWindow.
+ * @param {string} windowTitle Title of the SnugWindow.
+ * @param {string} iframeSrc URL of the HTML page to load in the iframe.
+ * @param {object} options SnugWindow options.
+ * @param {boolean} injectAppServicesIntoIframe If true, tries to make appServices available in iframe.
  */
-function openGameWindow() {
-    const windowId = 'tetrisGame';
+function openAppInWindow(windowId, windowTitle, iframeSrc, options = {}, injectAppServicesIntoIframe = true) {
     if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
         return;
     }
 
     const content = document.createElement('iframe');
-    content.src = 'tetris.html'; // The game file to load
+    content.src = iframeSrc;
     content.style.width = '100%';
     content.style.height = '100%';
     content.style.border = 'none';
+    content.style.backgroundColor = 'var(--bg-window-content)'; // Inherit theme background
 
-    const options = {
-        width: 600,
-        height: 750,
-        minWidth: 400,
-        minHeight: 600,
-    };
+    const windowInstance = new SnugWindow(windowId, windowTitle, content, options, appServices);
 
-    new SnugWindow(windowId, 'Snugtris', content, options, appServices);
+    if (injectAppServicesIntoIframe) {
+        // After the iframe content has loaded, inject appServices
+        content.onload = () => {
+            try {
+                // Ensure the iframe's contentWindow is accessible (same-origin policy applies)
+                if (content.contentWindow && content.contentWindow.document) {
+                    content.contentWindow.appServices = appServices;
+                    // If the iframe has an initialization function, call it
+                    if (content.contentWindow.initializePage) {
+                        content.contentWindow.initializePage(appServices);
+                    }
+                    console.log(`[SnugOS] appServices injected into iframe: ${iframeSrc}`);
+                }
+            } catch (e) {
+                console.warn(`[SnugOS] Could not inject appServices into iframe ${iframeSrc}. Check same-origin policy or iframe content.`, e);
+            }
+        };
+    }
+    return windowInstance;
 }
 
 /**
  * Sets up the main welcome page functionality.
  */
 function initializeWelcomePage() {
-    // Populate the appServices object. These functions are expected to be globally available
-    // from the other script files you load in index.html (like utils.js, state.js).
+    // Populate the appServices object for the index.html context
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
-    appServices.storeAsset = storeAsset;
-    appServices.getAsset = getAsset;
-    if (typeof addWindowToStoreState !== 'undefined') appServices.addWindowToStore = addWindowToStoreState;
-    if (typeof removeWindowFromStoreState !== 'undefined') appServices.removeWindowFromStore = removeWindowFromStoreState;
-    if (typeof incrementHighestZState !== 'undefined') appServices.incrementHighestZ = incrementHighestZState;
-    if (typeof getHighestZState !== 'undefined') appServices.getHighestZ = getHighestZState;
-    if (typeof setHighestZState !== 'undefined') appServices.setHighestZ = setHighestZState;
-    if (typeof getWindowByIdState !== 'undefined') appServices.getWindowById = getWindowByIdState;
-    if (typeof createContextMenu !== 'undefined') appServices.createContextMenu = createContextMenu;
+    appServices.storeAsset = storeAsset; // from welcomeDb.js
+    appServices.getAsset = getAsset;     // from welcomeDb.js
+    
+    // Core SnugWindow/Window State functions
+    appServices.addWindowToStore = addWindowToStore;
+    appServices.removeWindowFromStore = removeWindowFromStore;
+    appServices.incrementHighestZ = incrementHighestZ;
+    appServices.getHighestZ = getHighestZ;
+    appServices.setHighestZ = setHighestZ;
+    appServices.getWindowById = getWindowById;
+
+    // Theme functions (from appState)
+    appServices.getCurrentUserThemePreference = getCurrentUserThemePreference;
+    appServices.setCurrentUserThemePreference = setCurrentUserThemePreference;
+
+    // Background handling
+    appServices.applyCustomBackground = applyCustomBackground; // Local function in welcome.js
+    appServices.handleBackgroundUpload = handleBackgroundUpload; // Imported from auth.js
+
+    // Global utility access (from utils.js, assumed globally loaded)
+    appServices.createContextMenu = createContextMenu;
+    appServices.showConfirmationDialog = showConfirmationDialog; // Assuming utils.js provides this
+
+    // Initialize auth module (passing the appServices)
+    initializeAuth(appServices);
 
     attachEventListeners();
     updateClockDisplay();
-    checkInitialAuthState();
-    applyUserThemePreference();
+    // checkInitialAuthState is now called by initializeAuth
+    applyUserThemePreference(); // Now directly from appServices
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference);
     renderDesktopIcons();
     initAudioOnFirstGesture();
 }
@@ -82,24 +120,43 @@ function initAudioOnFirstGesture() {
  * Attaches all primary event listeners for the page.
  */
 function attachEventListeners() {
-    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
+    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal); // Auth handles this
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    
+    // Modified Start Menu and Desktop Icon actions to open SnugWindows
     document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
     document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow); // New menu item
+    
     document.getElementById('menuLogin')?.addEventListener('click', () => {
         toggleStartMenu();
-        showLoginModal();
+        showLoginModal(); // Auth handles this
     });
     document.getElementById('menuLogout')?.addEventListener('click', () => {
         toggleStartMenu();
-        handleLogout();
+        handleLogout(); // Auth handles this
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('customBgInput')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) handleBackgroundUpload(file);
+        if (file) appServices.handleBackgroundUpload(file); // Use appServices
         e.target.value = null;
+    });
+
+    // Add context menu to desktop
+    document.getElementById('desktop')?.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (e.target.closest('.window')) return; // Don't show if clicking inside a window
+        const menuItems = [
+            { label: 'Change Background', action: () => document.getElementById('customBgInput').click() },
+            { separator: true },
+            { label: 'Open DAW', action: launchDaw },
+            { label: 'Open Library', action: openLibraryWindow },
+            { label: 'View Profiles', action: viewProfiles },
+            { label: 'Play Snugtris', action: openGameWindow }
+        ];
+        appServices.createContextMenu(e, menuItems);
     });
 }
 
@@ -122,27 +179,19 @@ function renderDesktopIcons() {
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: () => {
-                if (loggedInUser) {
-                    window.location.href = `profile.html?user=${loggedInUser.username}`;
-                } else {
-                    showNotification('Please log in to view your profile.', 3000);
-                }
-            },
+            action: viewProfiles, // Now uses the new function to open in SnugWindow
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
         },
         {
             id: 'sound-library-icon',
             name: 'Library',
-            action: () => {
-                window.location.href = 'library.html';
-            },
+            action: openLibraryWindow, // Now uses the new function to open in SnugWindow
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow,
+            action: openGameWindow, // Now uses the new function to open in SnugWindow
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -171,12 +220,30 @@ function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
+// Rewritten to open Snaw in a SnugWindow iframe
 function launchDaw() {
-    window.location.href = 'snaw.html';
+    toggleStartMenu();
+    openAppInWindow('snawApp', 'Snaw DAW', 'snaw.html', { width: 1000, height: 700 });
 }
 
+// Rewritten to open Profiles in a SnugWindow iframe
 function viewProfiles() {
-    window.location.href = 'profile.html?user=snaw';
+    toggleStartMenu();
+    // Retrieve logged-in user if available to pass to profile.html
+    const profileUsername = loggedInUser ? loggedInUser.username : 'guest'; // Default to guest or handle login
+    openAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `profile.html?user=${profileUsername}`, { width: 600, height: 700 });
+}
+
+// NEW: Function to open Library in a SnugWindow iframe
+function openLibraryWindow() {
+    toggleStartMenu();
+    openAppInWindow('libraryApp', 'SnugOS Library', 'library.html', { width: 800, height: 600 });
+}
+
+// Rewritten to open Tetris in a SnugWindow iframe
+function openGameWindow() {
+    toggleStartMenu();
+    openAppInWindow('tetrisGame', 'Snugtris', 'tetris.html', { width: 600, height: 750, minWidth: 400, minHeight: 600 });
 }
 
 function updateClockDisplay() {
@@ -188,156 +255,13 @@ function updateClockDisplay() {
     setTimeout(updateClockDisplay, 60000);
 }
 
-async function checkInitialAuthState() {
-    const token = localStorage.getItem('snugos_token');
-    if (!token) {
-        updateAuthUI(null);
-        return;
-    }
-    try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            return handleLogout();
-        }
-        loggedInUser = { id: payload.id, username: payload.username };
-        updateAuthUI(loggedInUser);
-        const backgroundBlob = await getAsset(`background-for-user-${loggedInUser.id}`);
-        if (backgroundBlob) {
-            applyCustomBackground(backgroundBlob);
-        }
-    } catch (e) {
-        console.error("Error during initial auth state check:", e);
-        handleLogout();
-    }
-}
-
-function updateAuthUI(user = null) {
-    loggedInUser = user;
-    const userAuthContainer = document.getElementById('userAuthContainer');
-    const menuLogin = document.getElementById('menuLogin');
-    const menuLogout = document.getElementById('menuLogout');
-    if (user && userAuthContainer) {
-        userAuthContainer.innerHTML = `<span class="mr-2">Welcome, ${user.username}!</span>`;
-        menuLogin?.classList.add('hidden');
-        menuLogout?.classList.remove('hidden');
-    } else {
-        userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
-        userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
-        menuLogin?.classList.remove('hidden');
-        menuLogout?.classList.add('hidden');
-    }
-}
-
-function showLoginModal() {
-    document.getElementById('startMenu')?.classList.add('hidden');
-    const modalContent = `
-        <div class="space-y-4">
-            <div>
-                <h3 class="font-bold mb-2">Login</h3>
-                <form id="loginForm" class="space-y-3">
-                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
-                </form>
-            </div>
-            <hr class="border-gray-500">
-            <div>
-                <h3 class="font-bold mb-2">Register</h3>
-                <form id="registerForm" class="space-y-3">
-                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
-                </form>
-            </div>
-        </div>
-    `;
-    const { overlay } = showCustomModal('Login or Register', modalContent, []);
-    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = overlay.querySelector('#loginUsername').value;
-        const password = overlay.querySelector('#loginPassword').value;
-        await handleLogin(username, password);
-        overlay.remove();
-    });
-    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = overlay.querySelector('#registerUsername').value;
-        const password = overlay.querySelector('#registerPassword').value;
-        await handleRegister(username, password);
-        overlay.remove();
-    });
-}
-
-async function handleLogin(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (data.success) {
-            localStorage.setItem('snugos_token', data.token);
-            await checkInitialAuthState();
-            showNotification(`Welcome back, ${data.user.username}!`, 2000);
-        } else {
-            showNotification(`Login failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        showNotification('Network error.', 3000);
-        console.error("Login Error:", error);
-    }
-}
-
-async function handleRegister(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (data.success) {
-            showNotification('Registration successful! Please log in.', 2500);
-        } else {
-            showNotification(`Registration failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        showNotification('Network error.', 3000);
-        console.error("Register Error:", error);
-    }
-}
-
-async function handleBackgroundUpload(file) {
-    if (!loggedInUser) {
-        showNotification('You must be logged in to save a background.', 3000);
-        applyCustomBackground(file);
-        return;
-    }
-    try {
-        await storeAsset(`background-for-user-${loggedInUser.id}`, file);
-        applyCustomBackground(file);
-        showNotification('Background saved locally!', 2000);
-    } catch (error) {
-        showNotification(`Error saving background: ${error.message}`, 3000);
-    }
-}
-
-function handleLogout() {
-    localStorage.removeItem('snugos_token');
-    loggedInUser = null;
-    updateAuthUI(null);
-    document.getElementById('desktop').style.backgroundImage = '';
-    const existingVideo = document.getElementById('desktop-video-bg');
-    if (existingVideo) existingVideo.remove();
-    showNotification('You have been logged out.', 2000);
-}
-
+// This function needs to be exposed for `auth.js` to call into it
+// It replaces the global checkInitialAuthState from `auth.js` which is now a module
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
     desktopEl.style.backgroundImage = '';
-    const existingVideo = desktopEl.querySelector('#desktop-video-bg');
+    const existingVideo = desktopEl.querySelector('video#desktop-video-bg');
     if (existingVideo) existingVideo.remove();
     let url, fileType;
     if (typeof source === 'string') {
@@ -370,22 +294,59 @@ function applyCustomBackground(source) {
     }
 }
 
+// Function to call from auth.js, which now needs to access a local utility
+function showLoginModal() {
+    document.getElementById('startMenu')?.classList.add('hidden');
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
+                </form>
+            </div>
+            <hr class="border-gray-500">
+            <div>
+                <h3 class="font-bold mb-2">Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []); // Use appServices.showCustomModal
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        // The handleLogin/Register functions are within the auth.js module
+        // and need to be called via appServices if they aren't globally exposed.
+        // auth.js's showLoginModal will call its own internal handleLogin/Register.
+        // So, this is implicitly correct if auth.js's showLoginModal is handling the form submits.
+        // We'll rely on auth.js's internal logic for now.
+    });
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        // Same as above
+    });
+}
+
 function toggleTheme() {
     const body = document.body;
     const isLightTheme = body.classList.contains('theme-light');
-    if (isLightTheme) {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        localStorage.setItem('snugos-theme', 'dark');
-    } else {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        localStorage.setItem('snugos-theme', 'light');
-    }
+    const newTheme = isLightTheme ? 'dark' : 'light';
+    appServices.setCurrentUserThemePreference(newTheme); // Use appServices
 }
 
+// Now this function is a local helper, appServices handles applying it
 function applyUserThemePreference() {
-    const preference = localStorage.getItem('snugos-theme');
+    const preference = appServices.getCurrentUserThemePreference();
     const body = document.body;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const themeToApply = preference || (prefersDark ? 'dark' : 'light');
@@ -401,7 +362,7 @@ function applyUserThemePreference() {
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
+            appServices.showNotification(`Error: ${err.message}`, 3000); // Use appServices
         });
     } else {
         if (document.exitFullscreen) {
