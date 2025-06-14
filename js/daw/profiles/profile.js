@@ -1,10 +1,12 @@
-// js/profile.js
+// js/daw/profiles/profile.js
 // NOTE: This file is designed to run within an iframe, hosted by index.html.
 // It receives `appServices` from its parent window.
 
 // Removed imports like SnugWindow as it's provided by the parent.
-// Removed other direct imports like state accessors, showNotification etc.
-// as they are accessed via the injected `appServices` object.
+// Corrected imports for utils and db
+import { storeAsset, getAsset } from '../db.js';
+import { showNotification, showCustomModal, createContextMenu } from '../utils.js';
+// Assuming state accessors are accessed via injected appServices.
 
 let appServices = {}; // Will be populated by the parent window.
 let loggedInUser = null;
@@ -20,7 +22,7 @@ function initProfilePageInIframe(injectedAppServices) {
     // Use appServices for window/modal management
     appServices.showNotification = appServices.showNotification || window.parent.showNotification;
     appServices.showCustomModal = appServices.showCustomModal || window.parent.showCustomModal;
-    appServices.createContextMenu = appServices.createContextMenu || window.parent.createContextMenu; // Assuming this exists globally in parent or via main.js
+    appServices.createContextMenu = appServices.createContextMenu || window.parent.createContextMenu;
     
     // Check local auth, but apply global settings via injected appServices.
     loggedInUser = checkLocalAuth();
@@ -154,7 +156,7 @@ function renderEditMode(container, profileData) {
     `;
     container.querySelector('#cancelEditBtn').addEventListener('click', () => {
         isEditing = false;
-        updateProfileUI(container, profileData); // Pass the container to re-render
+        updateProfileUI(container, profileData);
     });
     container.querySelector('#editProfileForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -171,14 +173,14 @@ function attachProfileWindowListeners() {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         const file = e.target.files[0];
         handleAvatarUpload(file);
-        e.target.value = null; // Clear input
+        e.target.value = null;
     });
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         const file = e.target.files[0];
         
-        appServices.showNotification("Uploading background...", 2000); // Use appServices
+        appServices.showNotification("Uploading background...", 2000);
         const formData = new FormData();
         formData.append('file', file);
         formData.append('path', '/backgrounds/');
@@ -199,10 +201,10 @@ function attachProfileWindowListeners() {
                 body: JSON.stringify({ background_url: newBgUrl })
             });
 
-            appServices.showNotification("Background updated!", 2000); // Use appServices
-            loadAndApplyGlobals(); // Re-apply to parent desktop if necessary via appServices
+            appServices.showNotification("Background updated!", 2000);
+            loadAndApplyGlobals(); // Calls parent's appServices.applyCustomBackground
         } catch(error) {
-            appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+            appServices.showNotification(`Error: ${error.message}`, 4000);
         }
     });
 }
@@ -210,7 +212,7 @@ function attachProfileWindowListeners() {
 
 async function handleAvatarUpload(file) {
     if (!loggedInUser) return;
-    appServices.showNotification("Uploading picture...", 2000); // Use appServices
+    appServices.showNotification("Uploading picture...", 2000);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('path', '/avatars/');
@@ -234,19 +236,18 @@ async function handleAvatarUpload(file) {
         const settingsResult = await settingsResponse.json();
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
-        appServices.showNotification("Profile picture updated!", 2000); // Use appServices
-        // Re-fetch profile data to update UI
+        appServices.showNotification("Profile picture updated!", 2000);
         fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
 
     } catch (error) {
-        appServices.showNotification(`Update failed: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Update failed: ${error.message}`, 4000);
     }
 }
 
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    appServices.showNotification("Saving...", 1500); // Use appServices
+    appServices.showNotification("Saving...", 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
             method: 'PUT',
@@ -255,11 +256,11 @@ async function saveProfile(username, dataToSave) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        appServices.showNotification("Profile saved!", 2000); // Use appServices
+        appServices.showNotification("Profile saved!", 2000);
         isEditing = false;
         fetchProfileData(username, document.getElementById('profile-container'));
     } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
@@ -267,7 +268,7 @@ async function handleAddFriendToggle(username, isFriend) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
     const method = isFriend ? 'DELETE' : 'POST';
-    appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500); // Use appServices
+    appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
@@ -275,17 +276,16 @@ async function handleAddFriendToggle(username, isFriend) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        appServices.showNotification(result.message, 2000); // Use appServices
-        // Re-fetch profile data to update UI
+        appServices.showNotification(result.message, 2000);
         fetchProfileData(username, document.getElementById('profile-container'));
     } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
 function showMessageModal(recipientUsername) {
     const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5"></textarea>`;
-    appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [ // Use appServices
+    appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [
         { label: 'Cancel' },
         { label: 'Send', action: () => {
             const content = document.getElementById('messageTextarea').value;
@@ -297,7 +297,7 @@ function showMessageModal(recipientUsername) {
 async function sendMessage(recipientUsername, content) {
     const token = localStorage.getItem('snugos_token');
     if (!token) return;
-    appServices.showNotification("Sending...", 1500); // Use appServices
+    appServices.showNotification("Sending...", 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/messages`, {
             method: 'POST',
@@ -306,9 +306,9 @@ async function sendMessage(recipientUsername, content) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        appServices.showNotification("Message sent!", 2000); // Use appServices
+        appServices.showNotification("Message sent!", 2000);
     } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
@@ -319,8 +319,7 @@ async function loadAndApplyGlobals() {
         const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            // Apply background to the parent window's desktop
-            appServices.applyCustomBackground(data.profile.background_url); // Use appServices
+            appServices.applyCustomBackground(data.profile.background_url);
         }
     } catch (error) {
         console.error("Could not apply global settings:", error);
