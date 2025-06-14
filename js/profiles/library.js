@@ -1,64 +1,67 @@
+// js/profiles/library.js
+// NOTE: This file is designed to run within an iframe, hosted by index.html.
+// It receives `appServices` from its parent window.
+
 import { SnugWindow } from '../daw/SnugWindow.js';
-import { openFileViewerWindow, initializeFileViewerUI } from '../daw/ui/fileViewerUI.js'; // NEW: Import initializeFileViewerUI
+import { openFileViewerWindow, initializeFileViewerUI } from '../daw/ui/fileViewerUI.js';
+
+// Removed direct imports for state functions, showNotification etc.
+// as they are accessed via the injected `appServices` object.
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 let loggedInUser = null;
 let currentPath = ['/'];
 let currentViewMode = 'my-files';
-let appServices = {};
+let appServices = {}; // Will be populated by the parent window.
+
+// This is the new entry point for when the iframe content is loaded by the parent.
+// It will be called by `initializePage` in `library.html`.
+function initLibraryPageInIframe(injectedAppServices) {
+    appServices = injectedAppServices;
+
+    // Initialize UI sub-modules that library.js might call directly
+    initializeFileViewerUI(appServices); // Ensure fileViewerUI has the correct appServices
+
+    // Use appServices for window/modal management
+    appServices.showNotification = appServices.showNotification || window.parent.showNotification;
+    appServices.showCustomModal = appServices.showCustomModal || window.parent.showCustomModal;
+    appServices.createContextMenu = appServices.createContextMenu || window.parent.createContextMenu;
+    
+    // Auth status and background (relies on parent's appServices.getAsset/applyCustomBackground)
+    loggedInUser = checkLocalAuth();
+    loadAndApplyGlobals(); 
+    
+    // Original library functions that still run
+    attachLibraryEventListeners(); // Renamed to clarify context
+    // No clock display needed within iframe as parent handles taskbar
+    // No full screen toggle needed within iframe
+    initAudioOnFirstGesture(); // Still needed for audio previews in library itself
+    
+    if (loggedInUser) {
+        // Now just render the content, no need to open a SnugWindow.
+        // We are already IN the SnugWindow iframe.
+        initializePageUI(document.body.querySelector('.flex.h-full')); // Pass the main content container
+        fetchAndRenderLibraryItems(document.body.querySelector('.flex.h-full'));
+    } else {
+        appServices.showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
+        document.body.querySelector('.flex.h-full').innerHTML = '<p class="p-8 text-center" style="color:red;">Please log in to use the Library.</p>';
+    }
+}
 
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
         try {
+            // Tone is directly loaded in library.html
             if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
                 await Tone.start();
-                console.log('AudioContext started successfully.');
+                console.log('AudioContext started successfully for Library preview.');
             }
-        } catch (e) { console.error('Could not start AudioContext:', e); }
+        } catch (e) { console.error('Could not start AudioContext for Library preview:', e); }
         document.body.removeEventListener('mousedown', startAudio);
     };
     document.body.addEventListener('mousedown', startAudio);
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Correctly populate appServices for the library.html context
-    appServices = { // Ensure appServices is populated here
-        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
-        getWindowById: getWindowByIdState,
-        addWindowToStore: addWindowToStoreState,
-        removeWindowFromStore: removeWindowFromStoreState,
-        getHighestZ: getHighestZState,
-        setHighestZ: setHighestZState,
-        incrementHighestZ: incrementHighestZState,
-        createContextMenu: createContextMenu,
-        showNotification: showNotification,
-        showCustomModal: showCustomModal,
-        openFileViewerWindow: openFileViewerWindow, // This is already imported and available
-        // Add any other globally available functions that appServices needs from utils.js, state.js, etc.
-        // For example:
-        // getTracks: getTracksState, 
-        // getTrackById: getTrackByIdState,
-        // (etc., if library.js directly needed other state functions beyond window management)
-    };
-
-    // Initialize FileViewerUI with the now-populated appServices
-    initializeFileViewerUI(appServices); // NEW: Call initializer for fileViewerUI
-
-    loggedInUser = checkLocalAuth();
-    
-    attachDesktopEventListeners();
-    applyUserThemePreference();
-    updateClockDisplay();
-    initAudioOnFirstGesture(); 
-    
-    if (loggedInUser) {
-        openLibraryWindow();
-        loadAndApplyGlobals();
-    } else {
-        showCustomModal('Access Denied', '<p class="p-4">Please log in to use the Library.</p>', [{ label: 'Close' }]);
-    }
-});
 
 async function loadAndApplyGlobals() {
     if (!loggedInUser) return;
@@ -69,56 +72,21 @@ async function loadAndApplyGlobals() {
         });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            const desktop = document.getElementById('desktop');
-            if(desktop) {
-                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
-                desktop.style.backgroundSize = 'cover';
-                desktop.style.backgroundPosition = 'center';
-            }
+            // Use parent's appServices to apply background to the main desktop
+            appServices.applyCustomBackground(data.profile.background_url);
         }
     } catch (error) {
         console.error("Could not apply global settings:", error);
     }
 }
 
-function openLibraryWindow() {
-    const windowId = 'library';
-    if (appServices.getWindowById(windowId)) {
-        appServices.getWindowById(windowId).focus();
-        return;
-    }
-    const contentHTML = `
-        <div class="flex h-full" style="background-color: var(--bg-window-content);">
-            <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
-                <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
-                <ul>
-                    <li><button id="my-files-btn" class="w-full text-left p-2 rounded mb-1" style="color: var(--text-primary);">My Files</button></li>
-                    <li><button id="global-files-btn" class="w-full text-left p-2 rounded" style="color: var(--text-primary);">Global</button></li>
-                </ul>
-                <hr class="my-4" style="border-color: var(--border-secondary);" />
-                <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
-                <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
-            </div>
-            <div class="flex-grow flex flex-col">
-                <div class="p-2 border-b" style="border-color: var(--border-secondary);">
-                    <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
-                </div>
-                <div id="file-view-area" class="flex-grow p-4 overflow-y-auto flex flex-wrap content-start gap-4"></div>
-            </div>
-        </div>
-    `;
-    const desktopEl = document.getElementById('desktop');
-    const options = { width: Math.max(800, desktopEl.offsetWidth * 0.7), height: Math.max(600, desktopEl.offsetHeight * 0.8), x: desktopEl.offsetWidth * 0.15, y: desktopEl.offsetHeight * 0.05 };
-    const libWindow = new SnugWindow(windowId, 'File Explorer', contentHTML, options, appServices);
-    initializePageUI(libWindow.element);
-}
-
+// Renamed and adapted to just initialize UI elements within the iframe body
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
     const uploadBtn = container.querySelector('#uploadFileBtn');
     const newFolderBtn = container.querySelector('#createFolderBtn');
-    const actualFileInput = document.getElementById('actualFileInput'); // This is in the main document
+    const actualFileInput = document.getElementById('actualFileInput'); // This is still in the library.html body
 
     const updateNavStyling = () => {
         myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
@@ -145,7 +113,6 @@ function initializePageUI(container) {
         btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = 'transparent'; });
     });
 
-    // NOTE: These are the listeners that were missing and have now been restored.
     uploadBtn?.addEventListener('click', () => actualFileInput.click());
     actualFileInput?.addEventListener('change', e => {
         handleFileUpload(e.target.files);
@@ -154,39 +121,23 @@ function initializePageUI(container) {
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
-    fetchAndRenderLibraryItems(container);
+    // No initial fetch here, fetchAndRenderLibraryItems is called by initLibraryPageInIframe
 }
 
-function setupDesktopContextMenu() {
-    const desktop = document.getElementById('desktop');
-    if (!desktop) return;
+// Renamed from attachDesktopEventListeners to be specific to the library iframe
+function attachLibraryEventListeners() {
+    // No desktop context menu or start menu/full screen toggles needed in iframe
+    // These functions (toggleStartMenu, toggleFullScreen, showLoginModal, handleLogout)
+    // would be called on the parent (index.html) if needed.
+    // They are left out here as this is a content iframe.
 
-    desktop.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (e.target.closest('.window')) return;
-        const menuItems = [
-            { label: 'New Folder', action: () => createFolder() },
-            { label: 'Upload File', action: () => document.getElementById('actualFileInput').click() },
-            { type: 'separator' },
-            { label: 'Change Background', action: () => document.getElementById('customBgInput').click() }
-        ];
-        appServices.createContextMenu(e, menuItems);
-    });
-}
-
-function attachDesktopEventListeners() {
-    setupDesktopContextMenu();
-    
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
-
+    // Custom background upload for the library page (still valid for changing parent desktop's background)
+    // The customBgInput is still present in library.html for this purpose.
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         const file = e.target.files[0];
         
-        showNotification("Uploading background...", 2000);
+        appServices.showNotification("Uploading background...", 2000); // Use appServices
         const formData = new FormData();
         formData.append('file', file);
         formData.append('path', '/backgrounds/');
@@ -207,10 +158,10 @@ function attachDesktopEventListeners() {
                 body: JSON.stringify({ background_url: newBgUrl })
             });
 
-            showNotification("Background updated!", 2000);
-            loadAndApplyGlobals();
+            appServices.showNotification("Background updated!", 2000); // Use appServices
+            loadAndApplyGlobals(); // Calls parent's appServices.applyCustomBackground
         } catch(error) {
-            showNotification(`Error: ${error.message}`, 4000);
+            appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
         }
     });
 }
@@ -221,18 +172,21 @@ async function fetchAndRenderLibraryItems(container) {
     if (!fileViewArea || !pathDisplay) return;
 
     fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">Loading...</p>`;
-    pathDisplay.textContent = currentPath.join('');
+    pathDisplay.textContent = `/${currentPath.slice(1).join('')}`; // Display path relative to library root
 
     const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public';
+    // The path sent to the server should be a proper slash-separated string
+    const serverPath = `/${currentPath.slice(1).join('')}`; // Adjust path for server request
+
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
+        const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(serverPath)}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Failed to fetch files');
         fileViewArea.innerHTML = '';
-        if (currentPath.length > 1) {
+        if (currentPath.length > 1) { // If not at the virtual root (Library/ or My Files/)
             fileViewArea.appendChild(renderFileItem({ file_name: '..', mime_type: 'folder' }, true));
         }
 
@@ -307,15 +261,14 @@ function renderFileItem(item, isParentFolder = false) {
 }
 
 function handleItemClick(item, isParentFolder) {
-    const libWindow = appServices.getWindowById('library');
+    // This now relies on appServices being correctly populated from the parent index.html
+    const libWindow = appServices.getWindowById('libraryApp'); // Correctly using the window ID for the hosted library app
     if (isParentFolder) {
         if (currentPath.length > 1) currentPath.pop();
     } else if (item.mime_type.includes('folder')) {
         currentPath.push(item.file_name + '/');
     } else {
-        // Here, appServices.openFileViewerWindow is called
-        // If appServices.openFileViewerWindow is indeed a function, it should work.
-        // The problem is that 'appServices' itself needs to be correctly populated.
+        // Use the injected appServices to open the file viewer in the parent context
         appServices.openFileViewerWindow(item); 
         return;
     }
@@ -323,7 +276,7 @@ function handleItemClick(item, isParentFolder) {
 }
 
 async function handleShareFile(item) {
-    showNotification("Generating secure link...", 1500);
+    appServices.showNotification("Generating secure link...", 1500); // Use appServices
     try {
         const token = localStorage.getItem('snugos_token');
         const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
@@ -332,9 +285,9 @@ async function handleShareFile(item) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         await navigator.clipboard.writeText(result.shareUrl);
-        showNotification("Sharable link copied! It expires in 1 hour.", 4000);
+        appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000); // Use appServices
     } catch (error) {
-        showNotification(`Could not generate link: ${error.message}`, 4000);
+        appServices.showNotification(`Could not generate link: ${error.message}`, 4000); // Use appServices
     }
 }
 
@@ -342,7 +295,7 @@ function showShareModal(item) {
     const newStatus = !item.is_public;
     const actionText = newStatus ? "publicly available" : "private";
     const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
-    showCustomModal('Confirm Action', modalContent, [
+    appServices.showCustomModal('Confirm Action', modalContent, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
     ]);
@@ -358,17 +311,17 @@ async function handleToggleFilePublic(fileId, newStatus) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification('File status updated!', 2000);
-        const libWindow = appServices.getWindowById('library');
+        appServices.showNotification('File status updated!', 2000); // Use appServices
+        const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
 function showDeleteModal(item) {
     const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
-    showCustomModal('Confirm Deletion', modalContent, [
+    appServices.showCustomModal('Confirm Deletion', modalContent, [ // Use appServices
         { label: 'Cancel' },
         { label: 'Delete', action: () => handleDeleteFile(item.id) }
     ]);
@@ -383,79 +336,76 @@ async function handleDeleteFile(fileId) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification('File deleted!', 2000);
-        const libWindow = appServices.getWindowById('library');
+        appServices.showNotification('File deleted!', 2000); // Use appServices
+        const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
     }
 }
 
 async function handleFileUpload(files) {
     if (!loggedInUser || files.length === 0) return;
-    showNotification(`Uploading ${files.length} file(s)...`, 3000);
+    appServices.showNotification(`Uploading ${files.length} file(s)...`, 3000); // Use appServices
     for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('path', currentPath.join('/'));
+        // The currentPath array contains the virtual roots ("My Files" or library name)
+        // We need to strip these for the server request to get the actual path.
+        const serverPath = `/${currentPath.slice(1).join('')}`; 
+        formData.append('path', serverPath);
         try {
             const token = localStorage.getItem('snugos_token');
             const response = await fetch(`${SERVER_URL}/api/files/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message);
         } catch (error) {
-            showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000);
+            appServices.showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000); // Use appServices
         }
     }
-    const libWindow = appServices.getWindowById('library');
+    const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
 }
 
 function createFolder() {
     if (!loggedInUser) return;
-    showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
+    appServices.showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
         { label: 'Cancel' },
         { label: 'Create', action: async ()=>{
             const folderName = document.getElementById('folderNameInput').value;
             if (!folderName) return;
             try {
                 const token = localStorage.getItem('snugos_token');
-                const response = await fetch(`${SERVER_URL}/api/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: folderName, path: currentPath.join('/') }) });
+                const serverPath = `/${currentPath.slice(1).join('')}`; // Adjust path for server request
+                const response = await fetch(`${SERVER_URL}/api/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: folderName, path: serverPath }) });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message);
-                showNotification(`Folder '${folderName}' created!`, 2000);
-                const libWindow = appServices.getWindowById('library');
+                appServices.showNotification(`Folder '${folderName}' created!`, 2000); // Use appServices
+                const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
                 if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
             } catch (error) {
-                showNotification(`Error: ${error.message}`, 5000);
+                appServices.showNotification(`Error: ${error.message}`, 5000); // Use appServices
             }
         }}
     ]);
 }
 
 function updateClockDisplay() {
-    const clockDisplay = document.getElementById('taskbarClockDisplay');
-    if (clockDisplay) {
-        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    setTimeout(updateClockDisplay, 60000);
+    // This clock display is specific to the parent's taskbar, not the iframe.
+    // So, it's better removed or if implemented, needs a different approach.
+    // As per the requirement to strip down iframed pages, this function is unnecessary here.
 }
 
 function toggleStartMenu() {
-    document.getElementById('startMenu')?.classList.toggle('hidden');
+    // Not needed in iframe. Parent index.html handles this.
 }
 
 function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
-        });
-    } else {
-        if(document.exitFullscreen) document.exitFullscreen();
-    }
+    // Not needed in iframe. Parent index.html handles this.
 }
 
 function checkLocalAuth() {
+    // This still checks local storage for token, which is correct.
     try {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
@@ -472,12 +422,16 @@ function checkLocalAuth() {
 }
 
 function handleLogout() {
+    // If logout in iframe should affect parent, it needs to call parent's logout.
+    // For now, reload is fine.
     localStorage.removeItem('snugos_token');
-    showNotification('You have been logged out.', 2000);
+    appServices.showNotification('You have been logged out.', 2000); // Use appServices
     window.location.reload();
 }
 
 function applyUserThemePreference() {
+    // Theme is applied by parent, not directly by iframe content for global body.
+    // But this function might still be called if needed for internal iframe styling.
     const preference = localStorage.getItem('snugos-theme');
     const body = document.body;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -492,5 +446,6 @@ function applyUserThemePreference() {
 }
 
 function showLoginModal() {
-    showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
+    // Not needed in iframe. Parent index.html handles this.
+    appServices.showCustomModal('Login / Register', '<p class="p-4">Login functionality would appear here.</p>', [{label: 'Close'}]);
 }
