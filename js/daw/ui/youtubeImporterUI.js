@@ -1,16 +1,14 @@
 // js/daw/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
-
 // Corrected imports for utils and state
-import { base64ToBlob, showNotification } from '../utils.js'; // Corrected path
-// No direct imports for state needed as it accesses via localAppServices
+import { base64ToBlob, showNotification } from '../utils.js'; //
 
-let localAppServices = {};
+let localAppServices = {}; //
 
-export function initializeYouTubeImporterUI(appServicesFromMain) {
-    localAppServices = appServicesFromMain;
+export function initializeYouTubeImporterUI(appServicesFromMain) { //
+    localAppServices = appServicesFromMain; //
 }
 
-export function openYouTubeImporterWindow(savedState = null) {
+export function openYouTubeImporterWindow(savedState = null) { //
     const windowId = 'youtubeImporter';
     if (localAppServices.getOpenWindows?.().has(windowId)) {
         localAppServices.getWindowById(windowId).restore();
