@@ -1,6 +1,7 @@
-// js/state/trackState.js
+// js/daw/state/trackState.js
 
-import { Track } from '../Track.js';
+// Corrected import path for Track.js
+import { Track } from '../Track.js'; // Corrected path
 
 let tracks = [];
 let trackIdCounter = 0;
