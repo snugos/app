@@ -1,19 +1,18 @@
-// js/auth.js
+// js/daw/auth.js
 
-let localAppServicesInstance = null; // Store the appServices instance
+let localAppServicesInstance = null;
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 // Expose these functions as module exports
 export function initializeAuth(appServices) {
-    localAppServicesInstance = appServices; // Store the passed appServices
+    localAppServicesInstance = appServices;
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
     checkInitialAuthState();
 }
 
-// Renamed for clarity, now a private helper function
 function updateAuthUI(user = null) {
     loggedInUser = user;
     const userAuthContainer = document.getElementById('userAuthContainer');
@@ -26,14 +25,12 @@ function updateAuthUI(user = null) {
         menuLogout?.classList.remove('hidden');
     } else {
         userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
-        // Re-attach event listener if login button is re-rendered
         userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
         menuLogin?.classList.remove('hidden');
         menuLogout?.classList.add('hidden');
     }
 }
 
-// Renamed for clarity, now a private helper function
 async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
@@ -44,13 +41,12 @@ async function checkInitialAuthState() {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            return handleLogout(); // Call exported logout
+            return handleLogout();
         }
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
 
-        // Access applyCustomBackground via localAppServicesInstance
         const backgroundBlob = await localAppServicesInstance.getAsset?.(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
             localAppServicesInstance.applyCustomBackground?.(backgroundBlob);
@@ -58,11 +54,10 @@ async function checkInitialAuthState() {
 
     } catch (e) {
         console.error("Error during initial auth state check:", e);
-        handleLogout(); // Call exported logout
+        handleLogout();
     }
 }
 
-// Renamed for clarity, now a private helper function
 function showLoginModal() {
     document.getElementById('startMenu')?.classList.add('hidden');
     const modalContent = `
@@ -87,7 +82,6 @@ function showLoginModal() {
         </div>
     `;
     
-    // Access showCustomModal via localAppServicesInstance
     const { overlay, contentDiv } = localAppServicesInstance.showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
@@ -133,7 +127,6 @@ function showLoginModal() {
     });
 }
 
-// Renamed for clarity, now a private helper function
 async function handleLogin(username, password) {
     try {
         const response = await fetch(`${SERVER_URL}/api/login`, {
@@ -145,7 +138,7 @@ async function handleLogin(username, password) {
 
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
-            await checkInitialAuthState(); // Re-check state after login to update UI and load background
+            await checkInitialAuthState();
             localAppServicesInstance.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
             localAppServicesInstance.showNotification(`Login failed: ${data.message}`, 3000);
@@ -156,7 +149,6 @@ async function handleLogin(username, password) {
     }
 }
 
-// Renamed for clarity, now a private helper function
 async function handleRegister(username, password) {
     try {
         const response = await fetch(`${SERVER_URL}/api/register`, {
@@ -177,17 +169,15 @@ async function handleRegister(username, password) {
     }
 }
 
-// Export this function to be used by main.js (via eventHandlers.js)
 export async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
         localAppServicesInstance.showNotification('You must be logged in to save a custom background.', 3000);
-        localAppServicesInstance.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
+        localAppServicesInstance.applyCustomBackground?.(file);
         return;
     }
 
     try {
         localAppServicesInstance.showNotification('Saving background...', 1500);
-        // Access storeAsset via localAppServicesInstance
         await localAppServicesInstance.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
         localAppServicesInstance.applyCustomBackground?.(file);
         localAppServicesInstance.showNotification('Background saved locally!', 2000);
@@ -197,7 +187,6 @@ export async function handleBackgroundUpload(file) {
     }
 }
 
-// Export this function to be used by main.js (via eventHandlers.js)
 export function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
