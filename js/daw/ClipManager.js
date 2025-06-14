@@ -1,8 +1,9 @@
 // js/daw/ClipManager.js
-// Removed import * as Constants from '../constants.js'; as Constants is global
-// Removed import { storeAudio, getAudio, deleteAudio } from '../db.js'; as these are global
+// Corrected imports for Constants and DB functions
+import * as Constants from './constants.js'; // Corrected path
+import { storeAudio, getAudio, deleteAudio } from './db.js'; // Corrected path
 
-class ClipManager { // Removed export
+class ClipManager {
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
@@ -25,8 +26,6 @@ class ClipManager { // Removed export
             return;
         }
         this.timelineClips.push(clipData);
-        // Removed renderTimeline call as timeline is removed
-        // this.appServices.renderTimeline?.();
         this.appServices.captureStateForUndo?.(`Add clip ${clipData.name}`);
     }
 
@@ -35,7 +34,6 @@ class ClipManager { // Removed export
             console.warn("[ClipManager.js] Attempted to add MIDI clip with no sequence data.");
             return;
         }
-        // Constants is global
         const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4);
         const totalBeats = sequence.length * beatsPerStep;
         const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value);
@@ -52,12 +50,11 @@ class ClipManager { // Removed export
 
     async addAudioClip(audioBlob, startTime, clipName) {
         if (this.track.type !== 'Audio') {
-            this.appServices.showNotification?.('Cannot add audio clip to a non-audio track.', 3000); // showNotification is global
+            this.appServices.showNotification?.('Cannot add audio clip to a non-audio track.', 3000);
             return;
         }
         try {
             const dbKey = `clip-${this.track.id}-${Date.now()}-${clipName}`;
-            // Use global storeAudio function
             await storeAudio(dbKey, audioBlob);
             const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer());
             const newClip = {
@@ -72,25 +69,22 @@ class ClipManager { // Removed export
             this.addClip(newClip);
         } catch (error) {
             console.error("[ClipManager.js] Error adding audio clip:", error);
-            this.appServices.showNotification?.('Failed to process and add audio clip.', 3000); // showNotification is global
+            this.appServices.showNotification?.('Failed to process and add audio clip.', 3000);
         }
     }
     
     deleteClip(clipId) {
         const index = this.timelineClips.findIndex(c => c.id === clipId);
         if (index > -1) {
-            const removedClip = this.timelineClips[index]; // Store removed clip for undo
+            const removedClip = this.timelineClips[index];
             if (removedClip.type === 'audio' && removedClip.audioBuffer) {
                 removedClip.audioBuffer.dispose();
                 if (removedClip.dbKey) {
-                    // Use global deleteAudio function
                     deleteAudio(removedClip.dbKey);
                 }
             }
             this.timelineClips.splice(index, 1);
-            // Removed renderTimeline call
-            // this.appServices.renderTimeline?.();
-            this.appServices.captureStateForUndo?.(`Delete clip ${removedClip.name}`); // captureStateForUndoInternal is global
+            this.appServices.captureStateForUndo?.(`Delete clip ${removedClip.name}`);
         } else {
             console.warn(`[ClipManager.js] Clip with ID ${clipId} not found for deletion.`);
         }
