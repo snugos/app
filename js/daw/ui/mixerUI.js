@@ -1,10 +1,9 @@
 // js/daw/ui/mixerUI.js
 
-// Import state functions directly for mixerUI.js module
-import { getTracks, getSoloedTrackId } from '../../state/trackState.js';
-import { getMasterGainValue, setMasterGainValue } from '../../state/masterState.js';
-import { getOpenWindows, getWindowById } from '../../state/windowState.js';
-
+// Corrected imports for state modules
+import { getTracks, getSoloedTrackId } from '../state/trackState.js'; // Corrected path
+import { getMasterGainValue, setMasterGainValue } from '../state/masterState.js'; // Corrected path
+import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
 
 let localAppServices = {};
 
@@ -14,11 +13,9 @@ export function initializeMixerUI(appServices) {
 
 export function openMixerWindow(savedState = null) {
     const windowId = 'mixer';
-    // getOpenWindowsState is global
-    const openWindows = getOpenWindows(); // Now imports from windowState.js
+    const openWindows = getOpenWindows();
     if (openWindows.has(windowId) && !savedState) {
-        // getWindowByIdState is global
-        getWindowById(windowId).restore(); // Now imports from windowState.js
+        getWindowById(windowId).restore();
         return;
     }
 
@@ -37,7 +34,6 @@ export function openMixerWindow(savedState = null) {
 
     if (savedState) Object.assign(mixerOptions, savedState);
     
-    // SnugWindow is global
     const mixerWindow = localAppServices.createWindow(windowId, 'Mixer', contentContainer, mixerOptions);
     if (mixerWindow?.element) {
         updateMixerWindow();
@@ -45,7 +41,6 @@ export function openMixerWindow(savedState = null) {
 }
 
 export function updateMixerWindow() {
-    // --- DEBUGGING LOG ---
     console.log('[mixerUI.js] updateMixerWindow called.');
     const container = document.getElementById('mixerContentContainer');
     if (container) {
@@ -54,8 +49,7 @@ export function updateMixerWindow() {
 }
 
 function renderMixerTracks(container) {
-    const tracks = getTracks(); // Now imports from trackState.js
-    // --- DEBUGGING LOG ---
+    const tracks = getTracks();
     console.log(`%c[mixerUI.js] renderMixerTracks called with ${tracks.length} tracks.`, 'color: #f39c12; font-weight: bold;');
 
     container.innerHTML = '';
@@ -71,24 +65,20 @@ function renderMixerTracks(container) {
 
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#volumeKnob-mixer-master-placeholder');
     if (masterVolKnobPlaceholder) {
-        // createKnob is global
-        const masterVolKnob = localAppServices.createKnob({ // Use appServices.createKnob
+        const masterVolKnob = localAppServices.createKnob({
             label: 'Master', min: 0, max: 1, step: 0.01,
-            // getMasterGainValueState is global
-            initialValue: getMasterGainValue(), // Now imports from masterState.js
-            // setMasterGainValueState is global
-            onValueChange: (val) => setMasterGainValue(val) // Now imports from masterState.js
+            initialValue: getMasterGainValue(),
+            onValueChange: (val) => setMasterGainValue(val)
         });
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
     tracks.forEach(track => {
-        // --- DEBUGGING LOG ---
         console.log(`[mixerUI.js] Rendering track: ${track.name}`);
 
         const trackDiv = document.createElement('div');
         trackDiv.className = 'mixer-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
-        trackDiv.dataset.trackId = track.id; // Added data-track-id
+        trackDiv.dataset.trackId = track.id;
         trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
             <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
@@ -98,13 +88,12 @@ function renderMixerTracks(container) {
                 <button id="mixerMuteBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs">${track.isMuted ? 'Unmute' : 'Mute'}</button>
                 <button id="mixerSoloBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
             </div>
-            `; // Added mute and solo buttons HTML
+            `;
         container.appendChild(trackDiv);
 
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) {
-            // createKnob is global
-            const volKnob = localAppServices.createKnob({ // Use appServices.createKnob
+            const volKnob = localAppServices.createKnob({
                 label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
@@ -112,19 +101,16 @@ function renderMixerTracks(container) {
             volKnobPlaceholder.appendChild(volKnob.element);
         }
 
-        // Attach listeners for the mixer buttons
         const mixerMuteBtn = trackDiv.querySelector(`#mixerMuteBtn-${track.id}`);
         if (mixerMuteBtn) {
             mixerMuteBtn.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
-            // Update initial state for mute button style
-            const soloedTrackId = getSoloedTrackId(); // Now imports from trackState.js
+            const soloedTrackId = getSoloedTrackId();
             mixerMuteBtn.classList.toggle('muted', track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id));
         }
 
         const mixerSoloBtn = trackDiv.querySelector(`#mixerSoloBtn-${track.id}`);
         if (mixerSoloBtn) {
             mixerSoloBtn.addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
-            // Update initial state for solo button style
             mixerSoloBtn.classList.toggle('soloed', track.isSoloed);
         }
     });
