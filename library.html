@@ -22,41 +22,44 @@
     </script>
 </head>
 <body class="theme-dark">
-
-    <div id="desktop"></div>
-
-    <div id="taskbar" class="select-none">
-        <button id="startButton">Start</button>
-        <div id="taskbarButtons"></div>
-        <div style="flex-grow: 1;"></div> 
-        <div id="taskbarClockDisplay" class="text-right px-2"></div>
-    </div>
-
-    <div id="startMenu" class="hidden select-none">
-        <ul>
-            <li id="menuLaunchDaw">Launch DAW</li>
-            <li><hr></li>
-            <li id="menuViewProfiles">View Profiles</li>
-            <li><hr></li>
-            <li id="menuLogin">Login / Register</li>
-            <li id="menuLogout" class="hidden">Logout</li>
-            <li><hr></li>
-            <li id="menuToggleFullScreen">Toggle Full Screen</li>
-        </ul>
+    <div class="flex h-full" style="background-color: var(--bg-window-content); color: var(--text-primary);">
+        <div class="w-48 flex-shrink-0 p-2" style="background-color: var(--bg-window); border-right: 1px solid var(--border-secondary);">
+            <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Library</h2>
+            <ul>
+                <li><button id="my-files-btn" class="w-full text-left p-2 rounded mb-1" style="color: var(--text-primary);">My Files</button></li>
+                <li><button id="global-files-btn" class="w-full text-left p-2 rounded" style="color: var(--text-primary);">Global</button></li>
+            </ul>
+            <hr class="my-4" style="border-color: var(--border-secondary);" />
+            <button id="uploadFileBtn" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Upload File</button>
+            <button id="createFolderBtn" class="w-full p-2 rounded mt-2" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">New Folder</button>
+        </div>
+        <div class="flex-grow flex flex-col">
+            <div class="p-2 border-b" style="border-color: var(--border-secondary);">
+                <div id="library-path-display" class="text-sm" style="color: var(--text-secondary);">/</div>
+            </div>
+            <div id="file-view-area" class="flex-grow p-4 overflow-y-auto flex flex-wrap content-start gap-4"></div>
+        </div>
     </div>
     
-    <div id="notification-area"></div>
-    <div id="modalContainer"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script> 
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <input type="file" id="actualFileInput" class="hidden" multiple>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
-    
     <script src="js/utils.js"></script>
-    <script src="js/state.js"></script>
-    <script type="module" src="js/daw/SnugWindow.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/constants.js"></script> <script type="module" src="js/daw/SnugWindow.js"></script> <script type="module" src="js/profiles/library.js"></script>
 
-    <script type="module" src="js/profiles/library.js"></script>
-
+    <script>
+        // This global function is expected to be called by the parent iframe host
+        function initializePage(appServices) {
+            // Now, library.js can be properly initialized with the correct appServices context.
+            // Call the existing library.js DOMContentLoaded logic here.
+            document.addEventListener('DOMContentLoaded', () => {
+                initLibraryPageInIframe(appServices); // A new function in library.js (see below)
+            });
+        }
+    </script>
 </body>
 </html>
