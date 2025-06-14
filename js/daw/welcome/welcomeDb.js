@@ -1,4 +1,4 @@
-// js/welcome/welcomeDb.js - Minimal IndexedDB Helper for Welcome Page
+// js/daw/welcome/welcomeDb.js - Minimal IndexedDB Helper for Welcome Page
 
 const DB_NAME = 'SnugOSAudioDB';
 const STORES = {
