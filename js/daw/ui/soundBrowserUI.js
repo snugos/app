@@ -1,15 +1,15 @@
 // js/daw/ui/soundBrowserUI.js - Sound Browser UI Management
 
 // Corrected imports for state modules
-import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js'; // Corrected path
-import { getWindowById } from '../state/windowState.js'; // Corrected path
-import { getArmedTrackId } from '../state/trackState.js'; // Corrected path
+import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js';
+import { getWindowById } from '../state/windowState.js';
+import { getArmedTrackId } from '../state/trackState.js';
 // Corrected import for Constants and DB
-import * as Constants from '../constants.js'; // Corrected path
-import { storeAudio, getAudio } from '../db.js'; // Corrected path
+import * as Constants from '../constants.js';
+import { storeAudio, getAudio } from '../db.js';
 
 let localAppServices = {};
-let selectedSoundForPreviewData = null; 
+let selectedSoundForPreviewData = null;
 
 const FOLDER_ICON_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
@@ -45,9 +45,8 @@ export function renderSoundBrowser(pathToRender) {
             virtualRoot[libName] = { type: 'folder', children: allFileTrees[libName] };
         } else {
             const loadedZips = getLoadedZipFiles() || {};
-            // Updated to show loading status more accurately
-            virtualRoot[libName] = { 
-                type: 'placeholder', 
+            virtualRoot[libName] = {
+                type: 'placeholder',
                 status: loadedZips[libName]?.status || 'pending',
                 displayName: `${libName} (${loadedZips[libName]?.status || 'loading...'})`
             };
