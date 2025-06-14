@@ -1,21 +1,19 @@
 // js/auth.js
-// Removed imports as functions will be global or accessed via localAppServices
-// import { storeAsset, getAsset } from './db.js';
-// import * as Constants from './constants.js';
-// import { showNotification, showCustomModal } from './utils.js';
 
-let localAppServices = {};
+let localAppServicesInstance = null; // Store the appServices instance
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-function initializeAuth(appServices) {
-    localAppServices = appServices;
+// Expose these functions as module exports
+export function initializeAuth(appServices) {
+    localAppServicesInstance = appServices; // Store the passed appServices
     document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogin')?.addEventListener('click', showLoginModal);
     document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
     checkInitialAuthState();
 }
 
+// Renamed for clarity, now a private helper function
 function updateAuthUI(user = null) {
     loggedInUser = user;
     const userAuthContainer = document.getElementById('userAuthContainer');
@@ -28,12 +26,14 @@ function updateAuthUI(user = null) {
         menuLogout?.classList.remove('hidden');
     } else {
         userAuthContainer.innerHTML = `<button id="loginBtnTop" class="px-3 py-1 border rounded">Login</button>`;
+        // Re-attach event listener if login button is re-rendered
         userAuthContainer.querySelector('#loginBtnTop')?.addEventListener('click', showLoginModal);
         menuLogin?.classList.remove('hidden');
         menuLogout?.classList.add('hidden');
     }
 }
 
+// Renamed for clarity, now a private helper function
 async function checkInitialAuthState() {
     const token = localStorage.getItem('snugos_token');
     if (!token) {
@@ -44,25 +44,25 @@ async function checkInitialAuthState() {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp * 1000 < Date.now()) {
-            return handleLogout();
+            return handleLogout(); // Call exported logout
         }
         
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
 
-        // Apply custom background if available and logged in
-        // Assumes getAsset and applyCustomBackground are now global or accessed via appServices
-        const backgroundBlob = await localAppServices.getAsset?.(`background-for-user-${loggedInUser.id}`);
+        // Access applyCustomBackground via localAppServicesInstance
+        const backgroundBlob = await localAppServicesInstance.getAsset?.(`background-for-user-${loggedInUser.id}`);
         if (backgroundBlob) {
-            localAppServices.applyCustomBackground?.(backgroundBlob);
+            localAppServicesInstance.applyCustomBackground?.(backgroundBlob);
         }
 
     } catch (e) {
         console.error("Error during initial auth state check:", e);
-        handleLogout();
+        handleLogout(); // Call exported logout
     }
 }
 
+// Renamed for clarity, now a private helper function
 function showLoginModal() {
     document.getElementById('startMenu')?.classList.add('hidden');
     const modalContent = `
@@ -87,8 +87,8 @@ function showLoginModal() {
         </div>
     `;
     
-    // Assumes showCustomModal is now global or accessed via appServices
-    const { overlay, contentDiv } = localAppServices.showCustomModal('Login or Register', modalContent, []);
+    // Access showCustomModal via localAppServicesInstance
+    const { overlay, contentDiv } = localAppServicesInstance.showCustomModal('Login or Register', modalContent, []);
 
     contentDiv.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
         input.style.backgroundColor = 'var(--bg-input)';
@@ -133,6 +133,7 @@ function showLoginModal() {
     });
 }
 
+// Renamed for clarity, now a private helper function
 async function handleLogin(username, password) {
     try {
         const response = await fetch(`${SERVER_URL}/api/login`, {
@@ -145,16 +146,17 @@ async function handleLogin(username, password) {
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
             await checkInitialAuthState(); // Re-check state after login to update UI and load background
-            localAppServices.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+            localAppServicesInstance.showNotification(`Welcome back, ${data.user.username}!`, 2000);
         } else {
-            localAppServices.showNotification(`Login failed: ${data.message}`, 3000);
+            localAppServicesInstance.showNotification(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        localAppServices.showNotification('Network error. Could not connect to server.', 3000);
+        localAppServicesInstance.showNotification('Network error. Could not connect to server.', 3000);
         console.error("Login Error:", error);
     }
 }
 
+// Renamed for clarity, now a private helper function
 async function handleRegister(username, password) {
     try {
         const response = await fetch(`${SERVER_URL}/api/register`, {
@@ -165,36 +167,38 @@ async function handleRegister(username, password) {
         const data = await response.json();
 
         if (data.success) {
-            localAppServices.showNotification('Registration successful! Please log in.', 2500);
+            localAppServicesInstance.showNotification('Registration successful! Please log in.', 2500);
         } else {
-            localAppServices.showNotification(`Registration failed: ${data.message}`, 3000);
+            localAppServicesInstance.showNotification(`Registration failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        localAppServices.showNotification('Network error. Could not connect to server.', 3000);
+        localAppServicesInstance.showNotification('Network error. Could not connect to server.', 3000);
         console.error("Register Error:", error);
     }
 }
 
-async function handleBackgroundUpload(file) {
+// Export this function to be used by main.js (via eventHandlers.js)
+export async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
-        localAppServices.showNotification('You must be logged in to save a custom background.', 3000);
-        localAppServices.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
+        localAppServicesInstance.showNotification('You must be logged in to save a custom background.', 3000);
+        localAppServicesInstance.applyCustomBackground?.(file); // Still apply temporarily even if not logged in
         return;
     }
 
     try {
-        localAppServices.showNotification('Saving background...', 1500);
-        // Assumes storeAsset is now global or accessed via appServices
-        await localAppServices.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
-        localAppServices.applyCustomBackground?.(file);
-        localAppServices.showNotification('Background saved locally!', 2000);
+        localAppServicesInstance.showNotification('Saving background...', 1500);
+        // Access storeAsset via localAppServicesInstance
+        await localAppServicesInstance.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
+        localAppServicesInstance.applyCustomBackground?.(file);
+        localAppServicesInstance.showNotification('Background saved locally!', 2000);
     } catch (error) {
-        localAppServices.showNotification(`Error saving background: ${error.message}`, 3000);
+        localAppServicesInstance.showNotification(`Error saving background: ${error.message}`, 3000);
         console.error("Background Upload Error:", error);
     }
 }
 
-function handleLogout() {
+// Export this function to be used by main.js (via eventHandlers.js)
+export function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null;
     updateAuthUI(null);
@@ -202,5 +206,5 @@ function handleLogout() {
     const existingVideo = document.getElementById('desktop-video-bg');
     if (existingVideo) existingVideo.remove();
     
-    localAppServices.showNotification('You have been logged out.', 2000);
+    localAppServicesInstance.showNotification('You have been logged out.', 2000);
 }
