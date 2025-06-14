@@ -1,5 +1,5 @@
-import { SnugWindow } from '../daw/SnugWindow.js'; // CORRECTED: Added 'from' and fixed syntax
-import { openFileViewerWindow } from '../daw/ui/fileViewerUI.js';
+import { SnugWindow } from '../daw/SnugWindow.js';
+import { openFileViewerWindow, initializeFileViewerUI } from '../daw/ui/fileViewerUI.js'; // NEW: Import initializeFileViewerUI
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
@@ -22,19 +22,28 @@ function initAudioOnFirstGesture() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // These `addWindowToStoreState`, etc. are still globally available in library.html
-    // because state.js is loaded in library.html via a script tag.
-    appServices.addWindowToStore = addWindowToStoreState;
-    appServices.removeWindowFromStore = removeWindowFromStoreState;
-    appServices.incrementHighestZ = incrementHighestZState;
-    appServices.getHighestZ = getHighestZState;
-    appServices.setHighestZ = setHighestZState;
-    appServices.getOpenWindows = getOpenWindowsState;
-    appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
-    appServices.openFileViewerWindow = openFileViewerWindow; // Now correctly assigned
+    // Correctly populate appServices for the library.html context
+    appServices = { // Ensure appServices is populated here
+        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
+        getWindowById: getWindowByIdState,
+        addWindowToStore: addWindowToStoreState,
+        removeWindowFromStore: removeWindowFromStoreState,
+        getHighestZ: getHighestZState,
+        setHighestZ: setHighestZState,
+        incrementHighestZ: incrementHighestZState,
+        createContextMenu: createContextMenu,
+        showNotification: showNotification,
+        showCustomModal: showCustomModal,
+        openFileViewerWindow: openFileViewerWindow, // This is already imported and available
+        // Add any other globally available functions that appServices needs from utils.js, state.js, etc.
+        // For example:
+        // getTracks: getTracksState, 
+        // getTrackById: getTrackByIdState,
+        // (etc., if library.js directly needed other state functions beyond window management)
+    };
+
+    // Initialize FileViewerUI with the now-populated appServices
+    initializeFileViewerUI(appServices); // NEW: Call initializer for fileViewerUI
 
     loggedInUser = checkLocalAuth();
     
@@ -304,7 +313,10 @@ function handleItemClick(item, isParentFolder) {
     } else if (item.mime_type.includes('folder')) {
         currentPath.push(item.file_name + '/');
     } else {
-        appServices.openFileViewerWindow(item); // Correctly using appServices
+        // Here, appServices.openFileViewerWindow is called
+        // If appServices.openFileViewerWindow is indeed a function, it should work.
+        // The problem is that 'appServices' itself needs to be correctly populated.
+        appServices.openFileViewerWindow(item); 
         return;
     }
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
