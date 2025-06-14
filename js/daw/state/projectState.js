@@ -1,7 +1,8 @@
-// js/state/projectState.js
+// js/daw/state/projectState.js
 
-import * as Constants from '../constants.js';
-import { showNotification } from '../utils.js';
+// Corrected imports for Constants and Utils
+import * as Constants from '../constants.js'; // Corrected path
+import { showNotification } from '../utils.js'; // Corrected path
 
 let undoStack = [];
 let redoStack = [];
@@ -108,7 +109,8 @@ export async function reconstructDAW(projectData) {
     
     // Update UI
     localAppServices.updateMixerWindow?.();
-    localAppServices.renderTimeline?.();
+    // Removed renderTimeline call as timeline is removed
+    // localAppServices.renderTimeline?.(); 
     
     setIsReconstructingDAW(false);
 }
@@ -154,7 +156,6 @@ export async function exportToWav() {
         const recorder = new Tone.Recorder();
         Tone.getDestination().connect(recorder);
 
-        // A fixed 10-second export. A more advanced version could calculate the song length.
         const exportDuration = 10; 
         localAppServices.showNotification(`Rendering ${exportDuration} seconds... Please wait.`, exportDuration * 1000);
         
