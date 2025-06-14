@@ -1,6 +1,7 @@
-// js/state/soundLibraryState.js
+// js/daw/state/soundLibraryState.js
 
-import { storeAudio as dbStoreAudio } from '../db.js';
+// Corrected import path for DB
+import { storeAudio as dbStoreAudio } from '../db.js'; // Corrected path
 
 let loadedZipFiles = {};
 let soundLibraryFileTrees = {};
