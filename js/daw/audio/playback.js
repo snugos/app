@@ -1,19 +1,19 @@
 // js/daw/audio/playback.js
 
-// Removed import * as Constants from '../constants.js'; as Constants is global
-// Removed import { showNotification } from '../utils.js'; as showNotification is global
+// Corrected import for Constants and Utils
+import * as Constants from '../constants.js'; // Corrected path
+import { showNotification } from '../utils.js'; // Corrected path
 
 let localAppServices = {};
 
-export function initializePlayback(appServices) { // Added 'export' here
+export function initializePlayback(appServices) {
     localAppServices = appServices;
 }
 
-export function scheduleTimelinePlayback() { // Added 'export' here
+export function scheduleTimelinePlayback() {
     // First, clear any existing scheduled events from the transport
     Tone.Transport.cancel(0);
 
-    // getTracksState is global
     const tracks = localAppServices.getTracks?.() || [];
 
     tracks.forEach(track => {
@@ -36,7 +36,6 @@ export function scheduleTimelinePlayback() { // Added 'export' here
                     for (let step = 0; step < sequenceLength; step++) {
                         const note = clip.sequenceData[pitchIndex][step];
                         if (note) {
-                            // Constants is global
                             events.push({
                                 time: `${step}*16n`,
                                 note: Constants.SYNTH_PITCHES[pitchIndex],
@@ -47,7 +46,6 @@ export function scheduleTimelinePlayback() { // Added 'export' here
                     }
                 }
                 
-                // Tone.Part is global
                 const part = new Tone.Part((time, value) => {
                     track.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity);
                 }, events);
@@ -62,15 +60,13 @@ export function scheduleTimelinePlayback() { // Added 'export' here
     });
 }
 
-export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) { // Added 'export' here
+export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
     if (!audioReady) {
-        // showNotification is global
         localAppServices.showNotification?.("Audio not ready for preview.", 2000);
         return;
     }
 
-    // getTrackByIdState is global
     const track = localAppServices.getTrackById?.(trackId);
 
     if (!track || track.type !== 'Sampler' || !track.audioBuffer || !track.audioBuffer.loaded || !track.slices[sliceIndex]) {
@@ -95,7 +91,6 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     }
     
     // For previews, we connect directly to the master output to bypass track effects
-    // Tone.Player is global
     const tempPlayer = new Tone.Player(track.audioBuffer).connect(masterBusInput);
     tempPlayer.playbackRate = playbackRate;
     tempPlayer.start(scheduledTime, sliceData.offset, playDuration);
@@ -105,15 +100,13 @@ export async function playSlicePreview(trackId, sliceIndex, velocity = 0.7, addi
     }, scheduledTime + playDuration + 0.5);
 }
 
-export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) { // Added 'export' here
+export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.7, additionalPitchShiftInSemitones = 0, time = undefined) {
     const audioReady = await localAppServices.initAudioContextAndMasterMeter?.(true);
     if (!audioReady) {
-        // showNotification is global
         localAppServices.showNotification?.("Audio not ready for preview.", 2000);
         return;
     }
 
-    // getTrackByIdState is global
     const track = localAppServices.getTrackById?.(trackId);
     if (!track || track.type !== 'DrumSampler') {
         return;
@@ -133,7 +126,6 @@ export async function playDrumSamplerPadPreview(trackId, padIndex, velocity = 0.
     
     const scheduledTime = time !== undefined ? time : Tone.now();
 
-    // Tone.Player is global
     const tempPlayer = new Tone.Player(padData.audioBuffer).connect(masterBusInput);
     
     tempPlayer.volume.value = Tone.gainToDb(padData.volume * velocity * 0.8);
