@@ -110,9 +110,14 @@ function initializeWelcomePage() {
  */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
-        if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-            await Tone.start();
-            console.log('AudioContext started successfully.');
+        try {
+            // Tone.js is loaded in index.html for Tetris
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log('AudioContext started successfully.');
+            }
+        } catch (e) {
+            console.error('Could not start AudioContext:', e);
         }
         document.body.removeEventListener('mousedown', startAudio);
     };
@@ -127,10 +132,10 @@ function attachEventListeners() {
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     
-    // Modified Start Menu and Desktop Icon actions to open SnugWindows
-    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
-    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
-    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow); // New menu item
+    // Modified Start Menu and Desktop Icon actions
+    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw); // Direct navigation
+    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles); // Open in SnugWindow
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow); // Open in SnugWindow
     
     document.getElementById('menuLogin')?.addEventListener('click', () => {
         toggleStartMenu();
@@ -155,10 +160,10 @@ function attachEventListeners() {
         const menuItems = [
             { label: 'Change Background', action: () => document.getElementById('customBgInput').click() },
             { separator: true },
-            { label: 'Open DAW', action: launchDaw },
-            { label: 'Open Library', action: openLibraryWindow },
-            { label: 'View Profiles', action: viewProfiles },
-            { label: 'Play Snugtris', action: openGameWindow }
+            { label: 'Open DAW', action: launchDaw }, // Direct navigation
+            { label: 'Open Library', action: openLibraryWindow }, // Open in SnugWindow
+            { label: 'View Profiles', action: viewProfiles }, // Open in SnugWindow
+            { label: 'Play Snugtris', action: openGameWindow } // Open in SnugWindow
         ];
         appServices.createContextMenu(e, menuItems);
     });
@@ -177,25 +182,25 @@ function renderDesktopIcons() {
         {
             id: 'snaw-icon',
             name: 'Snaw',
-            action: launchDaw,
+            action: launchDaw, // Direct navigation
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`
         },
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: viewProfiles,
+            action: viewProfiles, // Open in SnugWindow
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
         },
         {
             id: 'sound-library-icon',
             name: 'Library',
-            action: openLibraryWindow,
+            action: openLibraryWindow, // Open in SnugWindow
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow,
+            action: openGameWindow, // Open in SnugWindow
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -224,26 +229,26 @@ function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
-// Rewritten to open Snaw in a SnugWindow iframe
+// MODIFIED: Snaw now opens on its own page
 function launchDaw() {
     toggleStartMenu();
-    openAppInWindow('snawApp', 'Snaw DAW', 'snaw.html', { width: 1000, height: 700 });
+    window.location.href = 'snaw.html'; // Direct navigation
 }
 
-// Rewritten to open Profiles in a SnugWindow iframe
+// MODIFIED: View Profiles opens in a SnugWindow iframe
 function viewProfiles() {
     toggleStartMenu();
-    const profileUsername = loggedInUser ? loggedInUser.username : 'guest'; // Default to guest or handle login
+    const profileUsername = loggedInUser ? loggedInUser.username : 'guest';
     openAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
 }
 
-// NEW: Function to open Library in a SnugWindow iframe
+// MODIFIED: Open Library opens in a SnugWindow iframe
 function openLibraryWindow() {
     toggleStartMenu();
-    openAppInWindow('libraryApp', 'SnugOS Library', 'js/daw/profiles/library.html', { width: 800, height: 600 });
+    openAppInWindow('libraryApp', 'SnugOS Library', `js/daw/profiles/library.html`, { width: 800, height: 600 });
 }
 
-// Rewritten to open Tetris in a SnugWindow iframe
+// MODIFIED: Open Tetris opens in a SnugWindow iframe
 function openGameWindow() {
     toggleStartMenu();
     openAppInWindow('tetrisGame', 'Snugtris', 'tetris.html', { width: 600, height: 750, minWidth: 400, minHeight: 600 });
