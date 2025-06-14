@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -285,10 +286,16 @@ app.post('/api/folders', authenticateToken, async (req, res) => {
     const { name, path } = req.body;
     if (!name) return res.status(400).json({ success: false, message: 'Folder name is required.' });
     try {
+        // Corrected s3_url generation to ensure uniqueness for folders
+        const uniqueFolderId = `folder-${userId}-${Date.now()}-${name.replace(/ /g, '_')}`;
         const insertFolderQuery = `INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
-        const result = await pool.query(insertFolderQuery, [userId, path || '/', name, `folder-${userId}-${Date.now()}-${name}`, '#', 'application/vnd.snugos.folder', 0, false]);
+        const result = await pool.query(insertFolderQuery, [userId, path || '/', name, uniqueFolderId, `snugos-folder-url/${uniqueFolderId}`, 'application/vnd.snugos.folder', 0, false]);
         res.status(201).json({ success: true, folder: result.rows[0] });
     } catch (error) {
+        console.error("[Folder Creation] Error:", error); // Log the actual error for debugging
+        if (error.code === '23505') { // PostgreSQL unique_violation error code
+            return res.status(409).json({ success: false, message: 'A folder or file with that exact name already exists in this directory.' });
+        }
         res.status(500).json({ success: false, message: 'Server error during folder creation.' });
     }
 });
