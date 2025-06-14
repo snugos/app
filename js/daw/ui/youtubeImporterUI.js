@@ -1,17 +1,18 @@
 // js/daw/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
-// Removed imports as functions will be global or accessed via localAppServices
+
+// Corrected imports for utils and state
+import { base64ToBlob, showNotification } from '../utils.js'; // Corrected path
+// No direct imports for state needed as it accesses via localAppServices
 
 let localAppServices = {};
 
-export function initializeYouTubeImporterUI(appServicesFromMain) { // Export present
-    localAppServices = appServicesFromMain || {};
+export function initializeYouTubeImporterUI(appServicesFromMain) {
+    localAppServices = appServicesFromMain;
 }
 
-export function openYouTubeImporterWindow(savedState = null) { // Export present
+export function openYouTubeImporterWindow(savedState = null) {
     const windowId = 'youtubeImporter';
-    // getOpenWindowsState is global
     if (localAppServices.getOpenWindows?.().has(windowId)) {
-        // getWindowByIdState is global
         localAppServices.getWindowById(windowId).restore();
         return;
     }
@@ -27,7 +28,6 @@ export function openYouTubeImporterWindow(savedState = null) { // Export present
         </div>
     `;
 
-    // SnugWindow is global
     const importerWindow = localAppServices.createWindow(windowId, 'Import from URL', contentHTML, {
         width: 450,
         height: 200,
@@ -50,7 +50,6 @@ function attachImporterEventListeners(windowElement) {
     const handleImport = async () => {
         const youtubeUrl = urlInput.value.trim();
         if (!youtubeUrl) {
-            // showNotification is global
             setStatus('Please enter a valid URL.', true);
             return;
         }
@@ -61,7 +60,6 @@ function attachImporterEventListeners(windowElement) {
         setStatus('Requesting audio from server... (this can take a moment)');
 
         try {
-            // Step 1: Call our Netlify function
             const response = await fetch('https://snugos-server-api.onrender.com/function/youtube', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -76,27 +74,20 @@ function attachImporterEventListeners(windowElement) {
 
             setStatus('Audio received. Processing...');
             
-            // Step 2: Convert the Base64 string back to a Blob
-            // base64ToBlob is global
             const audioBlob = base64ToBlob(result.base64);
             
-            // Clean up the title to create a valid filename
             const fileName = (result.title || 'imported-youtube-audio').replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.mp3';
 
-            // addFileToSoundLibraryInternal is global
-            if (localAppServices.addFileToSoundLibraryInternal) {
-                await localAppServices.addFileToSoundLibraryInternal(fileName, audioBlob);
+            if (localAppServices.addFileToSoundLibrary) {
+                await localAppServices.addFileToSoundLibrary(fileName, audioBlob);
                 setStatus(`Success! "${fileName}" added to your 'Imports' library.`, false);
                 
-                // Refresh the sound browser if it's open
-                // getWindowByIdState and renderSoundBrowser are global
                 const soundBrowser = localAppServices.getWindowById?.('soundBrowser');
                 if (soundBrowser && !soundBrowser.isMinimized) {
                     localAppServices.renderSoundBrowser();
                 }
 
                 setTimeout(() => {
-                    // getWindowByIdState is global
                     const win = localAppServices.getWindowById('youtubeImporter');
                     if (win) win.close();
                 }, 2500);
