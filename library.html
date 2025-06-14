@@ -47,9 +47,12 @@
 
     <input type="file" id="actualFileInput" class="hidden" multiple>
 
-    <script src="js/utils.js"></script>
-    <script src="js/db.js"></script>
-    <script src="js/constants.js"></script> <script type="module" src="js/daw/SnugWindow.js"></script> <script type="module" src="js/profiles/library.js"></script>
+    <script src="js/daw/utils.js"></script>
+    <script src="js/daw/db.js"></script>
+    <script src="js/daw/constants.js"></script>
+    <script type="module" src="js/daw/SnugWindow.js"></script>
+
+    <script type="module" src="js/daw/profiles/library.js"></script>
 
     <script>
         // This global function is expected to be called by the parent iframe host
@@ -57,7 +60,7 @@
             // Now, library.js can be properly initialized with the correct appServices context.
             // Call the existing library.js DOMContentLoaded logic here.
             document.addEventListener('DOMContentLoaded', () => {
-                initLibraryPageInIframe(appServices); // A new function in library.js (see below)
+                initLibraryPageInIframe(appServices);
             });
         }
     </script>
