@@ -1,7 +1,8 @@
 // js/daw/audio/recording.js
 
-// Corrected import path for trackState
+// Corrected import path for Track and added getRecordingStartTime as import
 import { getRecordingStartTime } from '../state/trackState.js'; // Corrected path
+// Assuming showNotification is passed via appServices, no direct import needed here
 
 let localAppServices = {};
 
@@ -10,33 +11,41 @@ export function initializeRecording(appServices) {
 }
 
 export async function startAudioRecording(track, isMonitoringEnabled) {
-    // Assuming mic and recorder are declared in a higher scope or managed differently.
-    // For local scope, they'd need `let mic, recorder;` at the top of the file.
-    // Given the previous console output, they seem to be implicit globals.
-    // For robustness, they should be defined here, or managed by a global audio state object.
-    // Let's declare them locally for now for safety.
-    let mic, recorder; 
+    // These need to be managed as part of the appServices state or returned.
+    // For simplicity, for now, let's assume they are handled by the AudioContext itself
+    // or passed implicitly. But ideally, they should be properties of an audio state.
+    // For immediate fix, let's keep it simple, but be aware of potential closure/scope issues.
+    let micInstance = null; // Declare locally
+    let recorderInstance = null; // Declare locally
 
-    if (mic?.state === "started") mic.close();
-    if (recorder?.state === "started") await recorder.stop();
-
+    // Check if mic or recorder were already created (e.g. from a previous start attempt)
+    // This part is tricky if mic/recorder are not centralized.
+    // For now, let's create new instances each time.
+    
     try {
-        mic = new Tone.UserMedia({
+        micInstance = new Tone.UserMedia({
             audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false }
         });
-        recorder = new Tone.Recorder();
+        recorderInstance = new Tone.Recorder();
 
         if (!track || track.type !== 'Audio' || !track.inputChannel) {
             localAppServices.showNotification?.('Invalid track for recording.', 3000);
             return false;
         }
 
-        await mic.open();
-        mic.connect(recorder);
+        await micInstance.open();
+        micInstance.connect(recorderInstance);
         if (isMonitoringEnabled) {
-            mic.connect(track.inputChannel);
+            micInstance.connect(track.inputChannel);
         }
-        await recorder.start();
+        await recorderInstance.start();
+
+        // Store these instances in a way they can be accessed by stopAudioRecording
+        // This is a missing piece of state management. For now, rely on closure for simplicity,
+        // but for a robust app, they'd be in appState or a dedicated audio context manager.
+        localAppServices._currentMicInstance = micInstance;
+        localAppServices._currentRecorderInstance = recorderInstance;
+
         return true;
     } catch (error) {
         console.error("Error starting recording:", error);
@@ -46,25 +55,29 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
 }
 
 export async function stopAudioRecording() {
-    // Assuming mic and recorder are declared in a higher scope or managed differently.
-    let mic, recorder; // Re-declare locally for consistency, or rely on global scope if intended.
+    // Retrieve instances stored by startAudioRecording
+    const recorderInstance = localAppServices._currentRecorderInstance;
+    const micInstance = localAppServices._currentMicInstance;
 
-    if (!recorder) return;
+    if (!recorderInstance) return;
     
     let blob = null;
-    if (recorder.state === "started") {
-        blob = await recorder.stop();
+    if (recorderInstance.state === "started") {
+        blob = await recorderInstance.stop();
     }
 
-    if (mic) {
-        mic.close();
-        mic = null;
+    if (micInstance) {
+        micInstance.close();
+        // Clear references
+        localAppServices._currentMicInstance = null;
     }
-    recorder = null;
+    recorderInstance.dispose(); // Dispose Tone.js recorder node
+    localAppServices._currentRecorderInstance = null; // Clear reference
+
 
     if (blob && blob.size > 0) {
         const recordingTrackId = localAppServices.getRecordingTrackId?.();
-        const startTime = getRecordingStartTime(); // This needs to be localAppServices.getRecordingStartTime() if it's a state function
+        const startTime = localAppServices.getRecordingStartTime(); // Access via appServices
         const track = localAppServices.getTrackById?.(recordingTrackId);
 
         if (track && typeof track.addAudioClip === 'function') {
