@@ -1,17 +1,17 @@
 // js/daw/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
 
 // Corrected imports for state modules
-import { getTrackById } from '../state/trackState.js'; // Corrected path
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
-import { getClipboardData } from '../state/projectState.js'; // Corrected path
-import { getPlaybackMode } from '../state/appState.js'; // Corrected path
+import { getTrackById } from '../state/trackState.js';
+import { getOpenWindows, getWindowById } from '../state/windowState.js';
+import { getClipboardData } from '../state/projectState.js';
+import { getPlaybackMode } from '../state/appState.js';
 // Corrected import for Constants
-import * as Constants from '../constants.js'; // Corrected path
+import * as Constants from '../constants.js';
 
 
 let localAppServices = {};
 export const openPianoRolls = new Map();
-export let lastActivePianoRollTrackId = null; 
+export let lastActivePianoRollTrackId = null;
 
 function getThemeColors() {
     const rootStyle = getComputedStyle(document.documentElement);
@@ -47,8 +47,8 @@ export function openPianoRollForClip(trackId, clipId) {
     }
 
     const tempSequenceName = `Editing: ${clip.name}`;
-    const sequenceLength = clip.sequenceData[0].length;
-    const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true); 
+    const sequenceLength = clip.sequenceData[0]?.length || 0;
+    const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true);
     tempSequence.data = JSON.parse(JSON.stringify(clip.sequenceData));
 
     openPianoRollWindow(track.id, tempSequence.id);
@@ -127,8 +127,8 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
     });
 
     if (pianoRollWindow && pianoRollWindow.element) {
-        const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${trackId}`);
-        const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${trackId}`);
+        const konvaContainer = pianoRollWindow.element.querySelector(`#pianoRollKonvaContainer-${track.id}`);
+        const velocityPane = pianoRollWindow.element.querySelector(`#velocityPaneContainer-${track.id}`);
         setTimeout(() => createPianoRollStage(konvaContainer, velocityPane, track), 50);
     }
 }
@@ -316,7 +316,7 @@ function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, n
 }
 
 function redrawNotes(noteLayer, track, colors, selectedNotes) {
-    noteLayer.destroyChildren(); 
+    noteLayer.destroyChildren();
     const activeSequence = track.sequences.getActiveSequence();
     if (!activeSequence) {
         noteLayer.batchDraw();
@@ -525,7 +525,7 @@ function attachPianoRollListeners(pianoRoll) {
     });
 
     stage.on('click tap', function (e) {
-        if (e.evt.button !== 0) return; 
+        if (e.evt.button !== 0) return;
 
         lastActivePianoRollTrackId = track.id;
         
