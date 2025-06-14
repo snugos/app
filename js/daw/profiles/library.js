@@ -1,14 +1,15 @@
-// js/profiles/library.js
+// js/daw/profiles/library.js
 // NOTE: This file is designed to run within an iframe, hosted by index.html.
 // It receives `appServices` from its parent window.
 
-import { SnugWindow } from '../daw/SnugWindow.js';
-import { openFileViewerWindow, initializeFileViewerUI } from '../daw/ui/fileViewerUI.js';
+import { SnugWindow } from '../SnugWindow.js';
+import { openFileViewerWindow, initializeFileViewerUI } from '../ui/fileViewerUI.js';
 
-// Removed direct imports for state functions, showNotification etc.
-// as they are accessed via the injected `appServices` object.
-
-const SERVER_URL = 'https://snugos-server-api.onrender.com';
+// Corrected imports for DB, Constants, Utils, and State modules
+import { storeAudio, getAudio } from '../db.js';
+import * as Constants from '../constants.js';
+import { showNotification, showCustomModal, createContextMenu } from '../utils.js';
+// Assuming windowState functions are accessed via appServices.
 
 let loggedInUser = null;
 let currentPath = ['/'];
@@ -21,7 +22,7 @@ function initLibraryPageInIframe(injectedAppServices) {
     appServices = injectedAppServices;
 
     // Initialize UI sub-modules that library.js might call directly
-    initializeFileViewerUI(appServices); // Ensure fileViewerUI has the correct appServices
+    initializeFileViewerUI(appServices);
 
     // Use appServices for window/modal management
     appServices.showNotification = appServices.showNotification || window.parent.showNotification;
@@ -30,17 +31,13 @@ function initLibraryPageInIframe(injectedAppServices) {
     
     // Auth status and background (relies on parent's appServices.getAsset/applyCustomBackground)
     loggedInUser = checkLocalAuth();
-    loadAndApplyGlobals(); 
+    loadAndApplyGlobals();
     
     // Original library functions that still run
     attachLibraryEventListeners(); // Renamed to clarify context
-    // No clock display needed within iframe as parent handles taskbar
-    // No full screen toggle needed within iframe
-    initAudioOnFirstGesture(); // Still needed for audio previews in library itself
+    initAudioOnFirstGesture();
     
     if (loggedInUser) {
-        // Now just render the content, no need to open a SnugWindow.
-        // We are already IN the SnugWindow iframe.
         initializePageUI(document.body.querySelector('.flex.h-full')); // Pass the main content container
         fetchAndRenderLibraryItems(document.body.querySelector('.flex.h-full'));
     } else {
@@ -51,13 +48,10 @@ function initLibraryPageInIframe(injectedAppServices) {
 
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
-        try {
-            // Tone is directly loaded in library.html
-            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-                await Tone.start();
-                console.log('AudioContext started successfully for Library preview.');
-            }
-        } catch (e) { console.error('Could not start AudioContext for Library preview:', e); }
+        if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+            await Tone.start();
+            console.log('AudioContext started successfully for Library preview.');
+        }
         document.body.removeEventListener('mousedown', startAudio);
     };
     document.body.addEventListener('mousedown', startAudio);
@@ -72,7 +66,6 @@ async function loadAndApplyGlobals() {
         });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            // Use parent's appServices to apply background to the main desktop
             appServices.applyCustomBackground(data.profile.background_url);
         }
     } catch (error) {
@@ -80,13 +73,12 @@ async function loadAndApplyGlobals() {
     }
 }
 
-// Renamed and adapted to just initialize UI elements within the iframe body
 function initializePageUI(container) {
     const myFilesBtn = container.querySelector('#my-files-btn');
     const globalFilesBtn = container.querySelector('#global-files-btn');
     const uploadBtn = container.querySelector('#uploadFileBtn');
     const newFolderBtn = container.querySelector('#createFolderBtn');
-    const actualFileInput = document.getElementById('actualFileInput'); // This is still in the library.html body
+    const actualFileInput = document.getElementById('actualFileInput');
 
     const updateNavStyling = () => {
         myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
@@ -116,28 +108,19 @@ function initializePageUI(container) {
     uploadBtn?.addEventListener('click', () => actualFileInput.click());
     actualFileInput?.addEventListener('change', e => {
         handleFileUpload(e.target.files);
-        e.target.value = null; // Clear input after selection
+        e.target.value = null;
     });
     newFolderBtn?.addEventListener('click', createFolder);
 
     updateNavStyling();
-    // No initial fetch here, fetchAndRenderLibraryItems is called by initLibraryPageInIframe
 }
 
-// Renamed from attachDesktopEventListeners to be specific to the library iframe
 function attachLibraryEventListeners() {
-    // No desktop context menu or start menu/full screen toggles needed in iframe
-    // These functions (toggleStartMenu, toggleFullScreen, showLoginModal, handleLogout)
-    // would be called on the parent (index.html) if needed.
-    // They are left out here as this is a content iframe.
-
-    // Custom background upload for the library page (still valid for changing parent desktop's background)
-    // The customBgInput is still present in library.html for this purpose.
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         const file = e.target.files[0];
         
-        appServices.showNotification("Uploading background...", 2000); // Use appServices
+        appServices.showNotification("Uploading background...", 2000);
         const formData = new FormData();
         formData.append('file', file);
         formData.append('path', '/backgrounds/');
@@ -158,10 +141,10 @@ function attachLibraryEventListeners() {
                 body: JSON.stringify({ background_url: newBgUrl })
             });
 
-            appServices.showNotification("Background updated!", 2000); // Use appServices
-            loadAndApplyGlobals(); // Calls parent's appServices.applyCustomBackground
+            appServices.showNotification("Background updated!", 2000);
+            loadAndApplyGlobals();
         } catch(error) {
-            appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+            appServices.showNotification(`Error: ${error.message}`, 4000);
         }
     });
 }
@@ -172,11 +155,10 @@ async function fetchAndRenderLibraryItems(container) {
     if (!fileViewArea || !pathDisplay) return;
 
     fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">Loading...</p>`;
-    pathDisplay.textContent = `/${currentPath.slice(1).join('')}`; // Display path relative to library root
+    pathDisplay.textContent = `/${currentPath.slice(1).join('')}`;
 
     const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public';
-    // The path sent to the server should be a proper slash-separated string
-    const serverPath = `/${currentPath.slice(1).join('')}`; // Adjust path for server request
+    const serverPath = `/${currentPath.slice(1).join('')}`;
 
     try {
         const token = localStorage.getItem('snugos_token');
@@ -186,7 +168,7 @@ async function fetchAndRenderLibraryItems(container) {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Failed to fetch files');
         fileViewArea.innerHTML = '';
-        if (currentPath.length > 1) { // If not at the virtual root (Library/ or My Files/)
+        if (currentPath.length > 1) {
             fileViewArea.appendChild(renderFileItem({ file_name: '..', mime_type: 'folder' }, true));
         }
 
@@ -261,22 +243,20 @@ function renderFileItem(item, isParentFolder = false) {
 }
 
 function handleItemClick(item, isParentFolder) {
-    // This now relies on appServices being correctly populated from the parent index.html
-    const libWindow = appServices.getWindowById('libraryApp'); // Correctly using the window ID for the hosted library app
+    const libWindow = appServices.getWindowById('libraryApp');
     if (isParentFolder) {
         if (currentPath.length > 1) currentPath.pop();
     } else if (item.mime_type.includes('folder')) {
         currentPath.push(item.file_name + '/');
     } else {
-        // Use the injected appServices to open the file viewer in the parent context
-        appServices.openFileViewerWindow(item); 
+        appServices.openFileViewerWindow(item);
         return;
     }
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
 }
 
 async function handleShareFile(item) {
-    appServices.showNotification("Generating secure link...", 1500); // Use appServices
+    appServices.showNotification("Generating secure link...", 1500);
     try {
         const token = localStorage.getItem('snugos_token');
         const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
@@ -285,9 +265,9 @@ async function handleShareFile(item) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         await navigator.clipboard.writeText(result.shareUrl);
-        appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000); // Use appServices
+        appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000);
     } catch (error) {
-        appServices.showNotification(`Could not generate link: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Could not generate link: ${error.message}`, 4000);
     }
 }
 
@@ -295,7 +275,7 @@ function showShareModal(item) {
     const newStatus = !item.is_public;
     const actionText = newStatus ? "publicly available" : "private";
     const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
-    appServices.showCustomModal('Confirm Action', modalContent, [ // Use appServices
+    appServices.showCustomModal('Confirm Action', modalContent, [
         { label: 'Cancel' },
         { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
     ]);
@@ -311,17 +291,17 @@ async function handleToggleFilePublic(fileId, newStatus) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        appServices.showNotification('File status updated!', 2000); // Use appServices
-        const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
+        appServices.showNotification('File status updated!', 2000);
+        const libWindow = appServices.getWindowById('libraryApp');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
 function showDeleteModal(item) {
     const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
-    appServices.showCustomModal('Confirm Deletion', modalContent, [ // Use appServices
+    appServices.showCustomModal('Confirm Deletion', modalContent, [
         { label: 'Cancel' },
         { label: 'Delete', action: () => handleDeleteFile(item.id) }
     ]);
@@ -336,23 +316,21 @@ async function handleDeleteFile(fileId) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        appServices.showNotification('File deleted!', 2000); // Use appServices
-        const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
+        appServices.showNotification('File deleted!', 2000);
+        const libWindow = appServices.getWindowById('libraryApp');
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000); // Use appServices
+        appServices.showNotification(`Error: ${error.message}`, 4000);
     }
 }
 
 async function handleFileUpload(files) {
     if (!loggedInUser || files.length === 0) return;
-    appServices.showNotification(`Uploading ${files.length} file(s)...`, 3000); // Use appServices
+    appServices.showNotification(`Uploading ${files.length} file(s)...`, 3000);
     for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
-        // The currentPath array contains the virtual roots ("My Files" or library name)
-        // We need to strip these for the server request to get the actual path.
-        const serverPath = `/${currentPath.slice(1).join('')}`; 
+        const serverPath = `/${currentPath.slice(1).join('')}`;
         formData.append('path', serverPath);
         try {
             const token = localStorage.getItem('snugos_token');
@@ -360,10 +338,10 @@ async function handleFileUpload(files) {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message);
         } catch (error) {
-            appServices.showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000); // Use appServices
+            appServices.showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000);
         }
     }
-    const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
+    const libWindow = appServices.getWindowById('libraryApp');
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
 }
 
@@ -376,15 +354,15 @@ function createFolder() {
             if (!folderName) return;
             try {
                 const token = localStorage.getItem('snugos_token');
-                const serverPath = `/${currentPath.slice(1).join('')}`; // Adjust path for server request
+                const serverPath = `/${currentPath.slice(1).join('')}`;
                 const response = await fetch(`${SERVER_URL}/api/folders`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: folderName, path: serverPath }) });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message);
-                appServices.showNotification(`Folder '${folderName}' created!`, 2000); // Use appServices
-                const libWindow = appServices.getWindowById('libraryApp'); // Corrected window ID
+                appServices.showNotification(`Folder '${folderName}' created!`, 2000);
+                const libWindow = appServices.getWindowById('libraryApp');
                 if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
             } catch (error) {
-                appServices.showNotification(`Error: ${error.message}`, 5000); // Use appServices
+                appServices.showNotification(`Error: ${error.message}`, 5000);
             }
         }}
     ]);
@@ -425,7 +403,7 @@ function handleLogout() {
     // If logout in iframe should affect parent, it needs to call parent's logout.
     // For now, reload is fine.
     localStorage.removeItem('snugos_token');
-    appServices.showNotification('You have been logged out.', 2000); // Use appServices
+    appServices.showNotification('You have been logged out.', 2000);
     window.location.reload();
 }
 
