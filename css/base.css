@@ -1,6 +1,15 @@
 /* css/base.css - Global styles, themes, and layout */
 
 :root {
+    /* --- NEW CUSTOM ACCENT COLORS --- */
+    --hot-pink: #FF69B4;
+    --electric-blue: #00BFFF;
+    --deep-violet: #8A2BE2;
+    --aqua-marine: #7FFFD4;
+    --lavender: #E6E6FA;
+    --pastel-green: #C1FFC1;
+    --pastel-yellow: #FFFFAA;
+
     /* Black & White Theme (Dark Mode Default) */
     --bg-primary: #000000;
     --bg-window: #000000;
@@ -83,22 +92,23 @@
     --shadow-modal: none;
     --shadow-context-menu: none;
 
-    --accent-focus: #FFFFFF;
+    /* --- Mapped Accent Colors (Dark Mode) --- */
+    --accent-focus: var(--electric-blue); /* Used for hover/focus states */
     --accent-muted-text: #000000;
-    --accent-muted: #FFFFFF;
+    --accent-muted: var(--lavender);
     --accent-soloed-text: #000000;
-    --accent-soloed: #FFFFFF;
-    --accent-armed-text: #000000;
-    --accent-armed: #FFFFFF;
+    --accent-soloed: var(--pastel-yellow);
+    --accent-armed-text: #FFFFFF;
+    --accent-armed: var(--hot-pink); /* Keep hot pink for armed/recording */
     --accent-active-text: #000000;
-    --accent-active: #FFFFFF;
+    --accent-active: var(--aqua-marine); /* General active state */
     --accent-sequencer-step-border: #000000;
-    --accent-sequencer-step: #FFFFFF;
-    --accent-sequencer-playing-outline: #FFFFFF;
-    --accent-meter: #FFFFFF;
-    --accent-meter-clip: #FFFFFF;
-    --accent-playhead: #ff4d4d;
-    --accent-clip-bg: #FFFFFF;
+    --accent-sequencer-step: var(--electric-blue); /* Notes in sequencer */
+    --accent-sequencer-playing-outline: var(--pastel-yellow);
+    --accent-meter: var(--pastel-green); /* Meters */
+    --accent-meter-clip: var(--hot-pink); /* Clipping color */
+    --accent-playhead: var(--hot-pink); /* Playhead in timeline */
+    --accent-clip-bg: var(--electric-blue); /* Audio/MIDI clip background */
     --accent-clip-border: #000000;
 
     --scrollbar-track: #000000;
@@ -107,6 +117,7 @@
     --scrollbar-thumb-border: #000000;
     --scrollbar-corner: #000000;
 
+    /* FIX: Add dedicated piano key colors */
     --piano-key-white-bg: #FFFFFF;
     --piano-key-black-bg: #4a4a4a;
     --piano-key-white-text: #000000;
@@ -198,22 +209,23 @@
     --shadow-modal: none;
     --shadow-context-menu: none;
     
-    --accent-focus: #000000;
+    /* --- Mapped Accent Colors (Light Mode) --- */
+    --accent-focus: var(--deep-violet);
     --accent-muted-text: #FFFFFF;
-    --accent-muted: #000000;
+    --accent-muted: var(--deep-violet);
     --accent-soloed-text: #FFFFFF;
-    --accent-soloed: #000000;
+    --accent-soloed: var(--hot-pink);
     --accent-armed-text: #FFFFFF;
-    --accent-armed: #000000;
+    --accent-armed: var(--hot-pink); /* Still hot pink for armed/recording */
     --accent-active-text: #FFFFFF;
-    --accent-active: #000000;
+    --accent-active: var(--electric-blue);
     --accent-sequencer-step-border: #FFFFFF;
-    --accent-sequencer-step: #000000;
-    --accent-sequencer-playing-outline: #000000;
-    --accent-meter: #000000;
-    --accent-meter-clip: #000000;
-    --accent-playhead: #ff0000;
-    --accent-clip-bg: #000000;
+    --accent-sequencer-step: var(--electric-blue);
+    --accent-sequencer-playing-outline: var(--electric-blue);
+    --accent-meter: var(--pastel-green);
+    --accent-meter-clip: var(--hot-pink);
+    --accent-playhead: var(--hot-pink);
+    --accent-clip-bg: var(--electric-blue);
     --accent-clip-border: #FFFFFF;
 
     --scrollbar-track: #FFFFFF;
