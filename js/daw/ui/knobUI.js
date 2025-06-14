@@ -1,6 +1,6 @@
-// js/knobUI.js - Knob UI Component
+// js/daw/ui/knobUI.js - Knob UI Component
 
-export function createKnob(options, appServices) { // Added 'export' here
+export function createKnob(options, appServices) {
     const container = document.createElement('div');
     container.className = 'knob-container';
 
@@ -43,11 +43,11 @@ export function createKnob(options, appServices) { // Added 'export' here
             handleEl.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
             valueEl.textContent = `${options.displayPrefix || ''}${options.decimals !== undefined ? currentValue.toFixed(options.decimals) : currentValue}${options.displaySuffix || ''}`;
             if (options.onValueChange && fromInteraction) {
-                options.onValueChange(currentValue, options.initialValue, true); // Pass true for fromInteraction
+                options.onValueChange(currentValue, options.initialValue, true);
             }
         }
         if (options.onValueChange && !fromInteraction) {
-             options.onValueChange(currentValue, options.initialValue, false); // Pass false for fromInteraction if not from user interaction
+             options.onValueChange(currentValue, options.initialValue, false);
         }
     }
 
@@ -65,7 +65,7 @@ export function createKnob(options, appServices) { // Added 'export' here
         function onMouseMove(moveEvent) {
             const deltaY = startY - moveEvent.clientY;
             let valueChange = (deltaY / pixelsForFullRange) * range;
-            setValue(startValue + valueChange, true); // Call setValue directly
+            setValue(startValue + valueChange, true);
         }
 
         function onMouseUp() {
@@ -91,7 +91,7 @@ export function createKnob(options, appServices) { // Added 'export' here
         function onTouchMove(moveEvent) {
             const deltaY = startY - moveEvent.touches[0].clientY;
             let valueChange = (deltaY / pixelsForFullRange) * range;
-            setValue(startValue + valueChange, true); // Call setValue directly
+            setValue(startValue + valueChange, true);
         }
 
         function onTouchEnd() {
