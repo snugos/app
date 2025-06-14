@@ -9,8 +9,8 @@ import {
 } from './eventHandlers.js';
 
 // CORRECTED IMPORTS: Now directly import from their new 'js/daw/' location
-import * as Constants from './constants.js'; // Assuming Constants object is accessed via * as
-import { storeAudio, getAudio, deleteAudio } from './db.js'; // For global DB functions
+import * as Constants from './constants.js';
+import { storeAudio, getAudio, deleteAudio } from './db.js';
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
 import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog } from './utils.js';
 import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js';
@@ -50,7 +50,8 @@ import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore,
 
 let appServices = {};
 
-// Centralized applyCustomBackground function
+// Centralized applyCustomBackground function (copied from welcome.js/profile.js pattern)
+// This should be the single source of truth for applying backgrounds
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
@@ -111,12 +112,12 @@ function openDefaultLayout() {
 
         const timelineHeight = 0; // Set to 0 as timeline is removed
         const mixerHeight = Math.floor((rect.height - 40 - 32 - (margin * 2) - gap) * 0.5); // Use full remaining height
-        const sidePanelHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap); // Use full remaining height
+        const sidePanelHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap) * 0.5; // Use full remaining height for master effects
+        const soundBrowserHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap); // Use full remaining height for sound browser
         const sidePanelWidth = 350;
         const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
         const row1Y = margin; // Top-most row starts at margin
-        const row2Y = row1Y + mixerHeight + gap; // Second row starts after mixer + gap
         
         // Mixer now starts higher and potentially fills more vertical space
         appServices.openMixerWindow({
@@ -131,7 +132,7 @@ function openDefaultLayout() {
             x: margin,
             y: row1Y + mixerHeight + gap, // Position below mixer
             width: leftPanelWidth,
-            height: sidePanelHeight - mixerHeight - gap // Adjust height to fill remaining space
+            height: sidePanelHeight // Adjust height to fill remaining space
         });
         
         // Sound Browser also adjusts its position and height
@@ -139,7 +140,7 @@ function openDefaultLayout() {
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
             y: row1Y, // Starts at the top now
-            height: sidePanelHeight // Use full remaining height for side panel
+            height: soundBrowserHeight // Use full remaining height for side panel
         });
     }, 100); 
 }
@@ -270,7 +271,7 @@ async function initializeSnugOS() {
         storeAsset: storeAsset, // Assumed to be from db.js
 
         // Tone.js related contexts and registries (from js/daw/effectsRegistry.js, etc.)
-        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
+        effectsRegistryAccess: { AVAILABLE_EFFECTs, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
         context: Tone.context, // Global Tone object
 
         // State Module Accessors (from js/daw/state/)
