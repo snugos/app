@@ -1,12 +1,12 @@
 // js/daw/main.js - Main Application Logic Orchestrator
 
-import { SnugWindow } from './SnugWindow.js'; // Path updated
+import { SnugWindow } from './SnugWindow.js'; //
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
-} from './eventHandlers.js'; // Path updated
+} from './eventHandlers.js'; //
 
 // Removed imports for now-global variables/functions from constants.js, utils.js, db.js, effectsRegistry.js, state.js, auth.js
 // They are now globally available because they are loaded via <script> tags in snaw.html
@@ -16,13 +16,13 @@ import {
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode, forceStopAllAudio
-} from './audio/audio.js'; // Path updated
-import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; // Path updated
-import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; // Path updated
+} from './audio/audio.js'; //
+import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; //
+import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; //
 import { 
     initializeSampleManager, loadSampleFile, loadDrumSamplerPadFile, loadSoundFromBrowserToTarget,
     getAudioBlobFromSoundBrowserItem, autoSliceSample, fetchSoundLibrary
-} from './audio/sampleManager.js'; // Path updated
+} from './audio/sampleManager.js'; //
 // Removed dbStoreAudio, dbGetAudio, dbDeleteAudio imports as they are global
 
 import {
@@ -31,20 +31,21 @@ import {
     openYouTubeImporterWindow, updateMixerWindow, renderEffectsList, renderEffectControls,
     renderDirectoryView, renderSoundBrowser,
     renderSamplePads, updateSliceEditorUI,
-    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob // NOTE: openProfileWindow removed from this line
-} from './ui/ui.js'; // Path updated
+    renderDrumSamplerPads, updateDrumPadControlsUI, createKnob,
+    openFileViewerWindow // NEW: Import openFileViewerWindow
+} from './ui/ui.js'; //
 // Removed AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions imports as they are global
 
-import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // Path updated
+import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; //
 // Removed initializeAuth, handleBackgroundUpload imports as they are global
 
 // Import the new state modules
-import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo } from '../state/appState.js';
-import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from '../state/masterState.js';
-import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from '../state/projectState.js';
-import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js';
-import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from '../state/trackState.js';
-import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ } from '../state/windowState.js';
+import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo } from '../state/appState.js'; //
+import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from '../state/masterState.js'; //
+import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from '../state/projectState.js'; //
+import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js'; //
+import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from '../state/trackState.js'; //
+import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ } from '../state/windowState.js'; //
 
 
 let appServices = {};
@@ -154,7 +155,7 @@ function openDefaultLayout() {
 
 function applyUserTheme() {
     // Access via appServices
-    const preference = appServices.getCurrentUserThemePreference();
+    const preference = appServices.getCurrentUserThemePreference(); //
     const body = document.body;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -169,7 +170,7 @@ function applyUserTheme() {
 
 function handleMasterEffectsUIUpdate() {
     // Access via appServices
-    const rackWindow = appServices.getWindowById('masterEffectsRack');
+    const rackWindow = appServices.getWindowById('masterEffectsRack'); //
     if (rackWindow && rackWindow.element && !rackWindow.isMinimized) {
         rackWindow.refresh();
     }
@@ -177,13 +178,13 @@ function handleMasterEffectsUIUpdate() {
 
 function handleTrackUIUpdate(trackId, reason, detail) {
     // Access via appServices
-    const track = appServices.getTrackById(trackId);
+    const track = appServices.getTrackById(trackId); //
     if (!track) return;
 
-    const soloedTrackId = appServices.getSoloedTrackId();
+    const soloedTrackId = appServices.getSoloedTrackId(); //
     const isEffectivelyMuted = track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id);
 
-    const inspectorWindow = appServices.getWindowById(`trackInspector-${track.id}`);
+    const inspectorWindow = appServices.getWindowById(`trackInspector-${track.id}`); //
     if (inspectorWindow && inspectorWindow.element && !inspectorWindow.isMinimized) {
         // Find the specific buttons within this inspector window
         const muteBtn = inspectorWindow.element.querySelector(`#muteBtn-${track.id}`);
@@ -191,7 +192,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
         const armBtn = inspectorWindow.element.querySelector(`#armInputBtn-${track.id}`);
 
         if (reason === 'armChanged') {
-            if (armBtn) armBtn.classList.toggle('armed', appServices.getArmedTrackId() === track.id);
+            if (armBtn) armBtn.classList.toggle('armed', appServices.getArmedTrackId() === track.id); //
         }
         if (reason === 'soloChanged' || reason === 'muteChanged') {
             if (muteBtn) {
@@ -217,7 +218,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
     
     // The mixer window update logic is already robust as it re-renders
-    const mixerWindow = appServices.getWindowById('mixer');
+    const mixerWindow = appServices.getWindowById('mixer'); //
     if (mixerWindow && mixerWindow.element && !mixerWindow.isMinimized) {
         const trackDiv = mixerWindow.element.querySelector(`.mixer-track[data-track-id='${track.id}']`);
         if(trackDiv) {
@@ -234,7 +235,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     }
 
     if (reason === 'effectsChanged') {
-        const rackWindow = appServices.getWindowById(`effectsRack-${trackId}`);
+        const rackWindow = appServices.getWindowById(`effectsRack-${trackId}`); //
         rackWindow?.refresh();
     }
     
@@ -247,7 +248,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
     // Access via appServices
-    const tracks = appServices.getTracks();
+    const tracks = appServices.getTracks(); //
 
     if (Tone.Transport.state === 'started') {
         Tone.Transport.stop();
@@ -276,7 +277,7 @@ async function initializeSnugOS() {
             const transportTime = Tone.Transport.seconds;
             
             // Access via appServices
-            const mode = appServices.getPlaybackMode();
+            const mode = appServices.getPlaybackMode(); //
             // No updatePlayheadPosition if timeline is removed
             // if (mode === 'timeline') {
             //     updatePlayheadPosition(transportTime);
@@ -285,144 +286,144 @@ async function initializeSnugOS() {
             // }
             
             // Access via appServices
-            appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, appServices.getTracks());
+            appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, appServices.getTracks()); //,
         }
         requestAnimationFrame(drawLoop);
     }
     
     appServices = {
         // createWindow assumes SnugWindow is global
-        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
+        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices), //
         // showNotification, createContextMenu, showCustomModal, drawWaveform are global
         showNotification: showNotification, 
         createContextMenu: createContextMenu, 
-        updateTrackUI: handleTrackUIUpdate,
+        updateTrackUI: handleTrackUIUpdate, 
         showCustomModal: showCustomModal, 
         applyUserThemePreference: applyUserTheme, 
-        updateMasterEffectsUI: handleMasterEffectsUIUpdate,
+        updateMasterEffectsUI: handleMasterEffectsUIUpdate, 
         // applyCustomBackground, handleBackgroundUpload are global
         applyCustomBackground: applyCustomBackground,
         handleBackgroundUpload: handleBackgroundUpload,
 
         // State Module Accessors
-        getTracks: getTracks,
-        getTrackById: getTrackById,
-        addTrack: addTrack,
-        removeTrack: removeTrack,
-        setTracks: setTracks,
-        setTrackIdCounter: setTrackIdCounter,
+        getTracks: getTracks, //
+        getTrackById: getTrackById, //
+        addTrack: addTrack, //
+        removeTrack: removeTrack, //
+        setTracks: setTracks, //
+        setTrackIdCounter: setTrackIdCounter, //
 
-        getOpenWindows: getOpenWindows,
-        getWindowById: getWindowById,
-        addWindowToStore: addWindowToStore,
-        removeWindowFromStore: removeWindowFromStore,
-        getHighestZ: getHighestZ,
-        setHighestZ: setHighestZ,
-        incrementHighestZ: incrementHighestZ,
+        getOpenWindows: getOpenWindows, //
+        getWindowById: getWindowById, //
+        addWindowToStore: addWindowToStore, //
+        removeWindowFromStore: removeWindowFromStore, //
+        getHighestZ: getHighestZ, //
+        setHighestZ: setHighestZ, //
+        incrementHighestZ: incrementHighestZ, //
         
-        getMidiAccess: getMidiAccess,
-        setMidiAccess: setMidiAccess,
-        getActiveMIDIInput: getActiveMIDIInput,
-        setActiveMIDIInput: setActiveMIDIInput,
-        getPlaybackMode: getPlaybackMode,
-        setPlaybackMode: setPlaybackMode,
-        getCurrentUserThemePreference: getCurrentUserThemePreference,
-        setCurrentUserThemePreference: setCurrentUserThemePreference,
-        getSelectedTimelineClipInfo: getSelectedTimelineClipInfo,
-        setSelectedTimelineClipInfo: setSelectedTimelineClipInfo,
-        getMidiRecordModeState: getMidiRecordModeState,
-        setMidiRecordModeState: setMidiRecordModeState,
+        getMidiAccess: getMidiAccess, //
+        setMidiAccess: setMidiAccess, //
+        getActiveMIDIInput: getActiveMIDIInput, //
+        setActiveMIDIInput: setActiveMIDIInput, //
+        getPlaybackMode: getPlaybackMode, //
+        setPlaybackMode: setPlaybackMode, //
+        getCurrentUserThemePreference: getCurrentUserThemePreference, //
+        setCurrentUserThemePreference: setCurrentUserThemePreference, //
+        getSelectedTimelineClipInfo: getSelectedTimelineClipInfo, //
+        setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, //
+        getMidiRecordModeState: getMidiRecordModeState, //
+        setMidiRecordModeState: setMidiRecordModeState, //
 
-        getMasterEffects: getMasterEffects,
-        addMasterEffect: addMasterEffect,
-        removeMasterEffect: removeMasterEffect,
-        updateMasterEffectParam: updateMasterEffectParam,
-        reorderMasterEffect: reorderMasterEffect,
-        getMasterGainValue: getMasterGainValue,
-        setMasterGainValue: setMasterGainValue,
+        getMasterEffects: getMasterEffects, //
+        addMasterEffect: addMasterEffect, //
+        removeMasterEffect: removeMasterEffect, //
+        updateMasterEffectParam: updateMasterEffectParam, //
+        reorderMasterEffect: reorderMasterEffect, //
+        getMasterGainValue: getMasterGainValue, //
+        setMasterGainValue: setMasterGainValue, //
 
-        getIsReconstructingDAW: getIsReconstructingDAW,
-        setIsReconstructingDAW: setIsReconstructingDAW,
-        getUndoStack: getUndoStack,
-        getRedoStack: getRedoStack,
-        getClipboardData: getClipboardData,
-        setClipboardData: setClipboardData,
-        captureStateForUndo: captureStateForUndo,
-        undoLastAction: undoLastAction,
-        redoLastAction: redoLastAction,
-        gatherProjectData: gatherProjectData,
-        reconstructDAW: reconstructDAW,
-        saveProject: saveProject,
-        loadProject: loadProject,
-        handleProjectFileLoad: handleProjectFileLoad,
-        exportToWav: exportToWav,
+        getIsReconstructingDAW: getIsReconstructingDAW, //
+        setIsReconstructingDAW: setIsReconstructingDAW, //
+        getUndoStack: getUndoStack, //
+        getRedoStack: getRedoStack, //
+        getClipboardData: getClipboardData, //
+        setClipboardData: setClipboardData, //
+        captureStateForUndo: captureStateForUndo, //
+        undoLastAction: undoLastAction, //
+        redoLastAction: redoLastAction, //
+        gatherProjectData: gatherProjectData, //
+        reconstructDAW: reconstructDAW, //
+        saveProject: saveProject, //
+        loadProject: loadProject, //
+        handleProjectFileLoad: handleProjectFileLoad, //
+        exportToWav: exportToWav, //
 
-        getLoadedZipFiles: getLoadedZipFiles,
-        setLoadedZipFiles: setLoadedZipFiles,
-        getSoundLibraryFileTrees: getSoundLibraryFileTrees,
-        setSoundLibraryFileTrees: setSoundLibraryFileTrees,
-        getCurrentLibraryName: getCurrentLibraryName,
-        setCurrentLibraryName: setCurrentLibraryName,
-        getCurrentSoundBrowserPath: getCurrentSoundBrowserPath,
-        setCurrentSoundBrowserPath: setCurrentSoundBrowserPath,
-        getPreviewPlayer: getPreviewPlayer,
-        setPreviewPlayer: setPreviewPlayer,
+        getLoadedZipFiles: getLoadedZipFiles, //
+        setLoadedZipFiles: setLoadedZipFiles, //
+        getSoundLibraryFileTrees: getSoundLibraryFileTrees, //
+        setSoundLibraryFileTrees: setSoundLibraryFileTrees, //
+        getCurrentLibraryName: getCurrentLibraryName, //
+        setCurrentLibraryName: setCurrentLibraryName, //
+        getCurrentSoundBrowserPath: getCurrentSoundBrowserPath, //
+        setCurrentSoundBrowserPath: setCurrentSoundBrowserPath, //
+        getPreviewPlayer: getPreviewPlayer, //
+        setPreviewPlayer: setPreviewPlayer, //
         addFileToSoundLibrary: addFileToSoundLibrary, // from soundLibraryState
 
         // Audio and Sample Management
-        initAudioContextAndMasterMeter, 
-        getMasterBusInputNode, 
-        updateMeters, 
-        rebuildMasterEffectChain,
-        addMasterEffectToAudio, 
-        removeMasterEffectFromAudio, 
-        updateMasterEffectParamInAudio,
-        reorderMasterEffectInAudio, 
-        setActualMasterVolume, 
-        startAudioRecording, 
-        stopAudioRecording,
-        forceStopAllAudio,
-        fetchSoundLibrary, 
-        loadSampleFile, 
-        loadDrumSamplerPadFile,
-        loadSoundFromBrowserToTarget, 
-        getAudioBlobFromSoundBrowserItem, 
-        autoSliceSample,
-        playSlicePreview, 
-        playDrumSamplerPadPreview, 
+        initAudioContextAndMasterMeter, //
+        getMasterBusInputNode, //
+        updateMeters, //
+        rebuildMasterEffectChain, //
+        addMasterEffectToAudio, //
+        removeMasterEffectFromAudio, //
+        updateMasterEffectParamInAudio, //
+        reorderMasterEffectInAudio, //
+        setActualMasterVolume, //
+        startAudioRecording, //
+        stopAudioRecording, //
+        forceStopAllAudio, //
+        fetchSoundLibrary, //
+        loadSampleFile, //
+        loadDrumSamplerPadFile, //
+        loadSoundFromBrowserToTarget, //
+        getAudioBlobFromSoundBrowserItem, //
+        autoSliceSample, //
+        playSlicePreview, //
+        playDrumSamplerPadPreview, //
         dbStoreAudio: storeAudio, // global in main.js scope
         dbGetAudio: getAudio,     // global in main.js scope
         dbDeleteAudio: deleteAudio, // global in main.js scope
 
         // UI Functions
-        openTrackInspectorWindow, 
-        openMixerWindow, 
-        updateMixerWindow, 
-        openTrackEffectsRackWindow,
-        openMasterEffectsRackWindow, 
-        openSoundBrowserWindow, 
-        openPianoRollWindow, 
-        updatePianoRollPlayhead, 
-        openYouTubeImporterWindow,
-        renderSamplePads, 
-        updateSliceEditorUI,
-        renderDrumSamplerPads, 
-        updateDrumPadControlsUI, 
-        renderDirectoryView, 
-        renderSoundBrowser,
-        // openProfileWindow is removed from here
+        openTrackInspectorWindow, //
+        openMixerWindow, //
+        updateMixerWindow, //
+        openTrackEffectsRackWindow, //
+        openMasterEffectsRackWindow, //
+        openSoundBrowserWindow, //
+        openPianoRollWindow, //
+        updatePianoRollPlayhead, //
+        openYouTubeImporterWindow, //
+        renderSamplePads, //
+        updateSliceEditorUI, //
+        renderDrumSamplerPads, //
+        updateDrumPadControlsUI, //
+        renderDirectoryView, //
+        renderSoundBrowser, //
+        openFileViewerWindow, // NEW: Add to appServices
 
         // Event Handlers
-        handleTrackMute: handleTrackMute, 
-        handleTrackSolo: handleTrackSolo, 
-        handleTrackArm: handleTrackArm, 
-        handleRemoveTrack: handleRemoveTrack,
-        handleOpenEffectsRack: handleOpenEffectsRack, 
-        handleOpenPianoRoll: handleOpenPianoRoll,
+        handleTrackMute: handleTrackMute, //
+        handleTrackSolo: handleTrackSolo, //
+        handleTrackArm: handleTrackArm, //
+        handleRemoveTrack: handleRemoveTrack, //
+        handleOpenEffectsRack: handleOpenEffectsRack, //
+        handleOpenPianoRoll: handleOpenPianoRoll, //
         onPlaybackModeChange: onPlaybackModeChange,
-        handleTimelineLaneDrop: handleTimelineLaneDrop, 
-        handleOpenYouTubeImporter: handleOpenYouTubeImporter,
-        toggleMetronome: toggleMetronome,
+        handleTimelineLaneDrop: handleTimelineLaneDrop, //
+        handleOpenYouTubeImporter: handleOpenYouTubeImporter, //
+        toggleMetronome: toggleMetronome, //
 
         // Direct Access to Registries/Context
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, // AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions are global
@@ -431,30 +432,30 @@ async function initializeSnugOS() {
     };
 
     // Initialize all state modules with appServices
-    initializeAppState(appServices);
-    initializeMasterState(appServices);
-    initializeProjectState(appServices);
-    initializeSoundLibraryState(appServices);
-    initializeTrackState(appServices);
-    initializeWindowState(appServices);
+    initializeAppState(appServices); //
+    initializeMasterState(appServices); //
+    initializeProjectState(appServices); //
+    initializeSoundLibraryState(appServices); //
+    initializeTrackState(appServices); //
+    initializeWindowState(appServices); //
     
     // Initialize other modules
-    initializeAudioModule(appServices);
-    initializePlayback(appServices);
-    initializeRecording(appServices);
-    initializeSampleManager(appServices);
-    initializeUIModule(appServices);
-    initializeEventHandlersModule(appServices);
-    initializeMetronome(appServices);
+    initializeAudioModule(appServices); //
+    initializePlayback(appServices); //
+    initializeRecording(appServices); //
+    initializeSampleManager(appServices); //
+    initializeUIModule(appServices); // IMPORTANT: This will now handle initializing fileViewerUI
+    initializeEventHandlersModule(appServices); //
+    initializeMetronome(appServices); //
     initializeAuth(appServices); // This one should be made a module eventually too
 
-    initializePrimaryEventListeners();
-    attachGlobalControlEvents({});
-    setupMIDI();
+    initializePrimaryEventListeners(); //
+    attachGlobalControlEvents({}); //
+    setupMIDI(); //
     
     const savedTheme = localStorage.getItem('snugos-theme');
     if (savedTheme) {
-        appServices.setCurrentUserThemePreference(savedTheme);
+        appServices.setCurrentUserThemePreference(savedTheme); //
     } else {
         applyUserTheme();
     }
