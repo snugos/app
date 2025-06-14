@@ -18,7 +18,7 @@ import { createKnob } from './knobUI.js'; //
  * This function also wires up services that are defined in one UI module but needed by others.
  * @param {object} appServices 
  */
-export function initializeUIModule(appServices) { // Export re-added
+export function initializeUIModule(appServices) { //
     // Make createKnob available as a service for other modules to use
     appServices.createKnob = (opts) => createKnob(opts, appServices); //
     
@@ -35,7 +35,7 @@ export function initializeUIModule(appServices) { // Export re-added
 
 // Export all the functions that main.js needs to build the appServices object.
 // This file acts as a single entry point for all UI functionality.
-export { // Exports re-added
+export { //
     createKnob, // Re-exported
     openTrackInspectorWindow, //
     openMixerWindow, //
