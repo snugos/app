@@ -1,11 +1,13 @@
 // js/daw/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
-// Removed import * as Constants from '../../constants.js'; as Constants is global
 
-// Import state functions directly for pianoRollUI.js module
-import { getTrackById } from '../../state/trackState.js';
-import { getOpenWindows, getWindowById } from '../../state/windowState.js';
-import { getClipboardData } from '../../state/projectState.js';
-import { getPlaybackMode } from '../../state/appState.js';
+// Corrected imports for state modules
+import { getTrackById } from '../state/trackState.js'; // Corrected path
+import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Corrected path
+import { getClipboardData } from '../state/projectState.js'; // Corrected path
+import { getPlaybackMode } from '../state/appState.js'; // Corrected path
+// Corrected import for Constants
+import * as Constants from '../constants.js'; // Corrected path
+
 
 let localAppServices = {};
 export const openPianoRolls = new Map();
@@ -36,11 +38,11 @@ export function initializePianoRollUI(appServicesFromMain) {
 }
 
 export function openPianoRollForClip(trackId, clipId) {
-    const track = localAppServices.getTrackById?.(trackId); // Use appServices
+    const track = localAppServices.getTrackById?.(trackId);
     const clip = track?.clips.timelineClips.find(c => c.id === clipId);
 
     if (!track || !clip || clip.type !== 'midi') {
-        localAppServices.showNotification?.("Could not find a valid MIDI clip to edit.", 3000); // showNotification is global
+        localAppServices.showNotification?.("Could not find a valid MIDI clip to edit.", 3000);
         return;
     }
 
@@ -49,9 +51,9 @@ export function openPianoRollForClip(trackId, clipId) {
     const tempSequence = track.sequences.createNewSequence(tempSequenceName, sequenceLength, true); 
     tempSequence.data = JSON.parse(JSON.stringify(clip.sequenceData));
 
-    openPianoRollWindow(track.id, tempSequence.id); // openPianoRollWindow is exported here
+    openPianoRollWindow(track.id, tempSequence.id);
 
-    const pianoRollWindow = getWindowById(`pianoRollWin-${trackId}`); // Now imports from windowState.js
+    const pianoRollWindow = getWindowById(`pianoRollWin-${trackId}`);
     if (pianoRollWindow) {
         const originalOnClose = pianoRollWindow.onCloseCallback;
         pianoRollWindow.onCloseCallback = () => {
@@ -75,12 +77,12 @@ export function openPianoRollForClip(trackId, clipId) {
 
 
 export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState = null) {
-    const track = localAppServices.getTrackById?.(trackId); // Use appServices
+    const track = localAppServices.getTrackById?.(trackId);
     if (!track || track.type === 'Audio') return;
 
     const windowId = `pianoRollWin-${trackId}`;
-    if (getOpenWindows().has(windowId) && !savedState) { // Now imports from windowState.js
-        getWindowById(windowId).restore(); // Now imports from windowState.js
+    if (getOpenWindows().has(windowId) && !savedState) {
+        getWindowById(windowId).restore();
         return;
     }
 
@@ -88,12 +90,12 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
     const activeSequence = track.sequences.sequences.find(s => s.id === sequenceId);
 
     if (!activeSequence) {
-        localAppServices.showNotification?.(`Track "${track.name}" has no valid sequence to edit.`, 3500); // showNotification is global
+        localAppServices.showNotification?.(`Track "${track.name}" has no valid sequence to edit.`, 3500);
         return;
     }
     track.sequences.activeSequenceId = activeSequence.id;
     
-    const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2); // Constants is global
+    const lengthInBars = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
 
     const contentContainer = document.createElement('div');
     contentContainer.className = 'w-full h-full flex flex-col bg-white dark:bg-black text-black dark:text-white';
@@ -114,7 +116,7 @@ export function openPianoRollWindow(trackId, sequenceIdToEdit = null, savedState
         <div id="velocityPaneContainer-${trackId}" class="flex-shrink-0 w-full h-1/5 bg-gray-200 dark:bg-gray-800 border-t-2 border-gray-400 dark:border-gray-600 overflow-x-auto overflow-y-hidden"></div>
     `;
 
-    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, { // SnugWindow is global
+    const pianoRollWindow = localAppServices.createWindow(windowId, `Piano Roll: ${track.name}`, contentContainer, {
         width: 800, height: 500, minWidth: 500, minHeight: 300, initialContentKey: windowId,
         onCloseCallback: () => {
             openPianoRolls.delete(trackId);
@@ -147,8 +149,8 @@ export function updatePianoRollPlayhead(transportTime) {
 
             if (loopDurationInSeconds === 0) return;
 
-            const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH; // Constants is global
-            const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
+            const pixelsPerSecond = (1 / secondsPer16thNote) * Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
+            const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
             const newX = (transportTime * pixelsPerSecond) + keyWidth;
 
             playhead.x(newX);
@@ -160,8 +162,8 @@ export function updatePianoRollPlayhead(transportTime) {
 function renderVelocityPane(velocityPane, track) {
     if (!velocityPane) return;
     velocityPane.innerHTML = '';
-    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
-    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH; // Constants is global
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     const activeSequence = track.sequences.getActiveSequence();
     if (!activeSequence) return;
     const scrollWrapper = document.createElement('div');
@@ -220,8 +222,8 @@ function renderVelocityPane(velocityPane, track) {
 }
 
 function drawPianoKeys(layer, track, colors, numRows) {
-    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
-    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT; // Constants is global
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
     const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
 
     if (isSampler) {
@@ -255,7 +257,7 @@ function drawPianoKeys(layer, track, colors, numRows) {
             layer.add(keyText);
         }
     } else {
-        Constants.SYNTH_PITCHES.forEach((noteName, index) => { // Constants is global
+        Constants.SYNTH_PITCHES.forEach((noteName, index) => {
             const isBlackKey = noteName.includes('#') || noteName.includes('b');
             const y = index * noteHeight;
             const keyRect = new Konva.Rect({
@@ -276,9 +278,9 @@ function drawPianoKeys(layer, track, colors, numRows) {
 }
 
 function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows) {
-    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT; // Constants is global
-    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
-    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH; // Constants is global
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
     
     layer.add(new Konva.Rect({
         x: keyWidth, y: 0, width: stageWidth - keyWidth, height: stageHeight,
@@ -287,7 +289,7 @@ function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, n
     
     for (let i = 0; i < numRows; i++) {
         if (!isSampler) {
-            const isBlackKey = Constants.SYNTH_PITCHES[i]?.includes('#') || false; // Constants is global
+            const isBlackKey = Constants.SYNTH_PITCHES[i]?.includes('#') || false;
             if (isBlackKey) {
                 layer.add(new Konva.Rect({
                     x: keyWidth, y: i * noteHeight,
@@ -323,9 +325,9 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
     
     const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
     const sequenceData = activeSequence.data;
-    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
-    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT; // Constants is global
-    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH; // Constants is global
+    const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
+    const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT;
+    const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH;
 
     sequenceData.forEach((pitchRow, pitchIndex) => {
         pitchRow.forEach((note, timeStep) => {
@@ -334,9 +336,9 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
                 let isVisible = true;
 
                 if (isSampler) {
-                    const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - pitchIndex; // Constants is global
-                    const padIndex = midiNote - Constants.SAMPLER_PIANO_ROLL_START_NOTE; // Constants is global
-                    if (padIndex < 0 || padIndex >= Constants.NUM_SAMPLER_NOTES) { // Constants is global
+                    const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - pitchIndex;
+                    const padIndex = midiNote - Constants.SAMPLER_PIANO_ROLL_START_NOTE;
+                    if (padIndex < 0 || padIndex >= Constants.NUM_SAMPLER_NOTES) {
                         isVisible = false;
                     }
                     y = padIndex * noteHeight;
@@ -369,7 +371,6 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) {
 }
 
 function createPianoRollStage(containerElement, velocityPane, track) {
-    // Konva is global
     if (typeof Konva === 'undefined' || !containerElement.parentElement) {
         setTimeout(() => createPianoRollStage(containerElement, velocityPane, track), 100);
         return;
@@ -380,13 +381,12 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     const numSteps = activeSequence.length;
     
     const isSampler = track.type === 'Sampler' || track.type === 'DrumSampler';
-    const numRows = isSampler ? Constants.NUM_SAMPLER_NOTES : Constants.SYNTH_PITCHES.length; // Constants is global
+    const numRows = isSampler ? Constants.NUM_SAMPLER_NOTES : Constants.SYNTH_PITCHES.length;
     
-    const stageWidth = (Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps) + Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
-    const stageHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * numRows; // Constants is global
+    const stageWidth = (Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH * numSteps) + Constants.PIANO_ROLL_KEY_WIDTH;
+    const stageHeight = Constants.PIANO_ROLL_NOTE_HEIGHT * numRows;
 
     containerElement.innerHTML = '';
-    // Konva.Stage and Konva.Layer are global
     const stage = new Konva.Stage({ container: containerElement, width: stageWidth, height: stageHeight });
     
     const gridLayer = new Konva.Layer();
@@ -408,7 +408,6 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     drawPianoKeys(keyLayer, track, colors, numRows);
     redrawNotes(noteLayer, track, colors, selectedNotes);
     
-    // Konva.Line is global
     const playhead = new Konva.Line({ points: [0, 0, 0, stageHeight], stroke: colors.playhead, strokeWidth: 1.5, listening: false });
     playheadLayer.add(playhead);
     pianoRoll.playhead = playhead;
@@ -425,7 +424,6 @@ function createPianoRollStage(containerElement, velocityPane, track) {
 function attachPianoRollListeners(pianoRoll) {
     const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors, isSampler } = pianoRoll;
     const activeSequence = track.sequences.getActiveSequence();
-    // Konva.Rect is global
     const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false });
     stage.getLayers().find(l => l !== gridLayer && l !== noteLayer && l !== keyLayer).add(selectionRect);
 
@@ -447,7 +445,6 @@ function attachPianoRollListeners(pianoRoll) {
         selectionRect.visible(false);
         if (!e.evt.shiftKey) selectedNotes.clear();
         const box = selectionRect.getClientRect();
-        // Konva.Util is global
         noteLayer.children.forEach(noteShape => {
             if (Konva.Util.haveIntersection(box, noteShape.getClientRect())) {
                 const noteId = noteShape.id();
@@ -481,19 +478,19 @@ function attachPianoRollListeners(pianoRoll) {
                     action: () => track.sequences.copyNotesToClipboard(activeSequence.id, selectedNotes)
                 });
             }
-            const clipboard = getClipboardData(); // Now imports from projectState.js
+            const clipboard = getClipboardData();
             if (clipboard?.type === 'piano-roll-notes') {
                 menuItems.push({
                     label: `Paste ${clipboard.notes.length} Note(s)`,
                     action: () => {
                         const pos = stage.getPointerPosition();
-                        const pasteTimeStep = Math.floor((pos.x - Constants.PIANO_ROLL_KEY_WIDTH) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH); // Constants is global
-                        const visualRow = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT); // Constants is global
+                        const pasteTimeStep = Math.floor((pos.x - Constants.PIANO_ROLL_KEY_WIDTH) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+                        const visualRow = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
                         
                         let pastePitchIndex;
                         if (isSampler) {
-                            const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + visualRow; // Constants is global
-                            pastePitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - midiNote; // Constants is global
+                            const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + visualRow;
+                            pastePitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - midiNote;
                         } else {
                             pastePitchIndex = visualRow;
                         }
@@ -522,7 +519,6 @@ function attachPianoRollListeners(pianoRoll) {
             menuItems.push({ label: 'Clear All Notes', action: () => track.sequences.clearSequence(activeSequence.id) });
             
             if (menuItems.length > 0) {
-                // createContextMenu is global
                 createContextMenu(e.evt, menuItems, localAppServices);
             }
         }
@@ -538,16 +534,16 @@ function attachPianoRollListeners(pianoRoll) {
         }
 
         const pos = stage.getPointerPosition();
-        const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; // Constants is global
+        const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH;
         if (pos.x < keyWidth) return;
 
-        const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH); // Constants is global
-        const visualRow = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT); // Constants is global
+        const timeStep = Math.floor((pos.x - keyWidth) / Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH);
+        const visualRow = Math.floor(pos.y / Constants.PIANO_ROLL_NOTE_HEIGHT);
         
         let pitchIndex;
         if (isSampler) {
-            const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + visualRow; // Constants is global
-            pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - midiNote; // Constants is global
+            const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + visualRow;
+            pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - midiNote;
         } else {
             pitchIndex = visualRow;
         }
@@ -573,11 +569,11 @@ function attachPianoRollListeners(pianoRoll) {
     const lengthInput = document.getElementById(`sequenceLengthInput-${track.id}`);
     lengthInput?.addEventListener('change', (e) => {
         const barValue = parseFloat(e.target.value);
-        if (isNaN(barValue) || barValue <= 0 || barValue > Constants.MAX_BARS) { // Constants is global
-            e.target.value = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2); // Constants is global
+        if (isNaN(barValue) || barValue <= 0 || barValue > Constants.MAX_BARS) {
+            e.target.value = (activeSequence.length / Constants.STEPS_PER_BAR).toFixed(2);
             return;
         }
-        const newLengthInSteps = Math.round(barValue * Constants.STEPS_PER_BAR); // Constants is global
+        const newLengthInSteps = Math.round(barValue * Constants.STEPS_PER_BAR);
         track.sequences.setSequenceLength(activeSequence.id, newLengthInSteps);
         
         const containerElement = document.getElementById(`pianoRollKonvaContainer-${track.id}`);
@@ -607,7 +603,6 @@ function attachPianoRollListeners(pianoRoll) {
         if (pianoRoll.selectedNotes.size > 0) {
             track.quantizeNotes(activeSequence.id, pianoRoll.selectedNotes, '16n');
         } else {
-            // If no notes are selected, quantize all notes in the sequence
             const allNoteIds = new Set();
             activeSequence.data.forEach((row, pitchIndex) => {
                 row.forEach((note, timeStep) => {
