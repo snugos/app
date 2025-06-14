@@ -1,4 +1,4 @@
-// js/profiles/profileUtils.js - Minimal utility functions for the Profile Page
+// js/daw/profiles/profileUtils.js - Minimal utility functions for the Profile Page
 
 export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
@@ -15,7 +15,7 @@ export function showNotification(message, duration = 3000) {
 
         setTimeout(() => {
             notification.classList.add('show');
-        }, 10); 
+        }, 10);
 
         setTimeout(() => {
             notification.classList.remove('show');
@@ -134,11 +134,11 @@ export function getThemeColors() { // Export re-added
         accentArmedText: rootStyle.getPropertyValue('--accent-armed-text').trim(),
         accentActive: rootStyle.getPropertyValue('--accent-active').trim(),
         accentActiveText: rootStyle.getPropertyValue('--accent-active-text').trim(),
-        errorBg: 'var(--bg-error, #fee2e2)', // Example with fallback
-        errorText: 'var(--text-error, #b91c1c)', // Example with fallback
-        panelBg: 'var(--bg-panel, var(--bg-window-content))', // Use existing panel background
+        errorBg: 'var(--bg-error, #fee2e2)',
+        errorText: 'var(--text-error, #b91c1c)',
+        panelBg: 'var(--bg-panel, var(--bg-window-content))',
         panelBorder: 'var(--border-panel, var(--border-primary))',
-        gray200: 'var(--gray-200, #e5e7eb)', // Assuming Tailwind's gray levels are mapped
+        gray200: 'var(--gray-200, #e5e7eb)',
         gray700: 'var(--gray-700, #374151)',
         gray500: 'var(--gray-500, #6b7280)',
         red500: 'var(--red-500, #ef4444)',
