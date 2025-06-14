@@ -1,10 +1,10 @@
 // js/daw/ui/inspectorUI.js
 
 // Corrected imports for state modules and utils
-import { getTrackById } from '../../state/trackState.js'; // Corrected path
-import { getWindowById } from '../../state/windowState.js'; // Corrected path
-import { getIsReconstructingDAW } from '../../state/projectState.js'; // Corrected path
-import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js'; // Corrected path
+import { getTrackById } from '../state/trackState.js';
+import { getWindowById } from '../state/windowState.js';
+import { getIsReconstructingDAW } from '../state/projectState.js';
+import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js';
 // Assuming effectsRegistry is now in js/daw/effectsRegistry.js and global as well.
 // If not, we'd need to import it explicitly. For now, assume it's like Tone.
 
@@ -99,7 +99,11 @@ export function updateSliceEditorUI(track, container) {
     if (pitchKnobEl) {
         pitchKnobEl.innerHTML = '';
         const knob = localAppServices.createKnob({
-            label: 'Pitch', min: -24, max: 24, step: 1, initialValue: slice.pitchShift || 0,
+            label: 'Pitch',
+            min: -24,
+            max: 24,
+            step: 1,
+            initialValue: slice.pitchShift || 0,
             onValueChange: (val) => { slice.pitchShift = val; }
         }, localAppServices);
         pitchKnobEl.appendChild(knob.element);
@@ -132,16 +136,16 @@ export function renderDrumSamplerPads(track, container) {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
             updateDrumPadControlsUI(track, container.closest('.window-content'));
-            renderDrumSamplerPads(track, container); // Re-render to update selection
+            renderDrumSamplerPads(track, container);
         });
 
         // setupGenericDropZoneListeners imported from utils.js
         setupGenericDropZoneListeners(
-            pad, 
-            track.id, 
-            'DrumSampler', 
-            i, 
-            localAppServices.loadSoundFromBrowserToTarget, 
+            pad,
+            track.id,
+            'DrumSampler',
+            i,
+            localAppServices.loadSoundFromBrowserToTarget,
             localAppServices.loadDrumSamplerPadFile
         );
 
@@ -174,7 +178,11 @@ export function updateDrumPadControlsUI(track, container) {
     const volContainer = controlsGrid.querySelector(`#volumeKnob-drumpad-${padIndex}-placeholder`);
     if (volContainer) {
         const volKnob = localAppServices.createKnob({
-            label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: padData.volume || 0.7,
+            label: 'Volume',
+            min: 0,
+            max: 1.2,
+            step: 0.01,
+            initialValue: padData.volume || 0.7,
             onValueChange: (val) => { padData.volume = val; }
         }, localAppServices);
         volContainer.appendChild(volKnob.element);
@@ -183,7 +191,11 @@ export function updateDrumPadControlsUI(track, container) {
     const pitchContainer = controlsGrid.querySelector(`#pitchKnob-drumpad-${padIndex}-placeholder`);
     if (pitchContainer) {
         const pitchKnob = localAppServices.createKnob({
-            label: 'Pitch', min: -24, max: 24, step: 1, initialValue: padData.pitchShift || 0,
+            label: 'Pitch',
+            min: -24,
+            max: 24,
+            step: 1,
+            initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices);
         pitchKnob.appendChild(pitchKnob.element);
@@ -368,7 +380,14 @@ function buildSlicerSamplerControls(track, container) {
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
     // setupGenericDropZoneListeners is imported from utils.js
-    setupGenericDropZoneListeners(dzEl, track.id, 'Sampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
+    setupGenericDropZoneListeners(
+        dzEl,
+        track.id,
+        'Sampler',
+        null,
+        localAppServices.loadSoundFromBrowserToTarget,
+        localAppServices.loadSampleFile
+    );
     
     const fileInputEl = dzContainerEl.querySelector(`#slicer-file-input-${track.id}`);
     if (fileInputEl) { // Check if element exists before attaching event
@@ -423,7 +442,14 @@ function buildInstrumentSamplerControls(track, container) {
     const dzContainerEl = container.querySelector(`#dropZoneContainer-instrument-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
     // setupGenericDropZoneListeners is imported from utils.js
-    setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
+    setupGenericDropZoneListeners(
+        dzEl,
+        track.id,
+        'InstrumentSampler',
+        null,
+        localAppServices.loadSoundFromBrowserToTarget,
+        localAppServices.loadSampleFile
+    );
 
     const fileInputEl = dzContainerEl.querySelector(`#instrument-file-input-${track.id}`);
     if (fileInputEl) { // Check if element exists before attaching event
@@ -439,7 +465,10 @@ function buildInstrumentSamplerControls(track, container) {
     if (volumeKnobPlaceholder) {
         const initialVolume = track.previousVolumeBeforeMute;
         const volumeKnob = localAppServices.createKnob({
-            label: 'Volume', min: 0, max: 1.2, step: 0.01,
+            label: 'Volume',
+            min: 0,
+            max: 1.2,
+            step: 0.01,
             initialValue: initialVolume,
             onValueChange: (val, oldVal, fromInteraction) => {
                 track.setVolume(val, fromInteraction);
@@ -452,7 +481,11 @@ function buildInstrumentSamplerControls(track, container) {
     if (pitchShiftKnobPlaceholder) {
         const initialPitchShift = track.instrumentSamplerSettings.pitchShift || 0;
         const pitchKnob = localAppServices.createKnob({
-            label: 'Pitch', min: -24, max: 24, step: 1, initialValue: initialPitchShift,
+            label: 'Pitch',
+            min: -24,
+            max: 24,
+            step: 1,
+            initialValue: initialPitchShift,
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
             }
