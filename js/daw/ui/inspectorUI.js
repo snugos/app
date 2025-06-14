@@ -1,10 +1,12 @@
 // js/daw/ui/inspectorUI.js
 
-// Import state functions directly for inspectorUI.js module
-import { getTrackById, getSoloedTrackId, getArmedTrackId } from '../../state/trackState.js';
-import { getWindowById } from '../../state/windowState.js';
-import { getIsReconstructingDAW } from '../../state/projectState.js';
-
+// Corrected imports for state modules and utils
+import { getTrackById } from '../../state/trackState.js'; // Corrected path
+import { getWindowById } from '../../state/windowState.js'; // Corrected path
+import { getIsReconstructingDAW } from '../../state/projectState.js'; // Corrected path
+import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js'; // Corrected path
+// Assuming effectsRegistry is now in js/daw/effectsRegistry.js and global as well.
+// If not, we'd need to import it explicitly. For now, assume it's like Tone.
 
 let localAppServices = {};
 
@@ -24,7 +26,7 @@ function getNestedParam(obj, path) {
 }
 
 function buildSynthEngineControls(track, container, engineType) {
-    // synthEngineControlDefinitions is global
+    // effectsRegistry is assumed to be globally available from js/daw/effectsRegistry.js
     const definitions = effectsRegistry.synthEngineControlDefinitions?.[engineType] || [];
     if (!container || definitions.length === 0) return;
 
@@ -36,8 +38,7 @@ function buildSynthEngineControls(track, container, engineType) {
         const initialValue = getNestedParam(track.synthParams, def.path);
 
         if (def.type === 'knob') {
-            // createKnob is global
-            control = localAppServices.createKnob({ // Use appServices.createKnob
+            control = localAppServices.createKnob({
                 label: def.label,
                 min: def.min,
                 max: def.max,
@@ -72,7 +73,7 @@ export function renderSamplePads(track, container) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
-    // Constants is global
+    // Constants is globally available from js/daw/constants.js
     for (let i = 0; i < Constants.numSlices; i++) {
         const pad = document.createElement('button');
         pad.className = 'pad-button';
@@ -82,7 +83,6 @@ export function renderSamplePads(track, container) {
         pad.addEventListener('click', () => {
             localAppServices.playSlicePreview?.(track.id, i);
             track.selectedSliceForEdit = i;
-            // updateSliceEditorUI is global
             updateSliceEditorUI(track, container.closest('.window-content'));
         });
         grid.appendChild(pad);
@@ -98,8 +98,7 @@ export function updateSliceEditorUI(track, container) {
     const pitchKnobEl = container.querySelector('#slice-pitch-knob-placeholder');
     if (pitchKnobEl) {
         pitchKnobEl.innerHTML = '';
-        // createKnob is global
-        const knob = localAppServices.createKnob({ // Use appServices.createKnob
+        const knob = localAppServices.createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: slice.pitchShift || 0,
             onValueChange: (val) => { slice.pitchShift = val; }
         }, localAppServices);
@@ -113,7 +112,7 @@ export function renderDrumSamplerPads(track, container) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
-    // Constants is global
+    // Constants is globally available from js/daw/constants.js
     for (let i = 0; i < Constants.numDrumSamplerPads; i++) {
         const pad = document.createElement('button');
         pad.className = 'pad-button';
@@ -132,13 +131,11 @@ export function renderDrumSamplerPads(track, container) {
         pad.addEventListener('click', () => {
             localAppServices.playDrumSamplerPadPreview?.(track.id, i);
             track.selectedDrumPadForEdit = i;
-            // updateDrumPadControlsUI is global
             updateDrumPadControlsUI(track, container.closest('.window-content'));
-            // renderDrumSamplerPads is global
             renderDrumSamplerPads(track, container); // Re-render to update selection
         });
 
-        // setupGenericDropZoneListeners is global
+        // setupGenericDropZoneListeners imported from utils.js
         setupGenericDropZoneListeners(
             pad, 
             track.id, 
@@ -176,8 +173,7 @@ export function updateDrumPadControlsUI(track, container) {
 
     const volContainer = controlsGrid.querySelector(`#volumeKnob-drumpad-${padIndex}-placeholder`);
     if (volContainer) {
-        // createKnob is global
-        const volKnob = localAppServices.createKnob({ // Use appServices.createKnob
+        const volKnob = localAppServices.createKnob({
             label: 'Volume', min: 0, max: 1.2, step: 0.01, initialValue: padData.volume || 0.7,
             onValueChange: (val) => { padData.volume = val; }
         }, localAppServices);
@@ -186,12 +182,11 @@ export function updateDrumPadControlsUI(track, container) {
     
     const pitchContainer = controlsGrid.querySelector(`#pitchKnob-drumpad-${padIndex}-placeholder`);
     if (pitchContainer) {
-        // createKnob is global
-        const pitchKnob = localAppServices.createKnob({ // Use appServices.createKnob
+        const pitchKnob = localAppServices.createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices);
-        pitchKnob.appendChild(pitchKnob.element); // This was `knob.element` which is incorrect, should be `pitchKnob.element`
+        pitchKnob.appendChild(pitchKnob.element);
     }
 
     container.appendChild(controlsGrid);
@@ -199,7 +194,6 @@ export function updateDrumPadControlsUI(track, container) {
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}-drumpad-${padIndex}`);
     if(dzContainerEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
-        // setupGenericDropZoneListeners is global
         if(dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', padIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
         const fileInputEl = dzContainerEl.querySelector(`#drum-pad-file-input-${padIndex}`);
         if(fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, padIndex); };
@@ -207,28 +201,22 @@ export function updateDrumPadControlsUI(track, container) {
 }
 
 export function openTrackInspectorWindow(trackId, savedState = null) {
-    const track = localAppServices.getTrackById(trackId); // Use appServices
+    const track = localAppServices.getTrackById(trackId);
     if (!track) return null;
     const windowId = `trackInspector-${trackId}`;
     
-    const existingWindow = getOpenWindows().get(windowId); // Now imports from windowState.js
+    const existingWindow = getOpenWindows().get(windowId);
 
     if (existingWindow) {
-        // If savedState is NOT provided, it means this call is from a menu click (e.g., "Open Inspector")
-        // and the window is already open, so just restore/focus it.
         if (!savedState) {
             existingWindow.restore();
             return existingWindow;
         } else {
-            // If savedState *IS* provided, it means we are trying to re-render an existing window
-            // (e.g., from handleTrackUIUpdate). We must close the old one first to avoid duplicates
-            // and ensure fresh elements/listeners, then proceed to create the new one with saved state.
-            existingWindow.close(true); // Close silently
+            existingWindow.close(true);
         }
     }
 
     const contentDOM = buildTrackInspectorContentDOM(track);
-    // SnugWindow is global
     const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, { width: 320, height: 450, ...savedState });
     if (inspectorWindow?.element) {
         console.log(`[inspectorUI.js] Calling initializeCommonInspectorControls for track ${track.id}`);
@@ -289,11 +277,10 @@ function buildTrackInspectorContentDOM(track) {
 }
 
 function initializeCommonInspectorControls(track, element) {
-    // --- DEBUG: Verifying button elements are found ---
     console.log(`[inspectorUI.js] Initializing common controls for track: ${track.id}`);
 
     const muteBtn = element.querySelector(`#muteBtn-${track.id}`);
-    if (muteBtn) { // Added null check
+    if (muteBtn) {
         console.log(`[inspectorUI.js] Found muteBtn-${track.id}`);
         muteBtn.addEventListener('click', () => {
             console.log(`[inspectorUI.js] Click event fired for muteBtn-${track.id}`);
@@ -304,7 +291,7 @@ function initializeCommonInspectorControls(track, element) {
     }
 
     const soloBtn = element.querySelector(`#soloBtn-${track.id}`);
-    if (soloBtn) { // Added null check
+    if (soloBtn) {
         console.log(`[inspectorUI.js] Found soloBtn-${track.id}`);
         soloBtn.addEventListener('click', () => {
             console.log(`[inspectorUI.js] Click event fired for soloBtn-${track.id}`);
@@ -315,7 +302,7 @@ function initializeCommonInspectorControls(track, element) {
     }
 
     const armBtn = element.querySelector(`#armInputBtn-${track.id}`);
-    if (armBtn) { // Added null check
+    if (armBtn) {
         console.log(`[inspectorUI.js] Found armInputBtn-${track.id}`);
         armBtn.addEventListener('click', () => {
             console.log(`[inspectorUI.js] Click event fired for armInputBtn-${track.id}`);
@@ -340,14 +327,10 @@ function initializeCommonInspectorControls(track, element) {
     openEffectsRackBtn?.addEventListener('click', () => {
         localAppServices.handleOpenEffectsRack?.(track.id);
     });
-
-    // REMOVED THE FOLLOWING LINES TO PREVENT INFINITE LOOP:
-    // localAppServices.updateTrackUI(track.id, 'soloChanged'); 
-    // localAppServices.updateTrackUI(track.id, 'muteChanged'); 
-    // localAppServices.updateTrackUI(track.id, 'armChanged'); 
 }
 
 function buildSynthControls(track, container) {
+    // effectsRegistry is assumed to be globally available from js/daw/effectsRegistry.js
     const controlsHtml = `
         <div class="panel">
             <h3 class="font-bold mb-2">Synthesizer</h3>
@@ -364,6 +347,7 @@ function buildSynthControls(track, container) {
         </div>
     `;
     container.innerHTML = controlsHtml;
+    // effectsRegistry is assumed to be globally available from js/daw/effectsRegistry.js
     buildSynthEngineControls(track, container, 'MonoSynth');
 }
 
@@ -383,19 +367,19 @@ function buildSlicerSamplerControls(track, container) {
     `;
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
-    // setupGenericDropZoneListeners is global
+    // setupGenericDropZoneListeners is imported from utils.js
     setupGenericDropZoneListeners(dzEl, track.id, 'Sampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
     
     const fileInputEl = dzContainerEl.querySelector(`#slicer-file-input-${track.id}`);
-    fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'Sampler');
+    if (fileInputEl) { // Check if element exists before attaching event
+        fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'Sampler');
+    }
     
     const canvas = container.querySelector(`#waveform-canvas-${track.id}`);
-    if (track.audioBuffer) {
-        // drawWaveform is global
+    if (canvas && track.audioBuffer) { // Check if canvas exists before drawing
         drawWaveform(canvas, track.audioBuffer);
     }
 
-    // renderSamplePads is global
     renderSamplePads(track, container.querySelector(`#sample-pads-container-${track.id}`));
 }
 
@@ -409,14 +393,11 @@ function buildDrumSamplerControls(track, container) {
     `;
     const padsContainer = container.querySelector(`#drum-pads-container-${track.id}`);
     const controlsContainer = container.querySelector(`#drum-pad-controls-container-${track.id}`);
-    // renderDrumSamplerPads is global
     renderDrumSamplerPads(track, padsContainer);
-    // updateDrumPadControlsUI is global
     updateDrumPadControlsUI(track, controlsContainer);
 }
 
 function buildInstrumentSamplerControls(track, container) {
-    // Add HTML structure for Instrument Sampler controls, including placeholders for knobs
     container.innerHTML = `
         <div class="panel">
             <h3 class="font-bold mb-2">Instrument Sampler</h3>
@@ -441,60 +422,44 @@ function buildInstrumentSamplerControls(track, container) {
     `;
     const dzContainerEl = container.querySelector(`#dropZoneContainer-instrument-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
-    // setupGenericDropZoneListeners is global
+    // setupGenericDropZoneListeners is imported from utils.js
     setupGenericDropZoneListeners(dzEl, track.id, 'InstrumentSampler', null, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadSampleFile);
 
     const fileInputEl = dzContainerEl.querySelector(`#instrument-file-input-${track.id}`);
-    fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler');
+    if (fileInputEl) { // Check if element exists before attaching event
+        fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler');
+    }
     
     const canvas = container.querySelector(`#waveform-canvas-instrument-${track.id}`);
-    if(track.instrumentSamplerSettings.audioBuffer) {
-        // drawWaveform is global
+    if(canvas && track.instrumentSamplerSettings.audioBuffer) { // Check if canvas exists before drawing
         drawWaveform(canvas, track.instrumentSamplerSettings.audioBuffer);
     }
 
-    // --- NEW: Add knob creation logic for Instrument Sampler parameters ---
-
-    // Volume Knob
     const volumeKnobPlaceholder = container.querySelector(`#instrumentSamplerVolume-${track.id}-placeholder`);
     if (volumeKnobPlaceholder) {
-        const initialVolume = track.previousVolumeBeforeMute; // Use track's main volume for now
-        // createKnob is global
-        const volumeKnob = localAppServices.createKnob({ // Use appServices.createKnob
+        const initialVolume = track.previousVolumeBeforeMute;
+        const volumeKnob = localAppServices.createKnob({
             label: 'Volume', min: 0, max: 1.2, step: 0.01,
             initialValue: initialVolume,
             onValueChange: (val, oldVal, fromInteraction) => {
-                track.setVolume(val, fromInteraction); // Update track's master volume
+                track.setVolume(val, fromInteraction);
             }
         }, localAppServices);
         volumeKnobPlaceholder.appendChild(volumeKnob.element);
     }
 
-    // Pitch Shift Knob
     const pitchShiftKnobPlaceholder = container.querySelector(`#instrumentSamplerPitchShift-${track.id}-placeholder`);
     if (pitchShiftKnobPlaceholder) {
         const initialPitchShift = track.instrumentSamplerSettings.pitchShift || 0;
-        // createKnob is global
-        const pitchKnob = localAppServices.createKnob({ // Use appServices.createKnob
+        const pitchKnob = localAppServices.createKnob({
             label: 'Pitch', min: -24, max: 24, step: 1, initialValue: initialPitchShift,
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
-                // If instrument is already loaded, update its pitch
-                if (track.instrument && track.instrumentSamplerSettings.audioBuffer && track.instrumentSamplerSettings.audioBuffer.loaded) {
-                    const rootNote = track.instrumentSamplerSettings.rootNote || 'C4';
-                    const playbackRate = Math.pow(2, val / 12);
-                    // Sampler's triggerAttack will apply this playbackRate based on note difference,
-                    // but we can ensure the base pitch shift is applied if the sampler has a 'pitch' property
-                    // Tone.js Sampler doesn't directly have a global pitch property like an oscillator.
-                    // Instead, pitch shifting applies per note, so we store it and apply on trigger.
-                    // For now, this knob just updates the setting. The Sampler logic needs to read this.
-                }
             }
         }, localAppServices);
-        pitchKnob.appendChild(pitchKnob.element); // Corrected: was `knob.element`
+        pitchKnob.appendChild(pitchKnob.element);
     }
 
-    // Envelope Knobs (Attack, Decay, Sustain, Release)
     const envelopeParams = [
         { id: 'EnvAttack', label: 'Attack', min: 0.001, max: 2, step: 0.001, decimals: 3, path: 'envelope.attack' },
         { id: 'EnvDecay', label: 'Decay', min: 0.01, max: 2, step: 0.01, decimals: 2, path: 'envelope.decay' },
@@ -507,10 +472,9 @@ function buildInstrumentSamplerControls(track, container) {
         if (placeholder) {
             const initialValue = getNestedParam(track.instrumentSamplerSettings, paramDef.path) !== undefined
                                  ? getNestedParam(track.instrumentSamplerSettings, paramDef.path)
-                                 : paramDef.defaultValue; // Use defaultValue from a common source if available
+                                 : paramDef.defaultValue;
 
-            // createKnob is global
-            const knob = localAppServices.createKnob({ // Use appServices.createKnob
+            const knob = localAppServices.createKnob({
                 label: paramDef.label,
                 min: paramDef.min,
                 max: paramDef.max,
@@ -518,7 +482,6 @@ function buildInstrumentSamplerControls(track, container) {
                 initialValue: initialValue,
                 decimals: paramDef.decimals,
                 onValueChange: (val) => {
-                    // Update track's instrumentSamplerSettings
                     let current = track.instrumentSamplerSettings;
                     const keys = paramDef.path.split('.');
                     for (let i = 0; i < keys.length - 1; i++) {
@@ -526,7 +489,6 @@ function buildInstrumentSamplerControls(track, container) {
                     }
                     current[keys[keys.length - 1]] = val;
 
-                    // Apply to the Tone.js instrument if it exists
                     if (track.instrument && track.instrument[keys[0]] && typeof track.instrument[keys[0]].set === 'function') {
                         track.instrument[keys[0]].set({ [keys.slice(1).join('.')]: val });
                     }
