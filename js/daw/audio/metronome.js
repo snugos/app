@@ -1,7 +1,7 @@
-// js/daw/metronome.js
+// js/daw/audio/metronome.js
 
-// Removed import * as Constants from '../constants.js'; // Removed as Constants is global
-// Removed Tone.MembraneSynth import as Tone is global
+// Corrected import for Constants
+import * as Constants from '../constants.js'; // Corrected path
 
 let localAppServices = {};
 let metronomeSynth = null;
@@ -21,36 +21,29 @@ function createMetronomeSynth() {
     }).toDestination();
 }
 
-export function initializeMetronome(appServices) { // Added 'export' here
-    // The appServices variable is still used, but its specific properties
-    // like showNotification would need to be accessed via the appServices object
-    // if needed within this module. For now, it's just passed for consistency.
+export function initializeMetronome(appServices) {
     localAppServices = appServices;
 }
 
 function startMetronome() {
     if (metronomeEventId !== -1) {
-        // Already running
         return;
     }
     if (!metronomeSynth) {
         metronomeSynth = createMetronomeSynth();
     }
     
-    // Schedule a repeating event every quarter note
     metronomeEventId = Tone.Transport.scheduleRepeat((time) => {
-        // Use the transport's position to determine the beat number
         const position = Tone.Transport.position.split(':');
         const measure = parseInt(position[0], 10);
         const beat = parseInt(position[1], 10);
 
-        // Play a high note on the downbeat (first beat of a measure), and a lower note on others
         if (beat === 0) {
             metronomeSynth.triggerAttackRelease("C5", "16n", time);
         } else {
             metronomeSynth.triggerAttackRelease("C4", "16n", time);
         }
-    }, "4n"); // "4n" means every quarter note (every beat)
+    }, "4n");
 
     isMetronomeEnabled = true;
 }
@@ -63,7 +56,7 @@ function stopMetronome() {
     isMetronomeEnabled = false;
 }
 
-export function toggleMetronome() { // Added 'export' here
+export function toggleMetronome() {
     isMetronomeEnabled ? stopMetronome() : startMetronome();
     return isMetronomeEnabled;
 }
