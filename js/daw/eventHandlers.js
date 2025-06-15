@@ -1,12 +1,14 @@
 // js/daw/eventHandlers.js - Global Event Listeners and Input Handling Module
 
-// Import state functions (already module imports)
-import { incrementOctaveShift, decrementOctaveShift, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT } from '../constants.js';
-import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime } from '../state/trackState.js';
-import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference } from '../state/appState.js'; // NEW: Added setCurrentUserThemePreference
-import { getUndoStack, getRedoStack, captureStateForUndo } from '../state/projectState.js';
-import { getWindowById } from '../state/windowState.js';
-import { getClipboardData } from '../state/projectState.js';
+// Import state functions (corrected paths)
+import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime } from '../state/trackState.js'; // Corrected path
+import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference } from '../state/appState.js'; // Corrected path
+import { getUndoStack, getRedoStack, captureStateForUndo } from '../state/projectState.js'; // Corrected path
+import { getWindowById } from '../state/windowState.js'; // Corrected path
+import { getClipboardData } from '../state/projectState.js'; // Corrected path
+
+// Corrected import for Constants - directly from js/daw/
+import { incrementOctaveShift, decrementOctaveShift, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT, computerKeySynthMap, PIANO_ROLL_END_MIDI_NOTE, SYNTH_PITCHES } from '../constants.js'; // Corrected path and added specific imports
 
 let localAppServices = {};
 const currentlyPressedKeys = new Set();
@@ -14,7 +16,7 @@ let isSustainPedalDown = false;
 const sustainedNotes = new Map();
 
 export function initializeEventHandlersModule(appServicesFromMain) {
-    localAppServices = appServicesFromMain || {};
+    localAppServices = appServicesFromMain;
 }
 
 export function initializePrimaryEventListeners() {
@@ -173,15 +175,15 @@ export function attachGlobalControlEvents(uiCache) {
             return;
         }
 
-        const transportState = Tone.Transport.state;
+        const transportState = localAppServices.Tone.Transport.state;
 
         if (transportState === 'started') {
-            Tone.Transport.pause();
+            localAppServices.Tone.Transport.pause();
         } else {
             if (transportState === 'stopped') {
                 localAppServices.onPlaybackModeChange?.(getPlaybackMode(), 'reschedule');
             }
-            Tone.Transport.start();
+            localAppServices.Tone.Transport.start();
         }
     };
 
@@ -192,19 +194,19 @@ export function attachGlobalControlEvents(uiCache) {
             return;
         }
 
-        if (Tone.Transport.state === 'started') {
+        if (localAppServices.Tone.Transport.state === 'started') {
             handleStop();
         } else {
             localAppServices.onPlaybackModeChange?.(getPlaybackMode(), 'reschedule');
-            Tone.Transport.start();
+            localAppServices.Tone.Transport.start();
         }
     };
     
     const handleStop = () => {
         localAppServices.forceStopAllAudio?.();
         
-        if (Tone.Transport.state !== 'stopped') {
-            Tone.Transport.stop();
+        if (localAppServices.Tone.Transport.state !== 'stopped') {
+            localAppServices.Tone.Transport.stop();
         }
     };
 
@@ -224,7 +226,7 @@ export function attachGlobalControlEvents(uiCache) {
             if (getRecordingTrackId() === armedTrackId && armedTrack?.type === 'Audio' && localAppServices.stopAudioRecording) {
                 await localAppServices.stopAudioRecording();
             }
-            if (Tone.Transport.state === 'started') {
+            if (localAppServices.Tone.Transport.state === 'started') {
                 handleStop();
             }
         } else if (armedTrack) {
@@ -232,7 +234,7 @@ export function attachGlobalControlEvents(uiCache) {
             setIsRecording(true);
             recordBtn.classList.add('recording');
             
-            setRecordingStartTime(Tone.Transport.seconds);
+            setRecordingStartTime(localAppServices.Tone.Transport.seconds);
     
             if (armedTrack.type === 'Audio') {
                 const success = await localAppServices.startAudioRecording(armedTrack, armedTrack.isMonitoringEnabled);
@@ -243,8 +245,8 @@ export function attachGlobalControlEvents(uiCache) {
                 }
             }
     
-            if (Tone.Transport.state !== 'started') {
-                Tone.Transport.start();
+            if (localAppServices.Tone.Transport.state !== 'started') {
+                localAppServices.Tone.Transport.start();
             }
         } else {
             localAppServices.showNotification("No track armed for recording.", 2500);
@@ -264,7 +266,7 @@ export function attachGlobalControlEvents(uiCache) {
         // Constants is global
         const newTempo = parseFloat(e.target.value);
         if (newTempo >= Constants.MIN_TEMPO && newTempo <= Constants.MAX_TEMPO) {
-            Tone.Transport.bpm.value = newTempo;
+            localAppServices.Tone.Transport.bpm.value = newTempo;
         }
     });
 
@@ -295,15 +297,15 @@ export function attachGlobalControlEvents(uiCache) {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
         // Constants is global
-        if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
+        if (computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) { // Use imported computerKeySynthMap
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
             
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = Constants.computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                const noteName = Tone.Midi(noteNumber).toNote();
-                armedTrack.instrument.triggerAttack(noteName, Tone.now(), 0.75);
+                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Use imported values
+                const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
+                armedTrack.instrument.triggerAttack(noteName, localAppServices.Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
             }
         } else {
@@ -316,12 +318,12 @@ export function attachGlobalControlEvents(uiCache) {
                 handleRecord();
             } else if (key === 'z') {
                 // Constants is global
-                decrementOctaveShift(); // This function from constants.js needs to be imported or globally accessible.
-                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                decrementOctaveShift(); // Use imported function
+                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000); // Use imported value
             } else if (key === 'x') {
                 // Constants is global
-                incrementOctaveShift(); // This function from constants.js needs to be imported or globally accessible.
-                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                incrementOctaveShift(); // Use imported function
+                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000); // Use imported value
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 // Removed timeline interaction code
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -333,15 +335,15 @@ export function attachGlobalControlEvents(uiCache) {
     document.addEventListener('keyup', (e) => {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
         // Constants is global
-        if (Constants.computerKeySynthMap[key]) {
+        if (computerKeySynthMap[key]) { // Use imported computerKeySynthMap
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
 
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = Constants.computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
-                const noteName = Tone.Midi(noteNumber).toNote();
-                armedTrack.instrument.triggerRelease(noteName, Tone.now());
+                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Use imported values
+                const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
+                armedTrack.instrument.triggerRelease(noteName, localAppServices.Tone.now());
                 currentlyPressedKeys.delete(key);
             }
         }
@@ -441,18 +443,18 @@ function populateMIDIInputSelector(midiAccess) {
         });
     }
 
-    const activeInput = getActiveMIDIInput();
+    const activeInput = localAppServices.getActiveMIDIInput();
     if (activeInput && currentInputs.has(activeInput.id)) {
         midiSelect.value = activeInput.id;
     } else {
-        setActiveMIDIInput(null);
+        localAppServices.setActiveMIDIInput(null);
     }
 }
 
 export function selectMIDIInput(event) {
     const midiAccess = localAppServices.getMidiAccess();
     const selectedId = event.target.value;
-    const currentActiveInput = getActiveMIDIInput();
+    const currentActiveInput = localAppServices.getActiveMIDIInput();
 
     if (currentActiveInput) {
         currentActiveInput.onmidimessage = null;
@@ -461,9 +463,9 @@ export function selectMIDIInput(event) {
     if (selectedId && midiAccess) {
         const newActiveInput = midiAccess.inputs.get(selectedId);
         newActiveInput.onmidimessage = onMIDIMessage;
-        setActiveMIDIInput(newActiveInput);
+        localAppServices.setActiveMIDIInput(newActiveInput);
     } else {
-        setActiveMIDIInput(null);
+        localAppServices.setActiveMIDIInput(null);
     }
 }
 
@@ -484,7 +486,7 @@ function onMIDIMessage(message) {
         } else {
             isSustainPedalDown = false;
             sustainedNotes.forEach((noteValue, midiNote) => {
-                armedTrack.instrument.triggerRelease(noteValue, Tone.now());
+                armedTrack.instrument.triggerRelease(noteValue, localAppServices.Tone.now());
             });
             sustainedNotes.clear();
         }
@@ -492,19 +494,19 @@ function onMIDIMessage(message) {
     }
     
     if (noteOn || noteOff) {
-        const noteName = Tone.Midi(noteNumber).toNote();
+        const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
         
         if (noteOn) {
             if (sustainedNotes.has(noteNumber)) {
-                armedTrack.instrument.triggerRelease(sustainedNotes.get(noteName), Tone.now());
+                armedTrack.instrument.triggerRelease(sustainedNotes.get(noteName), localAppServices.Tone.now());
                 sustainedNotes.delete(noteNumber);
             }
-            armedTrack.instrument.triggerAttack(noteName, Tone.now(), velocity / 127);
+            armedTrack.instrument.triggerAttack(noteName, localAppServices.Tone.now(), velocity / 127);
         } else { 
             if (isSustainPedalDown) {
                 sustainedNotes.set(noteNumber, noteName);
             } else {
-                armedTrack.instrument.triggerRelease(noteName, Tone.now());
+                armedTrack.instrument.triggerRelease(noteName, localAppServices.Tone.now());
             }
         }
     }
@@ -514,15 +516,15 @@ function onMIDIMessage(message) {
         if (track.type !== 'Audio') {
             const activeSequence = track.sequences.getActiveSequence();
             if (activeSequence) {
-                const ticksPerStep = Tone.Transport.PPQ / 4;
-                const currentStep = Math.round(Tone.Transport.ticks / ticksPerStep) % activeSequence.length;
-                const pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber; // Constants is global
+                const ticksPerStep = localAppServices.Tone.Transport.PPQ / 4;
+                const currentStep = Math.round(localAppServices.Tone.Transport.ticks / ticksPerStep) % activeSequence.length;
+                const pitchIndex = PIANO_ROLL_END_MIDI_NOTE - noteNumber; // Use imported PIANO_ROLL_END_MIDI_NOTE
 
-                if (pitchIndex >= 0 && pitchIndex < Constants.SYNTH_PITCHES.length) {
+                if (pitchIndex >= 0 && pitchIndex < SYNTH_PITCHES.length) { // Use imported SYNTH_PITCHES
                     
                     const recordMode = getMidiRecordModeState();
                     if (recordMode === 'replace') {
-                        for (let i = 0; i < Constants.SYNTH_PITCHES.length; i++) {
+                        for (let i = 0; i < SYNTH_PITCHES.length; i++) { // Use imported SYNTH_PITCHES
                             if (activeSequence.data[i][currentStep]) {
                                 track.sequences.removeNoteFromSequence(activeSequence.id, i, currentStep, true); 
                             }
