@@ -15,7 +15,7 @@
     <link rel="apple-touch-icon" sizes="152x152" href="assets/apple-icon-152x152.png">
     <link rel="icon" type="image/png" sizes="192x192"  href="assets/android-icon-192x192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
     <link rel="manifest" href="manifest.json">
     <meta name="msapplication-TileColor" content="#1e1e1e">
@@ -51,7 +51,7 @@
         </div>
         <div id="themeToggleContainerTopRight">
             <button id="themeToggleBtn" title="Toggle Theme">
-                <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg id="themeIconSun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 <svg id="themeIconMoon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </button>
         </div>
@@ -89,6 +89,8 @@
     <div id="notification-area"></div>
     <div id="modalContainer"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    
     <script type="module" src="js/daw/constants.js"></script>
     <script type="module" src="js/daw/db.js"></script>
     <script type="module" src="js/daw/effectsRegistry.js"></script>
@@ -103,8 +105,7 @@
     <script type="module" src="js/daw/state/windowState.js"></script>
 
     <script type="module" src="js/daw/SnugWindow.js"></script>
-
-    <script type="module" src="js/daw/ui/knobUI.js"></script>
+    <script type="module" src="js/daw/ui/knobUI.js"></script> 
     <script type="module" src="js/daw/ui/effectsRackUI.js"></script>
     <script type="module" src="js/daw/ui/inspectorUI.js"></script>
     <script type="module" src="js/daw/ui/mixerUI.js"></script>
@@ -112,11 +113,9 @@
     <script type="module" src="js/daw/ui/soundBrowserUI.js"></script>
     <script type="module" src="js/daw/ui/youtubeImporterUI.js"></script>
     <script type="module" src="js/daw/ui/fileViewerUI.js"></script>
-    <script type="module" src="js/daw/ui/ui.js"></script>
+    <script type="module" src="js/daw/ui/ui.js"></script> 
 
     <script type="module" src="js/daw/welcome/welcomeDb.js"></script>
     <script type="module" src="js/daw/welcome/welcomeUtils.js"></script>
-    <script type="module" src="js/daw/welcome/welcome.js"></script>
-
-</body>
+    <script type="module" src="js/daw/welcome/welcome.js"></script> </body>
 </html>
