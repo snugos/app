@@ -124,7 +124,7 @@ export function renderEffectsList(owner, ownerType, listDiv, controlsContainer) 
             effectDiv.addEventListener('click', (e) => { //
                 if (e.target.tagName === 'BUTTON') { //
                     if (ownerType === 'track') owner.effects.removeEffect(effect.id); //
-                    else addMasterEffect(effect.id); //
+                    else localAppServices.removeMasterEffect(effect.id); // Fix: Corrected call to removeMasterEffect
                 } else {
                     selectedEffectId[ownerId] = effect.id; //
                     renderEffectsList(owner, ownerType, listDiv, controlsContainer); //
@@ -175,9 +175,9 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                     initialValue: currentValue, //
                     onValueChange: (val) => { //
                         if (ownerType === 'track') owner.effects.updateEffectParam(effect.id, paramDef.key, val); //
-                        else updateMasterEffectParam(effect.id, paramDef.key, val); //
+                        else localAppServices.updateMasterEffectParam(effect.id, paramDef.key, val); //
                     }
-                }, localAppServices); //
+                }, localAppServices.captureStateForUndo); //
                 controlWrapper.appendChild(knob.element); //
             }
             gridContainer.appendChild(controlWrapper); //
@@ -209,7 +209,7 @@ function showAddEffectModal(owner, ownerType) { //
             if (ownerType === 'track') { //
                 owner.effects.addEffect(effectType); //
             } else {
-                addMasterEffect(effectType); //
+                localAppServices.addMasterEffect(effectType); // Fix: Call via localAppServices
             }
             modal.overlay.remove(); // This closes the modal
         });
