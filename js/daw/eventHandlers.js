@@ -8,7 +8,7 @@ import { getWindowById } from './state/windowState.js';
 import { getClipboardData } from './state/projectState.js';
 
 // Corrected import for Constants - directly from current directory
-import { incrementOctaveShift, decrementOctaveShift, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT, computerKeySynthMap, PIANO_ROLL_END_MIDI_NOTE, SYNTH_PITCHES, DRUM_MIDI_START_NOTE } from './constants.js';
+import * as Constants from './constants.js';
 
 let localAppServices = {};
 const currentlyPressedKeys = new Set();
@@ -18,29 +18,31 @@ const sustainedNotes = new Map(); // Map to hold notes currently being sustained
 /**
  * Initializes the event handlers module.
  * This function is designed to be called once during app startup by main.js.
- * It now explicitly returns an object containing functions that main.js needs to expose via appServices.
+ * It now returns an object containing functions that main.js needs to expose via appServices.
  * @param {object} appServicesFromMain - The main appServices object.
  * @returns {object} An object containing functions to be exposed via appServices.
  */
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
     
-    // Call primary listeners setup
-    initializePrimaryEventListeners();
-    attachGlobalControlEvents();
-    setupMIDI();
+    // These functions are *exported* now, and will be called directly by main.js
+    // after appServices is fully populated.
+    // They are NOT called from within this initializer anymore.
 
     // Return functions that main.js needs to assign to appServices
     return {
-        updateUndoRedoButtons: updateUndoRedoButtons, // Expose this function
-        // Other functions are now called directly via localAppServices where needed.
+        updateUndoRedoButtons: updateUndoRedoButtons,
+        initializePrimaryEventListeners: initializePrimaryEventListeners, // Export and return
+        attachGlobalControlEvents: attachGlobalControlEvents,       // Export and return
+        setupMIDI: setupMIDI,                                       // Export and return
     };
 }
 
 /**
  * Initializes primary global event listeners, mostly related to the desktop and start menu.
+ * This function is now EXPORTED and called by main.js.
  */
-function initializePrimaryEventListeners() {
+export function initializePrimaryEventListeners() {
     const startButton = document.getElementById('startButton');
     const startMenu = document.getElementById('startMenu');
     const desktopEl = document.getElementById('desktop');
@@ -159,7 +161,7 @@ function initializePrimaryEventListeners() {
     document.getElementById('menuOpenTestProfile')?.addEventListener('click', () => {
         const usernameToOpen = 'testuser'; // Example username for testing
         // Open profile in a new browser tab/window (or SnugWindow if that feature is implemented)
-        window.open(`profile.html?user=${usernameToOpen}`, '_blank'); // Opens in new browser window/tab
+        window.open(`/app/profile.html?user=${usernameToOpen}`, '_blank'); // Using /app/ for profile.html path
         document.getElementById('startMenu')?.classList.add('hidden');
     });
 
@@ -184,8 +186,9 @@ function initializePrimaryEventListeners() {
 /**
  * Attaches global control event listeners (play, stop, record, tempo, MIDI input, theme toggle).
  * These are listeners for the top taskbar controls.
+ * This function is now EXPORTED and called by main.js.
  */
-function attachGlobalControlEvents() {
+export function attachGlobalControlEvents() {
     const playBtn = document.getElementById('playBtnGlobalTop');
     const stopBtn = document.getElementById('stopBtnGlobalTop');
     const recordBtn = document.getElementById('recordBtnGlobalTop');
@@ -367,7 +370,7 @@ function attachGlobalControlEvents() {
             const armedTrack = getTrackById(armedTrackId);
             
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const noteNumber = computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Using Constants
                 const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerAttack(noteName, localAppServices.Tone.now(), 0.75); // Trigger note
                 currentlyPressedKeys.add(key); // Mark key as pressed
@@ -382,11 +385,11 @@ function attachGlobalControlEvents() {
             } else if (key === 'r' && !e.ctrlKey && !e.metaKey) { // 'r' for record (not with Ctrl/Cmd)
                 handleRecord();
             } else if (key === 'z' && !e.ctrlKey && !e.metaKey) { // 'z' to decrement octave (not with Ctrl/Cmd)
-                decrementOctaveShift();
-                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                Constants.decrementOctaveShift(); // Using Constants
+                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (key === 'x' && !e.ctrlKey && !e.metaKey) { // 'x' to increment octave (not with Ctrl/Cmd)
-                incrementOctaveShift();
-                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                Constants.incrementOctaveShift(); // Using Constants
+                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 // Future: Add functionality for deleting selected clips/notes on timeline/piano roll
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -405,13 +408,13 @@ function attachGlobalControlEvents() {
     document.addEventListener('keyup', (e) => {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
         // Release note when key is lifted
-        if (computerKeySynthMap[key]) {
+        if (Constants.computerKeySynthMap[key]) { // Using Constants
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
 
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Using Constants
                 const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerRelease(noteName, localAppServices.Tone.now()); // Release note
                 currentlyPressedKeys.delete(key); // Mark key as released
@@ -467,8 +470,9 @@ function toggleFullScreen() {
 
 /**
  * Sets up Web MIDI API access and populates the MIDI input selector.
+ * This function is now EXPORTED and called by main.js.
  */
-function setupMIDI() {
+export function setupMIDI() {
     if (!navigator.requestMIDIAccess) {
         localAppServices.showNotification("Web MIDI is not supported in this browser.", 4000);
         return;

@@ -63,7 +63,7 @@ import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore,
 
 let appServices = {};
 
-// Centralized applyCustomBackground function
+// Centralized applyCustomBackground function 
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
@@ -333,7 +333,12 @@ async function initializeSnugOS() {
         createKnob: null, 
 
         // Event Handlers (from js/daw/eventHandlers.js)
-        initializeEventHandlersModule: null, // Placeholder, assigned after import
+        // These are functions that are EXPORTED from eventHandlers.js and need to be called by main.js
+        // The `initializeEventHandlersModule` function itself is also imported and called.
+        initializeEventHandlersModule: null, 
+        initializePrimaryEventListeners: null, 
+        attachGlobalControlEvents: null, 
+        setupMIDI: null, 
         handleTrackMute: null, handleTrackSolo: null, handleTrackArm: null, handleRemoveTrack: null,
         handleOpenEffectsRack: null, handleOpenPianoRoll: null, onPlaybackModeChange: null,
         handleTimelineLaneDrop: null, handleOpenYouTubeImporter: null, 
@@ -357,7 +362,7 @@ async function initializeSnugOS() {
     const [
         trackStateModule, windowStateModule, appStateModule, masterStateModule, projectStateModule, soundLibraryStateModule,
         audioModule, playbackModule, recordingModule, sampleManagerModule,
-        uiModule, eventHandlersModuleExports, metronomeModule, authModuleExports, // Renamed `eventHandlersModule` to `eventHandlersModuleExports` to avoid confusion
+        uiModule, eventHandlersModuleExports, metronomeModule, authModuleExports, 
         { Track } // Directly import Track class from its module
     ] = await Promise.all([
         import('./state/trackState.js'), import('./state/windowState.js'), import('./state/appState.js'), import('./state/masterState.js'), import('./state/projectState.js'), import('./state/soundLibraryState.js'),
@@ -370,6 +375,8 @@ async function initializeSnugOS() {
     appServices.Track = Track;
 
     // Assign all exported functions from each module to appServices
+    // These `Object.assign` calls ensure that functions like `getTracks`, `getWindowById`, etc.,
+    // are available directly on `appServices`.
     Object.assign(appServices, trackStateModule);
     Object.assign(appServices, windowStateModule);
     Object.assign(appServices, appStateModule);
@@ -380,30 +387,46 @@ async function initializeSnugOS() {
     Object.assign(appServices, playbackModule);
     Object.assign(appServices, recordingModule);
     Object.assign(appServices, sampleManagerModule);
-    Object.assign(appServices, uiModule); // UI module exports functions like openTrackInspectorWindow
-    Object.assign(appServices, metronomeModule); // Metronome module exports initializeMetronome, toggleMetronome
-
-    // Event Handlers and Auth modules have special initialization patterns
-    // where their `initialize` function sets up internal state and might return
-    // an object of functions to be exposed.
-    const eventHandlersReturn = eventHandlersModuleExports.initializeEventHandlersModule(appServices); // Call init function
+    Object.assign(appServices, uiModule); 
+    Object.assign(appServices, metronomeModule); 
+    
+    // Event Handlers and Auth modules have specific initialization patterns
+    // where their `initialize` function sets up internal state and returns
+    // an object of functions to be exposed (if any).
+    const eventHandlersReturn = eventHandlersModuleExports.initializeEventHandlersModule(appServices); 
     Object.assign(appServices, eventHandlersReturn); // Assign functions returned by the initializer
 
-    const authModuleReturn = authModuleExports.initializeAuth(appServices); // Call init function
+    const authModuleReturn = authModuleExports.initializeAuth(appServices); 
     Object.assign(appServices, authModuleReturn); // Assign functions returned by the initializer (if any)
 
-    // These functions are now directly on `appServices` due to the `Object.assign` calls.
-    // They are called here to set up initial global listeners and state.
-    appServices.initializePrimaryEventListeners(); // This is a function exported by eventHandlers.js
-    appServices.attachGlobalControlEvents(); // This is a function exported by eventHandlers.js
-    appServices.setupMIDI(); // This is a function exported by eventHandlers.js
+    // Now, call the top-level initialization functions. They are now directly on `appServices`.
+    appServices.initializeAppState(appServices);
+    appServices.initializeMasterState(appServices);
+    appServices.initializeProjectState(appServices);
+    appServices.initializeSoundLibraryState(appServices);
+    appServices.initializeTrackState(appServices);
+    appServices.initializeWindowState(appServices);
+    
+    appServices.initializeAudioModule(appServices);
+    appServices.initializePlayback(appServices);
+    appServices.initializeRecording(appServices);
+    appServices.initializeSampleManager(appServices);
+    appServices.initializeUIModule(appServices);
+    appServices.initializeMetronome(appServices);
+
+    // Call the EXPORTED functions from eventHandlers.js which are now on appServices
+    // These functions were previously called *inside* initializeEventHandlersModule
+    // but are now called directly from main.js as part of the main setup flow.
+    appServices.initializePrimaryEventListeners(); 
+    appServices.attachGlobalControlEvents(); 
+    appServices.setupMIDI(); 
     
     // Theme application and system preference listening
     const savedTheme = localStorage.getItem('snugos-theme');
     if (savedTheme) {
-        appServices.setCurrentUserThemePreference(savedTheme); // This applies the theme and stores preference
+        appServices.setCurrentUserThemePreference(savedTheme); 
     } else {
-        appServices.setCurrentUserThemePreference('system'); // This will trigger the actual theme application based on system preference
+        appServices.setCurrentUserThemePreference('system'); 
     }
     // Listen for system theme changes and re-apply "system" preference
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => appServices.setCurrentUserThemePreference('system')); 
@@ -429,8 +452,8 @@ async function initializeSnugOS() {
     console.log("SnugOS Initialized Successfully.");
 
     // Tone.js context settings for latency
-    appServices.context.lookAhead = 0.02; // Time in seconds that Tone.js schedules audio events in advance
-    appServices.context.updateInterval = 0.01; // Interval at which the AudioContext's currentTime is polled
+    appServices.context.lookAhead = 0.02; 
+    appServices.context.updateInterval = 0.01; 
     console.log(`[Latency] lookAhead set to: ${appServices.context.lookAhead}`);
     console.log(`[Latency] updateInterval set to: ${appServices.context.updateInterval}`);
     
@@ -439,16 +462,16 @@ async function initializeSnugOS() {
         if (typeof appServices.Tone !== 'undefined') {
             const transportTime = appServices.Tone.Transport.seconds;
             
-            const mode = appServices.getPlaybackMode(); // Current playback mode, affects what UI to update
-            appServices.updatePianoRollPlayhead(transportTime); // Update piano roll playhead
+            const mode = appServices.getPlaybackMode(); 
+            appServices.updatePianoRollPlayhead(transportTime); 
             
             // Update master and track meters
             const masterMixerMeterBar = document.getElementById('mixerTrackMeterBar-master');
             appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), masterMixerMeterBar, appServices.getTracks());
         }
-        requestAnimationFrame(drawLoop); // Request next animation frame
+        requestAnimationFrame(drawLoop); 
     }
-    drawLoop(); // Start the loop immediately
+    drawLoop(); 
 }
 
 // Ensure initializeSnugOS runs when the DOM is fully loaded.
