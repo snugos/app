@@ -1,9 +1,9 @@
 // js/daw/ClipManager.js
 // Corrected imports for Constants and DB functions
-import * as Constants from './constants.js'; // Corrected path
-import { storeAudio, getAudio, deleteAudio } from './db.js'; // Corrected path
+import * as Constants from './constants.js';
+import { storeAudio, getAudio, deleteAudio } from './db.js';
 
-class ClipManager {
+export class ClipManager { // ADDED 'export'
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
@@ -11,12 +11,11 @@ class ClipManager {
     }
 
     initialize(clips = []) {
-        // Ensure clips is an array before assigning/iterating
         if (Array.isArray(clips)) {
             this.timelineClips = clips;
         } else {
             console.warn(`[ClipManager.js] initialize received non-array clips data for track ${this.track.id}:`, clips);
-            this.timelineClips = []; // Default to empty array if invalid data
+            this.timelineClips = [];
         }
     }
 
