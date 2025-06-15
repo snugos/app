@@ -24,26 +24,61 @@
     gap: 6px;
 }
 
-#topTaskbar button {
-    background-color: var(--bg-button);
-    border: 1px solid var(--border-button);
-    color: var(--text-button);
-    padding: 5px 8px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Consolidate common button styles here for consistent sizing across most buttons.
+    This includes:
+    - #topTaskbar button
+    - #taskbarButtons .taskbar-button
+    - .window-title-buttons button (min/max/close)
+    - .panel button (general buttons like in Inspector)
+    - .modal-buttons button (buttons in modals)
+    - .mixer-track button (mute/solo buttons in mixer)
+*/
+#topTaskbar button,
+#taskbarButtons .taskbar-button,
+.window-title-buttons button,
+.panel button,
+.modal-buttons button,
+.mixer-track button {
+    padding: 5px 8px; /* Consistent padding */
+    border: 1px solid var(--border-button); /* Consistent border */
+    border-radius: 3px; /* Consistent border-radius */
+    font-size: 11px; /* Consistent font size */
+    height: 30px; /* Explicit height to prevent enlargement */
+    min-width: 30px; /* Ensure minimum width to prevent collapse */
+    box-sizing: border-box; /* Crucial: Include padding and border in element's total width/height */
+    display: inline-flex; /* Use flexbox for centering content */
+    align-items: center; /* Vertically center content */
+    justify-content: center; /* Horizontally center content */
+    flex-shrink: 0; /* Prevent buttons from shrinking in flex containers */
+    cursor: pointer; /* Ensure cursor is pointer by default for all buttons */
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; /* Smooth transitions */
+    background-color: var(--bg-button); /* Default background */
+    color: var(--text-button); /* Default text color */
 }
-#topTaskbar button:hover {
+
+/* Common hover and active states for these consolidated buttons */
+#topTaskbar button:hover,
+#taskbarButtons .taskbar-button:hover,
+.window-title-buttons button:hover,
+.panel button:hover,
+.modal-buttons button:hover,
+.mixer-track button:hover {
     background-color: var(--bg-button-hover);
     border-color: var(--border-button-hover);
     color: var(--text-button-hover);
 }
-#topTaskbar button:active {
+
+#topTaskbar button:active,
+#taskbarButtons .taskbar-button:active,
+.window-title-buttons button:active,
+.panel button:active,
+.modal-buttons button:active,
+.mixer-track button:active {
     background-color: var(--bg-button-active);
+    border-color: var(--border-button-active-outer); /* Use outer border for active */
+    box-shadow: inset 1px 1px 0 var(--shadow-button-inset-main), inset -1px -1px 0 var(--shadow-button-inset-secondary); /* Apply inset shadow for active */
 }
+
 
 #topTaskbar button#recordBtnGlobalTop svg {
     fill: var(--text-button);
@@ -188,26 +223,63 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 .window-title-bar { background-color: var(--bg-title-bar); color: var(--text-title-bar); padding: 5px 8px; cursor: grab; display: flex; justify-content: space-between; align-items: center; height: 28px; flex-shrink: 0; font-weight: 600; user-select: none; border-bottom: 1px solid var(--border-window-title-bottom); border-top-left-radius: 2px; border-top-right-radius: 2px;}
 .window-title-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px;}
 .window-title-buttons { display: flex;}
-.window-title-buttons button { background: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button); width: 20px; height: 20px; line-height: 18px; text-align: center; font-size: 11px; font-weight: bold; margin-left: 4px; padding: 0; cursor: default; flex-shrink: 0; border-radius: 3px; transition: background-color 0.15s ease;}
-.window-title-buttons button:hover { background: var(--bg-button-hover); color: var(--text-button-hover);}
-.window-title-buttons button:active { background: var(--bg-button-active); border-color: var(--border-button);}
-.window-content { flex-grow: 1; padding: 0; background-color: var(--bg-window-content); overflow: auto; color: var(--text-primary);}
-.window-resizer { position: absolute; width: 10px; height: 10px; right: 0; bottom: 0; cursor: nwse-resize; }
+/* Window title buttons have a more specific size here */
+.window-title-buttons button {
+    width: 20px;
+    height: 20px;
+    line-height: 18px; /* Adjust line-height for vertical centering of single char */
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 4px;
+    padding: 0; /* Remove padding explicitly for smaller buttons */
+    /* Inherits other base styles from the consolidated button rule above */
+}
 
+.window-content { flex-grow: 1; padding: 0; background-color: var(--bg-window-content); overflow: auto; color: var(--text-primary);}
 
 /* --- Taskbar Styling (Bottom Taskbar) --- */
 #taskbar { position: fixed; bottom: 0; left: 0; width: 100%; height: 32px; background-color: var(--bg-taskbar); border-top: 1px solid var(--border-secondary); z-index: 10000; display: flex; align-items: center; padding: 0 6px; box-sizing: border-box; color: var(--text-secondary);}
-#startButton { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 12px; font-weight: 600; margin-right: 6px; color: var(--text-button); border-radius: 3px; transition: background-color 0.15s ease;}
-#startButton:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
-#startButton:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active);}
-#taskbarButtons .taskbar-button { background-color: var(--bg-button); border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; padding: 3px 10px; margin: 0 3px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; color: var(--text-secondary); border-radius: 3px; transition: background-color 0.15s ease, color 0.15s ease;}
-#taskbarButtons .taskbar-button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover);}
+
+#startButton { 
+    padding: 3px 12px; 
+    font-weight: 600; 
+    margin-right: 6px; 
+    /* Inherits other base styles from the consolidated button rule above */
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); 
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; 
+}
+#startButton:hover { 
+    /* Inherits from consolidated hover */
+}
+#startButton:active { 
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); 
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; 
+    /* Inherits from consolidated active */
+}
+
+#taskbarButtons .taskbar-button { 
+    padding: 3px 10px; 
+    margin: 0 3px; 
+    max-width: 160px; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    white-space: nowrap; 
+    /* Inherits other base styles from the consolidated button rule above */
+    border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); 
+    box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; 
+}
+#taskbarButtons .taskbar-button:hover { 
+    /* Inherits from consolidated hover */
+}
 #taskbarButtons .taskbar-button.active,
-#taskbarButtons .taskbar-button:active { border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button-active); color: var(--text-button-hover);}
+#taskbarButtons .taskbar-button:active { 
+    border-color: var(--border-button-active-outer) var(--border-button-active-inner) var(--border-button-active-inner) var(--border-button-active-outer); 
+    box-shadow: -1px -1px 0 var(--shadow-button-inset-main) inset, 1px 1px 0 var(--shadow-button-inset-secondary) inset; 
+    /* Inherits from consolidated active */
+}
 #taskbarButtons .taskbar-button.minimized-on-taskbar { background-color: var(--bg-button); opacity: 0.65;}
 #taskbarTempoDisplay { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border-button); border-color: var(--border-button-hover) var(--border-button-active-outer) var(--border-button-active-outer) var(--border-button-hover); box-shadow: 1px 1px 0 var(--shadow-button-inset-main) inset, -1px -1px 0 var(--shadow-button-inset-secondary) inset; background-color: var(--bg-button); cursor: pointer; color: var(--text-secondary); border-radius: 3px;}
 #taskbarTempoDisplay:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
-
 
 /* --- Start Menu Styling --- */
 #startMenu { position: absolute; bottom: 32px; left: 0; background: var(--bg-start-menu); border: 1px solid var(--border-start-menu); border-color: var(--border-start-menu-shadow); box-shadow: var(--shadow-start-menu); z-index: 10001; padding: 4px; min-width: 220px; color: var(--text-primary); border-radius: 3px;}
@@ -278,11 +350,56 @@ body.theme-dark #themeToggleBtn #themeIconSun { display: inline-block; }
 .knob-handle { width: 4px; height: 10px; background-color: var(--text-secondary); position: absolute; top: 3px; left: 50%; transform: translateX(-50%); transform-origin: bottom center; border-radius: 2px;}
 .knob-value { font-size: 0.75rem; color: var(--text-knob); margin-top: 2px; min-height: 1em; text-align: center;}
 
-/* --- General Button Active States --- */
-button.muted { background-color: var(--accent-muted) !important; color: var(--accent-muted-text) !important; }
-button.soloed { background-color: var(--accent-soloed) !important; color: var(--accent-soloed-text) !important; }
-button.armed, button.recording { background-color: var(--accent-armed) !important; color: var(--accent-armed-text) !important; }
-button.active { background-color: var(--accent-active) !important; color: var(--accent-active-text) !important; }
+/* --- General Button Active States (for .muted, .soloed, .armed, .active) --- */
+/* These rules should ONLY change colors, and NOT affect sizing or layout.
+   The sizing/layout is handled by the consolidated rules near the top. */
+button.muted {
+    background-color: var(--accent-muted) !important;
+    color: var(--accent-muted-text) !important;
+    border-color: var(--accent-muted) !important; /* Make border match background for a solid look */
+}
+
+button.soloed {
+    background-color: var(--accent-soloed) !important;
+    color: var(--accent-soloed-text) !important;
+    border-color: var(--accent-soloed) !important; /* Make border match background */
+}
+
+button.armed, button.recording {
+    background-color: var(--accent-armed) !important;
+    color: var(--accent-armed-text) !important;
+    border-color: var(--accent-armed) !important; /* Make border match background */
+}
+
+button.active {
+    background-color: var(--accent-active) !important;
+    color: var(--accent-active-text) !important;
+    border-color: var(--accent-active) !important; /* Make border match background */
+}
+
+/* --- Piano Roll / Sequencer Styling --- */
+.sequencer-container .controls { position: sticky; top: 0; left: 0; background-color: var(--bg-title-bar); z-index: 30; border-bottom: 1px solid var(--border-primary); padding: 0.25rem; color: var(--text-title-bar);}
+.sequencer-container .controls input, .sequencer-container .controls label { color: var(--text-primary);}
+.sequencer-container .controls input { background-color: var(--bg-input); border-color: var(--border-input);}
+.sequencer-grid-layout > div { box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; border: 1px solid var(--border-sequencer);}
+.sequencer-grid-layout .sequencer-header-cell { position: sticky; top: 0; background-color: var(--bg-sequencer-header); font-weight: 500; color: var(--text-sequencer-header); z-index: 20;}
+.sequencer-grid-layout .sequencer-header-cell:first-child { z-index: 25; left: 0;}
+.sequencer-grid-layout .sequencer-label-cell { position: sticky; left: 0; background-color: var(--bg-sequencer-label); justify-content: flex-end; padding-right: 0.25rem; font-weight: 500; color: var(--text-sequencer-header); z-index: 10;}
+.sequencer-grid-layout .sequencer-step-cell { cursor: pointer; transition: background-color: 0.1s ease; color: var(--text-sequencer-step);}
+.sequencer-step-cell.bg-gray-50 { background-color: var(--bg-sequencer-step-even); }
+.sequencer-step-cell.bg-white { background-color: var(--bg-sequencer-step-odd); }
+.sequencer-step-cell:hover { background-color: var(--bg-sequencer-step-hover) !important; color: var(--text-button-hover) !important }
+.sequencer-step-cell.active-synth, .sequencer-step-cell.active-sampler, .sequencer-step-cell.active-drum-sampler, .sequencer-step-cell.active-instrument-sampler { background-color: var(--accent-sequencer-step) !important; color: var(--bg-sequencer-step-even) !important; border-color: var(--accent-sequencer-step-border) !important;}
+.sequencer-step-cell.playing { outline: 2px solid var(--accent-sequencer-playing-outline); outline-offset: -2px; z-index: 5;}
+
+.velocity-bar {
+    background-color: var(--accent-sequencer-step);
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+}
+.velocity-bar:hover {
+    opacity: 1;
+}
 
 /* --- Notification Area --- */
 #notification-area { position: fixed; bottom: 40px; right: 10px; z-index: 20000; display: flex; flex-direction: column; align-items: flex-end; }
@@ -300,6 +417,7 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 
 /* --- Meter Bar Styling --- */
 .meter-bar-container { background-color: var(--bg-meter-bar-container); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-meter-bar-container); height: 10px; box-sizing: border-box;}
+.meter-bar { background-color: var(--accent-meter); height: 100%; width: 0%; transition: width 0.05s linear;}
 .meter-bar.clipping { background-color: var(--accent-meter-clip);}
 .track-meter-container { height: 16px; margin-top: 2px; }
 .mixer-meter-container { height: 12px; margin-top: 4px; }
@@ -317,13 +435,15 @@ button.active { background-color: var(--accent-active) !important; color: var(--
 .modal-buttons button:hover { background-color: var(--bg-button-hover); color: var(--text-button-hover); }
 .modal-buttons button:active { background-color: var(--bg-button-active);}
 
-/* --- Context Menu Styling --- */
-.context-menu { background-color: var(--bg-context-menu); border: 1px solid var(--border-context-menu); box-shadow: var(--shadow-context-menu); padding: 4px 0; min-width: 180px; border-radius: 3px; color: var(--text-primary); position: absolute;}
-.context-menu ul { list-style: none; padding: 0; margin: 0; }
-.context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
-.context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: #000000; }
-.context-menu-item.disabled { color: var(--text-start-menu-disabled); cursor: default; }
-.context-menu-separator { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
+.window-resizer { position: absolute; width: 10px; height: 10px; right: 0; bottom: 0; cursor: nwse-resize; }
+.modular-effects-rack {}
+.effects-list-container {}
+.effect-item.dragging { opacity: 0.5; background-color: var(--bg-button-hover); }
+.effect-item.dragover-target { border-top: 2px solid var(--accent-focus); }
+.drop-zone-relink-container { margin-top: 5px; }
+.drop-zone-relink-button { font-size: 0.8em; padding: 2px 5px; margin-top: 3px; background-color: var(--bg-button); border: 1px solid var(--border-button); cursor: pointer; }
+.drop-zone-missing, .drop-zone-error { border-color: var(--accent-meter-clip); background-color: var(--accent-muted); color: var(--accent-muted-text); }
+.drop-zone-loading { border-color: var(--accent-active); background-color: var(--accent-active); color: var(--accent-active-text); }
 
 /* Input and Select General Styling */
 select, input[type="text"], input[type="number"],
@@ -333,120 +453,65 @@ select, input[type="text"], input[type="number"],
 input::placeholder,
 .window-content input::placeholder, .modal-content input::placeholder { color: var(--text-placeholder);}
 
-/* --- Library Page Styles --- */
-/* For the file items grid */
-#my-files-list {
-    /* Use CSS Grid for flexible columns based on screen size */
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Responsive columns */
-    gap: 1rem; /* Gap between grid items */
-    max-height: 500px; /* Max height for scrollbar to appear */
-    overflow-y: auto; /* Enable vertical scrollbar */
-    padding-right: 10px; /* Space for scrollbar */
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar { width: 10px; height: 10px;}
+::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 0px;}
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; border: 1px solid var(--scrollbar-thumb-border);}
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover);}
+::-webkit-scrollbar-corner { background: var(--scrollbar-corner);}
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);}
+
+/* --- Context Menu Styling --- */
+.context-menu { background-color: var(--bg-context-menu); border: 1px solid var(--border-context-menu); box-shadow: var(--shadow-context-menu); padding: 4px 0; min-width: 180px; border-radius: 3px; color: var(--text-primary); position: absolute;}
+.context-menu ul { list-style: none; padding: 0; margin: 0; }
+.context-menu-item { padding: 6px 15px 6px 12px; cursor: pointer; white-space: nowrap; transition: background-color 0.1s ease, color 0.1s ease; }
+.context-menu-item:not(.disabled):hover { background-color: var(--accent-focus); color: #000000; }
+.context-menu-item.disabled { color: var(--text-start-menu-disabled); cursor: default; }
+.context-menu-separator { border: none; border-top: 1px solid var(--border-start-menu); margin: 4px 0; }
+
+/* --- Timeline Styling --- */
+#timeline-container { height: 100%; width: 100%; background-color: var(--bg-timeline-container); display: flex; flex-direction: column; overflow: hidden; position: relative;}
+#timeline-header { height: 20px; background-color: var(--bg-timeline-header); border-bottom: 1px solid var(--border-timeline-header); flex-shrink: 0; position: relative; overflow: hidden; width: 100%;}
+#timeline-ruler { width: 4000px; height: 100%; background-image: repeating-linear-gradient(to right, var(--text-secondary) 0 1px, transparent 1px 100%), repeating-linear-gradient(to right, var(--text-placeholder) 0 1px, transparent 1px 100%); background-size: 120px 100%, 30px 100%; background-position: left top; position: absolute; top: 0; left: 0;}
+#timeline-tracks-and-playhead-container { flex-grow: 1; position: relative; overflow-x: auto; overflow-y: hidden;}
+#timeline-playhead { position: absolute; top: 0; left: var(--timeline-track-name-width, 120px); width: 2px; height: 100%; background-color: var(--accent-playhead); z-index: 20; pointer-events: none; transform: translateX(0px);}
+#timeline-tracks-area { position: relative; height:100%; overflow-y: auto; display: flex; flex-direction: column;}
+.timeline-track-lane { min-height: 50px; background-color: var(--bg-timeline-track-lane); border-bottom: 1px solid var(--border-timeline-track-lane); box-sizing: border-box; position: relative; overflow: hidden; display: flex; width: 4000px;}
+.timeline-track-lane:nth-child(even) { background-color: var(--bg-timeline-track-lane-even);}
+.timeline-track-lane-name { position: sticky; left: 0; z-index: 10; background-color: var(--bg-timeline-track-name); padding: 0 8px; height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-timeline-track-name); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; color: var(--text-primary); width: var(--timeline-track-name-width, 120px); flex-shrink: 0;}
+.timeline-clips-area { position: relative; height: 100%; flex-grow: 1;}
+
+.audio-clip, .midi-clip {
+    position: absolute;
+    height: 80%;
+    top: 10%;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 2px 4px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: grab;
+    border-radius: 3px;
 }
 
-/* Style for individual file items */
-.file-item {
-    background-color: var(--bg-button); /* Use button background for consistency */
-    border: 1px solid var(--border-button); /* Use button border */
-    color: var(--text-primary); /* Primary text color for file names */
-    padding: 0.75rem; /* Reduced padding for a more condensed look */
-    border-radius: 0.5rem; /* Rounded corners */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    font-size: 0.875rem; /* Small font size */
-    word-break: break-word; /* Break long words */
-    overflow: hidden; /* Hide overflowing content */
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+.audio-clip { 
+    background-color: var(--accent-clip-bg); 
+    border: 1px solid var(--accent-clip-border); 
+    color: var(--bg-primary); 
+}
+.midi-clip {
+    background-color: var(--accent-active);
+    border: 1px solid var(--border-primary);
+    color: var(--accent-active-text);
+}
+.midi-clip:hover, .audio-clip:hover {
+    filter: brightness(1.2);
 }
 
-.file-item:hover {
-    background-color: var(--bg-button-hover);
-    border-color: var(--border-button-hover);
+.audio-clip.selected, .midi-clip.selected { 
+    outline: 2px solid var(--text-primary);
+    z-index: 5;
 }
-
-/* Style for audio/video players within file items */
-.file-item audio,
-.file-item video {
-    width: 100%;
-    max-width: 150px; /* Constrain width for condensed view */
-    height: auto;
-    background-color: #000000; /* Black background for players */
-    border-radius: 0.25rem; /* Match player rounding */
-    outline: none; /* Remove default focus outline */
-}
-
-/* Specific styling for default audio/video player controls */
-.file-item audio::-webkit-media-controls-panel,
-.file-item video::-webkit-media-controls-panel {
-    background-color: #000000; /* Black controls */
-    color: #FFFFFF; /* White icons/text */
-    border-radius: 0.25rem; /* Match player rounding */
-}
-
-.file-item audio::-webkit-media-controls-play-button,
-.file-item video::-webkit-media-controls-play-button {
-    color: #FFFFFF; /* White play button */
-}
-
-.file-item audio::-webkit-media-controls-current-time-display,
-.file-item video::-webkit-media-controls-current-time-display,
-.file-item audio::-webkit-media-controls-time-remaining-display,
-.file-item video::-webkit-media-controls-time-remaining-display {
-    color: #FFFFFF; /* White time text */
-}
-
-.file-item audio::-webkit-media-controls-timeline,
-.file-item video::-webkit-media-controls-timeline {
-    background-color: #333333; /* Dark gray timeline */
-}
-
-.file-item audio::-webkit-media-controls-volume-slider,
-.file-item video::-webkit-media-controls-volume-slider {
-    background-color: #333333; /* Dark gray volume slider */
-}
-
-/* Button styling within file items */
-.file-item button,
-.file-item a.px-2.py-1 {
-    font-size: 0.7rem; /* Smaller font for these buttons */
-    padding: 0.25rem 0.5rem; /* Smaller padding */
-    border-radius: 0.25rem; /* Consistent small radius */
-    white-space: nowrap; /* Prevent text wrap */
-}
-
-/* --- Tailwind overrides for consistent buttons --- */
-/* The general button active states are defined in base.css,
-   but we ensure these custom styled buttons also pick up theme colors */
-.file-item .bg-blue-500 { background-color: var(--blue-500, #3b82f6) !important; color: var(--text-button) !important; }
-.file-item .hover\:bg-blue-600:hover { background-color: var(--blue-600, #2563eb) !important; }
-.file-item .bg-gray-500 { background-color: var(--gray-500, #6b7280) !important; color: var(--text-button) !important; }
-.file-item .hover\:bg-gray-600:hover { background-color: var(--gray-600, #4b5563) !important; }
-.file-item .bg-red-500 { background-color: var(--red-500, #ef4444) !important; color: var(--text-button) !important; }
-.file-item .hover\:bg-red-600:hover { background-color: var(--red-600, #dc2626) !important; }
-
-
-/* Custom Scrollbar Styling (replicated here for clarity if components.css is primary for this) */
-#my-files-list::-webkit-scrollbar {
-    width: 8px; /* Thinner scrollbar */
-}
-#my-files-list::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
-    border-radius: 4px; /* Rounded track */
-}
-#my-files-list::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 4px; /* Rounded thumb */
-    border: 1px solid var(--scrollbar-thumb-border);
-}
-#my-files-list::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-hover);
-}
-/* Firefox scrollbar styling */
-#my-files-list {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+.dragover-timeline-lane { 
+    background-color: var(--bg-dropzone-dragover) !important;
 }
