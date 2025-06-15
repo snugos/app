@@ -229,7 +229,7 @@ function launchDaw() {
 // MODIFIED: View Profiles opens in a SnugWindow iframe
 function viewProfiles() {
     toggleStartMenu();
-    const profileUsername = loggedInUser ? loggedInUser.username : 'guest';
+    const profileUsername = loggedInUser ? loggedInUser.username : 'snaw';
     openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
 }
 
