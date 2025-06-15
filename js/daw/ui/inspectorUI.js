@@ -2,7 +2,7 @@
 
 // Corrected imports for state modules and utils
 import { getTrackById } from '../state/trackState.js';
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Fix: Added getOpenWindows import
+import { getOpenWindows, getWindowById } from '../state/windowState.js';
 import { getIsReconstructingDAW } from '../state/projectState.js';
 import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js';
 import * as effectsRegistry from '../effectsRegistry.js'; // Fix for Issue 3 in Step 2: Import as module alias
@@ -197,7 +197,7 @@ export function updateDrumPadControlsUI(track, container) {
             initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
-        pitchKnob.appendChild(pitchKnob.element);
+        pitchKnob.appendChild(pitchKnob.element); // Fix: Append the element property of the knob object
     }
 
     container.appendChild(controlsGrid);
@@ -216,7 +216,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     if (!track) return null;
     const windowId = `trackInspector-${trackId}`;
     
-    const existingWindow = localAppServices.getOpenWindows().get(windowId); // Fix: Use localAppServices to getOpenWindows
+    const existingWindow = localAppServices.getOpenWindows().get(windowId);
 
     if (existingWindow) {
         if (!savedState) {
