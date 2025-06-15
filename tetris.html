@@ -6,7 +6,7 @@
     <title>Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #000000;
@@ -21,7 +21,7 @@
             height: 100%;
             margin: 0;
             overflow: hidden;
-            font-family: 'Press Start 2P', monospace;
+            font-family: 'Roboto', sans-serif;
             background-color: var(--bg-color);
             color: var(--primary-text);
         }
@@ -42,7 +42,6 @@
         #game-board {
             border: 1px solid var(--border-color);
             display: block;
-            image-rendering: pixelated;
         }
 
         .sidebar {
@@ -61,6 +60,7 @@
 
         .panel-title {
             font-size: 0.9rem;
+            font-weight: 700;
             color: var(--secondary-text);
             margin-bottom: 0.75rem;
             text-align: center;
@@ -73,7 +73,7 @@
             gap: 0.5rem;
         }
         
-        .panel div {
+        .panel div, .panel label {
             font-size: 0.9rem;
         }
 
@@ -86,7 +86,6 @@
 
         .preview-canvas {
             background-color: transparent;
-            image-rendering: pixelated;
         }
 
         button {
@@ -96,18 +95,40 @@
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
-            font-family: 'Press Start 2P', monospace;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
             width: 100%;
             transition: background-color 0.15s ease, color 0.15s ease;
         }
         
         button + button {
-            margin-top: 0.5rem;
+             margin-top: 0.5rem;
         }
 
         button:hover {
             background-color: var(--primary-text);
             color: var(--bg-color);
+        }
+        
+        .setting-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .setting-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
+        input[type="number"] {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--primary-text);
+            font-family: 'Roboto', sans-serif;
+            padding: 4px;
+            width: 50px;
+            text-align: right;
+            border-radius: 4px;
         }
 
         .modal-overlay {
@@ -128,20 +149,20 @@
         
         .modal-dialog h2 {
             margin-top: 0;
-            font-size: 1.5rem;
+            font-size: 2rem;
+            font-weight: 700;
         }
         
         .modal-dialog p {
-            font-size: 1rem;
+            font-size: 1.2rem;
         }
         
         .controls-list {
             display: grid;
             grid-template-columns: auto 1fr;
-            gap: 1rem 1.5rem;
+            gap: 0.75rem 1.5rem;
             text-align: left;
             margin: 1.5rem 0;
-            font-size: 0.8rem;
         }
         .controls-list span:first-child {
             font-weight: 700;
@@ -169,12 +190,6 @@
     <div class="game-wrapper">
         <div class="sidebar">
             <div class="panel">
-                <div class="panel-title">HOLD</div>
-                <div id="hold-queue-container">
-                    <canvas class="preview-canvas" id="hold-canvas"></canvas>
-                </div>
-            </div>
-            <div class="panel">
                 <div class="panel-title">STATS</div>
                 <div class="panel-content">
                     <div>SCORE: <span id="score">0</span></div>
@@ -182,9 +197,35 @@
                     <div>LEVEL: <span id="level">1</span></div>
                 </div>
             </div>
+            <div class="panel">
+                <div class="panel-title">HANDLING</div>
+                 <div class="setting-wrapper">
+                    <label for="das-input">DAS</label>
+                    <input type="number" id="das-input" value="167" step="1">
+                </div>
+                <div class="setting-wrapper">
+                   <label for="arr-input">ARR</label>
+                   <input type="number" id="arr-input" value="33" step="1">
+               </div>
+               <div class="setting-wrapper">
+                    <label for="sdf-input">SDF</label>
+                    <input type="number" id="sdf-input" value="6" step="1">
+                </div>
+            </div>
+             <div class="panel">
+                <button id="start-btn">Play</button>
+                <button id="pause-btn">Pause</button>
+                <button id="controls-btn">Help</button>
+            </div>
         </div>
         <canvas id="game-board"></canvas>
         <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">HOLD</div>
+                <div id="hold-queue-container">
+                    <canvas class="preview-canvas" id="hold-canvas"></canvas>
+                </div>
+            </div>
             <div class="panel">
                  <div class="panel-title">NEXT</div>
                  <div id="next-queue-container">
@@ -192,12 +233,8 @@
                     <canvas class="preview-canvas" id="next-2"></canvas>
                     <canvas class="preview-canvas" id="next-3"></canvas>
                     <canvas class="preview-canvas" id="next-4"></canvas>
+                    <canvas class="preview-canvas" id="next-5"></canvas>
                  </div>
-            </div>
-             <div class="panel">
-                <button id="start-btn">Play</button>
-                <button id="pause-btn">Pause</button>
-                <button id="controls-btn">Controls</button>
             </div>
         </div>
     </div>
@@ -214,9 +251,8 @@
         <div class="modal-dialog">
             <h2>CONTROLS</h2>
             <div class="controls-list">
-                <span>ARROWS</span><span>MOVE</span>
-                <span>UP/X</span><span>ROTATE CW</span>
-                <span>CTRL/Z</span><span>ROTATE CCW</span>
+                <span>ARROW KEYS</span><span>MOVE</span>
+                <span>UP / W</span><span>ROTATE</span>
                 <span>SPACE</span><span>HARD DROP</span>
                 <span>SHIFT</span><span>HOLD</span>
             </div>
@@ -231,7 +267,7 @@
         const boardCtx = boardCanvas.getContext('2d');
         const holdCanvas = document.getElementById('hold-canvas');
         const holdCtx = holdCanvas.getContext('2d');
-        const nextCanvases = Array.from({length: 4}, (_, i) => document.getElementById(`next-${i + 1}`));
+        const nextCanvases = Array.from({length: 5}, (_, i) => document.getElementById(`next-${i + 1}`));
         const nextContexts = nextCanvases.map(c => c.getContext('2d'));
 
         // --- Game Constants ---
@@ -276,6 +312,9 @@
             restartBtn: document.getElementById('restart-btn'),
             gameOverModal: document.getElementById('game-over-modal'),
             finalScore: document.getElementById('final-score'),
+            dasInput: document.getElementById('das-input'),
+            arrInput: document.getElementById('arr-input'),
+            sdfInput: document.getElementById('sdf-input'),
             controlsBtn: document.getElementById('controls-btn'),
             controlsModal: document.getElementById('controls-modal'),
             closeControlsBtn: document.getElementById('close-controls-btn'),
@@ -328,7 +367,7 @@
             keysDown = {};
             clearTimeout(dasTimeout); clearInterval(arrInterval);
             
-            nextPieceQueue = Array.from({ length: 4 }, () => generatePiece());
+            nextPieceQueue = Array.from({ length: 5 }, () => generatePiece());
             spawnNewPiece();
             
             updateUI();
@@ -425,17 +464,10 @@
             dropCounter = 0;
         }
 
-        function rotatePiece(direction) {
+        function rotatePiece() {
             if (!currentPiece) return;
             const shape = currentPiece.shape;
-            let newShape;
-
-            if (direction === 1) { // Clockwise
-                 newShape = shape[0].map((_, colIndex) => shape.map(row => row[colIndex])).reverse();
-            } else { // Counter-clockwise
-                 newShape = shape[0].map((_, colIndex) => shape.map(row => row[row.length - 1 - colIndex]));
-            }
-
+            const newShape = shape[0].map((_, colIndex) => shape.map(row => row[colIndex])).reverse();
             const originalX = currentPiece.x, originalShape = currentPiece.shape;
             currentPiece.shape = newShape;
             let offset = 1;
@@ -599,7 +631,7 @@
                     pieceDrop(); 
                     break;
                 case 'ArrowUp': case 'KeyW':
-                    rotatePiece(1);
+                    rotatePiece();
                     draw(); 
                     break;
                 case 'Space': 
@@ -628,6 +660,10 @@
                     break;
             }
         });
+
+        ui.dasInput.addEventListener('change', (e) => dasValue = parseInt(e.target.value, 10));
+        ui.arrInput.addEventListener('change', (e) => arrValue = parseInt(e.target.value, 10));
+        ui.sdfInput.addEventListener('change', (e) => sdfValue = parseInt(e.target.value, 10));
 
         // --- Initial Setup ---
         window.addEventListener('resize', resizeGame);
