@@ -1,9 +1,9 @@
 // js/daw/SequenceManager.js
 
 // Corrected import for Constants
-import * as Constants from './constants.js'; // Corrected path
+import * as Constants from './constants.js';
 
-class SequenceManager {
+export class SequenceManager { // ADDED 'export'
     constructor(track, appServices) {
         this.track = track;
         this.appServices = appServices;
