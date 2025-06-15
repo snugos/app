@@ -1,6 +1,6 @@
 // js/daw/auth.js
 
-let localAppServicesInstance = null;
+let localAppServicesInstance = null; 
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
