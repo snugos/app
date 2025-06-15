@@ -1,13 +1,13 @@
 // js/daw/Track.js - Track Class Module (Refactored)
 
-// Corrected imports for ClipManager and SequenceManager
-import { EffectChain } from './EffectChain.js';
-import { SequenceManager } from './SequenceManager.js';
-import { ClipManager } from './ClipManager.js';
+// Corrected imports for ClipManager and SequenceManager (now exported classes)
+import { ClipManager } from './ClipManager.js'; // Corrected: ensure ClipManager is exported
+import { SequenceManager } from './SequenceManager.js'; // Corrected: ensure SequenceManager is exported
+import { EffectChain } from './EffectChain.js'; // Corrected: ensure EffectChain is exported
 // Corrected import for Constants. This file now explicitly imports it.
 import * as Constants from './constants.js';
 
-class Track {
+export class Track { // ADDED 'export'
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
@@ -67,12 +67,12 @@ class Track {
         } else if (this.type === 'Sampler') {
             this.samplerAudioData = { fileName: initialData?.samplerAudioData?.fileName || null, dbKey: initialData?.samplerAudioData?.dbKey || null, status: 'empty' };
             this.slices = initialData?.slices || Array(Constants.numSlices || 16).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
-            this.selectedSliceForEdit = initialData?.selectedSliceForEdit || 0;
+            this.selectedSliceForEdit = 0;
         } else if (this.type === 'DrumSampler') {
             this.drumSamplerPads = Array.from({ length: Constants.numDrumSamplerPads || 16 }, (_, i) =>
                 initialData?.drumSamplerPads?.[i] || { originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null }
             );
-            this.selectedDrumPadForEdit = initialData?.selectedDrumPadForEdit || 0;
+            this.selectedDrumPadForEdit = 0;
         } else if (this.type === 'InstrumentSampler') {
             this.instrumentSamplerSettings = initialData?.instrumentSamplerSettings || {
                 originalFileName: null, dbKey: null, rootNote: 'C4', pitchShift: 0, loop: false, loopStart: 0, loopEnd: 0,
