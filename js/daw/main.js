@@ -31,25 +31,25 @@ import {
 // FIX: Import ALL individual UI functions that are assigned to appServices or called directly
 import {
     initializeUIModule, 
-    openTrackInspectorWindow, // Fix: Added this import
-    openMixerWindow, // Fix: Added this import
-    updateMixerWindow, // Fix: Added this import
-    openTrackEffectsRackWindow, // Fix: Added this import
-    openMasterEffectsRackWindow, // Fix: Added this import
-    renderEffectsList, // Fix: Added this import
-    renderEffectControls, // Fix: Added this import
-    openSoundBrowserWindow, // Fix: Added this import
-    renderSoundBrowser, // Fix: Added this import
-    renderDirectoryView, // Fix: Added this import
-    openPianoRollWindow, // Fix: Added this import
-    updatePianoRollPlayhead, // Fix: Added this import
-    openYouTubeImporterWindow, // Fix: Added this import
-    openFileViewerWindow, // Fix: Added this import
-    renderSamplePads, // Fix: Added this import
-    updateSliceEditorUI, // Fix: Added this import
-    renderDrumSamplerPads, // Fix: Added this import
-    updateDrumPadControlsUI, // Fix: Added this import
-    createKnob // Fix: Added this import
+    openTrackInspectorWindow, 
+    openMixerWindow, 
+    updateMixerWindow, 
+    openTrackEffectsRackWindow, 
+    openMasterEffectsRackWindow, 
+    renderEffectsList, 
+    renderEffectControls,
+    openSoundBrowserWindow, 
+    renderSoundBrowser, 
+    renderDirectoryView,
+    openPianoRollWindow, 
+    updatePianoRollPlayhead, 
+    openYouTubeImporterWindow, 
+    openFileViewerWindow, 
+    renderSamplePads, 
+    updateSliceEditorUI,
+    renderDrumSamplerPads, 
+    updateDrumPadControlsUI, 
+    createKnob 
 } from './ui/ui.js'; // path relative to js/daw/
 
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // path relative to js/daw/
@@ -57,7 +57,7 @@ import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // 
 // CORRECTED IMPORTS: All state modules are now directly relative to js/daw/state/
 // Import individual functions used by appServices directly
 import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiAccess, setMidiAccess, getActiveMIDIInput, setActiveMIDIInput } from './state/appState.js';
-import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } => './state/masterState.js';
+import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js'; // Fix: Corrected import for masterState functions
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
