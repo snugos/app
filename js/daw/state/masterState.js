@@ -24,7 +24,8 @@ export function addMasterEffect(effectType) { //
     const defaultParams = getEffectDefaultParamsFromRegistry(effectType); //
     const effect = { id: `master-effect-${Date.now()}`, type: effectType, params: defaultParams }; //
     masterEffectsChain.push(effect); //
-    localAppServices.addMasterEffectToAudio?.(effect); //
+    // Fix: Pass effect.id, effect.type, and effect.params separately and explicitly
+    localAppServices.addMasterEffectToAudio?.(effect.id, effect.type, effect.params); //
     localAppServices.updateMasterEffectsUI?.(); //
 }
 
