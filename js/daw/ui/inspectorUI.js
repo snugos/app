@@ -6,6 +6,7 @@ import { getOpenWindows, getWindowById } from '../state/windowState.js';
 import { getIsReconstructingDAW } from '../state/projectState.js';
 import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js';
 import * as effectsRegistry from '../effectsRegistry.js'; // Fix for Issue 3 in Step 2: Import as module alias
+import * as Constants from '../constants.js'; // Fix for Issue 1 in Step 5.1: Added Constants import
 
 let localAppServices = {};
 
