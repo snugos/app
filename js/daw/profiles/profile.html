@@ -30,14 +30,19 @@
     <input type="file" id="avatarUploadInput" class="hidden" accept="image/*">
     <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
 
+    <script type="module" src="../utils.js"></script> 
+    <script type="module" src="../db.js"></script>
+    <script type="module" src="../constants.js"></script>
+    <script type="module" src="../auth.js"></script> <script type="module" src="../SnugWindow.js"></script>
+
     <script type="module" src="./profileUtils.js"></script>
     <script type="module" src="./profileDb.js"></script>
     <script type="module" src="./profile.js"></script>
 
     <script>
-        // This global function is expected to be called by the parent iframe host
         function initializePage(appServices) {
             document.addEventListener('DOMContentLoaded', () => {
+                // Call the entry point function for the profile JS
                 initProfilePageInIframe(appServices);
             });
         }
