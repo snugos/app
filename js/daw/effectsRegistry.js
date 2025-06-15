@@ -1,6 +1,6 @@
-// js/effectsRegistry.js - Definitions for modular effects
+// js/daw/effectsRegistry.js - Definitions for modular effects
 
-const synthEngineControlDefinitions = {
+export const synthEngineControlDefinitions = {
     MonoSynth: [
         { idPrefix: 'portamento', label: 'Porta', type: 'knob', min: 0, max: 0.2, step: 0.001, defaultValue: 0.01, decimals: 3, path: 'portamento' },
         { idPrefix: 'oscType', label: 'Osc Type', type: 'select', options: ['sine', 'square', 'sawtooth', 'triangle', 'pulse', 'pwm'], defaultValue: 'sine', path: 'oscillator.type' },
@@ -20,7 +20,7 @@ const synthEngineControlDefinitions = {
     ]
 };
 
-const AVAILABLE_EFFECTS = {
+export const AVAILABLE_EFFECTS = {
     AutoFilter: {
         displayName: 'Auto Filter',
         toneClass: 'AutoFilter',
@@ -253,7 +253,7 @@ const AVAILABLE_EFFECTS = {
     },
 };
 
-function createEffectInstance(effectType, initialParams = {}) {
+export function createEffectInstance(effectType, initialParams = {}) {
     if (typeof Tone === 'undefined') {
         console.error(`[EffectsRegistry createEffectInstance] Tone.js is not loaded. Cannot create effect "${effectType}".`);
         return null;
@@ -361,7 +361,7 @@ function createEffectInstance(effectType, initialParams = {}) {
     }
 }
 
-function getEffectDefaultParams(effectType) {
+export function getEffectDefaultParams(effectType) {
     const definition = AVAILABLE_EFFECTS[effectType];
     if (!definition || !definition.params || !Array.isArray(definition.params)) {
         if (!definition) console.warn(`[EffectsRegistry getEffectDefaultParams] No definition found for effect type: ${effectType}`);
@@ -383,7 +383,7 @@ function getEffectDefaultParams(effectType) {
     return defaults;
 }
 
-function getEffectParamDefinitions(effectType) {
+export function getEffectParamDefinitions(effectType) {
     const definition = AVAILABLE_EFFECTS[effectType];
     if (!definition) {
         console.warn(`[EffectsRegistry getEffectParamDefinitions] No definition found for effect type: ${effectType}`);
