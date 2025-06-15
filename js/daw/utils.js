@@ -1,6 +1,6 @@
-// js/utils.js - Utility Functions Module
+// js/daw/utils.js - Utility Functions Module
 
-function showNotification(message, duration = 3000) {
+export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
         console.error("CRITICAL: Notification area ('notification-area') not found in DOM. Message:", message);
@@ -31,7 +31,7 @@ function showNotification(message, duration = 3000) {
     }
 }
 
-function showCustomModal(title, contentHTML, buttonsConfig = []) {
+export function showCustomModal(title, contentHTML, buttonsConfig = []) {
     const modalContainer = document.getElementById('modalContainer');
     if (!modalContainer) return;
 
@@ -76,8 +76,7 @@ function showCustomModal(title, contentHTML, buttonsConfig = []) {
     return { overlay, contentDiv };
 }
 
-// NEW: Basic implementation for showConfirmationDialog
-function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
+export function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
     const buttons = [
         {
             label: 'Cancel',
@@ -96,7 +95,7 @@ function showConfirmationDialog(title, message, onConfirm, onCancel = null) {
 }
 
 
-function createContextMenu(event, menuItems, appServices) {
+export function createContextMenu(event, menuItems, appServices) {
     // Remove any existing context menus
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
@@ -147,13 +146,7 @@ function createContextMenu(event, menuItems, appServices) {
 }
 
 
-/**
- * Converts a Base64 encoded string to a Blob object.
- * @param {string} base64 - The Base64 string.
- * @param {string} contentType - The MIME type of the content.
- * @returns {Blob}
- */
-function base64ToBlob(base64, contentType = 'audio/mpeg') {
+export function base64ToBlob(base64, contentType = 'audio/mpeg') {
     const byteCharacters = atob(base64);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
@@ -163,13 +156,7 @@ function base64ToBlob(base64, contentType = 'audio/mpeg') {
     return new Blob([byteArray], { type: contentType });
 }
 
-/**
- * Draws a waveform on a given canvas element.
- * @param {HTMLCanvasElement} canvas - The canvas element to draw on.
- * @param {AudioBuffer} audioBuffer - The AudioBuffer containing the audio data.
- * @param {string} color - The color of the waveform (default: 'black').
- */
-function drawWaveform(canvas, audioBuffer, color = 'black') {
+export function drawWaveform(canvas, audioBuffer, color = 'black') {
     if (!canvas || !audioBuffer) return;
 
     const ctx = canvas.getContext('2d');
@@ -205,8 +192,7 @@ function drawWaveform(canvas, audioBuffer, color = 'black') {
 }
 
 
-// Generic drop zone listeners for dragging files from local system or sound browser
-function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) {
+export function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, padIndex = null, loadFromSoundBrowserCallback, loadFromFileCallback) {
     dropZoneElement.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropZoneElement.classList.add('dragover');
@@ -224,7 +210,7 @@ function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
         if (files && files.length > 0) {
             const file = files[0];
             if (file.type.startsWith('audio/')) {
-                loadFromFileCallback(e, trackId, trackTypeHint, padIndex); // Use the callback
+                loadFromFileCallback(e, trackId, trackTypeHint, padIndex);
             } else {
                 showNotification(`Unsupported file type: ${file.type}`, 3000);
             }
@@ -234,7 +220,7 @@ function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
                 try {
                     const data = JSON.parse(jsonData);
                     if (data.type === 'sound-browser-item') {
-                        loadFromSoundBrowserCallback(data, trackId, trackTypeHint, padIndex); // Use the callback
+                        loadFromSoundBrowserCallback(data, trackId, trackTypeHint, padIndex);
                     }
                 } catch (jsonError) {
                     console.error("Error parsing dropped JSON data:", jsonError);
@@ -251,8 +237,7 @@ function setupGenericDropZoneListeners(dropZoneElement, trackId, trackTypeHint, 
     }
 }
 
-// Function to create drop zone HTML - needed in inspectorUI
-function createDropZoneHTML(inputId, labelText = 'Drag & Drop Audio Here') {
+export function createDropZoneHTML(inputId, labelText = 'Drag & Drop Audio Here') {
     return `
         <div class="drop-zone">
             <input type="file" id="${inputId}" class="hidden" accept="audio/*">
