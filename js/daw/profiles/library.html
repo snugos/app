@@ -39,18 +39,21 @@
     </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script> 
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <input type="file" id="actualFileInput" class="hidden" multiple>
 
-    <script type="module" src="../utils.js"></script> <script type="module" src="../db.js"></script> <script type="module" src="../constants.js"></script> <script type="module" src="../SnugWindow.js"></script> <script type="module" src="./library.js"></script> <script>
-        // This global function is expected to be called by the parent iframe host
+    <script type="module" src="../utils.js"></script> 
+    <script type="module" src="../db.js"></script>
+    <script type="module" src="../constants.js"></script>
+    <script type="module" src="../SnugWindow.js"></script> 
+    <script type="module" src="../ui/fileViewerUI.js"></script> <script type="module" src="./library.js"></script>
+
+    <script>
         function initializePage(appServices) {
-            // Now, library.js can be properly initialized with the correct appServices context.
-            // Call the existing library.js DOMContentLoaded logic here.
             document.addEventListener('DOMContentLoaded', () => {
-                initLibraryPageInIframe(appServices);
+                // Call the entry point function for the library JS
+                initLibraryPageInIframe(appServices); 
             });
         }
     </script>
