@@ -6,7 +6,6 @@
 // Corrected imports for utils and db
 import { storeAsset, getAsset } from '../db.js';
 import { showNotification, showCustomModal, createContextMenu } from '../utils.js';
-// Assuming state accessors are accessed via injected appServices.
 
 let appServices = {}; // Will be populated by the parent window.
 let loggedInUser = null;
@@ -19,14 +18,17 @@ let isEditing = false;
 function initProfilePageInIframe(injectedAppServices) {
     appServices = injectedAppServices;
 
-    // Use appServices for window/modal management
-    appServices.showNotification = appServices.showNotification || window.parent.showNotification;
-    appServices.showCustomModal = appServices.showCustomModal || window.parent.showCustomModal;
-    appServices.createContextMenu = appServices.createContextMenu || window.parent.createContextMenu;
+    // Use appServices for window/modal management (ensure parent's services are used)
+    // Assuming `appServices` object from parent is fully formed.
+    appServices.showNotification = appServices.showNotification || window.parent.appServices.showNotification;
+    appServices.showCustomModal = appServices.showCustomModal || window.parent.appServices.showCustomModal;
+    appServices.createContextMenu = appServices.createContextMenu || window.parent.appServices.createContextMenu;
+    // For profile to open other profiles, it also needs openEmbeddedAppInWindow
+    appServices.openEmbeddedAppInWindow = appServices.openEmbeddedAppInWindow || window.parent.appServices.openEmbeddedAppInWindow;
     
     // Check local auth, but apply global settings via injected appServices.
     loggedInUser = checkLocalAuth();
-    loadAndApplyGlobals(); // Will use appServices.getAsset and appServices.applyCustomBackground
+    loadAndApplyGlobals();
 
     attachProfileWindowListeners(); // Attach listeners relevant to profile content
     
@@ -122,7 +124,6 @@ function updateProfileUI(container, profileData) {
     
     // Attach listeners for buttons and avatar upload
     if (isOwner) {
-        // avatarUploadInput is still in the profile.html body
         container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
         container.querySelector('#editProfileBtn')?.addEventListener('click', () => {
             isEditing = !isEditing;
@@ -131,6 +132,17 @@ function updateProfileUI(container, profileData) {
     } else if (loggedInUser) {
         container.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
         container.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
+        // Handle clicking on username/link within profile to open another user's profile in a SnugWindow
+        const usernameLink = container.querySelector('#profile-body-content .username-link'); // Assuming you have such a link
+        if (usernameLink) {
+            usernameLink.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default navigation
+                const targetUsername = e.target.dataset.username; // Assuming data-username attribute
+                if (targetUsername && appServices.openEmbeddedAppInWindow) {
+                    appServices.openEmbeddedAppInWindow(`profile-${targetUsername}`, `${targetUsername}'s Profile`, `js/daw/profiles/profile.html?user=${targetUsername}`, { width: 600, height: 700 });
+                }
+            });
+        }
     }
 }
 
@@ -165,15 +177,12 @@ function renderEditMode(container, profileData) {
     });
 }
 
-// Global scope listener to avoid re-attaching on UI updates
-// This is specific to the iframe, not the main index.html desktop
 function attachProfileWindowListeners() {
-    // This is the file input that lives in profile.html body
     document.getElementById('avatarUploadInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         const file = e.target.files[0];
         handleAvatarUpload(file);
-        e.target.value = null;
+        e.target.value = null; 
     });
 
     document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
@@ -202,7 +211,7 @@ function attachProfileWindowListeners() {
             });
 
             appServices.showNotification("Background updated!", 2000);
-            loadAndApplyGlobals(); // Calls parent's appServices.applyCustomBackground
+            loadAndApplyGlobals();
         } catch(error) {
             appServices.showNotification(`Error: ${error.message}`, 4000);
         }
@@ -237,7 +246,10 @@ async function handleAvatarUpload(file) {
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
         appServices.showNotification("Profile picture updated!", 2000);
-        fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
+        updateProfileUI(document.getElementById('profile-container'), currentProfileData); // Re-render local UI
+        if (appServices.updateUserAuthContainer) { // Notify parent if available
+             appServices.updateUserAuthContainer(loggedInUser);
+        }
 
     } catch (error) {
         appServices.showNotification(`Update failed: ${error.message}`, 4000);
@@ -321,6 +333,9 @@ async function loadAndApplyGlobals() {
         if (data.success && data.profile.background_url) {
             appServices.applyCustomBackground(data.profile.background_url);
         }
+        if (appServices.updateUserAuthContainer) { // Ensure user info is updated on desktop
+            appServices.updateUserAuthContainer(loggedInUser);
+        }
     } catch (error) {
         console.error("Could not apply global settings:", error);
     }
@@ -339,5 +354,16 @@ function checkLocalAuth() {
     } catch (e) {
         localStorage.removeItem('snugos_token');
         return null;
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('snugos_token');
+    appServices.showNotification('You have been logged out.', 2000);
+    // For iframes, we need to signal the parent to handle full logout/UI update
+    if (window.parent && window.parent.appServices && window.parent.appServices.handleLogout) {
+        window.parent.appServices.handleLogout(); // Call parent's logout
+    } else {
+        window.location.reload(); // Fallback for standalone
     }
 }
