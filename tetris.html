@@ -192,9 +192,11 @@
                     <canvas class="preview-canvas" id="next-2"></canvas>
                     <canvas class="preview-canvas" id="next-3"></canvas>
                     <canvas class="preview-canvas" id="next-4"></canvas>
+                    <canvas class="preview-canvas" id="next-5"></canvas>
                  </div>
             </div>
-            <div class="panel">
+             <div class="panel">
+                <div class="panel-title">CONTROLS</div>
                 <button id="start-btn">Play</button>
                 <button id="pause-btn">Pause</button>
                 <button id="controls-btn">Help</button>
@@ -230,7 +232,7 @@
         const boardCtx = boardCanvas.getContext('2d');
         const holdCanvas = document.getElementById('hold-canvas');
         const holdCtx = holdCanvas.getContext('2d');
-        const nextCanvases = Array.from({length: 4}, (_, i) => document.getElementById(`next-${i + 1}`));
+        const nextCanvases = Array.from({length: 5}, (_, i) => document.getElementById(`next-${i + 1}`));
         const nextContexts = nextCanvases.map(c => c.getContext('2d'));
 
         // --- Game Constants ---
@@ -281,37 +283,21 @@
         };
         
         function resizeGame() {
-            const sidebars = document.querySelectorAll('.sidebar');
-            const gameWrapper = document.querySelector('.game-wrapper');
-
-            const availableHeight = window.innerHeight * 0.95;
-            const availableWidth = window.innerWidth * 0.95;
+            const padding = 32;
+            const availableHeight = window.innerHeight - padding;
+            const availableWidth = window.innerWidth - padding;
+            const blockSizeByHeight = availableHeight / (ROWS + 2);
+            const blockSizeByWidth = availableWidth / (COLS + 10);
             
-            const blockSizeByHeight = availableHeight / ROWS;
-            const totalColsEstimate = COLS + 5 + 5 + 2; 
-            const blockSizeByWidth = availableWidth / totalColsEstimate;
-
             BLOCK_SIZE = Math.floor(Math.min(blockSizeByHeight, blockSizeByWidth));
-
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
-
             holdCanvas.width = 4 * BLOCK_SIZE;
             holdCanvas.height = 4 * BLOCK_SIZE;
             nextCanvases.forEach(canvas => {
                 canvas.width = 4 * BLOCK_SIZE;
                 canvas.height = 4 * BLOCK_SIZE;
             });
-            
-            const baseFontSize = BLOCK_SIZE / 2;
-            gameWrapper.style.fontSize = `${baseFontSize}px`;
-            sidebars.forEach(sidebar => {
-                sidebar.style.width = `${BLOCK_SIZE * 5}px`;
-                sidebar.style.gap = `${BLOCK_SIZE / 2}px`;
-            });
-            gameWrapper.style.gap = `${BLOCK_SIZE}px`;
-
-
             draw();
         }
         
@@ -343,7 +329,7 @@
             keysDown = {};
             clearTimeout(dasTimeout); clearInterval(arrInterval);
             
-            nextPieceQueue = Array.from({ length: 4 }, () => generatePiece());
+            nextPieceQueue = Array.from({ length: 5 }, () => generatePiece());
             spawnNewPiece();
             
             updateUI();
@@ -351,7 +337,10 @@
         }
         
         function update(time = 0) {
-            if (isPaused || isGameOver) return;
+            if (isPaused || isGameOver) {
+                 if (isPaused) draw();
+                 return;
+            }
             const deltaTime = time - lastTime;
             lastTime = time;
             dropCounter += deltaTime;
