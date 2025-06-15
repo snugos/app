@@ -24,13 +24,10 @@ function initLibraryPageInIframe(injectedAppServices) {
     initializeFileViewerUI(appServices);
 
     // Use appServices for window/modal management (ensure parent's services are used)
-    // Note: showNotification, showCustomModal, createContextMenu are now IMPORTED into welcome.js
-    // and passed via appServices, so this re-assignment might be redundant or unnecessary
-    // if appServices is already fully formed with them. Keeping it for safety/clarity.
     appServices.showNotification = appServices.showNotification || window.parent.appServices.showNotification;
     appServices.showCustomModal = appServices.showCustomModal || window.parent.appServices.showCustomModal;
     appServices.createContextMenu = appServices.createContextMenu || window.parent.appServices.createContextMenu;
-    // Ensure openEmbeddedAppInWindow from welcome.js is accessible for nested windows
+    // Ensure openEmbeddedAppInWindow from welcome.js is accessible for nested window opening
     appServices.openEmbeddedAppInWindow = appServices.openEmbeddedAppInWindow || window.parent.appServices.openEmbeddedAppInWindow;
 
     // Auth status and background (relies on parent's appServices.getAsset/applyCustomBackground)
@@ -52,7 +49,6 @@ function initLibraryPageInIframe(injectedAppServices) {
 
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
-        // Tone is loaded in library.html for previews
         if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
             await Tone.start();
             console.log('AudioContext started successfully for Library preview.');
@@ -71,7 +67,6 @@ async function loadAndApplyGlobals() {
         });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            // Use parent's appServices to apply background to the main desktop
             appServices.applyCustomBackground(data.profile.background_url);
         }
     } catch (error) {
@@ -257,7 +252,7 @@ function handleItemClick(item, isParentFolder) {
     } else {
         // Now, clicking on a file within the Library iframe should open it in a new SnugWindow
         // on the parent (index.html) desktop.
-        appServices.openFileViewerWindow(item); 
+        appServices.openFileViewerWindow(item);
         return;
     }
     if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
@@ -275,7 +270,7 @@ async function handleShareFile(item) {
         await navigator.clipboard.writeText(result.shareUrl);
         appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000);
     } catch (error) {
-        appServices.showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Could not generate link: ${error.message}`, 4000);
     }
 }
 
@@ -408,7 +403,11 @@ function handleLogout() {
     localStorage.removeItem('snugos_token');
     appServices.showNotification('You have been logged out.', 2000);
     // If logout in iframe should affect parent, it needs to call parent's logout.
-    window.location.reload(); // Reloading iframe will just show login state in iframe
+    if (window.parent && window.parent.appServices && window.parent.appServices.handleLogout) { //
+        window.parent.appServices.handleLogout(); // Call parent's logout
+    } else {
+        window.location.reload(); // Fallback for standalone
+    }
 }
 
 function applyUserThemePreference() {
