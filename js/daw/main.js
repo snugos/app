@@ -41,7 +41,8 @@ import {
 import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // path relative to js/daw/
 
 // CORRECTED IMPORTS: All state modules are now directly relative to js/daw/state/
-import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo } from './state/appState.js';
+// Import individual functions used by appServices directly
+import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiAccess, setMidiAccess, getActiveMIDIInput, setActiveMIDIInput } from './state/appState.js';
 import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
@@ -276,6 +277,7 @@ async function initializeSnugOS() {
         Tone: Tone, // Fix for Issue 4: Pass Tone object through appServices
 
         // State Module Accessors (from js/daw/state/)
+        // Directly import the functions needed for appServices
         getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack, removeTrack: removeTrack, setTracks: setTracks, setTrackIdCounter: setTrackIdCounter,
         getOpenWindows: getOpenWindows, getWindowById: getWindowById, addWindowToStore: addWindowToStore, removeWindowFromStore: removeWindowFromStore, getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ,
         getMidiAccess: getMidiAccess, setMidiAccess: setMidiAccess, getActiveMIDIInput: getActiveMIDIInput, setActiveMIDIInput: setActiveMIDIInput, getPlaybackMode: getPlaybackMode, setPlaybackMode: setPlaybackMode, getCurrentUserThemePreference: getCurrentUserThemePreference, setCurrentUserThemePreference: setCurrentUserThemePreference, getSelectedTimelineClipInfo: getSelectedTimelineClipInfo, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, getMidiRecordModeState: getMidiRecordModeState, setMidiRecordModeState: setMidiRecordModeState,
