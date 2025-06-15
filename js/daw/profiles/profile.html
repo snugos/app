@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="css/base.css"> 
-    <link rel="stylesheet" href="css/components.css"> 
+    <link rel="stylesheet" href="/css/base.css"> 
+    <link rel="stylesheet" href="/css/components.css"> 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -32,15 +32,14 @@
     <input type="file" id="avatarUploadInput" class="hidden" accept="image/*">
     <input type="file" id="customBgInput" class="hidden" accept="image/*,video/mp4,video/webm,video/quicktime">
 
-    <script type="module" src="js/daw/profiles/profile.js"></script>
+    <script type="module" src="/js/daw/profiles/profile.js"></script>
 
     <script>
         // This function is called by the parent window (e.g., welcome.js)
         // to inject `appServices` into this iframe's context.
         function initializePage(appServices) {
-            // Ensure the DOM is fully loaded before initializing the profile page logic
             document.addEventListener('DOMContentLoaded', () => {
-                // Call the entry point function for the profile JS, passing the injected appServices
+                // Call the entry point function for the profile JS
                 if (typeof initProfilePageInIframe === 'function') {
                     initProfilePageInIframe(appServices);
                 } else {
