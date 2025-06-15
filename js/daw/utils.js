@@ -95,7 +95,7 @@ export function showConfirmationDialog(title, message, onConfirm, onCancel = nul
 }
 
 
-export function createContextMenu(event, menuItems, appServices) {
+export function createContextMenu(event, menuItems, appServices) { // ADDED 'export'
     // Remove any existing context menus
     const existingMenu = document.querySelector('.context-menu');
     if (existingMenu) {
