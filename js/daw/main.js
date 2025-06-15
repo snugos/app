@@ -6,27 +6,27 @@ import {
     handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
     handleTimelineLaneDrop, handleOpenYouTubeImporter
-} from './eventHandlers.js';
+} from './eventHandlers.js'; // path relative to js/daw/
 
-// CORRECTED IMPORTS: Now directly import from their new 'js/daw/' location
-import * as Constants from './constants.js';
-import { storeAudio, getAudio, deleteAudio } from './db.js';
-import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
-import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog } from './utils.js';
-import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js';
+// CORRECTED IMPORTS: All core utilities are now directly relative to js/daw/
+import * as Constants from './constants.js'; // This is now in js/daw/constants.js
+import { storeAudio, getAudio, deleteAudio } from './db.js'; // This is now in js/daw/db.js
+import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js'; // This is now in js/daw/effectsRegistry.js
+import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog } from './utils.js'; // This is now in js/daw/utils.js
+import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js'; // This is now in js/daw/auth.js
 
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode, forceStopAllAudio
-} from './audio/audio.js';
-import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js';
-import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js';
+} from './audio/audio.js'; // path relative to js/daw/
+import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; // path relative to js/daw/
+import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; // path relative to js/daw/
 import { 
     initializeSampleManager, loadSampleFile, loadDrumSamplerPadFile, loadSoundFromBrowserToTarget,
     getAudioBlobFromSoundBrowserItem, autoSliceSample, fetchSoundLibrary
-} from './audio/sampleManager.js';
+} from './audio/sampleManager.js'; // path relative to js/daw/
 
 import {
     initializeUIModule, openTrackInspectorWindow, openMixerWindow, openTrackEffectsRackWindow,
@@ -36,11 +36,11 @@ import {
     renderSamplePads, updateSliceEditorUI,
     renderDrumSamplerPads, updateDrumPadControlsUI, createKnob,
     openFileViewerWindow
-} from './ui/ui.js';
+} from './ui/ui.js'; // path relative to js/daw/
 
-import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
+import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // path relative to js/daw/
 
-// State modules (paths are already relative to js/daw/, which is correct)
+// CORRECTED IMPORTS: All state modules are now directly relative to js/daw/state/
 import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo } from './state/appState.js';
 import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
@@ -50,8 +50,7 @@ import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore,
 
 let appServices = {};
 
-// Centralized applyCustomBackground function (copied from welcome.js/profile.js pattern)
-// This should be the single source of truth for applying backgrounds
+// Centralized applyCustomBackground function 
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
@@ -71,7 +70,7 @@ function applyCustomBackground(source) {
         if (['mp4', 'webm', 'mov'].includes(extension)) {
             fileType = `video/${extension}`;
         } else {
-            fileType = 'image/jpeg'; // Assume image for other URLs
+            fileType = 'image/jpeg';
         }
     } else { // It's a File object
         url = URL.createObjectURL(source);
@@ -110,37 +109,33 @@ function openDefaultLayout() {
         const margin = 10;
         const gap = 10;
 
-        const timelineHeight = 0; // Set to 0 as timeline is removed
-        const mixerHeight = Math.floor((rect.height - 40 - 32 - (margin * 2) - gap) * 0.5); // Use full remaining height
-        const sidePanelHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap) * 0.5; // Use full remaining height for master effects
-        const soundBrowserHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap); // Use full remaining height for sound browser
+        const mixerHeight = Math.floor((rect.height - 40 - 32 - (margin * 2) - gap) * 0.5);
+        const sidePanelHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap) * 0.5;
+        const soundBrowserHeight = Math.floor(rect.height - 40 - 32 - (margin * 2) - gap);
         const sidePanelWidth = 350;
         const leftPanelWidth = Math.floor(desktopEl.clientWidth * 0.5);
 
-        const row1Y = margin; // Top-most row starts at margin
+        const row1Y = margin;
         
-        // Mixer now starts higher and potentially fills more vertical space
         appServices.openMixerWindow({
             x: margin,
-            y: row1Y, // Starts at the top now
+            y: row1Y,
             width: leftPanelWidth,
             height: mixerHeight
         });
 
-        // Master Effects Rack also adjusts its position and height
         appServices.openMasterEffectsRackWindow({
             x: margin,
-            y: row1Y + mixerHeight + gap, // Position below mixer
+            y: row1Y + mixerHeight + gap,
             width: leftPanelWidth,
-            height: sidePanelHeight // Adjust height to fill remaining space
+            height: sidePanelHeight
         });
         
-        // Sound Browser also adjusts its position and height
         const soundBrowserX = rect.width - sidePanelWidth - margin;
         appServices.openSoundBrowserWindow({
             x: soundBrowserX,
-            y: row1Y, // Starts at the top now
-            height: soundBrowserHeight // Use full remaining height for side panel
+            y: row1Y,
+            height: soundBrowserHeight
         });
     }, 100); 
 }
@@ -256,7 +251,10 @@ async function initializeSnugOS() {
         showCustomModal: showCustomModal,
         createContextMenu: createContextMenu, 
         drawWaveform: drawWaveform,
-        // (assuming base64ToBlob, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog are exposed via utils.js and accessed directly where needed)
+        base64ToBlob: base64ToBlob, // Explicitly pass base64ToBlob
+        setupGenericDropZoneListeners: setupGenericDropZoneListeners, // Explicitly pass setupGenericDropZoneListeners
+        createDropZoneHTML: createDropZoneHTML, // Explicitly pass createDropZoneHTML
+        showConfirmationDialog: showConfirmationDialog, // Explicitly pass showConfirmationDialog
 
         // Auth related functions (from js/daw/auth.js)
         initializeAuth: initializeAuth,
@@ -271,7 +269,7 @@ async function initializeSnugOS() {
         storeAsset: storeAsset, // Assumed to be from db.js
 
         // Tone.js related contexts and registries (from js/daw/effectsRegistry.js, etc.)
-        effectsRegistryAccess: { AVAILABLE_EFFECTs, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
+        effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
         context: Tone.context, // Global Tone object
 
         // State Module Accessors (from js/daw/state/)
@@ -290,7 +288,7 @@ async function initializeSnugOS() {
         loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
         playSlicePreview, playDrumSamplerPadPreview, 
 
-        // UI Module Functions (from js/daw/ui/)
+        // UI Module Functions (initializers passed to initializeUIModule)
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
         openMasterEffectsRackWindow, openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, 
         openYouTubeImporterWindow, openFileViewerWindow, renderSamplePads, updateSliceEditorUI,
