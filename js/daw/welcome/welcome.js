@@ -106,7 +106,7 @@ function initializeWelcomePage() {
  */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
-        // Tone.js is loaded in index.html because Tetris (and others) will be embedded.
+        // Tone.js is loaded in index.html because Tetris (and now DAW) will be embedded.
         if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
             await Tone.start();
             console.log('AudioContext started successfully.');
@@ -220,10 +220,10 @@ function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
-// MODIFIED: Launch DAW as a standalone page (direct navigation)
+// MODIFIED: Launch DAW in a SnugWindow iframe
 function launchDaw() {
     toggleStartMenu();
-    window.location.href = 'snaw.html';
+    openEmbeddedAppInWindow('snawApp', 'Snaw DAW', 'snaw.html', { width: 1000, height: 700 });
 }
 
 // MODIFIED: View Profiles opens in a SnugWindow iframe
@@ -239,7 +239,7 @@ function openLibraryWindow() {
     openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `js/daw/profiles/library.html`, { width: 800, height: 600 });
 }
 
-// MODIFIED: Open Tetris opens in a SnugWindow iframe
+// MODIFIED: Open Tetris is still embedded in a SnugWindow iframe
 function openGameWindow() {
     toggleStartMenu();
     openEmbeddedAppInWindow('tetrisGame', 'Snugtris', 'tetris.html', { width: 600, height: 750, minWidth: 400, minHeight: 600 });
@@ -312,31 +312,114 @@ function showLoginModal() {
                     <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
                 </form>
             </div>
+            <div id="login-register-status" class="text-center text-sm mt-2"></div>
         </div>
     `;
     const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []);
-    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = overlay.querySelector('#loginUsername').value;
-        const password = overlay.querySelector('#loginPassword').value;
-        // auth.js's showLoginModal will call its own internal handleLogin/Register.
+
+    // Add button styling and form submission
+    const loginForm = overlay.querySelector('#loginForm');
+    const registerForm = overlay.querySelector('#registerForm');
+    const statusDiv = overlay.querySelector('#login-register-status');
+
+    // Style inputs and buttons
+    overlay.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
+        input.style.backgroundColor = 'var(--bg-input)';
+        input.style.color = 'var(--text-primary)';
+        input.style.border = '1px solid var(--border-input)';
+        input.style.padding = '8px';
+        input.style.borderRadius = '3px';
     });
-    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+
+    overlay.querySelectorAll('button').forEach(button => {
+        button.style.backgroundColor = 'var(--bg-button)';
+        button.style.border = '1px solid var(--border-button)';
+        button.style.color = 'var(--text-button)';
+        button.style.padding = '8px 15px';
+        button.style.cursor = 'pointer';
+        button.style.borderRadius = '3px';
+        button.style.transition = 'background-color 0.15s ease';
+        button.addEventListener('mouseover', () => {
+            button.style.backgroundColor = 'var(--bg-button-hover)';
+            button.style.color = 'var(--text-button-hover)';
+        });
+        button.addEventListener('mouseout', () => {
+            button.style.backgroundColor = 'var(--bg-button)';
+            button.style.color = 'var(--text-button)';
+        });
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = overlay.querySelector('#registerUsername').value;
-        const password = overlay.querySelector('#registerPassword').value;
+        const username = loginForm.querySelector('#loginUsername').value;
+        const password = loginForm.querySelector('#loginPassword').value;
+        statusDiv.textContent = 'Logging in...';
+        try {
+            const response = await fetch(`${SERVER_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                localStorage.setItem('snugos_token', data.token);
+                // The initializeAuth function will handle updating UI and background
+                initializeAuth(appServices); 
+                statusDiv.textContent = `Welcome back, ${data.user.username}!`;
+                setTimeout(() => overlay.remove(), 1000);
+            } else {
+                statusDiv.textContent = `Login failed: ${data.message}`;
+            }
+        } catch (error) {
+            statusDiv.textContent = 'Network error. Could not connect to server.';
+            console.error("Login Error:", error);
+        }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = registerForm.querySelector('#registerUsername').value;
+        const password = registerForm.querySelector('#registerPassword').value;
+        statusDiv.textContent = 'Registering...';
+        try {
+            const response = await fetch(`${SERVER_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                statusDiv.textContent = 'Registration successful! Please log in.';
+                // No auto-login after register, user should log in explicitly
+            } else {
+                statusDiv.textContent = `Registration failed: ${data.message}`;
+            }
+        } catch (error) {
+            statusDiv.textContent = 'Network error. Could not connect to server.';
+            console.error("Register Error:", error);
+        }
     });
 }
+
 
 function toggleTheme() {
     const body = document.body;
     const isLightTheme = body.classList.contains('theme-light');
-    const newTheme = isLightTheme ? 'dark' : 'light';
-    appServices.setCurrentUserThemePreference(newTheme);
+    if (isLightTheme) {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    } else {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    }
 }
 
 function applyUserThemePreference() {
-    const preference = appServices.getCurrentUserThemePreference();
+    const preference = localStorage.getItem('snugos-theme');
     const body = document.body;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const themeToApply = preference || (prefersDark ? 'dark' : 'light');
