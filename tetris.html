@@ -6,8 +6,7 @@
     <title>Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #000000;
@@ -22,7 +21,7 @@
             height: 100%;
             margin: 0;
             overflow: hidden;
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Press Start 2P', monospace;
             background-color: var(--bg-color);
             color: var(--primary-text);
         }
@@ -43,6 +42,7 @@
         #game-board {
             border: 1px solid var(--border-color);
             display: block;
+            image-rendering: pixelated;
         }
 
         .sidebar {
@@ -61,7 +61,6 @@
 
         .panel-title {
             font-size: 0.9rem;
-            font-weight: 700;
             color: var(--secondary-text);
             margin-bottom: 0.75rem;
             text-align: center;
@@ -74,7 +73,7 @@
             gap: 0.5rem;
         }
         
-        .panel div, .panel label {
+        .panel div {
             font-size: 0.9rem;
         }
 
@@ -87,6 +86,7 @@
 
         .preview-canvas {
             background-color: transparent;
+            image-rendering: pixelated;
         }
 
         button {
@@ -96,36 +96,18 @@
             padding: 10px;
             border-radius: 5px;
             cursor: pointer;
-            font-family: 'Roboto', sans-serif;
-            font-weight: 700;
+            font-family: 'Press Start 2P', monospace;
             width: 100%;
             transition: background-color 0.15s ease, color 0.15s ease;
         }
         
         button + button {
-             margin-top: 0.5rem;
+            margin-top: 0.5rem;
         }
 
         button:hover {
             background-color: var(--primary-text);
             color: var(--bg-color);
-        }
-
-        .setting-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        input[type="number"] {
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--primary-text);
-            font-family: 'Roboto', sans-serif;
-            padding: 4px;
-            width: 50px;
-            text-align: right;
-            border-radius: 4px;
         }
 
         .modal-overlay {
@@ -141,17 +123,31 @@
             padding: 2rem;
             border-radius: 8px;
             text-align: center;
+            max-width: 400px;
         }
         
         .modal-dialog h2 {
             margin-top: 0;
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 1.5rem;
         }
         
         .modal-dialog p {
-            font-size: 1.2rem;
+            font-size: 1rem;
         }
+        
+        .controls-list {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1rem 1.5rem;
+            text-align: left;
+            margin: 1.5rem 0;
+            font-size: 0.8rem;
+        }
+        .controls-list span:first-child {
+            font-weight: 700;
+            justify-self: end;
+        }
+
 
         @media (max-width: 800px) {
             .game-wrapper {
@@ -186,10 +182,6 @@
                     <div>LEVEL: <span id="level">1</span></div>
                 </div>
             </div>
-             <div class="panel">
-                <button id="start-btn">Play</button>
-                <button id="pause-btn">Pause</button>
-            </div>
         </div>
         <canvas id="game-board"></canvas>
         <div class="sidebar">
@@ -202,20 +194,10 @@
                     <canvas class="preview-canvas" id="next-4"></canvas>
                  </div>
             </div>
-            <div class="panel">
-                <div class="panel-title">HANDLING</div>
-                 <div class="setting-wrapper">
-                    <label for="das-input">DAS</label>
-                    <input type="number" id="das-input" value="167" step="1">
-                </div>
-                <div class="setting-wrapper">
-                   <label for="arr-input">ARR</label>
-                   <input type="number" id="arr-input" value="33" step="1">
-               </div>
-               <div class="setting-wrapper">
-                    <label for="sdf-input">SDF</label>
-                    <input type="number" id="sdf-input" value="6" step="1">
-                </div>
+             <div class="panel">
+                <button id="start-btn">Play</button>
+                <button id="pause-btn">Pause</button>
+                <button id="controls-btn">Controls</button>
             </div>
         </div>
     </div>
@@ -225,6 +207,20 @@
             <h2>GAME OVER</h2>
             <p>FINAL SCORE: <span id="final-score">0</span></p>
             <button id="restart-btn">Restart</button>
+        </div>
+    </div>
+    
+    <div id="controls-modal" class="modal-overlay">
+        <div class="modal-dialog">
+            <h2>CONTROLS</h2>
+            <div class="controls-list">
+                <span>ARROWS</span><span>MOVE</span>
+                <span>UP/X</span><span>ROTATE CW</span>
+                <span>CTRL/Z</span><span>ROTATE CCW</span>
+                <span>SPACE</span><span>HARD DROP</span>
+                <span>SHIFT</span><span>HOLD</span>
+            </div>
+            <button id="close-controls-btn">Close</button>
         </div>
     </div>
 
@@ -242,31 +238,29 @@
         const COLS = 10;
         const ROWS = 20;
         const LINES_PER_LEVEL = 10;
-        const LOCK_DELAY_MS = 500;
         let BLOCK_SIZE = 15;
 
         // --- Colors & Tetrominoes ---
         const BORDER_COLOR = '#000000';
         const GHOST_COLOR = 'rgba(255, 255, 255, 0.2)';
-        const LOCKING_COLOR = 'rgba(255, 255, 255, 0.5)';
         const TETROMINOES = {
-            'I': { shape: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], color: '#00BFFF' },
-            'J': { shape: [[1,0,0], [1,1,1], [0,0,0]], color: '#8A2BE2' },
-            'L': { shape: [[0,0,1], [1,1,1], [0,0,0]], color: '#FF69B4' },
-            'O': { shape: [[1,1], [1,1]], color: '#FFFFAA' },
-            'S': { shape: [[0,1,1], [1,1,0], [0,0,0]], color: '#C1FFC1' },
-            'T': { shape: [[0,1,0], [1,1,1], [0,0,0]], color: '#E6E6FA' },
-            'Z': { shape: [[1,1,0], [0,1,1], [0,0,0]], color: '#7FFFD4' }
+            'I': { shape: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], color: '#00FFFF' },
+            'J': { shape: [[1,0,0], [1,1,1], [0,0,0]], color: '#0000FF' },
+            'L': { shape: [[0,0,1], [1,1,1], [0,0,0]], color: '#FFA500' },
+            'O': { shape: [[1,1], [1,1]], color: '#FFFF00' },
+            'S': { shape: [[0,1,1], [1,1,0], [0,0,0]], color: '#00FF00' },
+            'T': { shape: [[0,1,0], [1,1,1], [0,0,0]], color: '#800080' },
+            'Z': { shape: [[1,1,0], [0,1,1], [0,0,0]], color: '#FF0000' }
         };
         const PIECE_KEYS = 'IJLOSTZ';
 
         // --- Game State ---
-        let grid, currentPiece, nextPieceQueue, holdPiece, canHold, lockDelayTimeout;
+        let grid, currentPiece, nextPieceQueue, holdPiece, canHold;
         let score, lines, level, dropCounter, dropInterval, lastTime;
         let isPaused = false, isGameOver = false, animationFrameId, isDroppingFast = false;
         
         // --- Handling ---
-        let dasTimeoutLeft, dasTimeoutRight, arrIntervalLeft, arrIntervalRight;
+        let dasTimeout, arrInterval;
         let dasValue = 167; 
         let arrValue = 33;
         let sdfValue = 6;
@@ -282,32 +276,11 @@
             restartBtn: document.getElementById('restart-btn'),
             gameOverModal: document.getElementById('game-over-modal'),
             finalScore: document.getElementById('final-score'),
-            dasInput: document.getElementById('das-input'),
-            arrInput: document.getElementById('arr-input'),
-            sdfInput: document.getElementById('sdf-input'),
+            controlsBtn: document.getElementById('controls-btn'),
+            controlsModal: document.getElementById('controls-modal'),
+            closeControlsBtn: document.getElementById('close-controls-btn'),
         };
         
-        // --- Sound Engine ---
-        const sound = {
-            isStarted: false,
-            move: new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 } }).toDestination(),
-            rotate: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 } }).toDestination(),
-            lock: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.2, release: 0.1 } }).toDestination(),
-            clear: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 } }).toDestination(),
-            gameOver: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.5 } }).toDestination(),
-            
-            async start() {
-                if (this.isStarted) return;
-                await Tone.start();
-                this.isStarted = true;
-            },
-            playMove() { if (this.isStarted) this.move.triggerAttackRelease('C2', '8n'); },
-            playRotate() { if (this.isStarted) this.rotate.triggerAttackRelease('E3', '8n'); },
-            playLock() { if (this.isStarted) this.lock.triggerAttackRelease('C1', '8n'); },
-            playClear() { if (this.isStarted) this.clear.triggerAttackRelease('G4', '8n'); },
-            playGameOver() { if (this.isStarted) this.gameOver.triggerAttackRelease('C3', '2n'); }
-        };
-
         function resizeGame() {
             const padding = 32;
             const availableHeight = window.innerHeight - padding;
@@ -335,7 +308,6 @@
                 this.color = TETROMINOES[key].color;
                 this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
                 this.y = 0;
-                this.isLocking = false;
             }
         }
         
@@ -354,10 +326,7 @@
             canHold = true;
             holdPiece = null;
             keysDown = {};
-            clearTimeout(dasTimeoutLeft); clearTimeout(dasTimeoutRight);
-            clearInterval(arrIntervalLeft); clearInterval(arrIntervalRight);
-            clearTimeout(lockDelayTimeout);
-
+            clearTimeout(dasTimeout); clearInterval(arrInterval);
             
             nextPieceQueue = Array.from({ length: 4 }, () => generatePiece());
             spawnNewPiece();
@@ -388,19 +357,10 @@
              currentPiece.y++;
              if (checkCollision(currentPiece)) {
                  currentPiece.y--;
-                 startLockDelay();
+                 handlePieceLanded();
              } else {
-                 if(isDroppingFast) score++;
-                 clearTimeout(lockDelayTimeout);
-                 currentPiece.isLocking = false;
                  dropCounter = 0;
              }
-        }
-
-        function startLockDelay() {
-            if (currentPiece.isLocking) return;
-            currentPiece.isLocking = true;
-            lockDelayTimeout = setTimeout(() => handlePieceLanded(), LOCK_DELAY_MS);
         }
 
         function hardDrop() {
@@ -411,9 +371,6 @@
         }
 
         function handlePieceLanded() {
-            clearTimeout(lockDelayTimeout);
-            if (!currentPiece) return;
-            sound.playLock();
             isDroppingFast = false;
             currentPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
@@ -452,7 +409,6 @@
                 rowsCleared++; y++;
             }
             if (rowsCleared > 0) {
-                sound.playClear();
                 score += [0, 100, 300, 500, 800][rowsCleared] * level;
                 lines += rowsCleared;
                 if (lines >= level * LINES_PER_LEVEL) level++;
@@ -471,7 +427,6 @@
 
         function rotatePiece(direction) {
             if (!currentPiece) return;
-            sound.playRotate();
             const shape = currentPiece.shape;
             let newShape;
 
@@ -493,14 +448,11 @@
                     return;
                 }
             }
-            if (checkCollision({...currentPiece, y: currentPiece.y + 1})) startLockDelay();
-            else clearTimeout(lockDelayTimeout);
         }
 
         function hold() {
             if (!canHold || !currentPiece) return;
             canHold = false;
-            sound.playMove();
             if (holdPiece) {
                 [currentPiece, holdPiece] = [new Piece(holdPiece.key), new Piece(currentPiece.key)];
                 currentPiece.x = Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2);
@@ -509,7 +461,6 @@
                 holdPiece = new Piece(currentPiece.key);
                 spawnNewPiece();
             }
-            clearTimeout(lockDelayTimeout);
         }
         
         // --- Drawing ---
@@ -550,9 +501,8 @@
             
             if (currentPiece) {
                 drawGhostPiece();
-                const color = currentPiece.isLocking ? LOCKING_COLOR : currentPiece.color;
                 currentPiece.shape.forEach((row, y) => row.forEach((value, x) => {
-                    if (value) drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y, color);
+                    if (value) drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y, currentPiece.color);
                 }));
             }
             
@@ -587,7 +537,6 @@
         }
         function gameOver() {
             isGameOver = true;
-            sound.playGameOver();
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
             ui.finalScore.textContent = score;
@@ -614,17 +563,8 @@
         
         function movePiece(dir) {
             if (!currentPiece) return;
-            sound.playMove();
             currentPiece.x += dir;
-            if (checkCollision(currentPiece)) {
-                 currentPiece.x -= dir;
-            } else {
-                 if (checkCollision({...currentPiece, y: currentPiece.y + 1})) startLockDelay();
-                 else {
-                     clearTimeout(lockDelayTimeout);
-                     currentPiece.isLocking = false;
-                 }
-            }
+            if (checkCollision(currentPiece)) currentPiece.x -= dir;
             draw();
         }
 
@@ -632,35 +572,35 @@
         ui.pauseBtn.addEventListener('click', togglePause);
         ui.restartBtn.addEventListener('click', startGame);
         
+        ui.controlsBtn.addEventListener('click', () => { ui.controlsModal.style.display = 'flex'; });
+        ui.closeControlsBtn.addEventListener('click', () => { ui.controlsModal.style.display = 'none'; });
+        ui.controlsModal.addEventListener('click', (e) => {
+            if (e.target === ui.controlsModal) {
+                ui.controlsModal.style.display = 'none';
+            }
+        });
+
         document.addEventListener('keydown', event => {
             if (keysDown[event.code]) return;
             keysDown[event.code] = true;
-            sound.start();
             if (!animationFrameId && !isGameOver) { startGame(); return; }
             if (isPaused || isGameOver) return;
             switch (event.code) { 
                 case 'ArrowLeft': case 'KeyA':
-                    clearTimeout(dasTimeoutRight); clearInterval(arrIntervalRight);
                     movePiece(-1);
-                    dasTimeoutLeft = setTimeout(() => { arrIntervalLeft = setInterval(() => movePiece(-1), arrValue); }, dasValue);
+                    dasTimeout = setTimeout(() => { arrInterval = setInterval(() => movePiece(-1), arrValue); }, dasValue);
                     break;
                 case 'ArrowRight': case 'KeyD':
-                    clearTimeout(dasTimeoutLeft); clearInterval(arrIntervalLeft);
                     movePiece(1);
-                    dasTimeoutRight = setTimeout(() => { arrIntervalRight = setInterval(() => movePiece(1), arrValue); }, dasValue);
+                    dasTimeout = setTimeout(() => { arrInterval = setInterval(() => movePiece(1), arrValue); }, dasValue);
                     break;
                 case 'ArrowDown': case 'KeyS':
                     isDroppingFast = true;
                     pieceDrop(); 
                     break;
                 case 'ArrowUp': case 'KeyW':
-                case 'KeyX':
                     rotatePiece(1);
                     draw(); 
-                    break;
-                case 'KeyC':
-                    rotatePiece(-1);
-                    draw();
                     break;
                 case 'Space': 
                     event.preventDefault(); 
@@ -676,22 +616,18 @@
             keysDown[event.code] = false;
             switch (event.code) {
                 case 'ArrowLeft': case 'KeyA':
-                    clearTimeout(dasTimeoutLeft);
-                    clearInterval(arrIntervalLeft);
+                    clearTimeout(dasTimeout);
+                    clearInterval(arrInterval);
                     break;
                 case 'ArrowRight': case 'KeyD':
-                    clearTimeout(dasTimeoutRight);
-                    clearInterval(arrIntervalRight);
+                    clearTimeout(dasTimeout);
+                    clearInterval(arrInterval);
                     break;
                 case 'ArrowDown': case 'KeyS':
                     isDroppingFast = false;
                     break;
             }
         });
-
-        ui.dasInput.addEventListener('change', (e) => dasValue = parseInt(e.target.value, 10));
-        ui.arrInput.addEventListener('change', (e) => arrValue = parseInt(e.target.value, 10));
-        ui.sdfInput.addEventListener('change', (e) => sdfValue = parseInt(e.target.value, 10));
 
         // --- Initial Setup ---
         window.addEventListener('resize', resizeGame);
