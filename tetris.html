@@ -74,7 +74,7 @@
             gap: 0.5rem;
         }
         
-        .panel div {
+        .panel div, .panel label {
             font-size: 0.9rem;
         }
 
@@ -103,12 +103,29 @@
         }
         
         button + button {
-            margin-top: 0.5rem;
+             margin-top: 0.5rem;
         }
 
         button:hover {
             background-color: var(--primary-text);
             color: var(--bg-color);
+        }
+
+        .setting-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--primary-text);
+            font-family: 'Roboto', sans-serif;
+            padding: 4px;
+            width: 50px;
+            text-align: right;
+            border-radius: 4px;
         }
 
         .modal-overlay {
@@ -171,7 +188,7 @@
             </div>
              <div class="panel">
                 <button id="start-btn">Play</button>
-                <button id="pause-btn" style="margin-top: 0.5rem;">Pause</button>
+                <button id="pause-btn">Pause</button>
             </div>
         </div>
         <canvas id="game-board"></canvas>
@@ -184,6 +201,21 @@
                     <canvas class="preview-canvas" id="next-3"></canvas>
                     <canvas class="preview-canvas" id="next-4"></canvas>
                  </div>
+            </div>
+            <div class="panel">
+                <div class="panel-title">HANDLING</div>
+                 <div class="setting-wrapper">
+                    <label for="das-input">DAS</label>
+                    <input type="number" id="das-input" value="167" step="1">
+                </div>
+                <div class="setting-wrapper">
+                   <label for="arr-input">ARR</label>
+                   <input type="number" id="arr-input" value="33" step="1">
+               </div>
+               <div class="setting-wrapper">
+                    <label for="sdf-input">SDF</label>
+                    <input type="number" id="sdf-input" value="6" step="1">
+                </div>
             </div>
         </div>
     </div>
@@ -216,14 +248,15 @@
         // --- Colors & Tetrominoes ---
         const BORDER_COLOR = '#000000';
         const GHOST_COLOR = 'rgba(255, 255, 255, 0.2)';
+        const LOCKING_COLOR = 'rgba(255, 255, 255, 0.5)';
         const TETROMINOES = {
-            'I': { shape: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], color: '#00BFFF' }, // Electric Blue
-            'J': { shape: [[1,0,0], [1,1,1], [0,0,0]], color: '#8A2BE2' }, // Deep Violet
-            'L': { shape: [[0,0,1], [1,1,1], [0,0,0]], color: '#FF69B4' }, // Hot Pink
-            'O': { shape: [[1,1], [1,1]], color: '#FFFFAA' }, // Pastel Yellow
-            'S': { shape: [[0,1,1], [1,1,0], [0,0,0]], color: '#C1FFC1' }, // Pastel Green
-            'T': { shape: [[0,1,0], [1,1,1], [0,0,0]], color: '#E6E6FA' }, // Lavender
-            'Z': { shape: [[1,1,0], [0,1,1], [0,0,0]], color: '#7FFFD4' }  // Aqua Marine
+            'I': { shape: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], color: '#00BFFF' },
+            'J': { shape: [[1,0,0], [1,1,1], [0,0,0]], color: '#8A2BE2' },
+            'L': { shape: [[0,0,1], [1,1,1], [0,0,0]], color: '#FF69B4' },
+            'O': { shape: [[1,1], [1,1]], color: '#FFFFAA' },
+            'S': { shape: [[0,1,1], [1,1,0], [0,0,0]], color: '#C1FFC1' },
+            'T': { shape: [[0,1,0], [1,1,1], [0,0,0]], color: '#E6E6FA' },
+            'Z': { shape: [[1,1,0], [0,1,1], [0,0,0]], color: '#7FFFD4' }
         };
         const PIECE_KEYS = 'IJLOSTZ';
 
@@ -249,13 +282,16 @@
             restartBtn: document.getElementById('restart-btn'),
             gameOverModal: document.getElementById('game-over-modal'),
             finalScore: document.getElementById('final-score'),
+            dasInput: document.getElementById('das-input'),
+            arrInput: document.getElementById('arr-input'),
+            sdfInput: document.getElementById('sdf-input'),
         };
-
+        
         // --- Sound Engine ---
         const sound = {
             isStarted: false,
-            move: new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination(),
-            rotate: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination(),
+            move: new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 } }).toDestination(),
+            rotate: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.05, sustain: 0, release: 0.1 } }).toDestination(),
             lock: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.2, release: 0.1 } }).toDestination(),
             clear: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 } }).toDestination(),
             gameOver: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.5 } }).toDestination(),
@@ -271,7 +307,7 @@
             playClear() { if (this.isStarted) this.clear.triggerAttackRelease('G4', '8n'); },
             playGameOver() { if (this.isStarted) this.gameOver.triggerAttackRelease('C3', '2n'); }
         };
-        
+
         function resizeGame() {
             const padding = 32;
             const availableHeight = window.innerHeight - padding;
@@ -299,6 +335,7 @@
                 this.color = TETROMINOES[key].color;
                 this.x = Math.floor(COLS / 2) - Math.floor(this.shape[0].length / 2);
                 this.y = 0;
+                this.isLocking = false;
             }
         }
         
@@ -320,6 +357,7 @@
             clearTimeout(dasTimeoutLeft); clearTimeout(dasTimeoutRight);
             clearInterval(arrIntervalLeft); clearInterval(arrIntervalRight);
             clearTimeout(lockDelayTimeout);
+
             
             nextPieceQueue = Array.from({ length: 4 }, () => generatePiece());
             spawnNewPiece();
@@ -352,14 +390,16 @@
                  currentPiece.y--;
                  startLockDelay();
              } else {
+                 if(isDroppingFast) score++;
                  clearTimeout(lockDelayTimeout);
-                 if (isDroppingFast) score++;
+                 currentPiece.isLocking = false;
                  dropCounter = 0;
              }
         }
-        
+
         function startLockDelay() {
-            clearTimeout(lockDelayTimeout);
+            if (currentPiece.isLocking) return;
+            currentPiece.isLocking = true;
             lockDelayTimeout = setTimeout(() => handlePieceLanded(), LOCK_DELAY_MS);
         }
 
@@ -373,7 +413,6 @@
         function handlePieceLanded() {
             clearTimeout(lockDelayTimeout);
             if (!currentPiece) return;
-
             sound.playLock();
             isDroppingFast = false;
             currentPiece.shape.forEach((row, y) => {
@@ -454,11 +493,8 @@
                     return;
                 }
             }
-            if (checkCollision(currentPiece)) {
-                 startLockDelay();
-            } else {
-                 clearTimeout(lockDelayTimeout);
-            }
+            if (checkCollision({...currentPiece, y: currentPiece.y + 1})) startLockDelay();
+            else clearTimeout(lockDelayTimeout);
         }
 
         function hold() {
@@ -473,6 +509,7 @@
                 holdPiece = new Piece(currentPiece.key);
                 spawnNewPiece();
             }
+            clearTimeout(lockDelayTimeout);
         }
         
         // --- Drawing ---
@@ -513,8 +550,9 @@
             
             if (currentPiece) {
                 drawGhostPiece();
+                const color = currentPiece.isLocking ? LOCKING_COLOR : currentPiece.color;
                 currentPiece.shape.forEach((row, y) => row.forEach((value, x) => {
-                    if (value) drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y, currentPiece.color);
+                    if (value) drawBlock(boardCtx, currentPiece.x + x, currentPiece.y + y, color);
                 }));
             }
             
@@ -579,13 +617,13 @@
             sound.playMove();
             currentPiece.x += dir;
             if (checkCollision(currentPiece)) {
-                currentPiece.x -= dir;
+                 currentPiece.x -= dir;
             } else {
-                 if (checkCollision({...currentPiece, y: currentPiece.y + 1})) {
-                    startLockDelay();
-                } else {
-                    clearTimeout(lockDelayTimeout);
-                }
+                 if (checkCollision({...currentPiece, y: currentPiece.y + 1})) startLockDelay();
+                 else {
+                     clearTimeout(lockDelayTimeout);
+                     currentPiece.isLocking = false;
+                 }
             }
             draw();
         }
@@ -595,16 +633,9 @@
         ui.restartBtn.addEventListener('click', startGame);
         
         document.addEventListener('keydown', event => {
-            sound.start(); // Ensure audio context is started on user interaction
-            if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
-                 if (isPaused || isGameOver) return;
-                rotatePiece(-1);
-                draw();
-                return;
-            }
-
             if (keysDown[event.code]) return;
             keysDown[event.code] = true;
+            sound.start();
             if (!animationFrameId && !isGameOver) { startGame(); return; }
             if (isPaused || isGameOver) return;
             switch (event.code) { 
@@ -623,6 +654,7 @@
                     pieceDrop(); 
                     break;
                 case 'ArrowUp': case 'KeyW':
+                case 'KeyX':
                     rotatePiece(1);
                     draw(); 
                     break;
@@ -656,6 +688,10 @@
                     break;
             }
         });
+
+        ui.dasInput.addEventListener('change', (e) => dasValue = parseInt(e.target.value, 10));
+        ui.arrInput.addEventListener('change', (e) => arrValue = parseInt(e.target.value, 10));
+        ui.sdfInput.addEventListener('change', (e) => sdfValue = parseInt(e.target.value, 10));
 
         // --- Initial Setup ---
         window.addEventListener('resize', resizeGame);
