@@ -2,7 +2,7 @@
 
 // Corrected imports for state modules and utils
 import { getTrackById } from '../state/trackState.js';
-import { getWindowById } from '../state/windowState.js';
+import { getOpenWindows, getWindowById } from '../state/windowState.js'; // Fix: Added getOpenWindows import
 import { getIsReconstructingDAW } from '../state/projectState.js';
 import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js';
 import * as effectsRegistry from '../effectsRegistry.js'; // Fix for Issue 3 in Step 2: Import as module alias
@@ -216,7 +216,7 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     if (!track) return null;
     const windowId = `trackInspector-${trackId}`;
     
-    const existingWindow = getOpenWindows().get(windowId);
+    const existingWindow = localAppServices.getOpenWindows().get(windowId); // Fix: Use localAppServices to getOpenWindows
 
     if (existingWindow) {
         if (!savedState) {
@@ -472,7 +472,7 @@ function buildInstrumentSamplerControls(track, container) {
             onValueChange: (val, oldVal, fromInteraction) => {
                 track.setVolume(val, fromInteraction);
             }
-        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+        }, localAppServices.captureStateForUndo);
         volumeKnobPlaceholder.appendChild(volumeKnob.element);
     }
 
@@ -488,7 +488,7 @@ function buildInstrumentSamplerControls(track, container) {
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
             }
-        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+        }, localAppServices.captureStateForUndo);
         pitchKnob.appendChild(pitchKnob.element);
     }
 
@@ -525,7 +525,7 @@ function buildInstrumentSamplerControls(track, container) {
                         track.instrument[keys[0]].set({ [keys.slice(1).join('.')]: val });
                     }
                 }
-            }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+            }, localAppServices.captureStateForUndo);
             placeholder.appendChild(knob.element);
         }
     });
