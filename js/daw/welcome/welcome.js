@@ -4,14 +4,19 @@
 
 import { SnugWindow } from '../SnugWindow.js';
 // Corrected imports for welcome-specific utils and db
-import { showNotification, showCustomModal } from './welcomeUtils.js';
-import { storeAsset, getAsset } from './welcomeDb.js';
+import { showNotification, showCustomModal } from './welcomeUtils.js'; // From welcomeUtils.js
+import { storeAsset, getAsset } from './welcomeDb.js'; // From welcomeDb.js
 // Corrected import for auth functions (now a module)
-import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js';
+import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js'; // From js/daw/auth.js
 
-// Import necessary state accessors (since welcome.js now runs on index.html and populates appServices)
+// Import necessary state accessors
 import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ } from '../state/windowState.js';
 import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '../state/appState.js';
+
+// NEW: Explicitly import createContextMenu and showConfirmationDialog from utils.js
+// Ensure that showConfirmationDialog is also exported from welcomeUtils if it uses it.
+// For now, importing createContextMenu directly from ../utils.js
+import { createContextMenu, showConfirmationDialog } from '../utils.js'; // DIRECT IMPORT from js/daw/utils.js
 
 let appServices = {};
 let loggedInUser = null;
@@ -41,14 +46,10 @@ function openAppInWindow(windowId, windowTitle, iframeSrc, options = {}, injectA
     const windowInstance = new SnugWindow(windowId, windowTitle, content, options, appServices);
 
     if (injectAppServicesIntoIframe) {
-        // After the iframe content has loaded, inject appServices
         content.onload = () => {
             try {
-                // Ensure the iframe's contentWindow is accessible (same-origin policy applies)
                 if (content.contentWindow && content.contentWindow.document) {
                     content.contentWindow.appServices = appServices;
-                    // If the iframe has an initialization function, call it
-                    // This is the pattern for profile.html and library.html to pick up appServices
                     if (content.contentWindow.initializePage) {
                         content.contentWindow.initializePage(appServices);
                     }
@@ -69,8 +70,8 @@ function initializeWelcomePage() {
     // Populate the appServices object for the index.html context
     appServices.showNotification = showNotification;
     appServices.showCustomModal = showCustomModal;
-    appServices.storeAsset = storeAsset; // from welcomeDb.js
-    appServices.getAsset = getAsset;     // from welcomeDb.js
+    appServices.storeAsset = storeAsset;
+    appServices.getAsset = getAsset;
     
     // Core SnugWindow/Window State functions
     appServices.addWindowToStore = addWindowToStore;
@@ -84,13 +85,13 @@ function initializeWelcomePage() {
     appServices.getCurrentUserThemePreference = getCurrentUserThemePreference;
     appServices.setCurrentUserThemePreference = setCurrentUserThemePreference;
 
-    // Background handling
+    // Background handling (using imported functions)
     appServices.applyCustomBackground = applyCustomBackground; // Local function in welcome.js
     appServices.handleBackgroundUpload = handleBackgroundUpload; // Imported from auth.js
 
-    // Global utility access (from utils.js, assumed globally loaded in index.html)
-    appServices.createContextMenu = createContextMenu;
-    appServices.showConfirmationDialog = showConfirmationDialog; // Assuming utils.js provides this
+    // Utility access (now explicitly imported from utils.js)
+    appServices.createContextMenu = createContextMenu; // This line now refers to the imported function
+    appServices.showConfirmationDialog = showConfirmationDialog; // This line now refers to the imported function
 
     // Initialize auth module (passing the appServices)
     initializeAuth(appServices);
@@ -98,7 +99,7 @@ function initializeWelcomePage() {
     attachEventListeners();
     updateClockDisplay();
     // checkInitialAuthState is now called by initializeAuth
-    applyUserThemePreference(); // Now directly from appServices
+    applyUserThemePreference();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference);
     renderDesktopIcons();
     initAudioOnFirstGesture();
@@ -110,14 +111,9 @@ function initializeWelcomePage() {
  */
 function initAudioOnFirstGesture() {
     const startAudio = async () => {
-        try {
-            // Tone.js is loaded in index.html for Tetris
-            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-                await Tone.start();
-                console.log('AudioContext started successfully.');
-            }
-        } catch (e) {
-            console.error('Could not start AudioContext:', e);
+        if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+            await Tone.start();
+            console.log('AudioContext started successfully.');
         }
         document.body.removeEventListener('mousedown', startAudio);
     };
@@ -128,44 +124,42 @@ function initAudioOnFirstGesture() {
  * Attaches all primary event listeners for the page.
  */
 function attachEventListeners() {
-    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal); // Auth handles this
+    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     
-    // Modified Start Menu and Desktop Icon actions
-    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw); // Direct navigation
-    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles); // Open in SnugWindow
-    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow); // Open in SnugWindow
+    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw);
+    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles);
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow);
     
     document.getElementById('menuLogin')?.addEventListener('click', () => {
         toggleStartMenu();
         // auth.js's showLoginModal will be called by initializeAuth and will handle form submits
-        // No direct call needed here.
     });
     document.getElementById('menuLogout')?.addEventListener('click', () => {
         toggleStartMenu();
-        handleLogout(); // Auth handles this
+        handleLogout(); // Imported from auth.js
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('customBgInput')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) appServices.handleBackgroundUpload(file); // Use appServices
+        if (file) appServices.handleBackgroundUpload(file); // Use appServices (imported from auth.js)
         e.target.value = null;
     });
 
     // Add context menu to desktop
     document.getElementById('desktop')?.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        if (e.target.closest('.window')) return; // Don't show if clicking inside a window
+        if (e.target.closest('.window')) return;
         const menuItems = [
             { label: 'Change Background', action: () => document.getElementById('customBgInput').click() },
             { separator: true },
-            { label: 'Open DAW', action: launchDaw }, // Direct navigation
-            { label: 'Open Library', action: openLibraryWindow }, // Open in SnugWindow
-            { label: 'View Profiles', action: viewProfiles }, // Open in SnugWindow
-            { label: 'Play Snugtris', action: openGameWindow } // Open in SnugWindow
+            { label: 'Open DAW', action: launchDaw },
+            { label: 'Open Library', action: openLibraryWindow },
+            { label: 'View Profiles', action: viewProfiles },
+            { label: 'Play Snugtris', action: openGameWindow }
         ];
-        appServices.createContextMenu(e, menuItems);
+        appServices.createContextMenu(e, menuItems); // Use appServices (imported from utils.js)
     });
 }
 
@@ -182,25 +176,25 @@ function renderDesktopIcons() {
         {
             id: 'snaw-icon',
             name: 'Snaw',
-            action: launchDaw, // Direct navigation
+            action: launchDaw,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`
         },
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: viewProfiles, // Open in SnugWindow
+            action: viewProfiles,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
         },
         {
             id: 'sound-library-icon',
             name: 'Library',
-            action: openLibraryWindow, // Open in SnugWindow
+            action: openLibraryWindow,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow, // Open in SnugWindow
+            action: openGameWindow,
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -229,26 +223,26 @@ function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
-// MODIFIED: Snaw now opens on its own page
+// Snaw now opens on its own page
 function launchDaw() {
     toggleStartMenu();
-    window.location.href = 'snaw.html'; // Direct navigation
+    window.location.href = 'snaw.html';
 }
 
-// MODIFIED: View Profiles opens in a SnugWindow iframe
+// View Profiles opens in a SnugWindow iframe
 function viewProfiles() {
     toggleStartMenu();
     const profileUsername = loggedInUser ? loggedInUser.username : 'guest';
     openAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
 }
 
-// MODIFIED: Open Library opens in a SnugWindow iframe
+// Open Library opens in a SnugWindow iframe
 function openLibraryWindow() {
     toggleStartMenu();
     openAppInWindow('libraryApp', 'SnugOS Library', `js/daw/profiles/library.html`, { width: 800, height: 600 });
 }
 
-// MODIFIED: Open Tetris opens in a SnugWindow iframe
+// Open Tetris opens in a SnugWindow iframe
 function openGameWindow() {
     toggleStartMenu();
     openAppInWindow('tetrisGame', 'Snugtris', 'tetris.html', { width: 600, height: 750, minWidth: 400, minHeight: 600 });
