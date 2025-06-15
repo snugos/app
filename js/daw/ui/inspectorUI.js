@@ -197,7 +197,7 @@ export function updateDrumPadControlsUI(track, container) {
             initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
-        pitchContainer.appendChild(pitchKnob.element); // Fix: Append the element property of the knob object
+        pitchContainer.appendChild(pitchKnob.element); // Corrected: Append the element property of the knob object
     }
 
     container.appendChild(controlsGrid);
@@ -489,7 +489,7 @@ function buildInstrumentSamplerControls(track, container) {
                 track.instrumentSamplerSettings.pitchShift = val;
             }
         }, localAppServices.captureStateForUndo);
-        pitchKnob.appendChild(pitchKnob.element); // Fix: Append the element property of the knob object
+        pitchShiftKnobPlaceholder.appendChild(pitchKnob.element); // Corrected: Append the element property of the knob object
     }
 
     const envelopeParams = [
