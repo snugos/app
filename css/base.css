@@ -209,7 +209,6 @@
     --shadow-modal: none;
     --shadow-context-menu: none;
     
-    /* --- Mapped Accent Colors (Light Mode) --- */
     --accent-focus: var(--deep-violet);
     --accent-muted-text: #FFFFFF;
     --accent-muted: var(--deep-violet);
