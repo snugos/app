@@ -20,7 +20,7 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
  * Creates and opens a new window containing an HTML page loaded into an iframe.
- * Used for apps that *should* be embedded (Profiles, Library, Tetris, and now DAW).
+ * Used for apps that *should* be embedded (Profiles, Library, Tetris).
  * @param {string} windowId Unique ID for the SnugWindow.
  * @param {string} windowTitle Title of the SnugWindow.
  * @param {string} iframeSrc URL of the HTML page to load in the iframe.
