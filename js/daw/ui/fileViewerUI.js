@@ -2,11 +2,21 @@
 
 let localAppServices = {};
 
+/**
+ * Initializes the File Viewer UI module.
+ * @param {object} appServicesFromMain - The main app services object.
+ */
 export function initializeFileViewerUI(appServicesFromMain) {
     localAppServices = appServicesFromMain;
 }
 
+/**
+ * Opens a new SnugWindow to display a file.
+ * The content displayed depends on the file's MIME type (audio, image, video, or generic).
+ * @param {object} fileItem - The file object containing properties like `id`, `file_name`, `mime_type`, `s3_url`.
+ */
 export function openFileViewerWindow(fileItem) {
+    // Check if a window for this file is already open
     const windowId = `fileViewer-${fileItem.id}`;
     if (localAppServices.getWindowById?.(windowId)) {
         localAppServices.getWindowById(windowId).restore();
@@ -19,9 +29,11 @@ export function openFileViewerWindow(fileItem) {
         height: 300,
         minWidth: 200,
         minHeight: 150,
-        initialContentKey: windowId
+        initialContentKey: windowId,
+        resizable: true, // Default to true, can be overridden below
     };
 
+    // Determine content and window options based on MIME type
     if (fileItem.mime_type.startsWith('audio/')) {
         contentElement = document.createElement('audio');
         contentElement.controls = true;
@@ -31,7 +43,7 @@ export function openFileViewerWindow(fileItem) {
         windowOptions.width = 400;
         windowOptions.height = 100;
         windowOptions.minHeight = 100;
-        windowOptions.resizeable = false; // Audio player doesn't need resizing much
+        windowOptions.resizable = false; // Audio player usually doesn't need resizing
     } else if (fileItem.mime_type.startsWith('image/')) {
         contentElement = document.createElement('img');
         contentElement.src = fileItem.s3_url;
@@ -47,6 +59,7 @@ export function openFileViewerWindow(fileItem) {
         windowOptions.width = 640;
         windowOptions.height = 400;
     } else {
+        // Fallback for unviewable file types
         contentElement = document.createElement('div');
         contentElement.className = 'p-4 text-center';
         contentElement.innerHTML = `
@@ -57,7 +70,9 @@ export function openFileViewerWindow(fileItem) {
         `;
         windowOptions.width = 450;
         windowOptions.height = 200;
+        windowOptions.resizable = false; // Fixed size for generic viewer
     }
 
-    const fileViewerWindow = localAppServices.createWindow(windowId, `Viewing: ${fileItem.file_name}`, contentElement, windowOptions);
+    // Create and open the SnugWindow
+    localAppServices.createWindow(windowId, `Viewing: ${fileItem.file_name}`, contentElement, windowOptions);
 }

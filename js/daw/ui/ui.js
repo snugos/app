@@ -10,6 +10,8 @@ import { initializeYouTubeImporterUI, openYouTubeImporterWindow } from './youtub
 import { initializeFileViewerUI, openFileViewerWindow } from './fileViewerUI.js';
 
 import { createKnob } from './knobUI.js';
+// Corrected: Import getThemeColors from utils.js, not profileUtils.js
+import { getThemeColors } from '../utils.js';
 
 
 /**
@@ -19,7 +21,10 @@ import { createKnob } from './knobUI.js';
  */
 export function initializeUIModule(appServices) {
     // Make createKnob available as a service for other modules to use
-    appServices.createKnob = (opts) => createKnob(opts, appServices);
+    appServices.createKnob = (opts, captureCallback) => createKnob(opts, captureCallback); // Pass captureCallback
+
+    // Make getThemeColors available as a service
+    appServices.getThemeColors = getThemeColors;
     
     // Initialize all modules
     initializeInspectorUI(appServices);

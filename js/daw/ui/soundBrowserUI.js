@@ -1,11 +1,11 @@
 // js/daw/ui/soundBrowserUI.js - Sound Browser UI Management
 
 // Corrected imports for state modules
-import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js'; //
-import { getWindowById } from '../state/windowState.js'; //
-import { getArmedTrackId } from '../state/trackState.js'; //
+import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js';
+import { getWindowById } from '../state/windowState.js';
+import { getArmedTrackId } from '../state/trackState.js';
 // Corrected import for Constants and DB
-import * as Constants from '../constants.js'; //
+import * as Constants from '../constants.js';
 import { storeAudio, getAudio } from '../db.js'; //
 
 let localAppServices = {}; //
@@ -36,6 +36,9 @@ export function renderSoundBrowser(pathToRender) { //
 
     const currentPath = pathToRender !== undefined ? pathToRender : (getCurrentSoundBrowserPath() || []); //
     
+    // Reset selected sound when rendering, unless specifically instructed otherwise for a targeted re-render
+    selectedSoundForPreviewData = null; 
+
     const allFileTrees = getSoundLibraryFileTrees() || {}; //
     
     const virtualRoot = {}; //
@@ -65,9 +68,15 @@ export function renderSoundBrowser(pathToRender) { //
     } catch (e) { //
         setCurrentSoundBrowserPath([]); //
         currentTreeNode = virtualRoot; //
+        console.warn(`[SoundBrowserUI] Resetting path due to invalid segment: ${e.message}`);
     }
     
     renderDirectoryView(currentPath, currentTreeNode); //
+    // After rendering, ensure preview button state is updated based on `selectedSoundForPreviewData`
+    const previewBtn = browserWindow.element.querySelector('#soundBrowserPreviewBtn');
+    if (previewBtn) {
+        previewBtn.disabled = !selectedSoundForPreviewData;
+    }
 }
 
 function getLibraryNameFromPath(pathArray) { //
@@ -119,15 +128,24 @@ export function openSoundBrowserWindow(savedState = null) { //
             if (selectedSoundForPreviewData) { //
                 try {
                     const blob = await localAppServices.getAudioBlobFromSoundBrowserItem(selectedSoundForPreviewData); //
-                    if (blob) { // Fix: Check if blob is valid
+                    if (blob) { // Check if blob is valid
                         let previewPlayer = getPreviewPlayer(); //
                         if (!previewPlayer) { //
                             previewPlayer = new localAppServices.Tone.Player().toDestination(); //
                             setPreviewPlayer(previewPlayer); //
                         }
-                        const objectURL = URL.createObjectURL(blob); //
-                        await previewPlayer.load(objectURL); //
-                        previewPlayer.start(); //
+                        // Stop any currently playing preview and load new one
+                        if (previewPlayer.state === 'started') {
+                            previewPlayer.stop();
+                        }
+                        // Use URL.createObjectURL for blob directly
+                        const objectURL = URL.createObjectURL(blob);
+                        await previewPlayer.load(objectURL);
+                        previewPlayer.start();
+                        // Revoke the Object URL after the buffer is loaded and started
+                        // This might be tricky if the player instance is reused. 
+                        // For simplicity, we'll revoke after a short delay, assuming Tone.js handles buffer internally.
+                        setTimeout(() => URL.revokeObjectURL(objectURL), 1000); 
                     } else { // New: Handle invalid blob
                         localAppServices.showNotification?.("Could not retrieve preview audio.", "error"); //
                     }
@@ -155,6 +173,7 @@ export function renderDirectoryView(pathArray, treeNode) { //
 
     dirView.innerHTML = ''; //
     pathDisplay.textContent = `/${pathArray.join('/')}`; //
+    // Disable preview button by default until a new sound is selected
     if (previewBtn) previewBtn.disabled = true; //
 
     if (pathArray.length > 0) { //
@@ -216,13 +235,15 @@ export function renderDirectoryView(pathArray, treeNode) { //
                 e.dataTransfer.effectAllowed = 'copy'; //
             });
             itemDiv.addEventListener('click', () => { //
+                // Remove selection from all items
                 dirView.querySelectorAll('.bg-black.text-white, .dark\\:bg-white.dark\\:text-black').forEach(el => { //
                     el.classList.remove('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black'); //
                 });
+                // Add selection to clicked item
                 itemDiv.classList.add('bg-black', 'text-white', 'dark:bg-white', 'dark:text-black'); //
                 const libraryName = getLibraryNameFromPath(pathArray); //
                 selectedSoundForPreviewData = { libraryName, fullPath: item.fullPath, fileName: name }; //
-                if (previewBtn) previewBtn.disabled = false; //
+                if (previewBtn) previewBtn.disabled = false; // Enable preview button
             });
             itemDiv.addEventListener('dblclick', () => { //
                 const armedTrackId = getArmedTrackId(); //

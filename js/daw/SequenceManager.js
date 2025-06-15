@@ -1,20 +1,24 @@
 // js/daw/SequenceManager.js
 
-// Corrected import for Constants
 import * as Constants from './constants.js'; //
 
-export class SequenceManager { // ADDED 'export'
+export class SequenceManager { //
     constructor(track, appServices) { //
         this.track = track; //
         this.appServices = appServices; //
         this.sequences = []; //
         this.activeSequenceId = null; //
         this._sequenceEventId = null; //
+        this.toneSequence = null; // Store the Tone.Sequence object
     }
 
     initialize(sequences = [], activeSequenceId = null) { //
         this.sequences = sequences; //
         this.activeSequenceId = activeSequenceId || (this.sequences.length > 0 ? this.sequences[0].id : null); //
+        // Recreate Tone.Sequence immediately after initialization if there's an active sequence
+        if (this.activeSequenceId) {
+            this.recreateToneSequence();
+        }
     }
 
     getActiveSequence() { //
@@ -34,6 +38,7 @@ export class SequenceManager { // ADDED 'export'
         this.sequences.push(newSequence); //
         this.activeSequenceId = newSeqId; //
         if (!skipUndo) this.appServices.captureStateForUndo?.(`Create Sequence "${name}" on ${this.track.name}`); //
+        this.recreateToneSequence(); // Recreate Tone.Sequence after adding new one
         return newSequence; //
     }
 
@@ -90,24 +95,34 @@ export class SequenceManager { // ADDED 'export'
         const notesToMove = []; //
         const newPositions = []; //
         const newSelectedNoteIds = new Set(); //
+        
+        // Collect notes to move and their new positions, validating bounds first
         for (const noteId of selectedNotes) { //
             const [pitchIndex, timeStep] = noteId.split('-').map(Number); //
-            const newPitchIndex = pitchIndex + pitchOffset; //
-            const newTimeStep = timeStep + timeOffset; //
-            if (newPitchIndex < 0 || newPitchIndex >= sequence.data.length || newTimeStep < 0 || newTimeStep >= sequence.length) { //
-                this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000); //
-                return null; //
+            const noteData = sequence.data[pitchIndex]?.[timeStep]; //
+            if (noteData) { //
+                const newPitchIndex = pitchIndex + pitchOffset; //
+                const newTimeStep = timeStep + timeOffset; //
+
+                if (newPitchIndex < 0 || newPitchIndex >= sequence.data.length || newTimeStep < 0 || newTimeStep >= sequence.length) { //
+                    this.appServices.showNotification?.('Cannot move notes outside the sequence bounds.', 2000); //
+                    return null; //
+                }
+                notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, data: noteData }); //
+                newPositions.push({ newPitch: newPitchIndex, newTime: newTimeStep, data: noteData }); //
             }
-            notesToMove.push({ oldPitch: pitchIndex, oldTime: timeStep, data: sequence.data[pitchIndex][timeStep] }); //
-            newPositions.push({ newPitch: newPitchIndex, newTime: newTimeStep, data: sequence.data[pitchIndex][timeStep] }); //
         }
+
+        // Clear old positions
         notesToMove.forEach(note => { //
             sequence.data[note.oldPitch][note.oldTime] = null; //
         });
+        // Set new positions
         newPositions.forEach(note => { //
             sequence.data[note.newPitch][note.newTime] = note.data; //
             newSelectedNoteIds.add(`${note.newPitch}-${note.newTime}`); //
         });
+
         this.appServices.captureStateForUndo?.('Move notes'); //
         this.recreateToneSequence(); //
         return newSelectedNoteIds; //
@@ -118,6 +133,7 @@ export class SequenceManager { // ADDED 'export'
         const note = sequence?.data?.[pitchIndex]?.[timeStep]; //
         if (note) { //
             note.duration = Math.max(1, Math.floor(newDuration)); //
+            this.recreateToneSequence(); // Recreate sequence after duration change
         }
     }
 
@@ -125,6 +141,9 @@ export class SequenceManager { // ADDED 'export'
         const sequence = this.sequences.find(s => s.id === sequenceId); //
         if (sequence?.data[pitchIndex]?.[timeStep]) { //
             sequence.data[pitchIndex][timeStep].velocity = Math.max(0.01, Math.min(1, newVelocity)); //
+            // Velocity changes don't strictly require recreating the whole Tone.Sequence
+            // but might require updating individual note events if already scheduled.
+            // For simplicity, recreating is fine for now, but could be optimized.
         }
     }
 
@@ -140,7 +159,7 @@ export class SequenceManager { // ADDED 'export'
         const originalSequence = this.sequences.find(s => s.id === sequenceId); //
         if (!originalSequence) return; //
         const newName = `${originalSequence.name} (copy)`; //
-        const newSequence = this.createNewSequence(newName, originalSequence.length, true); //
+        const newSequence = this.createNewSequence(newName, originalSequence.length, true); // // pass true to skip undo for initial creation
         newSequence.data = JSON.parse(JSON.stringify(originalSequence.data)); //
         this.recreateToneSequence(); //
         this.appServices.captureStateForUndo?.(`Duplicate sequence on ${this.track.name}`); //
@@ -173,10 +192,12 @@ export class SequenceManager { // ADDED 'export'
 
     pasteNotesFromClipboard(sequenceId, pastePitchIndex, pasteTimeStep) { //
         const clipboard = this.appServices.getClipboardData?.(); //
-        if (clipboard?.type !== 'piano-roll-notes' || !clipboard.notes?.length) return; //
+        if (clipboard?.type !== 'piano-roll-notes' || !clipboard.notes?.length) return null; //
 
         const sequence = this.sequences.find(s => s.id === sequenceId); //
-        if (!sequence) return; //
+        if (!sequence) return null; //
+
+        const newSelectedNoteIds = new Set(); // To return the newly pasted notes for selection
 
         clipboard.notes.forEach(noteToPaste => { //
             const newPitchIndex = pastePitchIndex + noteToPaste.pitchOffset; //
@@ -184,50 +205,80 @@ export class SequenceManager { // ADDED 'export'
 
             if (newPitchIndex >= 0 && newPitchIndex < sequence.data.length && newTimeStep >= 0 && newTimeStep < sequence.length) { //
                 sequence.data[newPitchIndex][newTimeStep] = JSON.parse(JSON.stringify(noteToPaste.noteData)); //
+                newSelectedNoteIds.add(`${newPitchIndex}-${newTimeStep}`); // Add to new selection set
+            } else {
+                console.warn(`[SequenceManager] Note out of bounds during paste: P:${newPitchIndex}, T:${newTimeStep}`); //
             }
         });
 
         this.recreateToneSequence(); //
         this.appServices.captureStateForUndo?.(`Paste ${clipboard.notes.length} notes`); //
+        return newSelectedNoteIds; // Return the set of new note IDs for selection
     }
 
     recreateToneSequence() { //
-        this.stopSequence(); //
+        this.stopSequence(); // Ensure previous sequence is stopped and cleared
         const activeSequence = this.getActiveSequence(); //
         if (!activeSequence) return; //
-        const callback = (time) => { //
-            const ticks = Tone.Transport.getTicksAtTime(time); //
-            const ticksPerStep = Tone.Transport.PPQ / 4; //
-            const currentStep = Math.floor(ticks / ticksPerStep); //
-            const loopStep = currentStep % activeSequence.length; //
-            for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) { //
-                const note = activeSequence.data[pitchIndex][loopStep]; //
+
+        // Collect all note events from the active sequence data
+        const events = [];
+        const ticksPerStep = this.appServices.Tone.Transport.PPQ / 4; // Assuming 16th note steps
+
+        for (let pitchIndex = 0; pitchIndex < activeSequence.data.length; pitchIndex++) { //
+            for (let timeStep = 0; timeStep < activeSequence.length; timeStep++) { //
+                const note = activeSequence.data[pitchIndex][timeStep]; //
                 if (note) { //
                     const notePitch = Constants.SYNTH_PITCHES[pitchIndex]; //
-                    const noteDuration = `${note.duration || 1}*16n`; //
+                    const noteDuration = `${note.duration || 1}*16n`; // Convert note duration to Tone.js time format
                     const noteVelocity = note.velocity || 0.75; //
-                    if (this.track.instrument) { //
-                        this.track.instrument.triggerAttackRelease(notePitch, noteDuration, time, noteVelocity); //
-                    }
+
+                    events.push({
+                        time: new this.appServices.Tone.Ticks(timeStep * ticksPerStep).toBarsBeatsSixteenths(), // Schedule by ticks
+                        note: notePitch,
+                        duration: noteDuration,
+                        velocity: noteVelocity
+                    });
                 }
             }
-        };
-        this._sequenceEventId = Tone.Transport.scheduleRepeat(callback, '16n'); //
+        }
+
+        if (this.track.instrument) { // Check if instrument is available
+            this.toneSequence = new this.appServices.Tone.Part((time, value) => { //
+                if (this.track.instrument) { // Double check instrument exists when callback fires
+                    this.track.instrument.triggerAttackRelease(value.note, value.duration, time, value.velocity); //
+                }
+            }, events);
+            
+            this.toneSequence.loop = true; // Ensure looping
+            this.toneSequence.loopEnd = new this.appServices.Tone.Ticks(activeSequence.length * ticksPerStep).toBarsBeatsSixteenths(); // Set loop end based on sequence length
+            
+            // Start the sequence at the beginning of the transport
+            this.toneSequence.start(0);
+        }
     }
 
     startSequence() { //
-        this.recreateToneSequence(); //
+        if (this.toneSequence) {
+            this.toneSequence.start(0); // Start from the beginning
+        } else {
+            this.recreateToneSequence(); // If not existing, create and start
+        }
     }
 
     stopSequence() { //
-        if (this._sequenceEventId) { //
-            Tone.Transport.clear(this._sequenceEventId); //
-            this._sequenceEventId = -1; //
+        if (this.toneSequence) { //
+            this.toneSequence.stop(0); // Stop immediately
+            this.toneSequence.dispose(); // Dispose the Tone.Part to free resources
+            this.toneSequence = null; // Clear the reference
         }
     }
 
     dispose() { //
         this.stopSequence(); //
+        // No need to dispose sequences array itself, just the Tone.Sequence
+        this.sequences = [];
+        this.activeSequenceId = null;
     }
 
     serialize() { //

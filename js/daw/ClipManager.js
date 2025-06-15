@@ -3,7 +3,7 @@
 import * as Constants from './constants.js'; //
 import { storeAudio, getAudio, deleteAudio } from './db.js'; //
 
-export class ClipManager { // ADDED 'export'
+export class ClipManager { //
     constructor(track, appServices) { //
         this.track = track; //
         this.appServices = appServices; //
@@ -35,7 +35,7 @@ export class ClipManager { // ADDED 'export'
         }
         const beatsPerStep = 1 / (Constants.STEPS_PER_BAR / 4); //
         const totalBeats = sequence.length * beatsPerStep; //
-        const clipDuration = totalBeats * (60 / Tone.Transport.bpm.value); //
+        const clipDuration = totalBeats * (60 / this.appServices.Tone.Transport.bpm.value); //
         const newClip = { //
             id: `clip-${this.track.id}-${Date.now()}`, //
             type: 'midi', //
@@ -55,7 +55,8 @@ export class ClipManager { // ADDED 'export'
         try {
             const dbKey = `clip-${this.track.id}-${Date.now()}-${clipName}`; //
             await storeAudio(dbKey, audioBlob); //
-            const audioBuffer = await Tone.context.decodeAudioData(await audioBlob.arrayBuffer()); //
+            // Access Tone through appServices
+            const audioBuffer = await this.appServices.Tone.context.decodeAudioData(await audioBlob.arrayBuffer()); //
             const newClip = { //
                 id: `clip-${this.track.id}-${Date.now()}`, //
                 type: 'audio', //
@@ -77,7 +78,10 @@ export class ClipManager { // ADDED 'export'
         if (index > -1) { //
             const removedClip = this.timelineClips[index]; //
             if (removedClip.type === 'audio' && removedClip.audioBuffer) { //
-                removedClip.audioBuffer.dispose(); //
+                // Dispose of Tone.js AudioBuffer if it exists
+                if (removedClip.audioBuffer.dispose && typeof removedClip.audioBuffer.dispose === 'function') { // Check if dispose method exists
+                    removedClip.audioBuffer.dispose(); //
+                }
                 if (removedClip.dbKey) { //
                     deleteAudio(removedClip.dbKey); //
                 }

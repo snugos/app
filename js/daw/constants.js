@@ -17,6 +17,8 @@ export const NUM_SAMPLER_NOTES = 16; // 16 pads/slices
 export const SYNTH_PITCHES = (() => {
     const pitches = [];
     if (Array.isArray(MIDI_NOTE_NAMES) && MIDI_NOTE_NAMES.length === 12) {
+        // Iterate downwards from PIANO_ROLL_END_MIDI_NOTE to PIANO_ROLL_START_MIDI_NOTE
+        // to match the visual representation in the piano roll (higher notes on top).
         for (let midiNote = PIANO_ROLL_END_MIDI_NOTE; midiNote >= PIANO_ROLL_START_MIDI_NOTE; midiNote--) {
             const octave = Math.floor(midiNote / 12) - 1;
             const noteName = MIDI_NOTE_NAMES[midiNote % 12];

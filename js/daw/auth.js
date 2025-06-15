@@ -1,6 +1,8 @@
 // js/daw/auth.js
 
 import { SERVER_URL } from './constants.js';
+import { showNotification, showCustomModal } from './utils.js'; // Consolidated utils import
+import { storeAsset, getAsset } from './db.js'; // Consolidated db import
 
 let localAppServicesInstance = null; 
 let loggedInUser = null;
@@ -49,7 +51,7 @@ async function checkInitialAuthState() {
         loggedInUser = { id: payload.id, username: payload.username };
         updateAuthUI(loggedInUser);
 
-        const backgroundBlob = await localAppServicesInstance.getAsset?.(`background-for-user-${loggedInUser.id}`);
+        const backgroundBlob = await getAsset?.(`background-for-user-${loggedInUser.id}`); // Consolidated db import
         if (backgroundBlob) {
             localAppServicesInstance.applyCustomBackground?.(backgroundBlob);
         }
@@ -141,12 +143,12 @@ async function handleLogin(username, password) {
         if (data.success) {
             localStorage.setItem('snugos_token', data.token);
             await checkInitialAuthState();
-            localAppServicesInstance.showNotification(`Welcome back, ${data.user.username}!`, 2000);
+            showNotification(`Welcome back, ${data.user.username}!`, 2000); // Consolidated utils import
         } else {
-            localAppServicesInstance.showNotification(`Login failed: ${data.message}`, 3000);
+            showNotification(`Login failed: ${data.message}`, 3000); // Consolidated utils import
         }
     } catch (error) {
-        localAppServicesInstance.showNotification('Network error. Could not connect to server.', 3000);
+        showNotification('Network error. Could not connect to server.', 3000); // Consolidated utils import
         console.error("Login Error:", error);
     }
 }
@@ -161,30 +163,30 @@ async function handleRegister(username, password) {
         const data = await response.json();
 
         if (data.success) {
-            localAppServicesInstance.showNotification('Registration successful! Please log in.', 2500);
+            showNotification('Registration successful! Please log in.', 2500); // Consolidated utils import
         } else {
-            localAppServicesInstance.showNotification(`Registration failed: ${data.message}`, 3000);
+            showNotification(`Registration failed: ${data.message}`, 3000); // Consolidated utils import
         }
     } catch (error) {
-        localAppServicesInstance.showNotification('Network error. Could not connect to server.', 3000);
+        showNotification('Network error. Could not connect to server.', 3000); // Consolidated utils import
         console.error("Register Error:", error);
     }
 }
 
 export async function handleBackgroundUpload(file) {
     if (!loggedInUser) {
-        localAppServicesInstance.showNotification('You must be logged in to save a custom background.', 3000);
+        showNotification('You must be logged in to save a custom background.', 3000); // Consolidated utils import
         localAppServicesInstance.applyCustomBackground?.(file);
         return;
     }
 
     try {
-        localAppServicesInstance.showNotification('Saving background...', 1500);
-        await localAppServicesInstance.storeAsset?.(`background-for-user-${loggedInUser.id}`, file);
+        showNotification('Saving background...', 1500); // Consolidated utils import
+        await storeAsset?.(`background-for-user-${loggedInUser.id}`, file); // Consolidated db import
         localAppServicesInstance.applyCustomBackground?.(file);
-        localAppServicesInstance.showNotification('Background saved locally!', 2000);
+        showNotification('Background saved locally!', 2000); // Consolidated utils import
     } catch (error) {
-        localAppServicesInstance.showNotification(`Error saving background: ${error.message}`, 3000);
+        showNotification(`Error saving background: ${error.message}`, 3000); // Consolidated utils import
         console.error("Background Upload Error:", error);
     }
 }
@@ -197,5 +199,5 @@ export function handleLogout() {
     const existingVideo = document.getElementById('desktop-video-bg');
     if (existingVideo) existingVideo.remove();
     
-    localAppServicesInstance.showNotification('You have been logged out.', 2000);
+    showNotification('You have been logged out.', 2000); // Consolidated utils import
 }

@@ -4,6 +4,7 @@
 import { getTracks, getSoloedTrackId } from '../state/trackState.js';
 import { getMasterGainValue, setMasterGainValue } from '../state/masterState.js';
 import { getOpenWindows, getWindowById } from '../state/windowState.js';
+import { getThemeColors } from '../utils.js'; // Import getThemeColors
 
 let localAppServices = {};
 
@@ -21,7 +22,8 @@ export function openMixerWindow(savedState = null) {
 
     const contentContainer = document.createElement('div');
     contentContainer.id = 'mixerContentContainer';
-    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-white dark:bg-black';
+    // Apply theme-aware classes
+    contentContainer.className = 'p-2 overflow-x-auto whitespace-nowrap h-full bg-window-content text-primary';
     
     const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
     const mixerOptions = {
@@ -36,6 +38,8 @@ export function openMixerWindow(savedState = null) {
     
     const mixerWindow = localAppServices.createWindow(windowId, 'Mixer', contentContainer, mixerOptions);
     if (mixerWindow?.element) {
+        // Set the onRefresh callback for the window
+        mixerWindow.onRefreshCallback = updateMixerWindow;
         updateMixerWindow();
     }
 }
@@ -53,13 +57,17 @@ function renderMixerTracks(container) {
     console.log(`%c[mixerUI.js] renderMixerTracks called with ${tracks.length} tracks.`, 'color: #f39c12; font-weight: bold;');
 
     container.innerHTML = '';
-    
+    const themeColors = getThemeColors(); // Get current theme colors
+
+    // Master Track
     const masterTrackDiv = document.createElement('div');
-    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
-    masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="Master">Master</div>
+    masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border shadow w-24 mr-2 text-xs';
+    masterTrackDiv.style.borderColor = themeColors.borderPrimary; // Apply border color
+    masterTrackDiv.style.backgroundColor = themeColors.bgWindow; // Apply background color
+    masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1" style="color: ${themeColors.textPrimary};" title="Master">Master</div>
         <div id="volumeKnob-mixer-master-placeholder" class="h-16 mx-auto mb-1"></div>
-        <div id="mixerTrackMeterContainer-master" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
-            <div id="mixerTrackMeterBar-master" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;\\"></div>
+        <div id="mixerTrackMeterContainer-master" class="h-3 w-full rounded border overflow-hidden mt-0.5" style="background-color: ${themeColors.bgMeterBarContainer}; border-color: ${themeColors.borderMeterBarContainer};">
+            <div id="mixerTrackMeterBar-master" class="h-full" style="background-color: ${themeColors.accentMeter}; width: 0%;"></div>
         </div>`;
     container.appendChild(masterTrackDiv);
 
@@ -68,28 +76,34 @@ function renderMixerTracks(container) {
         const masterVolKnob = localAppServices.createKnob({
             label: 'Master',
             min: 0,
-            max: 1,
+            max: 1.2, // Max volume can go a bit over 1 for boost
             step: 0.01,
             initialValue: getMasterGainValue(),
-            onValueChange: (val) => setMasterGainValue(val)
-        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+            onValueChange: (val, oldVal, fromInteraction) => setMasterGainValue(val, fromInteraction)
+        }, localAppServices.captureStateForUndo);
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
+    // Individual Tracks
     tracks.forEach(track => {
         console.log(`[mixerUI.js] Rendering track: ${track.name}`);
 
+        const soloedTrackId = getSoloedTrackId();
+        const isEffectivelyMuted = track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id);
+
         const trackDiv = document.createElement('div');
-        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border border-black dark:border-white bg-white dark:bg-black shadow w-24 mr-2 text-xs';
+        trackDiv.className = 'mixer-track inline-block align-top p-1.5 border shadow w-24 mr-2 text-xs';
+        trackDiv.style.borderColor = themeColors.borderPrimary; // Apply border color
+        trackDiv.style.backgroundColor = themeColors.bgWindow; // Apply background color
         trackDiv.dataset.trackId = track.id;
-        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 text-black dark:text-white" title="${track.name}">${track.name}</div>
+        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1" style="color: ${themeColors.textPrimary};" title="${track.name}">${track.name}</div>
             <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div>
-            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-white dark:bg-black rounded border border-black dark:border-white overflow-hidden mt-0.5">
-                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-black dark:bg-white transition-all duration-50 ease-linear" style="width: 0%;\\"></div>
+            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full rounded border overflow-hidden mt-0.5" style="background-color: ${themeColors.bgMeterBarContainer}; border-color: ${themeColors.borderMeterBarContainer};">
+                <div id="mixerTrackMeterBar-${track.id}" class="h-full" style="background-color: ${themeColors.accentMeter}; width: 0%;"></div>
             </div>
             <div class="flex justify-around mt-1">
-                <button id="mixerMuteBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs">${track.isMuted ? 'Unmute' : 'Mute'}</button>
-                <button id="mixerSoloBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
+                <button id="mixerMuteBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs" style="background-color: ${themeColors.bgButton}; color: ${themeColors.textButton}; border-color: ${themeColors.borderButton};">${track.isMuted ? 'Unmute' : 'Mute'}</button>
+                <button id="mixerSoloBtn-${track.id}" class="px-2 py-0.5 border rounded text-xs" style="background-color: ${themeColors.bgButton}; color: ${themeColors.textButton}; border-color: ${themeColors.borderButton};">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
             </div>
             `;
         container.appendChild(trackDiv);
@@ -102,16 +116,15 @@ function renderMixerTracks(container) {
                 max: 1.2,
                 step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
-                onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
-            }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+                onValueChange: (val, oldVal, fromInteraction) => track.setVolume(val, fromInteraction)
+            }, localAppServices.captureStateForUndo);
             volKnobPlaceholder.appendChild(volKnob.element);
         }
 
         const mixerMuteBtn = trackDiv.querySelector(`#mixerMuteBtn-${track.id}`);
         if (mixerMuteBtn) {
             mixerMuteBtn.addEventListener('click', () => localAppServices.handleTrackMute(track.id));
-            const soloedTrackId = getSoloedTrackId();
-            mixerMuteBtn.classList.toggle('muted', track.isMuted || (soloedTrackId !== null && soloedTrackId !== track.id));
+            mixerMuteBtn.classList.toggle('muted', isEffectivelyMuted);
         }
 
         const mixerSoloBtn = trackDiv.querySelector(`#mixerSoloBtn-${track.id}`);

@@ -1,6 +1,6 @@
 // js/daw/EffectChain.js
 
-import { createEffectInstance } from './effectsRegistry.js'; // Corrected path
+import { createEffectInstance } from './effectsRegistry.js';
 
 export class EffectChain {
     constructor(track, appServices) {
@@ -16,6 +16,8 @@ export class EffectChain {
         } else {
             console.warn(`[EffectChain.js] initialize received non-array effects data for track ${this.track.id}:`, effects);
         }
+        // After initializing all effects, rebuild the chain to ensure connections are correct.
+        this.rebuildEffectChain();
     }
 
     addEffect(effectType, params, isInitialLoad = false) {
@@ -73,17 +75,27 @@ export class EffectChain {
     }
 
     rebuildEffectChain() {
-        this.track.input.disconnect();
+        this.track.input.disconnect(); // Disconnect everything from the track's input initially
         let currentNode = this.track.input;
 
         this.activeEffects.forEach(effect => {
             if (effect.toneNode) {
+                // Disconnect each effect node first, in case its previous connection changed
+                if (currentNode !== effect.toneNode) { // Avoid disconnecting self if currentNode is already the effectNode (e.g. at start of chain)
+                    if (currentNode.output && typeof currentNode.output.disconnect === 'function') {
+                        // This handles cases where currentNode is a ToneAudioNode with 'output'
+                        currentNode.output.disconnect(effect.toneNode);
+                    } else if (typeof currentNode.disconnect === 'function') {
+                        // This handles cases where currentNode is a direct AudioNode
+                        currentNode.disconnect(effect.toneNode);
+                    }
+                }
                 currentNode.connect(effect.toneNode);
                 currentNode = effect.toneNode;
             }
         });
 
-        currentNode.connect(this.track.outputNode);
+        currentNode.connect(this.track.outputNode); // Connect the last effect node to the track's output
     }
 
     serialize() {
@@ -93,5 +105,8 @@ export class EffectChain {
     dispose() {
         this.activeEffects.forEach(e => e.toneNode.dispose());
         this.activeEffects = [];
+        // Ensure the chain is re-established to bypass disposed effects
+        this.track.input.disconnect();
+        this.track.input.connect(this.track.outputNode);
     }
 }

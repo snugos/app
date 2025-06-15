@@ -2,14 +2,13 @@
 // NOTE: This file is designed to run within an iframe, hosted by index.html.
 // It receives `appServices` from its parent window.
 
-// Removed imports like SnugWindow as it's provided by the parent.
 // Corrected imports for utils and db
-import { storeAsset, getAsset } from '../db.js'; // Fix for Issue 3 in Step 3: Changed from './profileDb.js'
-import { showNotification, showCustomModal, createContextMenu } from '../utils.js';
+import { storeAsset, getAsset } from '../db.js'; // Consolidated db import
+import { showNotification, showCustomModal, createContextMenu } from '../utils.js'; // Consolidated utils import
 
 let appServices = {}; // Will be populated by the parent window.
 let loggedInUser = null;
-const SERVER_URL = 'https://snugos-server-api.onrender.com';
+const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Defined in constants.js, but hardcoding here to ensure iframe works if constants isn't available
 let currentProfileData = null;
 let isEditing = false;
 
@@ -20,9 +19,10 @@ function initProfilePageInIframe(injectedAppServices) {
 
     // Use appServices for window/modal management (ensure parent's services are used)
     // Assuming `appServices` object from parent is fully formed.
-    appServices.showNotification = appServices.showNotification || window.parent.appServices.showNotification;
-    appServices.showCustomModal = appServices.showCustomModal || window.parent.appServices.showCustomModal;
-    appServices.createContextMenu = appServices.createContextMenu || window.parent.appServices.createContextMenu;
+    // Fallback to window.parent.appServices if not directly injected (for robustness)
+    appServices.showNotification = appServices.showNotification || window.parent.appServices.showNotification || showNotification;
+    appServices.showCustomModal = appServices.showCustomModal || window.parent.appServices.showCustomModal || showCustomModal;
+    appServices.createContextMenu = appServices.createContextMenu || window.parent.appServices.createContextMenu || createContextMenu;
     // For profile to open other profiles, it also needs openEmbeddedAppInWindow
     appServices.openEmbeddedAppInWindow = appServices.openEmbeddedAppInWindow || window.parent.appServices.openEmbeddedAppInWindow;
     
@@ -70,6 +70,7 @@ async function fetchProfileData(username, container) {
 
     } catch (error) {
         document.getElementById('profile-container').innerHTML = `<p class="p-8 text-center" style="color:red;">Error: ${error.message}</p>`;
+        appServices.showNotification(`Failed to load profile: ${error.message}`, 4000);
     }
 }
 
@@ -124,25 +125,36 @@ function updateProfileUI(container, profileData) {
     
     // Attach listeners for buttons and avatar upload
     if (isOwner) {
+        // Corrected event listener attachment for dynamically created elements
         container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
         container.querySelector('#editProfileBtn')?.addEventListener('click', () => {
             isEditing = !isEditing;
             updateProfileUI(container, profileData);
         });
+        // Attach event listener for background upload input
+        const customBgInput = document.getElementById('customBgInput');
+        if (customBgInput) {
+            customBgInput.addEventListener('change', async (e) => {
+                if (!e.target.files || !e.target.files[0] || !loggedInUser) return;
+                const file = e.target.files[0];
+                handleBackgroundUpload(file); // Call the newly created handleBackgroundUpload
+                e.target.value = null; // Clear input after selection
+            });
+
+            // Add context menu to background area for owner
+            const backgroundArea = newContent.querySelector('.relative.h-40');
+            if (backgroundArea) {
+                backgroundArea.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    appServices.createContextMenu(e, [
+                        { label: 'Change Background', action: () => customBgInput.click() }
+                    ]);
+                });
+            }
+        }
     } else if (loggedInUser) {
         container.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
         container.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
-        // Handle clicking on username/link within profile to open another user's profile in a SnugWindow
-        const usernameLink = container.querySelector('#profile-body-content .username-link'); // Assuming you have such a link
-        if (usernameLink) {
-            usernameLink.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default navigation
-                const targetUsername = e.target.dataset.username; // Assuming data-username attribute
-                if (targetUsername && appServices.openEmbeddedAppInWindow) {
-                    appServices.openEmbeddedAppInWindow(`profile-${targetUsername}`, `${targetUsername}'s Profile`, `js/daw/profiles/profile.html?user=${targetUsername}`, { width: 600, height: 700 });
-                }
-            });
-        }
     }
 }
 
@@ -178,53 +190,27 @@ function renderEditMode(container, profileData) {
 }
 
 function attachProfileWindowListeners() {
+    // This function now primarily handles avatar upload, which is specific to profile.html
+    // The customBgInput listener is moved into updateProfileUI for dynamic attachment
+    // after content update.
     document.getElementById('avatarUploadInput')?.addEventListener('change', async (e) => {
         if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
         const file = e.target.files[0];
         handleAvatarUpload(file);
         e.target.value = null; 
     });
-
-    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        const file = e.target.files[0];
-        
-        appServices.showNotification("Uploading background...", 2000);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', '/backgrounds/');
-        try {
-            const token = localStorage.getItem('snugos_token');
-            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResult.success) throw new Error(uploadResult.message);
-
-            const newBgUrl = uploadResult.file.s3_url;
-            await fetch(`${SERVER_URL}/api/profile/settings`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ background_url: newBgUrl })
-            });
-
-            appServices.showNotification("Background updated!", 2000);
-            loadAndApplyGlobals();
-        } catch(error) {
-            appServices.showNotification(`Error: ${error.message}`, 4000);
-        }
-    });
 }
 
-
+/**
+ * Handles uploading an avatar file to the server and updating profile settings.
+ * @param {File} file - The image file selected for the avatar.
+ */
 async function handleAvatarUpload(file) {
     if (!loggedInUser) return;
     appServices.showNotification("Uploading picture...", 2000);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('path', '/avatars/');
+    formData.append('path', '/avatars/'); // Specific path for avatars
     try {
         const token = localStorage.getItem('snugos_token');
         const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
@@ -246,15 +232,83 @@ async function handleAvatarUpload(file) {
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
         appServices.showNotification("Profile picture updated!", 2000);
-        updateProfileUI(document.getElementById('profile-container'), currentProfileData); // Re-render local UI
-        if (appServices.updateUserAuthContainer) { // Notify parent if available
-             appServices.updateUserAuthContainer(loggedInUser);
+        // After successful update, re-fetch profile data to refresh UI with new URL
+        await fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
+        
+        // If the parent (index.html) has a way to update its auth UI (e.g., avatar on top bar)
+        if (window.parent && window.parent.appServices && window.parent.appServices.updateUserAuthContainer) { 
+             window.parent.appServices.updateUserAuthContainer(loggedInUser);
         }
 
     } catch (error) {
         appServices.showNotification(`Update failed: ${error.message}`, 4000);
+        console.error("Avatar Upload Error:", error);
     }
 }
+
+/**
+ * Handles uploading a background file to the server and updating profile settings.
+ * This function is now part of profile.js as it's directly related to profile background.
+ * It uses the main `db.js` for asset storage.
+ * @param {File} file - The image/video file selected for the background.
+ */
+async function handleBackgroundUpload(file) {
+    if (!loggedInUser) {
+        appServices.showNotification('You must be logged in to save a custom background.', 3000);
+        return;
+    }
+
+    try {
+        appServices.showNotification('Uploading background...', 1500);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('is_public', 'true'); // Backgrounds are generally public
+        formData.append('path', '/backgrounds/'); // Specific path for backgrounds
+
+        const token = localStorage.getItem('snugos_token');
+        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) throw new Error(uploadResult.message);
+
+        const newBgUrl = uploadResult.file.s3_url;
+        await fetch(`${SERVER_URL}/api/profile/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ background_url: newBgUrl })
+        });
+
+        appServices.showNotification("Background updated!", 2000);
+        // After successful upload, store it locally and apply it
+        await storeAsset(`background-for-user-${loggedInUser.id}`, file); // Store locally using db.js
+        // If the parent (index.html) has an `applyCustomBackground` function
+        if (window.parent && window.parent.appServices && window.parent.appServices.applyCustomBackground) {
+            window.parent.appServices.applyCustomBackground(file); // Apply to parent desktop immediately
+        } else {
+            // Fallback for standalone profile or direct background update within iframe
+            const desktopEl = document.getElementById('profile-container').closest('.window-content');
+            if (desktopEl) {
+                if (file.type.startsWith('image/')) {
+                    desktopEl.style.backgroundImage = `url(${URL.createObjectURL(file)})`;
+                    desktopEl.style.backgroundSize = 'cover';
+                    desktopEl.style.backgroundPosition = 'center';
+                } else if (file.type.startsWith('video/')) {
+                    // Handle video background if needed in iframe
+                }
+            }
+        }
+        // Re-fetch profile data to ensure the URL is updated
+        await fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
+
+    } catch(error) {
+        appServices.showNotification(`Error saving background: ${error.message}`, 4000);
+        console.error("Background Upload Error:", error);
+    }
+}
+
 
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
@@ -273,12 +327,16 @@ async function saveProfile(username, dataToSave) {
         fetchProfileData(username, document.getElementById('profile-container'));
     } catch (error) {
         appServices.showNotification(`Error: ${error.message}`, 4000);
+        console.error("Save Profile Error:", error);
     }
 }
 
 async function handleAddFriendToggle(username, isFriend) {
     const token = localStorage.getItem('snugos_token');
-    if (!token) return;
+    if (!token) {
+        appServices.showNotification('You must be logged in to add/remove friends.', 3000);
+        return;
+    }
     const method = isFriend ? 'DELETE' : 'POST';
     appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
     try {
@@ -292,11 +350,12 @@ async function handleAddFriendToggle(username, isFriend) {
         fetchProfileData(username, document.getElementById('profile-container'));
     } catch (error) {
         appServices.showNotification(`Error: ${error.message}`, 4000);
+        console.error("Friend Action Error:", error);
     }
 }
 
 function showMessageModal(recipientUsername) {
-    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5"></textarea>`;
+    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);"></textarea>`;
     appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [
         { label: 'Cancel' },
         { label: 'Send', action: () => {
@@ -308,7 +367,10 @@ function showMessageModal(recipientUsername) {
 
 async function sendMessage(recipientUsername, content) {
     const token = localStorage.getItem('snugos_token');
-    if (!token) return;
+    if (!token) {
+        appServices.showNotification('You must be logged in to send messages.', 3000);
+        return;
+    }
     appServices.showNotification("Sending...", 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/messages`, {
@@ -321,6 +383,7 @@ async function sendMessage(recipientUsername, content) {
         appServices.showNotification("Message sent!", 2000);
     } catch (error) {
         appServices.showNotification(`Error: ${error.message}`, 4000);
+        console.error("Send Message Error:", error);
     }
 }
 
@@ -331,10 +394,14 @@ async function loadAndApplyGlobals() {
         const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            appServices.applyCustomBackground(data.profile.background_url);
+            // Apply background to the parent desktop
+            if (window.parent && window.parent.appServices && window.parent.appServices.applyCustomBackground) {
+                window.parent.appServices.applyCustomBackground(data.profile.background_url);
+            }
         }
-        if (appServices.updateUserAuthContainer) { // Ensure user info is updated on desktop
-            appServices.updateUserAuthContainer(loggedInUser);
+        // Update parent's auth container with user info
+        if (window.parent && window.parent.appServices && window.parent.appServices.updateUserAuthContainer) {
+            window.parent.appServices.updateUserAuthContainer(loggedInUser);
         }
     } catch (error) {
         console.error("Could not apply global settings:", error);
@@ -359,11 +426,12 @@ function checkLocalAuth() {
 
 function handleLogout() {
     localStorage.removeItem('snugos_token');
+    loggedInUser = null;
     appServices.showNotification('You have been logged out.', 2000);
-    // For iframes, we need to signal the parent to handle full logout/UI update
+    // If logout in iframe should affect parent, it needs to call parent's logout.
     if (window.parent && window.parent.appServices && window.parent.appServices.handleLogout) {
         window.parent.appServices.handleLogout(); // Call parent's logout
     } else {
-        window.location.reload(); // Fallback for standalone
+        window.location.reload(); // Fallback for standalone page
     }
 }
