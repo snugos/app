@@ -18,24 +18,29 @@ const sustainedNotes = new Map(); // Map to hold notes currently being sustained
 /**
  * Initializes the event handlers module.
  * This function is designed to be called once during app startup by main.js.
- * It now returns an object containing functions that main.js needs to expose via appServices.
+ * It now explicitly returns an object containing functions that main.js needs to expose via appServices.
  * @param {object} appServicesFromMain - The main appServices object.
  * @returns {object} An object containing functions to be exposed via appServices.
  */
 export function initializeEventHandlersModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
     
+    // Call primary listeners setup
+    initializePrimaryEventListeners();
+    attachGlobalControlEvents();
+    setupMIDI();
+
     // Return functions that main.js needs to assign to appServices
     return {
-        updateUndoRedoButtons: updateUndoRedoButtons,
-        // Add other functions here if they need to be callable directly from appServices
+        updateUndoRedoButtons: updateUndoRedoButtons, // Expose this function
+        // Other functions are now called directly via localAppServices where needed.
     };
 }
 
 /**
  * Initializes primary global event listeners, mostly related to the desktop and start menu.
  */
-export function initializePrimaryEventListeners() {
+function initializePrimaryEventListeners() {
     const startButton = document.getElementById('startButton');
     const startMenu = document.getElementById('startMenu');
     const desktopEl = document.getElementById('desktop');
@@ -180,7 +185,7 @@ export function initializePrimaryEventListeners() {
  * Attaches global control event listeners (play, stop, record, tempo, MIDI input, theme toggle).
  * These are listeners for the top taskbar controls.
  */
-export function attachGlobalControlEvents() { // Removed `uiCache` param, `localAppServices` is used
+function attachGlobalControlEvents() {
     const playBtn = document.getElementById('playBtnGlobalTop');
     const stopBtn = document.getElementById('stopBtnGlobalTop');
     const recordBtn = document.getElementById('recordBtnGlobalTop');
@@ -384,10 +389,8 @@ export function attachGlobalControlEvents() { // Removed `uiCache` param, `local
                 localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 // Future: Add functionality for deleting selected clips/notes on timeline/piano roll
-                // Removed timeline interaction code
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                 // Future: Add functionality for navigating selected clips/notes
-                // Removed timeline interaction code
             } else if (e.ctrlKey && key === 'z') { // Ctrl+Z for Undo
                 localAppServices.undoLastAction();
             } else if ((e.ctrlKey && key === 'y') || (e.shiftKey && e.ctrlKey && key === 'z')) { // Ctrl+Y or Ctrl+Shift+Z for Redo
@@ -465,7 +468,7 @@ function toggleFullScreen() {
 /**
  * Sets up Web MIDI API access and populates the MIDI input selector.
  */
-export function setupMIDI() {
+function setupMIDI() {
     if (!navigator.requestMIDIAccess) {
         localAppServices.showNotification("Web MIDI is not supported in this browser.", 4000);
         return;

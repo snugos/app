@@ -1,34 +1,33 @@
 // js/daw/main.js - Main Application Logic Orchestrator
 
+// Import SnugWindow class
 import { SnugWindow } from './SnugWindow.js';
-import {
-    initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
-    handleOpenTrackInspector, handleOpenEffectsRack, handleOpenPianoRoll,
-    handleTimelineLaneDrop, handleOpenYouTubeImporter
-} from './eventHandlers.js'; // path relative to js/daw/
 
-// CORRECTED IMPORTS: All core utilities are now directly relative to js/daw/
-import * as Constants from './constants.js'; // This is now in js/daw/constants.js
-import { storeAudio, getAudio, deleteAudio, storeAsset, getAsset } from './db.js'; // Fix: Added storeAsset and getAsset imports
-import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js'; // This is now in js/daw/effectsRegistry.js
-import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog, getThemeColors } from './utils.js'; // This is now in js/daw/utils.js, added getThemeColors
-import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js'; // This is now in js/daw/auth.js
+// Import all functions from eventHandlers.js module
+import * as EventHandlersModule from './eventHandlers.js';
 
+// All core utilities are now directly relative to js/daw/
+import * as Constants from './constants.js';
+import { storeAudio, getAudio, deleteAudio, storeAsset, getAsset } from './db.js';
+import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js';
+import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog, getThemeColors } from './utils.js';
+import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js';
+
+// Audio module imports
 import {
     initializeAudioModule, initAudioContextAndMasterMeter, updateMeters,
     rebuildMasterEffectChain, addMasterEffectToAudio, removeMasterEffectFromAudio,
     updateMasterEffectParamInAudio, reorderMasterEffectInAudio, setActualMasterVolume,
     getMasterBusInputNode, forceStopAllAudio
-} from './audio/audio.js'; // path relative to js/daw/
-import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js'; // path relative to js/daw/
-import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js'; // path relative to js/daw/
+} from './audio/audio.js';
+import { initializePlayback, playSlicePreview, playDrumSamplerPadPreview, scheduleTimelinePlayback } from './audio/playback.js';
+import { initializeRecording, startAudioRecording, stopAudioRecording } from './audio/recording.js';
 import { 
     initializeSampleManager, loadSampleFile, loadDrumSamplerPadFile, loadSoundFromBrowserToTarget,
     getAudioBlobFromSoundBrowserItem, autoSliceSample, fetchSoundLibrary
-} from './audio/sampleManager.js'; // path relative to js/daw/
+} from './audio/sampleManager.js';
 
-// FIX: Import ALL individual UI functions that are assigned to appServices or called directly
+// UI module imports
 import {
     initializeUIModule, 
     openTrackInspectorWindow, 
@@ -50,22 +49,21 @@ import {
     renderDrumSamplerPads, 
     updateDrumPadControlsUI, 
     createKnob 
-} from './ui/ui.js'; // path relative to js/daw/
+} from './ui/ui.js';
 
-import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // path relative to js/daw/
+import { initializeMetronome, toggleMetronome } from './audio/metronome.js';
 
-// CORRECTED IMPORTS: All state modules are now directly relative to js/daw/state/
-// Import individual functions used by appServices directly
+// State module imports
 import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiAccess, setMidiAccess, getActiveMIDIInput, setActiveMIDIInput } from './state/appState.js';
-import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js'; // Fix: Corrected import for masterState functions
+import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
-import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ, serializeWindows, reconstructWindows } from './state/windowState.js'; // Import new windowState functions
+import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ, serializeWindows, reconstructWindows } from './state/windowState.js';
 
 let appServices = {};
 
-// Centralized applyCustomBackground function 
+// Centralized applyCustomBackground function
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
@@ -246,6 +244,7 @@ function onPlaybackModeChange(newMode, oldMode) {
 async function initializeSnugOS() {
     // Define the appServices object here to ensure all core functionalities are assigned
     // before any SnugWindow (or other components that rely on appServices) are created.
+    // This is crucial for resolving circular dependencies and ensuring functions are available.
     appServices = {
         // Core application services
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
@@ -255,17 +254,18 @@ async function initializeSnugOS() {
         showCustomModal: showCustomModal,
         createContextMenu: createContextMenu, 
         drawWaveform: drawWaveform,
-        base64ToBlob: base64ToBlob, // Explicitly pass base64ToBlob
-        setupGenericDropZoneListeners: setupGenericDropZoneListeners, // Explicitly pass setupGenericDropZoneListeners
-        createDropZoneHTML: createDropZoneHTML, // Explicitly pass createDropZoneHTML
-        showConfirmationDialog: showConfirmationDialog, // Explicitly pass showConfirmationDialog
-        getThemeColors: getThemeColors, // Make getThemeColors available
+        base64ToBlob: base64ToBlob, 
+        setupGenericDropZoneListeners: setupGenericDropZoneListeners, 
+        createDropZoneHTML: createDropZoneHTML, 
+        showConfirmationDialog: showConfirmationDialog, 
+        getThemeColors: getThemeColors, 
 
         // Auth related functions (from js/daw/auth.js)
-        initializeAuth: initializeAuth,
+        // initializeAuth needs to be called to set these, but we can pre-define them
+        initializeAuth: null, // Placeholder, assigned after import
         handleBackgroundUpload: handleBackgroundUpload,
         handleLogout: handleLogout,
-        updateUserAuthContainer: null, // Placeholder, will be set in auth.js
+        updateUserAuthContainer: null, // Placeholder, assigned after auth module initialization
 
         // DB functions (from js/daw/db.js)
         dbStoreAudio: storeAudio, 
@@ -277,8 +277,8 @@ async function initializeSnugOS() {
         // Tone.js related contexts and registries (from js/daw/effectsRegistry.js, etc.)
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
         context: Tone.context, // Global Tone object
-        Tone: Tone, 
-        // Tone.js utilities (also part of Tone.js global)
+        Tone: Tone, // The global Tone object itself
+        // Directly assign commonly used Tone.js sub-objects/classes for consistent access
         ToneTime: Tone.Time,
         ToneMidi: Tone.Midi,
         ToneTransport: Tone.Transport,
@@ -294,56 +294,54 @@ async function initializeSnugOS() {
         ToneBuffer: Tone.Buffer,
         ToneTicks: Tone.Ticks,
         TonePart: Tone.Part,
-        ToneWaveShaper: Tone.WaveShaper, // Added for completeness if needed elsewhere
-        ToneFilter: Tone.Filter, // Added for completeness if needed elsewhere
+        ToneWaveShaper: Tone.WaveShaper, 
+        ToneFilter: Tone.Filter, 
+        ToneDbToGain: Tone.dbToGain, 
+        ToneGainToDb: Tone.gainToDb, 
 
         // State Module Accessors (from js/daw/state/)
-        // Directly import and assign the functions needed for appServices
-        getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack, removeTrack: removeTrack, setTracks: setTracks, setTrackIdCounter: setTrackIdCounter,
-        getOpenWindows: getOpenWindows, getWindowById: getWindowById, addWindowToStore: addWindowToStore, removeWindowFromStore: removeWindowFromStore, getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ, serializeWindows: serializeWindows, reconstructWindows: reconstructWindows, // Added serialize/reconstruct
-        getMidiAccess: getMidiAccess, setMidiAccess: setMidiAccess, getActiveMIDIInput: setActiveMIDIInput, setActiveMIDIInput: setActiveMIDIInput, getPlaybackMode: getPlaybackMode, setPlaybackMode: setPlaybackMode, getCurrentUserThemePreference: getCurrentUserThemePreference, setCurrentUserThemePreference: setCurrentUserThemePreference, getSelectedTimelineClipInfo: getSelectedTimelineClipInfo, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, getMidiRecordModeState: getMidiRecordModeState, setMidiRecordModeState: setMidiRecordModeState,
-        getMasterEffects: getMasterEffects, addMasterEffect: addMasterEffect, removeMasterEffect: removeMasterEffect, updateMasterEffectParam: updateMasterEffectParam, reorderMasterEffect: reorderMasterEffect, getMasterGainValue: getMasterGainValue, setMasterGainValue: setMasterGainValue,
-        getIsReconstructingDAW: getIsReconstructingDAW, setIsReconstructingDAW: setIsReconstructingDAW, getUndoStack: getUndoStack, getRedoStack: getRedoStack, getClipboardData: getClipboardData, setClipboardData: setClipboardData, captureStateForUndo: captureStateForUndo, undoLastAction: undoLastAction, redoLastAction: redoLastAction, gatherProjectData: gatherProjectData, reconstructDAW: reconstructDAW, saveProject: saveProject, loadProject: loadProject, handleProjectFileLoad: handleProjectFileLoad, exportToWav: exportToWav,
-        getLoadedZipFiles: getLoadedZipFiles, setLoadedZipFiles: setLoadedZipFiles, getSoundLibraryFileTrees: getSoundLibraryFileTrees, setSoundLibraryFileTrees: setSoundLibraryFileTrees, getCurrentLibraryName: getCurrentLibraryName, setCurrentLibraryName: setCurrentLibraryName, getCurrentSoundBrowserPath: getCurrentSoundBrowserPath, setCurrentSoundBrowserPath: setCurrentSoundBrowserPath, getPreviewPlayer: getPreviewPlayer, setPreviewPlayer: setPreviewPlayer, addFileToSoundLibrary: addFileToSoundLibrary, 
-        getSoloedTrackId: getSoloedTrackId, setSoloedTrackId: setSoloedTrackId, getArmedTrackId: getArmedTrackId, setArmedTrackId: setArmedTrackId, isRecording: isRecording, setIsRecording: setIsRecording, getRecordingTrackId: getRecordingTrackId, setRecordingTrackId: setRecordingTrackId, getRecordingStartTime: getRecordingStartTime, setRecordingStartTime: setRecordingStartTime, // Added these trackState functions to appServices directly
-        Track: null, // Placeholder for Track class, assigned below
+        // These are functions that are initialized by their respective state modules
+        // and are then made available through appServices.
+        getTracks: null, getTrackById: null, addTrack: null, removeTrack: null, setTracks: null, setTrackIdCounter: null,
+        getOpenWindows: null, getWindowById: null, addWindowToStore: null, removeWindowFromStore: null, getHighestZ: null, setHighestZ: null, incrementHighestZ: null, serializeWindows: null, reconstructWindows: null,
+        getMidiAccess: null, setMidiAccess: null, getActiveMIDIInput: null, setActiveMIDIInput: null, getPlaybackMode: null, setPlaybackMode: null, getCurrentUserThemePreference: null, setCurrentUserThemePreference: null, getSelectedTimelineClipInfo: null, setSelectedTimelineClipInfo: null, getMidiRecordModeState: null, setMidiRecordModeState: null,
+        getMasterEffects: null, addMasterEffect: null, removeMasterEffect: null, updateMasterEffectParam: null, reorderMasterEffect: null, getMasterGainValue: null, setMasterGainValue: null,
+        getIsReconstructingDAW: null, setIsReconstructingDAW: null, getUndoStack: null, getRedoStack: null, getClipboardData: null, setClipboardData: null, captureStateForUndo: null, undoLastAction: null, redoLastAction: null, gatherProjectData: null, reconstructDAW: null, saveProject: null, loadProject: null, handleProjectFileLoad: null, exportToWav: null,
+        getLoadedZipFiles: null, setLoadedZipFiles: null, getSoundLibraryFileTrees: null, setSoundLibraryFileTrees: null, getCurrentLibraryName: null, setCurrentLibraryName: null, getCurrentSoundBrowserPath: null, setCurrentSoundBrowserPath: null, getPreviewPlayer: null, setPreviewPlayer: null, addFileToSoundLibrary: null, 
+        getSoloedTrackId: null, setSoloedTrackId: null, getArmedTrackId: null, setArmedTrackId: null, isRecording: null, setIsRecording: null, getRecordingTrackId: null, setRecordingTrackId: null, getRecordingStartTime: null, setRecordingStartTime: null, 
+        Track: null, // Placeholder for Track class, assigned after import
 
         // Audio Module Functions (from js/daw/audio/)
-        initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
-        addMasterEffectToAudio, removeMasterEffectFromAudio, updateMasterEffectParamInAudio,
-        reorderMasterEffectInAudio, setActualMasterVolume, startAudioRecording, stopAudioRecording,
-        forceStopAllAudio, fetchSoundLibrary, loadSampleFile, loadDrumSamplerPadFile,
-        loadSoundFromBrowserToTarget, getAudioBlobFromSoundBrowserItem, autoSliceSample,
-        playSlicePreview, playDrumSamplerPadPreview, 
+        initializeAudioModule: null, initAudioContextAndMasterMeter: null, updateMeters: null, rebuildMasterEffectChain: null,
+        addMasterEffectToAudio: null, removeMasterEffectFromAudio: null, updateMasterEffectParamInAudio: null,
+        reorderMasterEffectInAudio: null, setActualMasterVolume: null, getMasterBusInputNode: null, forceStopAllAudio: null, 
+        initializePlayback: null, playSlicePreview: null, playDrumSamplerPadPreview: null, scheduleTimelinePlayback: null,
+        initializeRecording: null, startAudioRecording: null, stopAudioRecording: null,
+        initializeSampleManager: null, loadSampleFile: null, loadDrumSamplerPadFile: null, loadSoundFromBrowserToTarget: null,
+        getAudioBlobFromSoundBrowserItem: null, autoSliceSample: null, fetchSoundLibrary: null,
 
         // UI Module Functions (initializers passed to initializeUIModule)
-        openTrackInspectorWindow: openTrackInspectorWindow, 
-        openMixerWindow: openMixerWindow, 
-        updateMixerWindow: updateMixerWindow, 
-        openTrackEffectsRackWindow: openTrackEffectsRackWindow, 
-        openMasterEffectsRackWindow: openMasterEffectsRackWindow, 
-        renderEffectsList: renderEffectsList, 
-        renderEffectControls: renderEffectControls, 
-        openSoundBrowserWindow: openSoundBrowserWindow, 
-        renderSoundBrowser: renderSoundBrowser, 
-        renderDirectoryView: renderDirectoryView, 
-        openPianoRollWindow: openPianoRollWindow, 
-        updatePianoRollPlayhead: updatePianoRollPlayhead, 
-        openYouTubeImporterWindow: openYouTubeImporterWindow, 
-        openFileViewerWindow: openFileViewerWindow, 
-        renderSamplePads: renderSamplePads, 
-        updateSliceEditorUI: updateSliceEditorUI, 
-        renderDrumSamplerPads: renderDrumSamplerPads, 
-        updateDrumPadControlsUI: updateDrumPadControlsUI, 
-        createKnob: createKnob, 
+        initializeUIModule: null, 
+        openTrackInspectorWindow: null, openMixerWindow: null, updateMixerWindow: null, 
+        openTrackEffectsRackWindow: null, openMasterEffectsRackWindow: null, 
+        renderEffectsList: null, renderEffectControls: null,
+        openSoundBrowserWindow: null, renderSoundBrowser: null, renderDirectoryView: null,
+        openPianoRollWindow: null, updatePianoRollPlayhead: null, 
+        openYouTubeImporterWindow: null, openFileViewerWindow: null, 
+        renderSamplePads: null, updateSliceEditorUI: null, 
+        renderDrumSamplerPads: null, updateDrumPadControlsUI: null, 
+        createKnob: null, 
 
         // Event Handlers (from js/daw/eventHandlers.js)
-        handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
-        handleOpenEffectsRack, handleOpenPianoRoll, onPlaybackModeChange,
-        handleTimelineLaneDrop, handleOpenYouTubeImporter, toggleMetronome,
-        updateUndoRedoButtons: null, // Placeholder, set in eventHandlers
+        initializeEventHandlersModule: null, // Placeholder, assigned after import
+        handleTrackMute: null, handleTrackSolo: null, handleTrackArm: null, handleRemoveTrack: null,
+        handleOpenEffectsRack: null, handleOpenPianoRoll: null, onPlaybackModeChange: null,
+        handleTimelineLaneDrop: null, handleOpenYouTubeImporter: null, 
 
-        // Other
+        // Metronome (from js/daw/audio/metronome.js)
+        initializeMetronome: null, toggleMetronome: null,
+
+        // Other utility references
         uiElementsCache: {
             desktop: document.getElementById('desktop'),
             topTaskbar: document.getElementById('topTaskbar'),
@@ -353,46 +351,64 @@ async function initializeSnugOS() {
         updateMasterEffectsUI: handleMasterEffectsUIUpdate, 
     };
 
-    // Import Track class and assign it to appServices here, after appServices is defined.
-    // This resolves circular dependency if Track needs appServices in its constructor.
-    const { Track } = await import('./Track.js');
+    // Dynamically import modules and assign their exports to appServices
+    // This pattern ensures all functions are correctly assigned to appServices after their
+    // module has been loaded and potentially initialized.
+    const [
+        trackStateModule, windowStateModule, appStateModule, masterStateModule, projectStateModule, soundLibraryStateModule,
+        audioModule, playbackModule, recordingModule, sampleManagerModule,
+        uiModule, eventHandlersModuleExports, metronomeModule, authModuleExports, // Renamed `eventHandlersModule` to `eventHandlersModuleExports` to avoid confusion
+        { Track } // Directly import Track class from its module
+    ] = await Promise.all([
+        import('./state/trackState.js'), import('./state/windowState.js'), import('./state/appState.js'), import('./state/masterState.js'), import('./state/projectState.js'), import('./state/soundLibraryState.js'),
+        import('./audio/audio.js'), import('./audio/playback.js'), import('./audio/recording.js'), import('./audio/sampleManager.js'),
+        import('./ui/ui.js'), import('./eventHandlers.js'), import('./audio/metronome.js'), import('./auth.js'),
+        import('./Track.js') // Track.js needs to be imported here to get the class
+    ]);
+
+    // Assign exports of Track class directly
     appServices.Track = Track;
 
-    // Initialize all state modules with appServices
-    initializeAppState(appServices);
-    initializeMasterState(appServices);
-    initializeProjectState(appServices);
-    initializeSoundLibraryState(appServices);
-    initializeTrackState(appServices);
-    initializeWindowState(appServices);
-    
-    // Initialize other modules
-    initializeAudioModule(appServices);
-    initializePlayback(appServices);
-    initializeRecording(appServices);
-    initializeSampleManager(appServices);
-    initializeUIModule(appServices);
-    initializeEventHandlersModule(appServices); // This module needs updateUndoRedoButtons
-    initializeMetronome(appServices);
-    initializeAuth(appServices); // This module needs updateUserAuthContainer
+    // Assign all exported functions from each module to appServices
+    Object.assign(appServices, trackStateModule);
+    Object.assign(appServices, windowStateModule);
+    Object.assign(appServices, appStateModule);
+    Object.assign(appServices, masterStateModule);
+    Object.assign(appServices, projectStateModule);
+    Object.assign(appServices, soundLibraryStateModule);
+    Object.assign(appServices, audioModule);
+    Object.assign(appServices, playbackModule);
+    Object.assign(appServices, recordingModule);
+    Object.assign(appServices, sampleManagerModule);
+    Object.assign(appServices, uiModule); // UI module exports functions like openTrackInspectorWindow
+    Object.assign(appServices, metronomeModule); // Metronome module exports initializeMetronome, toggleMetronome
 
-    // Set functions that require full appServices setup
-    appServices.updateUserAuthContainer = appServices.initializeAuth.updateAuthUI; // Correct way to assign updateAuthUI
-    appServices.updateUndoRedoButtons = appServices.initializeEventHandlersModule.updateUndoRedoButtons; // Assign updateUndoRedoButtons
+    // Event Handlers and Auth modules have special initialization patterns
+    // where their `initialize` function sets up internal state and might return
+    // an object of functions to be exposed.
+    const eventHandlersReturn = eventHandlersModuleExports.initializeEventHandlersModule(appServices); // Call init function
+    Object.assign(appServices, eventHandlersReturn); // Assign functions returned by the initializer
 
-    initializePrimaryEventListeners();
-    attachGlobalControlEvents({}); // This still takes an empty object, should it take appServices? (eventHandlers.js already gets appServices via its init)
-    setupMIDI();
+    const authModuleReturn = authModuleExports.initializeAuth(appServices); // Call init function
+    Object.assign(appServices, authModuleReturn); // Assign functions returned by the initializer (if any)
+
+    // These functions are now directly on `appServices` due to the `Object.assign` calls.
+    // They are called here to set up initial global listeners and state.
+    appServices.initializePrimaryEventListeners(); // This is a function exported by eventHandlers.js
+    appServices.attachGlobalControlEvents(); // This is a function exported by eventHandlers.js
+    appServices.setupMIDI(); // This is a function exported by eventHandlers.js
     
+    // Theme application and system preference listening
     const savedTheme = localStorage.getItem('snugos-theme');
     if (savedTheme) {
-        appServices.setCurrentUserThemePreference(savedTheme);
+        appServices.setCurrentUserThemePreference(savedTheme); // This applies the theme and stores preference
     } else {
-        applyUserTheme(); // Apply system preference if no saved theme
+        appServices.setCurrentUserThemePreference('system'); // This will trigger the actual theme application based on system preference
     }
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference);
-    
-    // Check if there's a saved window layout in local storage or project data
+    // Listen for system theme changes and re-apply "system" preference
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => appServices.setCurrentUserThemePreference('system')); 
+
+    // Open default layout or restore saved window state
     const lastProjectData = localStorage.getItem('snugos_last_project');
     if (lastProjectData) {
         try {
@@ -412,27 +428,28 @@ async function initializeSnugOS() {
     
     console.log("SnugOS Initialized Successfully.");
 
-    // Tone.js context settings
-    appServices.context.lookAhead = 0.02;
-    appServices.context.updateInterval = 0.01;
+    // Tone.js context settings for latency
+    appServices.context.lookAhead = 0.02; // Time in seconds that Tone.js schedules audio events in advance
+    appServices.context.updateInterval = 0.01; // Interval at which the AudioContext's currentTime is polled
     console.log(`[Latency] lookAhead set to: ${appServices.context.lookAhead}`);
     console.log(`[Latency] updateInterval set to: ${appServices.context.updateInterval}`);
     
-    drawLoop();
-}
-
-function applyUserTheme() {
-    const preference = localStorage.getItem('snugos-theme');
-    const body = document.body;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
-    if (themeToApply === 'light') {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-    } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
+    // Start the main draw loop for UI updates (e.g., meters, playhead)
+    function drawLoop() {
+        if (typeof appServices.Tone !== 'undefined') {
+            const transportTime = appServices.Tone.Transport.seconds;
+            
+            const mode = appServices.getPlaybackMode(); // Current playback mode, affects what UI to update
+            appServices.updatePianoRollPlayhead(transportTime); // Update piano roll playhead
+            
+            // Update master and track meters
+            const masterMixerMeterBar = document.getElementById('mixerTrackMeterBar-master');
+            appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), masterMixerMeterBar, appServices.getTracks());
+        }
+        requestAnimationFrame(drawLoop); // Request next animation frame
     }
+    drawLoop(); // Start the loop immediately
 }
 
+// Ensure initializeSnugOS runs when the DOM is fully loaded.
 document.addEventListener('DOMContentLoaded', initializeSnugOS);

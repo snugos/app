@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
+    <base href="/app/"> 
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -241,6 +243,21 @@
     </div>
 
     <script>
+        // This 'initializePage' function is expected by the parent (welcome.js) to pass appServices.
+        // For Tetris, appServices is not directly used by game logic, but it's part of the iframe contract.
+        function initializePage(appServices) {
+            // No specific appServices integration for the game logic itself,
+            // but you could add high score submission, user settings, etc., here if desired.
+            console.log("Tetris: initializePage called from parent.");
+            // Ensure DOM is ready before running game setup
+            document.addEventListener('DOMContentLoaded', () => {
+                resetGame(); // Reset game state
+                resizeGame(); // Initial resize
+                draw(); // Initial draw
+            });
+        }
+        window.initializePage = initializePage; // Make it globally accessible for the parent
+
         // --- Canvas and Context Setup ---
         const boardCanvas = document.getElementById('game-board');
         const boardCtx = boardCanvas.getContext('2d');
@@ -299,15 +316,6 @@
             2: ui.color2.value
         };
         
-        // This function will be called by the parent (welcome.js) to pass appServices
-        function initializePage(appServices) {
-            // No specific appServices needed for Tetris game logic itself,
-            // but if you ever wanted to integrate high scores or user data
-            // you could use appServices here. For now, it's just a placeholder.
-            console.log("Tetris: initializePage called from parent.");
-        }
-        window.initializePage = initializePage; // Make it globally accessible for the parent
-
         function resizeGame() {
             const padding = 32;
             const availableHeight = window.innerHeight - padding;
@@ -635,11 +643,11 @@
         ui.arrInput.addEventListener('change', (e) => arrValue = parseInt(e.target.value, 10));
         ui.sdfInput.addEventListener('change', (e) => sdfValue = parseInt(e.target.value, 10));
 
-        // --- Initial Setup ---
-        window.addEventListener('resize', resizeGame);
-        resetGame();
-        resizeGame();
-        draw();
+        // Initial setup calls moved to initializePage, triggered by DOMContentLoaded
+        // window.addEventListener('resize', resizeGame); // Already here
+        // resetGame(); // Called in initializePage
+        // resizeGame(); // Called in initializePage
+        // draw(); // Called in initializePage
     </script>
 
 </body>
