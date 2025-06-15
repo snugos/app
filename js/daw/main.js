@@ -12,7 +12,7 @@ import {
 import * as Constants from './constants.js'; // This is now in js/daw/constants.js
 import { storeAudio, getAudio, deleteAudio, storeAsset, getAsset } from './db.js'; // Fix: Added storeAsset and getAsset imports
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js'; // This is now in js/daw/effectsRegistry.js
-import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog } from './utils.js'; // This is now in js/daw/utils.js
+import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog, getThemeColors } from './utils.js'; // This is now in js/daw/utils.js, added getThemeColors
 import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js'; // This is now in js/daw/auth.js
 
 import {
@@ -61,7 +61,7 @@ import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterE
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
-import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ } from './state/windowState.js';
+import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ, serializeWindows, reconstructWindows } from './state/windowState.js'; // Import new windowState functions
 
 let appServices = {};
 
@@ -244,21 +244,8 @@ function onPlaybackModeChange(newMode, oldMode) {
 }
 
 async function initializeSnugOS() {
-    
-    function drawLoop() {
-        if (typeof appServices.Tone !== 'undefined') {
-            const transportTime = appServices.Tone.Transport.seconds;
-            
-            const mode = appServices.getPlaybackMode();
-            appServices.updatePianoRollPlayhead(transportTime); 
-            
-            // Pass the master mixer meter bar element to updateMeters
-            const masterMixerMeterBar = document.getElementById('mixerTrackMeterBar-master');
-            appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), masterMixerMeterBar, appServices.getTracks());
-        }
-        requestAnimationFrame(drawLoop);
-    }
-    
+    // Define the appServices object here to ensure all core functionalities are assigned
+    // before any SnugWindow (or other components that rely on appServices) are created.
     appServices = {
         // Core application services
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
@@ -272,11 +259,13 @@ async function initializeSnugOS() {
         setupGenericDropZoneListeners: setupGenericDropZoneListeners, // Explicitly pass setupGenericDropZoneListeners
         createDropZoneHTML: createDropZoneHTML, // Explicitly pass createDropZoneHTML
         showConfirmationDialog: showConfirmationDialog, // Explicitly pass showConfirmationDialog
+        getThemeColors: getThemeColors, // Make getThemeColors available
 
         // Auth related functions (from js/daw/auth.js)
         initializeAuth: initializeAuth,
         handleBackgroundUpload: handleBackgroundUpload,
         handleLogout: handleLogout,
+        updateUserAuthContainer: null, // Placeholder, will be set in auth.js
 
         // DB functions (from js/daw/db.js)
         dbStoreAudio: storeAudio, 
@@ -289,15 +278,35 @@ async function initializeSnugOS() {
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
         context: Tone.context, // Global Tone object
         Tone: Tone, 
+        // Tone.js utilities (also part of Tone.js global)
+        ToneTime: Tone.Time,
+        ToneMidi: Tone.Midi,
+        ToneTransport: Tone.Transport,
+        TonePlayer: Tone.Player,
+        ToneMeter: Tone.Meter,
+        ToneGain: Tone.Gain,
+        ToneSampler: Tone.Sampler,
+        TonePolySynth: Tone.PolySynth,
+        ToneSynth: Tone.Synth,
+        ToneRecorder: Tone.Recorder,
+        ToneUserMedia: Tone.UserMedia,
+        ToneMembraneSynth: Tone.MembraneSynth,
+        ToneBuffer: Tone.Buffer,
+        ToneTicks: Tone.Ticks,
+        TonePart: Tone.Part,
+        ToneWaveShaper: Tone.WaveShaper, // Added for completeness if needed elsewhere
+        ToneFilter: Tone.Filter, // Added for completeness if needed elsewhere
 
         // State Module Accessors (from js/daw/state/)
         // Directly import and assign the functions needed for appServices
         getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack, removeTrack: removeTrack, setTracks: setTracks, setTrackIdCounter: setTrackIdCounter,
-        getOpenWindows: getOpenWindows, getWindowById: getWindowById, addWindowToStore: addWindowToStore, removeWindowFromStore: removeWindowFromStore, getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ,
-        getMidiAccess: getMidiAccess, setMidiAccess: setMidiAccess, getActiveMIDIInput: getActiveMIDIInput, setActiveMIDIInput: setActiveMIDIInput, getPlaybackMode: getPlaybackMode, setPlaybackMode: setPlaybackMode, getCurrentUserThemePreference: getCurrentUserThemePreference, setCurrentUserThemePreference: setCurrentUserThemePreference, getSelectedTimelineClipInfo: getSelectedTimelineClipInfo, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, getMidiRecordModeState: getMidiRecordModeState, setMidiRecordModeState: setMidiRecordModeState,
+        getOpenWindows: getOpenWindows, getWindowById: getWindowById, addWindowToStore: addWindowToStore, removeWindowFromStore: removeWindowFromStore, getHighestZ: getHighestZ, setHighestZ: setHighestZ, incrementHighestZ: incrementHighestZ, serializeWindows: serializeWindows, reconstructWindows: reconstructWindows, // Added serialize/reconstruct
+        getMidiAccess: getMidiAccess, setMidiAccess: setMidiAccess, getActiveMIDIInput: setActiveMIDIInput, setActiveMIDIInput: setActiveMIDIInput, getPlaybackMode: getPlaybackMode, setPlaybackMode: setPlaybackMode, getCurrentUserThemePreference: getCurrentUserThemePreference, setCurrentUserThemePreference: setCurrentUserThemePreference, getSelectedTimelineClipInfo: getSelectedTimelineClipInfo, setSelectedTimelineClipInfo: setSelectedTimelineClipInfo, getMidiRecordModeState: getMidiRecordModeState, setMidiRecordModeState: setMidiRecordModeState,
         getMasterEffects: getMasterEffects, addMasterEffect: addMasterEffect, removeMasterEffect: removeMasterEffect, updateMasterEffectParam: updateMasterEffectParam, reorderMasterEffect: reorderMasterEffect, getMasterGainValue: getMasterGainValue, setMasterGainValue: setMasterGainValue,
         getIsReconstructingDAW: getIsReconstructingDAW, setIsReconstructingDAW: setIsReconstructingDAW, getUndoStack: getUndoStack, getRedoStack: getRedoStack, getClipboardData: getClipboardData, setClipboardData: setClipboardData, captureStateForUndo: captureStateForUndo, undoLastAction: undoLastAction, redoLastAction: redoLastAction, gatherProjectData: gatherProjectData, reconstructDAW: reconstructDAW, saveProject: saveProject, loadProject: loadProject, handleProjectFileLoad: handleProjectFileLoad, exportToWav: exportToWav,
         getLoadedZipFiles: getLoadedZipFiles, setLoadedZipFiles: setLoadedZipFiles, getSoundLibraryFileTrees: getSoundLibraryFileTrees, setSoundLibraryFileTrees: setSoundLibraryFileTrees, getCurrentLibraryName: getCurrentLibraryName, setCurrentLibraryName: setCurrentLibraryName, getCurrentSoundBrowserPath: getCurrentSoundBrowserPath, setCurrentSoundBrowserPath: setCurrentSoundBrowserPath, getPreviewPlayer: getPreviewPlayer, setPreviewPlayer: setPreviewPlayer, addFileToSoundLibrary: addFileToSoundLibrary, 
+        getSoloedTrackId: getSoloedTrackId, setSoloedTrackId: setSoloedTrackId, getArmedTrackId: getArmedTrackId, setArmedTrackId: setArmedTrackId, isRecording: isRecording, setIsRecording: setIsRecording, getRecordingTrackId: getRecordingTrackId, setRecordingTrackId: setRecordingTrackId, getRecordingStartTime: getRecordingStartTime, setRecordingStartTime: setRecordingStartTime, // Added these trackState functions to appServices directly
+        Track: null, // Placeholder for Track class, assigned below
 
         // Audio Module Functions (from js/daw/audio/)
         initAudioContextAndMasterMeter, getMasterBusInputNode, updateMeters, rebuildMasterEffectChain,
@@ -332,12 +341,22 @@ async function initializeSnugOS() {
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
         handleOpenEffectsRack, handleOpenPianoRoll, onPlaybackModeChange,
         handleTimelineLaneDrop, handleOpenYouTubeImporter, toggleMetronome,
+        updateUndoRedoButtons: null, // Placeholder, set in eventHandlers
 
         // Other
-        uiElementsCache: {},
+        uiElementsCache: {
+            desktop: document.getElementById('desktop'),
+            topTaskbar: document.getElementById('topTaskbar'),
+            taskbar: document.getElementById('taskbar'),
+        },
         applyCustomBackground: applyCustomBackground,
         updateMasterEffectsUI: handleMasterEffectsUIUpdate, 
     };
+
+    // Import Track class and assign it to appServices here, after appServices is defined.
+    // This resolves circular dependency if Track needs appServices in its constructor.
+    const { Track } = await import('./Track.js');
+    appServices.Track = Track;
 
     // Initialize all state modules with appServices
     initializeAppState(appServices);
@@ -353,26 +372,47 @@ async function initializeSnugOS() {
     initializeRecording(appServices);
     initializeSampleManager(appServices);
     initializeUIModule(appServices);
-    initializeEventHandlersModule(appServices);
+    initializeEventHandlersModule(appServices); // This module needs updateUndoRedoButtons
     initializeMetronome(appServices);
-    initializeAuth(appServices);
+    initializeAuth(appServices); // This module needs updateUserAuthContainer
+
+    // Set functions that require full appServices setup
+    appServices.updateUserAuthContainer = appServices.initializeAuth.updateAuthUI; // Correct way to assign updateAuthUI
+    appServices.updateUndoRedoButtons = appServices.initializeEventHandlersModule.updateUndoRedoButtons; // Assign updateUndoRedoButtons
 
     initializePrimaryEventListeners();
-    attachGlobalControlEvents({});
+    attachGlobalControlEvents({}); // This still takes an empty object, should it take appServices? (eventHandlers.js already gets appServices via its init)
     setupMIDI();
     
     const savedTheme = localStorage.getItem('snugos-theme');
     if (savedTheme) {
         appServices.setCurrentUserThemePreference(savedTheme);
     } else {
-        applyUserTheme();
+        applyUserTheme(); // Apply system preference if no saved theme
     }
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference);
     
-    openDefaultLayout();
+    // Check if there's a saved window layout in local storage or project data
+    const lastProjectData = localStorage.getItem('snugos_last_project');
+    if (lastProjectData) {
+        try {
+            const parsedData = JSON.parse(lastProjectData);
+            if (parsedData.openWindows && parsedData.openWindows.length > 0) {
+                appServices.reconstructWindows(parsedData.openWindows);
+            } else {
+                openDefaultLayout();
+            }
+        } catch (e) {
+            console.error("Error parsing last project data from local storage:", e);
+            openDefaultLayout();
+        }
+    } else {
+        openDefaultLayout();
+    }
     
     console.log("SnugOS Initialized Successfully.");
 
+    // Tone.js context settings
     appServices.context.lookAhead = 0.02;
     appServices.context.updateInterval = 0.01;
     console.log(`[Latency] lookAhead set to: ${appServices.context.lookAhead}`);

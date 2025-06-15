@@ -307,3 +307,62 @@ export function createDropZoneHTML(inputId, labelText = 'Drag & Drop Audio Here'
         </div>
     `;
 }
+
+/**
+ * Reads CSS custom properties to get current theme colors.
+ * @returns {object} An object containing theme colors.
+ */
+export function getThemeColors() { 
+    const rootStyle = getComputedStyle(document.documentElement);
+    return {
+        // Backgrounds
+        bgPrimary: rootStyle.getPropertyValue('--bg-primary').trim(),
+        bgWindow: rootStyle.getPropertyValue('--bg-window').trim(),
+        bgWindowContent: rootStyle.getPropertyValue('--bg-window-content').trim(),
+        bgButton: rootStyle.getPropertyValue('--bg-button').trim(),
+        bgButtonHover: rootStyle.getPropertyValue('--bg-button-hover').trim(),
+        bgInput: rootStyle.getPropertyValue('--bg-input').trim(),
+        bgDropzone: rootStyle.getPropertyValue('--bg-dropzone').trim(),
+        bgDropzoneDragover: rootStyle.getPropertyValue('--bg-dropzone-dragover').trim(),
+        bgModalDialog: rootStyle.getPropertyValue('--bg-modal-dialog').trim(),
+        bgSequencerStepEven: rootStyle.getPropertyValue('--bg-sequencer-step-even').trim(),
+        bgSequencerStepOdd: rootStyle.getPropertyValue('--bg-sequencer-step-odd').trim(),
+
+        // Text Colors
+        textPrimary: rootStyle.getPropertyValue('--text-primary').trim(),
+        textSecondary: rootStyle.getPropertyValue('--text-secondary').trim(),
+        textButton: rootStyle.getPropertyValue('--text-button').trim(),
+        textButtonHover: rootStyle.getPropertyValue('--text-button-hover').trim(),
+        textDropzone: rootStyle.getPropertyValue('--text-dropzone').trim(),
+        textDropzoneDragover: rootStyle.getPropertyValue('--text-dropzone-dragover').trim(),
+        
+        // Borders
+        borderPrimary: rootStyle.getPropertyValue('--border-primary').trim(),
+        borderSecondary: rootStyle.getPropertyValue('--border-secondary').trim(),
+        borderButton: rootStyle.getPropertyValue('--border-button').trim(),
+        borderDropzone: rootStyle.getPropertyValue('--border-dropzone').trim(),
+        borderDropzoneDragover: rootStyle.getPropertyValue('--border-dropzone-dragover').trim(),
+        borderSequencer: rootStyle.getPropertyValue('--border-sequencer').trim(),
+
+        // Accents (for active states)
+        accentFocus: rootStyle.getPropertyValue('--accent-focus').trim(),
+        accentMuted: rootStyle.getPropertyValue('--accent-muted').trim(),
+        accentMutedText: rootStyle.getPropertyValue('--accent-muted-text').trim(),
+        accentSoloed: rootStyle.getPropertyValue('--accent-soloed').trim(),
+        accentSoloedText: rootStyle.getPropertyValue('--accent-soloed-text').trim(),
+        accentArmed: rootStyle.getPropertyValue('--accent-armed').trim(),
+        accentArmedText: rootStyle.getPropertyValue('--accent-armed-text').trim(),
+        accentActive: rootStyle.getPropertyValue('--accent-active').trim(),
+        accentActiveText: rootStyle.getPropertyValue('--accent-active-text').trim(),
+        accentSequencerStep: rootStyle.getPropertyValue('--accent-sequencer-step').trim(),
+        accentSequencerStepBorder: rootStyle.getPropertyValue('--accent-sequencer-step-border').trim(),
+        accentPlayhead: rootStyle.getPropertyValue('--accent-playhead').trim(),
+        accentMeter: rootStyle.getPropertyValue('--accent-meter').trim(),
+        
+        // Piano Key Colors (directly from root if available, otherwise fallback)
+        whiteKeyBg: rootStyle.getPropertyValue('--piano-key-white-bg').trim() || '#FFFFFF',
+        blackKeyBg: rootStyle.getPropertyValue('--piano-key-black-bg').trim() || '#4a4a4a',
+        whiteKeyText: rootStyle.getPropertyValue('--piano-key-white-text').trim() || '#000000',
+        blackKeyText: rootStyle.getPropertyValue('--piano-key-black-text').trim() || '#FFFFFF',
+    };
+}
