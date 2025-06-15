@@ -2,6 +2,7 @@
 // NOTE: This file is designed to run within the main index.html context.
 // It sets up the desktop icons and application launching.
 
+import { SERVER_URL } from '../constants.js';
 import { SnugWindow } from '../SnugWindow.js';
 import { showNotification, showCustomModal } from './welcomeUtils.js';
 import { storeAsset, getAsset } from './welcomeDb.js';
@@ -16,7 +17,6 @@ import { createContextMenu, showConfirmationDialog } from '../utils.js';
 
 let appServices = {};
 let loggedInUser = null;
-const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
  * Creates and opens a new window containing an HTML page loaded into an iframe.

@@ -1,6 +1,6 @@
 // js/daw/SnugWindow.js - SnugWindow Class Module
 
-// Removed import { createContextMenu } from './utils.js'; as createContextMenu is global
+import { createContextMenu } from './utils.js';
 
 export class SnugWindow { // This class is exported
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {

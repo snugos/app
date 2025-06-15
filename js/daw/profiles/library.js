@@ -2,6 +2,7 @@
 // NOTE: This file is designed to run within an iframe, hosted by index.html.
 // It receives `appServices` from its parent window.
 
+import { SERVER_URL } from '../constants.js';
 import { SnugWindow } from '../SnugWindow.js';
 import { openFileViewerWindow, initializeFileViewerUI } from '../ui/fileViewerUI.js';
 

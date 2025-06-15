@@ -1,8 +1,10 @@
 // js/daw/auth.js
 
+import { SERVER_URL } from './constants.js';
+
 let localAppServicesInstance = null; 
 let loggedInUser = null;
-const SERVER_URL = 'https://snugos-server-api.onrender.com';
+
 
 // Expose these functions as module exports
 export function initializeAuth(appServices) {

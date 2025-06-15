@@ -1,5 +1,7 @@
 // js/daw/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
 // Corrected imports for utils and state
+
+import { SERVER_URL } from '../constants.js';
 import { base64ToBlob, showNotification } from '../utils.js'; //
 
 let localAppServices = {}; //
@@ -58,7 +60,7 @@ function attachImporterEventListeners(windowElement) {
         setStatus('Requesting audio from server... (this can take a moment)');
 
         try {
-            const response = await fetch('https://snugos-server-api.onrender.com/function/youtube', {
+            const response = await fetch('${SERVER_URL}/function/youtube', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: youtubeUrl })
