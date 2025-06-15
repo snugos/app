@@ -154,7 +154,7 @@ function attachEventListeners() {
             { label: 'Open DAW', action: launchDaw }, // Direct navigation (DAW)
             { label: 'Open Library', action: openLibraryWindow }, // SnugWindow
             { label: 'View Profiles', action: viewProfiles }, // SnugWindow
-            { label: 'Play Snugtris', action: openGameWindow } // SnugWindow
+            { label: 'Play Snugtris', action: openGameWindow }
         ];
         appServices.createContextMenu(e, menuItems);
     });
