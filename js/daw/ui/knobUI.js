@@ -1,6 +1,6 @@
 // js/daw/ui/knobUI.js - Knob UI Component
 
-export function createKnob(options, captureStateForUndoCallback) { // Fix for Issue 5: Changed signature
+export function createKnob(options, captureStateForUndoCallback = () => {}) { // Fix: Provide a default empty function for the callback
     const container = document.createElement('div'); //
     container.className = 'knob-container'; //
 
@@ -28,9 +28,6 @@ export function createKnob(options, captureStateForUndoCallback) { // Fix for Is
     const range = max - min; //
     const maxDegrees = 270; //
     let initialValueBeforeInteraction = currentValue; //
-    // Removed mouseDownListener and touchStartListener as they are local to their handlers
-    // let mouseDownListener = null; 
-    // let touchStartListener = null; 
 
     function setValue(newValue, fromInteraction = false) { //
         // Clamp and step value
@@ -72,8 +69,8 @@ export function createKnob(options, captureStateForUndoCallback) { // Fix for Is
             document.removeEventListener('mousemove', onMouseMove); //
             document.removeEventListener('mouseup', onMouseUp); //
             // Only capture state if value changed and callback is provided
-            if (currentValue !== initialValueBeforeInteraction && captureStateForUndoCallback) { // Fix: Corrected logic
-                captureStateForUndoCallback(`Change ${options.label} to ${valueEl.textContent}`); // Fix: Corrected logic
+            if (currentValue !== initialValueBeforeInteraction && captureStateForUndoCallback) { //
+                captureStateForUndoCallback(`Change ${options.label} to ${valueEl.textContent}`); //
             }
         }
 
@@ -99,8 +96,8 @@ export function createKnob(options, captureStateForUndoCallback) { // Fix for Is
             document.removeEventListener('touchmove', onTouchMove); //
             document.removeEventListener('touchend', onTouchEnd); //
             // Only capture state if value changed and callback is provided
-            if (currentValue !== initialValueBeforeInteraction && captureStateForUndoCallback) { // Fix: Corrected logic
-                captureStateForUndoCallback(`Change ${options.label} to ${valueEl.textContent}`); // Fix: Corrected logic
+            if (currentValue !== initialValueBeforeInteraction && captureStateForUndoCallback) { //
+                captureStateForUndoCallback(`Change ${options.label} to ${valueEl.textContent}`); //
             }
         }
 
