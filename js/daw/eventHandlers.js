@@ -1,6 +1,7 @@
 // js/daw/eventHandlers.js - Global Event Listeners and Input Handling Module
 
 // Import state functions (already module imports)
+import { incrementOctaveShift, decrementOctaveShift, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT } from '../constants.js';
 import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime } from '../state/trackState.js';
 import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference } from '../state/appState.js'; // NEW: Added setCurrentUserThemePreference
 import { getUndoStack, getRedoStack, captureStateForUndo } from '../state/projectState.js';
@@ -300,7 +301,7 @@ export function attachGlobalControlEvents(uiCache) {
             const armedTrack = getTrackById(armedTrackId);
             
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const noteNumber = Constants.computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
                 const noteName = Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerAttack(noteName, Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
@@ -316,11 +317,11 @@ export function attachGlobalControlEvents(uiCache) {
             } else if (key === 'z') {
                 // Constants is global
                 decrementOctaveShift(); // This function from constants.js needs to be imported or globally accessible.
-                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (key === 'x') {
                 // Constants is global
                 incrementOctaveShift(); // This function from constants.js needs to be imported or globally accessible.
-                localAppServices.showNotification?.(`Keyboard Octave: ${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
+                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 // Removed timeline interaction code
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -338,7 +339,7 @@ export function attachGlobalControlEvents(uiCache) {
             const armedTrack = getTrackById(armedTrackId);
 
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
+                const noteNumber = Constants.computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
                 const noteName = Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerRelease(noteName, Tone.now());
                 currentlyPressedKeys.delete(key);

@@ -87,7 +87,7 @@ export class Track { // ADDED 'export'
 
     quantizeNotes(sequenceId, noteIdsToQuantize, gridSize = '16n') { //
         const sequence = this.sequences.sequences.find(s => s.id === sequenceId); //
-        if (!sequence || noteIdsToQuantize.size === 0) return; //
+        if (!sequence || noteIdsToQuantize.size === 0) return newSelectedNoteIds; //
 
         this.appServices.captureStateForUndo?.(`Quantize notes in ${this.name}`); //
 
@@ -110,6 +110,7 @@ export class Track { // ADDED 'export'
             }
         });
 
+        const newSelectedNoteIds = new Set();
         notesToMove.forEach(note => { //
             newData[note.oldPitch][note.oldTime] = null; //
         });
