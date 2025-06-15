@@ -31,24 +31,24 @@ import {
 // FIX: Import ALL individual UI functions that are assigned to appServices or called directly
 import {
     initializeUIModule, 
-    openTrackInspectorWindow, 
-    openMixerWindow, 
-    updateMixerWindow, 
-    openTrackEffectsRackWindow, 
-    openMasterEffectsRackWindow, 
-    renderEffectsList, 
-    renderEffectControls,
-    openSoundBrowserWindow, 
-    renderSoundBrowser, 
-    renderDirectoryView,
-    openPianoRollWindow, 
+    openTrackInspectorWindow, // Fix: Added this import
+    openMixerWindow, // Fix: Added this import
+    updateMixerWindow, // Fix: Added this import
+    openTrackEffectsRackWindow, // Fix: Added this import
+    openMasterEffectsRackWindow, // Fix: Added this import
+    renderEffectsList, // Fix: Added this import
+    renderEffectControls, // Fix: Added this import
+    openSoundBrowserWindow, // Fix: Added this import
+    renderSoundBrowser, // Fix: Added this import
+    renderDirectoryView, // Fix: Added this import
+    openPianoRollWindow, // Fix: Added this import
     updatePianoRollPlayhead, // Fix: Added this import
-    openYouTubeImporterWindow, 
-    openFileViewerWindow, 
-    renderSamplePads, 
-    updateSliceEditorUI,
-    renderDrumSamplerPads, 
-    updateDrumPadControlsUI, 
+    openYouTubeImporterWindow, // Fix: Added this import
+    openFileViewerWindow, // Fix: Added this import
+    renderSamplePads, // Fix: Added this import
+    updateSliceEditorUI, // Fix: Added this import
+    renderDrumSamplerPads, // Fix: Added this import
+    updateDrumPadControlsUI, // Fix: Added this import
     createKnob // Fix: Added this import
 } from './ui/ui.js'; // path relative to js/daw/
 
@@ -57,7 +57,7 @@ import { initializeMetronome, toggleMetronome } from './audio/metronome.js'; // 
 // CORRECTED IMPORTS: All state modules are now directly relative to js/daw/state/
 // Import individual functions used by appServices directly
 import { initializeAppState, getPlaybackMode, setPlaybackMode, getCurrentUserThemePreference, setCurrentUserThemePreference, getMidiRecordModeState, setMidiRecordModeState, getSelectedTimelineClipInfo, setSelectedTimelineClipInfo, getMidiAccess, setMidiAccess, getActiveMIDIInput, setActiveMIDIInput } from './state/appState.js';
-import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } from './state/masterState.js';
+import { initializeMasterState, getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam, reorderMasterEffect, getMasterGainValue, setMasterGainValue } => './state/masterState.js';
 import { initializeProjectState, getIsReconstructingDAW, setIsReconstructingDAW, getUndoStack, getRedoStack, getClipboardData, setClipboardData, captureStateForUndo, undoLastAction, redoLastAction, gatherProjectData, reconstructDAW, saveProject, loadProject, handleProjectFileLoad, exportToWav } from './state/projectState.js';
 import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from './state/soundLibraryState.js';
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
@@ -250,7 +250,7 @@ async function initializeSnugOS() {
             const transportTime = appServices.Tone.Transport.seconds;
             
             const mode = appServices.getPlaybackMode();
-            appServices.updatePianoRollPlayhead(transportTime); // Fix: updatePianoRollPlayhead is now imported
+            appServices.updatePianoRollPlayhead(transportTime); 
             
             // Pass the master mixer meter bar element to updateMeters
             const masterMixerMeterBar = document.getElementById('mixerTrackMeterBar-master');
@@ -308,25 +308,25 @@ async function initializeSnugOS() {
         playSlicePreview, playDrumSamplerPadPreview, 
 
         // UI Module Functions (initializers passed to initializeUIModule)
-        openTrackInspectorWindow: openTrackInspectorWindow, // Fix: Ensure assignment
-        openMixerWindow: openMixerWindow, // Fix: Ensure assignment
-        updateMixerWindow: updateMixerWindow, // Fix: Ensure assignment
-        openTrackEffectsRackWindow: openTrackEffectsRackWindow, // Fix: Ensure assignment
-        openMasterEffectsRackWindow: openMasterEffectsRackWindow, // Fix: Ensure assignment
-        renderEffectsList: renderEffectsList, // Fix: Ensure assignment
-        renderEffectControls: renderEffectControls, // Fix: Ensure assignment
-        openSoundBrowserWindow: openSoundBrowserWindow, // Fix: Ensure assignment
-        renderSoundBrowser: renderSoundBrowser, // Fix: Ensure assignment
-        renderDirectoryView: renderDirectoryView, // Fix: Ensure assignment
-        openPianoRollWindow: openPianoRollWindow, // Fix: Ensure assignment
-        updatePianoRollPlayhead: updatePianoRollPlayhead, // Fix: Ensure assignment
-        openYouTubeImporterWindow: openYouTubeImporterWindow, // Fix: Ensure assignment
-        openFileViewerWindow: openFileViewerWindow, // Fix: Ensure assignment
-        renderSamplePads: renderSamplePads, // Fix: Ensure assignment
-        updateSliceEditorUI: updateSliceEditorUI, // Fix: Ensure assignment
-        renderDrumSamplerPads: renderDrumSamplerPads, // Fix: Ensure assignment
-        updateDrumPadControlsUI: updateDrumPadControlsUI, // Fix: Ensure assignment
-        createKnob: createKnob, // Fix: Ensure assignment
+        openTrackInspectorWindow: openTrackInspectorWindow, 
+        openMixerWindow: openMixerWindow, 
+        updateMixerWindow: updateMixerWindow, 
+        openTrackEffectsRackWindow: openTrackEffectsRackWindow, 
+        openMasterEffectsRackWindow: openMasterEffectsRackWindow, 
+        renderEffectsList: renderEffectsList, 
+        renderEffectControls: renderEffectControls, 
+        openSoundBrowserWindow: openSoundBrowserWindow, 
+        renderSoundBrowser: renderSoundBrowser, 
+        renderDirectoryView: renderDirectoryView, 
+        openPianoRollWindow: openPianoRollWindow, 
+        updatePianoRollPlayhead: updatePianoRollPlayhead, 
+        openYouTubeImporterWindow: openYouTubeImporterWindow, 
+        openFileViewerWindow: openFileViewerWindow, 
+        renderSamplePads: renderSamplePads, 
+        updateSliceEditorUI: updateSliceEditorUI, 
+        renderDrumSamplerPads: renderDrumSamplerPads, 
+        updateDrumPadControlsUI: updateDrumPadControlsUI, 
+        createKnob: createKnob, 
 
         // Event Handlers (from js/daw/eventHandlers.js)
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,

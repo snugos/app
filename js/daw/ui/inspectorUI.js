@@ -5,8 +5,8 @@ import { getTrackById } from '../state/trackState.js';
 import { getOpenWindows, getWindowById } from '../state/windowState.js';
 import { getIsReconstructingDAW } from '../state/projectState.js';
 import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js';
-import * as effectsRegistry from '../effectsRegistry.js'; // Fix for Issue 3 in Step 2: Import as module alias
-import * as Constants from '../constants.js'; // Fix for Issue 1 in Step 5.1: Added Constants import
+import * as effectsRegistry from '../effectsRegistry.js'; 
+import * as Constants from '../constants.js'; // Fix: Added Constants import
 
 let localAppServices = {};
 
@@ -26,8 +26,7 @@ function getNestedParam(obj, path) {
 }
 
 function buildSynthEngineControls(track, container, engineType) {
-    // effectsRegistry is assumed to be globally available from js/daw/effectsRegistry.js
-    const definitions = effectsRegistry.synthEngineControlDefinitions?.[engineType] || []; // Fix for Issue 3 in Step 2: Use effectsRegistry alias
+    const definitions = effectsRegistry.synthEngineControlDefinitions?.[engineType] || []; 
     if (!container || definitions.length === 0) return;
 
     definitions.forEach(def => {
@@ -47,7 +46,7 @@ function buildSynthEngineControls(track, container, engineType) {
                 decimals: def.decimals,
                 displaySuffix: def.displaySuffix || '',
                 onValueChange: (val) => track.setSynthParam(def.path, val)
-            }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+            }, localAppServices.captureStateForUndo); 
             placeholder.appendChild(control.element);
         } else if (def.type === 'select') {
             const selectEl = document.createElement('select');
@@ -73,8 +72,7 @@ export function renderSamplePads(track, container) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
-    // Constants is globally available from js/daw/constants.js
-    for (let i = 0; i < Constants.numSlices; i++) {
+    for (let i = 0; i < Constants.numSlices; i++) { // Fix: Using Constants from import
         const pad = document.createElement('button');
         pad.className = 'pad-button';
         pad.textContent = `Slice ${i + 1}`;
@@ -105,7 +103,7 @@ export function updateSliceEditorUI(track, container) {
             step: 1,
             initialValue: slice.pitchShift || 0,
             onValueChange: (val) => { slice.pitchShift = val; }
-        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+        }, localAppServices.captureStateForUndo); 
         pitchKnobEl.appendChild(knob.element);
     }
 }
@@ -116,8 +114,7 @@ export function renderDrumSamplerPads(track, container) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
-    // Constants is globally available from js/daw/constants.js
-    for (let i = 0; i < Constants.numDrumSamplerPads; i++) {
+    for (let i = 0; i < Constants.numDrumSamplerPads; i++) { // Fix: Using Constants from import
         const pad = document.createElement('button');
         pad.className = 'pad-button';
         pad.dataset.padIndex = i;
@@ -184,7 +181,7 @@ export function updateDrumPadControlsUI(track, container) {
             step: 0.01,
             initialValue: padData.volume || 0.7,
             onValueChange: (val) => { padData.volume = val; }
-        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
+        }, localAppServices.captureStateForUndo); 
         volContainer.appendChild(volKnob.element);
     }
     
@@ -197,8 +194,8 @@ export function updateDrumPadControlsUI(track, container) {
             step: 1,
             initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
-        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
-        pitchContainer.appendChild(pitchKnob.element); // Corrected: Append the element property of the knob object
+        }, localAppServices.captureStateForUndo); 
+        pitchContainer.appendChild(pitchKnob.element); // Fix: Append the element property of the knob object
     }
 
     container.appendChild(controlsGrid);
