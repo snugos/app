@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <style>
         :root {
             --bg-color: #000000;
@@ -123,7 +124,6 @@
             padding: 2rem;
             border-radius: 8px;
             text-align: center;
-            max-width: 400px;
         }
         
         .modal-dialog h2 {
@@ -135,19 +135,6 @@
         .modal-dialog p {
             font-size: 1.2rem;
         }
-
-        .controls-list {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 0.75rem 1.5rem;
-            text-align: left;
-            margin: 1.5rem 0;
-        }
-        .controls-list span:first-child {
-            font-weight: 700;
-            justify-self: end;
-        }
-
 
         @media (max-width: 800px) {
             .game-wrapper {
@@ -182,6 +169,10 @@
                     <div>LEVEL: <span id="level">1</span></div>
                 </div>
             </div>
+             <div class="panel">
+                <button id="start-btn">Play</button>
+                <button id="pause-btn" style="margin-top: 0.5rem;">Pause</button>
+            </div>
         </div>
         <canvas id="game-board"></canvas>
         <div class="sidebar">
@@ -192,14 +183,7 @@
                     <canvas class="preview-canvas" id="next-2"></canvas>
                     <canvas class="preview-canvas" id="next-3"></canvas>
                     <canvas class="preview-canvas" id="next-4"></canvas>
-                    <canvas class="preview-canvas" id="next-5"></canvas>
                  </div>
-            </div>
-             <div class="panel">
-                <div class="panel-title">CONTROLS</div>
-                <button id="start-btn">Play</button>
-                <button id="pause-btn">Pause</button>
-                <button id="controls-btn">Help</button>
             </div>
         </div>
     </div>
@@ -212,19 +196,6 @@
         </div>
     </div>
 
-    <div id="controls-modal" class="modal-overlay">
-        <div class="modal-dialog">
-            <h2>CONTROLS</h2>
-            <div class="controls-list">
-                <span>ARROW KEYS</span><span>MOVE</span>
-                <span>UP / W</span><span>ROTATE</span>
-                <span>SPACE</span><span>HARD DROP</span>
-                <span>C</span><span>HOLD</span>
-            </div>
-            <button id="close-controls-btn">Close</button>
-        </div>
-    </div>
-
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // --- Canvas Setup ---
@@ -232,36 +203,37 @@
         const boardCtx = boardCanvas.getContext('2d');
         const holdCanvas = document.getElementById('hold-canvas');
         const holdCtx = holdCanvas.getContext('2d');
-        const nextCanvases = Array.from({length: 5}, (_, i) => document.getElementById(`next-${i + 1}`));
+        const nextCanvases = Array.from({length: 4}, (_, i) => document.getElementById(`next-${i + 1}`));
         const nextContexts = nextCanvases.map(c => c.getContext('2d'));
 
         // --- Game Constants ---
         const COLS = 10;
         const ROWS = 20;
         const LINES_PER_LEVEL = 10;
+        const LOCK_DELAY_MS = 500;
         let BLOCK_SIZE = 15;
 
         // --- Colors & Tetrominoes ---
         const BORDER_COLOR = '#000000';
         const GHOST_COLOR = 'rgba(255, 255, 255, 0.2)';
         const TETROMINOES = {
-            'I': { shape: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], color: '#00FFFF' },
-            'J': { shape: [[1,0,0], [1,1,1], [0,0,0]], color: '#0000FF' },
-            'L': { shape: [[0,0,1], [1,1,1], [0,0,0]], color: '#FFA500' },
-            'O': { shape: [[1,1], [1,1]], color: '#FFFF00' },
-            'S': { shape: [[0,1,1], [1,1,0], [0,0,0]], color: '#00FF00' },
-            'T': { shape: [[0,1,0], [1,1,1], [0,0,0]], color: '#800080' },
-            'Z': { shape: [[1,1,0], [0,1,1], [0,0,0]], color: '#FF0000' }
+            'I': { shape: [[0,0,0,0], [1,1,1,1], [0,0,0,0], [0,0,0,0]], color: '#00BFFF' }, // Electric Blue
+            'J': { shape: [[1,0,0], [1,1,1], [0,0,0]], color: '#8A2BE2' }, // Deep Violet
+            'L': { shape: [[0,0,1], [1,1,1], [0,0,0]], color: '#FF69B4' }, // Hot Pink
+            'O': { shape: [[1,1], [1,1]], color: '#FFFFAA' }, // Pastel Yellow
+            'S': { shape: [[0,1,1], [1,1,0], [0,0,0]], color: '#C1FFC1' }, // Pastel Green
+            'T': { shape: [[0,1,0], [1,1,1], [0,0,0]], color: '#E6E6FA' }, // Lavender
+            'Z': { shape: [[1,1,0], [0,1,1], [0,0,0]], color: '#7FFFD4' }  // Aqua Marine
         };
         const PIECE_KEYS = 'IJLOSTZ';
 
         // --- Game State ---
-        let grid, currentPiece, nextPieceQueue, holdPiece, canHold;
+        let grid, currentPiece, nextPieceQueue, holdPiece, canHold, lockDelayTimeout;
         let score, lines, level, dropCounter, dropInterval, lastTime;
         let isPaused = false, isGameOver = false, animationFrameId, isDroppingFast = false;
         
         // --- Handling ---
-        let dasTimeout, arrInterval;
+        let dasTimeoutLeft, dasTimeoutRight, arrIntervalLeft, arrIntervalRight;
         let dasValue = 167; 
         let arrValue = 33;
         let sdfValue = 6;
@@ -277,9 +249,27 @@
             restartBtn: document.getElementById('restart-btn'),
             gameOverModal: document.getElementById('game-over-modal'),
             finalScore: document.getElementById('final-score'),
-            controlsBtn: document.getElementById('controls-btn'),
-            controlsModal: document.getElementById('controls-modal'),
-            closeControlsBtn: document.getElementById('close-controls-btn'),
+        };
+
+        // --- Sound Engine ---
+        const sound = {
+            isStarted: false,
+            move: new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination(),
+            rotate: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 } }).toDestination(),
+            lock: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.2, release: 0.1 } }).toDestination(),
+            clear: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 } }).toDestination(),
+            gameOver: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.5, sustain: 0, release: 0.5 } }).toDestination(),
+            
+            async start() {
+                if (this.isStarted) return;
+                await Tone.start();
+                this.isStarted = true;
+            },
+            playMove() { if (this.isStarted) this.move.triggerAttackRelease('C2', '8n'); },
+            playRotate() { if (this.isStarted) this.rotate.triggerAttackRelease('E3', '8n'); },
+            playLock() { if (this.isStarted) this.lock.triggerAttackRelease('C1', '8n'); },
+            playClear() { if (this.isStarted) this.clear.triggerAttackRelease('G4', '8n'); },
+            playGameOver() { if (this.isStarted) this.gameOver.triggerAttackRelease('C3', '2n'); }
         };
         
         function resizeGame() {
@@ -327,9 +317,11 @@
             canHold = true;
             holdPiece = null;
             keysDown = {};
-            clearTimeout(dasTimeout); clearInterval(arrInterval);
+            clearTimeout(dasTimeoutLeft); clearTimeout(dasTimeoutRight);
+            clearInterval(arrIntervalLeft); clearInterval(arrIntervalRight);
+            clearTimeout(lockDelayTimeout);
             
-            nextPieceQueue = Array.from({ length: 5 }, () => generatePiece());
+            nextPieceQueue = Array.from({ length: 4 }, () => generatePiece());
             spawnNewPiece();
             
             updateUI();
@@ -337,10 +329,7 @@
         }
         
         function update(time = 0) {
-            if (isPaused || isGameOver) {
-                 if (isPaused) draw();
-                 return;
-            }
+            if (isPaused || isGameOver) return;
             const deltaTime = time - lastTime;
             lastTime = time;
             dropCounter += deltaTime;
@@ -361,10 +350,17 @@
              currentPiece.y++;
              if (checkCollision(currentPiece)) {
                  currentPiece.y--;
-                 handlePieceLanded();
+                 startLockDelay();
              } else {
+                 clearTimeout(lockDelayTimeout);
+                 if (isDroppingFast) score++;
                  dropCounter = 0;
              }
+        }
+        
+        function startLockDelay() {
+            clearTimeout(lockDelayTimeout);
+            lockDelayTimeout = setTimeout(() => handlePieceLanded(), LOCK_DELAY_MS);
         }
 
         function hardDrop() {
@@ -375,6 +371,10 @@
         }
 
         function handlePieceLanded() {
+            clearTimeout(lockDelayTimeout);
+            if (!currentPiece) return;
+
+            sound.playLock();
             isDroppingFast = false;
             currentPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
@@ -413,6 +413,7 @@
                 rowsCleared++; y++;
             }
             if (rowsCleared > 0) {
+                sound.playClear();
                 score += [0, 100, 300, 500, 800][rowsCleared] * level;
                 lines += rowsCleared;
                 if (lines >= level * LINES_PER_LEVEL) level++;
@@ -429,10 +430,18 @@
             dropCounter = 0;
         }
 
-        function rotatePiece() {
+        function rotatePiece(direction) {
             if (!currentPiece) return;
+            sound.playRotate();
             const shape = currentPiece.shape;
-            const newShape = shape[0].map((_, colIndex) => shape.map(row => row[colIndex])).reverse();
+            let newShape;
+
+            if (direction === 1) { // Clockwise
+                 newShape = shape[0].map((_, colIndex) => shape.map(row => row[colIndex])).reverse();
+            } else { // Counter-clockwise
+                 newShape = shape[0].map((_, colIndex) => shape.map(row => row[row.length - 1 - colIndex]));
+            }
+
             const originalX = currentPiece.x, originalShape = currentPiece.shape;
             currentPiece.shape = newShape;
             let offset = 1;
@@ -445,11 +454,17 @@
                     return;
                 }
             }
+            if (checkCollision(currentPiece)) {
+                 startLockDelay();
+            } else {
+                 clearTimeout(lockDelayTimeout);
+            }
         }
 
         function hold() {
             if (!canHold || !currentPiece) return;
             canHold = false;
+            sound.playMove();
             if (holdPiece) {
                 [currentPiece, holdPiece] = [new Piece(holdPiece.key), new Piece(currentPiece.key)];
                 currentPiece.x = Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2);
@@ -534,6 +549,7 @@
         }
         function gameOver() {
             isGameOver = true;
+            sound.playGameOver();
             cancelAnimationFrame(animationFrameId);
             animationFrameId = null;
             ui.finalScore.textContent = score;
@@ -560,8 +576,17 @@
         
         function movePiece(dir) {
             if (!currentPiece) return;
+            sound.playMove();
             currentPiece.x += dir;
-            if (checkCollision(currentPiece)) currentPiece.x -= dir;
+            if (checkCollision(currentPiece)) {
+                currentPiece.x -= dir;
+            } else {
+                 if (checkCollision({...currentPiece, y: currentPiece.y + 1})) {
+                    startLockDelay();
+                } else {
+                    clearTimeout(lockDelayTimeout);
+                }
+            }
             draw();
         }
 
@@ -569,41 +594,47 @@
         ui.pauseBtn.addEventListener('click', togglePause);
         ui.restartBtn.addEventListener('click', startGame);
         
-        ui.controlsBtn.addEventListener('click', () => { ui.controlsModal.style.display = 'flex'; });
-        ui.closeControlsBtn.addEventListener('click', () => { ui.controlsModal.style.display = 'none'; });
-        ui.controlsModal.addEventListener('click', (e) => {
-            if (e.target === ui.controlsModal) {
-                ui.controlsModal.style.display = 'none';
-            }
-        });
-
         document.addEventListener('keydown', event => {
+            sound.start(); // Ensure audio context is started on user interaction
+            if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+                 if (isPaused || isGameOver) return;
+                rotatePiece(-1);
+                draw();
+                return;
+            }
+
             if (keysDown[event.code]) return;
             keysDown[event.code] = true;
             if (!animationFrameId && !isGameOver) { startGame(); return; }
             if (isPaused || isGameOver) return;
             switch (event.code) { 
                 case 'ArrowLeft': case 'KeyA':
+                    clearTimeout(dasTimeoutRight); clearInterval(arrIntervalRight);
                     movePiece(-1);
-                    dasTimeout = setTimeout(() => { arrInterval = setInterval(() => movePiece(-1), arrValue); }, dasValue);
+                    dasTimeoutLeft = setTimeout(() => { arrIntervalLeft = setInterval(() => movePiece(-1), arrValue); }, dasValue);
                     break;
                 case 'ArrowRight': case 'KeyD':
+                    clearTimeout(dasTimeoutLeft); clearInterval(arrIntervalLeft);
                     movePiece(1);
-                    dasTimeout = setTimeout(() => { arrInterval = setInterval(() => movePiece(1), arrValue); }, dasValue);
+                    dasTimeoutRight = setTimeout(() => { arrIntervalRight = setInterval(() => movePiece(1), arrValue); }, dasValue);
                     break;
                 case 'ArrowDown': case 'KeyS':
                     isDroppingFast = true;
                     pieceDrop(); 
                     break;
                 case 'ArrowUp': case 'KeyW':
-                    rotatePiece();
+                    rotatePiece(1);
                     draw(); 
+                    break;
+                case 'KeyC':
+                    rotatePiece(-1);
+                    draw();
                     break;
                 case 'Space': 
                     event.preventDefault(); 
                     hardDrop();
                     break;
-                case 'KeyC':
+                case 'ShiftLeft': case 'ShiftRight':
                     hold();
                     break;
             }
@@ -613,9 +644,12 @@
             keysDown[event.code] = false;
             switch (event.code) {
                 case 'ArrowLeft': case 'KeyA':
+                    clearTimeout(dasTimeoutLeft);
+                    clearInterval(arrIntervalLeft);
+                    break;
                 case 'ArrowRight': case 'KeyD':
-                    clearTimeout(dasTimeout);
-                    clearInterval(arrInterval);
+                    clearTimeout(dasTimeoutRight);
+                    clearInterval(arrIntervalRight);
                     break;
                 case 'ArrowDown': case 'KeyS':
                     isDroppingFast = false;
