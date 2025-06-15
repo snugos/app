@@ -1,14 +1,14 @@
 // js/daw/eventHandlers.js - Global Event Listeners and Input Handling Module
 
 // Import state functions (corrected paths)
-import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime } from '../state/trackState.js'; // Corrected path
-import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference } from '../state/appState.js'; // Corrected path
-import { getUndoStack, getRedoStack, captureStateForUndo } from '../state/projectState.js'; // Corrected path
-import { getWindowById } from '../state/windowState.js'; // Corrected path
-import { getClipboardData } from '../state/projectState.js'; // Corrected path
+import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime } from './state/trackState.js'; // Corrected path from ../state to ./state
+import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference } from './state/appState.js'; // Corrected path from ../state to ./state
+import { getUndoStack, getRedoStack, captureStateForUndo } from './state/projectState.js'; // Corrected path from ../state to ./state
+import { getWindowById } from './state/windowState.js'; // Corrected path from ../state to ./state
+import { getClipboardData } from './state/projectState.js'; // Corrected path from ../state to ./state
 
-// Corrected import for Constants - directly from js/daw/
-import { incrementOctaveShift, decrementOctaveShift, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT, computerKeySynthMap, PIANO_ROLL_END_MIDI_NOTE, SYNTH_PITCHES } from '../constants.js'; // Corrected path and added specific imports
+// Corrected import for Constants - directly from current directory
+import { incrementOctaveShift, decrementOctaveShift, COMPUTER_KEY_SYNTH_OCTAVE_SHIFT, computerKeySynthMap, PIANO_ROLL_END_MIDI_NOTE, SYNTH_PITCHES } from './constants.js'; // Corrected path from ../constants to ./constants
 
 let localAppServices = {};
 const currentlyPressedKeys = new Set();
@@ -297,13 +297,13 @@ export function attachGlobalControlEvents(uiCache) {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
         // Constants is global
-        if (computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) { // Use imported computerKeySynthMap
+        if (computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
             
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Use imported values
+                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
                 const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerAttack(noteName, localAppServices.Tone.now(), 0.75);
                 currentlyPressedKeys.add(key);
@@ -318,12 +318,12 @@ export function attachGlobalControlEvents(uiCache) {
                 handleRecord();
             } else if (key === 'z') {
                 // Constants is global
-                decrementOctaveShift(); // Use imported function
-                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000); // Use imported value
+                decrementOctaveShift();
+                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (key === 'x') {
                 // Constants is global
-                incrementOctaveShift(); // Use imported function
-                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000); // Use imported value
+                incrementOctaveShift();
+                localAppServices.showNotification?.(`Keyboard Octave: ${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT > 0 ? '+' : ''}${COMPUTER_KEY_SYNTH_OCTAVE_SHIFT}`, 1000);
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 // Removed timeline interaction code
             } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -335,13 +335,13 @@ export function attachGlobalControlEvents(uiCache) {
     document.addEventListener('keyup', (e) => {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
         // Constants is global
-        if (computerKeySynthMap[key]) { // Use imported computerKeySynthMap
+        if (computerKeySynthMap[key]) {
             e.preventDefault();
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
 
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Use imported values
+                const noteNumber = computerKeySynthMap[key] + (COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12);
                 const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerRelease(noteName, localAppServices.Tone.now());
                 currentlyPressedKeys.delete(key);
@@ -518,13 +518,13 @@ function onMIDIMessage(message) {
             if (activeSequence) {
                 const ticksPerStep = localAppServices.Tone.Transport.PPQ / 4;
                 const currentStep = Math.round(localAppServices.Tone.Transport.ticks / ticksPerStep) % activeSequence.length;
-                const pitchIndex = PIANO_ROLL_END_MIDI_NOTE - noteNumber; // Use imported PIANO_ROLL_END_MIDI_NOTE
+                const pitchIndex = PIANO_ROLL_END_MIDI_NOTE - noteNumber;
 
-                if (pitchIndex >= 0 && pitchIndex < SYNTH_PITCHES.length) { // Use imported SYNTH_PITCHES
+                if (pitchIndex >= 0 && pitchIndex < SYNTH_PITCHES.length) {
                     
                     const recordMode = getMidiRecordModeState();
                     if (recordMode === 'replace') {
-                        for (let i = 0; i < SYNTH_PITCHES.length; i++) { // Use imported SYNTH_PITCHES
+                        for (let i = 0; i < SYNTH_PITCHES.length; i++) {
                             if (activeSequence.data[i][currentStep]) {
                                 track.sequences.removeNoteFromSequence(activeSequence.id, i, currentStep, true); 
                             }
