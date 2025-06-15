@@ -10,7 +10,7 @@ import {
 
 // CORRECTED IMPORTS: All core utilities are now directly relative to js/daw/
 import * as Constants from './constants.js'; // This is now in js/daw/constants.js
-import { storeAudio, getAudio, deleteAudio } from './db.js'; // This is now in js/daw/db.js
+import { storeAudio, getAudio, deleteAudio, storeAsset, getAsset } from './db.js'; // Fix: Added storeAsset and getAsset imports
 import { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions } from './effectsRegistry.js'; // This is now in js/daw/effectsRegistry.js
 import { showNotification, showCustomModal, createContextMenu, base64ToBlob, drawWaveform, setupGenericDropZoneListeners, createDropZoneHTML, showConfirmationDialog } from './utils.js'; // This is now in js/daw/utils.js
 import { initializeAuth, handleBackgroundUpload, handleLogout } from './auth.js'; // This is now in js/daw/auth.js
@@ -267,8 +267,8 @@ async function initializeSnugOS() {
         dbStoreAudio: storeAudio, 
         dbGetAudio: getAudio,     
         dbDeleteAudio: deleteAudio, 
-        getAsset: getAsset, // Assumed to be from db.js
-        storeAsset: storeAsset, // Assumed to be from db.js
+        getAsset: getAsset, // Fix: Use the imported getAsset
+        storeAsset: storeAsset, // Fix: Use the imported storeAsset
 
         // Tone.js related contexts and registries (from js/daw/effectsRegistry.js, etc.)
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
