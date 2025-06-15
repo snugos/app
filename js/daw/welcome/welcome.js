@@ -20,7 +20,7 @@ const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 /**
  * Creates and opens a new window containing an HTML page loaded into an iframe.
- * Used for apps that *should* be embedded (Profiles, Library, Tetris).
+ * Used for apps that *should* be embedded (Profiles, Library, Tetris, and now DAW).
  * @param {string} windowId Unique ID for the SnugWindow.
  * @param {string} windowTitle Title of the SnugWindow.
  * @param {string} iframeSrc URL of the HTML page to load in the iframe.
@@ -220,10 +220,10 @@ function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
 }
 
-// MODIFIED: Launch DAW in a SnugWindow iframe
+// MODIFIED: Launch DAW as a standalone page (direct navigation)
 function launchDaw() {
     toggleStartMenu();
-    openEmbeddedAppInWindow('snawApp', 'Snaw DAW', 'snaw.html', { width: 1000, height: 700 });
+    window.location.href = 'snaw.html';
 }
 
 // MODIFIED: View Profiles opens in a SnugWindow iframe
