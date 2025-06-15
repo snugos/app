@@ -1,7 +1,7 @@
 // js/daw/audio/audio.js - Core Audio Engine, Master Bus and Master Effects
 // Corrected import for effectsRegistry
 
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '../effectsRegistry.js'; // Corrected path
+import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '../effectsRegistry.js';
 
 let masterEffectsBusInputNode = null;
 let masterGainNodeActual = null;
@@ -29,10 +29,10 @@ export function setActualMasterVolume(gainValue, rampTime = 0.05) {
 }
 
 export async function initAudioContextAndMasterMeter(isUserInteraction = false) {
-    if (audioContextInitialized && Tone.context.state === 'running') return true;
-    if (Tone.context.state === 'suspended' && isUserInteraction) {
+    if (audioContextInitialized && localAppServices.Tone.context.state === 'running') return true;
+    if (localAppServices.Tone.context.state === 'suspended' && isUserInteraction) {
         try {
-            await Tone.start();
+            await localAppServices.Tone.start();
             console.log('[Audio] Audio context resumed.');
             if (!audioContextInitialized) {
                  setupMasterBus();
@@ -50,9 +50,9 @@ export async function initAudioContextAndMasterMeter(isUserInteraction = false) 
 function setupMasterBus() {
     if (masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) return;
     
-    masterEffectsBusInputNode = new Tone.Gain();
-    masterGainNodeActual = new Tone.Gain(Tone.dbToGain(0)).toDestination();
-    masterMeterNode = new Tone.Meter();
+    masterEffectsBusInputNode = new localAppServices.Tone.Gain();
+    masterGainNodeActual = new localAppServices.Tone.Gain(localAppServices.Tone.dbToGain(0)).toDestination();
+    masterMeterNode = new localAppServices.Tone.Meter();
     
     masterEffectsBusInputNode.connect(masterGainNodeActual);
     masterGainNodeActual.connect(masterMeterNode);
@@ -117,18 +117,18 @@ export function reorderMasterEffectInAudio() {
 export function updateMeters(globalMasterMeterBar, mixerMasterMeterBar, tracks) {
     if (masterMeterNode && !masterMeterNode.disposed) {
         const masterLevelDb = masterMeterNode.getValue();
-        const masterLevelGain = isFinite(masterLevelDb) ? Tone.dbToGain(masterLevelDb) : 0;
+        const masterLevelGain = isFinite(masterLevelDb) ? localAppServices.Tone.dbToGain(masterLevelDb) : 0;
         if (globalMasterMeterBar) {
             globalMasterMeterBar.style.width = `${Math.min(100, masterLevelGain * 100)}%`;
         }
-        if (mixerMasterMeterBar) {
-            mixerMasterMeterBar.style.width = `${Math.min(100, trackLevelGain * 100)}%`;
+        if (mixerMasterMeterBar) { // Fix for Issue 5: Use masterLevelGain here
+            mixerMasterMeterBar.style.width = `${Math.min(100, masterLevelGain * 100)}%`;
         }
     }
     tracks.forEach(track => {
         if (track.trackMeter && !track.trackMeter.disposed) {
             const trackLevelDb = track.trackMeter.getValue();
-            const trackLevelGain = isFinite(trackLevelDb) ? Tone.dbToGain(trackLevelDb) : 0;
+            const trackLevelGain = isFinite(trackLevelDb) ? localAppServices.Tone.dbToGain(trackLevelDb) : 0;
             const mixerTrackMeterBar = document.getElementById(`mixerTrackMeterBar-${track.id}`);
             if (mixerTrackMeterBar) {
                 mixerTrackMeterBar.style.width = `${Math.min(100, trackLevelGain * 100)}%`;
@@ -145,7 +145,7 @@ export function forceStopAllAudio() {
         }
     });
     
-    Tone.Transport.cancel(0);
-    Tone.Transport.stop();
-    Tone.Transport.position = 0;
+    localAppServices.Tone.Transport.cancel(0);
+    localAppServices.Tone.Transport.stop();
+    localAppServices.Tone.Transport.position = 0;
 }

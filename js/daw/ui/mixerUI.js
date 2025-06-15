@@ -72,7 +72,7 @@ function renderMixerTracks(container) {
             step: 0.01,
             initialValue: getMasterGainValue(),
             onValueChange: (val) => setMasterGainValue(val)
-        });
+        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
         masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
@@ -103,7 +103,7 @@ function renderMixerTracks(container) {
                 step: 0.01,
                 initialValue: track.previousVolumeBeforeMute,
                 onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction)
-            });
+            }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
             volKnobPlaceholder.appendChild(volKnob.element);
         }
 

@@ -82,4 +82,4 @@ export const authConstants = {
     REMEMBER_ME_KEY: 'snugos_remember_me',
 };
 
-export const SERVER_URL = 'https://snugos-server-api.onrender.com';
+export const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Defined for Issue 1 in Step 1

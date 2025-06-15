@@ -213,8 +213,8 @@ function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
     const tracks = appServices.getTracks();
 
-    if (Tone.Transport.state === 'started') {
-        Tone.Transport.stop();
+    if (appServices.Tone.Transport.state === 'started') {
+        appServices.Tone.Transport.stop();
     }
     
     tracks.forEach(track => track.sequences.stopSequence?.());
@@ -231,13 +231,15 @@ function onPlaybackModeChange(newMode, oldMode) {
 async function initializeSnugOS() {
     
     function drawLoop() {
-        if (typeof Tone !== 'undefined') {
-            const transportTime = Tone.Transport.seconds;
+        if (typeof appServices.Tone !== 'undefined') {
+            const transportTime = appServices.Tone.Transport.seconds;
             
             const mode = appServices.getPlaybackMode();
             appServices.updatePianoRollPlayhead(transportTime);
             
-            appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), null, appServices.getTracks());
+            // Pass the master mixer meter bar element to updateMeters
+            const masterMixerMeterBar = document.getElementById('mixerTrackMeterBar-master');
+            appServices.updateMeters(document.getElementById('masterMeterBarGlobalTop'), masterMixerMeterBar, appServices.getTracks());
         }
         requestAnimationFrame(drawLoop);
     }
@@ -271,6 +273,7 @@ async function initializeSnugOS() {
         // Tone.js related contexts and registries (from js/daw/effectsRegistry.js, etc.)
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
         context: Tone.context, // Global Tone object
+        Tone: Tone, // Fix for Issue 4: Pass Tone object through appServices
 
         // State Module Accessors (from js/daw/state/)
         getTracks: getTracks, getTrackById: getTrackById, addTrack: addTrack, removeTrack: removeTrack, setTracks: setTracks, setTrackIdCounter: setTrackIdCounter,
@@ -290,9 +293,11 @@ async function initializeSnugOS() {
 
         // UI Module Functions (initializers passed to initializeUIModule)
         openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openTrackEffectsRackWindow,
-        openMasterEffectsRackWindow, openSoundBrowserWindow, openPianoRollWindow, updatePianoRollPlayhead, 
+        openMasterEffectsRackWindow, renderEffectsList, renderEffectControls,
+        openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView,
+        openPianoRollWindow, updatePianoRollPlayhead, 
         openYouTubeImporterWindow, openFileViewerWindow, renderSamplePads, updateSliceEditorUI,
-        renderDrumSamplerPads, updateDrumPadControlsUI, createKnob, renderDirectoryView, renderSoundBrowser,
+        renderDrumSamplerPads, updateDrumPadControlsUI, createKnob,
 
         // Event Handlers (from js/daw/eventHandlers.js)
         handleTrackMute, handleTrackSolo, handleTrackArm, handleRemoveTrack,
@@ -302,6 +307,7 @@ async function initializeSnugOS() {
         // Other
         uiElementsCache: {},
         applyCustomBackground: applyCustomBackground,
+        updateMasterEffectsUI: handleMasterEffectsUIUpdate, // Fix for masterState.js Issue: Assign handler
     };
 
     // Initialize all state modules with appServices

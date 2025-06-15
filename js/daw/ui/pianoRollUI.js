@@ -144,7 +144,7 @@ export function updatePianoRollPlayhead(transportTime) {
             const loopEndSteps = activeSequence.length;
             if (typeof loopEndSteps !== 'number' || loopEndSteps === 0) return;
 
-            const secondsPer16thNote = Tone.Time('16n').toSeconds();
+            const secondsPer16thNote = localAppServices.Tone.Time('16n').toSeconds();
             const loopDurationInSeconds = loopEndSteps * secondsPer16thNote;
 
             if (loopDurationInSeconds === 0) return;
@@ -478,7 +478,7 @@ function attachPianoRollListeners(pianoRoll) {
                     action: () => track.sequences.copyNotesToClipboard(activeSequence.id, selectedNotes)
                 });
             }
-            const clipboard = getClipboardData();
+            const clipboard = localAppServices.getClipboardData();
             if (clipboard?.type === 'piano-roll-notes') {
                 menuItems.push({
                     label: `Paste ${clipboard.notes.length} Note(s)`,
@@ -495,22 +495,18 @@ function attachPianoRollListeners(pianoRoll) {
                             pastePitchIndex = visualRow;
                         }
 
-                        const currentActiveSequence = track.sequences.getActiveSequence();
-                        if (!currentActiveSequence || !currentActiveSequence.data[pitchIndex] || timeStep >= currentActiveSequence.length) {
-                            return;
-                        }
+                        // Call the pasteNotesFromClipboard function on the track's sequence manager
+                        const newSelected = track.sequences.pasteNotesFromClipboard(activeSequence.id, pastePitchIndex, pasteTimeStep); // Fix for Issue 1: Correct paste call
                         
-                        const noteExists = currentActiveSequence.data[pitchIndex][timeStep];
-
-                        if (noteExists) {
-                            track.sequences.removeNoteFromSequence(currentActiveSequence.id, pitchIndex, timeStep);
+                        if (newSelected) { // Fix for Issue 1: Check if newSelected is returned
+                            selectedNotes.clear(); // Fix for Issue 1: Clear and add new selections
+                            newSelected.forEach(id => selectedNotes.add(id)); // Fix for Issue 1: Add new selections
+                            redrawNotes(noteLayer, track, colors, selectedNotes); // Fix for Issue 1: Redraw
+                            renderVelocityPane(velocityPane, track); // Fix for Issue 1: Re-render velocity pane
+                            localAppServices.showNotification?.(`${clipboard.notes.length} note(s) pasted.`); // Fix for Issue 1: Notification
                         } else {
-                            track.sequences.addNoteToSequence(currentActiveSequence.id, pitchIndex, timeStep);
+                            localAppServices.showNotification?.("Could not paste notes. Ensure target location is valid (e.g., within sequence bounds).", 3000); // Fix for Issue 1: Error notification
                         }
-
-                        selectedNotes.clear();
-                        redrawNotes(noteLayer, track, colors, selectedNotes);
-                        renderVelocityPane(velocityPane, track);
                     }
                 });
             }
@@ -519,7 +515,7 @@ function attachPianoRollListeners(pianoRoll) {
             menuItems.push({ label: 'Clear All Notes', action: () => track.sequences.clearSequence(activeSequence.id) });
             
             if (menuItems.length > 0) {
-                createContextMenu(e.evt, menuItems, localAppServices);
+                localAppServices.createContextMenu(e.evt, menuItems);
             }
         }
     });
@@ -600,8 +596,9 @@ function attachPianoRollListeners(pianoRoll) {
         const activeSequence = track.sequences.getActiveSequence();
         if (!activeSequence) return;
 
+        let notesToQuantize;
         if (pianoRoll.selectedNotes.size > 0) {
-            track.quantizeNotes(activeSequence.id, pianoRoll.selectedNotes, '16n');
+            notesToQuantize = pianoRoll.selectedNotes;
         } else {
             const allNoteIds = new Set();
             activeSequence.data.forEach((row, pitchIndex) => {
@@ -611,7 +608,15 @@ function attachPianoRollListeners(pianoRoll) {
                     }
                 });
             });
-            track.quantizeNotes(activeSequence.id, allNoteIds, '16n');
+            notesToQuantize = allNoteIds;
+        }
+        
+        const newSelected = track.quantizeNotes(activeSequence.id, notesToQuantize, '16n');
+        if (newSelected) {
+            selectedNotes.clear();
+            newSelected.forEach(id => selectedNotes.add(id));
+            redrawNotes(noteLayer, track, colors, selectedNotes);
+            renderVelocityPane(velocityPane, track);
         }
     });
 }

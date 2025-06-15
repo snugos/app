@@ -4,7 +4,7 @@
 
 // Removed imports like SnugWindow as it's provided by the parent.
 // Corrected imports for utils and db
-import { storeAsset, getAsset } from '../db.js';
+import { storeAsset, getAsset } from '../db.js'; // Fix for Issue 3 in Step 3: Changed from './profileDb.js'
 import { showNotification, showCustomModal, createContextMenu } from '../utils.js';
 
 let appServices = {}; // Will be populated by the parent window.

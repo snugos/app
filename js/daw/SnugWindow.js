@@ -1,6 +1,6 @@
 // js/daw/SnugWindow.js - SnugWindow Class Module
 
-import { createContextMenu } from './utils.js';
+import { createContextMenu } from './utils.js'; // Fix for Issue 2.1: Re-enabled import
 
 export class SnugWindow { // This class is exported
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
@@ -155,9 +155,51 @@ export class SnugWindow { // This class is exported
     }
     
     makeResizable() {
-        // This function is declared but currently empty.
-        // You would add the resize handle elements and their drag logic here.
-        // For example, creating a corner div that changes width/height on drag.
+        const resizer = document.createElement('div');
+        resizer.className = 'window-resizer';
+        this.element.appendChild(resizer);
+
+        let startX, startY, startWidth, startHeight;
+
+        const onMouseMove = (e) => {
+            if (!this._isResizing) return;
+            e.preventDefault(); // Prevent text selection during drag
+
+            const newWidth = startWidth + (e.clientX - startX);
+            const newHeight = startHeight + (e.clientY - startY);
+
+            // Get desktop dimensions to clamp resizing
+            const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
+            const desktopRect = desktopEl.getBoundingClientRect();
+            const topTaskbarHeight = this.appServices.uiElementsCache?.topTaskbar?.offsetHeight || 40;
+            const bottomTaskbarHeight = this.appServices.uiElementsCache?.taskbar?.offsetHeight || 32;
+
+            const maxContentWidth = desktopRect.width - this.element.offsetLeft;
+            const maxContentHeight = desktopRect.height - this.element.offsetTop - topTaskbarHeight - bottomTaskbarHeight;
+
+            // Apply new width/height, respecting min/max dimensions
+            this.element.style.width = `${Math.max(this.options.minWidth, Math.min(newWidth, maxContentWidth))}px`;
+            this.element.style.height = `${Math.max(this.options.minHeight, Math.min(newHeight, maxContentHeight))}px`;
+        };
+
+        const onMouseUp = () => {
+            this._isResizing = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            this.element.classList.remove('resizing'); // Add a class for visual feedback if needed
+        };
+
+        resizer.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); // Prevent drag from starting simultaneously
+            this._isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = this.element.offsetWidth;
+            startHeight = this.element.offsetHeight;
+            this.element.classList.add('resizing'); // Add a class for visual feedback if needed
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     }
 
     focus() {

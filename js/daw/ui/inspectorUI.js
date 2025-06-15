@@ -5,8 +5,7 @@ import { getTrackById } from '../state/trackState.js';
 import { getWindowById } from '../state/windowState.js';
 import { getIsReconstructingDAW } from '../state/projectState.js';
 import { setupGenericDropZoneListeners, createDropZoneHTML } from '../utils.js';
-// Assuming effectsRegistry is now in js/daw/effectsRegistry.js and global as well.
-// If not, we'd need to import it explicitly. For now, assume it's like Tone.
+import * as effectsRegistry from '../effectsRegistry.js'; // Fix for Issue 3 in Step 2: Import as module alias
 
 let localAppServices = {};
 
@@ -27,7 +26,7 @@ function getNestedParam(obj, path) {
 
 function buildSynthEngineControls(track, container, engineType) {
     // effectsRegistry is assumed to be globally available from js/daw/effectsRegistry.js
-    const definitions = effectsRegistry.synthEngineControlDefinitions?.[engineType] || [];
+    const definitions = effectsRegistry.synthEngineControlDefinitions?.[engineType] || []; // Fix for Issue 3 in Step 2: Use effectsRegistry alias
     if (!container || definitions.length === 0) return;
 
     definitions.forEach(def => {
@@ -47,7 +46,7 @@ function buildSynthEngineControls(track, container, engineType) {
                 decimals: def.decimals,
                 displaySuffix: def.displaySuffix || '',
                 onValueChange: (val) => track.setSynthParam(def.path, val)
-            }, localAppServices);
+            }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
             placeholder.appendChild(control.element);
         } else if (def.type === 'select') {
             const selectEl = document.createElement('select');
@@ -105,7 +104,7 @@ export function updateSliceEditorUI(track, container) {
             step: 1,
             initialValue: slice.pitchShift || 0,
             onValueChange: (val) => { slice.pitchShift = val; }
-        }, localAppServices);
+        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
         pitchKnobEl.appendChild(knob.element);
     }
 }
@@ -184,7 +183,7 @@ export function updateDrumPadControlsUI(track, container) {
             step: 0.01,
             initialValue: padData.volume || 0.7,
             onValueChange: (val) => { padData.volume = val; }
-        }, localAppServices);
+        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
         volContainer.appendChild(volKnob.element);
     }
     
@@ -197,7 +196,7 @@ export function updateDrumPadControlsUI(track, container) {
             step: 1,
             initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
-        }, localAppServices);
+        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
         pitchKnob.appendChild(pitchKnob.element);
     }
 
@@ -473,7 +472,7 @@ function buildInstrumentSamplerControls(track, container) {
             onValueChange: (val, oldVal, fromInteraction) => {
                 track.setVolume(val, fromInteraction);
             }
-        }, localAppServices);
+        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
         volumeKnobPlaceholder.appendChild(volumeKnob.element);
     }
 
@@ -489,7 +488,7 @@ function buildInstrumentSamplerControls(track, container) {
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
             }
-        }, localAppServices);
+        }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
         pitchKnob.appendChild(pitchKnob.element);
     }
 
@@ -526,7 +525,7 @@ function buildInstrumentSamplerControls(track, container) {
                         track.instrument[keys[0]].set({ [keys.slice(1).join('.')]: val });
                     }
                 }
-            }, localAppServices);
+            }, localAppServices.captureStateForUndo); // Fix for Issue 5: Pass specific callback
             placeholder.appendChild(knob.element);
         }
     });

@@ -9,7 +9,7 @@ let metronomeEventId = -1; //
 let isMetronomeEnabled = false; //
 
 function createMetronomeSynth() { //
-    return new Tone.MembraneSynth({ //
+    return new localAppServices.Tone.MembraneSynth({ //
         pitchDecay: 0.01, //
         octaves: 6, //
         envelope: { //
@@ -32,8 +32,8 @@ function startMetronome() { //
         metronomeSynth = createMetronomeSynth(); //
     }
     
-    metronomeEventId = Tone.Transport.scheduleRepeat((time) => { //
-        const position = Tone.Transport.position.split(':'); //
+    metronomeEventId = localAppServices.Tone.Transport.scheduleRepeat((time) => { //
+        const position = localAppServices.Tone.Transport.getBarsBeatsSixteenthsAtTime(time).split(':'); // Fix for Issue 2: Use getBarsBeatsSixteenthsAtTime
         const measure = parseInt(position[0], 10); //
         const beat = parseInt(position[1], 10); //
 
@@ -49,7 +49,7 @@ function startMetronome() { //
 
 function stopMetronome() { //
     if (metronomeEventId !== -1) { //
-        Tone.Transport.clear(metronomeEventId); //
+        localAppServices.Tone.Transport.clear(metronomeEventId); //
         metronomeEventId = -1; //
     }
     isMetronomeEnabled = false; //
