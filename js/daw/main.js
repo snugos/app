@@ -242,12 +242,11 @@ function onPlaybackModeChange(newMode, oldMode) {
 }
 
 async function initializeSnugOS() {
-    // Define the appServices object here to ensure all core functionalities are assigned
-    // before any SnugWindow (or other components that rely on appServices) are created.
-    // This is crucial for resolving circular dependencies and ensuring functions are available.
+    // Define the appServices object with initial placeholders.
+    // This object will be progressively populated with module exports.
     appServices = {
-        // Core application services
-        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
+        // Core application services (createWindow will be redefined later with full appServices)
+        createWindow: null, 
         
         // Utilities (from js/daw/utils.js)
         showNotification: showNotification, 
@@ -261,11 +260,10 @@ async function initializeSnugOS() {
         getThemeColors: getThemeColors, 
 
         // Auth related functions (from js/daw/auth.js)
-        // initializeAuth needs to be called to set these, but we can pre-define them
-        initializeAuth: null, // Placeholder, assigned after import
+        initializeAuth: null, 
         handleBackgroundUpload: handleBackgroundUpload,
         handleLogout: handleLogout,
-        updateUserAuthContainer: null, // Placeholder, assigned after auth module initialization
+        updateUserAuthContainer: null, 
 
         // DB functions (from js/daw/db.js)
         dbStoreAudio: storeAudio, 
@@ -276,9 +274,8 @@ async function initializeSnugOS() {
 
         // Tone.js related contexts and registries (from js/daw/effectsRegistry.js, etc.)
         effectsRegistryAccess: { AVAILABLE_EFFECTS, getEffectDefaultParams, synthEngineControlDefinitions, getEffectParamDefinitions }, 
-        context: Tone.context, // Global Tone object
-        Tone: Tone, // The global Tone object itself
-        // Directly assign commonly used Tone.js sub-objects/classes for consistent access
+        context: Tone.context, 
+        Tone: Tone, 
         ToneTime: Tone.Time,
         ToneMidi: Tone.Midi,
         ToneTransport: Tone.Transport,
@@ -299,9 +296,7 @@ async function initializeSnugOS() {
         ToneDbToGain: Tone.dbToGain, 
         ToneGainToDb: Tone.gainToDb, 
 
-        // State Module Accessors (from js/daw/state/)
-        // These are functions that are initialized by their respective state modules
-        // and are then made available through appServices.
+        // State Module Accessors (functions will be assigned from imported modules)
         getTracks: null, getTrackById: null, addTrack: null, removeTrack: null, setTracks: null, setTrackIdCounter: null,
         getOpenWindows: null, getWindowById: null, addWindowToStore: null, removeWindowFromStore: null, getHighestZ: null, setHighestZ: null, incrementHighestZ: null, serializeWindows: null, reconstructWindows: null,
         getMidiAccess: null, setMidiAccess: null, getActiveMIDIInput: null, setActiveMIDIInput: null, getPlaybackMode: null, setPlaybackMode: null, getCurrentUserThemePreference: null, setCurrentUserThemePreference: null, getSelectedTimelineClipInfo: null, setSelectedTimelineClipInfo: null, getMidiRecordModeState: null, setMidiRecordModeState: null,
@@ -309,9 +304,9 @@ async function initializeSnugOS() {
         getIsReconstructingDAW: null, setIsReconstructingDAW: null, getUndoStack: null, getRedoStack: null, getClipboardData: null, setClipboardData: null, captureStateForUndo: null, undoLastAction: null, redoLastAction: null, gatherProjectData: null, reconstructDAW: null, saveProject: null, loadProject: null, handleProjectFileLoad: null, exportToWav: null,
         getLoadedZipFiles: null, setLoadedZipFiles: null, getSoundLibraryFileTrees: null, setSoundLibraryFileTrees: null, getCurrentLibraryName: null, setCurrentLibraryName: null, getCurrentSoundBrowserPath: null, setCurrentSoundBrowserPath: null, getPreviewPlayer: null, setPreviewPlayer: null, addFileToSoundLibrary: null, 
         getSoloedTrackId: null, setSoloedTrackId: null, getArmedTrackId: null, setArmedTrackId: null, isRecording: null, setIsRecording: null, getRecordingTrackId: null, setRecordingTrackId: null, getRecordingStartTime: null, setRecordingStartTime: null, 
-        Track: null, // Placeholder for Track class, assigned after import
+        Track: null, 
 
-        // Audio Module Functions (from js/daw/audio/)
+        // Audio Module Functions (functions will be assigned from imported modules)
         initializeAudioModule: null, initAudioContextAndMasterMeter: null, updateMeters: null, rebuildMasterEffectChain: null,
         addMasterEffectToAudio: null, removeMasterEffectFromAudio: null, updateMasterEffectParamInAudio: null,
         reorderMasterEffectInAudio: null, setActualMasterVolume: null, getMasterBusInputNode: null, forceStopAllAudio: null, 
@@ -320,7 +315,7 @@ async function initializeSnugOS() {
         initializeSampleManager: null, loadSampleFile: null, loadDrumSamplerPadFile: null, loadSoundFromBrowserToTarget: null,
         getAudioBlobFromSoundBrowserItem: null, autoSliceSample: null, fetchSoundLibrary: null,
 
-        // UI Module Functions (initializers passed to initializeUIModule)
+        // UI Module Functions (functions will be assigned from imported modules)
         initializeUIModule: null, 
         openTrackInspectorWindow: null, openMixerWindow: null, updateMixerWindow: null, 
         openTrackEffectsRackWindow: null, openMasterEffectsRackWindow: null, 
@@ -332,9 +327,7 @@ async function initializeSnugOS() {
         renderDrumSamplerPads: null, updateDrumPadControlsUI: null, 
         createKnob: null, 
 
-        // Event Handlers (from js/daw/eventHandlers.js)
-        // These are functions that are EXPORTED from eventHandlers.js and need to be called by main.js
-        // The `initializeEventHandlersModule` function itself is also imported and called.
+        // Event Handlers (functions will be assigned from imported module exports)
         initializeEventHandlersModule: null, 
         initializePrimaryEventListeners: null, 
         attachGlobalControlEvents: null, 
@@ -343,7 +336,7 @@ async function initializeSnugOS() {
         handleOpenEffectsRack: null, handleOpenPianoRoll: null, onPlaybackModeChange: null,
         handleTimelineLaneDrop: null, handleOpenYouTubeImporter: null, 
 
-        // Metronome (from js/daw/audio/metronome.js)
+        // Metronome (functions will be assigned from imported module exports)
         initializeMetronome: null, toggleMetronome: null,
 
         // Other utility references
@@ -356,26 +349,24 @@ async function initializeSnugOS() {
         updateMasterEffectsUI: handleMasterEffectsUIUpdate, 
     };
 
-    // Dynamically import modules and assign their exports to appServices
-    // This pattern ensures all functions are correctly assigned to appServices after their
-    // module has been loaded and potentially initialized.
+    // Dynamically import all modules using Promise.all to ensure they are loaded
     const [
         trackStateModule, windowStateModule, appStateModule, masterStateModule, projectStateModule, soundLibraryStateModule,
         audioModule, playbackModule, recordingModule, sampleManagerModule,
         uiModule, eventHandlersModuleExports, metronomeModule, authModuleExports, 
-        { Track } // Directly import Track class from its module
+        { Track } 
     ] = await Promise.all([
         import('./state/trackState.js'), import('./state/windowState.js'), import('./state/appState.js'), import('./state/masterState.js'), import('./state/projectState.js'), import('./state/soundLibraryState.js'),
         import('./audio/audio.js'), import('./audio/playback.js'), import('./audio/recording.js'), import('./audio/sampleManager.js'),
         import('./ui/ui.js'), import('./eventHandlers.js'), import('./audio/metronome.js'), import('./auth.js'),
-        import('./Track.js') // Track.js needs to be imported here to get the class
+        import('./Track.js') 
     ]);
 
     // Assign exports of Track class directly
     appServices.Track = Track;
 
     // Assign all exported functions from each module to appServices
-    // These `Object.assign` calls ensure that functions like `getTracks`, `getWindowById`, etc.,
+    // This ensures that functions like `getTracks`, `getWindowById`, `getPlaybackMode`, etc.,
     // are available directly on `appServices`.
     Object.assign(appServices, trackStateModule);
     Object.assign(appServices, windowStateModule);
@@ -390,16 +381,20 @@ async function initializeSnugOS() {
     Object.assign(appServices, uiModule); 
     Object.assign(appServices, metronomeModule); 
     
+    // Now define appServices.createWindow, using the now fully populated appServices object.
+    // This is the CRITICAL change to fix the TypeError in SnugWindow.
+    appServices.createWindow = (id, title, content, options) => new SnugWindow(id, title, content, options, appServices);
+    
     // Event Handlers and Auth modules have specific initialization patterns
     // where their `initialize` function sets up internal state and returns
-    // an object of functions to be exposed (if any).
+    // an object of functions to be exposed.
     const eventHandlersReturn = eventHandlersModuleExports.initializeEventHandlersModule(appServices); 
-    Object.assign(appServices, eventHandlersReturn); // Assign functions returned by the initializer
+    Object.assign(appServices, eventHandlersReturn); 
 
     const authModuleReturn = authModuleExports.initializeAuth(appServices); 
-    Object.assign(appServices, authModuleReturn); // Assign functions returned by the initializer (if any)
+    Object.assign(appServices, authModuleReturn); 
 
-    // Now, call the top-level initialization functions. They are now directly on `appServices`.
+    // Call the top-level initialization functions. They are now directly on `appServices`.
     appServices.initializeAppState(appServices);
     appServices.initializeMasterState(appServices);
     appServices.initializeProjectState(appServices);
@@ -415,8 +410,6 @@ async function initializeSnugOS() {
     appServices.initializeMetronome(appServices);
 
     // Call the EXPORTED functions from eventHandlers.js which are now on appServices
-    // These functions were previously called *inside* initializeEventHandlersModule
-    // but are now called directly from main.js as part of the main setup flow.
     appServices.initializePrimaryEventListeners(); 
     appServices.attachGlobalControlEvents(); 
     appServices.setupMIDI(); 
@@ -428,7 +421,6 @@ async function initializeSnugOS() {
     } else {
         appServices.setCurrentUserThemePreference('system'); 
     }
-    // Listen for system theme changes and re-apply "system" preference
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => appServices.setCurrentUserThemePreference('system')); 
 
     // Open default layout or restore saved window state
