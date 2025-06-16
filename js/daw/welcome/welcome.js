@@ -4,18 +4,18 @@
 
 import { SERVER_URL } from '../constants.js';
 import { SnugWindow } from '../SnugWindow.js';
-import { showNotification, showCustomModal } from './welcomeUtils.js';
-import { storeAsset, getAsset } from './welcomeDb.js';
+import { showNotification, showCustomModal } from '../utils.js';
+import { storeAsset, getAsset } from '../db.js'; // Corrected: import from main db.js
 import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js';
 
 // Import necessary state accessors
-import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ } from '../state/windowState.js';
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '../state/windowState.js'; // Added getOpenWindows, serializeWindows, reconstructWindows
 import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '../state/appState.js';
 
 // Explicitly import createContextMenu and showConfirmationDialog from utils.js
 import { createContextMenu, showConfirmationDialog } from '../utils.js';
 
-let appServices = {};
+let appServices = {}; // Define appServices at the top level
 let loggedInUser = null;
 
 /**
@@ -25,11 +25,13 @@ let loggedInUser = null;
  * @param {string} windowTitle Title of the SnugWindow.
  * @param {string} iframeSrc URL of the HTML page to load in the iframe.
  * @param {object} options SnugWindow options.
+ * @returns {SnugWindow} The newly created SnugWindow instance.
  */
 function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {}) {
+    // Check if the window is already open and focus it
     if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
-        return;
+        return appServices.getWindowById(windowId);
     }
 
     const content = document.createElement('iframe');
@@ -39,7 +41,8 @@ function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {})
     content.style.border = 'none';
     content.style.backgroundColor = 'var(--bg-window-content)'; // Inherit theme background
 
-    const windowInstance = new SnugWindow(windowId, windowTitle, content, options, appServices);
+    // Use appServices.createWindow to create the SnugWindow
+    const windowInstance = appServices.createWindow(windowId, windowTitle, content, options);
 
     // Inject appServices into iframe after content loads
     content.onload = () => {
@@ -63,41 +66,97 @@ function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {})
  * Sets up the main welcome page functionality.
  */
 function initializeWelcomePage() {
-    // Populate the appServices object for the index.html context
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
-    appServices.storeAsset = storeAsset;
-    appServices.getAsset = getAsset;
-    
-    // Core SnugWindow/Window State functions
-    appServices.addWindowToStore = addWindowToStore;
-    appServices.removeWindowFromStore = removeWindowFromStore;
-    appServices.incrementHighestZ = incrementHighestZ;
-    appServices.getHighestZ = getHighestZ;
-    appServices.setHighestZ = setHighestZ;
-    appServices.getWindowById = getWindowById;
+    // 1. Initialize appServices placeholders.
+    // Functions that are directly used here, but populated by modules later, start as null.
+    appServices = {
+        // Core SnugWindow/Window State functions (will be assigned after windowStateModule loads)
+        getWindowById: null, addWindowToStore: null, removeWindowFromStore: null, 
+        incrementHighestZ: null, getHighestZ: null, setHighestZ: null, getOpenWindows: null, 
+        serializeWindows: null, reconstructWindows: null,
+        
+        // Theme functions
+        getCurrentUserThemePreference: null, setCurrentUserThemePreference: null,
 
-    // Theme functions
-    appServices.getCurrentUserThemePreference = getCurrentUserThemePreference;
-    appServices.setCurrentUserThemePreference = setCurrentUserThemePreference;
+        // Background handling
+        applyCustomBackground: applyCustomBackground, // Local function in welcome.js
+        handleBackgroundUpload: handleBackgroundUpload, // Imported from auth.js
 
-    // Background handling
-    appServices.applyCustomBackground = applyCustomBackground; // Local function in welcome.js
-    appServices.handleBackgroundUpload = handleBackgroundUpload; // Imported from auth.js
+        // Utility access
+        showNotification: showNotification, // Direct import, can be used immediately
+        showCustomModal: showCustomModal,   // Direct import, can be used immediately
+        createContextMenu: createContextMenu,
+        showConfirmationDialog: showConfirmationDialog,
 
-    // Utility access
-    appServices.createContextMenu = createContextMenu;
-    appServices.showConfirmationDialog = showConfirmationDialog;
+        // Auth related (will be assigned after authModule loads)
+        initializeAuth: null, // This is the initialize function from auth.js
+        handleLogout: handleLogout, // Local handleLogout
+        // Other auth functions (like checkInitialAuthState, updateAuthUI) are managed within auth.js module
+        // We need a way for welcome.js to trigger the auth.js updateAuthUI.
+        // Let's ensure initializeAuth returns updateAuthUI or similar.
+    };
 
-    // Initialize auth module (passing the appServices)
-    initializeAuth(appServices);
+    // 2. Dynamically import necessary modules.
+    // We use Promise.all to ensure all modules are loaded before proceeding.
+    const [
+        windowStateModule, appStateModule, authModuleExports
+    ] = await Promise.all([
+        import('../state/windowState.js'),
+        import('../state/appState.js'),
+        import('../auth.js') // Auth module
+    ]);
 
+    // 3. Populate appServices with exports from modules.
+    // This is crucial: assign module exports to appServices
+    Object.assign(appServices, windowStateModule);
+    Object.assign(appServices, appStateModule);
+
+    // 4. Define `appServices.createWindow` *after* appServices has its core window functions.
+    // This resolves the TypeError in SnugWindow.focus.
+    appServices.createWindow = (id, title, content, options) => new SnugWindow(id, title, content, options, appServices);
+
+
+    // 5. Initialize modules that have an `initializeXModule` function.
+    // These initializers set up internal state and might return specific functions to be exposed.
+    appServices.initializeWindowState(appServices);
+    appServices.initializeAppState(appServices);
+
+    // Initialize AuthModule. This module's initialize function sets up its own event listeners
+    // and might return functions like `updateAuthUI` to be exposed on appServices.
+    const authExports = authModuleExports.initializeAuth(appServices);
+    Object.assign(appServices, authExports); // Assign functions returned by auth.js initializer
+
+
+    // 6. Attach top-level event listeners for the welcome page.
     attachEventListeners();
     updateClockDisplay();
-    applyUserThemePreference();
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appServices.applyUserThemePreference);
+    // Use the function from appState.js to apply user theme preference
+    appServices.setCurrentUserThemePreference(appServices.getCurrentUserThemePreference() || 'system'); // Re-evaluate initial theme
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => appServices.setCurrentUserThemePreference('system'));
+    
     renderDesktopIcons();
     initAudioOnFirstGesture();
+    
+    // Attempt to restore window state from previous session
+    const lastSessionState = localStorage.getItem('snugos_welcome_session_windows');
+    if (lastSessionState) {
+        try {
+            const parsedState = JSON.parse(lastSessionState);
+            if (parsedState && parsedState.length > 0) {
+                // Reconstruct windows based on saved state
+                appServices.reconstructWindows(parsedState);
+            }
+        } catch (e) {
+            console.error("Error restoring welcome page window state:", e);
+        }
+    }
+
+    // Add a beforeunload listener to save welcome page window state
+    window.addEventListener('beforeunload', () => {
+        const currentOpenWindows = appServices.serializeWindows();
+        localStorage.setItem('snugos_welcome_session_windows', JSON.stringify(currentOpenWindows));
+    });
+
+    console.log("Welcome Page Initialized Successfully.");
 }
 
 /**
@@ -120,7 +179,8 @@ function initAudioOnFirstGesture() {
  * Attaches all primary event listeners for the page.
  */
 function attachEventListeners() {
-    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal);
+    // Top taskbar buttons
+    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal); // This calls the local showLoginModal
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     
@@ -131,11 +191,12 @@ function attachEventListeners() {
     
     document.getElementById('menuLogin')?.addEventListener('click', () => {
         toggleStartMenu();
-        // auth.js's showLoginModal will be called by initializeAuth and will handle form submits
+        showLoginModal(); // This calls the local showLoginModal
     });
     document.getElementById('menuLogout')?.addEventListener('click', () => {
         toggleStartMenu();
-        handleLogout();
+        // Calls the handleLogout from auth.js which is now exposed via appServices
+        appServices.handleLogout(); 
     });
     document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
     document.getElementById('customBgInput')?.addEventListener('change', (e) => {
@@ -147,7 +208,7 @@ function attachEventListeners() {
     // Add context menu to desktop
     document.getElementById('desktop')?.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        if (e.target.closest('.window')) return;
+        if (e.target.closest('.window')) return; // Don't show if right-clicking on a window
         const menuItems = [
             { label: 'Change Background', action: () => document.getElementById('customBgInput').click() },
             { separator: true },
@@ -223,26 +284,30 @@ function toggleStartMenu() {
 // MODIFIED: Launch DAW as a standalone page (direct navigation)
 function launchDaw() {
     toggleStartMenu();
-    window.location.href = 'snaw.html';
+    // Correct absolute path for snaw.html
+    window.location.href = '/app/snaw.html';
 }
 
 // MODIFIED: View Profiles opens in a SnugWindow iframe
 function viewProfiles() {
     toggleStartMenu();
     const profileUsername = loggedInUser ? loggedInUser.username : 'snaw';
-    openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
+    // Correct absolute path for profile.html
+    openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `/app/js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
 }
 
 // MODIFIED: Open Library opens in a SnugWindow iframe
 function openLibraryWindow() {
     toggleStartMenu();
-    openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `js/daw/profiles/library.html`, { width: 800, height: 600 });
+    // Correct absolute path for library.html
+    openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `/app/js/daw/profiles/library.html`, { width: 800, height: 600 });
 }
 
 // MODIFIED: Open Tetris is still embedded in a SnugWindow iframe
 function openGameWindow() {
     toggleStartMenu();
-    openEmbeddedAppInWindow('tetrisGame', 'Snugtris', 'tetris.html', { width: 600, height: 750, minWidth: 400, minHeight: 600 });
+    // Correct absolute path for tetris.html
+    openEmbeddedAppInWindow('tetrisGame', 'Snugtris', `/app/tetris.html`, { width: 600, height: 750, minWidth: 400, minHeight: 600 });
 }
 
 function updateClockDisplay() {
@@ -252,184 +317,6 @@ function updateClockDisplay() {
         clockDisplay.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     setTimeout(updateClockDisplay, 60000);
-}
-
-function applyCustomBackground(source) {
-    const desktopEl = document.getElementById('desktop');
-    if (!desktopEl) return;
-    desktopEl.style.backgroundImage = '';
-    const existingVideo = desktopEl.querySelector('video#desktop-video-bg');
-    if (existingVideo) existingVideo.remove();
-    let url, fileType;
-    if (typeof source === 'string') {
-        url = source;
-        const extension = source.split('.').pop().toLowerCase().split('?')[0];
-        fileType = ['mp4', 'webm', 'mov'].includes(extension) ? `video/${extension}` : 'image/jpeg';
-    } else if (source instanceof Blob || source instanceof File) {
-        url = URL.createObjectURL(source);
-        fileType = source.type;
-    } else { return; }
-    if (fileType.startsWith('image/')) {
-        desktopEl.style.backgroundImage = `url(${url})`;
-        desktopEl.style.backgroundSize = 'cover';
-        desktopEl.style.backgroundPosition = 'center';
-    } else if (fileType.startsWith('video/')) {
-        const videoEl = document.createElement('video');
-        videoEl.id = 'desktop-video-bg';
-        videoEl.style.position = 'absolute';
-        videoEl.style.top = '0';
-        videoEl.style.left = '0';
-        videoEl.style.width = '100%';
-        videoEl.style.height = '100%';
-        videoEl.style.objectFit = 'cover';
-        videoEl.src = url;
-        videoEl.autoplay = true;
-        videoEl.loop = true;
-        videoEl.muted = true;
-        videoEl.playsInline = true;
-        desktopEl.appendChild(videoEl);
-    }
-}
-
-function showLoginModal() {
-    document.getElementById('startMenu')?.classList.add('hidden');
-    const modalContent = `
-        <div class="space-y-4">
-            <div>
-                <h3 class="font-bold mb-2">Login</h3>
-                <form id="loginForm" class="space-y-3">
-                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
-                </form>
-            </div>
-            <hr class="border-gray-500">
-            <div>
-                <h3 class="font-bold mb-2">Register</h3>
-                <form id="registerForm" class="space-y-3">
-                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
-                </form>
-            </div>
-            <div id="login-register-status" class="text-center text-sm mt-2"></div>
-        </div>
-    `;
-    const { overlay } = appServices.showCustomModal('Login or Register', modalContent, []);
-
-    // Add button styling and form submission
-    const loginForm = overlay.querySelector('#loginForm');
-    const registerForm = overlay.querySelector('#registerForm');
-    const statusDiv = overlay.querySelector('#login-register-status');
-
-    // Style inputs and buttons
-    overlay.querySelectorAll('input[type="text"], input[type="password"]').forEach(input => {
-        input.style.backgroundColor = 'var(--bg-input)';
-        input.style.color = 'var(--text-primary)';
-        input.style.border = '1px solid var(--border-input)';
-        input.style.padding = '8px';
-        input.style.borderRadius = '3px';
-    });
-
-    overlay.querySelectorAll('button').forEach(button => {
-        button.style.backgroundColor = 'var(--bg-button)';
-        button.style.border = '1px solid var(--border-button)';
-        button.style.color = 'var(--text-button)';
-        button.style.padding = '8px 15px';
-        button.style.cursor = 'pointer';
-        button.style.borderRadius = '3px';
-        button.style.transition = 'background-color 0.15s ease';
-        button.addEventListener('mouseover', () => {
-            button.style.backgroundColor = 'var(--bg-button-hover)';
-            button.style.color = 'var(--text-button-hover)';
-        });
-        button.addEventListener('mouseout', () => {
-            button.style.backgroundColor = 'var(--bg-button)';
-            button.style.color = 'var(--text-button)';
-        });
-    });
-
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = loginForm.querySelector('#loginUsername').value;
-        const password = loginForm.querySelector('#loginPassword').value;
-        statusDiv.textContent = 'Logging in...';
-        try {
-            const response = await fetch(`${SERVER_URL}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                localStorage.setItem('snugos_token', data.token);
-                // The initializeAuth function will handle updating UI and background
-                initializeAuth(appServices); 
-                statusDiv.textContent = `Welcome back, ${data.user.username}!`;
-                setTimeout(() => overlay.remove(), 1000);
-            } else {
-                statusDiv.textContent = `Login failed: ${data.message}`;
-            }
-        } catch (error) {
-            statusDiv.textContent = 'Network error. Could not connect to server.';
-            console.error("Login Error:", error);
-        }
-    });
-
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = registerForm.querySelector('#registerUsername').value;
-        const password = registerForm.querySelector('#registerPassword').value;
-        statusDiv.textContent = 'Registering...';
-        try {
-            const response = await fetch(`${SERVER_URL}/api/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                statusDiv.textContent = 'Registration successful! Please log in.';
-                // No auto-login after register, user should log in explicitly
-            } else {
-                statusDiv.textContent = `Registration failed: ${data.message}`;
-            }
-        } catch (error) {
-            statusDiv.textContent = 'Network error. Could not connect to server.';
-            console.error("Register Error:", error);
-        }
-    });
-}
-
-
-function toggleTheme() {
-    const body = document.body;
-    const isLightTheme = body.classList.contains('theme-light');
-    if (isLightTheme) {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        localStorage.setItem('snugos-theme', 'dark');
-    } else {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        localStorage.setItem('snugos-theme', 'light');
-    }
-}
-
-function applyUserThemePreference() {
-    const preference = localStorage.getItem('snugos-theme');
-    const body = document.body;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
-    if (themeToApply === 'light') {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-    } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-    }
 }
 
 function toggleFullScreen() {
@@ -444,4 +331,19 @@ function toggleFullScreen() {
     }
 }
 
+// The following functions are called by desktop events but are defined in auth.js.
+// We call auth.js's showLoginModal via appServices
+function showLoginModal() {
+    document.getElementById('startMenu')?.classList.add('hidden');
+    appServices.showLoginModal(); // Call the auth module's showLoginModal
+}
+
+function toggleTheme() {
+    // This calls the setCurrentUserThemePreference from appState.js which is exposed via appServices
+    const isLightTheme = document.body.classList.contains('theme-light');
+    const newTheme = isLightTheme ? 'dark' : 'light';
+    appServices.setCurrentUserThemePreference(newTheme);
+}
+
+// Ensure initializeWelcomePage runs when the DOM is fully loaded.
 document.addEventListener('DOMContentLoaded', initializeWelcomePage);

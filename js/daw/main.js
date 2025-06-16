@@ -98,7 +98,7 @@ function applyCustomBackground(source) {
         const videoEl = document.createElement('video');
         videoEl.id = 'desktop-video-bg';
         videoEl.style.position = 'absolute';
-        videoEl.style.top = '0';
+        videoEl.top = '0';
         videoEl.style.left = '0';
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
@@ -245,7 +245,8 @@ async function initializeSnugOS() {
     // Define the appServices object with initial placeholders.
     // This object will be progressively populated with module exports.
     appServices = {
-        // Core application services (createWindow will be redefined later with full appServices)
+        // These are initial placeholders. `createWindow` will be redefined later
+        // after `appServices` is fully populated with window state functions.
         createWindow: null, 
         
         // Utilities (from js/daw/utils.js)
@@ -381,20 +382,20 @@ async function initializeSnugOS() {
     Object.assign(appServices, uiModule); 
     Object.assign(appServices, metronomeModule); 
     
-    // Now define appServices.createWindow, using the now fully populated appServices object.
+    // Define appServices.createWindow *after* appServices has its core window functions.
     // This is the CRITICAL change to fix the TypeError in SnugWindow.
     appServices.createWindow = (id, title, content, options) => new SnugWindow(id, title, content, options, appServices);
     
     // Event Handlers and Auth modules have specific initialization patterns
     // where their `initialize` function sets up internal state and returns
-    // an object of functions to be exposed.
+    // an object of functions to be exposed (if any).
     const eventHandlersReturn = eventHandlersModuleExports.initializeEventHandlersModule(appServices); 
     Object.assign(appServices, eventHandlersReturn); 
 
     const authModuleReturn = authModuleExports.initializeAuth(appServices); 
     Object.assign(appServices, authModuleReturn); 
 
-    // Call the top-level initialization functions. They are now directly on `appServices`.
+    // Now call the top-level initialization functions for state managers.
     appServices.initializeAppState(appServices);
     appServices.initializeMasterState(appServices);
     appServices.initializeProjectState(appServices);
@@ -402,6 +403,7 @@ async function initializeSnugOS() {
     appServices.initializeTrackState(appServices);
     appServices.initializeWindowState(appServices);
     
+    // Call the exported module initializers/setup functions.
     appServices.initializeAudioModule(appServices);
     appServices.initializePlayback(appServices);
     appServices.initializeRecording(appServices);
@@ -409,7 +411,7 @@ async function initializeSnugOS() {
     appServices.initializeUIModule(appServices);
     appServices.initializeMetronome(appServices);
 
-    // Call the EXPORTED functions from eventHandlers.js which are now on appServices
+    // Call the EXPORTED top-level event handler setup functions from eventHandlers.js which are now on appServices
     appServices.initializePrimaryEventListeners(); 
     appServices.attachGlobalControlEvents(); 
     appServices.setupMIDI(); 
