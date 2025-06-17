@@ -1,6 +1,6 @@
 // js/daw/EffectChain.js
 
-import { createEffectInstance } from './effectsRegistry.js';
+import { createEffectInstance } from '/app/js/daw/effectsRegistry.js'; // Corrected path
 
 export class EffectChain {
     constructor(track, appServices) {

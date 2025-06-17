@@ -1,8 +1,8 @@
 // js/daw/audio/sampleManager.js
 
 // Corrected imports for DB and Constants
-import { storeAudio, getAudio } from '../db.js';
-import * as Constants from '../constants.js';
+import { storeAudio, getAudio } from '/app/js/daw/db.js'; // Corrected path
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
 
 let localAppServices = {};
 

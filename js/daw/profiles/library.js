@@ -2,16 +2,16 @@
 // NOTE: This file is designed to run within an iframe, hosted by index.html.
 // It receives `appServices` from its parent window.
 
-import { SERVER_URL } from '../constants.js';
+import { SERVER_URL } from '/app/js/daw/constants.js'; // Corrected path
 // SnugWindow is not imported here, as this script runs inside an existing SnugWindow iframe.
 // It is the parent window's responsibility to create and manage SnugWindows.
 // openFileViewerWindow is specific to library, so it's imported and called directly.
-import { openFileViewerWindow, initializeFileViewerUI } from '../ui/fileViewerUI.js';
+import { openFileViewerWindow, initializeFileViewerUI } from '/app/js/daw/ui/fileViewerUI.js'; // Corrected path
 
 // We explicitly import common utilities and DB functions.
-import { storeAudio, getAudio } from '../db.js';
-import * as Constants from '../constants.js';
-import { showNotification, showCustomModal, createContextMenu } from '../utils.js';
+import { storeAudio, getAudio } from '/app/js/daw/db.js'; // Corrected path
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
+import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js'; // Corrected path
 
 let loggedInUser = null;
 let currentPath = ['/'];
@@ -295,7 +295,7 @@ function renderFileItem(item, isParentFolder = false) {
  * Handles clicks (and double clicks) on file and folder items.
  * Navigates into folders or opens the file viewer for files.
  * @param {Object} item The clicked file or folder object.
- * @param {boolean} isParentFolder True if this item is the ".." parent folder.
+ * @param {boolean} isParentFolder True if this item represents the ".." parent folder.
  */
 function handleItemClick(item, isParentFolder) {
     const libWindow = appServices.getWindowById('libraryApp'); // Assuming appServices.getWindowById is available.
@@ -469,13 +469,13 @@ function checkLocalAuth() {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
         const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token'); // Remove expired token
+        if (payload.exp * 1000 < Date.now()) { // Check if token is expired.
+            localStorage.removeItem('snugos_token'); // Remove expired token.
             return null;
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
-        localStorage.removeItem('snugos_token'); // Clear token on error
+        localStorage.removeItem('snugos_token'); // Clear token on error during parsing.
         return null;
     }
 }
@@ -486,11 +486,11 @@ function checkLocalAuth() {
  */
 function handleLogout() {
     localStorage.removeItem('snugos_token');
-    loggedInUser = null;
+    loggedInUser = null; // Clear local user state.
     appServices.showNotification('You have been logged out.', 2000);
     // Call the parent window's logout function if available.
     if (window.parent && window.parent.appServices && typeof window.parent.appServices.handleLogout === 'function') {
-        window.parent.appServices.handleLogout();
+        window.parent.appServices.handleLogout(); 
     } else {
         window.location.reload(); // Fallback: reload the iframe if no parent handler.
     }

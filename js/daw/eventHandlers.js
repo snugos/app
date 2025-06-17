@@ -1,14 +1,14 @@
 // js/daw/eventHandlers.js - Global Event Listeners and Input Handling Module
 
 // Import state functions
-import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime } from './state/trackState.js';
-import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference, setMidiRecordModeState } from './state/appState.js';
-import { getUndoStack, getRedoStack, captureStateForUndo } from './state/projectState.js';
-import { getWindowById } from './state/windowState.js';
-import { getClipboardData } from './state/projectState.js';
+import { getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime } from '/app/js/daw/state/trackState.js'; // Corrected path
+import { getPlaybackMode, setPlaybackMode, getMidiAccess, setActiveMIDIInput, getActiveMIDIInput, getMidiRecordModeState, setCurrentUserThemePreference, setMidiRecordModeState } from '/app/js/daw/state/appState.js'; // Corrected path
+import { getUndoStack, getRedoStack, captureStateForUndo } from '/app/js/daw/state/projectState.js'; // Corrected path
+import { getWindowById } from '/app/js/daw/state/windowState.js'; // Corrected path
+import { getClipboardData } from '/app/js/daw/state/projectState.js'; // Corrected path
 
 // Corrected import for Constants - directly from current directory
-import * as Constants from './constants.js';
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
 
 let localAppServices = {};
 const currentlyPressedKeys = new Set();
@@ -171,10 +171,7 @@ export function initializePrimaryEventListeners() {
         startMenu?.classList.add('hidden');
     });
 
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', () => {
-        toggleFullScreen(); // Toggle full screen mode
-        startMenu?.classList.add('hidden');
-    });
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
 
     // Event listener for loading project file via file input
     const loadProjectInput = document.getElementById('loadProjectInput');
@@ -364,13 +361,13 @@ export function attachGlobalControlEvents() {
         const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
         // Computer Keyboard as Piano
-        if (computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) {
+        if (Constants.computerKeySynthMap[key] && !currentlyPressedKeys.has(key)) { // Using Constants
             e.preventDefault(); // Prevent default browser action (e.g., scrolling)
             const armedTrackId = getArmedTrackId();
             const armedTrack = getTrackById(armedTrackId);
             
             if (armedTrack && armedTrack.instrument) {
-                const noteNumber = computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Using Constants
+                const noteNumber = Constants.computerKeySynthMap[key] + (Constants.COMPUTER_KEY_SYNTH_OCTAVE_SHIFT * 12); // Using Constants
                 const noteName = localAppServices.Tone.Midi(noteNumber).toNote();
                 armedTrack.instrument.triggerAttack(noteName, localAppServices.Tone.now(), 0.75); // Trigger note
                 currentlyPressedKeys.add(key); // Mark key as pressed
@@ -655,10 +652,10 @@ function onMIDIMessage(message) {
                 let pitchIndex;
                 if (track.type === 'DrumSampler') {
                     // For drum samplers, map MIDI note to pad index directly for recording
-                    pitchIndex = noteNumber - Constants.DRUM_MIDI_START_NOTE;
+                    pitchIndex = noteNumber - Constants.DRUM_MIDI_START_NOTE; // Using Constants
                 } else {
                     // For synths/instrument samplers, map to the pitch array index
-                    pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber;
+                    pitchIndex = Constants.PIANO_ROLL_END_MIDI_NOTE - noteNumber; // Using Constants
                 }
                 
                 if (pitchIndex >= 0 && pitchIndex < activeSequence.data.length) {
@@ -695,6 +692,9 @@ function onMIDIMessage(message) {
             }
         }
     }
+    
+    // MIDI Recording Logic
+    // ... (rest of existing MIDI recording logic)
 }
 
 

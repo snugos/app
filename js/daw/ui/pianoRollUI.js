@@ -1,12 +1,12 @@
 // js/daw/ui/pianoRollUI.js - Piano Roll UI Management with Konva.js
 
 // Corrected imports for state modules
-import { getTrackById } from '../state/trackState.js'; //
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; //
-import { getClipboardData } from '../state/projectState.js'; //
-import { getPlaybackMode } from '../state/appState.js'; //
+import { getTrackById } from '/app/js/daw/state/trackState.js'; // Corrected path
+import { getOpenWindows, getWindowById } from '/app/js/daw/state/windowState.js'; // Corrected path
+import { getClipboardData } from '/app/js/daw/state/projectState.js'; // Corrected path
+import { getPlaybackMode } from '/app/js/daw/state/appState.js'; // Corrected path
 // Corrected import for Constants
-import * as Constants from '../constants.js'; //
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
 
 
 let localAppServices = {}; //
@@ -353,14 +353,14 @@ function redrawNotes(noteLayer, track, colors, selectedNotes) { //
                     yPositionOnGrid = pitchIndex * noteHeight;
 
                     // If it's a DrumSampler, we need to ensure the pitchIndex is within the expected range for pads
-                    if (track.type === 'DrumSampler') {
+                    if (track.type === 'DrumSampler') { //
                          const midiNote = Constants.PIANO_ROLL_END_MIDI_NOTE - pitchIndex; // Get MIDI note from pitchIndex
                          const padIndex = midiNote - Constants.DRUM_MIDI_START_NOTE; // Calculate pad index from MIDI note
                          if (padIndex < 0 || padIndex >= Constants.NUM_DRUM_SAMPLER_PADS) {
                              isVisible = false; // Note is outside the displayed pad range
                          }
                          yPositionOnGrid = padIndex * noteHeight; // Y position is based on the pad index
-                    } else if (track.type === 'Sampler') {
+                    } else if (track.type === 'Sampler') { 
                         // For Sampler, pitchIndex maps to the slice index
                         // We need to map the SYNTH_PITCHES index (pitchIndex) to the slice number
                         // SYNTH_PITCHES[pitchIndex] gives the note name, like 'C2', 'C#2'
@@ -617,13 +617,6 @@ function attachPianoRollListeners(pianoRoll) { //
                 }
             });
             menuItems.push({ separator: true });
-        }
-        
-        if (selectedNotes.size > 0) { // Options for copying selected notes
-            menuItems.push({
-                label: `Copy ${selectedNotes.size} Note(s)`,
-                action: () => track.sequences.copyNotesToClipboard(activeSequence.id, selectedNotes)
-            });
         }
         
         const clipboard = localAppServices.getClipboardData(); // Get clipboard data

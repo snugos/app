@@ -1,7 +1,7 @@
 // js/daw/audio/recording.js
 
 // Corrected import path for Track and added getRecordingStartTime as import
-import { getRecordingStartTime } from '../state/trackState.js';
+import { getRecordingStartTime } from '/app/js/daw/state/trackState.js'; // Corrected path
 
 let localAppServices = {};
 

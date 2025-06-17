@@ -2,18 +2,18 @@
 // NOTE: This file is designed to run within the main index.html context.
 // It sets up the desktop icons and application launching.
 
-import { SERVER_URL } from '../constants.js';
-import { SnugWindow } from '../SnugWindow.js';
-import { showNotification, showCustomModal } from '../utils.js';
-import { storeAsset, getAsset } from '../db.js';
-import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js';
+import { SERVER_URL } from '/app/js/daw/constants.js'; // Corrected path
+import { SnugWindow } from '/app/js/daw/SnugWindow.js'; // Corrected path
+import { showNotification, showCustomModal } from '/app/js/daw/utils.js'; // Corrected path
+import { storeAsset, getAsset } from '/app/js/daw/db.js'; // Corrected path
+import { initializeAuth, handleBackgroundUpload, handleLogout } from '/app/js/daw/auth.js'; // Corrected path
 
 // Import necessary state accessors
-import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '../state/windowState.js';
-import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '../state/appState.js';
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js'; // Corrected path
+import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js'; // Corrected path
 
 // Explicitly import createContextMenu and showConfirmationDialog from utils.js
-import { createContextMenu, showConfirmationDialog } from '../utils.js';
+import { createContextMenu, showConfirmationDialog } from '/app/js/daw/utils.js'; // Corrected path
 
 let appServices = {}; // Define appServices at the top level
 let loggedInUser = null;
@@ -148,9 +148,9 @@ async function initializeWelcomePage() { // Marked as async to allow await
     const [
         windowStateModule, appStateModule, authModuleExports
     ] = await Promise.all([
-        import('../state/windowState.js'), 
-        import('../state/appState.js'), 
-        import('../auth.js') 
+        import('/app/js/daw/state/windowState.js'), // Corrected path
+        import('/app/js/daw/state/appState.js'), // Corrected path
+        import('/app/js/daw/auth.js') // Corrected path
     ]);
 
     // 3. Populate appServices with exports from modules.
@@ -341,14 +341,14 @@ function viewProfiles() {
     toggleStartMenu();
     const profileUsername = loggedInUser ? loggedInUser.username : 'snaw';
     // Correct absolute path for profile.html
-    openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `/app/js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 });
+    openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `/app/profile.html?user=${profileUsername}`, { width: 600, height: 700 }); // Corrected path
 }
 
 // MODIFIED: Open Library opens in a SnugWindow iframe
 function openLibraryWindow() {
     toggleStartMenu();
     // Correct absolute path for library.html
-    openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `/app/js/daw/profiles/library.html`, { width: 800, height: 600 });
+    openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `/app/library.html`, { width: 800, height: 600 }); // Corrected path
 }
 
 // MODIFIED: Open Tetris is still embedded in a SnugWindow iframe

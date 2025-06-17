@@ -1,5 +1,7 @@
 // js/daw/ui/fileViewerUI.js
 
+import { base64ToBlob, showNotification, showCustomModal } from '/app/js/daw/utils.js'; // Corrected path
+
 let localAppServices = {};
 
 /**

@@ -1,6 +1,6 @@
 // js/daw/SnugWindow.js - SnugWindow Class Module
 
-import { createContextMenu } from './utils.js'; //
+import { createContextMenu } from '/app/js/daw/utils.js'; // Corrected path
 
 export class SnugWindow { //
     constructor(id, title, contentHTMLOrElement, options = {}, appServices = {}) {
@@ -165,7 +165,11 @@ export class SnugWindow { //
 
             this._isDragging = true;
             offsetX = e.clientX - this.element.offsetLeft;
+            offsetY = e.clientY - e.clientY; // This line needs correction
+            // It should be offsetY = e.clientY - this.element.offsetTop;
+            // Corrected:
             offsetY = e.clientY - this.element.offsetTop;
+
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         });

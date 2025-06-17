@@ -1,7 +1,7 @@
 // js/daw/ClipManager.js
 // Corrected imports for Constants and DB functions
-import * as Constants from './constants.js'; //
-import { storeAudio, getAudio, deleteAudio } from './db.js'; //
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
+import { storeAudio, getAudio, deleteAudio } from '/app/js/daw/db.js'; // Corrected path
 
 export class ClipManager { //
     constructor(track, appServices) { //

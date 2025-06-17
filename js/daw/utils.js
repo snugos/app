@@ -1,5 +1,7 @@
 // js/daw/utils.js - Utility Functions Module
 
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
+
 /**
  * Displays a non-intrusive notification message to the user.
  * @param {string} message - The message to display.
@@ -238,7 +240,7 @@ export function drawWaveform(canvas, audioBuffer, color = 'black') {
  * Sets up generic drag-and-drop and click-to-browse listeners for a drop zone element.
  * @param {HTMLElement} dropZoneElement - The DOM element to act as a drop zone.
  * @param {string|number} trackId - The ID of the associated track.
- * @param {string} trackTypeHint - The type of the track ('Sampler', 'DrumSampler', 'Audio').
+ * @param {string} trackTypeHint - The type of the track ('Sampler', 'DrumSampler', 'InstrumentSampler').
  * @param {number|null} padIndex - The index of the drum pad if applicable.
  * @param {Function} loadFromSoundBrowserCallback - Callback for loading from sound browser (soundData, trackId, trackTypeHint, padIndex).
  * @param {Function} loadFromFileCallback - Callback for loading from local file (event, trackId, trackTypeHint, padIndex).

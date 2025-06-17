@@ -349,7 +349,6 @@ async function initializeSnugOS() {
             topTaskbar: document.getElementById('topTaskbar'),
             taskbar: document.getElementById('taskbar'),
         },
-        applyCustomBackground: applyCustomBackground,
         updateMasterEffectsUI: handleMasterEffectsUIUpdate, 
     };
 

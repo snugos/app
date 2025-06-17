@@ -1,11 +1,11 @@
 // js/daw/Track.js - Track Class Module (Refactored)
 
 // Corrected imports for ClipManager and SequenceManager (now exported classes)
-import { ClipManager } from './ClipManager.js';
-import { SequenceManager } from './SequenceManager.js';
-import { EffectChain } from './EffectChain.js';
+import { ClipManager } from '/app/js/daw/ClipManager.js'; // Corrected path
+import { SequenceManager } from '/app/js/daw/SequenceManager.js'; // Corrected path
+import { EffectChain } from '/app/js/daw/EffectChain.js'; // Corrected path
 // Corrected import for Constants. This file now explicitly imports it.
-import * as Constants from './constants.js';
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
 
 export class Track { //
     constructor(id, type, initialData = null, appServices = {}) {

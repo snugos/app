@@ -1,8 +1,8 @@
 // js/daw/auth.js
 
-import { SERVER_URL } from './constants.js';
-import { showNotification, showCustomModal } from './utils.js'; // Consolidated utils import
-import { storeAsset, getAsset } from './db.js'; // Consolidated db import
+import { SERVER_URL } from '/app/js/daw/constants.js'; // Corrected path
+import { showNotification, showCustomModal } from '/app/js/daw/utils.js'; // Corrected path
+import { storeAsset, getAsset } from '/app/js/daw/db.js'; // Corrected path
 
 let localAppServicesInstance = null; 
 let loggedInUser = null;

@@ -1,6 +1,6 @@
 // js/daw/SequenceManager.js
 
-import * as Constants from './constants.js'; //
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
 
 export class SequenceManager { //
     constructor(track, appServices) { //

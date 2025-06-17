@@ -1,7 +1,7 @@
 // js/daw/state/masterState.js
 
 // Corrected import path for effectsRegistry
-import { getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '../effectsRegistry.js'; //
+import { getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '/app/js/daw/effectsRegistry.js'; // Corrected path
 
 let masterEffectsChain = []; // Stores an array of effect objects (type, params, id) for the master bus
 let masterGainValue = 1.0; // Stores the current master gain value (linear, not dB)

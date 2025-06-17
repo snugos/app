@@ -254,8 +254,12 @@ export const AVAILABLE_EFFECTS = {
 };
 
 export function createEffectInstance(effectType, initialParams = {}) {
-    if (typeof Tone === 'undefined') {
-        console.error(`[EffectsRegistry createEffectInstance] Tone.js is not loaded. Cannot create effect "${effectType}".`);
+    // Ensure Tone is accessed from the global scope or passed context
+    // This is crucial for environments where modules might not have direct global 'Tone' access
+    const ToneContext = window.Tone || {}; // Fallback in case window.Tone is not defined
+
+    if (typeof ToneContext === 'undefined' || Object.keys(ToneContext).length === 0) { // Check if ToneContext is empty
+        console.error(`[EffectsRegistry createEffectInstance] Tone.js is not loaded or accessible. Cannot create effect "${effectType}".`);
         return null;
     }
 
@@ -264,7 +268,7 @@ export function createEffectInstance(effectType, initialParams = {}) {
         console.error(`[EffectsRegistry createEffectInstance] Effect type definition for "${effectType}" not found.`);
         return null;
     }
-    if (!Tone[definition.toneClass]) {
+    if (!ToneContext[definition.toneClass]) {
         console.error(`[EffectsRegistry createEffectInstance] Tone class "Tone.${definition.toneClass}" not found for effect type "${effectType}".`);
         return null;
     }
@@ -308,13 +312,13 @@ export function createEffectInstance(effectType, initialParams = {}) {
 
     try {
         console.log(`[EffectsRegistry createEffectInstance] Attempting to instantiate Tone.${definition.toneClass} with params:`, JSON.parse(JSON.stringify(paramsForInstance)));
-        const instance = new Tone[definition.toneClass](paramsForInstance);
+        const instance = new ToneContext[definition.toneClass](paramsForInstance);
         return instance;
     } catch (e) {
         console.warn(`[EffectsRegistry createEffectInstance] Error during primary instantiation of Tone.${definition.toneClass} with structured params (Error: ${e.message}). Attempting fallback... Params:`, JSON.parse(JSON.stringify(paramsForInstance)));
         try {
             // Fallback: Try instantiating without initial params, then set them
-            const instance = new Tone[definition.toneClass]();
+            const instance = new ToneContext[definition.toneClass]();
             if (typeof instance.set === 'function') {
                 console.log(`[EffectsRegistry createEffectInstance Fallback] Using instance.set() for Tone.${definition.toneClass}`);
                 instance.set(paramsForInstance);

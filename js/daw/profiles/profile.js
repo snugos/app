@@ -6,11 +6,13 @@
 // We import common utilities which are expected to be available via `appServices` after initialization.
 // The parent `index.html` (or `welcome.js`) handles global utility imports and passes appServices.
 // We explicitly import storeAsset/getAsset as they are directly used for DB operations.
-import { storeAsset, getAsset } from '../db.js'; 
+import { storeAsset, getAsset } from '/app/js/daw/db.js'; // Corrected path
+import { SERVER_URL } from '/app/js/daw/constants.js'; // Corrected path
+// Assuming utils.js functions are accessed via appServices, no direct import needed here for utils methods.
+// The original file did not have a direct import from utils.js, but it's good to reconfirm.
 
 let appServices = {}; // This will be assigned the actual appServices object from the parent.
 let loggedInUser = null;
-const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let currentProfileData = null;
 let isEditing = false;
 

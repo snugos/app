@@ -1,17 +1,17 @@
 // js/daw/ui/ui.js - Main UI Orchestrator
 
 // Import initializers from all UI sub-modules
-import { initializeInspectorUI, openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from './inspectorUI.js';
-import { initializeMixerUI, openMixerWindow, updateMixerWindow } from './mixerUI.js';
-import { initializeEffectsRackUI, openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from './effectsRackUI.js';
-import { initializeSoundBrowserUI, openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView } from './soundBrowserUI.js';
-import { initializePianoRollUI, openPianoRollWindow, updatePianoRollPlayhead } from './pianoRollUI.js';
-import { initializeYouTubeImporterUI, openYouTubeImporterWindow } from './youtubeImporterUI.js';
-import { initializeFileViewerUI, openFileViewerWindow } from './fileViewerUI.js';
+import { initializeInspectorUI, openTrackInspectorWindow, renderSamplePads, updateSliceEditorUI, renderDrumSamplerPads, updateDrumPadControlsUI } from '/app/js/daw/ui/inspectorUI.js'; // Corrected path
+import { initializeMixerUI, openMixerWindow, updateMixerWindow } from '/app/js/daw/ui/mixerUI.js'; // Corrected path
+import { initializeEffectsRackUI, openTrackEffectsRackWindow, openMasterEffectsRackWindow, renderEffectsList, renderEffectControls } from '/app/js/daw/ui/effectsRackUI.js'; // Corrected path
+import { initializeSoundBrowserUI, openSoundBrowserWindow, renderSoundBrowser, renderDirectoryView } from '/app/js/daw/ui/soundBrowserUI.js'; // Corrected path
+import { initializePianoRollUI, openPianoRollWindow, updatePianoRollPlayhead } from '/app/js/daw/ui/pianoRollUI.js'; // Corrected path
+import { initializeYouTubeImporterUI, openYouTubeImporterWindow } from '/app/js/daw/ui/youtubeImporterUI.js'; // Corrected path
+import { initializeFileViewerUI, openFileViewerWindow } from '/app/js/daw/ui/fileViewerUI.js'; // Corrected path
 
-import { createKnob } from './knobUI.js';
+import { createKnob } from '/app/js/daw/ui/knobUI.js'; // Corrected path
 // Corrected: Import getThemeColors from utils.js, not profileUtils.js
-import { getThemeColors } from '../utils.js';
+import { getThemeColors } from '/app/js/daw/utils.js'; // Corrected path
 
 
 /**

@@ -1,7 +1,7 @@
 // js/daw/audio/metronome.js
 
 // Corrected import for Constants
-import * as Constants from '../constants.js'; //
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
 
 let localAppServices = {}; //
 let metronomeSynth = null; //

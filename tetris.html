@@ -30,6 +30,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* Ensure body fills the iframe */
+            width: 100%; 
+            height: 100%;
         }
 
         .game-wrapper {
@@ -37,18 +40,25 @@
             gap: 1.5rem;
             align-items: flex-start;
             justify-content: center;
+            /* Ensure wrapper adapts to available space */
+            max-width: 100%;
+            max-height: 100%;
+            box-sizing: border-box; /* Include padding/border in element's total width/height */
         }
 
         #game-board {
             border: 1px solid var(--border-color);
             display: block;
+            box-sizing: border-box; /* Crucial for canvas within a flex container */
         }
 
         .sidebar {
-            width: 160px;
+            /* Remove fixed width to allow responsive scaling based on BLOCK_SIZE */
+            /* width: 160px; */ 
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            box-sizing: border-box;
         }
 
         .panel {
@@ -56,6 +66,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1rem;
+            box-sizing: border-box;
         }
 
         .panel-title {
@@ -86,6 +97,7 @@
 
         .preview-canvas {
             background-color: transparent;
+            display: block; /* Ensure canvas behaves as a block element */
         }
 
         button {
@@ -99,6 +111,7 @@
             font-weight: 700;
             width: 100%;
             transition: background-color 0.15s ease, color 0.15s ease;
+            box-sizing: border-box; /* Crucial for buttons with width: 100% in a flex item */
         }
         
         button + button {
@@ -129,6 +142,7 @@
             width: 50px;
             text-align: right;
             border-radius: 4px;
+            box-sizing: border-box; /* Prevent padding from increasing width beyond 50px */
         }
 
         .modal-overlay {
@@ -145,6 +159,7 @@
             border-radius: 8px;
             text-align: center;
             max-width: 400px;
+            box-sizing: border-box;
         }
         
         .modal-dialog h2 {
@@ -178,7 +193,7 @@
             .sidebar {
                 flex-direction: row;
                 width: 100%;
-                max-width: 400px;
+                max-width: 400px; /* Constrain sidebar row for very wide screens */
                 justify-content: center;
             }
         }
@@ -325,20 +340,52 @@
             const panels = document.querySelectorAll('.panel');
             const uiElements = document.querySelectorAll('.panel div, .panel label, .panel-title, button, input[type="number"]');
 
-            const padding = 16;
+            // Calculate available space in the *iframe window*
+            const padding = 16; /* 1rem converted to pixels for calculation */
             const availableHeight = window.innerHeight - (padding * 2);
-            const totalColsEstimate = 25; 
             const availableWidth = window.innerWidth - (padding * 2);
 
-            const blockSizeByHeight = availableHeight / ROWS;
-            const blockSizeByWidth = availableWidth / totalColsEstimate;
+            // Estimate total "column" units needed for layout (game board + 2 sidebars + gaps)
+            // Game board is COLS (10) units wide. Each sidebar typically holds 4 blocks wide (for previews),
+            // plus internal padding/margins. Let's estimate sidebars take roughly 5-6 BLOCK_SIZE units each.
+            // Total columns estimate: 10 (board) + 2 * 6 (sidebars) + 2 * 1.5 (wrapper gap) = 25
+            // Let's adjust this to be more conservative for small screens.
+            // Try 10 (board) + 2 * 4 (preview canvases) + some fixed UI width + gaps.
+            // If sidebars adapt their width, we can think of total 'block sizes'.
+            // Let's assume minimum sidebar content width.
+            const minSidebarContentBlocks = 4; // Width of preview canvases
+            const minSidebarFixedPadding = 2 * (16 / BLOCK_SIZE); // 2 * 1rem padding, scaled to BLOCK_SIZE units
+            const minSidebarGapBlocks = 1.5; // From game-wrapper gap, shared among elements
+            const totalColsEstimate = COLS + (minSidebarContentBlocks * 2) + (2 * minSidebarGapBlocks); /* COLS (10) + 2 sidebars of 4 blocks minimum content + 2 gaps*/
 
+            const blockSizeByHeight = availableHeight / ROWS;
+            // blockSizeByWidth needs to account for total columns, including sidebars
+            // Let's be more dynamic with sidebar width here.
+            // A more robust approach might be to calculate content-area sizes
+            // and then determine BLOCK_SIZE from there.
+
+            // Re-evaluate available width considering game-wrapper gaps (3rem total gap)
+            const totalHorizontalGap = parseFloat(getComputedStyle(gameWrapper).gap) * 2; // two gaps in game-wrapper
+            const effectiveAvailableWidth = availableWidth - totalHorizontalGap;
+
+            // Tentative: Assume sidebars need a certain minimum width (e.g., 6 * BLOCK_SIZE for their full panel width)
+            // Let's try to make the sidebars scale with BLOCK_SIZE.
+            // The sidebars contain 4-block wide canvases. Let's say sidebars are 5 blocks wide minimum for layout.
+            const estimatedSidebarBlockWidth = 5; // e.g., for 4-block canvas + padding
+            const dynamicTotalBlockColumns = COLS + (2 * estimatedSidebarBlockWidth);
+
+            const blockSizeByWidth = effectiveAvailableWidth / dynamicTotalBlockColumns;
+
+
+            // Select the smaller BLOCK_SIZE to ensure everything fits
             BLOCK_SIZE = Math.floor(Math.min(blockSizeByHeight, blockSizeByWidth));
-            if (BLOCK_SIZE < 4) BLOCK_SIZE = 4;
+            if (BLOCK_SIZE < 8) BLOCK_SIZE = 8; // Set a sensible minimum BLOCK_SIZE, e.g., 8 or 10
+            if (BLOCK_SIZE > 30) BLOCK_SIZE = 30; // Set a sensible maximum BLOCK_SIZE to prevent overly large game
 
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
             
+            // Preview canvases are 4 blocks wide, 3 blocks high
             holdCanvas.width = 4 * BLOCK_SIZE;
             holdCanvas.height = 3 * BLOCK_SIZE;
             nextCanvases.forEach(canvas => {
@@ -346,34 +393,50 @@
                 canvas.height = 3 * BLOCK_SIZE;
             });
             
-            const baseFontSize = Math.max(8, BLOCK_SIZE * 0.7);
-            const panelWidth = BLOCK_SIZE * 6;
-            const gapSize = BLOCK_SIZE;
-            
-            gameWrapper.style.gap = `${gapSize}px`;
+            // Adjust UI element sizes relative to BLOCK_SIZE
+            const baseFontSize = Math.max(8, BLOCK_SIZE * 0.7); // Min font size 8px
+            // The sidebars should now adapt their width based on the content and padding, scaled by BLOCK_SIZE
+            // Instead of fixed `panelWidth`, let's ensure the panel padding and gaps scale
+            const panelPadding = BLOCK_SIZE * 0.8; // Roughly 0.8 * BLOCK_SIZE for 1rem padding (16px)
+            const panelGap = BLOCK_SIZE * 0.5; // Roughly 0.5 * BLOCK_SIZE for 0.5rem gap (8px)
+
+            // Dynamic width for sidebars based on their content + padding
             sidebars.forEach(sidebar => {
-                sidebar.style.width = `${panelWidth}px`;
-                sidebar.style.gap = `${gapSize}px`;
+                // The panels within sidebars will control their width based on content and padding
+                // For simplicity, let's just ensure the panels scale their internal elements correctly
+                // and the sidebar's flex-direction handles the rest.
+                // We don't need to explicitly set sidebar width if its children handle it.
+                // If it becomes too narrow, consider adding a min-width to sidebar if necessary,
+                // but let's rely on flexible width for now.
             });
-            
+
+            // Adjust panel padding and border-radius
             panels.forEach(panel => {
-                panel.style.padding = `${baseFontSize * 1.2}px`;
+                panel.style.padding = `${panelPadding}px`;
                 panel.style.borderRadius = `${baseFontSize / 2}px`;
-                panel.style.gap = `${baseFontSize * 0.7}px`;
+                panel.style.gap = `${panelGap}px`;
             });
             
             uiElements.forEach(el => {
                  el.style.fontSize = `${baseFontSize}px`;
                  if(el.tagName === 'BUTTON') {
                      el.style.padding = `${baseFontSize * 0.8}px`;
+                     el.style.borderRadius = `${baseFontSize * 0.3}px`; /* Scale button border-radius */
                  }
                  if(el.tagName === 'INPUT') {
                       el.style.padding = `${baseFontSize * 0.3}px`;
                       el.style.width = `${baseFontSize * 3}px`;
+                      el.style.borderRadius = `${baseFontSize * 0.2}px`; /* Scale input border-radius */
+                 }
+                 if(el.classList.contains('panel-title')) { /* Specific for panel titles */
+                     el.style.fontSize = `${baseFontSize * 1.1}px`; /* Slightly larger */
                  }
             });
 
-            draw();
+            // Adjust game-wrapper gap based on BLOCK_SIZE
+            gameWrapper.style.gap = `${BLOCK_SIZE * 1.5}px`; /* 1.5rem default gap */
+
+            draw(); // Redraw game elements with new BLOCK_SIZE
         }
         
         // --- Game Logic ---
@@ -705,7 +768,7 @@
         // --- Initial Setup ---
         window.addEventListener('resize', resizeGame);
         resetGame();
-        resizeGame();
+        resizeGame(); /* Initial call to resize and draw */
         draw();
     });
     </script>

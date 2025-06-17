@@ -1,10 +1,10 @@
 // js/daw/ui/mixerUI.js
 
 // Corrected imports for state modules
-import { getTracks, getSoloedTrackId } from '../state/trackState.js';
-import { getMasterGainValue, setMasterGainValue } from '../state/masterState.js';
-import { getOpenWindows, getWindowById } from '../state/windowState.js';
-import { getThemeColors } from '../utils.js'; // Import getThemeColors
+import { getTracks, getSoloedTrackId } from '/app/js/daw/state/trackState.js'; // Corrected path
+import { getMasterGainValue, setMasterGainValue } from '/app/js/daw/state/masterState.js'; // Corrected path
+import { getOpenWindows, getWindowById } from '/app/js/daw/state/windowState.js'; // Corrected path
+import { getThemeColors } from '/app/js/daw/utils.js'; // Corrected path
 
 let localAppServices = {};
 

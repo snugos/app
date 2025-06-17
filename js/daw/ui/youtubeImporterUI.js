@@ -1,8 +1,8 @@
 // js/daw/ui/youtubeImporterUI.js - UI and logic for importing audio from YouTube
 // Corrected imports for utils and state
 
-import { SERVER_URL } from '../constants.js';
-import { base64ToBlob, showNotification, showCustomModal } from '../utils.js'; // Consolidated utils import
+import { SERVER_URL } from '/app/js/daw/constants.js'; // Corrected path
+import { base64ToBlob, showNotification, showCustomModal } from '/app/js/daw/utils.js'; // Corrected path
 
 let localAppServices = {}; //
 

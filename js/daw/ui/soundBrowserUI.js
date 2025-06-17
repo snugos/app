@@ -1,12 +1,12 @@
 // js/daw/ui/soundBrowserUI.js - Sound Browser UI Management
 
 // Corrected imports for state modules
-import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '../state/soundLibraryState.js';
-import { getWindowById } from '../state/windowState.js';
-import { getArmedTrackId } from '../state/trackState.js';
+import { getLoadedZipFiles, setLoadedZipFiles, getSoundLibraryFileTrees, setSoundLibraryFileTrees, getCurrentLibraryName, setCurrentLibraryName, getCurrentSoundBrowserPath, setCurrentSoundBrowserPath, getPreviewPlayer, setPreviewPlayer, addFileToSoundLibrary } from '/app/js/daw/state/soundLibraryState.js'; // Corrected path
+import { getWindowById } from '/app/js/daw/state/windowState.js'; // Corrected path
+import { getArmedTrackId } from '/app/js/daw/state/trackState.js'; // Corrected path
 // Corrected import for Constants and DB
-import * as Constants from '../constants.js';
-import { storeAudio, getAudio } from '../db.js'; //
+import * as Constants from '/app/js/daw/constants.js'; // Corrected path
+import { storeAudio, getAudio } from '/app/js/daw/db.js'; // Corrected path
 
 let localAppServices = {}; //
 let selectedSoundForPreviewData = null; //
