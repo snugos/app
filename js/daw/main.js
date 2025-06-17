@@ -61,8 +61,8 @@ import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getS
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
 import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ, serializeWindows, reconstructWindows } from './state/windowState.js';
 
-// Import the Track class directly here. This will be the single authoritative definition.
-import { Track } from './Track.js';
+// NOTE: Track class is NOT imported directly here anymore.
+// It will be imported by Track.js, and main.js will pass it to trackState.js.
 
 let appServices = {};
 
@@ -308,7 +308,7 @@ async function initializeSnugOS() {
         getIsReconstructingDAW: null, setIsReconstructingDAW: null, getUndoStack: null, getRedoStack: null, getClipboardData: null, setClipboardData: null, captureStateForUndo: null, undoLastAction: null, redoLastAction: null, gatherProjectData: null, reconstructDAW: null, saveProject: null, loadProject: null, handleProjectFileLoad: null, exportToWav: null,
         getLoadedZipFiles: null, setLoadedZipFiles: null, getSoundLibraryFileTrees: null, setSoundLibraryFileTrees: null, getCurrentLibraryName: null, setCurrentLibraryName: null, getCurrentSoundBrowserPath: null, setCurrentSoundBrowserPath: null, getPreviewPlayer: null, setPreviewPlayer: null, addFileToSoundLibrary: null, 
         getSoloedTrackId: null, setSoloedTrackId: null, getArmedTrackId: null, setArmedTrackId: null, isRecording: null, setIsRecording: null, getRecordingTrackId: null, setRecordingTrackId: null, getRecordingStartTime: null, setRecordingStartTime: null, 
-        // Track class will be assigned explicitly from THIS main.js context, and passed to trackState.js
+        Track: null, // This will be the *passed* Track class to trackState.js
 
         // Audio Module Functions (functions will be assigned from imported modules)
         initializeAudioModule: null, initAudioContextAndMasterMeter: null, updateMeters: null, rebuildMasterEffectChain: null,
@@ -354,7 +354,6 @@ async function initializeSnugOS() {
     };
 
     // Dynamically import all modules.
-    // NOTE: Track.js is imported separately below to ensure it's loaded before `Track` class is used.
     const [
         trackStateModule, windowStateModule, appStateModule, masterStateModule, projectStateModule, soundLibraryStateModule,
         audioModule, playbackModule, recordingModule, sampleManagerModule,
@@ -366,12 +365,10 @@ async function initializeSnugOS() {
     ]);
 
     // Import the Track class AFTER all other modules are imported.
-    // This is to establish a single, authoritative 'Track' class reference.
+    // This ensures a single, authoritative 'Track' class reference.
     const { Track } = await import('./Track.js'); 
 
     // Assign all exported functions from each module to appServices
-    // This ensures that functions like `getTracks`, `getWindowById`, `getPlaybackMode`, etc.,
-    // are available directly on `appServices`.
     Object.assign(appServices, trackStateModule);
     Object.assign(appServices, windowStateModule);
     Object.assign(appServices, appStateModule);
@@ -404,11 +401,12 @@ async function initializeSnugOS() {
     Object.assign(appServices, authModuleReturn); 
 
     // Now call the top-level initialization functions for state managers.
+    // Pass the Track class directly to initializeTrackState
     appServices.initializeAppState(appServices);
     appServices.initializeMasterState(appServices);
     appServices.initializeProjectState(appServices);
     appServices.initializeSoundLibraryState(appServices);
-    appServices.initializeTrackState(appServices);
+    appServices.initializeTrackState(appServices); // This now needs the Track class
     appServices.initializeWindowState(appServices);
     
     // Call the exported module initializers/setup functions.

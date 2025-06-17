@@ -1,8 +1,7 @@
 // js/daw/state/trackState.js
 
-// Corrected import path for Track.js
-// Make sure Track is imported directly here for instantiation.
-import { Track } from '../Track.js';
+// Track class will be provided by main.js via initializeTrackState
+let TrackClassReference = null; // Store the Track class passed by main.js
 
 let tracks = []; // Array to hold all track objects
 let trackIdCounter = 0; // Counter for generating unique track IDs
@@ -17,9 +16,11 @@ let localAppServices = {}; // Reference to the main appServices object
 /**
  * Initializes the track state module.
  * @param {object} appServices - The main app services object.
+ * @param {class} Track - The Track class constructor from the main app context.
  */
-export function initializeTrackState(appServices) {
+export function initializeTrackState(appServices, Track) {
     localAppServices = appServices;
+    TrackClassReference = Track; // Store the authoritative Track class
 }
 
 /**
@@ -101,15 +102,19 @@ export function setRecordingStartTime(time) { recordingStartTimeGlobal = time; }
  * @returns {Promise<Track>} A promise that resolves with the newly created track.
  */
 export async function addTrack(type) {
+    if (!TrackClassReference) {
+        console.error("Track class not initialized in trackState.js. Cannot add track.");
+        return null;
+    }
     const newTrackId = trackIdCounter++; // Increment counter for unique ID
-    // Instantiate Track using the imported Track class directly.
-    const track = new Track(newTrackId, type, null, localAppServices);
+    // Instantiate Track using the locally stored TrackClassReference.
+    const track = new TrackClassReference(newTrackId, type, null, localAppServices);
     tracks.push(track); // Add to global tracks array
     await track.initializeInstrument(); // Initialize the Tone.js instrument for the track
     
     localAppServices.updateMixerWindow?.(); // Refresh mixer UI
     localAppServices.captureStateForUndo?.(`Add ${type} Track`); // Capture state for undo
-    return track; //
+    return track;
 }
 
 /**
