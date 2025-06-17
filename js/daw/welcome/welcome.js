@@ -5,11 +5,11 @@
 import { SERVER_URL } from '../constants.js';
 import { SnugWindow } from '../SnugWindow.js';
 import { showNotification, showCustomModal } from '../utils.js';
-import { storeAsset, getAsset } from '../db.js'; // Corrected: import from main db.js
+import { storeAsset, getAsset } from '../db.js';
 import { initializeAuth, handleBackgroundUpload, handleLogout } from '../auth.js';
 
 // Import necessary state accessors
-import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '../state/windowState.js'; // Added getOpenWindows, serializeWindows, reconstructWindows
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '../state/windowState.js';
 import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '../state/appState.js';
 
 // Explicitly import createContextMenu and showConfirmationDialog from utils.js
@@ -65,7 +65,7 @@ function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {})
 /**
  * Sets up the main welcome page functionality.
  */
-function initializeWelcomePage() {
+async function initializeWelcomePage() { // Marked as async to allow await
     // 1. Initialize appServices placeholders.
     // Functions that are directly used here, but populated by modules later, start as null.
     appServices = {
@@ -90,7 +90,6 @@ function initializeWelcomePage() {
         // Auth related (will be assigned after authModule loads)
         initializeAuth: null, // This is the initialize function from auth.js
         handleLogout: handleLogout, // Local handleLogout
-        // Other auth functions (like checkInitialAuthState, updateAuthUI) are managed within auth.js module
         // We need a way for welcome.js to trigger the auth.js updateAuthUI.
         // Let's ensure initializeAuth returns updateAuthUI or similar.
     };
@@ -123,7 +122,7 @@ function initializeWelcomePage() {
     // Initialize AuthModule. This module's initialize function sets up its own event listeners
     // and might return functions like `updateAuthUI` to be exposed on appServices.
     const authExports = authModuleExports.initializeAuth(appServices);
-    Object.assign(appServices, authExports); // Assign functions returned by auth.js initializer
+    Object.assign(appServices, authExports); // Assign functions returned by the initializer
 
 
     // 6. Attach top-level event listeners for the welcome page.
@@ -180,18 +179,18 @@ function initAudioOnFirstGesture() {
  */
 function attachEventListeners() {
     // Top taskbar buttons
-    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal); // This calls the local showLoginModal
+    document.getElementById('loginBtnTop')?.addEventListener('click', showLoginModal); 
     document.getElementById('themeToggleBtn')?.addEventListener('click', toggleTheme);
     document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
     
     // Start Menu and Desktop Icon actions
-    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw); // Direct navigation (DAW)
-    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles); // SnugWindow
-    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow); // SnugWindow
+    document.getElementById('menuLaunchDaw')?.addEventListener('click', launchDaw); 
+    document.getElementById('menuViewProfiles')?.addEventListener('click', viewProfiles); 
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', openLibraryWindow); 
     
     document.getElementById('menuLogin')?.addEventListener('click', () => {
         toggleStartMenu();
-        showLoginModal(); // This calls the local showLoginModal
+        showLoginModal(); 
     });
     document.getElementById('menuLogout')?.addEventListener('click', () => {
         toggleStartMenu();
@@ -208,13 +207,13 @@ function attachEventListeners() {
     // Add context menu to desktop
     document.getElementById('desktop')?.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        if (e.target.closest('.window')) return; // Don't show if right-clicking on a window
+        if (e.target.closest('.window')) return; 
         const menuItems = [
             { label: 'Change Background', action: () => document.getElementById('customBgInput').click() },
             { separator: true },
-            { label: 'Open DAW', action: launchDaw }, // Direct navigation (DAW)
-            { label: 'Open Library', action: openLibraryWindow }, // SnugWindow
-            { label: 'View Profiles', action: viewProfiles }, // SnugWindow
+            { label: 'Open DAW', action: launchDaw }, 
+            { label: 'Open Library', action: openLibraryWindow }, 
+            { label: 'View Profiles', action: viewProfiles }, 
             { label: 'Play Snugtris', action: openGameWindow }
         ];
         appServices.createContextMenu(e, menuItems);
@@ -234,25 +233,25 @@ function renderDesktopIcons() {
         {
             id: 'snaw-icon',
             name: 'Snaw',
-            action: launchDaw, // Direct navigation (DAW)
+            action: launchDaw, 
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`
         },
         {
             id: 'profiles-icon',
             name: 'Profiles',
-            action: viewProfiles, // SnugWindow
+            action: viewProfiles, 
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
         },
         {
             id: 'sound-library-icon',
             name: 'Library',
-            action: openLibraryWindow, // SnugWindow
+            action: openLibraryWindow, 
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 10H9c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h8c.55 0 1 .45 1 1v6c0 .55-.45 1-1 1z"/></svg>`
         },
         {
             id: 'game-icon',
             name: 'Game',
-            action: openGameWindow, // SnugWindow
+            action: openGameWindow, 
             svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12"><path d="M21.57,9.36,18,7.05V4a1,1,0,0,0-1-1H7A1,1,0,0,0,6,4V7.05L2.43,9.36a1,1,0,0,0-.43,1V17a1,1,0,0,0,1,1H6v3a1,1,0,0,0,1,1h1V19H16v3h1a1,1,0,0,0,1-1V18h3a1,1,0,0,0,1-1V10.36A1,1,0,0,0,21.57,9.36ZM8,5H16V7H8ZM14,14H12V16H10V14H8V12h2V10h2v2h2Z"/></svg>`
         }
     ];
@@ -344,6 +343,17 @@ function toggleTheme() {
     const newTheme = isLightTheme ? 'dark' : 'light';
     appServices.setCurrentUserThemePreference(newTheme);
 }
+
+// The following functions handle background upload/logout specific to welcome.js (index.html) context.
+// These are separate from similar functions in main.js (DAW context) for clarity.
+
+// The `handleBackgroundUpload` is already defined locally in welcome.js.
+// It uses `appServices.handleBackgroundUpload` which comes from `auth.js`.
+// This structure is fine as `auth.js` provides the core logic and `welcome.js` defines the UI interaction.
+
+// The `handleLogout` is defined locally in welcome.js.
+// It uses `appServices.handleLogout` which comes from `auth.js`.
+// This is also fine, as `auth.js` provides the core logout mechanism.
 
 // Ensure initializeWelcomePage runs when the DOM is fully loaded.
 document.addEventListener('DOMContentLoaded', initializeWelcomePage);
