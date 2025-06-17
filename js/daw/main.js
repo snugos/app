@@ -61,8 +61,8 @@ import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getS
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
 import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ, serializeWindows, reconstructWindows } from './state/windowState.js';
 
-// NOTE: Track class is NOT imported directly here anymore.
-// It will be imported by Track.js, and main.js will pass it to trackState.js.
+// Import the Track class directly here. This will be the single authoritative definition.
+import { Track } from './Track.js';
 
 let appServices = {};
 
@@ -406,7 +406,7 @@ async function initializeSnugOS() {
     appServices.initializeMasterState(appServices);
     appServices.initializeProjectState(appServices);
     appServices.initializeSoundLibraryState(appServices);
-    appServices.initializeTrackState(appServices); // This now needs the Track class
+    appServices.initializeTrackState(appServices, Track); // PASSING TRACK CLASS HERE
     appServices.initializeWindowState(appServices);
     
     // Call the exported module initializers/setup functions.
