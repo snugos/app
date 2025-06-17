@@ -4,7 +4,6 @@ export function showNotification(message, duration = 3000) {
     const notificationArea = document.getElementById('notification-area');
     if (!notificationArea) {
         console.error("CRITICAL: Notification area ('notification-area') not found in DOM. Message:", message);
-        // Fallback to alert if notification area is missing (e.g., during initial setup)
         alert(`Notification: ${message}`);
         return;
     }
