@@ -1,8 +1,8 @@
 // js/daw/state/projectState.js
 
 // Corrected imports for Constants and Utils
-import * as Constants from '../constants.js'; //
-import { showNotification } from '../utils.js'; //
+import * as Constants from '../constants.js';
+import { showNotification } from '../utils.js';
 import { serializeWindows, reconstructWindows as recreateWindowsFromState } from './windowState.js'; // Import window state functions
 
 let undoStack = []; // History of states for undo operation
@@ -19,67 +19,67 @@ let localAppServices = {}; // Reference to the main appServices object
  * Initializes the project state module.
  * @param {object} appServices - The main app services object.
  */
-export function initializeProjectState(appServices) { //
-    localAppServices = appServices; //
+export function initializeProjectState(appServices) {
+    localAppServices = appServices;
 }
 
 /**
  * Gets the current reconstruction status.
  * @returns {boolean} True if the DAW is currently being reconstructed, false otherwise.
  */
-export function getIsReconstructingDAW() { //
-    return isReconstructingDAW; //
+export function getIsReconstructingDAW() {
+    return isReconstructingDAW;
 }
 
 /**
  * Sets the reconstruction status.
  * @param {boolean} isReconstructing - True to indicate reconstruction is active, false otherwise.
  */
-export function setIsReconstructingDAW(isReconstructing) { //
-    isReconstructingDAW = isReconstructing; //
+export function setIsReconstructingDAW(isReconstructing) {
+    isReconstructingDAW = isReconstructing;
 }
 
 /**
  * Gets the undo stack.
  * @returns {Array<object>} The array of saved states for undo.
  */
-export function getUndoStack() { //
-    return undoStack; //
+export function getUndoStack() {
+    return undoStack;
 }
 
 /**
  * Gets the redo stack.
  * @returns {Array<object>} The array of saved states for redo.
  */
-export function getRedoStack() { //
-    return redoStack; //
+export function getRedoStack() {
+    return redoStack;
 }
 
 /**
  * Gets the current clipboard data.
  * @returns {object} The clipboard data.
  */
-export function getClipboardData() { //
-    return clipboardData; //
+export function getClipboardData() {
+    return clipboardData;
 }
 
 /**
  * Sets the clipboard data.
  * @param {object} data - The data to set in the clipboard.
  */
-export function setClipboardData(data) { //
-    clipboardData = data; //
+export function setClipboardData(data) {
+    clipboardData = data;
 }
 
 /**
  * Captures the current state of the project for undo history.
  * @param {string} actionDescription - A description of the action being undone.
  */
-export function captureStateForUndo(actionDescription) { //
+export function captureStateForUndo(actionDescription) {
     if (getIsReconstructingDAW()) return; // Do not capture state during reconstruction
     const state = gatherProjectData(); // Get current project data
     undoStack.push({ state, actionDescription }); // Add state and description to undo stack
-    if (undoStack.length > MAX_UNDO_HISTORY) { // Limit undo history size
+    if (undoStack.length > MAX_UNDO_HISTORY) {
         undoStack.shift(); // Remove oldest state if history exceeds limit
     }
     redoStack = []; // Clear redo stack on a new action
@@ -90,7 +90,7 @@ export function captureStateForUndo(actionDescription) { //
 /**
  * Undoes the last action by reverting to the previous saved state.
  */
-export function undoLastAction() { //
+export function undoLastAction() {
     if (undoStack.length > 0) { // Check if there are states to undo
         const lastState = undoStack.pop(); // Get the last state from undo stack
         const currentState = gatherProjectData(); // Capture current state for redo
@@ -104,7 +104,7 @@ export function undoLastAction() { //
 /**
  * Redoes the last undone action by reapplying a saved state.
  */
-export function redoLastAction() { //
+export function redoLastAction() {
     if (redoStack.length > 0) { // Check if there are states to redo
         const nextState = redoStack.pop(); // Get the next state from redo stack
         const currentState = gatherProjectData(); // Capture current state for undo
@@ -120,7 +120,7 @@ export function redoLastAction() { //
  * This includes tracks, master effects, master volume, and tempo.
  * @returns {object} A comprehensive project data object.
  */
-export function gatherProjectData() { //
+export function gatherProjectData() {
     const tracks = localAppServices.getTracks?.() || []; // Get all tracks
     return { //
         tracks: tracks.map(t => t.serialize()), // Serialize each track
@@ -137,11 +137,11 @@ export function gatherProjectData() { //
  * This is used for loading projects and undo/redo operations.
  * @param {object} projectData - The project data to reconstruct from.
  */
-export async function reconstructDAW(projectData) { //
+export async function reconstructDAW(projectData) {
     setIsReconstructingDAW(true); // Set flag to prevent new undo captures
     
     // Clear existing state (dispose all current tracks and reset global track state)
-    const currentTracks = localAppServices.getTracks?.() || []; //
+    const currentTracks = localAppServices.getTracks?.() || [];
     for (const track of currentTracks) {
         track.dispose(); // Dispose Tone.js resources for each track
     }
@@ -150,16 +150,19 @@ export async function reconstructDAW(projectData) { //
     
     // Reconstruct tracks
     if (projectData.tracks) { // Check if tracks data exists
+        const reconstructedTracks = [];
         // Use a traditional for loop to await promises correctly
-        for (const trackData of projectData.tracks) { // Iterate over serialized track data
+        for (const trackData of projectData.tracks) {
             // For reconstruction, we create a new Track instance and deserialize its data.
             // This ensures Tone.js nodes are re-created correctly.
+            // The Track constructor does not need `trackData` here, as deserialize is called explicitly.
             const newTrack = new localAppServices.Track(trackData.id, trackData.type, null, localAppServices); // Create new Track instance
             await newTrack.deserialize(trackData); // Deserialize its properties, including instrument and effects
-            localAppServices.getTracks().push(newTrack); // Add to the main tracks array
+            reconstructedTracks.push(newTrack); // Add to a temporary array
             // Update trackIdCounter to be higher than any existing track ID
             localAppServices.setTrackIdCounter?.(Math.max(localAppServices.getTrackIdCounter(), trackData.id + 1));
         }
+        localAppServices.setTracks?.(reconstructedTracks); // Set the global tracks array with the reconstructed instances
     }
     
     // Reconstruct master state
@@ -179,17 +182,16 @@ export async function reconstructDAW(projectData) { //
     }
 
     // Update UI elements for mixer and potentially piano roll/timeline
-    localAppServices.updateMixerWindow?.(); // Refresh mixer UI
-    // `localAppServices.updateTrackUI` will be called by `openTrackInspectorWindow` etc.
+    localAppServices.updateMixerWindow?.();
 
     setIsReconstructingDAW(false); // Clear reconstruction flag
-    showNotification('Project loaded successfully!', 2000); 
+    showNotification('Project loaded successfully!', 2000);
 }
 
 /**
  * Saves the current project data to a JSON file.
  */
-export function saveProject() { //
+export function saveProject() {
     const projectData = gatherProjectData(); // Gather all project data
     const jsonString = JSON.stringify(projectData, null, 2); // Convert to pretty-printed JSON string
     const blob = new Blob([jsonString], { type: 'application/json' }); // Create a Blob
@@ -201,14 +203,14 @@ export function saveProject() { //
     a.click(); // Programmatically click the link to trigger download
     document.body.removeChild(a); // Remove link from body
     URL.revokeObjectURL(url); // Revoke the Blob URL to free up memory
-    showNotification('Project saved!', 2000); 
+    showNotification('Project saved!', 2000);
 }
 
 /**
  * Loads project data from a provided file.
  * @param {File} file - The project file (typically .snug JSON).
  */
-export function loadProject(file) { //
+export function loadProject(file) {
     const reader = new FileReader(); // Create a FileReader
     reader.onload = async (e) => { // Set onload event handler
         try {
@@ -220,7 +222,7 @@ export function loadProject(file) { //
         }
     };
     reader.onerror = (e) => { // Handle read errors
-        showNotification("Error reading file.", 3000); 
+        showNotification("Error reading file.", 3000);
         console.error("File read error:", e);
     };
     reader.readAsText(file); // Read the file as text
@@ -230,8 +232,8 @@ export function loadProject(file) { //
  * Handles the event when a project file is selected via an input element.
  * @param {Event} event - The change event from the file input.
  */
-export async function handleProjectFileLoad(event) { //
-    const file = event.target.files[0]; // Get the selected file
+export async function handleProjectFileLoad(event) {
+    const file = event.target.files[0];
     if (file) { // If a file is selected
         await loadProject(file); // Load the project
     }
@@ -241,7 +243,7 @@ export async function handleProjectFileLoad(event) { //
  * Exports the entire project master output to a WAV file.
  * This renders the audio for a fixed duration.
  */
-export async function exportToWav() { //
+export async function exportToWav() {
     try {
         await localAppServices.initAudioContextAndMasterMeter(true); // Ensure audio context is running
         const recorder = new localAppServices.Tone.Recorder(); // Create a Tone.js Recorder
@@ -262,9 +264,9 @@ export async function exportToWav() { //
             const url = URL.createObjectURL(recording); // Create a URL for the blob
             const anchor = document.createElement("a"); // Create a download link
             anchor.download = "snugos-export.wav"; // Set download filename
-            anchor.href = url; // Set href to blob URL
+            anchor.href = url; // Set href to Blob URL
             document.body.appendChild(anchor); // Append to body
-            anchor.click(); // Trigger download
+            anchor.click(); // Programmatically click the link to trigger download
 
             URL.revokeObjectURL(url); // Clean up the blob URL
             recorder.dispose(); // Dispose the recorder
