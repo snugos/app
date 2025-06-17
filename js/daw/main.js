@@ -61,6 +61,9 @@ import { initializeSoundLibraryState, getLoadedZipFiles, setLoadedZipFiles, getS
 import { initializeTrackState, getTracks, getTrackById, getSoloedTrackId, setSoloedTrackId, getArmedTrackId, setArmedTrackId, isRecording, setIsRecording, getRecordingTrackId, setRecordingTrackId, getRecordingStartTime, setRecordingStartTime, addTrack, removeTrack, setTracks, setTrackIdCounter } from './state/trackState.js';
 import { initializeWindowState, getOpenWindows, getWindowById, addWindowToStore, removeWindowFromStore, getHighestZ, setHighestZ, incrementHighestZ, serializeWindows, reconstructWindows } from './state/windowState.js';
 
+// Import the Track class directly here. This will be the single authoritative definition.
+import { Track } from './Track.js';
+
 let appServices = {};
 
 // Centralized applyCustomBackground function 
@@ -98,7 +101,7 @@ function applyCustomBackground(source) {
         const videoEl = document.createElement('video');
         videoEl.id = 'desktop-video-bg';
         videoEl.style.position = 'absolute';
-        videoEl.top = '0';
+        videoEl.style.top = '0';
         videoEl.style.left = '0';
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
@@ -305,7 +308,7 @@ async function initializeSnugOS() {
         getIsReconstructingDAW: null, setIsReconstructingDAW: null, getUndoStack: null, getRedoStack: null, getClipboardData: null, setClipboardData: null, captureStateForUndo: null, undoLastAction: null, redoLastAction: null, gatherProjectData: null, reconstructDAW: null, saveProject: null, loadProject: null, handleProjectFileLoad: null, exportToWav: null,
         getLoadedZipFiles: null, setLoadedZipFiles: null, getSoundLibraryFileTrees: null, setSoundLibraryFileTrees: null, getCurrentLibraryName: null, setCurrentLibraryName: null, getCurrentSoundBrowserPath: null, setCurrentSoundBrowserPath: null, getPreviewPlayer: null, setPreviewPlayer: null, addFileToSoundLibrary: null, 
         getSoloedTrackId: null, setSoloedTrackId: null, getArmedTrackId: null, setArmedTrackId: null, isRecording: null, setIsRecording: null, getRecordingTrackId: null, setRecordingTrackId: null, getRecordingStartTime: null, setRecordingStartTime: null, 
-        Track: null, 
+        // Track class will be assigned explicitly
 
         // Audio Module Functions (functions will be assigned from imported modules)
         initializeAudioModule: null, initAudioContextAndMasterMeter: null, updateMeters: null, rebuildMasterEffectChain: null,
@@ -350,21 +353,21 @@ async function initializeSnugOS() {
         updateMasterEffectsUI: handleMasterEffectsUIUpdate, 
     };
 
-    // Dynamically import all modules using Promise.all to ensure they are loaded
+    // Dynamically import all modules.
+    // NOTE: Track.js is imported separately below to ensure it's loaded before `Track` class is used.
     const [
         trackStateModule, windowStateModule, appStateModule, masterStateModule, projectStateModule, soundLibraryStateModule,
         audioModule, playbackModule, recordingModule, sampleManagerModule,
         uiModule, eventHandlersModuleExports, metronomeModule, authModuleExports, 
-        { Track } 
     ] = await Promise.all([
         import('./state/trackState.js'), import('./state/windowState.js'), import('./state/appState.js'), import('./state/masterState.js'), import('./state/projectState.js'), import('./state/soundLibraryState.js'),
         import('./audio/audio.js'), import('./audio/playback.js'), import('./audio/recording.js'), import('./audio/sampleManager.js'),
         import('./ui/ui.js'), import('./eventHandlers.js'), import('./audio/metronome.js'), import('./auth.js'),
-        import('./Track.js') 
     ]);
 
-    // Assign exports of Track class directly
-    appServices.Track = Track;
+    // Import the Track class *after* all other module imports are complete
+    // to prevent any potential circular dependency issues.
+    const { Track } = await import('./Track.js'); 
 
     // Assign all exported functions from each module to appServices
     // This ensures that functions like `getTracks`, `getWindowById`, `getPlaybackMode`, etc.,
@@ -382,6 +385,9 @@ async function initializeSnugOS() {
     Object.assign(appServices, uiModule); 
     Object.assign(appServices, metronomeModule); 
     
+    // Assign the imported Track class to appServices.Track
+    appServices.Track = Track;
+
     // Define appServices.createWindow *after* appServices has its core window functions.
     // This is the CRITICAL change to fix the TypeError in SnugWindow.
     appServices.createWindow = (id, title, content, options) => new SnugWindow(id, title, content, options, appServices);
