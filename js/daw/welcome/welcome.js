@@ -18,6 +18,55 @@ import { createContextMenu, showConfirmationDialog } from '../utils.js';
 let appServices = {}; // Define appServices at the top level
 let loggedInUser = null;
 
+// Centralized applyCustomBackground function - MOVED TO TOP
+function applyCustomBackground(source) {
+    const desktopEl = document.getElementById('desktop');
+    if (!desktopEl) return;
+
+    desktopEl.style.backgroundImage = '';
+    const existingVideo = desktopEl.querySelector('#desktop-video-bg');
+    if (existingVideo) {
+        existingVideo.remove();
+    }
+
+    let url;
+    let fileType;
+
+    if (typeof source === 'string') {
+        url = source;
+        const extension = source.split('.').pop().toLowerCase().split('?')[0];
+        if (['mp4', 'webm', 'mov'].includes(extension)) {
+            fileType = `video/${extension}`;
+        } else {
+            fileType = 'image/jpeg';
+        }
+    } else { // It's a File object
+        url = URL.createObjectURL(source);
+        fileType = source.type;
+    }
+
+    if (fileType.startsWith('image/')) {
+        desktopEl.style.backgroundImage = `url(${url})`;
+        desktopEl.style.backgroundSize = 'cover';
+        desktopEl.style.backgroundPosition = 'center';
+    } else if (fileType.startsWith('video/')) {
+        const videoEl = document.createElement('video');
+        videoEl.id = 'desktop-video-bg';
+        videoEl.style.position = 'absolute';
+        videoEl.style.top = '0';
+        videoEl.style.left = '0';
+        videoEl.style.width = '100%';
+        videoEl.style.height = '100%';
+        videoEl.style.objectFit = 'cover';
+        videoEl.src = url;
+        videoEl.autoplay = true;
+        videoEl.loop = true;
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        desktopEl.appendChild(videoEl);
+    }
+}
+
 /**
  * Creates and opens a new window containing an HTML page loaded into an iframe.
  * Used for apps that *should* be embedded (Profiles, Library, Tetris).
@@ -43,6 +92,7 @@ function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {})
 
     // Use appServices.createWindow to create the SnugWindow
     const windowInstance = appServices.createWindow(windowId, windowTitle, content, options);
+
 
     // Inject appServices into iframe after content loads
     content.onload = () => {
@@ -78,7 +128,7 @@ async function initializeWelcomePage() { // Marked as async to allow await
         getCurrentUserThemePreference: null, setCurrentUserThemePreference: null,
 
         // Background handling
-        applyCustomBackground: applyCustomBackground, // Local function in welcome.js
+        applyCustomBackground: applyCustomBackground, // Local function, now defined earlier
         handleBackgroundUpload: handleBackgroundUpload, // Imported from auth.js
 
         // Utility access
@@ -88,10 +138,9 @@ async function initializeWelcomePage() { // Marked as async to allow await
         showConfirmationDialog: showConfirmationDialog,
 
         // Auth related (will be assigned after authModule loads)
-        initializeAuth: null, // This is the initialize function from auth.js
-        handleLogout: handleLogout, // Local handleLogout
-        // We need a way for welcome.js to trigger the auth.js updateAuthUI.
-        // Let's ensure initializeAuth returns updateAuthUI or similar.
+        initializeAuth: null, 
+        handleLogout: handleLogout, 
+        updateUserAuthContainer: null, 
     };
 
     // 2. Dynamically import necessary modules.
@@ -99,9 +148,9 @@ async function initializeWelcomePage() { // Marked as async to allow await
     const [
         windowStateModule, appStateModule, authModuleExports
     ] = await Promise.all([
-        import('../state/windowState.js'),
-        import('../state/appState.js'),
-        import('../auth.js') // Auth module
+        import('../state/windowState.js'), 
+        import('../state/appState.js'), 
+        import('../auth.js') 
     ]);
 
     // 3. Populate appServices with exports from modules.
@@ -111,49 +160,49 @@ async function initializeWelcomePage() { // Marked as async to allow await
 
     // 4. Define `appServices.createWindow` *after* appServices has its core window functions.
     // This resolves the TypeError in SnugWindow.focus.
-    appServices.createWindow = (id, title, content, options) => new SnugWindow(id, title, content, options, appServices);
+    appServices.createWindow = (id, title, content, options) => new SnugWindow(id, title, content, options, appServices); 
 
 
     // 5. Initialize modules that have an `initializeXModule` function.
     // These initializers set up internal state and might return specific functions to be exposed.
-    appServices.initializeWindowState(appServices);
-    appServices.initializeAppState(appServices);
+    appServices.initializeWindowState(appServices); 
+    appServices.initializeAppState(appServices); 
 
     // Initialize AuthModule. This module's initialize function sets up its own event listeners
     // and might return functions like `updateAuthUI` to be exposed on appServices.
-    const authExports = authModuleExports.initializeAuth(appServices);
-    Object.assign(appServices, authExports); // Assign functions returned by the initializer
+    const authExports = authModuleExports.initializeAuth(appServices); 
+    Object.assign(appServices, authExports); 
 
 
     // 6. Attach top-level event listeners for the welcome page.
     attachEventListeners();
     updateClockDisplay();
     // Use the function from appState.js to apply user theme preference
-    appServices.setCurrentUserThemePreference(appServices.getCurrentUserThemePreference() || 'system'); // Re-evaluate initial theme
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => appServices.setCurrentUserThemePreference('system'));
+    appServices.setCurrentUserThemePreference(appServices.getCurrentUserThemePreference() || 'system'); 
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => appServices.setCurrentUserThemePreference('system')); 
     
     renderDesktopIcons();
     initAudioOnFirstGesture();
     
     // Attempt to restore window state from previous session
-    const lastSessionState = localStorage.getItem('snugos_welcome_session_windows');
-    if (lastSessionState) {
+    const lastSessionState = localStorage.getItem('snugos_welcome_session_windows'); 
+    if (lastSessionState) { 
         try {
-            const parsedState = JSON.parse(lastSessionState);
-            if (parsedState && parsedState.length > 0) {
+            const parsedState = JSON.parse(lastSessionState); 
+            if (parsedState && parsedState.length > 0) { 
                 // Reconstruct windows based on saved state
-                appServices.reconstructWindows(parsedState);
+                appServices.reconstructWindows(parsedState); 
             }
         } catch (e) {
-            console.error("Error restoring welcome page window state:", e);
+            console.error("Error restoring welcome page window state:", e); 
         }
-    }
+    } 
 
     // Add a beforeunload listener to save welcome page window state
-    window.addEventListener('beforeunload', () => {
-        const currentOpenWindows = appServices.serializeWindows();
-        localStorage.setItem('snugos_welcome_session_windows', JSON.stringify(currentOpenWindows));
-    });
+    window.addEventListener('beforeunload', () => { 
+        const currentOpenWindows = appServices.serializeWindows(); 
+        localStorage.setItem('snugos_welcome_session_windows', JSON.stringify(currentOpenWindows)); 
+    }); 
 
     console.log("Welcome Page Initialized Successfully.");
 }
@@ -166,12 +215,12 @@ function initAudioOnFirstGesture() {
     const startAudio = async () => {
         // Tone.js is loaded in index.html because Tetris (and now DAW) will be embedded.
         if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-            await Tone.start();
-            console.log('AudioContext started successfully.');
+            await Tone.start(); 
+            console.log('AudioContext started successfully.'); 
         }
-        document.body.removeEventListener('mousedown', startAudio);
-    };
-    document.body.addEventListener('mousedown', startAudio);
+        document.body.removeEventListener('mousedown', startAudio); 
+    }; 
+    document.body.addEventListener('mousedown', startAudio); 
 }
 
 /**
