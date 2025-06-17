@@ -228,7 +228,19 @@ export class Track { //
                 });
                 break;
             case 'Sampler':
-                this.instrument = new this.appServices.Tone.Sampler();
+                // Tone.Sampler expects `urls` as the first argument, or options if no urls
+                // To pass options, pass an empty urls object first, then the options.
+                this.instrument = new this.appServices.Tone.Sampler(
+                    {}, // Empty urls object
+                    { // Options object for Sampler
+                        attack: 0.01,
+                        release: 0.1,
+                        // Ensure envelope is not passed directly here unless Sampler explicitly supports it.
+                        // Sampler's envelope is usually a separate property/signal.
+                        // For now, pass basic envelope settings directly compatible with Tone.Sampler
+                        // and apply slice-specific envelopes per slice later.
+                    }
+                );
                 if (this.audioBuffer && this.audioBuffer.loaded) {
                     // Populate sampler with slices
                     this.slices.forEach((slice, index) => {
@@ -241,30 +253,50 @@ export class Track { //
                                     (slice.offset + slice.duration) * this.audioBuffer.sampleRate
                                 )
                             );
-                            this.instrument.add(noteName, sliceBuffer);
+                            // Set individual slice properties like volume, pitch, envelope here
+                            // Sampler.add(note, buffer, onEnd)
+                            this.instrument.add(noteName, sliceBuffer, null); // No onEnd callback for now
+                            // Sampler's envelope applies globally. Slice-specific envelopes would require custom logic.
+                            // For pitchShift and volume, apply via Tone.Player when playing slice, not via Sampler.add
                         }
                     });
                 }
                 break;
             case 'DrumSampler':
-                this.instrument = new this.appServices.Tone.Sampler();
+                // Tone.Sampler expects `urls` as the first argument, or options if no urls
+                this.instrument = new this.appServices.Tone.Sampler(
+                    {}, // Empty urls object
+                    {
+                        attack: 0.01,
+                        release: 0.1,
+                    }
+                );
                 if (this.drumSamplerPads) {
                     this.drumSamplerPads.forEach((padData, index) => {
                         if (padData.audioBuffer && padData.audioBuffer.loaded) {
                             const midiNote = Constants.DRUM_MIDI_START_NOTE + index;
                             const noteName = this.appServices.Tone.Midi(midiNote).toNote();
-                            this.instrument.add(noteName, padData.audioBuffer);
+                            // Add buffer with specific volume and pitch shift if Sampler.add supports it
+                            // For sampler, volume/pitch are typically applied per-note during triggerAttack.
+                            this.instrument.add(noteName, padData.audioBuffer, null); 
                         }
                     });
                 }
                 break;
             case 'InstrumentSampler':
-                this.instrument = new this.appServices.Tone.Sampler({
-                    envelope: this.instrumentSamplerSettings.envelope,
-                    // The 'urls' object for Sampler needs to map pitch to buffer,
-                    // but since InstrumentSampler loads a single audio file and maps it to a root note,
-                    // we add the buffer explicitly after initialization.
-                });
+                // InstrumentSampler also uses Tone.Sampler, but with a specific envelope and single root note mapping
+                this.instrument = new this.appServices.Tone.Sampler(
+                    {}, // Empty urls object
+                    {
+                        envelope: this.instrumentSamplerSettings.envelope, // Pass envelope directly
+                        attack: this.instrumentSamplerSettings.envelope.attack, // Ensure individual properties are also set if envelope is an object
+                        release: this.instrumentSamplerSettings.envelope.release,
+                        // Other envelope properties (decay, sustain) are part of the envelope object
+                        loop: this.instrumentSamplerSettings.loop,
+                        // LoopStart and LoopEnd are often set on the buffer itself or on a Player instance
+                        // For Sampler, they typically apply to the internal players created when notes are triggered.
+                    }
+                );
                 if (this.instrumentSamplerSettings.audioBuffer && this.instrumentSamplerSettings.audioBuffer.loaded) {
                     const rootNote = this.instrumentSamplerSettings.rootNote || 'C4';
                     this.instrument.add(rootNote, this.instrumentSamplerSettings.audioBuffer);
@@ -279,6 +311,10 @@ export class Track { //
 
         if (this.instrument) {
             this.instrument.connect(this.input);
+            // After instrument is initialized, set overall playbackRate for InstrumentSampler
+            if (this.type === 'InstrumentSampler' && this.instrumentSamplerSettings.pitchShift !== undefined) {
+                this.instrument.playbackRate = Math.pow(2, this.instrumentSamplerSettings.pitchShift / 12);
+            }
         }
         
         // Recreate Tone.Sequence for playback after instrument is initialized
