@@ -308,7 +308,7 @@ async function initializeSnugOS() {
         getIsReconstructingDAW: null, setIsReconstructingDAW: null, getUndoStack: null, getRedoStack: null, getClipboardData: null, setClipboardData: null, captureStateForUndo: null, undoLastAction: null, redoLastAction: null, gatherProjectData: null, reconstructDAW: null, saveProject: null, loadProject: null, handleProjectFileLoad: null, exportToWav: null,
         getLoadedZipFiles: null, setLoadedZipFiles: null, getSoundLibraryFileTrees: null, setSoundLibraryFileTrees: null, getCurrentLibraryName: null, setCurrentLibraryName: null, getCurrentSoundBrowserPath: null, setCurrentSoundBrowserPath: null, getPreviewPlayer: null, setPreviewPlayer: null, addFileToSoundLibrary: null, 
         getSoloedTrackId: null, setSoloedTrackId: null, getArmedTrackId: null, setArmedTrackId: null, isRecording: null, setIsRecording: null, getRecordingTrackId: null, setRecordingTrackId: null, getRecordingStartTime: null, setRecordingStartTime: null, 
-        // Track class will be assigned explicitly
+        // Track class will be assigned explicitly from THIS main.js context, and passed to trackState.js
 
         // Audio Module Functions (functions will be assigned from imported modules)
         initializeAudioModule: null, initAudioContextAndMasterMeter: null, updateMeters: null, rebuildMasterEffectChain: null,
@@ -365,8 +365,8 @@ async function initializeSnugOS() {
         import('./ui/ui.js'), import('./eventHandlers.js'), import('./audio/metronome.js'), import('./auth.js'),
     ]);
 
-    // Import the Track class *after* all other module imports are complete
-    // to prevent any potential circular dependency issues.
+    // Import the Track class AFTER all other modules are imported.
+    // This is to establish a single, authoritative 'Track' class reference.
     const { Track } = await import('./Track.js'); 
 
     // Assign all exported functions from each module to appServices
@@ -386,6 +386,8 @@ async function initializeSnugOS() {
     Object.assign(appServices, metronomeModule); 
     
     // Assign the imported Track class to appServices.Track
+    // This makes the definitive Track class available throughout appServices
+    // and to modules like trackState.js that rely on it.
     appServices.Track = Track;
 
     // Define appServices.createWindow *after* appServices has its core window functions.
