@@ -133,6 +133,12 @@ export function reconstructWindows(serializedWindows) {
             case 'youtubeImporter':
                 localAppServices.openYouTubeImporterWindow(savedState);
                 break;
+            case 'libraryApp': // Added case for the Library App
+                localAppServices.openEmbeddedAppInWindow(id, title, `/app/library/library.html`, savedState);
+                break;
+            case `profile-${id.split('-')[1]}`: // Case for Profile App (e.g., profile-snaw)
+                localAppServices.openEmbeddedAppInWindow(id, title, `/app/profile/profile.html?user=${id.split('-')[1]}`, savedState);
+                break;
             // Add other window types here
             default:
                 // Handle track-specific windows (Inspector, Effects Rack, Piano Roll)
