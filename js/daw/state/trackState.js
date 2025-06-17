@@ -1,7 +1,8 @@
 // js/daw/state/trackState.js
 
 // Corrected import path for Track.js
-import { Track } from '../Track.js'; //
+// Make sure Track is imported directly here for instantiation.
+import { Track } from '../Track.js';
 
 let tracks = []; // Array to hold all track objects
 let trackIdCounter = 0; // Counter for generating unique track IDs
@@ -17,97 +18,96 @@ let localAppServices = {}; // Reference to the main appServices object
  * Initializes the track state module.
  * @param {object} appServices - The main app services object.
  */
-export function initializeTrackState(appServices) { //
-    localAppServices = appServices; //
+export function initializeTrackState(appServices) {
+    localAppServices = appServices;
 }
 
 /**
  * Gets all track objects.
  * @returns {Array<Track>} An array of all track objects.
  */
-export function getTracks() { return tracks; } //
+export function getTracks() { return tracks; }
 
 /**
  * Gets a track object by its ID.
  * @param {number} id - The ID of the track.
  * @returns {Track|undefined} The track object, or undefined if not found.
  */
-export function getTrackById(id) { return tracks.find(t => t.id === id); } //
+export function getTrackById(id) { return tracks.find(t => t.id === id); }
 
 /**
  * Gets the ID of the currently soloed track.
  * @returns {number|null} The ID of the soloed track, or null.
  */
-export function getSoloedTrackId() { return soloedTrackId; } //
+export function getSoloedTrackId() { return soloedTrackId; }
 
 /**
  * Sets the ID of the currently soloed track.
  * @param {number|null} id - The ID of the track to solo, or null to unsolo all.
  */
-export function setSoloedTrackId(id) { soloedTrackId = id; } //
+export function setSoloedTrackId(id) { soloedTrackId = id; }
 
 /**
  * Gets the ID of the currently armed track.
  * @returns {number|null} The ID of the armed track, or null.
  */
-export function getArmedTrackId() { return armedTrackId; } //
+export function getArmedTrackId() { return armedTrackId; }
 
 /**
  * Sets the ID of the currently armed track.
  * @param {number|null} id - The ID of the track to arm, or null to disarm all.
  */
-export function setArmedTrackId(id) { armedTrackId = id; } //
+export function setArmedTrackId(id) { armedTrackId = id; }
 
 /**
  * Checks if global recording is currently active.
  * @returns {boolean} True if recording, false otherwise.
  */
-export function isRecording() { return isRecordingGlobal; } //
+export function isRecording() { return isRecordingGlobal; }
 
 /**
  * Sets the global recording status.
  * @param {boolean} isRecording - True to set recording active, false to set inactive.
  */
-export function setIsRecording(isRecording) { isRecordingGlobal = isRecording; } //
+export function setIsRecording(isRecording) { isRecordingGlobal = isRecording; }
 
 /**
  * Gets the ID of the track that is currently being recorded.
  * @returns {number|null} The ID of the recording track, or null.
  */
-export function getRecordingTrackId() { return recordingTrackIdGlobal; } //
+export function getRecordingTrackId() { return recordingTrackIdGlobal; }
 
 /**
  * Sets the ID of the track that is currently being recorded.
  * @param {number|null} id - The ID of the track.
  */
-export function setRecordingTrackId(id) { recordingTrackIdGlobal = id; } //
+export function setRecordingTrackId(id) { recordingTrackIdGlobal = id; }
 
 /**
  * Gets the start time of the current recording.
  * @returns {number} The Tone.js Transport time when recording started.
  */
-export function getRecordingStartTime() { return recordingStartTimeGlobal; } //
+export function getRecordingStartTime() { return recordingStartTimeGlobal; }
 
 /**
  * Sets the start time of the current recording.
  * @param {number} time - The Tone.js Transport time.
  */
-export function setRecordingStartTime(time) { recordingStartTimeGlobal = time; } //
+export function setRecordingStartTime(time) { recordingStartTimeGlobal = time; }
 
 /**
  * Adds a new track to the project.
  * @param {string} type - The type of track ('Synth', 'Sampler', 'DrumSampler', 'InstrumentSampler', 'Audio').
  * @returns {Promise<Track>} A promise that resolves with the newly created track.
  */
-export async function addTrack(type) { //
+export async function addTrack(type) {
     const newTrackId = trackIdCounter++; // Increment counter for unique ID
-    // Pass initialData as null for new tracks, and appServices for dependency injection
-    const track = new Track(newTrackId, type, null, localAppServices); //
+    // Instantiate Track using the imported Track class directly.
+    const track = new Track(newTrackId, type, null, localAppServices);
     tracks.push(track); // Add to global tracks array
     await track.initializeInstrument(); // Initialize the Tone.js instrument for the track
     
     localAppServices.updateMixerWindow?.(); // Refresh mixer UI
-    // As timeline is removed, no renderTimeline() call here.
     localAppServices.captureStateForUndo?.(`Add ${type} Track`); // Capture state for undo
     return track; //
 }
@@ -116,7 +116,7 @@ export async function addTrack(type) { //
  * Removes a track from the project.
  * @param {number} trackId - The ID of the track to remove.
  */
-export function removeTrack(trackId) { //
+export function removeTrack(trackId) {
     const index = tracks.findIndex(t => t.id === trackId); // Find track index
     if (index > -1) { // If track found
         const trackName = tracks[index].name; // Get track name for undo description
@@ -134,7 +134,6 @@ export function removeTrack(trackId) { //
         }
 
         localAppServices.updateMixerWindow?.(); // Refresh mixer UI
-        // As timeline is removed, no renderTimeline() call here.
     }
 }
 
@@ -142,14 +141,14 @@ export function removeTrack(trackId) { //
  * Sets the entire array of tracks (used during project loading/undo/redo).
  * @param {Array<Track>} newTracks - The new array of track objects.
  */
-export function setTracks(newTracks) { //
-    tracks = newTracks; //
+export function setTracks(newTracks) {
+    tracks = newTracks;
 }
 
 /**
  * Sets the track ID counter (used during project loading).
  * @param {number} count - The new value for the track ID counter.
  */
-export function setTrackIdCounter(count) { //
-    trackIdCounter = count; //
+export function setTrackIdCounter(count) {
+    trackIdCounter = count;
 }
