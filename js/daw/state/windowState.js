@@ -134,10 +134,10 @@ export function reconstructWindows(serializedWindows) {
                 localAppServices.openYouTubeImporterWindow(savedState);
                 break;
             case 'libraryApp': // Added case for the Library App
-                localAppServices.openEmbeddedAppInWindow(id, title, `/app/library/library.html`, savedState);
+                localAppServices.openEmbeddedAppInWindow(id, title, `/app/js/daw/profiles/library.html`, savedState); // CORRECTED PATH
                 break;
             case `profile-${id.split('-')[1]}`: // Case for Profile App (e.g., profile-snaw)
-                localAppServices.openEmbeddedAppInWindow(id, title, `/app/profile/profile.html?user=${id.split('-')[1]}`, savedState);
+                localAppServices.openEmbeddedAppInWindow(id, title, `/app/js/daw/profiles/profile.html?user=${id.split('-')[1]}`, savedState); // CORRECTED PATH
                 break;
             // Add other window types here
             default:

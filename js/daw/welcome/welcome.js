@@ -18,7 +18,7 @@ import { createContextMenu, showConfirmationDialog } from '/app/js/daw/utils.js'
 let appServices = {}; 
 let loggedInUser = null;
 
-// Centralized applyCustomBackground function - MOVED TO TOP
+// Centralized applyCustomBackground function 
 function applyCustomBackground(source) {
     const desktopEl = document.getElementById('desktop');
     if (!desktopEl) return;
@@ -76,7 +76,7 @@ function applyCustomBackground(source) {
  * @param {object} options SnugWindow options.
  * @returns {SnugWindow} The newly created SnugWindow instance.
  */
-function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {}) {
+export function openEmbeddedAppInWindow(windowId, windowTitle, iframeSrc, options = {}) { // EXPORT THIS FUNCTION
     // Check if the window is already open and focus it
     if (appServices.getWindowById(windowId)) {
         appServices.getWindowById(windowId).focus();
@@ -141,6 +141,9 @@ async function initializeWelcomePage() {
         initializeAuth: null, 
         handleLogout: null, 
         updateUserAuthContainer: null, 
+        
+        // Expose openEmbeddedAppInWindow via appServices
+        openEmbeddedAppInWindow: openEmbeddedAppInWindow, // ADDED
     };
 
     // 2. Dynamically import necessary modules.
@@ -341,14 +344,14 @@ function viewProfiles() {
     toggleStartMenu();
     const profileUsername = loggedInUser ? loggedInUser.username : 'snaw';
     // Corrected absolute path for profile.html based on your clarification
-    openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `/app/profile/profile.html?user=${profileUsername}`, { width: 600, height: 700 }); 
+    openEmbeddedAppInWindow(`profile-${profileUsername}`, `${profileUsername}'s Profile`, `/app/js/daw/profiles/profile.html?user=${profileUsername}`, { width: 600, height: 700 }); // CORRECTED PATH
 }
 
 // MODIFIED: Open Library opens in a SnugWindow iframe
 function openLibraryWindow() {
     toggleStartMenu();
     // Corrected absolute path for library.html based on your clarification
-    openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `/app/library/library.html`, { width: 800, height: 600 }); 
+    openEmbeddedAppInWindow('libraryApp', 'SnugOS Library', `/app/js/daw/profiles/library.html`, { width: 800, height: 600 }); // CORRECTED PATH
 }
 
 // MODIFIED: Open Tetris is still embedded in a SnugWindow iframe
