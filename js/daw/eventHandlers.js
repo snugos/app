@@ -16,44 +16,180 @@ let isSustainPedalDown = false;
 const sustainedNotes = new Map(); // Map to hold notes currently being sustained by pedal
 
 /**
- * Initializes the event handlers module.
- * This function is designed to be called once during app startup by main.js.
- * It now returns an object containing functions that main.js needs to expose via appServices.
- * @param {object} appServicesFromMain - The main appServices object.
- * @returns {object} An object containing functions to be exposed via appServices.
+ * Handles track mute toggle.
+ * @param {number} trackId - The ID of the track to mute/unmute.
  */
-export function initializeEventHandlersModule(appServicesFromMain) {
-    localAppServices = appServicesFromMain;
-    
-    // These functions are *exported* now, and will be called directly by main.js
-    // after appServices is fully populated.
-    // They are NOT called from within this initializer anymore.
-
-    // Return functions that main.js needs to assign to appServices
-    return {
-        updateUndoRedoButtons: updateUndoRedoButtons,
-        initializePrimaryEventListeners: initializePrimaryEventListeners, 
-        attachGlobalControlEvents: attachGlobalControlEvents,       
-        setupMIDI: setupMIDI,                                       
-        // Ensure all publicly callable handlers are explicitly returned here
-        handleTrackMute: handleTrackMute, // ADDED
-        handleTrackSolo: handleTrackSolo, // ADDED
-        handleTrackArm: handleTrackArm,   // ADDED
-        handleRemoveTrack: handleRemoveTrack, // ADDED
-        handleOpenTrackInspector: handleOpenTrackInspector, // ADDED
-        handleOpenEffectsRack: handleOpenEffectsRack, // ADDED
-        handleOpenPianoRoll: handleOpenPianoRoll, // ADDED
-        onPlaybackModeChange: onPlaybackModeChange, // ADDED
-        handleTimelineLaneDrop: handleTimelineLaneDrop, // ADDED
-        handleOpenYouTubeImporter: handleOpenYouTubeImporter, // ADDED
-    };
+export function handleTrackMute(trackId) {
+    console.log(`[eventHandlers.js] handleTrackMute called for trackId: ${trackId}`);
+    const track = getTrackById(trackId);
+    if (!track) {
+        console.warn(`[eventHandlers.js] handleTrackMute: Track with ID ${trackId} not found.`);
+        return;
+    }
+    localAppServices.captureStateForUndo?.(`${track.isMuted ? 'Unmute' : 'Mute'} Track: ${track.name}`);
+    track.isMuted = !track.isMuted;
+    track.applyMuteState(); 
+    if (localAppServices.updateTrackUI) {
+        getTracks().forEach(t => localAppServices.updateTrackUI(t.id, 'muteChanged')); 
+        localAppServices.updateMixerWindow(); 
+    }
 }
 
 /**
- * Initializes primary global event listeners, mostly related to the desktop and start menu.
- * This function is now EXPORTED and called by main.js.
+ * Handles track solo toggle.
+ * @param {number} trackId - The ID of the track to solo/unsolo.
  */
-export function initializePrimaryEventListeners() {
+export function handleTrackSolo(trackId) {
+    console.log(`[eventHandlers.js] handleTrackSolo called for trackId: ${trackId}`);
+    const track = getTrackById(trackId);
+    if (!track) {
+        console.warn(`[eventHandlers.js] handleTrackSolo: Track with ID ${trackId} not found.`);
+        return;
+    }
+    localAppServices.captureStateForUndo?.(`Solo Track: ${track.name}`);
+    const currentSoloId = getSoloedTrackId();
+    const newSoloId = (currentSoloId === trackId) ? null : trackId; 
+    setSoloedTrackId(newSoloId); 
+    getTracks().forEach(t => {
+        if (t.updateSoloMuteState) {
+            t.updateSoloMuteState(newSoloId); 
+        }
+        localAppServices.updateTrackUI(t.id, 'soloChanged'); 
+    });
+    if (localAppServices.updateMixerWindow) {
+        localAppServices.updateMixerWindow(); 
+    }
+}
+
+/**
+ * Handles track arm toggle for recording.
+ * @param {number} trackId - The ID of the track to arm/disarm.
+ */
+export function handleTrackArm(trackId) {
+    console.log(`[eventHandlers.js] handleTrackArm called for trackId: ${trackId}`);
+    const currentArmedId = getArmedTrackId();
+    const newArmedId = (currentArmedId === trackId) ? null : trackId; 
+    setArmedTrackId(newArmedId); 
+    if (localAppServices.updateTrackUI) {
+        localAppServices.updateTrackUI(trackId, 'armChanged'); 
+        if (currentArmedId !== null && currentArmedId !== trackId) {
+            localAppServices.updateTrackUI(currentArmedId, 'armChanged');
+        }
+    }
+}
+
+/**
+ * Handles removal of a track after user confirmation.
+ * @param {number} trackId - The ID of the track to remove.
+ */
+export function handleRemoveTrack(trackId) {
+    const track = getTrackById(trackId);
+    if (!track) return;
+    localAppServices.showConfirmationDialog('Remove Track', `Are you sure you want to remove "${track.name}"? This cannot be undone.`, () => {
+        localAppServices.removeTrack(trackId); 
+    });
+}
+
+/**
+ * Handles opening the inspector window for a specific track.
+ * @param {number} trackId - The ID of the track.
+ */
+export function handleOpenTrackInspector(trackId) {
+    if (localAppServices.openTrackInspectorWindow) {
+        localAppServices.openTrackInspectorWindow(trackId);
+    }
+}
+
+/**
+ * Handles opening the effects rack window for a specific track.
+ * @param {number} trackId - The ID of the track.
+ */
+export function handleOpenEffectsRack(trackId) {
+    if (localAppServices.openTrackEffectsRackWindow) {
+        localAppServices.openTrackEffectsRackWindow(trackId);
+    }
+}
+
+/**
+ * Handles opening the piano roll window for a specific track.
+ * @param {number} trackId - The ID of the track.
+ */
+export function handleOpenPianoRoll(trackId) {
+    if (localAppServices.openPianoRollWindow) {
+        localAppServices.openPianoRollWindow(trackId);
+    } else {
+        localAppServices.showNotification("Piano Roll UI is currently unavailable.", 3000);
+    }
+}
+
+/**
+ * Handles drag-and-drop of files or MIDI clips onto a timeline lane.
+ * @param {DragEvent} event - The drag event.
+ * @param {number} targetTrackId - The ID of the track receiving the drop.
+ * @param {number} startTime - The target start time for the clip on the timeline.
+ */
+export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
+    const files = event.dataTransfer.files;
+    const targetTrack = getTrackById(targetTrackId);
+
+    if (!targetTrack) return;
+    
+    if (files && files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('audio/')) {
+            if (targetTrack.type === 'Audio') {
+                await targetTrack.clips.addAudioClip(file, startTime, file.name);
+                localAppServices.showNotification(`Audio clip "${file.name}" added to ${targetTrack.name}.`, 2000);
+            } else {
+                localAppServices.showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500);
+            }
+        } else {
+             localAppServices.showNotification(`Unsupported file type for timeline drop: ${file.type}`, 3000);
+        }
+    } else {
+        const jsonDataString = event.dataTransfer.getData("application/json");
+        if (jsonDataString) {
+            try {
+                const soundData = JSON.parse(jsonDataString);
+                if (soundData.type === 'piano-roll-sequence') {
+                    const sourceTrack = getTrackById(soundData.sourceTrackId);
+                    const sequence = sourceTrack?.sequences.sequences.find(s => s.id === soundData.sequenceId);
+                    if (targetTrack && sequence) {
+                        if (targetTrack.type === 'Synth' || targetTrack.type === 'InstrumentSampler' || targetTrack.type === 'DrumSampler' || targetTrack.type === 'Sampler') {
+                            targetTrack.clips.addMidiClip(sequence, startTime);
+                            localAppServices.showNotification(`MIDI clip from ${sourceTrack.name} added to ${targetTrack.name}.`, 2000);
+                        } else {
+                             localAppServices.showNotification(`Cannot add MIDI clips to a ${targetTrack.type} track. Drop on an instrument track.`, 3500);
+                        }
+                    }
+                } else if (soundData.type === 'sound-browser-item') {
+                    localAppServices.showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000);
+                }
+            } catch(e) {
+                console.error("Error parsing dropped JSON data:", e);
+                localAppServices.showNotification("Error processing dropped data.", 3000);
+            }
+        }
+    }
+}
+
+/**
+ * Handles opening the YouTube Importer window.
+ */
+export function handleOpenYouTubeImporter() {
+    if (localAppServices.openYouTubeImporterWindow) {
+        localAppServices.openYouTubeImporterWindow();
+    } else {
+        localAppServices.showNotification("YouTube Importer UI is currently unavailable.", 3000);
+    }
+}
+
+/**
+ * Initializes the primary global event listeners.
+ * This function is defined as a local function to be explicitly included in the
+ * returned object, ensuring its availability when called via appServices.
+ */
+function initializePrimaryEventListeners() {
     const startButton = document.getElementById('startButton');
     const startMenu = document.getElementById('startMenu');
     const desktopEl = document.getElementById('desktop');
@@ -191,10 +327,10 @@ export function initializePrimaryEventListeners() {
 
 /**
  * Attaches global control event listeners (play, stop, record, tempo, MIDI input, theme toggle).
- * These are listeners for the top taskbar controls.
- * This function is now EXPORTED and called by main.js.
+ * This function is defined as a local function to be explicitly included in the
+ * returned object, ensuring its availability when called via appServices.
  */
-export function attachGlobalControlEvents() {
+function attachGlobalControlEvents() { // Changed to local function
     const playBtn = document.getElementById('playBtnGlobalTop');
     const stopBtn = document.getElementById('stopBtnGlobalTop');
     const recordBtn = document.getElementById('recordBtnGlobalTop');
@@ -449,9 +585,10 @@ function toggleFullScreen() {
 
 /**
  * Sets up Web MIDI API access and populates the MIDI input selector.
- * This function is now EXPORTED and called by main.js.
+ * This function is defined as a local function to be explicitly included in the
+ * returned object, ensuring its availability when called via appServices.
  */
-export function setupMIDI() {
+function setupMIDI() { // Changed to local function
     if (!navigator.requestMIDIAccess) {
         localAppServices.showNotification("Web MIDI is not supported in this browser.", 4000);
         return;
@@ -543,7 +680,7 @@ export function selectMIDIInput(event) {
         if (newActiveInput) { 
             newActiveInput.onmidimessage = onMIDIMessage;
             localAppServices.setActiveMIDIInput(newActiveInput);
-            localAppServices.showNotification(`MIDI Input: ${newActiveInput.name} selected.`, 1500); // Corrected citation: 1
+            localAppServices.showNotification(`MIDI Input: ${newActiveInput.name} selected.`, 1500);
         } else {
             localAppServices.showNotification("MIDI device not found.", 2000);
             localAppServices.setActiveMIDIInput(null);
@@ -646,171 +783,70 @@ function onMIDIMessage(message) {
 
 
 /**
- * Handles track mute toggle.
- * @param {number} trackId - The ID of the track to mute/unmute.
+ * Updates the disabled state and title of the Undo and Redo buttons.
+ * This function is exposed to `main.js` via `initializeEventHandlersModule`.
  */
-export function handleTrackMute(trackId) {
-    console.log(`[eventHandlers.js] handleTrackMute called for trackId: ${trackId}`);
-    const track = getTrackById(trackId);
-    if (!track) {
-        console.warn(`[eventHandlers.js] handleTrackMute: Track with ID ${trackId} not found.`);
-        return;
-    }
-    localAppServices.captureStateForUndo?.(`${track.isMuted ? 'Unmute' : 'Mute'} Track: ${track.name}`);
-    track.isMuted = !track.isMuted;
-    track.applyMuteState(); 
-    if (localAppServices.updateTrackUI) {
-        getTracks().forEach(t => localAppServices.updateTrackUI(t.id, 'muteChanged')); 
-        localAppServices.updateMixerWindow(); 
-    }
-}
-
-/**
- * Handles track solo toggle.
- * @param {number} trackId - The ID of the track to solo/unsolo.
- */
-export function handleTrackSolo(trackId) {
-    console.log(`[eventHandlers.js] handleTrackSolo called for trackId: ${trackId}`);
-    const track = getTrackById(trackId);
-    if (!track) {
-        console.warn(`[eventHandlers.js] handleTrackSolo: Track with ID ${trackId} not found.`);
-        return;
-    }
-    localAppServices.captureStateForUndo?.(`Solo Track: ${track.name}`);
-    const currentSoloId = getSoloedTrackId();
-    const newSoloId = (currentSoloId === trackId) ? null : trackId; 
-    setSoloedTrackId(newSoloId); 
-    getTracks().forEach(t => {
-        if (t.updateSoloMuteState) {
-            t.updateSoloMuteState(newSoloId); 
-        }
-        localAppServices.updateTrackUI(t.id, 'soloChanged'); 
-    });
-    if (localAppServices.updateMixerWindow) {
-        localAppServices.updateMixerWindow(); 
-    }
-}
-
-/**
- * Handles track arm toggle for recording.
- * @param {number} trackId - The ID of the track to arm/disarm.
- */
-export function handleTrackArm(trackId) {
-    console.log(`[eventHandlers.js] handleTrackArm called for trackId: ${trackId}`);
-    const currentArmedId = getArmedTrackId();
-    const newArmedId = (currentArmedId === trackId) ? null : trackId; 
-    setArmedTrackId(newArmedId); 
-    if (localAppServices.updateTrackUI) {
-        localAppServices.updateTrackUI(trackId, 'armChanged'); 
-        if (currentArmedId !== null && currentArmedId !== trackId) {
-            localAppServices.updateTrackUI(currentArmedId, 'armChanged');
-        }
-    }
-}
-
-/**
- * Handles removal of a track after user confirmation.
- * @param {number} trackId - The ID of the track to remove.
- */
-export function handleRemoveTrack(trackId) {
-    const track = getTrackById(trackId);
-    if (!track) return;
-    localAppServices.showConfirmationDialog('Remove Track', `Are you sure you want to remove "${track.name}"? This cannot be undone.`, () => {
-        localAppServices.removeTrack(trackId); 
-    });
-}
-
-/**
- * Handles opening the inspector window for a specific track.
- * @param {number} trackId - The ID of the track.
- */
-export function handleOpenTrackInspector(trackId) {
-    if (localAppServices.openTrackInspectorWindow) {
-        localAppServices.openTrackInspectorWindow(trackId);
-    }
-}
-
-/**
- * Handles opening the effects rack window for a specific track.
- * @param {number} trackId - The ID of the track.
- */
-export function handleOpenEffectsRack(trackId) {
-    if (localAppServices.openTrackEffectsRackWindow) {
-        localAppServices.openTrackEffectsRackWindow(trackId);
-    }
-}
-
-/**
- * Handles opening the piano roll window for a specific track.
- * @param {number} trackId - The ID of the track.
- */
-export function handleOpenPianoRoll(trackId) {
-    if (localAppServices.openPianoRollWindow) {
-        localAppServices.openPianoRollWindow(trackId);
-    } else {
-        localAppServices.showNotification("Piano Roll UI is currently unavailable.", 3000);
-    }
-}
-
-/**
- * Handles drag-and-drop of files or MIDI clips onto a timeline lane.
- * @param {DragEvent} event - The drag event.
- * @param {number} targetTrackId - The ID of the track receiving the drop.
- * @param {number} startTime - The target start time for the clip on the timeline.
- */
-export async function handleTimelineLaneDrop(event, targetTrackId, startTime) {
-    const files = event.dataTransfer.files;
-    const targetTrack = getTrackById(targetTrackId);
-
-    if (!targetTrack) return;
+function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtnTop');
+    const redoBtn = document.getElementById('redoBtnTop');
     
-    // Handle file drops (audio files)
-    if (files && files.length > 0) {
-        const file = files[0];
-        if (file.type.startsWith('audio/')) {
-            if (targetTrack.type === 'Audio') {
-                await targetTrack.clips.addAudioClip(file, startTime, file.name);
-                localAppServices.showNotification(`Audio clip "${file.name}" added to ${targetTrack.name}.`, 2000);
-            } else {
-                localAppServices.showNotification(`Cannot add audio files to a ${targetTrack.type} track. Drop on an Audio track.`, 3500);
-            }
+    if (undoBtn) {
+        const undoStack = getUndoStack();
+        if (undoStack.length > 0) {
+            undoBtn.disabled = false;
+            undoBtn.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
         } else {
-             localAppServices.showNotification(`Unsupported file type for timeline drop: ${file.type}`, 3000);
+            undoBtn.disabled = true;
+            undoBtn.title = 'Undo';
         }
-    } else {
-        const jsonDataString = event.dataTransfer.getData("application/json");
-        if (jsonDataString) {
-            try {
-                const soundData = JSON.parse(jsonDataString);
-                if (soundData.type === 'piano-roll-sequence') {
-                    const sourceTrack = getTrackById(soundData.sourceTrackId);
-                    const sequence = sourceTrack?.sequences.sequences.find(s => s.id === soundData.sequenceId);
-                    if (targetTrack && sequence) {
-                        if (targetTrack.type === 'Synth' || targetTrack.type === 'InstrumentSampler' || targetTrack.type === 'DrumSampler' || targetTrack.type === 'Sampler') {
-                            targetTrack.clips.addMidiClip(sequence, startTime);
-                            localAppServices.showNotification(`MIDI clip from ${sourceTrack.name} added to ${targetTrack.name}.`, 2000);
-                        } else {
-                             localAppServices.showNotification(`Cannot add MIDI clips to a ${targetTrack.type} track. Drop on an instrument track.`, 3500);
-                        }
-                    }
-                } else if (soundData.type === 'sound-browser-item') {
-                    localAppServices.showNotification(`Cannot drag from Sound Browser to timeline yet. Drop on a sampler track's inspector instead.`, 4000);
-                }
-            } catch(e) {
-                console.error("Error parsing dropped JSON data:", e);
-                localAppServices.showNotification("Error processing dropped data.", 3000);
-            }
+    }
+    if (redoBtn) {
+        const redoStack = getRedoStack();
+        if (redoStack.length > 0) {
+            redoBtn.disabled = false;
+            redoBtn.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
+        } else {
+            redoBtn.disabled = true;
+            redoBtn.title = 'Redo';
         }
     }
 }
 
 /**
- * Handles opening the YouTube Importer window.
+ * Toggles the browser's full-screen mode.
  */
-export function handleOpenYouTubeImporter() {
-    if (localAppServices.openYouTubeImporterWindow) {
-        localAppServices.openYouTubeImporterWindow();
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            localAppServices.showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000);
+        });
     } else {
-        localAppServices.showNotification("YouTube Importer UI is currently unavailable.", 3000);
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
     }
+}
+
+/**
+ * @returns {object} An object containing functions to be exposed via appServices.
+ */
+export function initializeEventHandlersModule(appServicesFromMain) {
+    localAppServices = appServicesFromMain;
+    
+    return {
+        updateUndoRedoButtons: updateUndoRedoButtons,
+        initializePrimaryEventListeners: initializePrimaryEventListeners, 
+        attachGlobalControlEvents: attachGlobalControlEvents,       
+        setupMIDI: setupMIDI,                                       
+        handleTrackMute: handleTrackMute, 
+        handleTrackSolo: handleTrackSolo, 
+        handleTrackArm: handleTrackArm,   
+        handleRemoveTrack: handleRemoveTrack, 
+        handleOpenTrackInspector: handleOpenTrackInspector, 
+        handleOpenEffectsRack: handleOpenEffectsRack, 
+        handleOpenPianoRoll: handleOpenPianoRoll, 
+        onPlaybackModeChange: onPlaybackModeChange, 
+        handleTimelineLaneDrop: handleTimelineLaneDrop, 
+        handleOpenYouTubeImporter: handleOpenYouTubeImporter, 
+    };
 }
