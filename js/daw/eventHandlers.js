@@ -213,7 +213,7 @@ export function handleTrackMute(trackId) {
     track.applyMuteState(); // Apply the mute state to the track's audio nodes
     if (localAppServices.updateTrackUI) {
         getTracks().forEach(t => localAppServices.updateTrackUI(t.id, 'muteChanged'));
-        localAppServices.updateMixerWindow(); 
+        localAppServices.updateMixerWindow(); // Update mixer UI
     }
 }
 
@@ -473,7 +473,7 @@ export function selectMIDIInput(event) {
  * @param {'piano-roll'|'timeline'} newMode - The new playback mode.
  * @param {'piano-roll'|'timeline'} oldMode - The old playback mode.
  */
-export function onPlaybackModeChange(newMode, oldMode) { // Changed to export function
+export function onPlaybackModeChange(newMode, oldMode) {
     console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
     const tracks = localAppServices.getTracks();
 
@@ -491,32 +491,186 @@ export function onPlaybackModeChange(newMode, oldMode) { // Changed to export fu
         playbackModeToggle.textContent = `Mode: ${modeText}`;
     }
 }
+/**
+ * Updates the disabled state and title of the Undo and Redo buttons.
+ * This function is exposed to `main.js` via `initializeEventHandlersModule`.
+ */
+function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtnTop');
+    const redoBtn = document.getElementById('redoBtnTop');
+    
+    if (undoBtn) {
+        const undoStack = getUndoStack();
+        if (undoStack.length > 0) {
+            undoBtn.disabled = false;
+            undoBtn.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
+        } else {
+            undoBtn.disabled = true;
+            undoBtn.title = 'Undo';
+        }
+    }
+    if (redoBtn) {
+        const redoStack = getRedoStack();
+        if (redoStack.length > 0) {
+            redoBtn.disabled = false;
+            redoBtn.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
+        } else {
+            redoBtn.disabled = true;
+            redoBtn.title = 'Redo';
+        }
+    }
+}
 
 /**
- * Initializes the event handlers module.
- * @param {object} appServicesFromMain - The main app services object.
- * @returns {object} An object containing functions to be exposed via appServices.
+ * Toggles the browser's full-screen mode.
  */
-export function initializeEventHandlersModule(appServicesFromMain) {
-    localAppServices = appServicesFromMain;
-    
-    // Return all functions that are meant to be exposed via appServices.
-    // Ensure all functions referenced here are defined in this file, either as export or local functions above this point.
-    return {
-        updateUndoRedoButtons: updateUndoRedoButtons,
-        initializePrimaryEventListeners: initializePrimaryEventListeners,
-        attachGlobalControlEvents: attachGlobalControlEvents,
-        setupMIDI: setupMIDI,
-        handleTrackMute: handleTrackMute,
-        handleTrackSolo: handleTrackSolo,
-        handleTrackArm: handleTrackArm,
-        handleRemoveTrack: handleRemoveTrack,
-        handleOpenTrackInspector: handleOpenTrackInspector,
-        handleOpenEffectsRack: handleOpenEffectsRack,
-        handleOpenPianoRoll: handleOpenPianoRoll,
-        onPlaybackModeChange: onPlaybackModeChange,
-        handleTimelineLaneDrop: handleTimelineLaneDrop,
-        handleOpenYouTubeImporter: handleOpenYouTubeImporter,
-        // Any other top-level functions that need to be called through appServices.
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            localAppServices.showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000);
+        });
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        }
+    }
+}
+
+/**
+ * Sets up Web MIDI API access and populates the MIDI input selector.
+ * This function is now EXPORTED and called by main.js.
+ */
+export function setupMIDI() {
+    if (!navigator.requestMIDIAccess) {
+        localAppServices.showNotification("Web MIDI is not supported in this browser.", 4000);
+        return;
+    }
+    if (!window.isSecureContext) {
+        localAppServices.showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
+        return;
+    }
+
+    navigator.requestMIDIAccess({ sysex: false }) // Request sysex access if needed, but safer to start false
+        .then(onMIDISuccess)
+        .catch(onMIDIFailure);
+}
+
+/**
+ * Callback for successful MIDI access.
+ * @param {MIDIAccess} midiAccess - The MIDIAccess object.
+ */
+function onMIDISuccess(midiAccess) {
+    localAppServices.setMidiAccess(midiAccess);
+    populateMIDIInputSelector(midiAccess);
+    // Listen for state changes (e.g., MIDI device connected/disconnected)
+    midiAccess.onstatechange = () => {
+        populateMIDIInputSelector(midiAccess);
     };
+}
+
+/**
+ * Callback for failed MIDI access.
+ * @param {Error} error - The error object.
+ */
+function onMIDIFailure(error) {
+    console.error("Failed to get MIDI access -", error);
+    localAppServices.showNotification(`Failed to get MIDI access: ${error.name}`, 4000);
+}
+
+/**
+ * Populates the MIDI input device dropdown selector.
+ * @param {MIDIAccess} midiAccess - The MIDIAccess object.
+ */
+function populateMIDIInputSelector(midiAccess) {
+    const midiSelect = document.getElementById('midiInputSelectGlobalTop');
+    if (!midiSelect || !midiAccess) {
+        return;
+    }
+
+    const currentInputs = new Set();
+    midiSelect.innerHTML = ''; // Clear existing options
+
+    // Add a default "None" option
+    const noneOption = document.createElement('option');
+    noneOption.value = "";
+    noneOption.textContent = "None";
+    midiSelect.appendChild(noneOption);
+    
+    // Add available MIDI input devices
+    if (midiAccess.inputs.size > 0) {
+        midiAccess.inputs.forEach(input => {
+            currentInputs.add(input.id);
+            const option = document.createElement('option');
+            option.value = input.id;
+            option.textContent = input.name || `MIDI Input ${input.id}`; // Fallback name
+            midiSelect.appendChild(option);
+        });
+    }
+
+    // Restore previously active MIDI input if it's still available
+    const activeInput = localAppServices.getActiveMIDIInput();
+    if (activeInput && currentInputs.has(activeInput.id)) {
+        midiSelect.value = activeInput.id;
+        // Re-attach listener if the device object might have changed (e.g. after refresh)
+        activeInput.onmidimessage = onMIDIMessage; 
+    } else {
+        // If the previously active input is no longer available, reset it
+        localAppServices.setActiveMIDIInput(null);
+        midiSelect.value = ""; // Select "None"
+    }
+}
+
+/**
+ * Handles the selection of a MIDI input device from the dropdown.
+ * @param {Event} event - The change event from the select element.
+ */
+export function selectMIDIInput(event) {
+    const midiAccess = localAppServices.getMidiAccess();
+    const selectedId = event.target.value;
+    const currentActiveInput = localAppServices.getActiveMIDIInput();
+
+    // Disconnect previous active input's listener
+    if (currentActiveInput) {
+        currentActiveInput.onmidimessage = null;
+    }
+
+    // Set new active input and attach listener
+    if (selectedId && midiAccess) {
+        const newActiveInput = midiAccess.inputs.get(selectedId);
+        if (newActiveInput) { // Ensure device actually exists
+            newActiveInput.onmidimessage = onMIDIMessage;
+            localAppServices.setActiveMIDIInput(newActiveInput);
+            localAppServices.showNotification(`MIDI Input: ${newActiveInput.name} selected.`, 1500);
+        } else {
+            localAppServices.showNotification("MIDI device not found.", 2000);
+            localAppServices.setActiveMIDIInput(null);
+        }
+    } else {
+        localAppServices.setActiveMIDIInput(null);
+        localAppServices.showNotification("MIDI Input: None selected.", 1500);
+    }
+}
+
+/**
+ * Handles changes to the global playback mode.
+ * @param {'piano-roll'|'timeline'} newMode - The new playback mode.
+ * @param {'piano-roll'|'timeline'} oldMode - The old playback mode.
+ */
+export function onPlaybackModeChange(newMode, oldMode) {
+    console.log(`Playback mode changed from ${oldMode} to ${newMode}`);
+    const tracks = localAppServices.getTracks();
+
+    if (localAppServices.Tone.Transport.state === 'started') {
+        localAppServices.Tone.Transport.stop();
+    }
+    
+    tracks.forEach(track => track.sequences.stopSequence?.());
+
+    tracks.forEach(track => track.sequences.recreateToneSequence?.());
+
+    const playbackModeToggle = document.getElementById('playbackModeToggleBtnGlobalTop');
+    if (playbackModeToggle) {
+        const modeText = newMode.charAt(0).toUpperCase() + newMode.slice(1);
+        playbackModeToggle.textContent = `Mode: ${modeText}`;
+    }
 }
