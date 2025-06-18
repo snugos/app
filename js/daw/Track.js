@@ -1,13 +1,13 @@
 // js/daw/Track.js - Track Class Module (Refactored)
 
 // Corrected imports for ClipManager and SequenceManager (now exported classes)
-import { ClipManager } from '/app/js/daw/ClipManager.js'; // Corrected path
-import { SequenceManager } from '/app/js/daw/SequenceManager.js'; // Corrected path
-import { EffectChain } from '/app/js/daw/EffectChain.js'; // Corrected path
+import { ClipManager } from '/app/js/daw/ClipManager.js'; 
+import { SequenceManager } from '/app/js/daw/SequenceManager.js'; 
+import { EffectChain } from '/app/js/daw/EffectChain.js'; 
 // Corrected import for Constants. This file now explicitly imports it.
-import * as Constants from '/app/js/daw/constants.js'; // Corrected path
+import * as Constants from '/app/js/daw/constants.js'; 
 
-export class Track { //
+export class Track { 
     constructor(id, type, initialData = null, appServices = {}) {
         this.id = initialData?.id || id;
         this.type = type;
@@ -23,12 +23,11 @@ export class Track { //
         }
 
         this.isMuted = initialData?.isMuted || false;
-        this.isSoloed = false; // Solo state is not persisted directly on track but managed by global soloedTrackId
+        this.isSoloed = false; 
         this.isMonitoringEnabled = initialData?.isMonitoringEnabled !== undefined ? initialData.isMonitoringEnabled : (this.type === 'Audio');
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
 
         // --- Core Audio Nodes ---
-        // Ensure Tone.js is available before creating nodes
         if (!this.appServices.Tone) {
             console.error("Tone.js not loaded. Cannot create track audio nodes.");
             return;
@@ -41,7 +40,6 @@ export class Track { //
         if (masterBusInput) {
             this.outputNode.fan(this.trackMeter, masterBusInput);
         } else {
-            // Fallback if master bus is not yet initialized (shouldn't happen with correct initialization flow)
             this.outputNode.fan(this.trackMeter, this.appServices.Tone.getDestination());
         }
         this.input.connect(this.outputNode);
@@ -54,7 +52,7 @@ export class Track { //
         this.instrument = null;
         this.synthEngineType = null;
         this.synthParams = {};
-        this.samplerAudioData = { fileName: null, dbKey: null, status: 'empty' }; // Initialize explicitly
+        this.samplerAudioData = { fileName: null, dbKey: null, status: 'empty' }; 
         this.audioBuffer = null;
         this.slices = [];
         this.selectedSliceForEdit = 0;
@@ -66,8 +64,6 @@ export class Track { //
         this.inputChannel = (this.type === 'Audio') ? new this.appServices.Tone.Gain().connect(this.input) : null;
 
         // --- Initialize from initialData ---
-        // This part will be handled by the reconstructDAW's deserializeTrack method
-        // For fresh track creation, these will remain at their defaults
         if (initialData) {
             this.deserialize(initialData);
         } else {
@@ -84,13 +80,12 @@ export class Track { //
         
         // Ensure a default sequence exists for non-audio tracks
         if (this.type !== 'Audio' && this.sequences.sequences.length === 0) {
-            this.sequences.createNewSequence("Sequence 1", 64, true); // `true` to skip undo capture for initial creation
+            this.sequences.createNewSequence("Sequence 1", 64, true); 
         }
     }
 
     /**
      * Reconstructs the track state from a serialized data object.
-     * This method is crucial for loading projects and undo/redo functionality.
      * @param {object} data - The serialized track data.
      */
     async deserialize(data) {
@@ -99,16 +94,15 @@ export class Track { //
         this.name = data.name;
         this.isMuted = data.isMuted;
         this.previousVolumeBeforeMute = data.volume;
-        // Solo state is determined by global soloedTrackId, not deserialized directly
 
         // Dispose existing Tone.js nodes before re-initializing
         this.instrument?.dispose();
         this.input?.dispose();
         this.outputNode?.dispose();
         this.trackMeter?.dispose();
-        this.effects.dispose(); // Dispose effects chain explicitly
+        this.effects.dispose(); 
 
-        // Re-create core audio nodes (important for Tone.js graph)
+        // Re-create core audio nodes
         this.input = new this.appServices.Tone.Gain();
         this.outputNode = new this.appServices.Tone.Gain(this.previousVolumeBeforeMute);
         this.trackMeter = new this.appServices.Tone.Meter();
@@ -135,8 +129,7 @@ export class Track { //
             case 'Sampler':
                 this.samplerAudioData = data.samplerAudioData ? JSON.parse(JSON.stringify(data.samplerAudioData)) : { fileName: null, dbKey: null, status: 'empty' };
                 this.slices = data.slices ? JSON.parse(JSON.stringify(data.slices)) : Array(Constants.numSlices).fill(null).map(() => ({ offset: 0, duration: 0, volume: 0.7, pitchShift: 0, loop: false, reverse: false, envelope: { attack: 0.005, decay: 0.1, sustain: 0.9, release: 0.2 } }));
-                this.selectedSliceForEdit = 0; // Reset to default on load
-                // Asynchronously load audio buffer if dbKey exists
+                this.selectedSliceForEdit = 0; 
                 if (this.samplerAudioData.dbKey) {
                     const audioBlob = await this.appServices.dbGetAudio(this.samplerAudioData.dbKey);
                     if (audioBlob) {
@@ -152,8 +145,7 @@ export class Track { //
                 break;
             case 'DrumSampler':
                 this.drumSamplerPads = data.drumSamplerPads ? JSON.parse(JSON.stringify(data.drumSamplerPads)) : Array(Constants.numDrumSamplerPads).fill(null).map((_, i) => ({ originalFileName: null, dbKey: null, volume: 0.7, pitchShift: 0, audioBuffer: null }));
-                this.selectedDrumPadForEdit = 0; // Reset to default on load
-                // Asynchronously load audio buffers for pads
+                this.selectedDrumPadForEdit = 0; 
                 for (let i = 0; i < this.drumSamplerPads.length; i++) {
                     const padData = this.drumSamplerPads[i];
                     if (padData.dbKey) {
@@ -161,7 +153,7 @@ export class Track { //
                         if (audioBlob) {
                             try {
                                 padData.audioBuffer = await new this.appServices.Tone.Buffer().load(URL.createObjectURL(audioBlob));
-                                padData.status = 'loaded'; // Add status to padData if needed
+                                padData.status = 'loaded'; 
                             } catch (e) {
                                 console.error(`Error loading audio buffer for drum pad ${i} on track ${this.id}:`, e);
                                 padData.status = 'error';
@@ -205,7 +197,6 @@ export class Track { //
 
     /**
      * Initializes the Tone.js instrument for the track based on its type and parameters.
-     * This method is called during track creation and deserialization.
      */
     async initializeInstrument() {
         // Dispose of existing instrument first
@@ -228,21 +219,14 @@ export class Track { //
                 });
                 break;
             case 'Sampler':
-                // Tone.Sampler expects `urls` as the first argument, or options if no urls
-                // To pass options, pass an empty urls object first, then the options.
                 this.instrument = new this.appServices.Tone.Sampler(
-                    {}, // Empty urls object
-                    { // Options object for Sampler
+                    {}, 
+                    { 
                         attack: 0.01,
                         release: 0.1,
-                        // Ensure envelope is not passed directly here unless Sampler explicitly supports it.
-                        // Sampler's envelope is usually a separate property/signal.
-                        // For now, pass basic envelope settings directly compatible with Tone.Sampler
-                        // and apply slice-specific envelopes per slice later.
                     }
                 );
                 if (this.audioBuffer && this.audioBuffer.loaded) {
-                    // Populate sampler with slices
                     this.slices.forEach((slice, index) => {
                         if (slice.duration > 0) {
                             const midiNote = Constants.SAMPLER_PIANO_ROLL_START_NOTE + index;
@@ -253,19 +237,14 @@ export class Track { //
                                     (slice.offset + slice.duration) * this.audioBuffer.sampleRate
                                 )
                             );
-                            // Set individual slice properties like volume, pitch, envelope here
-                            // Sampler.add(note, buffer, onEnd)
-                            this.instrument.add(noteName, sliceBuffer, null); // No onEnd callback for now
-                            // Sampler's envelope applies globally. Slice-specific envelopes would require custom logic.
-                            // For pitchShift and volume, apply via Tone.Player when playing slice, not via Sampler.add
+                            this.instrument.add(noteName, sliceBuffer, null); 
                         }
                     });
                 }
                 break;
             case 'DrumSampler':
-                // Tone.Sampler expects `urls` as the first argument, or options if no urls
                 this.instrument = new this.appServices.Tone.Sampler(
-                    {}, // Empty urls object
+                    {}, 
                     {
                         attack: 0.01,
                         release: 0.1,
@@ -276,25 +255,19 @@ export class Track { //
                         if (padData.audioBuffer && padData.audioBuffer.loaded) {
                             const midiNote = Constants.DRUM_MIDI_START_NOTE + index;
                             const noteName = this.appServices.Tone.Midi(midiNote).toNote();
-                            // Add buffer with specific volume and pitch shift if Sampler.add supports it
-                            // For sampler, volume/pitch are typically applied per-note during triggerAttack.
                             this.instrument.add(noteName, padData.audioBuffer, null); 
                         }
                     });
                 }
                 break;
             case 'InstrumentSampler':
-                // InstrumentSampler also uses Tone.Sampler, but with a specific envelope and single root note mapping
                 this.instrument = new this.appServices.Tone.Sampler(
-                    {}, // Empty urls object
+                    {}, 
                     {
-                        envelope: this.instrumentSamplerSettings.envelope, // Pass envelope directly
-                        attack: this.instrumentSamplerSettings.envelope.attack, // Ensure individual properties are also set if envelope is an object
+                        envelope: this.instrumentSamplerSettings.envelope, 
+                        attack: this.instrumentSamplerSettings.envelope.attack, 
                         release: this.instrumentSamplerSettings.envelope.release,
-                        // Other envelope properties (decay, sustain) are part of the envelope object
                         loop: this.instrumentSamplerSettings.loop,
-                        // LoopStart and LoopEnd are often set on the buffer itself or on a Player instance
-                        // For Sampler, they typically apply to the internal players created when notes are triggered.
                     }
                 );
                 if (this.instrumentSamplerSettings.audioBuffer && this.instrumentSamplerSettings.audioBuffer.loaded) {
@@ -303,7 +276,7 @@ export class Track { //
                 }
                 break;
             case 'Audio':
-                this.instrument = null; // Audio tracks don't have an instrument
+                this.instrument = null; 
                 break;
             default:
                 this.instrument = null;
@@ -311,7 +284,6 @@ export class Track { //
 
         if (this.instrument) {
             this.instrument.connect(this.input);
-            // After instrument is initialized, set overall playbackRate for InstrumentSampler
             if (this.type === 'InstrumentSampler' && this.instrumentSamplerSettings.pitchShift !== undefined) {
                 this.instrument.playbackRate = Math.pow(2, this.instrumentSamplerSettings.pitchShift / 12);
             }
@@ -338,11 +310,11 @@ export class Track { //
     applySoloState(isAnotherTrackSoloed) {
         if (!this.outputNode) return;
         if (isAnotherTrackSoloed) this.outputNode.gain.rampTo(0, 0.02);
-        else this.applyMuteState(); // Apply mute state if no other track is soloed
+        else this.applyMuteState(); 
     }
 
     updateSoloMuteState(soloedTrackId) {
-        this.isSoloed = this.id === soloedTrackId; // Update soloed status based on global state
+        this.isSoloed = this.id === soloedTrackId; 
         this.applySoloState(soloedTrackId !== null && !this.isSoloed);
         this.appServices.updateTrackUI?.(this.id, 'soloChanged');
     }
@@ -350,10 +322,8 @@ export class Track { //
     setSynthParam(paramPath, value) {
         if (!this.instrument || this.type !== 'Synth') return;
         try {
-            // Tone.js .set() method
             this.instrument.set({ [paramPath]: value });
 
-            // Update local synthParams state (deeply)
             let current = this.synthParams;
             const keys = paramPath.split('.');
             for (let i = 0; i < keys.length - 1; i++) {
@@ -403,17 +373,57 @@ export class Track { //
     addAudioClip(audioBlob, startTime, clipName) { return this.clips.addAudioClip(audioBlob, startTime, clipName); }
     deleteClip(clipId) { return this.clips.deleteClip(clipId); }
 
+    /**
+     * Serializes the track's state into a plain object for saving/undo/redo.
+     * This method must be kept up-to-date with all serializable properties.
+     * @returns {object} A serializable representation of the track.
+     */
+    serialize() { // ADDED serialize method
+        return {
+            id: this.id,
+            type: this.type,
+            name: this.name,
+            isMuted: this.isMuted,
+            volume: this.previousVolumeBeforeMute, // Use previousVolumeBeforeMute for serialization
+            isMonitoringEnabled: this.isMonitoringEnabled,
+            // Delegate serialization to managers
+            activeEffects: this.effects.serialize(),
+            sequences: this.sequences.serialize(),
+            timelineClips: this.clips.serialize(),
+            // Type-specific data
+            synthEngineType: this.type === 'Synth' ? this.synthEngineType : undefined,
+            synthParams: this.type === 'Synth' ? this.synthParams : undefined,
+            samplerAudioData: this.type === 'Sampler' ? this.samplerAudioData : undefined,
+            slices: this.type === 'Sampler' ? this.slices : undefined,
+            drumSamplerPads: this.type === 'DrumSampler' ? this.drumSamplerPads.map(pad => ({
+                originalFileName: pad.originalFileName,
+                dbKey: pad.dbKey,
+                volume: pad.volume,
+                pitchShift: pad.pitchShift
+            })) : undefined, // Only serialize essential pad data
+            instrumentSamplerSettings: this.type === 'InstrumentSampler' ? {
+                originalFileName: this.instrumentSamplerSettings.originalFileName,
+                dbKey: this.instrumentSamplerSettings.dbKey,
+                rootNote: this.instrumentSamplerSettings.rootNote,
+                pitchShift: this.instrumentSamplerSettings.pitchShift,
+                loop: this.instrumentSamplerSettings.loop,
+                loopStart: this.instrumentSamplerSettings.loopStart,
+                loopEnd: this.instrumentSamplerSettings.loopEnd,
+                envelope: this.instrumentSamplerSettings.envelope
+            } : undefined
+        };
+    }
+
     dispose() {
         this.sequences.dispose();
         this.instrument?.dispose();
         this.input?.dispose();
         this.outputNode?.dispose();
         this.trackMeter?.dispose();
-        this.effects.dispose(); // Dispose effects chain
-        // Dispose audio buffers specific to sampler types
-        this.audioBuffer?.dispose(); // For Sampler type
-        this.drumSamplerPads.forEach(p => p.audioBuffer?.dispose()); // For DrumSampler type
-        this.instrumentSamplerSettings.audioBuffer?.dispose(); // For InstrumentSampler type
-        this.inputChannel?.dispose(); // For Audio track type
+        this.effects.dispose(); 
+        this.audioBuffer?.dispose(); 
+        this.drumSamplerPads.forEach(p => p.audioBuffer?.dispose()); 
+        this.instrumentSamplerSettings.audioBuffer?.dispose(); 
+        this.inputChannel?.dispose(); 
     }
 }
