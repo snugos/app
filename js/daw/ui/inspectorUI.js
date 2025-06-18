@@ -1,12 +1,12 @@
 // js/daw/ui/inspectorUI.js
 
 // Corrected imports for state modules and utils
-import { getTrackById } from '../state/trackState.js';
-import { getOpenWindows, getWindowById } from '../state/windowState.js';
-import { getIsReconstructingDAW } from '../state/projectState.js';
-import { setupGenericDropZoneListeners, createDropZoneHTML, drawWaveform } from '../utils.js'; // Import drawWaveform from utils.js
-import * as effectsRegistry from '../effectsRegistry.js'; 
-import * as Constants from '../constants.js'; //
+import { getTrackById } from '/app/js/daw/state/trackState.js'; 
+import { getOpenWindows, getWindowById } from '/app/js/daw/state/windowState.js'; 
+import { getIsReconstructingDAW } from '/app/js/daw/state/projectState.js'; 
+import { setupGenericDropZoneListeners, createDropZoneHTML, drawWaveform } from '/app/js/daw/utils.js'; 
+import * as effectsRegistry from '/app/js/daw/effectsRegistry.js'; 
+import * as Constants from '/app/js/daw/constants.js'; 
 
 let localAppServices = {};
 
@@ -43,7 +43,7 @@ function buildSynthEngineControls(track, container, engineType) {
 
     definitions.forEach(def => {
         // Ensure placeholder exists for the control
-        const placeholder = container.querySelector(`#<span class="math-inline">\{def\.idPrefix\}\-</span>{track.id}-placeholder`);
+        const placeholder = container.querySelector(`#${def.idPrefix}-${track.id}-placeholder`);
         if (!placeholder) return;
 
         let control;
@@ -62,7 +62,7 @@ function buildSynthEngineControls(track, container, engineType) {
                 onValueChange: (val, oldVal, fromInteraction) => {
                     track.setSynthParam(def.path, val);
                 }
-            }, localAppServices.captureStateForUndo); // Pass captureStateForUndo callback
+            }, localAppServices.captureStateForUndo); 
             placeholder.appendChild(control.element);
         } else if (def.type === 'select') {
             const selectGroup = document.createElement('div');
@@ -85,7 +85,7 @@ function buildSynthEngineControls(track, container, engineType) {
                 localAppServices.captureStateForUndo?.(`Change ${def.label} on ${track.name}`);
             });
             selectGroup.appendChild(selectEl);
-            placeholder.appendChild(selectGroup); // Append the group, not just the selectEl
+            placeholder.appendChild(selectGroup); 
         }
     });
 }
@@ -101,7 +101,7 @@ export function renderSamplePads(track, container) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
-    for (let i = 0; i < Constants.numSlices; i++) { // Using Constants for numSlices
+    for (let i = 0; i < Constants.numSlices; i++) { 
         const pad = document.createElement('button');
         pad.className = 'pad-button';
         pad.textContent = `Slice ${i + 1}`;
@@ -217,7 +217,7 @@ export function renderDrumSamplerPads(track, container) {
     const grid = document.createElement('div');
     grid.className = 'grid grid-cols-4 gap-2';
 
-    for (let i = 0; i < Constants.numDrumSamplerPads; i++) { // Using Constants for numDrumSamplerPads
+    for (let i = 0; i < Constants.numDrumSamplerPads; i++) { 
         const pad = document.createElement('button');
         pad.className = 'pad-button';
         pad.dataset.padIndex = i;
@@ -273,11 +273,11 @@ export function updateDrumPadControlsUI(track, container) {
         container.appendChild(controlsGrid);
     }
     controlsGrid.innerHTML = `
-        <div id="dropZoneContainer-<span class="math-inline">\{track\.id\}\-drumpad\-</span>{padIndex}">
+        <div id="dropZoneContainer-${track.id}-drumpad-${padIndex}">
             ${createDropZoneHTML(`pad-file-input-${padIndex}`, `Load for Pad ${padIndex + 1}`)}
         </div>
-        <div id="volumeKnob-drumpad-<span class="math-inline">\{padIndex\}\-placeholder"\></div\>
-<div id\="pitchKnob\-drumpad\-</span>{padIndex}-placeholder"></div>
+        <div id="volumeKnob-drumpad-${padIndex}-placeholder"></div>
+        <div id="pitchKnob-drumpad-${padIndex}-placeholder"></div>
     `;
 
     // Volume knob for drum pad
@@ -305,15 +305,15 @@ export function updateDrumPadControlsUI(track, container) {
             initialValue: padData.pitchShift || 0,
             onValueChange: (val) => { padData.pitchShift = val; }
         }, localAppServices.captureStateForUndo); 
-        pitchContainer.appendChild(pitchKnob.element); // Corrected: Append the element property of the knob object
+        pitchContainer.appendChild(pitchKnob.element); 
     }
 
     // Attach drop zone listeners and file input change handler
-    const dzContainerEl = container.querySelector(`#dropZoneContainer-<span class="math-inline">\{track\.id\}\-drumpad\-</span>{padIndex}`);
+    const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}-drumpad-${padIndex}`);
     if(dzContainerEl) {
         const dzEl = dzContainerEl.querySelector('.drop-zone');
         if(dzEl) setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', padIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile);
-        const fileInputEl = dzContainerEl.querySelector(`input[type="file"]`); // More generic selector
+        const fileInputEl = dzContainerEl.querySelector(`input[type="file"]`); 
         if(fileInputEl) fileInputEl.onchange = (e) => { localAppServices.loadDrumSamplerPadFile(e, track.id, padIndex); };
     }
 }
@@ -364,8 +364,8 @@ function buildTrackInspectorContentDOM(track) {
     if (track.type !== 'Audio') {
         editorButtonsHTML = `
             <div class="flex space-x-2 mt-2">
-                <button id="openPianoRollBtn-<span class="math-inline">\{track\.id\}" class\="flex\-1 p\-1 border rounded"\>Piano Roll</button\>
-<button id\="openEffectsRackBtn\-</span>{track.id}" class="flex-1 p-1 border rounded">Effects Rack</button>
+                <button id="openPianoRollBtn-${track.id}" class="flex-1 p-1 border rounded">Piano Roll</button>
+                <button id="openEffectsRackBtn-${track.id}" class="flex-1 p-1 border rounded">Effects Rack</button>
             </div>
         `;
     }
@@ -374,17 +374,17 @@ function buildTrackInspectorContentDOM(track) {
         <div class="panel">
             <h3 class="font-bold mb-2">Track Controls</h3>
             <div class="flex space-x-2">
-                <button id="muteBtn-<span class="math-inline">\{track\.id\}" class\="flex\-1 p\-1 border rounded"\></span>{track.isMuted ? 'Unmute' : 'Mute'}</button>
-                <button id="soloBtn-<span class="math-inline">\{track\.id\}" class\="flex\-1 p\-1 border rounded"\></span>{track.isSoloed ? 'Unsolo' : 'Solo'}</button>
-                <button id="armInputBtn-<span class="math-inline">\{track\.id\}" class\="flex\-1 p\-1 border rounded"\>Arm</button\>
-</div\>
-<div class\="mt\-2"\>
-<label for\="trackNameInput\-</span>{track.id}" class="text-sm">Track Name:</label>
-                <input type="text" id="trackNameInput-<span class="math-inline">\{track\.id\}" value\="</span>{track.name}" class="w-full p-1 border rounded bg-white dark:bg-black border-black dark:border-white">
+                <button id="muteBtn-${track.id}" class="flex-1 p-1 border rounded">${track.isMuted ? 'Unmute' : 'Mute'}</button>
+                <button id="soloBtn-${track.id}" class="flex-1 p-1 border rounded">${track.isSoloed ? 'Unsolo' : 'Solo'}</button>
+                <button id="armInputBtn-${track.id}" class="flex-1 p-1 border rounded">Arm</button>
             </div>
-            <span class="math-inline">\{editorButtonsHTML\}
-</div\>
-<div id\="inspector\-type\-specific\-controls\-</span>{track.id}"></div>
+            <div class="mt-2">
+                <label for="trackNameInput-${track.id}" class="text-sm">Track Name:</label>
+                <input type="text" id="trackNameInput-${track.id}" value="${track.name}" class="w-full p-1 border rounded bg-white dark:bg-black border-black dark:border-white">
+            </div>
+            ${editorButtonsHTML}
+        </div>
+        <div id="inspector-type-specific-controls-${track.id}"></div>
     `;
 
     const typeSpecificContainer = content.querySelector(`#inspector-type-specific-controls-${track.id}`);
@@ -401,10 +401,10 @@ function buildTrackInspectorContentDOM(track) {
             buildDrumSamplerControls(track, typeSpecificContainer);
             break;
         case 'InstrumentSampler':
-            buildInstrumentSamplerControls(track, typeSpecificContainer);
+            buildInstrumentSamplerControls(track, typeSpecificContainer); // The element to modify is now definitely `typeSpecificContainer`
             break;
         case 'Audio':
-            buildAudioTrackControls(track, typeSpecificContainer); // New function for Audio track controls
+            buildAudioTrackControls(track, typeSpecificContainer); 
             break;
     }
 
@@ -479,21 +479,21 @@ function buildSynthControls(track, container) {
     const controlsHtml = `
         <div class="panel">
             <h3 class="font-bold mb-2">Synthesizer</h3>
-            <div id="oscillator-controls-<span class="math-inline">\{track\.id\}" class\="control\-group"\>
-<label\>Oscillator</label\>
-<div id\="oscType\-</span>{track.id}-placeholder"></div>
+            <div id="oscillator-controls-${track.id}" class="control-group">
+                <label>Oscillator</label>
+                <div id="oscType-${track.id}-placeholder"></div>
             </div>
-            <div id="envelope-controls-<span class="math-inline">\{track\.id\}" class\="grid grid\-cols\-2 gap\-x\-2 gap\-y\-1"\>
-<div id\="envAttack\-</span>{track.id}-placeholder"></div>
-                <div id="envDecay-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="envSustain\-</span>{track.id}-placeholder"></div>
+            <div id="envelope-controls-${track.id}" class="grid grid-cols-2 gap-x-2 gap-y-1">
+                <div id="envAttack-${track.id}-placeholder"></div>
+                <div id="envDecay-${track.id}-placeholder"></div>
+                <div id="envSustain-${track.id}-placeholder"></div>
                 <div id="envRelease-${track.id}-placeholder"></div>
             </div>
         </div>
     `;
     container.innerHTML = controlsHtml;
     // Build synth engine-specific controls using definitions from effectsRegistry
-    buildSynthEngineControls(track, container, 'MonoSynth'); // Assuming 'MonoSynth' is the default for 'Synth' type
+    buildSynthEngineControls(track, container, 'MonoSynth'); 
 }
 
 /**
@@ -508,13 +508,13 @@ function buildSlicerSamplerControls(track, container) {
             <div id="dropZoneContainer-${track.id}">
                 ${createDropZoneHTML(`slicer-file-input-${track.id}`)}
             </div>
-            <canvas id="waveform-canvas-<span class="math-inline">\{track\.id\}" class\="waveform\-canvas mt\-2"\></canvas\>
-<div class\="mt\-2 text\-sm text\-center text\-secondary"\></span>{track.samplerAudioData.fileName || 'No sample loaded'}</div>
+            <canvas id="waveform-canvas-${track.id}" class="waveform-canvas mt-2"></canvas>
+            <div class="mt-2 text-sm text-center text-secondary">${track.samplerAudioData.fileName || 'No sample loaded'}</div>
         </div>
         <div class="panel">
             <h3 class="font-bold mb-2">Slices</h3>
-            <div id="sample-pads-container-<span class="math-inline">\{track\.id\}" class\="mt\-2"\></div\>
-<div id\="slice\-controls\-container\-</span>{track.id}"></div>
+            <div id="sample-pads-container-${track.id}" class="mt-2"></div>
+            <div id="slice-controls-container-${track.id}"></div>
         </div>
     `;
     const dzContainerEl = container.querySelector(`#dropZoneContainer-${track.id}`);
@@ -529,7 +529,7 @@ function buildSlicerSamplerControls(track, container) {
         localAppServices.loadSampleFile
     );
     
-    const fileInputEl = dzContainerEl.querySelector(`input[type="file"]`); // More generic selector
+    const fileInputEl = dzContainerEl.querySelector(`input[type="file"]`); 
     if (fileInputEl) { 
         fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'Sampler');
     }
@@ -554,8 +554,8 @@ function buildDrumSamplerControls(track, container) {
     container.innerHTML = `
         <div class="panel">
             <h3 class="font-bold mb-2">Sampler Pads</h3>
-            <div id="drum-pads-container-<span class="math-inline">\{track\.id\}" class\="mt\-2"\></div\>
-<div id\="drum\-pad\-controls\-container\-</span>{track.id}" class="mt-2"></div>
+            <div id="drum-pads-container-${track.id}" class="mt-2"></div>
+            <div id="drum-pad-controls-container-${track.id}" class="mt-2"></div>
         </div>
     `;
     const padsContainer = container.querySelector(`#drum-pads-container-${track.id}`);
@@ -570,32 +570,38 @@ function buildDrumSamplerControls(track, container) {
  * @param {HTMLElement} container - The DOM element to attach controls to.
  */
 function buildInstrumentSamplerControls(track, container) {
+    // Define the initial HTML content for the Instrument Sampler controls.
+    // Ensure the main controls grid has a unique ID, like `instrument-sampler-controls-grid-${track.id}`
+    // and that the placeholders are correctly nested within it.
     container.innerHTML = `
         <div class="panel">
             <h3 class="font-bold mb-2">Instrument Sampler</h3>
             <div id="dropZoneContainer-instrument-${track.id}">
                 ${createDropZoneHTML(`instrument-file-input-${track.id}`)}
             </div>
-            <canvas id="waveform-canvas-instrument-<span class="math-inline">\{track\.id\}" class\="waveform\-canvas mt\-2"\></canvas\>
-<div class\="mt\-2 text\-sm text\-center text\-secondary"\></span>{track.instrumentSamplerSettings.originalFileName || 'No sample loaded'}</div>
+            <canvas id="waveform-canvas-instrument-${track.id}" class="waveform-canvas mt-2"></canvas>
+            <div class="mt-2 text-sm text-center text-secondary">${track.instrumentSamplerSettings.originalFileName || 'No sample loaded'}</div>
             
-            <div class="mt-4 grid grid-cols-2 gap-2">
-                <div id="instrumentSamplerVolume-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="instrumentSamplerPitchShift\-</span>{track.id}-placeholder"></div>
-                <div id="instrumentSamplerLoop-<span class="math-inline">\{track\.id\}\-placeholder" class\="col\-span\-2 flex items\-center"\></div\>
-</div\>
-<div class\="mt\-2 grid grid\-cols\-2 gap\-x\-2 gap\-y\-1"\>
-<h4 class\="col\-span\-2 font\-semibold mt\-2"\>Envelope</h4\>
-<div id\="instrumentSamplerEnvAttack\-</span>{track.id}-placeholder"></div>
-                <div id="instrumentSamplerEnvDecay-<span class="math-inline">\{track\.id\}\-placeholder"\></div\>
-<div id\="instrumentSamplerEnvSustain\-</span>{track.id}-placeholder"></div>
+            <div id="instrument-sampler-controls-grid-${track.id}" class="mt-4 grid grid-cols-2 gap-2">
+                <div id="instrumentSamplerVolume-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerPitchShift-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerLoop-${track.id}-placeholder" class="col-span-2 flex items-center"></div>
+            </div>
+            <div class="mt-2 grid grid-cols-2 gap-x-2 gap-y-1">
+                <h4 class="col-span-2 font-semibold mt-2">Envelope</h4>
+                <div id="instrumentSamplerEnvAttack-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerEnvDecay-${track.id}-placeholder"></div>
+                <div id="instrumentSamplerEnvSustain-${track.id}-placeholder"></div>
                 <div id="instrumentSamplerEnvRelease-${track.id}-placeholder"></div>
             </div>
         </div>
     `;
+
+    // Now, select the newly created grid container correctly
+    const controlsGrid = container.querySelector(`#instrument-sampler-controls-grid-${track.id}`); // Corrected ID selection
+
     const dzContainerEl = container.querySelector(`#dropZoneContainer-instrument-${track.id}`);
     const dzEl = dzContainerEl.querySelector('.drop-zone');
-    // setupGenericDropZoneListeners is imported from utils.js
     setupGenericDropZoneListeners(
         dzEl,
         track.id,
@@ -605,7 +611,7 @@ function buildInstrumentSamplerControls(track, container) {
         localAppServices.loadSampleFile
     );
 
-    const fileInputEl = dzContainerEl.querySelector(`input[type="file"]`); // More generic selector
+    const fileInputEl = dzContainerEl.querySelector(`input[type="file"]`); 
     if (fileInputEl) {
         fileInputEl.onchange = (e) => localAppServices.loadSampleFile(e, track.id, 'InstrumentSampler');
     }
@@ -616,9 +622,9 @@ function buildInstrumentSamplerControls(track, container) {
     }
 
     // Volume knob for instrument sampler
-    const volumeKnobPlaceholder = container.querySelector(`#instrumentSamplerVolume-${track.id}-placeholder`);
+    const volumeKnobPlaceholder = controlsGrid.querySelector(`#instrumentSamplerVolume-${track.id}-placeholder`); // Use controlsGrid
     if (volumeKnobPlaceholder) {
-        const initialVolume = track.previousVolumeBeforeMute; // Use track's main volume
+        const initialVolume = track.previousVolumeBeforeMute; 
         const volumeKnob = localAppServices.createKnob({
             label: 'Volume',
             min: 0,
@@ -626,14 +632,14 @@ function buildInstrumentSamplerControls(track, container) {
             step: 0.01,
             initialValue: initialVolume,
             onValueChange: (val, oldVal, fromInteraction) => {
-                track.setVolume(val, fromInteraction); // Update track's main volume
+                track.setVolume(val, fromInteraction); 
             }
         }, localAppServices.captureStateForUndo);
         volumeKnobPlaceholder.appendChild(volumeKnob.element);
     }
 
     // Pitch Shift knob for instrument sampler
-    const pitchShiftKnobPlaceholder = container.querySelector(`#instrumentSamplerPitchShift-${track.id}-placeholder`);
+    const pitchShiftKnobPlaceholder = controlsGrid.querySelector(`#instrumentSamplerPitchShift-${track.id}-placeholder`); // Use controlsGrid
     if (pitchShiftKnobPlaceholder) {
         const initialPitchShift = track.instrumentSamplerSettings.pitchShift || 0;
         const pitchKnob = localAppServices.createKnob({
@@ -644,17 +650,16 @@ function buildInstrumentSamplerControls(track, container) {
             initialValue: initialPitchShift,
             onValueChange: (val) => {
                 track.instrumentSamplerSettings.pitchShift = val;
-                // Update Tone.Sampler's overall playbackRate if it exists
                 if (track.instrument) {
                     track.instrument.playbackRate = Math.pow(2, val / 12);
                 }
             }
-        }, localAppServices.captureStateForUndo);
-        pitchShiftKnobPlaceholder.appendChild(pitchKnob.element);
+        }, localAppServices.captureStateForUndo); 
+        pitchShiftKnobPlaceholder.appendChild(pitchKnob.element); 
     }
 
     // Loop checkbox for instrument sampler
-    const loopCheckboxPlaceholder = container.querySelector(`#instrumentSamplerLoop-${track.id}-placeholder`);
+    const loopCheckboxPlaceholder = controlsGrid.querySelector(`#instrumentSamplerLoop-${track.id}-placeholder`); // Use controlsGrid
     if (loopCheckboxPlaceholder) {
         loopCheckboxPlaceholder.innerHTML = `<label class="flex items-center space-x-2">
             <input type="checkbox" id="instrumentSamplerLoopCheckbox-${track.id}" class="form-checkbox" ${track.instrumentSamplerSettings.loop ? 'checked' : ''}> <span>Loop Sample</span>
@@ -662,7 +667,6 @@ function buildInstrumentSamplerControls(track, container) {
         const checkbox = loopCheckboxPlaceholder.querySelector(`#instrumentSamplerLoopCheckbox-${track.id}`);
         checkbox.addEventListener('change', (e) => {
             track.instrumentSamplerSettings.loop = e.target.checked;
-            // Update Tone.Sampler's loop property if it exists
             if (track.instrument) {
                 track.instrument.loop = e.target.checked;
             }
@@ -679,12 +683,11 @@ function buildInstrumentSamplerControls(track, container) {
     ];
 
     envelopeParams.forEach(paramDef => {
-        const placeholder = container.querySelector(`#instrumentSampler${paramDef.id}-${track.id}-placeholder`);
+        const placeholder = container.querySelector(`#instrumentSampler${paramDef.id}-${track.id}-placeholder`); // These are still under the main `container`
         if (placeholder) {
-            // Get initial value from instrumentSamplerSettings
             const initialValue = getNestedParam(track.instrumentSamplerSettings, paramDef.path) !== undefined
                                  ? getNestedParam(track.instrumentSamplerSettings, paramDef.path)
-                                 : paramDef.defaultValue; // Fallback to a default if not found
+                                 : paramDef.defaultValue; 
 
             const knob = localAppServices.createKnob({
                 label: paramDef.label,
@@ -694,7 +697,6 @@ function buildInstrumentSamplerControls(track, container) {
                 initialValue: initialValue,
                 decimals: paramDef.decimals,
                 onValueChange: (val) => {
-                    // Update instrumentSamplerSettings state
                     let current = track.instrumentSamplerSettings;
                     const keys = paramDef.path.split('.');
                     for (let i = 0; i < keys.length - 1; i++) {
@@ -702,7 +704,6 @@ function buildInstrumentSamplerControls(track, container) {
                     }
                     current[keys[keys.length - 1]] = val;
 
-                    // Update Tone.Sampler's envelope directly
                     if (track.instrument && track.instrument.envelope && typeof track.instrument.envelope.set === 'function') {
                         track.instrument.envelope.set({ [keys.slice(1).join('.')]: val });
                     }
@@ -722,11 +723,11 @@ function buildAudioTrackControls(track, container) {
     container.innerHTML = `
         <div class="panel">
             <h3 class="font-bold mb-2">Audio Track</h3>
-            <div id="audioMonitoring-<span class="math-inline">\{track\.id\}\-placeholder" class\="flex items\-center space\-x\-2"\>
-<label for\="monitorInputCheckbox\-</span>{track.id}" class="text-sm">Monitor Input:</label>
-                <input type="checkbox" id="monitorInputCheckbox-${track.id}" class="form-checkbox" <span class="math-inline">\{track\.isMonitoringEnabled ? 'checked' \: ''\}\>
-</div\>
-<div id\="audioDropZone\-</span>{track.id}" class="mt-4">
+            <div id="audioMonitoring-${track.id}-placeholder" class="flex items-center space-x-2">
+                <label for="monitorInputCheckbox-${track.id}" class="text-sm">Monitor Input:</label>
+                <input type="checkbox" id="monitorInputCheckbox-${track.id}" class="form-checkbox" ${track.isMonitoringEnabled ? 'checked' : ''}>
+            </div>
+            <div id="audioDropZone-${track.id}" class="mt-4">
                 ${createDropZoneHTML(`audio-track-file-input-${track.id}`, 'Drop Audio File to Create Clip')}
             </div>
         </div>
@@ -737,9 +738,7 @@ function buildAudioTrackControls(track, container) {
         monitorCheckbox.addEventListener('change', (e) => {
             track.isMonitoringEnabled = e.target.checked;
             localAppServices.showNotification?.(`Monitoring for ${track.name} ${track.isMonitoringEnabled ? 'enabled' : 'disabled'}.`);
-            // If recording and monitoring enabled/disabled mid-recording, need to update the audio chain
             if (localAppServices.isRecording() && localAppServices.getRecordingTrackId() === track.id) {
-                // This might require stopping and restarting the recorder, or dynamically connecting/disconnecting mic
                 localAppServices.showNotification?.("Monitoring change will apply on next recording start.", 3000);
             }
         });
@@ -753,12 +752,10 @@ function buildAudioTrackControls(track, container) {
             'Audio',
             null,
             (soundData, targetTrackId, targetType) => {
-                // When dropping from Sound Browser, we need to load it as an audio clip
                 localAppServices.getAudioBlobFromSoundBrowserItem(soundData)
                     .then(blob => {
                         if (blob) {
                             localAppServices.showNotification(`Adding "${soundData.fileName}" to ${track.name}.`, 2000);
-                            // Default start time for drag and drop to audio track is 0, user can move later
                             track.clips.addAudioClip(blob, 0, soundData.fileName);
                         }
                     })
@@ -768,11 +765,10 @@ function buildAudioTrackControls(track, container) {
                     });
             },
             (e, targetTrackId, targetType) => {
-                // When dropping from local file system
                 const file = e.dataTransfer.files[0];
                 if (file && file.type.startsWith('audio/')) {
                     localAppServices.showNotification(`Adding "${file.name}" to ${track.name}.`, 2000);
-                    track.clips.addAudioClip(file, 0, file.name); // Add at time 0
+                    track.clips.addAudioClip(file, 0, file.name); 
                 }
             }
         );
