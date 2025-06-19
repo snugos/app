@@ -827,50 +827,6 @@ export function attachGlobalControlEvents() {
     });
 }
 
-/**
- * Updates the disabled state and title of the Undo and Redo buttons.
- * This function is exposed to `main.js` via `initializeEventHandlersModule`.
- */
-function updateUndoRedoButtons() {
-    const undoBtn = document.getElementById('undoBtnTop');
-    const redoBtn = document.getElementById('redoBtnTop');
-    
-    if (undoBtn) {
-        const undoStack = getUndoStack();
-        if (undoStack.length > 0) {
-            undoBtn.disabled = false;
-            undoBtn.title = `Undo: ${undoStack[undoStack.length - 1].actionDescription}`;
-        } else {
-            undoBtn.disabled = true;
-            undoBtn.title = 'Undo';
-        }
-    }
-    if (redoBtn) {
-        const redoStack = getRedoStack();
-        if (redoStack.length > 0) {
-            redoBtn.disabled = false;
-            redoBtn.title = `Redo: ${redoStack[redoStack.length - 1].actionDescription}`;
-        } else {
-            redoBtn.disabled = true;
-            redoBtn.title = 'Redo';
-        }
-    }
-}
-
-/**
- * Toggles the browser's full-screen mode.
- */
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            localAppServices.showNotification(`Error attempting to enable full-screen mode: ${err.message}`, 3000);
-        });
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        }
-    }
-}
 
 /**
  * Sets up Web MIDI API access and populates the MIDI input selector.
