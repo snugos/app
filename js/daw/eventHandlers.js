@@ -397,25 +397,6 @@ function toggleFullScreen() {
 }
 
 /**
- * Sets up Web MIDI API access and populates the MIDI input selector.
- * This function is now EXPORTED and called by main.js.
- */
-export function setupMIDI() {
-    if (!navigator.requestMIDIAccess) {
-        localAppServices.showNotification("Web MIDI is not supported in this browser.", 4000);
-        return;
-    }
-    if (!window.isSecureContext) {
-        localAppServices.showNotification("MIDI access requires a secure connection (HTTPS).", 6000);
-        return;
-    }
-
-    navigator.requestMIDIAccess({ sysex: false })
-        .then(onMIDISuccess)
-        .catch(onMIDIFailure);
-}
-
-/**
  * Handles the selection of a MIDI input device from the dropdown.
  * @param {Event} event - The change event from the select element.
  */
