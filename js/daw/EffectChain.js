@@ -75,28 +75,32 @@ export class EffectChain {
     }
 
     rebuildEffectChain() {
-        this.track.input.disconnect(); // Disconnect everything from the track's input initially
-        let currentNode = this.track.input;
-
-        this.activeEffects.forEach(effect => {
-            if (effect.toneNode) {
-                // Disconnect each effect node first, in case its previous connection changed
-                if (currentNode !== effect.toneNode) { // Avoid disconnecting self if currentNode is already the effectNode (e.g. at start of chain)
-                    if (currentNode.output && typeof currentNode.output.disconnect === 'function') {
-                        // This handles cases where currentNode is a ToneAudioNode with 'output'
-                        currentNode.output.disconnect(effect.toneNode);
-                    } else if (typeof currentNode.disconnect === 'function') {
-                        // This handles cases where currentNode is a direct AudioNode
-                        currentNode.disconnect(effect.toneNode);
-                    }
-                }
-                currentNode.connect(effect.toneNode);
-                currentNode = effect.toneNode;
-            }
-        });
-
-        currentNode.connect(this.track.outputNode); // Connect the last effect node to the track's output
+    // First, ensure all current connections from the track's input are cleared.
+    // This is safe even if nothing is connected.
+    if (this.track.input && typeof this.track.input.disconnect === 'function') {
+        this.track.input.disconnect();
     }
+    let currentNode = this.track.input; // Start the chain from the track's input
+
+    this.activeEffects.forEach(effect => {
+        if (effect.toneNode) {
+            // Disconnect the effect node from any previous connections it might have had.
+            // This is crucial if effects are reordered or the chain is rebuilt multiple times.
+            if (typeof effect.toneNode.disconnect === 'function') {
+                effect.toneNode.disconnect();
+            }
+            // Connect the current source in the chain to the current effect node.
+            currentNode.connect(effect.toneNode);
+            // The current effect node becomes the new source for the next connection.
+            currentNode = effect.toneNode;
+        }
+    });
+
+    // Finally, connect the last node in the chain to the track's main output node.
+    if (currentNode && this.track.outputNode) {
+        currentNode.connect(this.track.outputNode);
+    }
+}
 
     serialize() {
         return this.activeEffects.map(e => ({ type: e.type, params: e.params }));

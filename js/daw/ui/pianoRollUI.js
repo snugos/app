@@ -281,7 +281,7 @@ function drawPianoKeys(layer, track, colors, numRows) { //
     }
 }
 
-function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows) { //
+function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows, track) { //
     const noteHeight = Constants.PIANO_ROLL_NOTE_HEIGHT; //
     const keyWidth = Constants.PIANO_ROLL_KEY_WIDTH; //
     const noteWidth = Constants.PIANO_ROLL_SIXTEENTH_NOTE_WIDTH; //
@@ -297,9 +297,7 @@ function drawGrid(layer, stageWidth, stageHeight, numSteps, colors, isSampler, n
         let isBlackKeyRow = false;
         if (!isSampler) { // For Synth/InstrumentSampler, identify black key rows
             isBlackKeyRow = Constants.SYNTH_PITCHES[i]?.includes('#') || false; //
-        } else if (track.type === 'DrumSampler') { // For DrumSampler, identify black key MIDI notes
-             isBlackKeyRow = Constants.MIDI_NOTE_NAMES[(Constants.DRUM_MIDI_START_NOTE + i) % 12]?.includes('#');
-        }
+        } else if (track && track.type === 'DrumSampler') { // Check if 'track' exists before accessing its 'type' isBlackKeyRow = Constants.MIDI_NOTE_NAMES[(Constants.DRUM_MIDI_START_NOTE + i) % 12]?.includes('#'); }
 
         if (isBlackKeyRow) { //
             layer.add(new Konva.Rect({ //
@@ -438,7 +436,7 @@ function createPianoRollStage(containerElement, velocityPane, track) { //
     const pianoRoll = { stage, gridLayer, noteLayer, keyLayer, playheadLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows }; // Store references
     openPianoRolls.set(track.id, pianoRoll); // Add to global map of open piano rolls
 
-    drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows); // Draw grid
+    drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows, track); // Draw grid
     drawPianoKeys(keyLayer, track, colors, numRows); // Draw piano keys/labels
     redrawNotes(noteLayer, track, colors, selectedNotes); // Draw notes
     
