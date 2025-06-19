@@ -899,20 +899,21 @@ export function initializeEventHandlersModule(appServicesFromMain) {
     
     // All functions returned here should be DEFINED (export or local) ABOVE this point
     // This ensures they are in scope when the return object is constructed.
-    return {
-        updateUndoRedoButtons: updateUndoRedoButtons,
-        initializePrimaryEventListeners: initializePrimaryEventListeners,
-        attachGlobalControlEvents: attachGlobalControlEvents,
-        setupMIDI: setupMIDI,
-        handleTrackMute: handleTrackMute,
-        handleTrackSolo: handleTrackSolo,
-        handleTrackArm: handleTrackArm,
-        handleRemoveTrack: handleRemoveTrack,
-        handleOpenTrackInspector: handleOpenTrackInspector,
-        handleOpenEffectsRack: handleOpenEffectsRack,
-        handleOpenPianoRoll: handleOpenPianoRoll,
-        onPlaybackModeChange: onPlaybackModeChange,
-        handleTimelineLaneDrop: handleTimelineLaneDrop,
-        handleOpenYouTubeImporter: handleOpenYouTubeImporter,
-    };
+return {
+    updateUndoRedoButtons: updateUndoRedoButtons,
+    initializePrimaryEventListeners: initializePrimaryEventListeners,
+    attachGlobalControlEvents: attachGlobalControlEvents,
+    setupMIDI: setupMIDI,
+    // Add all other publicly callable handlers here
+    handleTrackMute: handleTrackMute,
+    handleTrackSolo: handleTrackSolo,
+    handleTrackArm: handleTrackArm,
+    handleRemoveTrack: handleRemoveTrack,
+    handleOpenTrackInspector: handleOpenTrackInspector,
+    handleOpenEffectsRack: handleOpenEffectsRack,
+    handleOpenPianoRoll: handleOpenPianoRoll,
+    onPlaybackModeChange: onPlaybackModeChange,
+    handleTimelineLaneDrop: handleTimelineLaneDrop,
+    handleOpenYouTubeImporter: handleOpenYouTubeImporter,
+};
 }
