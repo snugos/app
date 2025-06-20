@@ -38,7 +38,7 @@ const initializeDatabase = async () => {
         );
     `;
     const addAvatarUrlColumnQuery = `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;`;
-    
+
     const createUserFilesTableQuery = `
         CREATE TABLE IF NOT EXISTS user_files (
             id SERIAL PRIMARY KEY,
@@ -55,7 +55,7 @@ const initializeDatabase = async () => {
     `;
     const addPathColumnQuery = `ALTER TABLE user_files ADD COLUMN IF NOT EXISTS path TEXT;`;
     const addIsPublicColumnQuery = `ALTER TABLE user_files ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;`;
-    
+
     const createFriendsTableQuery = `
         CREATE TABLE IF NOT EXISTS friends (
             user_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -89,8 +89,16 @@ const initializeDatabase = async () => {
     }
 };
 
-app.use(express.json());
-app.use(cors());
+// Configure CORS to allow requests from your GitHub Pages domain
+// IMPORTANT: Replace 'https://snugos.github.io' with your actual GitHub Pages domain if it changes.
+// If you have multiple origins, you can provide an array: ['https://snugos.github.io', 'http://localhost:8080']
+app.use(cors({
+    origin: 'https://snugos.github.io', // Your GitHub Pages URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+    allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers
+}));
+
+app.use(express.json()); // This should be *after* cors setup for preflight requests
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -154,7 +162,7 @@ app.get('/api/profile/me', authenticateToken, async (request, response) => {
 app.put('/api/profile/settings', authenticateToken, async (req, res) => {
     const { avatar_url, background_url } = req.body;
     const userId = req.user.id;
-    
+
     try {
         if (avatar_url) {
             await pool.query("UPDATE profiles SET avatar_url = $1 WHERE id = $2", [avatar_url, userId]);
@@ -188,7 +196,7 @@ app.put('/api/profiles/:username', authenticateToken, async (request, response) 
     if (request.user.username !== username) {
         return response.status(403).json({ success: false, message: "You can only edit your own profile." });
     }
-    
+
     try {
         const updateQuery = 'UPDATE profiles SET bio = $1 WHERE id = $2 RETURNING id, username, bio';
         const result = await pool.query(updateQuery, [bio, request.user.id]);
@@ -338,6 +346,45 @@ app.put('/api/files/:fileId/toggle-public', authenticateToken, async (req, res) 
     }
 });
 
+app.put('/api/files/:fileId/rename', authenticateToken, async (req, res) => {
+    const fileId = req.params.fileId;
+    const userId = req.user.id;
+    const { newName } = req.body;
+
+    if (!newName || newName.trim() === '') {
+        return res.status(400).json({ success: false, message: 'New name cannot be empty.' });
+    }
+
+    try {
+        const getFileQuery = "SELECT user_id, path, file_name, s3_key FROM user_files WHERE id = $1";
+        const fileResult = await pool.query(getFileQuery, [fileId]);
+
+        if (fileResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'File or folder not found.' });
+        }
+
+        const fileData = fileResult.rows[0];
+        if (fileData.user_id !== userId) {
+            return res.status(403).json({ success: false, message: 'You do not have permission to rename this item.' });
+        }
+
+        // Check for name conflict in the same directory
+        const conflictQuery = "SELECT id FROM user_files WHERE user_id = $1 AND path = $2 AND file_name = $3 AND id != $4";
+        const conflictResult = await pool.query(conflictQuery, [userId, fileData.path, newName.trim(), fileId]);
+        if (conflictResult.rows.length > 0) {
+            return res.status(409).json({ success: false, message: `An item with the name "${newName.trim()}" already exists in this location.` });
+        }
+
+        const updateQuery = `UPDATE user_files SET file_name = $1 WHERE id = $2 RETURNING *;`;
+        const result = await pool.query(updateQuery, [newName.trim(), fileId]);
+
+        res.json({ success: true, message: 'Item renamed successfully.', item: result.rows[0] });
+    } catch (error) {
+        console.error("[Rename Item] Error:", error);
+        res.status(500).json({ success: false, message: 'Server error while renaming item.' });
+    }
+});
+
 app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
     const fileId = req.params.fileId;
     const userId = req.user.id;
@@ -345,7 +392,7 @@ app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
         const getFileQuery = "SELECT user_id, s3_key FROM user_files WHERE id = $1";
         const fileResult = await pool.query(getFileQuery, [fileId]);
         if (fileResult.rows.length === 0) return res.status(404).json({ success: false, message: 'File not found.' });
-        
+
         const fileOwnerId = fileResult.rows[0].user_id;
         const s3Key = fileResult.rows[0].s3_key;
         if (fileOwnerId !== userId) return res.status(403).json({ success: false, message: 'You do not have permission to delete this file.' });
@@ -366,12 +413,12 @@ app.get('/api/files/:fileId/share-link', authenticateToken, async (req, res) => 
     try {
         const fileQuery = await pool.query("SELECT user_id, s3_key, is_public FROM user_files WHERE id = $1", [fileId]);
         if (fileQuery.rows.length === 0) return res.status(404).json({ success: false, message: "File not found." });
-        
+
         const file = fileQuery.rows[0];
         if (!file.is_public && file.user_id !== userId) {
             return res.status(403).json({ success: false, message: "You do not have permission to share this file." });
         }
-        
+
         const params = { Bucket: process.env.S3_BUCKET_NAME, Key: file.s3_key, Expires: 3600 };
         const shareUrl = await s3.getSignedUrlPromise('getObject', params);
         res.json({ success: true, shareUrl: shareUrl });
