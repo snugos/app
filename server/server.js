@@ -37,6 +37,7 @@ const initializeDatabase = async () => {
             background_url TEXT,
             bio TEXT,
             avatar_url TEXT,
+            google_id VARCHAR(255) UNIQUE, -- New: Google User ID
             google_access_token TEXT,  -- For storing Google access token
             google_refresh_token TEXT, -- For storing Google refresh token
             google_token_expiry TIMESTAMP WITH TIME ZONE -- For token expiry
@@ -44,6 +45,7 @@ const initializeDatabase = async () => {
     `;
     const addGoogleAuthColumnsQuery = `
         ALTER TABLE profiles
+        ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE,
         ADD COLUMN IF NOT EXISTS google_access_token TEXT,
         ADD COLUMN IF NOT EXISTS google_refresh_token TEXT,
         ADD COLUMN IF NOT EXISTS google_token_expiry TIMESTAMP WITH TIME ZONE;
@@ -337,7 +339,12 @@ app.get('/api/admin/files', authenticateToken, async (req, res) => {
     }
     try {
         // Fetch all files from the database regardless of user_id or path
-        const query = `SELECT * FROM user_files ORDER BY user_id, path, mime_type, file_name ASC`;
+        const query = `
+            SELECT uf.*, p.username as owner_username
+            FROM user_files uf
+            JOIN profiles p ON uf.user_id = p.id
+            ORDER BY uf.user_id, uf.path, uf.mime_type, uf.file_name ASC
+        `;
         const result = await pool.query(query);
         res.json({ success: true, items: result.rows });
     } catch (error) {
@@ -409,7 +416,6 @@ app.put('/api/files/:fileId/rename', authenticateToken, async (req, res) => {
 
         res.json({ success: true, message: 'Item renamed successfully.', item: result.rows[0] });
     } catch (error) {
-        console.error("[Rename Item] Error:", error);
         res.status(500).json({ success: false, message: 'Server error while renaming item.' });
     }
 });
@@ -561,15 +567,21 @@ app.get('/api/files/:fileId/share-link', authenticateToken, async (req, res) => 
 
 // --- Google OAuth & Drive Integration Endpoints ---
 
-// Initiate Google OAuth flow
-app.get('/api/google-auth', authenticateToken, (req, res) => {
+// Initiate Google OAuth flow (DOES NOT require SnugOS authentication)
+app.get('/api/google-auth', (req, res) => {
     // You must set these environment variables in Render
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-    const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://snugos-server-api.onrender.com/api/google-auth/callback'; // Or your frontend's redirect URI
+    // The REDIRECT_URI for your backend, which is also configured in Google Cloud Console
+    const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://snugos-server-api.onrender.com/api/google-auth/callback';
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_REDIRECT_URI) {
         return res.status(500).json({ success: false, message: 'Google API credentials not configured on server.' });
     }
+
+    // Generate a random state to prevent CSRF attacks
+    const state = crypto.randomBytes(16).toString('hex');
+    // Store state in session or temporary cache if you need to verify it on callback
+    // For simplicity, we'll just send it, but in a real app, verify it server-side.
 
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${GOOGLE_CLIENT_ID}&` +
@@ -578,19 +590,22 @@ app.get('/api/google-auth', authenticateToken, (req, res) => {
         `scope=https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&` +
         `access_type=offline&` + // Request a refresh token
         `prompt=consent&` + // Always show consent screen
-        `state=${req.user.id}`; // Pass user ID to associate token later
+        `state=${state}`; // Pass a state parameter
 
-    res.json({ success: true, authUrl });
+    // Instead of json, redirect directly from here as Google expects a direct redirect
+    res.redirect(authUrl);
 });
 
 // Google OAuth callback handler
 app.get('/api/google-auth/callback', async (req, res) => {
-    const { code, state, error } = req.query; // 'state' will be our userId
+    const { code, state, error } = req.query;
+
+    // Frontend redirect URL
+    const FRONTEND_REDIRECT_URL = 'https://snugos.github.io/app/drive/index.html';
 
     if (error) {
         console.error("Google OAuth Error:", error);
-        // Redirect to frontend with an error message
-        return res.redirect(`https://snugos.github.io/app/drive/index.html?google_auth_error=${encodeURIComponent(error)}`);
+        return res.redirect(`${FRONTEND_REDIRECT_URL}?google_auth_error=${encodeURIComponent(error)}`);
     }
 
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -598,10 +613,11 @@ app.get('/api/google-auth/callback', async (req, res) => {
     const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://snugos-server-api.onrender.com/api/google-auth/callback';
 
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
-        return res.status(500).send('Google API credentials not fully configured on server.');
+        return res.redirect(`${FRONTEND_REDIRECT_URL}?google_auth_error=${encodeURIComponent('Server Google API credentials not fully configured.')}`);
     }
 
     try {
+        // Exchange authorization code for tokens
         const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
             client_id: GOOGLE_CLIENT_ID,
             client_secret: GOOGLE_CLIENT_SECRET,
@@ -613,20 +629,63 @@ app.get('/api/google-auth/callback', async (req, res) => {
         const { access_token, refresh_token, expires_in } = tokenResponse.data;
         const expiryDate = new Date(Date.now() + expires_in * 1000);
 
-        // Store tokens in the user's profile
-        await pool.query(
-            "UPDATE profiles SET google_access_token = $1, google_refresh_token = $2, google_token_expiry = $3 WHERE id = $4",
-            [access_token, refresh_token, expiryDate, state] // 'state' contains the user ID
-        );
+        // Fetch user info from Google (to get Google ID)
+        const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { 'Authorization': `Bearer ${access_token}` }
+        });
+        const googleId = userInfoResponse.data.id;
+        const googleEmail = userInfoResponse.data.email;
+        const googleName = userInfoResponse.data.name || `google_user_${googleId.substring(0, 8)}`;
 
-        // Redirect back to your frontend with success status or a simple message
-        res.redirect('https://snugos.github.io/app/drive/index.html?google_auth_success=true');
+
+        // Check if a user with this google_id already exists
+        let profileResult = await pool.query("SELECT * FROM profiles WHERE google_id = $1", [googleId]);
+        let profile = profileResult.rows[0];
+        let snugosToken;
+
+        if (profile) {
+            // Existing user: Update their Google tokens
+            await pool.query(
+                "UPDATE profiles SET google_access_token = $1, google_refresh_token = $2, google_token_expiry = $3 WHERE id = $4",
+                [access_token, refresh_token, expiryDate, profile.id]
+            );
+            snugosToken = jwt.sign({ id: profile.id, username: profile.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
+            console.log(`User ${profile.username} (${profile.id}) re-authenticated via Google.`);
+        } else {
+            // New user: Create a new profile linked to Google
+            // Create a unique username for the new Google user
+            let newUsername = googleName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+            let usernameExists = (await pool.query("SELECT 1 FROM profiles WHERE username = $1", [newUsername])).rows.length > 0;
+            let counter = 1;
+            while (usernameExists) {
+                newUsername = `${googleName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase()}_${counter++}`;
+                usernameExists = (await pool.query("SELECT 1 FROM profiles WHERE username = $1", [newUsername])).rows.length > 0;
+            }
+
+            // A placeholder password_hash is needed if the column is NOT NULL
+            const dummyPasswordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+
+            const insertUserQuery = `
+                INSERT INTO profiles (username, password_hash, google_id, google_access_token, google_refresh_token, google_token_expiry)
+                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username;
+            `;
+            const newUserResult = await pool.query(insertUserQuery,
+                [newUsername, dummyPasswordHash, googleId, access_token, refresh_token, expiryDate]
+            );
+            profile = newUserResult.rows[0];
+            snugosToken = jwt.sign({ id: profile.id, username: profile.username }, process.env.JWT_SECRET, { expiresIn: '30d' });
+            console.log(`New user ${profile.username} (${profile.id}) created via Google.`);
+        }
+
+        // Redirect back to your frontend with the SnugOS JWT
+        res.redirect(`${FRONTEND_REDIRECT_URL}?snugos_jwt=${snugosToken}`);
 
     } catch (tokenError) {
-        console.error("Error exchanging Google code for token:", tokenError.response?.data || tokenError.message);
-        res.redirect(`https://snugos.github.io/app/drive/index.html?google_auth_error=${encodeURIComponent('Failed to get Google tokens.')}`);
+        console.error("Error during Google OAuth callback:", tokenError.response?.data || tokenError.message);
+        res.redirect(`${FRONTEND_REDIRECT_URL}?google_auth_error=${encodeURIComponent('Failed to process Google login.')}`);
     }
 });
+
 
 // Endpoint to fetch and upload a file from Google Drive to S3
 app.post('/api/google-drive/import', authenticateToken, async (req, res) => {
@@ -722,7 +781,7 @@ app.post('/api/google-drive/revoke', authenticateToken, async (req, res) => {
         }
 
         await pool.query(
-            "UPDATE profiles SET google_access_token = NULL, google_refresh_token = NULL, google_token_expiry = NULL WHERE id = $1",
+            "UPDATE profiles SET google_id = NULL, google_access_token = NULL, google_refresh_token = NULL, google_token_expiry = NULL WHERE id = $1",
             [userId]
         );
         res.json({ success: true, message: 'Google Drive access revoked.' });
