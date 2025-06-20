@@ -47,13 +47,17 @@ function showMessage(msg, onConfirm = null, showCancel = false, onCancel = null)
 
     messageConfirmBtn.onclick = () => {
         messageDialog.classList.add('hidden');
-        if (onConfirm) onConfirm();
+        if (typeof onConfirm === 'function') { // FIX: Check if onConfirm is a function
+            onConfirm();
+        }
     };
 
     if (showCancel) {
         messageCancelBtn.onclick = () => {
             messageDialog.classList.add('hidden');
-            if (onCancel) onCancel();
+            if (typeof onCancel === 'function') { // FIX: Check if onCancel is a function
+                onCancel();
+            }
         };
     }
 }
@@ -107,16 +111,24 @@ async function fetchMessages() {
     }
     showLoading();
     try {
-        const response = await fetch(`${SERVER_URL}/api/messages/my`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            renderMessages(data.messages);
-        } else {
-            showMessage(data.message || 'Failed to fetch messages.', 4000);
-            messagesListDiv.innerHTML = '<p class="p-8 text-center" style="color:red;">Error loading messages.</p>';
-        }
+        // Fetch both sent and received messages
+        const [receivedRes, sentRes] = await Promise.all([
+            fetch(`${SERVER_URL}/api/messages/received`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${SERVER_URL}/api/messages/sent`, { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        const [receivedData, sentData] = await Promise.all([receivedRes.json(), sentRes.json()]);
+
+        // FIX: Check success property for both receivedData and sentData
+        if (!receivedRes.ok || !receivedData.success) throw new Error(receivedData.message || 'Failed to fetch received messages.');
+        if (!sentRes.ok || !sentData.success) throw new Error(sentData.message || 'Failed to fetch sent messages.');
+
+        // Combine and sort messages by timestamp
+        const allMessages = [...(receivedData.messages || []), ...(sentData.messages || [])];
+        allMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        renderMessages(allMessages);
+
     } catch (error) {
         console.error("Error fetching messages:", error);
         showMessage('Network error fetching messages.', 4000);
@@ -134,21 +146,38 @@ function renderMessages(messages) {
     }
 
     messages.forEach(msg => {
+        const isSender = msg.sender_id === currentUser.id;
         const messageDiv = document.createElement('div');
-        messageDiv.className = `p-4 rounded-md shadow-sm ${msg.sender_id === currentUser.id ? 'bg-blue-600 text-white self-end' : 'bg-gray-700 text-white self-start'}`;
-        messageDiv.style.backgroundColor = msg.sender_id === currentUser.id ? 'var(--accent-active)' : 'var(--bg-window)';
-        messageDiv.style.color = msg.sender_id === currentUser.id ? 'var(--accent-active-text)' : 'var(--text-primary)';
         
-        const timestamp = new Date(msg.timestamp).toLocaleString();
+        // Apply styling for conversational bubbles
+        messageDiv.className = `flex ${isSender ? 'justify-end' : 'justify-start'} mb-4`;
         messageDiv.innerHTML = `
-            <div class="font-bold mb-1">${msg.sender_username || 'Unknown User'} to ${msg.recipient_username || 'Unknown User'}</div>
-            <p>${msg.content}</p>
-            <div class="text-xs opacity-75 mt-1 text-right">${timestamp}</div>
+            <div class="max-w-[70%] p-3 rounded-lg shadow-md ${isSender ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white'}"
+                 style="background-color: ${isSender ? 'var(--accent-active)' : 'var(--bg-window)'}; color: ${isSender ? 'var(--accent-active-text)' : 'var(--text-primary)'};">
+                <div class="text-sm font-semibold mb-1">
+                    <a href="profile.html?user=${isSender ? msg.recipient_username : msg.sender_username}" target="_blank" class="hover:underline" style="color: inherit;">
+                        ${isSender ? `To: ${msg.recipient_username}` : `From: ${msg.sender_username}`}
+                    </a>
+                </div>
+                <p class="text-base break-words">${msg.content}</p>
+                <div class="text-xs opacity-75 mt-1" style="text-align: ${isSender ? 'right' : 'left'};">${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            </div>
         `;
+        
         messagesListDiv.appendChild(messageDiv);
+
+        // Attach click listeners to usernames
+        messageDiv.querySelector(`a[href*="profile.html?user=${msg.sender_username}"]`)?.addEventListener('click', (e) => handleUsernameClick(e.target.dataset.username || msg.sender_username));
+        messageDiv.querySelector(`a[href*="profile.html?user=${msg.recipient_username}"]`)?.addEventListener('click', (e) => handleUsernameClick(e.target.dataset.username || msg.recipient_username));
     });
     // Scroll to bottom
     messagesListDiv.scrollTop = messagesListDiv.scrollHeight;
+}
+
+function handleUsernameClick(username) {
+    if (username) {
+        window.open(`/app/js/daw/profiles/profile.html?user=${username}`, '_blank'); // Open in new tab
+    }
 }
 
 async function sendMessage(recipientUsername, content) {
@@ -170,10 +199,11 @@ async function sendMessage(recipientUsername, content) {
         const result = await response.json();
         if (response.ok) {
             showMessage("Message sent!", 2000);
-            messageContentInput.value = ''; // Clear input
+            recipientUsernameInput.value = ''; // Clear recipient field too
+            messageContentInput.value = ''; // Clear message input
             fetchMessages(); // Refresh messages list
         } else {
-            showMessage(data.message || 'Failed to send message.', 4000);
+            showMessage(result.message || 'Failed to send message.', 4000);
         }
     } catch (error) {
         console.error("Send Message Error:", error);
@@ -187,32 +217,26 @@ async function sendMessage(recipientUsername, content) {
 // --- Main App Renderer & Event Listeners ---
 
 function renderMessagesApp() {
-    if (token && currentUser) {
-        // Logged in: Show app content, fetch messages
-        appContent?.classList.remove('hidden');
+    // Update logged in user display in header
+    if (currentUser) {
         loggedInUserSpan.innerHTML = `Logged in as: <span class="font-semibold" style="color: var(--text-primary);">${currentUser.username}</span>`;
         logoutBtn?.classList.remove('hidden');
+        appContent?.classList.remove('hidden'); // Show the main messages content
         fetchMessages(); // Fetch messages
     } else {
-        // Not logged in: Show login prompt (similar to browser/profile standalone login)
-        appContent?.classList.add('hidden');
+        // Not logged in: Show a message prompting login from main desktop
         loggedInUserSpan.textContent = '';
         logoutBtn?.classList.add('hidden');
-        // This messages app does not have a dedicated login form in its HTML
-        // For simplicity, we just display a message if not logged in.
-        messagesListDiv.innerHTML = '<p class="p-8 text-center" style="color:red;">Please log in from the main SnugOS desktop to view messages.</p>';
+        appContent?.classList.add('hidden'); // Hide messages content
+        
+        messagesListDiv.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-center">
+                <p class="text-lg font-semibold mb-4" style="color:var(--text-primary);">Access Denied</p>
+                <p style="color:var(--text-secondary);">Please log in from the main SnugOS desktop to view and send messages.</p>
+                <button onclick="window.location.href='/'" class="mt-4 px-6 py-2 rounded" style="background-color:var(--bg-button); color:var(--text-button); border:1px solid var(--border-button);">Go to Login Page</button>
+            </div>
+        `;
     }
-}
-
-function renderLoginPrompt() {
-    // For standalone messages, if not logged in, just show a message.
-    // User needs to login via main desktop.
-    appContent?.classList.add('hidden');
-    loggedInUserSpan.textContent = '';
-    logoutBtn?.classList.add('hidden');
-    messagesListDiv.innerHTML = '<p class="p-8 text-center" style="color:red;">Please log in from the main SnugOS desktop to view messages.</p>';
-    // Optionally, could add a button to redirect to index.html for login
-    // messagesListDiv.innerHTML += '<button onclick="window.location.href=\'/index.html\'">Go to Login Page</button>';
 }
 
 
@@ -239,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (token) {
         fetchUserProfileAndMessages(); // Fetch user profile and messages if token exists
     } else {
-        renderLoginPrompt(); // Otherwise, show login prompt
+        renderMessagesApp(); // Show login prompt if no token
     }
     attachMessagesEventListeners(); // Attach event listeners
 });
