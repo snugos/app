@@ -30,6 +30,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* Ensure body fills the iframe */
+            width: 100%; 
+            height: 100%;
         }
 
         .game-wrapper {
@@ -37,18 +40,25 @@
             gap: 1.5rem;
             align-items: flex-start;
             justify-content: center;
+            /* Ensure wrapper adapts to available space */
+            max-width: 100%;
+            max-height: 100%;
+            box-sizing: border-box; /* Include padding/border in element's total width/height */
         }
 
         #game-board {
             border: 1px solid var(--border-color);
             display: block;
+            box-sizing: border-box; /* Crucial for canvas within a flex container */
         }
 
         .sidebar {
-            width: 160px;
+            /* Remove fixed width to allow responsive scaling based on BLOCK_SIZE */
+            /* width: 160px; */ 
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            box-sizing: border-box;
         }
 
         .panel {
@@ -56,6 +66,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1rem;
+            box-sizing: border-box;
         }
 
         .panel-title {
@@ -86,6 +97,7 @@
 
         .preview-canvas {
             background-color: transparent;
+            display: block; /* Ensure canvas behaves as a block element */
         }
 
         button {
@@ -99,10 +111,11 @@
             font-weight: 700;
             width: 100%;
             transition: background-color 0.15s ease, color 0.15s ease;
+            box-sizing: border-box; /* Crucial for buttons with width: 100% in a flex item */
         }
         
         button + button {
-            margin-top: 0.5rem;
+             margin-top: 0.5rem;
         }
 
         button:hover {
@@ -129,6 +142,7 @@
             width: 50px;
             text-align: right;
             border-radius: 4px;
+            box-sizing: border-box; /* Prevent padding from increasing width beyond 50px */
         }
 
         .modal-overlay {
@@ -145,6 +159,7 @@
             border-radius: 8px;
             text-align: center;
             max-width: 400px;
+            box-sizing: border-box;
         }
         
         .modal-dialog h2 {
@@ -178,7 +193,7 @@
             .sidebar {
                 flex-direction: row;
                 width: 100%;
-                max-width: 400px;
+                max-width: 400px; /* Constrain sidebar row for very wide screens */
                 justify-content: center;
             }
         }
@@ -204,6 +219,21 @@
                 </div>
             </div>
              <div class="panel">
+                <div class="panel-title">HANDLING</div>
+                 <div class="setting-wrapper">
+                    <label for="das-input">DAS</label>
+                    <input type="number" id="das-input" value="167" step="1">
+                </div>
+                <div class="setting-wrapper">
+                   <label for="arr-input">ARR</label>
+                   <input type="number" id="arr-input" value="33" step="1">
+               </div>
+               <div class="setting-wrapper">
+                    <label for="sdf-input">SDF</label>
+                    <input type="number" id="sdf-input" value="6" step="1">
+                </div>
+            </div>
+            <div class="panel">
                 <button id="start-btn">Play</button>
                 <button id="pause-btn">Pause</button>
                 <button id="controls-btn">Help</button>
@@ -219,21 +249,6 @@
                     <canvas class="preview-canvas" id="next-3"></canvas>
                     <canvas class="preview-canvas" id="next-4"></canvas>
                  </div>
-            </div>
-            <div class="panel">
-                <div class="panel-title">HANDLING</div>
-                 <div class="setting-wrapper">
-                    <label for="das-input">DAS</label>
-                    <input type="number" id="das-input" value="167" step="1">
-                </div>
-                <div class="setting-wrapper">
-                   <label for="arr-input">ARR</label>
-                   <input type="number" id="arr-input" value="33" step="1">
-               </div>
-               <div class="setting-wrapper">
-                    <label for="sdf-input">SDF</label>
-                    <input type="number" id="sdf-input" value="6" step="1">
-                </div>
             </div>
         </div>
     </div>
@@ -294,8 +309,8 @@
         let score, lines, level, dropCounter, dropInterval, lastTime;
         let isPaused = false, isGameOver = false, animationFrameId, isDroppingFast = false;
         
-        // --- Handling State ---
-        let dasTimeoutLeft, dasTimeoutRight, arrIntervalLeft, arrIntervalRight;
+        // --- Handling ---
+        let dasTimeout, arrInterval;
         let dasValue = 167; 
         let arrValue = 33;
         let sdfValue = 6;
@@ -320,22 +335,74 @@
         };
         
         function resizeGame() {
-            const padding = 32;
-            const availableHeight = window.innerHeight - padding;
-            const availableWidth = window.innerWidth - padding;
-            const blockSizeByHeight = availableHeight / (ROWS + 2);
-            const blockSizeByWidth = availableWidth / (COLS + 10);
-            
+            const gameWrapper = document.querySelector('.game-wrapper');
+            const sidebars = document.querySelectorAll('.sidebar');
+            const panels = document.querySelectorAll('.panel');
+            const uiElements = document.querySelectorAll('.panel div, .panel label, .panel-title, button, input[type="number"]');
+
+            // Calculate available space in the *iframe window*
+            const padding = 16; /* 1rem converted to pixels for calculation */
+            const availableHeight = window.innerHeight - (padding * 2);
+            const availableWidth = window.innerWidth - (padding * 2);
+
+            // Estimate total "column" units needed for layout (game board + 2 sidebars + gaps)
+            const minSidebarContentBlocks = 4; // Width of preview canvases (4 blocks wide)
+            const totalHorizontalGapUnits = 3; // 1.5rem gap * 2 = 3rem total gap (roughly 3 BLOCK_SIZE units)
+            const dynamicTotalBlockColumns = COLS + (2 * minSidebarContentBlocks) + totalHorizontalGapUnits; 
+
+            const blockSizeByHeight = availableHeight / ROWS;
+            const blockSizeByWidth = availableWidth / dynamicTotalBlockColumns;
+
+
+            // Select the smaller BLOCK_SIZE to ensure everything fits
             BLOCK_SIZE = Math.floor(Math.min(blockSizeByHeight, blockSizeByWidth));
+            if (BLOCK_SIZE < 8) BLOCK_SIZE = 8; // Set a sensible minimum BLOCK_SIZE, e.g., 8 or 10
+            if (BLOCK_SIZE > 30) BLOCK_SIZE = 30; // Set a sensible maximum BLOCK_SIZE to prevent overly large game
+
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
+            
+            // Preview canvases are 4 blocks wide, 3 blocks high
             holdCanvas.width = 4 * BLOCK_SIZE;
-            holdCanvas.height = 4 * BLOCK_SIZE;
+            holdCanvas.height = 3 * BLOCK_SIZE;
             nextCanvases.forEach(canvas => {
                 canvas.width = 4 * BLOCK_SIZE;
-                canvas.height = 4 * BLOCK_SIZE;
+                canvas.height = 3 * BLOCK_SIZE;
             });
-            draw();
+            
+            // Adjust UI element sizes relative to BLOCK_SIZE
+            const baseFontSize = Math.max(8, BLOCK_SIZE * 0.7); // Min font size 8px
+            const panelPadding = Math.round(BLOCK_SIZE * 0.8); // Roughly 0.8 * BLOCK_SIZE for 1rem padding (16px)
+            const panelGap = Math.round(BLOCK_SIZE * 0.5); // Roughly 0.5 * BLOCK_SIZE for 0.5rem gap (8px)
+
+            // Adjust panel padding and border-radius
+            panels.forEach(panel => {
+                panel.style.padding = `${panelPadding}px`;
+                panel.style.borderRadius = `${baseFontSize / 2}px`;
+                // panels now implicitly define gap via flexbox gap property
+                panel.style.gap = `${panelGap}px`; /* Apply gap to panel content if flex */
+            });
+            
+            uiElements.forEach(el => {
+                 el.style.fontSize = `${baseFontSize}px`;
+                 if(el.tagName === 'BUTTON') {
+                     el.style.padding = `${Math.round(baseFontSize * 0.8)}px ${Math.round(baseFontSize * 1.2)}px`; /* Scale button padding */
+                     el.style.borderRadius = `${Math.round(baseFontSize * 0.3)}px`; /* Scale button border-radius */
+                 }
+                 if(el.tagName === 'INPUT') {
+                      el.style.padding = `${Math.round(baseFontSize * 0.3)}px`;
+                      el.style.width = `${Math.round(baseFontSize * 3)}px`;
+                      el.style.borderRadius = `${Math.round(baseFontSize * 0.2)}px`; /* Scale input border-radius */
+                 }
+                 if(el.classList.contains('panel-title')) { /* Specific for panel titles */
+                     el.style.fontSize = `${Math.round(baseFontSize * 1.1)}px`; /* Slightly larger */
+                 }
+            });
+
+            // Adjust game-wrapper gap based on BLOCK_SIZE
+            gameWrapper.style.gap = `${Math.round(BLOCK_SIZE * 1.5)}px`; /* 1.5rem default gap */
+
+            draw(); // Redraw game elements with new BLOCK_SIZE
         }
         
         // --- Game Logic ---
