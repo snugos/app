@@ -4,10 +4,10 @@
 
 // Corrected imports to be absolute paths
 import { SnugWindow } from '/app/js/daw/SnugWindow.js';
-import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js';
-import * as Constants from '/app/js/daw/constants.js';
-import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js';
-import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js';
+import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js'; // Ensure these are imported
+import * as Constants from '/app/js/daw/constants.js'; // Ensure constants are imported
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js'; // Corrected paths
+import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js'; // Corrected paths
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let loggedInUser = null;
@@ -15,9 +15,8 @@ let appServices = {}; // This will be populated locally for this standalone app.
 let messagePollingIntervals = new Map(); // Store intervals per conversation window
 
 // --- Global UI and Utility Functions (Local to this standalone app) ---
-// These functions provide desktop-like UI/modal functionality that this standalone app needs.
+// These functions are defined first to ensure they are available when called.
 
-// MOVED TO TOP: Authentication and related helper functions
 function checkLocalAuth() {
     try {
         const token = localStorage.getItem('snugos_token');
@@ -172,20 +171,49 @@ function toggleFullScreen() {
     }
 }
 
+function attachDesktopEventListeners() {
+    // Top-level elements
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
+
+    // Links in the start menu (will open new tabs/windows)
+    document.getElementById('menuLaunchDaw')?.addEventListener('click', () => { window.open('/app/snaw.html', '_blank'); toggleStartMenu(); });
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', () => { window.open('/app/js/daw/browser/library.html', '_blank'); toggleStartMenu(); }); // Browser link
+    document.getElementById('menuViewProfiles')?.addEventListener('click', () => { window.open('/app/js/daw/profiles/profile.html', '_blank'); toggleStartMenu(); }); // Profile link
+    // No specific menuOpenMessages as this *is* the messages app.
+
+    // Example of adding a generic desktop context menu (similar to welcome.js)
+    const desktop = document.getElementById('desktop');
+    if (desktop) {
+        desktop.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const menuItems = [
+                { label: 'Open Browser', action: () => { window.open('/app/js/daw/browser/library.html', '_blank'); toggleStartMenu(); } },
+                { label: 'Open Profile', action: () => { window.open('/app/js/daw/profiles/profile.html', '_blank'); toggleStartMenu(); } },
+                { separator: true },
+                { label: 'Login / Register', action: showLoginModal },
+                { label: 'Logout', action: handleLogout },
+            ];
+            createContextMenu(e, menuItems);
+        });
+    }
+}
+
 // --- Main App Initialization (on DOMContentLoaded) ---
 document.addEventListener('DOMContentLoaded', () => {
     // Populate appServices for this standalone desktop's context
     appServices = {
         // SnugWindow management from windowState.js (imported above)
-        addWindowToStore: addWindowToStore,
-        removeWindowFromStore: removeWindowFromStore,
-        incrementHighestZ: incrementHighestZ,
-        getHighestZ: getHighestZ,
-        setHighestZ: setHighestZ,
-        getOpenWindows: getOpenWindows,
-        getWindowById: getWindowById,
-        serializeWindows: serializeWindows,
-        reconstructWindows: reconstructWindows,
+        addWindowToStore: addWindowToStore, // from windowState.js
+        removeWindowFromStore: removeWindowFromStore, // from windowState.js
+        incrementHighestZ: incrementHighestZ, // from windowState.js
+        getHighestZ: getHighestZ, // from windowState.js
+        setHighestZ: setHighestZ, // from windowState.js
+        getOpenWindows: getOpenWindows, // from windowState.js
+        getWindowById: getWindowById, // from windowState.js
+        serializeWindows: serializeWindows, // from windowState.js
+        reconstructWindows: reconstructWindows, // from windowState.js
 
         // Utilities from utils.js (imported above)
         createContextMenu: createContextMenu,
@@ -201,12 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     };
 
-    loggedInUser = checkLocalAuth();
+    loggedInUser = checkLocalAuth(); // Call local function checkLocalAuth
     
-    attachDesktopEventListeners(); // Attach desktop-level event listeners for this standalone page
-    applyUserThemePreference(); // Apply theme for this page
-    updateClockDisplay(); // Start clock
-    initAudioOnFirstGesture(); // Initialize audio if this page can play sounds (e.g. for message sounds)
+    attachDesktopEventListeners(); // Call local function attachDesktopEventListeners
+    applyUserThemePreference(); // Call local function applyUserThemePreference
+    updateClockDisplay(); // Call local function updateClockDisplay
+    initAudioOnFirstGesture(); // Call local function initAudioOnFirstGesture
     
     // Initial render based on login status
     if (loggedInUser) {
@@ -217,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in to use Messages.</p></div>`;
         }
-        showLoginModal();
+        showLoginModal(); // Call local function showLoginModal
     }
 });
 
