@@ -1,6 +1,8 @@
 // NOTE: This import statement is the fix. It makes the SnugWindow class
 // available for use within this file.
 import { SnugWindow } from '../daw/SnugWindow.js';
+import { storeAsset, getAsset } from '/app/js/daw/db.js';
+import { SERVER_URL } from '/app/js/daw/constants.js';
 
 let loggedInUser = null;
 const SERVER_URL = 'https://snugos-server-api.onrender.com';

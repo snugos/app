@@ -1,7 +1,7 @@
 // js/daw/audio/audio.js - Core Audio Engine, Master Bus and Master Effects
 // Corrected import for effectsRegistry
 
-import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '../effectsRegistry.js';
+import { createEffectInstance, getEffectDefaultParams as getEffectDefaultParamsFromRegistry } from '/app/js/daw/effectsRegistry.js';
 
 let masterEffectsBusInputNode = null;
 let masterGainNodeActual = null;

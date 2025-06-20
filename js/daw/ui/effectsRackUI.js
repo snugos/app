@@ -1,11 +1,11 @@
 // js/daw/ui/effectsRackUI.js
 
 // Corrected imports for effectsRegistry and state modules
-import { getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS, getEffectParamDefinitions } from '../effectsRegistry.js'; //
-import { getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam } from '../state/masterState.js'; //
-import { getTrackById } from '../state/trackState.js'; //
-import { getOpenWindows, getWindowById } from '../state/windowState.js'; //
-import { getThemeColors } from '../utils.js'; // Import getThemeColors
+import { getEffectDefaultParams as getEffectDefaultParamsFromRegistry, AVAILABLE_EFFECTS, getEffectParamDefinitions } from '/app/js/daw/effectsRegistry.js';
+import { getMasterEffects, addMasterEffect, removeMasterEffect, updateMasterEffectParam } from '/app/js/daw/state/masterState.js';
+import { getTrackById } from '/app/js/daw/state/trackState.js';
+import { getOpenWindows, getWindowById } from '/app/js/daw/state/windowState.js';
+import { getThemeColors } from '/app/js/daw/utils.js';
 
 let localAppServices = {}; //
 let selectedEffectId = {}; // Keyed by ownerId

@@ -139,6 +139,10 @@ export function reconstructWindows(serializedWindows) {
             case `profile-${id.split('-')[1]}`: // Case for Profile App (e.g., profile-snaw)
                 localAppServices.openEmbeddedAppInWindow(id, title, `/app/js/daw/profiles/profile.html?user=${id.split('-')[1]}`, savedState); // CORRECTED PATH
                 break;
+
+               case 'tetrisGame': // NEW CASE
+    localAppServices.openEmbeddedAppInWindow(id, title, `/app/tetris.html`, savedState); // Correct path for tetris.html
+    break;
             // Add other window types here
             default:
                 // Handle track-specific windows (Inspector, Effects Rack, Piano Roll)
