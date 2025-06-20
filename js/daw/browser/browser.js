@@ -66,13 +66,17 @@ function showMessage(msg, onConfirm = null, showCancel = false, onCancel = null)
 
     messageConfirmBtn.onclick = () => {
         messageDialog.classList.add('hidden');
-        if (onConfirm) onConfirm();
+        if (typeof onConfirm === 'function') { // FIX: Check if onConfirm is a function
+            onConfirm();
+        }
     };
 
     if (showCancel) {
         messageCancelBtn.onclick = () => {
             messageDialog.classList.add('hidden');
-            if (onCancel) onCancel();
+            if (typeof onCancel === 'function') { // FIX: Check if onCancel is a function
+                onCancel();
+            }
         };
     }
 }
@@ -111,6 +115,23 @@ const getEyeOffIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" 
 const getShareIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`;
 
 // --- Authentication Functions (Local to this standalone app) ---
+
+function checkLocalAuth() {
+    try {
+        const tokenFromStorage = localStorage.getItem('snugos_token'); // Use 'snugos_token' for consistency
+        if (!tokenFromStorage) return null;
+        const payload = JSON.parse(atob(tokenFromStorage.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('snugos_token');
+            return null;
+        }
+        token = tokenFromStorage; // Set local token variable
+        return { id: payload.id, username: payload.username };
+    } catch (e) {
+        localStorage.removeItem('snugos_token');
+        return null;
+    }
+}
 
 async function fetchUserProfile() {
     if (!token) return;
@@ -151,9 +172,9 @@ async function handleAuthSubmit(event) {
     }
 
     document.getElementById('auth-message').classList.add('hidden');
-    document.getElementById('auth-submit-btn').disabled = true;
-    document.getElementById('auth-spinner').classList.remove('hidden');
-    document.getElementById('auth-btn-text').textContent = authMode === 'register' ? 'Registering...' : 'Logging in...';
+    authSubmitBtn.disabled = true;
+    authSpinner.classList.remove('hidden');
+    authBtnText.textContent = authMode === 'register' ? 'Registering...' : 'Logging in...';
 
     try {
         const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
@@ -258,7 +279,7 @@ async function handleCreateFolder() {
             const data = await response.json();
             if (data.success) {
                 showMessage("Folder created successfully!", 2000); // Use local showMessage
-                fetchFiles(); // Re-fetch files to update UI
+                fetchFiles();
                 return true;
             } else {
                 showMessage(data.message || "Failed to create folder.", 4000); // Use local showMessage
@@ -771,6 +792,7 @@ async function handleDrop(e) {
 }
 
 // --- Main App Renderer ---
+
 function renderApp() {
     const loginPage = document.getElementById('login-page');
     const appContent = document.getElementById('app-content');
@@ -778,13 +800,13 @@ function renderApp() {
     const logoutBtn = document.getElementById('logout-btn');
     const snawAdminSection = document.getElementById('snaw-admin-section'); // Ref to admin section
 
-    if (loggedInUser) { // Use local loggedInUser from checkLocalAuth
+    if (currentUser) { // Use local currentUser from checkLocalAuth or successful login
         loginPage?.classList.add('hidden');
         appContent?.classList.remove('hidden');
-        loggedInUserSpan.innerHTML = `Logged in as: <span class="font-semibold" style="color: var(--text-primary);">${loggedInUser.username}</span>`;
+        loggedInUserSpan.innerHTML = `Logged in as: <span class="font-semibold" style="color: var(--text-primary);">${currentUser.username}</span>`;
         logoutBtn?.classList.remove('hidden');
 
-        if (loggedInUser.username === 'snaw') {
+        if (currentUser.username === 'snaw') {
             snawAdminSection?.classList.remove('hidden');
         } else {
             snawAdminSection?.classList.add('hidden');
@@ -794,11 +816,12 @@ function renderApp() {
         renderBreadcrumbs();
         fetchFiles();
     } else {
-        loggedInUser = null; // Clear local loggedInUser if appServices.loggedInUser is null
-        loginPage?.classList.remove('hidden');
-        appContent?.classList.add('hidden');
-        loggedInUserSpan.textContent = '';
+        loggedInUserSpan.textContent = ''; // Clear user display
         logoutBtn?.classList.add('hidden');
+        appContent?.classList.add('hidden'); // Hide app content
+        loginPage?.classList.remove('hidden'); // Show login page
+
+        // Reset login/register form titles/buttons
         const authTitle = document.getElementById('auth-title');
         const authBtnText = document.getElementById('auth-btn-text');
         const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
@@ -810,8 +833,9 @@ function renderApp() {
     }
 }
 
-// --- Event Listeners (Adjusted for appServices and correct DOM refs) ---
-function attachDriveEventListeners() {
+// --- Event Listeners ---
+
+function attachBrowserEventListeners() {
     const authForm = document.getElementById('auth-form');
     const logoutBtn = document.getElementById('logout-btn');
     const createFolderBtn = document.getElementById('create-folder-btn');
@@ -821,13 +845,12 @@ function attachDriveEventListeners() {
     const fileListDiv = document.getElementById('file-list');
     const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
 
-    if (authForm) authForm.addEventListener('submit', handleAuthSubmit);
+    if (authForm) authForm.addEventListener('submit', handleAuthSubmit); // Ensure only one listener
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
     if (createFolderBtn) createFolderBtn.addEventListener('click', handleCreateFolder);
     if (uploadFileBtn) uploadFileBtn.addEventListener('click', handleUploadClick);
     if (fileUploadInput) fileUploadInput.addEventListener('change', handleFileInputChange);
 
-    // Snaw admin button
     if (viewAllFilesBtn) {
         viewAllFilesBtn.addEventListener('click', () => {
             isAdminView = !isAdminView;
@@ -838,9 +861,8 @@ function attachDriveEventListeners() {
         });
     }
 
-    // Global drag and drop listeners for the entire file list area
     if (fileListDiv) {
-        fileListDiv.addEventListener('dragover', handleDropTargetDragOver); // Re-added drag listeners to main list div
+        fileListDiv.addEventListener('dragover', handleDropTargetDragOver);
         fileListDiv.addEventListener('dragleave', handleDropTargetDragLeave);
         fileListDiv.addEventListener('drop', handleDrop);
     }
@@ -848,7 +870,7 @@ function attachDriveEventListeners() {
     if (toggleAuthModeBtn) {
         toggleAuthModeBtn.addEventListener('click', () => {
             authMode = authMode === 'login' ? 'register' : 'login';
-            renderApp();
+            renderApp(); // Re-render to update form based on authMode
         });
     }
 }
@@ -856,66 +878,11 @@ function attachDriveEventListeners() {
 // --- Initial Setup ---
 document.addEventListener('DOMContentLoaded', () => {
     // Check initial auth state on page load
-    loggedInUser = checkLocalAuth();
-    renderApp();
-    attachDriveEventListeners(); // Attach standalone listeners
+    token = localStorage.getItem('snugos_token'); // Get token from localStorage directly
+    if (token) {
+        fetchUserProfile(); // Attempt to fetch user profile if token exists
+    } else {
+        renderApp(); // Show login page if no token
+    }
+    attachBrowserEventListeners(); // Attach event listeners
 });
-
-// --- Local Authentication Functions (Copied from welcome.js/auth.js and adapted for standalone) ---
-function checkLocalAuth() {
-    try {
-        const tokenFromStorage = localStorage.getItem('snugos_token'); // Use 'snugos_token' for consistency
-        if (!tokenFromStorage) return null;
-        const payload = JSON.parse(atob(tokenFromStorage.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token');
-            return null;
-        }
-        token = tokenFromStorage; // Set local token variable
-        return { id: payload.id, username: payload.username };
-    } catch (e) {
-        localStorage.removeItem('snugos_token');
-        return null;
-    }
-}
-
-async function handleAuthSubmit(event) {
-    event.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    if (!username || !password) {
-        showMessage('Please enter both username and password.');
-        return;
-    }
-
-    document.getElementById('auth-submit-btn').disabled = true;
-    document.getElementById('auth-spinner').classList.remove('hidden');
-    document.getElementById('auth-btn-text').textContent = authMode === 'register' ? 'Registering...' : 'Logging in...';
-
-    try {
-        const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
-        const response = await fetch(`${SERVER_URL}${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            token = data.token;
-            localStorage.setItem('snugos_token', token); // Use 'snugos_token' for consistency
-            currentUser = data.user;
-            renderApp();
-        } else {
-            showMessage(data.message || (authMode === 'register' ? 'Registration failed.' : 'Login failed.'), 4000); // Use local showMessage
-        }
-    } catch (error) {
-        console.error("Authentication error:", error);
-        showMessage('Network error or server unavailable.', 4000); // Use local showMessage
-    } finally {
-        document.getElementById('auth-submit-btn').disabled = false;
-        document.getElementById('auth-spinner').classList.add('hidden');
-        document.getElementById('auth-btn-text').textContent = authMode === 'register' ? 'Register' : 'Login';
-    }
-}
