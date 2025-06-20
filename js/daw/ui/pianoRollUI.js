@@ -445,7 +445,7 @@ function createPianoRollStage(containerElement, velocityPane, track) {
 }
 
 function attachPianoRollListeners(pianoRoll) { 
-    const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows } = pianoRoll; 
+    const { stage, gridLayer, noteLayer, selectionLayer, keyLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows } = pianoRoll; 
     const activeSequence = track.sequences.getActiveSequence(); 
     const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false }); 
     selectionLayer.add(selectionRect); // DIRECTLY ADD to selectionLayer 
