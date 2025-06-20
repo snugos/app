@@ -8,6 +8,7 @@ const { Pool } = require('pg');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 const axios = require('axios'); // Added for potential Google Drive file fetching
+const crypto = require('crypto'); // <<< ADDED: Import the crypto module
 
 const app = express();
 const PORT = process.env.PORT || 3000;
