@@ -448,7 +448,7 @@ function attachPianoRollListeners(pianoRoll) {
     const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows } = pianoRoll; 
     const activeSequence = track.sequences.getActiveSequence(); 
     const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false }); 
-    stage.getLayers().find(l => l.name() !== gridLayer.name() && l.name() !== noteLayer.name() && l.name() !== keyLayer.name())selectionLayer.add(selectionRect); // DIRECTLY ADD to selectionLayer
+    selectionLayer.add(selectionRect); // DIRECTLY ADD to selectionLayer 
 
     let x1, y1; 
     let isDraggingNote = false; 
