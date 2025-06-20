@@ -93,7 +93,8 @@ async function loadAndApplyGlobals() {
                 window.parent.appServices.applyCustomBackground(data.profile.background_url);
             }
         }
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Could not apply global settings:", error);
     }
 }
@@ -204,7 +205,8 @@ async function fetchAndRenderLibraryItems(container) {
         } else if (currentPath.length <= 1) { // Display message if folder is empty at root level
             fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
         }
-    } catch (error) {
+    }
+    catch (error) {
         fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">${error.message}</p>`;
     }
 }
@@ -385,7 +387,7 @@ function showDeleteModal(item) {
 
 /**
  * Deletes a file from the server and refreshes the library.
- * @param {string} fileId The ID of the file to delete.
+ * @param {string} fileId - The ID of the file to delete.
  */
 async function handleDeleteFile(fileId) {
     try {
@@ -490,7 +492,7 @@ function handleLogout() {
     appServices.showNotification('You have been logged out.', 2000);
     // Call the parent window's logout function if available.
     if (window.parent && window.parent.appServices && typeof window.parent.appServices.handleLogout === 'function') {
-        window.parent.appServices.handleLogout(); 
+        window.parent.appServices.handleLogout();
     } else {
         window.location.reload(); // Fallback: reload the iframe if no parent handler.
     }
