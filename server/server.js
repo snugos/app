@@ -1581,5 +1581,3 @@ app.listen(PORT, () => {
     console.log(`SnugOS server is listening on port ${PORT}`);
     initializeDatabase();
 });
-
-}
