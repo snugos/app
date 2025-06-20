@@ -250,8 +250,7 @@ function updateProfileUI(container, profileData) {
         if (backgroundArea) {
             backgroundArea.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
-                // We don't have appServices.createContextMenu here in standalone,
-                // so we can use a simpler local context menu or fallback.
+                // In standalone, we don't have appServices.createContextMenu, so use a simple local alert or a custom modal.
                 // For now, just trigger background input directly.
                 customBgInput.click();
             });
@@ -264,7 +263,6 @@ function updateProfileUI(container, profileData) {
                 e.preventDefault();
                 const targetUsername = e.target.dataset.username;
                 if (targetUsername) {
-                    // In standalone mode, navigate to the profile page directly
                     window.location.href = `profile.html?user=${targetUsername}`;
                 }
             });
@@ -329,8 +327,7 @@ async function handleAvatarUpload(file) {
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
         showMessage("Profile picture updated!", 2000);
-        // Refresh the profile content with the new avatar
-        fetchProfileData(currentUser.username, profileContainer);
+        fetchProfileData(currentUser.username, profileContainer); // Refresh the profile content
 
     } catch (error) {
         showMessage(`Update failed: ${error.message}`, 4000);
@@ -363,15 +360,10 @@ async function handleBackgroundUpload(file) {
         });
 
         showMessage("Background updated!", 2000);
-        // Update the background style directly on the body
-        document.body.style.backgroundImage = `url(${newBgUrl})`;
+        document.body.style.backgroundImage = `url(${newBgUrl})`; // Apply directly to body
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundPosition = 'center';
-        // Refresh the profile content with the new background if current user is viewing their own profile
-        if (currentProfileData?.username === currentUser.username) {
-            fetchProfileData(currentUser.username, profileContainer);
-        }
-
+        fetchProfileData(currentUser.username, profileContainer); // Refresh the profile content if current user's
     } catch(error) {
         showMessage(`Error saving background: ${error.message}`, 4000);
         console.error("Background Upload Error:", error);
@@ -451,42 +443,26 @@ async function sendMessage(recipientUsername, content) {
 // --- Main App Renderer & Event Listeners ---
 
 function renderProfileApp() {
-    if (token && currentUser) {
-        loginPage?.classList.add('hidden');
-        appContent?.classList.remove('hidden');
+    // Update logged in user display in header
+    if (currentUser) {
         loggedInUserSpan.innerHTML = `Logged in as: <span class="font-semibold" style="color: var(--text-primary);">${currentUser.username}</span>`;
         logoutBtn?.classList.remove('hidden');
-
-        // Get username from URL parameters if available, otherwise default to current user
+        appContent?.classList.remove('hidden'); // Show the main profile content
+        // Fetch profile data based on URL or current user
         const urlParams = new URLSearchParams(window.location.search);
-        const username = urlParams.get('user') || currentUser.username;
-        
+        const username = urlParams.get('user') || currentUser.username; // Default to current user's profile
         fetchProfileData(username, profileContainer);
     } else {
-        // If not logged in, show the login page
-        loginPage?.classList.remove('hidden');
-        appContent?.classList.add('hidden');
+        // Not logged in: Show the login page
         loggedInUserSpan.textContent = '';
         logoutBtn?.classList.add('hidden');
+        appContent?.classList.add('hidden'); // Hide profile content
+        loginPage?.classList.remove('hidden'); // Show login page
         
         // Reset login/register form titles/buttons
-        const authTitle = document.getElementById('auth-title');
-        const authBtnText = document.getElementById('auth-btn-text');
-        const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
-        if (authTitle && authBtnText && toggleAuthModeBtn) {
-            authTitle.textContent = 'Login to SnugOS Profile';
-            authBtnText.textContent = 'Login';
-            toggleAuthModeBtn.textContent = 'Need an account? Register';
-            toggleAuthModeBtn.onclick = () => {
-                authMode = authMode === 'login' ? 'register' : 'login';
-                authTitle.textContent = authMode === 'register' ? 'Register to SnugOS Profile' : 'Login to SnugOS Profile';
-                authBtnText.textContent = authMode === 'register' ? 'Register' : 'Login';
-                toggleAuthModeBtn.textContent = authMode === 'register' ? 'Already have an account? Login' : 'Need an account? Register';
-                document.getElementById('auth-message').classList.add('hidden'); // Clear message on toggle
-            };
-        }
-        // Attach form submit listener if not already attached (or re-attach)
-        authForm?.addEventListener('submit', handleAuthSubmit);
+        authTitle.textContent = 'Login to SnugOS Profile';
+        document.getElementById('auth-btn-text').textContent = 'Login';
+        toggleAuthModeBtn.textContent = 'Need an account? Register';
     }
 }
 
@@ -496,7 +472,11 @@ function attachProfileEventListeners() {
     if (toggleAuthModeBtn) {
         toggleAuthModeBtn.addEventListener('click', () => {
             authMode = authMode === 'login' ? 'register' : 'login';
-            renderProfileApp(); // Re-render to update form based on authMode
+            // Update auth form UI based on mode
+            authTitle.textContent = authMode === 'register' ? 'Register to SnugOS Profile' : 'Login to SnugOS Profile';
+            document.getElementById('auth-btn-text').textContent = authMode === 'register' ? 'Register' : 'Login';
+            toggleAuthModeBtn.textContent = authMode === 'register' ? 'Already have an account? Login' : 'Need an account? Register';
+            document.getElementById('auth-message').classList.add('hidden'); // Clear message on toggle
         });
     }
 
@@ -514,23 +494,11 @@ function attachProfileEventListeners() {
 // --- Initial Setup ---
 document.addEventListener('DOMContentLoaded', () => {
     // Check initial auth state on page load
-    loggedInUser = checkLocalAuth();
-    renderProfileApp();
+    token = localStorage.getItem('snugos_token'); // Ensure token is read on DOMContentLoaded
+    if (token) {
+        fetchUserProfileData(); // Attempt to fetch user profile if token exists
+    } else {
+        renderProfileApp(); // Show login page if no token
+    }
     attachProfileEventListeners();
 });
-
-// --- Local Utility Functions (from original utils.js/welcomeUtils.js - copied for standalone) ---
-// These functions are duplicated here for the standalone app's independence.
-// If you create a common utilities.js for all standalone apps, you can import them.
-
-// Re-implementing showNotification, showCustomModal, etc., directly here as they are not passed via appServices in standalone.
-
-// Assumes showNotification, showCustomModal are available globally or imported if not in same file
-// For this standalone app, we are defining them here to keep it self-contained.
-// This is done implicitly by including their code directly from the original snippets.
-
-// NOTE: showNotification and showCustomModal are defined at the top of this file.
-// If you want to put them into a shared utilities.js for standalone apps, that's a refactoring step.
-// For now, they are part of this file as they were inline in the original Drive HTML.
-
-// This file itself contains the necessary utility functions.
