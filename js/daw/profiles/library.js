@@ -1,4 +1,4 @@
-import { SnugWindow } from '../daw/SnugWindow.js';
+import { SnugWindow } from '/app/js/daw/SnugWindow.js';
 import { SERVER_URL } from '/app/js/daw/constants.js';
 import { openFileViewerWindow, initializeFileViewerUI } from '/app/js/daw/ui/fileViewerUI.js';
 import { storeAudio, getAudio } from '/app/js/daw/db.js';
