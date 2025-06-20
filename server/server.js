@@ -23,6 +23,9 @@ const s3 = new AWS.S3({
     signatureVersion: 'v4'
 });
 
+// Multer storage: memoryStorage keeps files in buffer. For truly huge files,
+// direct streaming to S3 or diskStorage might be needed, but this handles
+// most common file sizes without explicit client-side limits.
 const upload = multer({ storage: multer.memoryStorage() });
 
 const initializeDatabase = async () => {
@@ -90,8 +93,6 @@ const initializeDatabase = async () => {
 };
 
 // Configure CORS to allow requests from your GitHub Pages domain
-// IMPORTANT: Replace 'https://snugos.github.io' with your actual GitHub Pages domain if it changes.
-// If you have multiple origins, you can provide an array: ['https://snugos.github.io', 'http://localhost:8080']
 app.use(cors({
     origin: 'https://snugos.github.io', // Your GitHub Pages URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
@@ -346,44 +347,77 @@ app.put('/api/files/:fileId/toggle-public', authenticateToken, async (req, res) 
     }
 });
 
-app.put('/api/files/:fileId/rename', authenticateToken, async (req, res) => {
-    const fileId = req.params.fileId;
+// New endpoint for moving files/folders
+app.put('/api/files/:id/move', authenticateToken, async (req, res) => {
+    const itemId = req.params.id;
     const userId = req.user.id;
-    const { newName } = req.body;
+    const { targetPath } = req.body; // The target path where the item should be moved
 
-    if (!newName || newName.trim() === '') {
-        return res.status(400).json({ success: false, message: 'New name cannot be empty.' });
+    if (!targetPath) {
+        return res.status(400).json({ success: false, message: 'Target path is required.' });
     }
 
     try {
-        const getFileQuery = "SELECT user_id, path, file_name, s3_key FROM user_files WHERE id = $1";
-        const fileResult = await pool.query(getFileQuery, [fileId]);
-
-        if (fileResult.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'File or folder not found.' });
+        const itemToMoveResult = await pool.query("SELECT id, user_id, path, file_name, mime_type FROM user_files WHERE id = $1", [itemId]);
+        if (itemToMoveResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Item not found.' });
         }
 
-        const fileData = fileResult.rows[0];
-        if (fileData.user_id !== userId) {
-            return res.status(403).json({ success: false, message: 'You do not have permission to rename this item.' });
+        const itemToMove = itemToMoveResult.rows[0];
+        if (itemToMove.user_id !== userId) {
+            return res.status(403).json({ success: false, message: 'You do not have permission to move this item.' });
         }
 
-        // Check for name conflict in the same directory
+        const isFolder = itemToMove.mime_type === 'application/vnd.snugos.folder';
+        const currentItemFullPath = itemToMove.path + itemToMove.file_name + (isFolder ? '/' : '');
+        const newParentPath = targetPath.endsWith('/') ? targetPath : `${targetPath}/`; // Ensure targetPath ends with a slash if it's a folder path
+
+        // Validation 1: Prevent moving an item into its current parent (no-op)
+        if (itemToMove.path === newParentPath) {
+            return res.json({ success: true, message: 'Item is already in the target location.' });
+        }
+
+        // Validation 2: Prevent moving a folder into its own descendant
+        if (isFolder && newParentPath.startsWith(currentItemFullPath)) {
+            return res.status(400).json({ success: false, message: 'Cannot move a folder into its own subfolder.' });
+        }
+
+        // Validation 3: Check for name conflict at destination
         const conflictQuery = "SELECT id FROM user_files WHERE user_id = $1 AND path = $2 AND file_name = $3 AND id != $4";
-        const conflictResult = await pool.query(conflictQuery, [userId, fileData.path, newName.trim(), fileId]);
+        const conflictResult = await pool.query(conflictQuery, [userId, newParentPath, itemToMove.file_name, itemId]);
         if (conflictResult.rows.length > 0) {
-            return res.status(409).json({ success: false, message: `An item with the name "${newName.trim()}" already exists in this location.` });
+            return res.status(409).json({ success: false, message: `An item with the name "${itemToMove.file_name}" already exists in the destination.` });
         }
 
-        const updateQuery = `UPDATE user_files SET file_name = $1 WHERE id = $2 RETURNING *;`;
-        const result = await pool.query(updateQuery, [newName.trim(), fileId]);
+        await pool.query('BEGIN'); // Start transaction
 
-        res.json({ success: true, message: 'Item renamed successfully.', item: result.rows[0] });
+        // Update the item itself
+        await pool.query("UPDATE user_files SET path = $1 WHERE id = $2 AND user_id = $3;", [newParentPath, itemId, userId]);
+
+        // If it's a folder, update all its children recursively
+        if (isFolder) {
+            const oldPathPrefix = currentItemFullPath; // e.g., /parent/folder_name/
+            const newPathPrefix = newParentPath + itemToMove.file_name + '/'; // e.g., /new_parent/folder_name/
+
+            // Update children's paths
+            const updateChildrenQuery = `
+                UPDATE user_files
+                SET path = $1 || SUBSTRING(path FROM LENGTH($2) + 1)
+                WHERE user_id = $3 AND path LIKE $2 || '%';
+            `;
+            await pool.query(updateChildrenQuery, [newPathPrefix, oldPathPrefix, userId]);
+        }
+
+        await pool.query('COMMIT'); // Commit transaction
+        res.json({ success: true, message: 'Item moved successfully.' });
+
     } catch (error) {
-        console.error("[Rename Item] Error:", error);
-        res.status(500).json({ success: false, message: 'Server error while renaming item.' });
+        await pool.query('ROLLBACK'); // Rollback transaction on error
+        console.error("[Move Item] Error:", error);
+        res.status(500).json({ success: false, message: 'Server error while moving item.' });
     }
 });
+
 
 app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
     const fileId = req.params.fileId;
