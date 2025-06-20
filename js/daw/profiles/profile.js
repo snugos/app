@@ -143,12 +143,12 @@ function updateProfileUI(container, profileData) {
 
     // Attach event listeners to the dynamically created elements
     if (isOwner) {
-        container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
-        container.querySelector('#editProfileBtn')?.addEventListener('click', () => { // Changed from newContent.querySelector
+        newContent.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
+        newContent.querySelector('#editProfileBtn')?.addEventListener('click', () => {
             isEditing = !isEditing;
             updateProfileUI(container, profileData); // Re-render in edit mode or view mode
         });
-        // Attach listener for background upload input (which is outside the the container passed)
+        // Attach listener for background upload input (which is outside the newContent)
         const customBgInput = document.getElementById('customBgInput');
         if (customBgInput) {
             customBgInput.addEventListener('change', async (e) => {
@@ -159,7 +159,7 @@ function updateProfileUI(container, profileData) {
             });
 
             // Add context menu to background area for owner
-            const backgroundArea = container.querySelector('.relative.h-40'); // Changed from newContent.querySelector
+            const backgroundArea = newContent.querySelector('.relative.h-40');
             if (backgroundArea) {
                 backgroundArea.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
@@ -170,10 +170,10 @@ function updateProfileUI(container, profileData) {
             }
         }
     } else if (loggedInUser) {
-        container.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend)); // Changed from newContent.querySelector
-        container.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username)); // Changed from newContent.querySelector
+        newContent.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
+        newContent.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
         // If there are links to other user profiles in the bio, add listeners
-        container.querySelectorAll('.username-link').forEach(link => { // Changed from newContent.querySelectorAll
+        newContent.querySelectorAll('.username-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const targetUsername = e.target.dataset.username;
@@ -220,20 +220,12 @@ function renderEditMode(container, profileData) {
     `;
     container.querySelector('#cancelEditBtn').addEventListener('click', () => {
         isEditing = false;
-        // Corrected: Use the passed container to find the profile window's content parent, then get the window instance
-        const profileWindowEl = container.closest('.window-content').parentElement;
-        if (profileWindowEl && profileWindowEl.id) {
-            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
-            if (profileWindowInstance) updateProfileUI(profileWindowInstance.contentContainer, profileData); // Pass the correct content container
-        } else {
-             console.warn("Could not find parent window element for profile update after cancel edit.");
-             updateProfileUI(container, profileData); // Fallback to current container
-        }
+        updateProfileUI(container, profileData); // Re-render in view mode.
     });
     container.querySelector('#editProfileForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const newBio = container.querySelector('#editBio').value;
-        saveProfile(profileData.username, { bio: newBio });
+        saveProfile(profileData.username, { bio: newBio }); // Save changes.
     });
 }
 
@@ -290,12 +282,7 @@ async function handleAvatarUpload(file) {
 
         appServices.showNotification("Profile picture updated!", 2000);
         // Re-fetch profile data to update the UI with the new avatar.
-        // Get the profile window instance via its content container's parent
-        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
-        if (profileWindowEl && profileWindowEl.id) {
-            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
-            if(profileWindowInstance) await fetchProfileData(loggedInUser.username, profileWindowInstance.contentContainer); // Pass correct content container
-        }
+        await fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
         
         // If the parent (index.html) has a way to update its auth UI (e.g., avatar on top bar)
         // this is where you'd call it. Assuming it receives user object.
@@ -351,11 +338,7 @@ async function handleBackgroundUpload(file) {
             window.parent.appServices.applyCustomBackground(file); 
         }
         // Re-fetch profile data to ensure the URL is updated and UI reflects new background immediately.
-        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
-        if (profileWindowEl && profileWindowEl.id) {
-            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
-            if(profileWindowInstance) await fetchProfileData(loggedInUser.username, profileWindowInstance.contentContainer);
-        }
+        await fetchProfileData(loggedInUser.username, document.getElementById('profile-container'));
 
     } catch(error) {
         appServices.showNotification(`Error saving background: ${error.message}`, 4000);
@@ -386,12 +369,7 @@ async function saveProfile(username, dataToSave) {
         if (!response.ok) throw new Error(result.message);
         appServices.showNotification("Profile saved!", 2000);
         isEditing = false; // Exit edit mode.
-        // Corrected: Use the passed profileWindow reference
-        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
-        if (profileWindowEl && profileWindowEl.id) {
-            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
-            if(profileWindowInstance) await fetchProfileData(username, profileWindowInstance.contentContainer);
-        }
+        fetchProfileData(username, document.getElementById('profile-container')); // Re-fetch data to update UI.
     } catch (error) {
         appServices.showNotification(`Error: ${error.message}`, 4000);
         console.error("Save Profile Error:", error);
@@ -414,18 +392,12 @@ async function handleAddFriendToggle(username, isFriend) {
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ isFriend: isFriend }) // Ensure payload is correct for server
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         appServices.showNotification(result.message, 2000);
-        // Corrected: Use the passed profileWindow reference
-        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
-        if (profileWindowEl && profileWindowEl.id) {
-            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
-            if(profileWindowInstance) await fetchProfileData(username, profileWindowInstance.contentContainer);
-        }
+        fetchProfileData(username, document.getElementById('profile-container')); // Re-fetch profile to update friend status UI.
     } catch (error) {
         appServices.showNotification(`Error: ${error.message}`, 4000);
         console.error("Friend Action Error:", error);
@@ -475,16 +447,9 @@ async function sendMessage(recipientUsername, content) {
     }
 }
 
-// Global functions that should be coming from appServices, but are locally defined as fallbacks or old patterns.
-// These should NOT be here if the file is embedded via an iframe that receives appServices.
-// They are being removed or adjusted to ensure they use the correct appServices object.
-
-// Corrected: Removed local definitions of these utility functions.
-// These should be accessed directly from `appServices` object provided by parent.
-// The functions themselves are defined in `/app/js/daw/utils.js` (showNotification, showCustomModal, createContextMenu)
-// and handled by `welcome.js` to populate appServices.
-
-// `loadAndApplyGlobals` is a local function that can stay.
+/**
+ * Loads user's global settings (like background) and applies them via parent's appServices.
+ */
 async function loadAndApplyGlobals() {
     if (!loggedInUser) return;
     try {
@@ -506,7 +471,10 @@ async function loadAndApplyGlobals() {
     }
 }
 
-// `checkLocalAuth` is a local function that can stay.
+/**
+ * Checks for a valid authentication token in local storage and returns user info if valid.
+ * @returns {object|null} User object (id, username) if authenticated, otherwise null.
+ */
 function checkLocalAuth() {
     try {
         const token = localStorage.getItem('snugos_token');
@@ -523,46 +491,18 @@ function checkLocalAuth() {
     }
 }
 
-// `handleLogout` is a local function that can stay.
+/**
+ * Handles user logout. This function is specific to the iframe context.
+ * It will trigger the parent's logout function for a consistent experience.
+ */
 function handleLogout() {
     localStorage.removeItem('snugos_token');
     loggedInUser = null; // Clear local user state.
+    appServices.showNotification('You have been logged out.', 2000);
     // Call the parent window's logout function if available.
     if (window.parent && window.parent.appServices && typeof window.parent.appServices.handleLogout === 'function') {
         window.parent.appServices.handleLogout(); 
     } else {
         window.location.reload(); // Fallback: reload the iframe if no parent handler.
     }
-    appServices.showNotification('You have been logged out.', 2000); // Use appServices.showNotification
 }
-
-// The following functions are from the "main app" version of profile.js that should NOT be here.
-// These local functions directly attempt to interact with the main desktop and app state,
-// which is handled by welcome.js. Their presence causes conflicts.
-
-// DELETING these functions as they are not meant for an embedded iframe profile.js
-// function updateClockDisplay() { ... }
-// function toggleStartMenu() { ... }
-// function toggleFullScreen() { ... }
-// function showLoginModal() { ... }
-// function attachDesktopEventListeners() { ... }
-// function openProfileWindow(username) { ... } // This one will be moved to welcome.js if needed there.
-
-// Corrected: Re-integrating the DOMContentLoaded block from the correct iframe profile.js structure.
-document.addEventListener('DOMContentLoaded', () => {
-    // These functions should come from appServices, which is passed from the parent.
-    // The local definitions below are what cause the conflict/ReferenceError.
-    // We should be calling appServices.showNotification, appServices.showCustomModal etc.
-    // not trying to assign them or call local, undefined versions.
-
-    // Corrected: The original entry point initProfilePageInIframe is called from profile.html.
-    // This DOMContentLoaded block in the provided profile.js is misplaced for an iframe script.
-    // It should be within the initProfilePageInIframe or just part of the overall flow.
-
-    // Let's assume the profile.html structure is correctly calling initProfilePageInIframe.
-    // The issue is simply the presence of these top-level DOMContentLoaded and related
-    // desktop/app management functions that do NOT belong in an embedded script.
-
-    // Removed the problematic DOMContentLoaded listener as it attempts to run main app logic.
-    // The actual initialization is handled by initProfilePageInIframe, called from profile.html.
-});
