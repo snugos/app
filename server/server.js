@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 const multer = require('multer');
 const AWS = require('aws-sdk');
+const axios = require('axios'); // Added for potential Google Drive file fetching
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,9 +24,7 @@ const s3 = new AWS.S3({
     signatureVersion: 'v4'
 });
 
-// Multer storage: memoryStorage keeps files in buffer. For truly huge files,
-// direct streaming to S3 or diskStorage might be needed, but this handles
-// most common file sizes without explicit client-side limits.
+// Multer storage: memoryStorage keeps files in buffer.
 const upload = multer({ storage: multer.memoryStorage() });
 
 const initializeDatabase = async () => {
@@ -37,10 +36,18 @@ const initializeDatabase = async () => {
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
             background_url TEXT,
             bio TEXT,
-            avatar_url TEXT
+            avatar_url TEXT,
+            google_access_token TEXT,  -- For storing Google access token
+            google_refresh_token TEXT, -- For storing Google refresh token
+            google_token_expiry TIMESTAMP WITH TIME ZONE -- For token expiry
         );
     `;
-    const addAvatarUrlColumnQuery = `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;`;
+    const addGoogleAuthColumnsQuery = `
+        ALTER TABLE profiles
+        ADD COLUMN IF NOT EXISTS google_access_token TEXT,
+        ADD COLUMN IF NOT EXISTS google_refresh_token TEXT,
+        ADD COLUMN IF NOT EXISTS google_token_expiry TIMESTAMP WITH TIME ZONE;
+    `;
 
     const createUserFilesTableQuery = `
         CREATE TABLE IF NOT EXISTS user_files (
@@ -80,7 +87,7 @@ const initializeDatabase = async () => {
 
     try {
         await pool.query(createProfilesTableQuery);
-        await pool.query(addAvatarUrlColumnQuery);
+        await pool.query(addGoogleAuthColumnsQuery); // Add new columns if they don't exist
         await pool.query(createUserFilesTableQuery);
         await pool.query(addPathColumnQuery);
         await pool.query(addIsPublicColumnQuery);
@@ -107,7 +114,7 @@ const authenticateToken = (req, res, next) => {
     if (token == null) return res.sendStatus(401);
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.sendStatus(403);
-        req.user = user;
+        req.user = user; // user object from JWT: { id, username }
         next();
     });
 };
@@ -150,7 +157,8 @@ app.post('/api/login', async (request, response) => {
 app.get('/api/profile/me', authenticateToken, async (request, response) => {
     try {
         const userId = request.user.id;
-        const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio, avatar_url FROM profiles WHERE id = $1", [userId]);
+        // Include google_access_token in profile for client-side Picker API if needed
+        const profileResult = await pool.query("SELECT id, username, created_at, background_url, bio, avatar_url, google_access_token FROM profiles WHERE id = $1", [userId]);
         if (profileResult.rows.length === 0) {
             return response.status(404).json({ success: false, message: 'Profile not found.' });
         }
@@ -321,6 +329,24 @@ app.get('/api/files/my', authenticateToken, async (req, res) => {
     }
 });
 
+// New endpoint for 'snaw' user to see all files
+app.get('/api/admin/files', authenticateToken, async (req, res) => {
+    // Only allow user 'snaw' to access this endpoint
+    if (req.user.username !== 'snaw') {
+        return res.status(403).json({ success: false, message: 'Access denied. Only "snaw" can view all files.' });
+    }
+    try {
+        // Fetch all files from the database regardless of user_id or path
+        const query = `SELECT * FROM user_files ORDER BY user_id, path, mime_type, file_name ASC`;
+        const result = await pool.query(query);
+        res.json({ success: true, items: result.rows });
+    } catch (error) {
+        console.error("[Admin Files] Error:", error);
+        res.status(500).json({ success: false, message: 'Server error fetching all files.' });
+    }
+});
+
+
 app.get('/api/files/public', authenticateToken, async (req, res) => {
     try {
         const path = req.query.path || '/';
@@ -347,7 +373,48 @@ app.put('/api/files/:fileId/toggle-public', authenticateToken, async (req, res) 
     }
 });
 
-// New endpoint for moving files/folders
+// Endpoint for renaming files/folders
+app.put('/api/files/:fileId/rename', authenticateToken, async (req, res) => {
+    const fileId = req.params.fileId;
+    const userId = req.user.id;
+    const { newName } = req.body;
+
+    if (!newName || newName.trim() === '') {
+        return res.status(400).json({ success: false, message: 'New name cannot be empty.' });
+    }
+
+    try {
+        const getFileQuery = "SELECT user_id, path, file_name, s3_key FROM user_files WHERE id = $1";
+        const fileResult = await pool.query(getFileQuery, [fileId]);
+
+        if (fileResult.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'File or folder not found.' });
+        }
+
+        const fileData = fileResult.rows[0];
+        // Allow 'snaw' to rename any file
+        if (fileData.user_id !== userId && req.user.username !== 'snaw') {
+            return res.status(403).json({ success: false, message: 'You do not have permission to rename this item.' });
+        }
+
+        // Check for name conflict in the same directory
+        const conflictQuery = "SELECT id FROM user_files WHERE user_id = $1 AND path = $2 AND file_name = $3 AND id != $4";
+        const conflictResult = await pool.query(conflictQuery, [fileData.user_id, fileData.path, newName.trim(), fileId]); // Check conflict for the *owner* of the file
+        if (conflictResult.rows.length > 0) {
+            return res.status(409).json({ success: false, message: `An item with the name "${newName.trim()}" already exists in this location.` });
+        }
+
+        const updateQuery = `UPDATE user_files SET file_name = $1 WHERE id = $2 RETURNING *;`;
+        const result = await pool.query(updateQuery, [newName.trim(), fileId]);
+
+        res.json({ success: true, message: 'Item renamed successfully.', item: result.rows[0] });
+    } catch (error) {
+        console.error("[Rename Item] Error:", error);
+        res.status(500).json({ success: false, message: 'Server error while renaming item.' });
+    }
+});
+
+// Endpoint for moving files/folders
 app.put('/api/files/:id/move', authenticateToken, async (req, res) => {
     const itemId = req.params.id;
     const userId = req.user.id;
@@ -364,7 +431,8 @@ app.put('/api/files/:id/move', authenticateToken, async (req, res) => {
         }
 
         const itemToMove = itemToMoveResult.rows[0];
-        if (itemToMove.user_id !== userId) {
+        // Allow 'snaw' to move any file
+        if (itemToMove.user_id !== userId && req.user.username !== 'snaw') {
             return res.status(403).json({ success: false, message: 'You do not have permission to move this item.' });
         }
 
@@ -382,9 +450,9 @@ app.put('/api/files/:id/move', authenticateToken, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Cannot move a folder into its own subfolder.' });
         }
 
-        // Validation 3: Check for name conflict at destination
+        // Validation 3: Check for name conflict at destination (for the item's actual owner)
         const conflictQuery = "SELECT id FROM user_files WHERE user_id = $1 AND path = $2 AND file_name = $3 AND id != $4";
-        const conflictResult = await pool.query(conflictQuery, [userId, newParentPath, itemToMove.file_name, itemId]);
+        const conflictResult = await pool.query(conflictQuery, [itemToMove.user_id, newParentPath, itemToMove.file_name, itemId]);
         if (conflictResult.rows.length > 0) {
             return res.status(409).json({ success: false, message: `An item with the name "${itemToMove.file_name}" already exists in the destination.` });
         }
@@ -392,7 +460,7 @@ app.put('/api/files/:id/move', authenticateToken, async (req, res) => {
         await pool.query('BEGIN'); // Start transaction
 
         // Update the item itself
-        await pool.query("UPDATE user_files SET path = $1 WHERE id = $2 AND user_id = $3;", [newParentPath, itemId, userId]);
+        await pool.query("UPDATE user_files SET path = $1 WHERE id = $2;", [newParentPath, itemId]);
 
         // If it's a folder, update all its children recursively
         if (isFolder) {
@@ -405,7 +473,7 @@ app.put('/api/files/:id/move', authenticateToken, async (req, res) => {
                 SET path = $1 || SUBSTRING(path FROM LENGTH($2) + 1)
                 WHERE user_id = $3 AND path LIKE $2 || '%';
             `;
-            await pool.query(updateChildrenQuery, [newPathPrefix, oldPathPrefix, userId]);
+            await pool.query(updateChildrenQuery, [newPathPrefix, oldPathPrefix, itemToMove.user_id]); // Update children for the actual owner
         }
 
         await pool.query('COMMIT'); // Commit transaction
@@ -423,23 +491,47 @@ app.delete('/api/files/:fileId', authenticateToken, async (req, res) => {
     const fileId = req.params.fileId;
     const userId = req.user.id;
     try {
-        const getFileQuery = "SELECT user_id, s3_key FROM user_files WHERE id = $1";
+        const getFileQuery = "SELECT user_id, s3_key, mime_type, file_name, path FROM user_files WHERE id = $1";
         const fileResult = await pool.query(getFileQuery, [fileId]);
         if (fileResult.rows.length === 0) return res.status(404).json({ success: false, message: 'File not found.' });
 
-        const fileOwnerId = fileResult.rows[0].user_id;
-        const s3Key = fileResult.rows[0].s3_key;
-        if (fileOwnerId !== userId) return res.status(403).json({ success: false, message: 'You do not have permission to delete this file.' });
+        const fileData = fileResult.rows[0];
+        // Allow 'snaw' to delete any file
+        if (fileData.user_id !== userId && req.user.username !== 'snaw') {
+            return res.status(403).json({ success: false, message: 'You do not have permission to delete this file.' });
+        }
 
-        if (!s3Key.startsWith('folder-')) {
-            await s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: s3Key }).promise();
+        await pool.query('BEGIN'); // Start transaction for potential folder deletion
+
+        // If it's a folder, recursively delete its contents from DB and S3
+        if (fileData.mime_type === 'application/vnd.snugos.folder') {
+            const folderPathPrefix = fileData.path + fileData.file_name + '/';
+            const childrenQuery = `SELECT id, s3_key, mime_type, file_name FROM user_files WHERE user_id = $1 AND path LIKE $2 || '%';`;
+            const childrenResult = await pool.query(childrenQuery, [fileData.user_id, folderPathPrefix]);
+
+            for (const child of childrenResult.rows) {
+                if (!child.s3_key.startsWith('folder-')) { // Delete actual S3 objects
+                    await s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: child.s3_key }).promise();
+                }
+                await pool.query("DELETE FROM user_files WHERE id = $1", [child.id]);
+            }
+        }
+
+        // Delete the item itself (and its S3 object if not a folder)
+        if (!fileData.s3_key.startsWith('folder-')) {
+            await s3.deleteObject({ Bucket: process.env.S3_BUCKET_NAME, Key: fileData.s3_key }).promise();
         }
         await pool.query("DELETE FROM user_files WHERE id = $1", [fileId]);
+
+        await pool.query('COMMIT'); // Commit transaction
         res.json({ success: true, message: 'File deleted successfully.' });
     } catch (error) {
+        await pool.query('ROLLBACK'); // Rollback transaction on error
+        console.error("[Delete File] Error:", error);
         res.status(500).json({ success: false, message: 'Server error while deleting file.' });
     }
 });
+
 
 app.get('/api/files/:fileId/share-link', authenticateToken, async (req, res) => {
     const { fileId } = req.params;
@@ -449,8 +541,13 @@ app.get('/api/files/:fileId/share-link', authenticateToken, async (req, res) => 
         if (fileQuery.rows.length === 0) return res.status(404).json({ success: false, message: "File not found." });
 
         const file = fileQuery.rows[0];
-        if (!file.is_public && file.user_id !== userId) {
+        if (!file.is_public && file.user_id !== userId && req.user.username !== 'snaw') {
             return res.status(403).json({ success: false, message: "You do not have permission to share this file." });
+        }
+
+        // Folders don't have shareable S3 URLs; their s3_key starts with 'folder-'
+        if (file.s3_key.startsWith('folder-')) {
+            return res.status(400).json({ success: false, message: "Folders do not have direct share links." });
         }
 
         const params = { Bucket: process.env.S3_BUCKET_NAME, Key: file.s3_key, Expires: 3600 };
@@ -461,6 +558,180 @@ app.get('/api/files/:fileId/share-link', authenticateToken, async (req, res) => 
         res.status(500).json({ success: false, message: "Could not generate share link." });
     }
 });
+
+// --- Google OAuth & Drive Integration Endpoints ---
+
+// Initiate Google OAuth flow
+app.get('/api/google-auth', authenticateToken, (req, res) => {
+    // You must set these environment variables in Render
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+    const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://snugos-server-api.onrender.com/api/google-auth/callback'; // Or your frontend's redirect URI
+
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_REDIRECT_URI) {
+        return res.status(500).json({ success: false, message: 'Google API credentials not configured on server.' });
+    }
+
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${GOOGLE_CLIENT_ID}&` +
+        `redirect_uri=${GOOGLE_REDIRECT_URI}&` +
+        `response_type=code&` +
+        `scope=https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&` +
+        `access_type=offline&` + // Request a refresh token
+        `prompt=consent&` + // Always show consent screen
+        `state=${req.user.id}`; // Pass user ID to associate token later
+
+    res.json({ success: true, authUrl });
+});
+
+// Google OAuth callback handler
+app.get('/api/google-auth/callback', async (req, res) => {
+    const { code, state, error } = req.query; // 'state' will be our userId
+
+    if (error) {
+        console.error("Google OAuth Error:", error);
+        // Redirect to frontend with an error message
+        return res.redirect(`https://snugos.github.io/app/drive/index.html?google_auth_error=${encodeURIComponent(error)}`);
+    }
+
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+    const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+    const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://snugos-server-api.onrender.com/api/google-auth/callback';
+
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
+        return res.status(500).send('Google API credentials not fully configured on server.');
+    }
+
+    try {
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            client_id: GOOGLE_CLIENT_ID,
+            client_secret: GOOGLE_CLIENT_SECRET,
+            code: code,
+            redirect_uri: GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code'
+        });
+
+        const { access_token, refresh_token, expires_in } = tokenResponse.data;
+        const expiryDate = new Date(Date.now() + expires_in * 1000);
+
+        // Store tokens in the user's profile
+        await pool.query(
+            "UPDATE profiles SET google_access_token = $1, google_refresh_token = $2, google_token_expiry = $3 WHERE id = $4",
+            [access_token, refresh_token, expiryDate, state] // 'state' contains the user ID
+        );
+
+        // Redirect back to your frontend with success status or a simple message
+        res.redirect('https://snugos.github.io/app/drive/index.html?google_auth_success=true');
+
+    } catch (tokenError) {
+        console.error("Error exchanging Google code for token:", tokenError.response?.data || tokenError.message);
+        res.redirect(`https://snugos.github.io/app/drive/index.html?google_auth_error=${encodeURIComponent('Failed to get Google tokens.')}`);
+    }
+});
+
+// Endpoint to fetch and upload a file from Google Drive to S3
+app.post('/api/google-drive/import', authenticateToken, async (req, res) => {
+    const { fileId, fileName, mimeType, parentPath } = req.body; // parentPath is the SnugOS path to save to
+    const userId = req.user.id;
+
+    if (!fileId || !fileName || !parentPath) {
+        return res.status(400).json({ success: false, message: 'File ID, file name, and target path are required.' });
+    }
+
+    try {
+        // Retrieve user's Google tokens from DB
+        const profileResult = await pool.query("SELECT google_access_token, google_refresh_token, google_token_expiry FROM profiles WHERE id = $1", [userId]);
+        const profile = profileResult.rows[0];
+
+        if (!profile || !profile.google_access_token) {
+            return res.status(401).json({ success: false, message: 'Google account not linked or token expired. Please re-authenticate.' });
+        }
+
+        let currentAccessToken = profile.google_access_token;
+        // Check if token is expired and refresh if necessary
+        if (new Date() > new Date(profile.google_token_expiry) && profile.google_refresh_token) {
+            console.log("Google access token expired, attempting to refresh...");
+            const refreshResponse = await axios.post('https://oauth2.googleapis.com/token', {
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                refresh_token: profile.google_refresh_token,
+                grant_type: 'refresh_token'
+            });
+            currentAccessToken = refreshResponse.data.access_token;
+            const newExpiryDate = new Date(Date.now() + refreshResponse.data.expires_in * 1000);
+
+            await pool.query(
+                "UPDATE profiles SET google_access_token = $1, google_token_expiry = $2 WHERE id = $3",
+                [currentAccessToken, newExpiryDate, userId]
+            );
+            console.log("Google access token refreshed.");
+        } else if (new Date() > new Date(profile.google_token_expiry) && !profile.google_refresh_token) {
+            return res.status(401).json({ success: false, message: 'Google refresh token missing. Please re-link Google Drive.' });
+        }
+
+
+        // Download file from Google Drive
+        const googleDriveFileResponse = await axios.get(
+            `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+            {
+                headers: { 'Authorization': `Bearer ${currentAccessToken}` },
+                responseType: 'arraybuffer' // Get as binary data
+            }
+        );
+
+        const fileBuffer = Buffer.from(googleDriveFileResponse.data);
+        const fileSizeBytes = fileBuffer.byteLength;
+
+        // Upload to S3
+        const s3Key = `user-files/${userId}/google-drive/${Date.now()}-${fileName.replace(/ /g, '_')}`;
+        const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: s3Key,
+            Body: fileBuffer,
+            ContentType: mimeType || 'application/octet-stream' // Use provided MIME type or default
+        };
+        const s3Data = await s3.upload(uploadParams).promise();
+
+        // Save to PostgreSQL
+        const insertFileQuery = `INSERT INTO user_files (user_id, path, file_name, s3_key, s3_url, mime_type, file_size, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
+        const result = await pool.query(insertFileQuery, [userId, parentPath, fileName, s3Key, s3Data.Location, mimeType, fileSizeBytes, false]);
+
+        res.status(201).json({ success: true, file: result.rows[0], message: `File "${fileName}" imported from Google Drive.` });
+
+    } catch (error) {
+        console.error("[Google Drive Import] Error:", error.response?.data || error.message);
+        let userMessage = 'Failed to import file from Google Drive.';
+        if (error.response?.status === 401) {
+            userMessage = 'Google Drive authentication failed. Please re-link your Google account.';
+        } else if (error.response?.status === 403) {
+            userMessage = 'Permission denied by Google Drive. Check file sharing settings.';
+        }
+        res.status(500).json({ success: false, message: userMessage });
+    }
+});
+
+
+// Endpoint to revoke Google Drive access (optional but good practice)
+app.post('/api/google-drive/revoke', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const profileResult = await pool.query("SELECT google_access_token FROM profiles WHERE id = $1", [userId]);
+        const profile = profileResult.rows[0];
+
+        if (profile && profile.google_access_token) {
+            await axios.post(`https://oauth2.googleapis.com/revoke?token=${profile.google_access_token}`);
+        }
+
+        await pool.query(
+            "UPDATE profiles SET google_access_token = NULL, google_refresh_token = NULL, google_token_expiry = NULL WHERE id = $1",
+            [userId]
+        );
+        res.json({ success: true, message: 'Google Drive access revoked.' });
+    } catch (error) {
+        console.error("[Google Revoke] Error:", error.response?.data || error.message);
+        res.status(500).json({ success: false, message: 'Failed to revoke Google Drive access.' });
+    }
+});
+
 
 // --- Start the Server ---
 app.listen(PORT, () => {
