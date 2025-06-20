@@ -53,7 +53,7 @@
         }
 
         .sidebar {
-            /* Remove fixed width to allow responsive scaling based on BLOCK_SIZE */
+            /* Removed fixed width to allow responsive scaling based on BLOCK_SIZE */
             /* width: 160px; */ 
             display: flex;
             flex-direction: column;
@@ -310,7 +310,7 @@
         let isPaused = false, isGameOver = false, animationFrameId, isDroppingFast = false;
         
         // --- Handling ---
-        let dasTimeout, arrInterval;
+        let dasTimeoutLeft, dasTimeoutRight, arrIntervalLeft, arrIntervalRight; // Corrected variable names
         let dasValue = 167; 
         let arrValue = 33;
         let sdfValue = 6;
@@ -346,18 +346,21 @@
             const availableWidth = window.innerWidth - (padding * 2);
 
             // Estimate total "column" units needed for layout (game board + 2 sidebars + gaps)
-            const minSidebarContentBlocks = 4; // Width of preview canvases (4 blocks wide)
-            const totalHorizontalGapUnits = 3; // 1.5rem gap * 2 = 3rem total gap (roughly 3 BLOCK_SIZE units)
-            const dynamicTotalBlockColumns = COLS + (2 * minSidebarContentBlocks) + totalHorizontalGapUnits; 
+            // Game board is COLS (10) units wide.
+            // Each sidebar needs enough space for a 4-block wide preview canvas plus padding.
+            // Let's estimate sidebars take roughly 5-6 BLOCK_SIZE units each minimum.
+            // The game-wrapper also has a 1.5rem gap on either side of the board.
+            const estimatedSidebarBlockWidth = 5; 
+            const totalHorizontalGapUnits = 3; // 1.5rem * 2 from game-wrapper gap converted to arbitrary BLOCK_SIZE units
+            const dynamicTotalBlockColumns = COLS + (2 * estimatedSidebarBlockWidth) + totalHorizontalGapUnits; 
 
             const blockSizeByHeight = availableHeight / ROWS;
             const blockSizeByWidth = availableWidth / dynamicTotalBlockColumns;
 
-
             // Select the smaller BLOCK_SIZE to ensure everything fits
             BLOCK_SIZE = Math.floor(Math.min(blockSizeByHeight, blockSizeByWidth));
-            if (BLOCK_SIZE < 8) BLOCK_SIZE = 8; // Set a sensible minimum BLOCK_SIZE, e.g., 8 or 10
-            if (BLOCK_SIZE > 30) BLOCK_SIZE = 30; // Set a sensible maximum BLOCK_SIZE to prevent overly large game
+            if (BLOCK_SIZE < 8) BLOCK_SIZE = 8; // Set a sensible minimum BLOCK_SIZE
+            if (BLOCK_SIZE > 30) BLOCK_SIZE = 30; // Set a sensible maximum BLOCK_SIZE
 
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
@@ -379,10 +382,15 @@
             panels.forEach(panel => {
                 panel.style.padding = `${panelPadding}px`;
                 panel.style.borderRadius = `${baseFontSize / 2}px`;
-                // panels now implicitly define gap via flexbox gap property
                 panel.style.gap = `${panelGap}px`; /* Apply gap to panel content if flex */
             });
             
+            // Set dynamic width for sidebars based on BLOCK_SIZE to ensure layout scales
+            sidebars.forEach(sidebar => {
+                sidebar.style.width = `${estimatedSidebarBlockWidth * BLOCK_SIZE}px`; 
+                sidebar.style.gap = `${panelGap}px`; /* Apply gap within sidebar if flex */
+            });
+
             uiElements.forEach(el => {
                  el.style.fontSize = `${baseFontSize}px`;
                  if(el.tagName === 'BUTTON') {
@@ -431,6 +439,7 @@
             canHold = true;
             holdPiece = null;
             keysDown = {};
+            // Corrected: Use specific clear timeouts for DAS/ARR
             clearTimeout(dasTimeoutLeft); clearTimeout(dasTimeoutRight);
             clearInterval(arrIntervalLeft); clearInterval(arrIntervalRight);
             
@@ -686,12 +695,13 @@
             if (isPaused || isGameOver) return;
             switch (event.code) { 
                 case 'ArrowLeft': case 'KeyA':
-                    clearTimeout(dasTimeoutRight); clearInterval(arrIntervalRight);
+                    // Clear both timeouts/intervals when a new DAS/ARR starts
+                    clearTimeout(dasTimeoutRight); clearInterval(arrIntervalRight); // Corrected clear for right
                     movePiece(-1);
                     dasTimeoutLeft = setTimeout(() => { arrIntervalLeft = setInterval(() => movePiece(-1), arrValue); }, dasValue);
                     break;
                 case 'ArrowRight': case 'KeyD':
-                    clearTimeout(dasTimeoutLeft); clearInterval(arrIntervalLeft);
+                    clearTimeout(dasTimeoutLeft); clearInterval(arrIntervalLeft); // Corrected clear for left
                     movePiece(1);
                     dasTimeoutRight = setTimeout(() => { arrIntervalRight = setInterval(() => movePiece(1), arrValue); }, dasValue);
                     break;
