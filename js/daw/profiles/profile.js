@@ -395,7 +395,8 @@ async function handleAddFriendToggle(username, isFriend) {
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ isFriend: isFriend }) // Ensure payload is correct for server
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
