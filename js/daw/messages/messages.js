@@ -4,10 +4,10 @@
 
 // Corrected imports to be absolute paths
 import { SnugWindow } from '/app/js/daw/SnugWindow.js';
-import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js'; // Ensure these are imported
-import * as Constants from '/app/js/daw/constants.js'; // Ensure constants are imported
-import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js'; // Corrected paths
-import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js'; // Corrected paths
+import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js';
+import * as Constants from '/app/js/daw/constants.js';
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js';
+import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js';
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let loggedInUser = null;
@@ -17,45 +17,69 @@ let messagePollingIntervals = new Map(); // Store intervals per conversation win
 // --- Global UI and Utility Functions (Local to this standalone app) ---
 // These functions provide desktop-like UI/modal functionality that this standalone app needs.
 
-function initAudioOnFirstGesture() {
-    const startAudio = async () => {
-        try {
-            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-                await Tone.start();
-                console.log('AudioContext started successfully.');
-            }
-        } catch (e) { console.error('Could not start AudioContext:', e); }
-        document.body.removeEventListener('mousedown', startAudio);
-    };
-    document.body.addEventListener('mousedown', startAudio);
-}
-
-function updateClockDisplay() {
-    const clockDisplay = document.getElementById('taskbarClockDisplay');
-    if (clockDisplay) {
-        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+// MOVED TO TOP: Authentication and related helper functions
+function checkLocalAuth() {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        if (!token) return null;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('snugos_token');
+            return null;
+        }
+        return { id: payload.id, username: payload.username };
+    } catch (e) {
+        localStorage.removeItem('snugos_token');
+        return null;
     }
-    setTimeout(updateClockDisplay, 60000);
 }
 
-function toggleStartMenu() {
-    document.getElementById('startMenu')?.classList.toggle('hidden');
-}
-
-function applyUserThemePreference() {
-    const preference = localStorage.getItem('snugos-theme');
-    const body = document.body;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
-    if (themeToApply === 'light') {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        localStorage.setItem('snugos-theme', 'light'); // Store explicit preference
-    } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        localStorage.setItem('snugos-theme', 'dark'); // Store explicit preference
+async function handleLogin(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('snugos_token', data.token);
+            loggedInUser = data.user;
+            showNotification(`Welcome, ${data.user.username}!`, 2000);
+            window.location.reload(); // Reload the page to fully initialize with logged-in user
+        } else {
+            showNotification(`Login failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        showNotification('Network error.', 3000);
+        console.error("Login Error:", error);
     }
+}
+
+async function handleRegister(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        showNotification('Network error.', 3000);
+        console.error("Register Error:", error);
+    }
+}
+
+function handleLogout() {
+    localStorage.removeItem('snugos_token');
+    loggedInUser = null;
+    showNotification('You have been logged out.', 2000);
+    window.location.reload(); // Reload the page to reflect logout status
 }
 
 function showLoginModal() {
@@ -97,52 +121,45 @@ function showLoginModal() {
     });
 }
 
-async function handleLogin(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (data.success) {
-            localStorage.setItem('snugos_token', data.token);
-            loggedInUser = data.user; // Set local loggedInUser
-            showNotification(`Welcome, ${data.user.username}!`, 2000);
-            window.location.reload(); // Reload the page to fully initialize with logged-in user
-        } else {
-            showNotification(`Login failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        showNotification('Network error.', 3000);
-        console.error("Login Error:", error);
-    }
+function initAudioOnFirstGesture() {
+    const startAudio = async () => {
+        try {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log('AudioContext started successfully.');
+            }
+        } catch (e) { console.error('Could not start AudioContext:', e); }
+        document.body.removeEventListener('mousedown', startAudio);
+    };
+    document.body.addEventListener('mousedown', startAudio);
 }
 
-async function handleRegister(username, password) {
-    try {
-        const response = await fetch(`${SERVER_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await response.json();
-        if (data.success) {
-            showNotification('Registration successful! Please log in.', 2500);
-        } else {
-            showNotification(`Registration failed: ${data.message}`, 3000);
-        }
-    } catch (error) {
-        showNotification('Network error.', 3000);
-        console.error("Register Error:", error);
+function updateClockDisplay() {
+    const clockDisplay = document.getElementById('taskbarClockDisplay');
+    if (clockDisplay) {
+        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
+    setTimeout(updateClockDisplay, 60000);
 }
 
-function handleLogout() {
-    localStorage.removeItem('snugos_token');
-    loggedInUser = null;
-    showNotification('You have been logged out.', 2000);
-    window.location.reload(); // Reload the page to reflect logout status
+function toggleStartMenu() {
+    document.getElementById('startMenu')?.classList.toggle('hidden');
+}
+
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    }
 }
 
 function toggleFullScreen() {
@@ -159,26 +176,26 @@ function toggleFullScreen() {
 document.addEventListener('DOMContentLoaded', () => {
     // Populate appServices for this standalone desktop's context
     appServices = {
-        // SnugWindow management from windowState.js
-        addWindowToStore: addWindowToStore, 
-        removeWindowFromStore: removeWindowFromStore, 
-        incrementHighestZ: incrementHighestZ, 
-        getHighestZ: getHighestZ, 
-        setHighestZ: setHighestZ, 
-        getOpenWindows: getOpenWindows, 
-        getWindowById: getWindowById, 
-        serializeWindows: serializeWindows, 
+        // SnugWindow management from windowState.js (imported above)
+        addWindowToStore: addWindowToStore,
+        removeWindowFromStore: removeWindowFromStore,
+        incrementHighestZ: incrementHighestZ,
+        getHighestZ: getHighestZ,
+        setHighestZ: setHighestZ,
+        getOpenWindows: getOpenWindows,
+        getWindowById: getWindowById,
+        serializeWindows: serializeWindows,
         reconstructWindows: reconstructWindows,
 
-        // Utilities from utils.js
+        // Utilities from utils.js (imported above)
         createContextMenu: createContextMenu,
         showNotification: showNotification,
         showCustomModal: showCustomModal,
 
-        // appState.js functions
+        // appState.js functions (imported above)
         applyUserThemePreference: applyUserThemePreference, // Local function defined above
-        setCurrentUserThemePreference: setCurrentUserThemePreference, // from appState.js
-        getCurrentUserThemePreference: getCurrentUserThemePreference, // from appState.js
+        setCurrentUserThemePreference: setCurrentUserThemePreference,
+        getCurrentUserThemePreference: getCurrentUserThemePreference,
 
         // Core SnugWindow constructor for this messenger app to open its own child windows
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
@@ -198,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // If not logged in, show a message and the login modal on the desktop area.
         const desktop = document.getElementById('desktop');
         if(desktop) {
-            desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in to use Messenger.</p></div>`;
+            desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in to use Messages.</p></div>`;
         }
         showLoginModal();
     }
