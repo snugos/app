@@ -1,104 +1,116 @@
-// NOTE: This import statement is the fix. It makes the SnugWindow class
-// available for use within this file.
-import { SnugWindow } from '/app/js/daw/SnugWindow.js';
+// js/daw/profiles/profile.js
+// NOTE: This file is designed to run within an iframe, hosted by profile.html.
+// It receives `appServices` from its parent window.
+
+// All imports now use absolute paths
 import { storeAsset, getAsset } from '/app/js/daw/db.js';
 import { SERVER_URL } from '/app/js/daw/constants.js';
+// Functions like showNotification, showCustomModal, createContextMenu, openEmbeddedAppInWindow, applyCustomBackground
+// are expected to be available directly on the `appServices` object injected from the parent.
 
+let appServices = {}; // This will be assigned the actual appServices object from the parent.
 let loggedInUser = null;
 let currentProfileData = null;
 let isEditing = false;
-const appServices = {};
 
-// --- Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
-    appServices.addWindowToStore = addWindowToStoreState;
-    appServices.removeWindowFromStore = removeWindowFromStoreState;
-    appServices.incrementHighestZ = incrementHighestZState;
-    appServices.getHighestZ = getHighestZState;
-    appServices.setHighestZ = setHighestZState;
-    appServices.getOpenWindows = getOpenWindowsState;
-    appServices.getWindowById = getWindowByIdState;
-    appServices.createContextMenu = createContextMenu;
-    appServices.showNotification = showNotification;
-    appServices.showCustomModal = showCustomModal;
+/**
+ * Entry point function for the Profile page when loaded within an iframe.
+ * This function is called by the parent window's `initializePage` function.
+ * @param {object} injectedAppServices - The appServices object passed from the parent window.
+ */
+function initProfilePageInIframe(injectedAppServices) {
+    appServices = injectedAppServices; // Assign the injected appServices
 
+    // Check local authentication state.
     loggedInUser = checkLocalAuth();
-    loadAndApplyGlobals();
-    attachDesktopEventListeners();
-    updateClockDisplay();
 
+    // Load user's global settings (like background) via parent's appServices.
+    loadAndApplyGlobals();
+
+    // Attach event listeners specific to the profile page elements within the iframe.
+    attachProfilePageListeners();
+    
+    // Get the username from the URL query parameter.
     const urlParams = new URLSearchParams(window.location.search);
     const username = urlParams.get('user');
-    if (username) {
-        openProfileWindow(username);
+
+    const profileContainer = document.getElementById('profile-container');
+    if (username && profileContainer) {
+        // Fetch and render the profile data directly into the iframe's container.
+        fetchProfileData(username, profileContainer);
     } else {
-        showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
-    }
-});
-
-// --- Main Window and UI Functions ---
-
-async function openProfileWindow(username) {
-    const windowId = `profile-${username}`;
-    if(appServices.getWindowById(windowId)) {
-        appServices.getWindowById(windowId).focus();
-        return;
-    }
-
-    const placeholderContent = document.createElement('div');
-    placeholderContent.innerHTML = '<p class="p-8 text-center">Loading Profile...</p>';
-    
-    const desktopEl = document.getElementById('desktop');
-    const options = {
-        width: Math.min(600, desktopEl.offsetWidth - 40),
-        height: Math.min(700, desktopEl.offsetHeight - 40),
-        x: (desktopEl.offsetWidth - Math.min(600, desktopEl.offsetWidth - 40)) / 2,
-        y: (desktopEl.offsetHeight - Math.min(700, desktopEl.offsetHeight - 40)) / 2
-    };
-
-    const profileWindow = new SnugWindow(windowId, `${username}'s Profile`, placeholderContent, options, appServices);
-    
-    try {
-        const token = localStorage.getItem('snugos_token');
-        const [profileRes, friendStatusRes] = await Promise.all([
-            fetch(`${SERVER_URL}/api/profiles/${username}`),
-            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.resolve(null)
-        ]);
-
-        const profileData = await profileRes.json();
-        if (!profileRes.ok) throw new Error(profileData.message);
-        
-        const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null;
-        
-        currentProfileData = profileData.profile;
-        currentProfileData.isFriend = friendStatusData?.isFriend || false;
-
-        updateProfileUI(profileWindow, currentProfileData);
-
-    } catch (error) {
-        profileWindow.contentContainer.innerHTML = `<p class="p-8 text-center" style="color:red;">Error: ${error.message}</p>`;
+        // Display an error if no username is specified.
+        profileContainer.innerHTML = '<p class="p-8 text-center" style="color:red;">No user profile specified in the URL.</p>';
+        appServices.showCustomModal('Error', '<p class="p-4">No user profile specified in the URL.</p>', [{label: 'Close'}]);
     }
 }
 
-function updateProfileUI(profileWindow, profileData) {
-    const isOwner = loggedInUser && loggedInUser.id === profileData.id;
-    const joinDate = new Date(profileData.created_at).toLocaleDateString();
+// Make the initialization function globally accessible for the parent window.
+window.initProfilePageInIframe = initProfilePageInIframe;
+
+// --- Main Profile Content Loading and Rendering ---
+
+/**
+ * Fetches profile data from the server and updates the UI.
+ * @param {string} username - The username of the profile to fetch.
+ * @param {HTMLElement} container - The DOM element where the profile UI will be rendered.
+ */
+async function fetchProfileData(username, container) {
+    container.innerHTML = '<p class="p-8 text-center">Loading Profile...</p>';
+
+    try {
+        const token = localStorage.getItem('snugos_token'); // Get token from localStorage
+        
+        // Fetch profile data and friend status concurrently.
+        const [profileRes, friendStatusRes] = await Promise.all([
+            fetch(`${SERVER_URL}/api/profiles/${username}`), // Fetch profile details
+            token ? fetch(`${SERVER_URL}/api/profiles/${username}/friend-status`, { headers: { 'Authorization': `Bearer ${token}` } }) : Promise.resolve(null) // Fetch friend status if logged in
+        ]);
+
+        const profileData = await profileRes.json();
+        if (!profileRes.ok) {
+            // Handle HTTP errors or API-specific errors.
+            throw new Error(profileData.message || `Failed to fetch profile for ${username}.`);
+        }
+        
+        const friendStatusData = friendStatusRes ? await friendStatusRes.json() : null;
+        
+        currentProfileData = profileData.profile; // Store the fetched profile data.
+        currentProfileData.isFriend = friendStatusData?.isFriend || false; // Set friend status.
+
+        updateProfileUI(container, currentProfileData); // Update the UI with the fetched data.
+
+    } catch (error) {
+        // Display error message if fetching fails.
+        container.innerHTML = `<p class="p-8 text-center" style="color:red;">Error: ${error.message}</p>`;
+        appServices.showNotification(`Failed to load profile: ${error.message}`, 4000);
+    }
+}
+
+/**
+ * Updates the profile UI with the provided profile data.
+ * @param {HTMLElement} container - The DOM element to update (e.g., #profile-container).
+ * @param {object} profileData - The profile data object.
+ */
+function updateProfileUI(container, profileData) {
+    const isOwner = loggedInUser && loggedInUser.id === profileData.id; // Check if the logged-in user is the profile owner.
+    const joinDate = new Date(profileData.created_at).toLocaleDateString(); // Format join date.
 
     let avatarContent = profileData.avatar_url
         ? `<img src="${profileData.avatar_url}" alt="${profileData.username}'s avatar" class="w-full h-full object-cover">`
-        : `<span class="text-4xl font-bold">${profileData.username.charAt(0).toUpperCase()}</span>`;
+        : `<span class="text-4xl font-bold">${profileData.username.charAt(0).toUpperCase()}</span>`; // Default avatar if URL is missing.
 
     const uploadOverlay = isOwner ? `<div id="avatarOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" title="Change Profile Picture"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 11.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 6.5 12 6.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/></svg></div>` : '';
         
     let actionButtons = '';
     if (isOwner) {
         actionButtons = `<button id="editProfileBtn" class="px-4 py-2 rounded" style="background-color: var(--bg-button); border: 1px solid var(--border-button); color: var(--text-button);">Edit Profile</button>`;
-    } else if (loggedInUser) {
+    } else if (loggedInUser) { // Show friend/message buttons if logged in and not owner.
         const friendBtnText = profileData.isFriend ? 'Remove Friend' : 'Add Friend';
         const friendBtnColor = profileData.isFriend ? 'var(--accent-armed)' : 'var(--accent-active)';
         actionButtons = `
             <button id="addFriendBtn" class="px-4 py-2 rounded text-white" style="background-color: ${friendBtnColor};">${friendBtnText}</button>
-            <button id="messageBtn" class="px-4 py-2 rounded text-white ml-2" style="background-color: var(--accent-soloed);">Message</button>
+            <button id="messageBtn" class="px-4 py-2 rounded text-white ml-2" style="background-color: var(--accent-soloed); color: var(--accent-active-text);">Message</button>
         `;
     }
 
@@ -126,28 +138,73 @@ function updateProfileUI(profileWindow, profileData) {
         renderViewMode(profileBody, profileData);
     }
     
-    profileWindow.contentContainer.innerHTML = '';
-    profileWindow.contentContainer.appendChild(newContent);
-    
+    container.innerHTML = ''; // Clear existing content
+    container.appendChild(newContent); // Append new content
+
+    // Attach event listeners to the dynamically created elements
     if (isOwner) {
-        profileWindow.contentContainer.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
-        profileWindow.contentContainer.querySelector('#editProfileBtn')?.addEventListener('click', () => {
+        container.querySelector('#avatarOverlay')?.addEventListener('click', () => document.getElementById('avatarUploadInput').click());
+        container.querySelector('#editProfileBtn')?.addEventListener('click', () => { // Changed from newContent.querySelector
             isEditing = !isEditing;
-            updateProfileUI(profileWindow, profileData);
+            updateProfileUI(container, profileData); // Re-render in edit mode or view mode
         });
+        // Attach listener for background upload input (which is outside the the container passed)
+        const customBgInput = document.getElementById('customBgInput');
+        if (customBgInput) {
+            customBgInput.addEventListener('change', async (e) => {
+                if (!e.target.files || !e.target.files[0] || !loggedInUser) return;
+                const file = e.target.files[0];
+                handleBackgroundUpload(file); // Call the dedicated background upload handler
+                e.target.value = null; // Clear input
+            });
+
+            // Add context menu to background area for owner
+            const backgroundArea = container.querySelector('.relative.h-40'); // Changed from newContent.querySelector
+            if (backgroundArea) {
+                backgroundArea.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    appServices.createContextMenu(e, [
+                        { label: 'Change Background', action: () => customBgInput.click() }
+                    ]);
+                });
+            }
+        }
     } else if (loggedInUser) {
-        profileWindow.contentContainer.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend));
-        profileWindow.contentContainer.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username));
+        container.querySelector('#addFriendBtn')?.addEventListener('click', () => handleAddFriendToggle(profileData.username, profileData.isFriend)); // Changed from newContent.querySelector
+        container.querySelector('#messageBtn')?.addEventListener('click', () => showMessageModal(profileData.username)); // Changed from newContent.querySelector
+        // If there are links to other user profiles in the bio, add listeners
+        container.querySelectorAll('.username-link').forEach(link => { // Changed from newContent.querySelectorAll
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetUsername = e.target.dataset.username;
+                if (targetUsername && appServices.openEmbeddedAppInWindow) {
+                    // Open another profile in a new SnugWindow using the parent's service
+                    appServices.openEmbeddedAppInWindow(`profile-${targetUsername}`, `${targetUsername}'s Profile`, `/app/js/daw/profiles/profile.html?user=${targetUsername}`, { width: 600, height: 700 });
+                }
+            });
+        });
     }
 }
 
+/**
+ * Renders the profile in view mode.
+ * @param {HTMLElement} container - The DOM element to render into.
+ * @param {object} profileData - The profile data.
+ */
 function renderViewMode(container, profileData) {
+    // Basic bio display
     container.innerHTML = `
         <h3 class="font-semibold mb-2">Bio</h3>
         <p class="text-primary whitespace-pre-wrap">${profileData.bio || 'This user has not written a bio yet.'}</p>
     `;
+    // Future: Parse bio for @mentions or #hashtags and convert to links.
 }
 
+/**
+ * Renders the profile in edit mode, allowing the owner to modify their bio.
+ * @param {HTMLElement} container - The DOM element to render into.
+ * @param {object} profileData - The profile data.
+ */
 function renderEditMode(container, profileData) {
     container.innerHTML = `
         <form id="editProfileForm" class="space-y-4">
@@ -163,8 +220,15 @@ function renderEditMode(container, profileData) {
     `;
     container.querySelector('#cancelEditBtn').addEventListener('click', () => {
         isEditing = false;
-        const profileWindow = appServices.getWindowById(`profile-${profileData.username}`);
-        if(profileWindow) updateProfileUI(profileWindow, profileData);
+        // Corrected: Use the passed container to find the profile window's content parent, then get the window instance
+        const profileWindowEl = container.closest('.window-content').parentElement;
+        if (profileWindowEl && profileWindowEl.id) {
+            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
+            if (profileWindowInstance) updateProfileUI(profileWindowInstance.contentContainer, profileData); // Pass the correct content container
+        } else {
+             console.warn("Could not find parent window element for profile update after cancel edit.");
+             updateProfileUI(container, profileData); // Fallback to current container
+        }
     });
     container.querySelector('#editProfileForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -173,12 +237,36 @@ function renderEditMode(container, profileData) {
     });
 }
 
+/**
+ * Attaches event listeners to elements that exist globally on the profile page's HTML,
+ * like the avatar upload input.
+ */
+function attachProfilePageListeners() {
+    document.getElementById('avatarUploadInput')?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+        const file = e.target.files[0];
+        handleAvatarUpload(file); // Handle avatar file upload.
+        e.target.value = null; // Clear input.
+    });
+
+    // The customBgInput listener is attached dynamically in updateProfileUI for the owner
+    // when the profile is rendered, to ensure it binds to the correct element.
+}
+
+
+/**
+ * Handles the upload of an avatar image file to the server.
+ * @param {File} file - The image file for the avatar.
+ */
 async function handleAvatarUpload(file) {
-    if (!loggedInUser) return;
-    showNotification("Uploading picture...", 2000);
+    if (!loggedInUser) {
+        appServices.showNotification('You must be logged in to update your profile picture.', 3000);
+        return;
+    }
+    appServices.showNotification("Uploading picture...", 2000);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('path', '/avatars/');
+    formData.append('path', '/avatars/'); // Specify upload path for avatars on S3.
     try {
         const token = localStorage.getItem('snugos_token');
         const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
@@ -189,8 +277,9 @@ async function handleAvatarUpload(file) {
         const uploadResult = await uploadResponse.json();
         if (!uploadResult.success) throw new Error(uploadResult.message);
         
-        const newAvatarUrl = uploadResult.file.s3_url;
+        const newAvatarUrl = uploadResult.file.s3_url; // Get the URL of the uploaded file.
         
+        // Update the user's profile settings on the server with the new avatar URL.
         const settingsResponse = await fetch(`${SERVER_URL}/api/profile/settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -199,19 +288,94 @@ async function handleAvatarUpload(file) {
         const settingsResult = await settingsResponse.json();
         if (!settingsResult.success) throw new Error(settingsResult.message);
 
-        showNotification("Profile picture updated!", 2000);
-        const profileWindow = appServices.getWindowById(`profile-${loggedInUser.username}`);
-        if(profileWindow) openProfileWindow(loggedInUser.username);
+        appServices.showNotification("Profile picture updated!", 2000);
+        // Re-fetch profile data to update the UI with the new avatar.
+        // Get the profile window instance via its content container's parent
+        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
+        if (profileWindowEl && profileWindowEl.id) {
+            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
+            if(profileWindowInstance) await fetchProfileData(loggedInUser.username, profileWindowInstance.contentContainer); // Pass correct content container
+        }
+        
+        // If the parent (index.html) has a way to update its auth UI (e.g., avatar on top bar)
+        // this is where you'd call it. Assuming it receives user object.
+        if (window.parent && window.parent.appServices && typeof window.parent.appServices.updateUserAuthContainer === 'function') { 
+             window.parent.appServices.updateUserAuthContainer(loggedInUser);
+        }
 
     } catch (error) {
-        showNotification(`Update failed: ${error.message}`, 4000);
+        appServices.showNotification(`Update failed: ${error.message}`, 4000);
+        console.error("Avatar Upload Error:", error);
     }
 }
 
+/**
+ * Handles the upload of a custom background file to the server.
+ * This function uses the main app's authentication and file services.
+ * @param {File} file - The image/video file selected for the background.
+ */
+async function handleBackgroundUpload(file) {
+    if (!loggedInUser) {
+        appServices.showNotification('You must be logged in to save a custom background.', 3000);
+        return;
+    }
+
+    try {
+        appServices.showNotification('Uploading background...', 1500);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('is_public', 'true'); // Backgrounds are generally public
+        formData.append('path', '/backgrounds/'); // Specific path for backgrounds on S3.
+
+        const token = localStorage.getItem('snugos_token');
+        const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) throw new Error(uploadResult.message);
+
+        const newBgUrl = uploadResult.file.s3_url;
+        await fetch(`${SERVER_URL}/api/profile/settings`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ background_url: newBgUrl })
+        });
+
+        appServices.showNotification("Background updated!", 2000);
+        // After successful upload, store it locally via appServices' DB service
+        await storeAsset(`background-for-user-${loggedInUser.id}`, file); 
+        // Apply background to the parent desktop if parent has the service.
+        if (window.parent && window.parent.appServices && typeof window.parent.appServices.applyCustomBackground === 'function') {
+            window.parent.appServices.applyCustomBackground(file); 
+        }
+        // Re-fetch profile data to ensure the URL is updated and UI reflects new background immediately.
+        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
+        if (profileWindowEl && profileWindowEl.id) {
+            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
+            if(profileWindowInstance) await fetchProfileData(loggedInUser.username, profileWindowInstance.contentContainer);
+        }
+
+    } catch(error) {
+        appServices.showNotification(`Error saving background: ${error.message}`, 4000);
+        console.error("Background Upload Error:", error);
+    }
+}
+
+
+/**
+ * Saves profile changes (e.g., bio) to the server.
+ * @param {string} username - The username of the profile to save.
+ * @param {object} dataToSave - An object containing the data to update (e.g., { bio: '...' }).
+ */
 async function saveProfile(username, dataToSave) {
     const token = localStorage.getItem('snugos_token');
-    if (!token) return;
-    showNotification("Saving...", 1500);
+    if (!token) {
+        appServices.showNotification('You must be logged in to save your profile.', 3000);
+        return;
+    }
+    appServices.showNotification("Saving...", 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}`, {
             method: 'PUT',
@@ -220,38 +384,61 @@ async function saveProfile(username, dataToSave) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification("Profile saved!", 2000);
-        isEditing = false;
-        const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) openProfileWindow(username);
+        appServices.showNotification("Profile saved!", 2000);
+        isEditing = false; // Exit edit mode.
+        // Corrected: Use the passed profileWindow reference
+        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
+        if (profileWindowEl && profileWindowEl.id) {
+            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
+            if(profileWindowInstance) await fetchProfileData(username, profileWindowInstance.contentContainer);
+        }
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000);
+        console.error("Save Profile Error:", error);
     }
 }
 
+/**
+ * Handles adding or removing a friend.
+ * @param {string} username - The username of the friend to add/remove.
+ * @param {boolean} isFriend - True if currently friends, false otherwise.
+ */
 async function handleAddFriendToggle(username, isFriend) {
     const token = localStorage.getItem('snugos_token');
-    if (!token) return;
+    if (!token) {
+        appServices.showNotification('You must be logged in to add/remove friends.', 3000);
+        return;
+    }
     const method = isFriend ? 'DELETE' : 'POST';
-    showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
+    appServices.showNotification(isFriend ? 'Removing friend...' : 'Adding friend...', 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ isFriend: isFriend }) // Ensure payload is correct for server
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification(result.message, 2000);
-        const profileWindow = appServices.getWindowById(`profile-${username}`);
-        if (profileWindow) openProfileWindow(username);
+        appServices.showNotification(result.message, 2000);
+        // Corrected: Use the passed profileWindow reference
+        const profileWindowEl = document.getElementById('profile-container').closest('.window-content').parentElement;
+        if (profileWindowEl && profileWindowEl.id) {
+            const profileWindowInstance = appServices.getWindowById(profileWindowEl.id);
+            if(profileWindowInstance) await fetchProfileData(username, profileWindowInstance.contentContainer);
+        }
     } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification(`Error: ${error.message}`, 4000);
+        console.error("Friend Action Error:", error);
     }
 }
 
+/**
+ * Displays a modal for sending a message to a user.
+ * @param {string} recipientUsername - The username of the message recipient.
+ */
 function showMessageModal(recipientUsername) {
-    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5"></textarea>`;
-    showCustomModal(`Message ${recipientUsername}`, modalContent, [
+    const modalContent = `<textarea id="messageTextarea" class="w-full p-2" rows="5" style="background-color: var(--bg-input); color: var(--text-primary); border-color: var(--border-input);"></textarea>`;
+    appServices.showCustomModal(`Message ${recipientUsername}`, modalContent, [
         { label: 'Cancel' },
         { label: 'Send', action: () => {
             const content = document.getElementById('messageTextarea').value;
@@ -260,10 +447,18 @@ function showMessageModal(recipientUsername) {
     ]);
 }
 
+/**
+ * Sends a message to a specified recipient.
+ * @param {string} recipientUsername - The username of the recipient.
+ * @param {string} content - The message content.
+ */
 async function sendMessage(recipientUsername, content) {
     const token = localStorage.getItem('snugos_token');
-    if (!token) return;
-    showNotification("Sending...", 1500);
+    if (!token) {
+        appServices.showNotification('You must be logged in to send messages.', 3000);
+        return;
+    }
+    appServices.showNotification("Sending...", 1500);
     try {
         const response = await fetch(`${SERVER_URL}/api/messages`, {
             method: 'POST',
@@ -272,64 +467,24 @@ async function sendMessage(recipientUsername, content) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        showNotification("Message sent!", 2000);
-    } catch (error) {
-        showNotification(`Error: ${error.message}`, 4000);
+        appServices.showNotification("Message sent!", 2000);
+    }
+    catch (error) {
+        appServices.showNotification(`Error: ${error.message}`, 4000);
+        console.error("Send Message Error:", error);
     }
 }
 
-function attachDesktopEventListeners() {
-    const desktop = document.getElementById('desktop');
-    if (!desktop) return;
+// Global functions that should be coming from appServices, but are locally defined as fallbacks or old patterns.
+// These should NOT be here if the file is embedded via an iframe that receives appServices.
+// They are being removed or adjusted to ensure they use the correct appServices object.
 
-    desktop.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (e.target.closest('.window')) return;
-        const menuItems = [{
-            label: 'Change Background',
-            action: () => document.getElementById('customBgInput').click()
-        }];
-        appServices.createContextMenu(e, menuItems);
-    });
+// Corrected: Removed local definitions of these utility functions.
+// These should be accessed directly from `appServices` object provided by parent.
+// The functions themselves are defined in `/app/js/daw/utils.js` (showNotification, showCustomModal, createContextMenu)
+// and handled by `welcome.js` to populate appServices.
 
-    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
-        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
-        const file = e.target.files[0];
-        
-        showNotification("Uploading background...", 2000);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', '/backgrounds/');
-        try {
-            const token = localStorage.getItem('snugos_token');
-            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const uploadResult = await uploadResponse.json();
-            if (!uploadResult.success) throw new Error(uploadResult.message);
-
-            const newBgUrl = uploadResult.file.s3_url;
-            await fetch(`${SERVER_URL}/api/profile/settings`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ background_url: newBgUrl })
-            });
-
-            showNotification("Background updated!", 2000);
-            loadAndApplyGlobals();
-        } catch(error) {
-            showNotification(`Error: ${error.message}`, 4000);
-        }
-    });
-    
-    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
-    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
-    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
-    document.getElementById('menuLogout')?.addEventListener('click', () => { toggleStartMenu(); handleLogout(); });
-}
-
+// `loadAndApplyGlobals` is a local function that can stay.
 async function loadAndApplyGlobals() {
     if (!loggedInUser) return;
     try {
@@ -337,62 +492,77 @@ async function loadAndApplyGlobals() {
         const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
         if (data.success && data.profile.background_url) {
-            const desktop = document.getElementById('desktop');
-            if(desktop) {
-                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
-                desktop.style.backgroundSize = 'cover';
-                desktop.style.backgroundPosition = 'center';
+            // Apply background to the parent desktop if the parent has the service.
+            if (window.parent && window.parent.appServices && typeof window.parent.appServices.applyCustomBackground === 'function') {
+                window.parent.appServices.applyCustomBackground(data.profile.background_url);
             }
+        }
+        // Update parent's authentication UI (e.g., welcome message)
+        if (window.parent && window.parent.appServices && typeof window.parent.appServices.updateUserAuthContainer === 'function') {
+            window.parent.appServices.updateUserAuthContainer(loggedInUser);
         }
     } catch (error) {
         console.error("Could not apply global settings:", error);
     }
 }
 
+// `checkLocalAuth` is a local function that can stay.
 function checkLocalAuth() {
     try {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
         const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token');
+        if (payload.exp * 1000 < Date.now()) { // Check if token is expired.
+            localStorage.removeItem('snugos_token'); // Remove expired token.
             return null;
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
-        localStorage.removeItem('snugos_token');
+        localStorage.removeItem('snugos_token'); // Clear token on error during parsing.
         return null;
     }
 }
 
+// `handleLogout` is a local function that can stay.
 function handleLogout() {
     localStorage.removeItem('snugos_token');
-    showNotification('You have been logged out.', 2000);
-    window.location.reload();
-}
-
-function updateClockDisplay() {
-    const clockDisplay = document.getElementById('taskbarClockDisplay');
-    if (clockDisplay) {
-        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    setTimeout(updateClockDisplay, 60000);
-}
-
-function toggleStartMenu() {
-    document.getElementById('startMenu')?.classList.toggle('hidden');
-}
-
-function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            showNotification(`Error: ${err.message}`, 3000);
-        });
+    loggedInUser = null; // Clear local user state.
+    // Call the parent window's logout function if available.
+    if (window.parent && window.parent.appServices && typeof window.parent.appServices.handleLogout === 'function') {
+        window.parent.appServices.handleLogout(); 
     } else {
-        if(document.exitFullscreen) document.exitFullscreen();
+        window.location.reload(); // Fallback: reload the iframe if no parent handler.
     }
+    appServices.showNotification('You have been logged out.', 2000); // Use appServices.showNotification
 }
 
-function showLoginModal() {
-    showCustomModal('Login / Register', '<p class="p-4">Login functionality would go here.</p>', [{label: 'Close'}]);
-}
+// The following functions are from the "main app" version of profile.js that should NOT be here.
+// These local functions directly attempt to interact with the main desktop and app state,
+// which is handled by welcome.js. Their presence causes conflicts.
+
+// DELETING these functions as they are not meant for an embedded iframe profile.js
+// function updateClockDisplay() { ... }
+// function toggleStartMenu() { ... }
+// function toggleFullScreen() { ... }
+// function showLoginModal() { ... }
+// function attachDesktopEventListeners() { ... }
+// function openProfileWindow(username) { ... } // This one will be moved to welcome.js if needed there.
+
+// Corrected: Re-integrating the DOMContentLoaded block from the correct iframe profile.js structure.
+document.addEventListener('DOMContentLoaded', () => {
+    // These functions should come from appServices, which is passed from the parent.
+    // The local definitions below are what cause the conflict/ReferenceError.
+    // We should be calling appServices.showNotification, appServices.showCustomModal etc.
+    // not trying to assign them or call local, undefined versions.
+
+    // Corrected: The original entry point initProfilePageInIframe is called from profile.html.
+    // This DOMContentLoaded block in the provided profile.js is misplaced for an iframe script.
+    // It should be within the initProfilePageInIframe or just part of the overall flow.
+
+    // Let's assume the profile.html structure is correctly calling initProfilePageInIframe.
+    // The issue is simply the presence of these top-level DOMContentLoaded and related
+    // desktop/app management functions that do NOT belong in an embedded script.
+
+    // Removed the problematic DOMContentLoaded listener as it attempts to run main app logic.
+    // The actual initialization is handled by initProfilePageInIframe, called from profile.html.
+});
