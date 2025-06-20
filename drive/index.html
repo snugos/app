@@ -875,7 +875,7 @@
                 });
                 const data = await response.json();
                 if (data.success && data.authUrl) {
-                    window.location.href = data.authUrl; // Redirect to Google OAuth page
+                    window.location. = data.authUrl; // Redirect to Google OAuth page
                 } else {
                     showMessage(data.message || "Failed to initiate Google authentication.");
                 }
