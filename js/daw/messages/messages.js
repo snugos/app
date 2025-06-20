@@ -14,8 +14,7 @@ let loggedInUser = null;
 let appServices = {}; // This will be populated locally for this standalone app.
 let messagePollingIntervals = new Map(); // Store intervals per conversation window
 
-// --- Global UI and Utility Functions (Local to this standalone app) ---
-// These functions are defined first to ensure they are available when called.
+// --- Global UI and Utility Functions (Defined first to ensure availability) ---
 
 function checkLocalAuth() {
     try {
@@ -181,7 +180,7 @@ function attachDesktopEventListeners() {
     document.getElementById('menuLaunchDaw')?.addEventListener('click', () => { window.open('/app/snaw.html', '_blank'); toggleStartMenu(); });
     document.getElementById('menuOpenLibrary')?.addEventListener('click', () => { window.open('/app/js/daw/browser/library.html', '_blank'); toggleStartMenu(); }); // Browser link
     document.getElementById('menuViewProfiles')?.addEventListener('click', () => { window.open('/app/js/daw/profiles/profile.html', '_blank'); toggleStartMenu(); }); // Profile link
-    // No specific menuOpenMessages as this *is* the messages app.
+    document.getElementById('menuOpenMessages')?.addEventListener('click', () => { window.open('/app/js/daw/messages/messages.html', '_blank'); toggleStartMenu(); }); // Messages link
 
     // Example of adding a generic desktop context menu (similar to welcome.js)
     const desktop = document.getElementById('desktop');
@@ -200,20 +199,21 @@ function attachDesktopEventListeners() {
     }
 }
 
+
 // --- Main App Initialization (on DOMContentLoaded) ---
 document.addEventListener('DOMContentLoaded', () => {
     // Populate appServices for this standalone desktop's context
     appServices = {
         // SnugWindow management from windowState.js (imported above)
-        addWindowToStore: addWindowToStore, // from windowState.js
-        removeWindowFromStore: removeWindowFromStore, // from windowState.js
-        incrementHighestZ: incrementHighestZ, // from windowState.js
-        getHighestZ: getHighestZ, // from windowState.js
-        setHighestZ: setHighestZ, // from windowState.js
-        getOpenWindows: getOpenWindows, // from windowState.js
-        getWindowById: getWindowById, // from windowState.js
-        serializeWindows: serializeWindows, // from windowState.js
-        reconstructWindows: reconstructWindows, // from windowState.js
+        addWindowToStore: addWindowToStore, 
+        removeWindowFromStore: removeWindowFromStore, 
+        incrementHighestZ: incrementHighestZ, 
+        getHighestZ: getHighestZ, 
+        setHighestZ: setHighestZ, 
+        getOpenWindows: getOpenWindows, 
+        getWindowById: getWindowById, 
+        serializeWindows: serializeWindows, 
+        reconstructWindows: reconstructWindows,
 
         // Utilities from utils.js (imported above)
         createContextMenu: createContextMenu,
@@ -229,23 +229,22 @@ document.addEventListener('DOMContentLoaded', () => {
         createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     };
 
-    loggedInUser = checkLocalAuth(); // Call local function checkLocalAuth
+    loggedInUser = checkLocalAuth();
     
-    attachDesktopEventListeners(); // Call local function attachDesktopEventListeners
-    applyUserThemePreference(); // Call local function applyUserThemePreference
-    updateClockDisplay(); // Call local function updateClockDisplay
-    initAudioOnFirstGesture(); // Call local function initAudioOnFirstGesture
+    attachDesktopEventListeners();
+    applyUserThemePreference();
+    updateClockDisplay();
+    initAudioOnFirstGesture();
     
     // Initial render based on login status
     if (loggedInUser) {
-        renderMessengerDesktop(); // Render the main messenger desktop UI
+        renderMessengerDesktop();
     } else {
-        // If not logged in, show a message and the login modal on the desktop area.
         const desktop = document.getElementById('desktop');
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in to use Messages.</p></div>`;
         }
-        showLoginModal(); // Call local function showLoginModal
+        showLoginModal();
     }
 });
 
@@ -253,8 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- Core Messenger UI Rendering & Logic ---
 
 function renderMessengerDesktop() {
-    // This is the main "desktop" for the Messenger app itself.
-    // It will show the friend list and the conversation area.
     const desktop = document.getElementById('desktop');
     if (!desktop) return;
 
@@ -269,7 +266,7 @@ function renderMessengerDesktop() {
         </div>
     `;
 
-    populateFriendList(desktop); // Populate the friend list on this desktop
+    populateFriendList(desktop);
 }
 
 // --- Window Management for Conversations ---
@@ -291,26 +288,24 @@ async function openConversationWindow(friend) {
         </div>
     `;
     
-    // Create the SnugWindow instance on THIS desktop
-    const desktopEl = document.getElementById('desktop'); // Reference the current Messenger desktop
+    const desktopEl = document.getElementById('desktop');
     const options = {
         width: 450, 
         height: 400, 
-        x: (desktopEl.offsetWidth / 2) - 225 + (Math.random() * 50), // Offset slightly for multiple windows
+        x: (desktopEl.offsetWidth / 2) - 225 + (Math.random() * 50),
         y: (desktopEl.offsetHeight / 2) - 200 + (Math.random() * 50),
     };
     const chatWindow = appServices.createWindow(windowId, `Chat: ${friend.username}`, contentHTML, options);
 
-    // Attach listeners and load conversation for this specific window
     const messageInput = chatWindow.element.querySelector(`#message-input-${friend.username}`);
     const sendBtn = chatWindow.element.querySelector(`#send-btn-${friend.username}`);
     
     const sendMessageAction = async () => {
         const content = messageInput.value.trim();
         if(!content) return;
-        await sendMessage(friend.username, content); // Use global sendMessage
+        await sendMessage(friend.username, content);
         messageInput.value = '';
-        await fetchAndRenderConversation(friend.username, chatWindow.element.querySelector(`#message-list-${friend.username}`)); // Refresh this window's conversation
+        await fetchAndRenderConversation(friend.username, chatWindow.element.querySelector(`#message-list-${friend.username}`));
     };
 
     if (sendBtn) sendBtn.onclick = sendMessageAction;
@@ -323,8 +318,6 @@ async function openConversationWindow(friend) {
         };
     }
 
-    // Set up polling for this specific conversation window
-    // Clear any existing polling for this partner if window was re-opened
     if (messagePollingIntervals.has(friend.username)) {
         clearInterval(messagePollingIntervals.get(friend.username));
     }
@@ -333,7 +326,6 @@ async function openConversationWindow(friend) {
     }, 5000);
     messagePollingIntervals.set(friend.username, intervalId);
 
-    // When this window is closed, clear its polling interval
     const originalOnClose = chatWindow.onCloseCallback;
     chatWindow.onCloseCallback = () => {
         clearInterval(messagePollingIntervals.get(friend.username));
@@ -341,7 +333,6 @@ async function openConversationWindow(friend) {
         if (typeof originalOnClose === 'function') originalOnClose();
     };
 
-    // Initial fetch for this specific conversation window
     await fetchAndRenderConversation(friend.username, chatWindow.element.querySelector(`#message-list-${friend.username}`));
 }
 
@@ -354,7 +345,7 @@ async function populateFriendList(container) {
     
     try {
         const token = localStorage.getItem('snugos_token');
-        const response = await fetch(`${SERVER_URL}/api/friends`, { // Assuming this endpoint exists on server.js
+        const response = await fetch(`${SERVER_URL}/api/friends`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -375,18 +366,16 @@ async function populateFriendList(container) {
                 <span class="truncate" style="color:var(--text-primary);">${friend.username}</span>
             `;
             friendDiv.addEventListener('click', () => {
-                // Remove selection from all other friends
                 container.querySelectorAll('.friend-item').forEach(el => {
                     el.style.backgroundColor = 'transparent';
                     el.style.color = 'var(--text-primary)';
                     el.querySelector('span').style.color = 'var(--text-primary)';
                 });
-                // Highlight selected friend
                 friendDiv.style.backgroundColor = 'var(--accent-active)';
                 friendDiv.style.color = 'var(--accent-active-text)';
                 friendDiv.querySelector('span').style.color = 'var(--accent-active-text)';
 
-                openConversationWindow(friend); // Open a new SnugWindow for conversation
+                openConversationWindow(friend);
             });
             friendListEl.appendChild(friendDiv);
         });
@@ -409,7 +398,7 @@ async function fetchAndRenderConversation(friendUsername, messageListContainer) 
         const data = await response.json();
         if (!data.success) throw new Error(data.message);
         
-        messageListContainer.innerHTML = ''; // Clear previous messages
+        messageListContainer.innerHTML = ''; 
         if (data.conversation && data.conversation.length > 0) {
              data.conversation.forEach(msg => {
                 const msgDiv = document.createElement('div');
