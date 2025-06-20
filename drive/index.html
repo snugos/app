@@ -372,7 +372,7 @@
         // Google API Client ID (this will be used by the frontend for Picker API)
         // This is *not* a secret, it's public knowledge for your app.
         // It should match the GOOGLE_CLIENT_ID you set in Render's environment variables.
-        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID'; // <<< REPLACE WITH YOUR ACTUAL GOOGLE CLIENT ID
+        const GOOGLE_CLIENT_ID = '354134570316-51o5p5htd5pcek682a7e7liivg0npi5o.apps.googleusercontent.com'; // <<< Make sure this is YOUR actual client ID
 
         // Global state variables
         let token = localStorage.getItem('jwtToken');
@@ -870,15 +870,8 @@
         async function linkGoogleAccount() {
             showLoading();
             try {
-                const response = await fetch(`${BASE_URL}/api/google-auth`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                if (data.success && data.authUrl) {
-                    window.location. = data.authUrl; // Redirect to Google OAuth page
-                } else {
-                    showMessage(data.message || "Failed to initiate Google authentication.");
-                }
+                // Directly redirect to the backend's Google auth endpoint
+                window.location.href = `${BASE_URL}/api/google-auth`;
             } catch (error) {
                 console.error("Error initiating Google auth:", error);
                 showMessage("Network error initiating Google authentication.");
@@ -890,14 +883,17 @@
         // Handles the redirect back from Google OAuth
         function handleGoogleCallback() {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('google_auth_success')) {
-                showMessage("Google Drive linked successfully!");
+            if (urlParams.has('snugos_jwt')) {
+                const newJwt = urlParams.get('snugos_jwt');
+                token = newJwt;
+                localStorage.setItem('jwtToken', newJwt);
+                showMessage("Logged in successfully via Google!");
                 // Clean URL
                 window.history.replaceState({}, document.title, window.location.pathname);
-                fetchUserProfile(); // Re-fetch profile to update UI if needed (e.g. show Google import button)
+                fetchUserProfile(); // Re-fetch profile to get updated currentUser
             } else if (urlParams.has('google_auth_error')) {
                 const errorMsg = decodeURIComponent(urlParams.get('google_auth_error'));
-                showMessage(`Google Drive linking failed: ${errorMsg}`);
+                showMessage(`Google login failed: ${errorMsg}`);
                 // Clean URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -906,11 +902,11 @@
         // Creates and shows the Google Picker dialog
         async function createGooglePicker() {
             if (!googleApiClientReady || !googlePickerReady || !currentUser || !currentUser.google_access_token) {
-                showMessage("Google APIs not ready or account not linked. Please try again.");
+                showMessage("Google APIs not ready or account not linked. Please link your Google account first.");
                 return;
             }
 
-            const token = currentUser.google_access_token; // Use the access token from the current user's profile
+            const accessToken = currentUser.google_access_token; // Use the access token from the current user's profile
 
             const view = new google.picker.View(google.picker.ViewId.DOCS);
             view.setMimeTypes('image/*,audio/*,video/*,application/pdf,text/plain,application/vnd.google-apps.document,application/vnd.google-apps.spreadsheet,application/vnd.google-apps.presentation'); // Example MIME types
@@ -918,7 +914,7 @@
             const picker = new google.picker.PickerBuilder()
                 .enableFeature(google.picker.Feature.NAV_ARGS)
                 .setAppId(GOOGLE_CLIENT_ID) // Use your Google Client ID here
-                .setOAuthToken(token)
+                .setOAuthToken(accessToken) // Pass the access token to the picker
                 .addView(view)
                 .addView(new google.picker.DocsUploadView()) // Allow direct upload from picker
                 .setCallback(pickerCallback)
@@ -1190,7 +1186,7 @@
                 row.innerHTML = `
                     <td class="p-3">${isFolder ? 'Folder' : 'File'}</td>
                     <td class="p-3">${fileNameDisplay}</td>
-                    <td class="p-3">${item.user_id}</td> <!-- Placeholder for owner username, if available -->
+                    <td class="p-3">${item.owner_username || item.user_id}</td> <!-- Display owner username if available -->
                     <td class="p-3 truncate max-w-[200px]">${item.path}</td>
                     <td class="p-3">${item.file_size ? (item.file_size / 1024 / 1024).toFixed(2) + ' MB' : '-'}</td>
                     <td class="p-3">${item.is_public ? 'Yes' : 'No'}</td>
