@@ -424,7 +424,7 @@ function createPianoRollStage(containerElement, velocityPane, track) {
     stage.add(keyLayer); 
 
     const selectedNotes = new Set(); 
-    const pianoRoll = { stage, gridLayer, noteLayer, keyLayer, playheadLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows }; 
+    const pianoRoll = { stage, gridLayer, noteLayer, selectionLayer, keyLayer, playheadLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows }; // Store references, ADD selectionLayer
     openPianoRolls.set(track.id, pianoRoll); 
 
     drawGrid(gridLayer, stageWidth, stageHeight, numSteps, colors, isSampler, numRows, track); // ADDED 'track' parameter here
@@ -448,7 +448,7 @@ function attachPianoRollListeners(pianoRoll) {
     const { stage, gridLayer, noteLayer, keyLayer, track, selectedNotes, velocityPane, colors, isSampler, numRows } = pianoRoll; 
     const activeSequence = track.sequences.getActiveSequence(); 
     const selectionRect = new Konva.Rect({ fill: 'rgba(0, 100, 255, 0.3)', visible: false }); 
-    stage.getLayers().find(l => l.name() !== gridLayer.name() && l.name() !== noteLayer.name() && l.name() !== keyLayer.name()).add(selectionRect); 
+    stage.getLayers().find(l => l.name() !== gridLayer.name() && l.name() !== noteLayer.name() && l.name() !== keyLayer.name())selectionLayer.add(selectionRect); // DIRECTLY ADD to selectionLayer
 
     let x1, y1; 
     let isDraggingNote = false; 
