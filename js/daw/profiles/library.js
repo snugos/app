@@ -25,27 +25,17 @@ function initLibraryPageInIframe(injectedAppServices) {
     // Initialize UI sub-modules that library.js might call directly
     initializeFileViewerUI(appServices);
 
-    // No longer need fallback assignments like appServices.showNotification = appServices.showNotification || window.parent.appServices.showNotification;
-    // appServices should be fully populated by the parent (welcome.js) before initLibraryPageInIframe is called.
-
-    loggedInUser = checkLocalAuth(); // This function (checkLocalAuth) should be defined locally in library.js
+    loggedInUser = checkLocalAuth();
     
     // Load user's global settings (like background) via parent's appServices.
-    loadAndApplyGlobals(); // This function (loadAndApplyGlobals) should be defined locally in library.js
+    loadAndApplyGlobals();
     
-    // Attach event listeners for the library UI elements
-    attachLibraryEventListeners(); // This function should be defined locally in library.js
-    initAudioOnFirstGesture(); // This function should be defined locally in library.js
+    // Original library functions that still run
+    attachLibraryEventListeners();
+    initAudioOnFirstGesture(); // Initialize audio for previews.
     
     // Open the library UI if a user is logged in, otherwise show a login prompt.
     if (loggedInUser) {
-        // initializePageUI now takes the main container of the library window itself.
-        // It should not be called with document.body.querySelector('.flex.h.full') here,
-        // but rather with the specific container that holds the library content,
-        // which the parent SnugWindow would provide, or find relative to its iframe's body.
-        // For consistency, let's assume library.html's <body> is the primary content,
-        // so we use document.body.firstElementChild if it's the div that holds the flex.
-        // The library.html provided has a div with flex h-full right inside the body.
         initializePageUI(document.body.querySelector('.flex.h-full')); // Pass the correct container
         fetchAndRenderLibraryItems(document.body.querySelector('.flex.h-full')); // Pass the correct container
     } else {
@@ -106,8 +96,7 @@ function initializePageUI(container) {
     const globalFilesBtn = container.querySelector('#global-files-btn');
     const uploadBtn = container.querySelector('#uploadFileBtn');
     const newFolderBtn = container.querySelector('#createFolderBtn');
-    // actualFileInput is in the main library.html, accessible directly by ID
-    const actualFileInput = document.getElementById('actualFileInput'); 
+    const actualFileInput = document.getElementById('actualFileInput'); // This is in the main document
 
     // Function to update navigation button styling based on current view mode
     const updateNavStyling = () => {
@@ -295,18 +284,18 @@ function renderFileItem(item, isParentFolder = false) {
  * @returns {void}
  */
 function handleItemClick(item, isParentFolder) {
-    const libWindow = appServices.getWindowById('libraryApp');
+    const libWindow = appServices.getWindowById('libraryApp'); // Assuming appServices.getWindowById is available.
     if (isParentFolder) {
-        if (currentPath.length > 1) currentPath.pop();
+        if (currentPath.length > 1) currentPath.pop(); // Go up one level
     } else if (item.mime_type && item.mime_type.includes('folder')) {
-        currentPath.push(item.file_name + '/');
+        currentPath.push(item.file_name + '/'); // Navigate into the folder
     } else {
         // Now, clicking on a file within the Library iframe should open it in a new SnugWindow
         // on the parent (index.html) desktop via openFileViewerWindow imported from fileViewerUI.js.
         appServices.openFileViewerWindow(item); // Corrected: Using appServices.openFileViewerWindow
         return;
     }
-    if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
+    if (libWindow) fetchAndRenderLibraryItems(libWindow.element); // Re-render library items
 }
 
 /**
@@ -314,7 +303,7 @@ function handleItemClick(item, isParentFolder) {
  * @param {Object} item The file object to share.
  */
 async function handleShareFile(item) {
-    appServices.showNotification("Generating secure link...", 1500);
+    appServices.showNotification("Generating secure link...", 1500); // Assuming appServices.showNotification is available.
     try {
         const token = localStorage.getItem('snugos_token');
         const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
@@ -322,7 +311,8 @@ async function handleShareFile(item) {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
-        await navigator.clipboard.writeText(result.shareUrl);
+        // Copy the generated share URL to clipboard
+        await navigator.clipboard.writeText(result.shareUrl); // Using modern clipboard API
         appServices.showNotification("Sharable link copied! It expires in 1 hour.", 4000);
     } catch (error) {
         appServices.showNotification(`Could not generate link: ${error.message}`, 4000);
@@ -359,7 +349,8 @@ async function handleToggleFilePublic(fileId, newStatus) {
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         appServices.showNotification('File status updated!', 2000);
-        const libWindow = appServices.getWindowById('libraryApp');
+        // Refresh the library window to reflect changes
+        const libWindow = appServices.getWindowById('libraryApp'); // Assuming appServices.getWindowById is available.
         if (libWindow) fetchAndRenderLibraryItems(libWindow.element);
     } catch (error) {
         appServices.showNotification(`Error: ${error.message}`, 4000);
@@ -380,7 +371,7 @@ function showDeleteModal(item) {
 
 /**
  * Deletes a file from the server and refreshes the library.
- * @param {string} fileId - The ID of the file to delete.
+ * @param {string} fileId The ID of the file to delete.
  */
 async function handleDeleteFile(fileId) {
     try {
@@ -462,13 +453,13 @@ function checkLocalAuth() {
         const token = localStorage.getItem('snugos_token');
         if (!token) return null;
         const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token'); // Remove expired token
+        if (payload.exp * 1000 < Date.now()) { // Check if token is expired.
+            localStorage.removeItem('snugos_token'); // Remove expired token.
             return null;
         }
         return { id: payload.id, username: payload.username };
     } catch (e) {
-        localStorage.removeItem('snugos_token'); // Clear token on error
+        localStorage.removeItem('snugos_token'); // Clear token on error during parsing.
         return null;
     }
 }
@@ -479,11 +470,11 @@ function checkLocalAuth() {
  */
 function handleLogout() {
     localStorage.removeItem('snugos_token');
-    loggedInUser = null;
+    loggedInUser = null; // Clear local user state.
     appServices.showNotification('You have been logged out.', 2000);
     // Call the parent window's logout function if available.
     if (window.parent && window.parent.appServices && typeof window.parent.appServices.handleLogout === 'function') {
-        window.parent.appServices.handleLogout();
+        window.parent.appServices.handleLogout(); 
     } else {
         window.location.reload(); // Fallback: reload the iframe if no parent handler.
     }

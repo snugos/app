@@ -3,10 +3,8 @@
 // It receives `appServices` from its parent window.
 
 // All imports now use absolute paths
-import { storeAsset, getAsset } from '/app/js/daw/db.js';
-import { SERVER_URL } from '/app/js/daw/constants.js';
-// Functions like showNotification, showCustomModal, createContextMenu, openEmbeddedAppInWindow, applyCustomBackground
-// are expected to be available directly on the `appServices` object injected from the parent.
+import { storeAsset, getAsset } from '/app/js/daw/db.js'; 
+import { SERVER_URL } from '/app/js/daw/constants.js'; 
 
 let appServices = {}; // This will be assigned the actual appServices object from the parent.
 let loggedInUser = null;
@@ -392,7 +390,8 @@ async function handleAddFriendToggle(username, isFriend) {
     try {
         const response = await fetch(`${SERVER_URL}/api/profiles/${username}/friend`, {
             method: method,
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ isFriend: isFriend }) // Ensure payload is correct for server
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
