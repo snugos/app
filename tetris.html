@@ -58,7 +58,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
-            box-sizing: border-box;
+            box-sizing: border-sizing;
         }
 
         .panel {
@@ -310,7 +310,7 @@
         let isPaused = false, isGameOver = false, animationFrameId, isDroppingFast = false;
         
         // --- Handling ---
-        let dasTimeoutLeft, dasTimeoutRight, arrIntervalLeft, arrIntervalRight; // Corrected variable names
+        let dasTimeoutLeft, dasTimeoutRight, arrIntervalLeft, arrIntervalRight;
         let dasValue = 167; 
         let arrValue = 33;
         let sdfValue = 6;
@@ -340,14 +340,21 @@
             const panels = document.querySelectorAll('.panel');
             const uiElements = document.querySelectorAll('.panel div, .panel label, .panel-title, button, input[type="number"]');
 
+            // Calculate available space in the *iframe window*
             const padding = 16; /* 1rem converted to pixels for calculation */
             const availableHeight = window.innerHeight - (padding * 2);
-            const totalColsEstimate = 25; 
             const availableWidth = window.innerWidth - (padding * 2);
 
-            const blockSizeByHeight = availableHeight / ROWS;
-            const blockSizeByWidth = availableWidth / totalColsEstimate;
+            // Estimate total "column" units needed for layout (game board + 2 sidebars + gaps)
+            const estimatedSidebarBlockWidth = 5; // Declared here
+            const totalHorizontalGapUnits = 3; // 1.5rem gap * 2 = 3rem total gap (roughly 3 BLOCK_SIZE units)
+            const dynamicTotalBlockColumns = COLS + (2 * estimatedSidebarBlockWidth) + totalHorizontalGapUnits; 
 
+            const blockSizeByHeight = availableHeight / ROWS;
+            const blockSizeByWidth = availableWidth / dynamicTotalBlockColumns;
+
+
+            // Select the smaller BLOCK_SIZE to ensure everything fits
             BLOCK_SIZE = Math.floor(Math.min(blockSizeByHeight, blockSizeByWidth));
             if (BLOCK_SIZE < 8) BLOCK_SIZE = 8; // Set a sensible minimum BLOCK_SIZE
             if (BLOCK_SIZE > 30) BLOCK_SIZE = 30; // Set a sensible maximum BLOCK_SIZE
@@ -355,6 +362,7 @@
             boardCanvas.width = COLS * BLOCK_SIZE;
             boardCanvas.height = ROWS * BLOCK_SIZE;
             
+            // Preview canvases are 4 blocks wide, 3 blocks high
             holdCanvas.width = 4 * BLOCK_SIZE;
             holdCanvas.height = 3 * BLOCK_SIZE;
             nextCanvases.forEach(canvas => {
@@ -362,6 +370,7 @@
                 canvas.height = 3 * BLOCK_SIZE;
             });
             
+            // Adjust UI element sizes relative to BLOCK_SIZE
             const baseFontSize = Math.max(8, BLOCK_SIZE * 0.7); // Min font size 8px
             const panelPadding = Math.round(BLOCK_SIZE * 0.8); // Roughly 0.8 * BLOCK_SIZE for 1rem padding (16px)
             const panelGap = Math.round(BLOCK_SIZE * 0.5); // Roughly 0.5 * BLOCK_SIZE for 0.5rem gap (8px)
@@ -584,7 +593,7 @@
                     if (value) {
                         drawBlock(boardCtx, ghost.x + x, ghost.y + y, GHOST_COLOR);
                     }
-                    });
+                });
             });
         }
         
@@ -684,12 +693,12 @@
             switch (event.code) { 
                 case 'ArrowLeft': case 'KeyA':
                     // Clear both timeouts/intervals when a new DAS/ARR starts
-                    clearTimeout(dasTimeoutRight); clearInterval(arrIntervalRight); // Corrected clear for right
+                    clearTimeout(dasTimeoutRight); clearInterval(arrIntervalRight); 
                     movePiece(-1);
                     dasTimeoutLeft = setTimeout(() => { arrIntervalLeft = setInterval(() => movePiece(-1), arrValue); }, dasValue);
                     break;
                 case 'ArrowRight': case 'KeyD':
-                    clearTimeout(dasTimeoutLeft); clearInterval(arrIntervalLeft); // Corrected clear for left
+                    clearTimeout(dasTimeoutLeft); clearInterval(arrIntervalLeft); 
                     movePiece(1);
                     dasTimeoutRight = setTimeout(() => { arrIntervalRight = setInterval(() => movePiece(1), arrValue); }, dasValue);
                     break;

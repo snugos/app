@@ -4,7 +4,6 @@ import { openFileViewerWindow, initializeFileViewerUI } from '/app/js/daw/ui/fil
 import { storeAudio, getAudio } from '/app/js/daw/db.js';
 import * as Constants from '/app/js/daw/constants.js';
 import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js';
-const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
 let loggedInUser = null;
 let currentPath = ['/'];
