@@ -1,888 +1,627 @@
 // js/daw/browser/browser.js
-// NOTE: This file is the main JavaScript for the standalone SnugOS Browser application (browser.html).
-// It manages its own authentication and UI, as it is a top-level page.
+// NOTE: This file is now the main JavaScript for the standalone SnugOS Browser application.
+// It includes its own desktop UI and manages its own global state.
 
-// Base URL for your backend server
-const SERVER_URL = 'https://snugos-server-api.onrender.com'; // Direct use for standalone app
+// Corrected imports to be absolute paths from the project root
+import { SnugWindow } from '/app/js/daw/SnugWindow.js';
+import { openFileViewerWindow, initializeFileViewerUI } from '/app/js/daw/ui/fileViewerUI.js';
 
-// Global state variables for this standalone app
-let token = localStorage.getItem('snugos_token'); // Get token from localStorage directly
-let currentUser = null; // Stores { id, username }
-let currentPath = '/';
-let authMode = 'login'; // 'login' or 'register'
-let isAdminView = false; // Flag for 'snaw' to view all files
+// We explicitly import common utilities and DB functions.
+import { storeAudio, getAudio, deleteAudio, storeAsset, getAsset } from '/app/js/daw/db.js';
+import * as Constants from '/app/js/daw/constants.js';
+import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js';
 
-// DOM Elements (assuming they exist in browser.html)
-const loadingOverlay = document.getElementById('loading-overlay');
-const messageDialog = document.getElementById('message-dialog');
-const messageText = document.getElementById('message-text');
-const messageConfirmBtn = document.getElementById('message-confirm-btn');
-const messageCancelBtn = document.getElementById('message-cancel-btn');
-const inputDialog = document.getElementById('input-dialog');
-const inputDialogTitle = document.getElementById('input-dialog-title');
-const inputDialogField = document.getElementById('input-dialog-field');
-const inputDialogConfirmBtn = document.getElementById('input-dialog-confirm-btn');
-const inputDialogCancelBtn = document.getElementById('input-dialog-cancel-btn');
-const loginPage = document.getElementById('login-page');
-const appContent = document.getElementById('app-content');
-const authTitle = document.getElementById('auth-title');
-const authForm = document.getElementById('auth-form');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const authMessage = document.getElementById('auth-message');
-const authSubmitBtn = document.getElementById('auth-submit-btn');
-const authBtnText = document.getElementById('auth-btn-text');
-const authSpinner = document.getElementById('auth-spinner');
-const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
-const loggedInUserSpan = document.getElementById('logged-in-user');
-const logoutBtn = document.getElementById('logout-btn');
-const createFolderBtn = document.getElementById('create-folder-btn');
-const uploadFileBtn = document.getElementById('upload-file-btn');
-const fileUploadInput = document.getElementById('file-upload-input');
-const breadcrumbsNav = document.getElementById('breadcrumbs');
-const fileListDiv = document.getElementById('file-list');
-const mainContentArea = document.getElementById('main-content-area');
-const snawAdminSection = document.getElementById('snaw-admin-section'); // Snaw admin section
-const viewAllFilesBtn = document.getElementById('view-all-files-btn'); // View All Files Button
+// Import necessary state functions directly, as this is a standalone app
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js';
+import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js';
 
-// --- Utility Functions for Modals (Local to this standalone app) ---
+const SERVER_URL = 'https://snugos-server-api.onrender.com';
 
-function showLoading() {
-    loadingOverlay?.classList.remove('hidden');
-}
+let loggedInUser = null;
+let currentPath = ['/'];
+let currentViewMode = 'my-files';
+let appServices = {}; // This will now be populated locally for this standalone app.
 
-function hideLoading() {
-    loadingOverlay?.classList.add('hidden');
-}
+// --- Global UI and Utility Functions (Local to this standalone app) ---
+// These are functions that would normally be provided by welcome.js via appServices
+// but are now duplicated here to make this a truly standalone desktop-like app.
 
-function showMessage(msg, onConfirm = null, showCancel = false, onCancel = null) {
-    if (!messageDialog) return;
-    messageText.textContent = msg;
-    messageCancelBtn?.classList.toggle('hidden', !showCancel);
-    messageDialog.classList.remove('hidden');
-
-    messageConfirmBtn.onclick = null;
-    messageCancelBtn.onclick = null;
-
-    messageConfirmBtn.onclick = () => {
-        messageDialog.classList.add('hidden');
-        if (typeof onConfirm === 'function') { // FIX: Check if onConfirm is a function
-            onConfirm();
-        }
-    };
-
-    if (showCancel) {
-        messageCancelBtn.onclick = () => {
-            messageDialog.classList.add('hidden');
-            if (typeof onCancel === 'function') { // FIX: Check if onCancel is a function
-                onCancel();
+function initAudioOnFirstGesture() {
+    const startAudio = async () => {
+        try {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log('AudioContext started successfully.');
             }
-        };
-    }
-}
-
-function showInputDialog(title, placeholder, initialValue, onConfirmCallback) {
-    if (!inputDialog) return;
-    inputDialogTitle.textContent = title;
-    inputDialogField.placeholder = placeholder;
-    inputDialogField.value = initialValue;
-    inputDialog.classList.remove('hidden');
-    inputDialogField.focus();
-
-    inputDialogConfirmBtn.onclick = null;
-    inputDialogCancelBtn.onclick = null;
-
-    inputDialogConfirmBtn.onclick = async () => {
-        const value = inputDialogField.value.trim();
-        const success = await onConfirmCallback(value);
-        if (success) {
-            inputDialog.classList.add('hidden');
-        }
+        } catch (e) { console.error('Could not start AudioContext:', e); }
+        document.body.removeEventListener('mousedown', startAudio);
     };
-
-    inputDialogCancelBtn.onclick = () => {
-        inputDialog.classList.add('hidden');
-    };
+    document.body.addEventListener('mousedown', startAudio);
 }
 
-// --- Icon SVGs (Inline) ---
-const getFolderIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-folder mr-3 flex-shrink-0" style="color: currentColor;"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`;
-const getFileIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-file-text mr-3 flex-shrink-0" style="color: currentColor;"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v6h6"/><path d="M10 12H8"/><path d="M16 16H8"/><path d="M16 20H8"/></svg>`;
-const getEditIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-const getTrashIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
-const getEyeIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
-const getEyeOffIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-eye-off"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.06 18.06 0 0 1 5.34-4.34M7.52 3.13A9.01 9.01 0 0 1 12 4c7 0 10 7 10 7a18.06 18.06 0 0 1-2.5 3.06"/><circle cx="12" cy="12" r="3"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`;
-const getShareIcon = () => `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`;
+function updateClockDisplay() {
+    const clockDisplay = document.getElementById('taskbarClockDisplay');
+    if (clockDisplay) {
+        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setTimeout(updateClockDisplay, 60000);
+}
 
-// --- Authentication Functions (Local to this standalone app) ---
+function toggleStartMenu() {
+    document.getElementById('startMenu')?.classList.toggle('hidden');
+}
 
-function checkLocalAuth() {
-    try {
-        const tokenFromStorage = localStorage.getItem('snugos_token'); // Use 'snugos_token' for consistency
-        if (!tokenFromStorage) return null;
-        const payload = JSON.parse(atob(tokenFromStorage.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem('snugos_token');
-            return null;
-        }
-        token = tokenFromStorage; // Set local token variable
-        return { id: payload.id, username: payload.username };
-    } catch (e) {
-        localStorage.removeItem('snugos_token');
-        return null;
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light'); // Store explicit preference
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark'); // Store explicit preference
     }
 }
 
-async function fetchUserProfile() {
-    if (!token) return;
-    showLoading();
-    try {
-        const response = await fetch(`${SERVER_URL}/api/profile/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            currentUser = data.profile;
-            renderApp();
-        } else {
-            console.error("Failed to fetch user profile:", response.statusText);
-            token = null;
-            localStorage.removeItem('snugos_token'); // Use 'snugos_token' for consistency
-            renderApp(); // Go back to login
-        }
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        token = null;
-        localStorage.removeItem('snugos_token'); // Use 'snugos_token' for consistency
-        renderApp(); // Go back to login
-    } finally {
-        hideLoading();
-    }
+function showLoginModal() {
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
+                </form>
+            </div>
+            <hr style="border-color: var(--border-secondary);">
+            <div>
+                <h3 class="font-bold mb-2">Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    const { overlay } = showCustomModal('Login or Register', modalContent, []);
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove(); // Close modal after action
+    });
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove(); // Close modal after action
+    });
 }
 
-async function handleAuthSubmit(event) {
-    event.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    if (!username || !password) {
-        document.getElementById('auth-message').textContent = 'Please enter both username and password.';
-        document.getElementById('auth-message').classList.remove('hidden');
-        return;
-    }
-
-    document.getElementById('auth-message').classList.add('hidden');
-    authSubmitBtn.disabled = true;
-    authSpinner.classList.remove('hidden');
-    authBtnText.textContent = authMode === 'register' ? 'Registering...' : 'Logging in...';
-
+async function handleLogin(username, password) {
     try {
-        const endpoint = authMode === 'register' ? '/api/register' : '/api/login';
-        const response = await fetch(`${SERVER_URL}${endpoint}`, {
+        const response = await fetch(`${SERVER_URL}/api/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
         const data = await response.json();
-
         if (data.success) {
-            token = data.token;
-            localStorage.setItem('snugos_token', token); // Use 'snugos_token' for consistency
-            currentUser = data.user;
-            renderApp();
+            localStorage.setItem('snugos_token', data.token);
+            loggedInUser = data.user; // Set local loggedInUser
+            showNotification(`Welcome, ${data.user.username}!`, 2000);
+            window.location.reload(); // Reload the page to fully initialize with logged-in user
         } else {
-            showMessage(data.message || (authMode === 'register' ? 'Registration failed.' : 'Login failed.'), 4000); // Use local showMessage
+            showNotification(`Login failed: ${data.message}`, 3000);
         }
     } catch (error) {
-        console.error("Authentication error:", error);
-        showMessage('Network error or server unavailable.', 4000); // Use local showMessage
-    } finally {
-        document.getElementById('auth-submit-btn').disabled = false;
-        document.getElementById('auth-spinner').classList.add('hidden');
-        document.getElementById('auth-btn-text').textContent = authMode === 'register' ? 'Register' : 'Login';
+        showNotification('Network error.', 3000);
+        console.error("Login Error:", error);
+    }
+}
+
+async function handleRegister(username, password) {
+    try {
+        const response = await fetch(`${SERVER_URL}/api/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (data.success) {
+            showNotification('Registration successful! Please log in.', 2500);
+        } else {
+            showNotification(`Registration failed: ${data.message}`, 3000);
+        }
+    } catch (error) {
+        showNotification('Network error.', 3000);
+        console.error("Register Error:", error);
     }
 }
 
 function handleLogout() {
-    token = null;
-    currentUser = null;
-    localStorage.removeItem('snugos_token'); // Use 'snugos_token' for consistency
-    isAdminView = false; // Reset admin view flag on logout
-    renderApp();
-    showMessage('You have been logged out.'); // Use local showMessage
+    localStorage.removeItem('snugos_token');
+    loggedInUser = null;
+    showNotification('You have been logged out.', 2000);
+    window.location.reload(); // Reload the page to reflect logout status
 }
 
-// --- File Management Functions ---
-
-async function fetchFiles() {
-    if (!token || !currentUser) {
-        document.getElementById('file-list').innerHTML = ''; // Clear content if not logged in
-        return;
-    }
-
-    showLoading();
-    try {
-        let apiUrl = `${SERVER_URL}/api/files/my?path=${encodeURIComponent(currentPath)}`;
-        // If 'snaw' and in admin view, fetch all files
-        if (currentUser.username === 'snaw' && isAdminView) {
-            apiUrl = `${SERVER_URL}/api/admin/files`;
-        }
-
-        const response = await fetch(apiUrl, {
-            headers: { 'Authorization': `Bearer ${token}` }
+function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+            showNotification(`Error: ${err.message}`, 3000);
         });
-        const data = await response.json();
-
-        if (data.success) {
-            if (currentUser.username === 'snaw' && isAdminView) {
-                renderFileListAdmin(data.items);
-            } else {
-                const sortedItems = data.items.sort((a, b) => {
-                    const isAFolder = a.mime_type === 'application/vnd.snugos.folder';
-                    const isBFolder = b.mime_type === 'application/vnd.snugos.folder';
-
-                    if (isAFolder && !isBFolder) return -1;
-                    if (!isAFolder && isBFolder) return 1;
-                    return a.file_name.localeCompare(b.file_name);
-                });
-                renderFileList(sortedItems);
-            }
-        } else {
-            showMessage(data.message || "Failed to load files.", 4000); // Use local showMessage
-            renderFileList([]); // Render empty list on error
-        }
-    } catch (error) {
-        console.error("Error fetching files:", error);
-        showMessage("Network error while fetching files. Please try again.", 4000); // Use local showMessage
-        renderFileList([]);
-    } finally {
-        hideLoading();
+    } else {
+        if(document.exitFullscreen) document.exitFullscreen();
     }
 }
 
-async function handleCreateFolder() {
-    showInputDialog('Create New Folder', 'Folder Name', '', async (name) => {
-        if (!name.trim()) {
-            showMessage("Folder name cannot be empty.", 2000); // Use local showMessage
-            return false;
-        }
-        showLoading();
-        try {
-            const response = await fetch(`${SERVER_URL}/api/folders`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ name: name.trim(), path: currentPath })
-            });
-            const data = await response.json();
-            if (data.success) {
-                showMessage("Folder created successfully!", 2000); // Use local showMessage
-                fetchFiles();
-                return true;
-            } else {
-                showMessage(data.message || "Failed to create folder.", 4000); // Use local showMessage
-                return false;
-            }
-        } catch (error) {
-            console.error("Error creating folder:", error);
-            showMessage("Network error creating folder.", 4000); // Use local showMessage
-            return false;
-        } finally {
-            hideLoading();
-        }
-    });
-}
+// --- END Global UI and Utility Functions ---
 
-async function uploadFiles(filesToUpload) {
-    if (!currentUser || filesToUpload.length === 0) return; // Use currentUser
 
-    showLoading();
-    let allSuccess = true;
-    let messages = [];
+// --- SnugWindow Related (If this file uses SnugWindows for sub-windows) ---
+// This app is a standalone desktop itself, but it might open SnugWindows for viewers etc.
+// Therefore, we need to populate appServices for its own SnugWindow instances.
 
-    for (const file of filesToUpload) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', currentPath);
-        formData.append('is_public', false); // Default to private
+document.addEventListener('DOMContentLoaded', () => {
+    // Populate appServices for this standalone desktop's context
+    appServices = {
+        // SnugWindow management from windowState.js (imported above)
+        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
+        getWindowById: getWindowById, // from windowState.js
+        addWindowToStore: addWindowToStore, // from windowState.js
+        removeWindowFromStore: removeWindowFromStore, // from windowState.js
+        incrementHighestZ: incrementHighestZ, // from windowState.js
+        getHighestZ: getHighestZ, // from windowState.js
+        setHighestZ: setHighestZ, // from windowState.js
+        getOpenWindows: getOpenWindows, // from windowState.js
+        serializeWindows: serializeWindows, // from windowState.js
+        reconstructWindows: reconstructWindows, // from windowState.js
 
-        try {
-            const response = await fetch(`${SERVER_URL}/api/files/upload`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-            const data = await response.json();
-            if (data.success) {
-                messages.push(`"${file.name}" uploaded successfully.`);
-            } else {
-                allSuccess = false;
-                messages.push(`Failed to upload "${file.name}": ${data.message || 'Server error'}.`);
-            }
-        } catch (error) {
-            allSuccess = false;
-            messages.push(`Network error uploading "${file.name}".`);
-            console.error(`Error uploading "${file.name}":`, error);
-        }
-    }
-    showMessage(messages.join('\n'), 5000); // Consolidated notification with local showMessage
-    fetchFiles(); // Re-fetch files to update UI
-    hideLoading();
-}
+        // Utilities from utils.js (imported above)
+        createContextMenu: createContextMenu, // from utils.js
+        showNotification: showNotification, // Local showNotification
+        showCustomModal: showCustomModal,   // Local showCustomModal
+        openFileViewerWindow: openFileViewerWindow, // From fileViewerUI.js
+        initializeFileViewerUI: initializeFileViewerUI, // From fileViewerUI.js
 
-function handleUploadClick() {
-    document.getElementById('file-upload-input').click();
-}
+        // appState.js functions (for theming etc.)
+        applyUserThemePreference: applyUserThemePreference, // Local function defined above
+        setCurrentUserThemePreference: setCurrentUserThemePreference, // from appState.js
+        getCurrentUserThemePreference: getCurrentUserThemePreference, // from appState.js
 
-function handleFileInputChange(event) {
-    const files = event.target.files;
-    uploadFiles(Array.from(files));
-    event.target.value = null; // Reset file input
-}
+        // DB functions (from db.js)
+        storeAudio: storeAudio,
+        getAudio: getAudio,
+        deleteAudio: deleteAudio,
+        storeAsset: storeAsset,
+        getAsset: getAsset,
 
-function handleRename(item) {
-    showInputDialog(`Rename ${item.file_name}`, 'New Name', item.file_name, async (newName) => {
-        if (!newName.trim()) {
-            showMessage("Name cannot be empty.", 2000); // Use local showMessage
-            return false;
-        }
-        showLoading();
-        try {
-            const response = await fetch(`${SERVER_URL}/api/files/${item.id}/rename`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ newName: newName.trim() })
-            });
-            const data = await response.json();
-            if (data.success) {
-                showMessage("Item renamed successfully.", 2000); // Use local showMessage
-                fetchFiles();
-                return true;
-            } else {
-                showMessage(data.message || "Failed to rename item.", 4000); // Use local showMessage
-                return false;
-            }
-        } catch (error) {
-            console.error("Error renaming item:", error);
-            showMessage("Network error renaming item.", 4000); // Use local showMessage
-            return false;
-        } finally {
-            hideLoading();
-        }
-    });
-}
-
-function handleDeleteItem(item) {
-    showMessage(`Are you sure you want to delete "${item.file_name}"? This action cannot be undone.`, async () => {
-        showLoading();
-        try {
-            const response = await fetch(`${SERVER_URL}/api/files/${item.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (data.success) {
-                showMessage(`"${item.file_name}" deleted successfully.`, 2000); // Use local showMessage
-                fetchFiles(); // Re-fetch files
-            } else {
-                showMessage(data.message || "Failed to delete item.", 4000); // Use local showMessage
-            }
-        } catch (error) {
-            console.error("Error deleting item:", error);
-            showMessage("Network error deleting item.", 4000); // Use local showMessage
-        } finally {
-            hideLoading();
-        }
-    }, true); // showCancel = true
-}
-
-async function handleTogglePublic(item) {
-    showLoading();
-    try {
-        const response = await fetch(`${SERVER_URL}/api/files/${item.id}/toggle-public`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ is_public: !item.is_public })
-        });
-        const data = await response.json();
-        if (data.success) {
-            showMessage(`"${item.file_name}" is now ${data.file.is_public ? 'public' : 'private'}.`, 2000); // Use local showMessage
-            fetchFiles(); // Re-fetch files
-        } else {
-            showMessage(data.message || "Failed to change public status.", 4000); // Use local showMessage
-        }
-    } catch (error) {
-        console.error("Error toggling public status:", error);
-        showMessage("Network error changing public status.", 4000); // Use local showMessage
-    } finally {
-        hideLoading();
-    }
-}
-
-async function handleShareLink(item) {
-    showLoading();
-    try {
-        const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        if (data.success) {
-            navigator.clipboard.writeText(data.shareUrl).then(() => {
-                showMessage("Share link copied to clipboard!", 2000); // Use local showMessage
-            }).catch(err => {
-                const textarea = document.createElement('textarea');
-                textarea.value = data.shareUrl;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showMessage("Share link copied to clipboard! (Fallback method)", 3000); // Use local showMessage
-                console.warn("Clipboard API not available, falling back to execCommand.");
-            });
-        } else {
-            showMessage(data.message || "Failed to generate share link.", 4000); // Use local showMessage
-        }
-    } catch (error) {
-        console.error("Error generating share link:", error);
-        showMessage("Network error generating share link.", 4000); // Use local showMessage
-    } finally {
-        hideLoading();
-    }
-}
-
-async function handleMoveItem(draggedItemId, targetPath) {
-    showLoading();
-    try {
-        const response = await fetch(`${SERVER_URL}/api/files/${draggedItemId}/move`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ targetPath: targetPath })
-        });
-        const data = await response.json();
-        if (data.success) {
-            showMessage(data.message || "Item moved successfully.", 2000); // Use local showMessage
-            fetchFiles(); // Re-fetch files to update UI
-        } else {
-            showMessage(data.message || "Failed to move item.", 4000); // Use local showMessage
-        }
-    } catch (error) {
-        console.error("Error moving item:", error);
-        showMessage("Network error moving item.", 4000); // Use local showMessage
-    } finally {
-        hideLoading();
-    }
-}
-
-// --- UI Rendering Functions ---
-
-function renderBreadcrumbs() {
-    const breadcrumbsNav = document.getElementById('breadcrumbs');
-    if (!breadcrumbsNav) return;
-
-    breadcrumbsNav.innerHTML = '';
-    const pathSegments = currentPath.split('/').filter(segment => segment !== '');
-
-    let myDriveLi = document.createElement('li');
-    myDriveLi.className = 'flex items-center';
-    let myDriveBtn = document.createElement('button');
-    myDriveBtn.className = 'hover:underline font-medium';
-    myDriveBtn.style.setProperty('color', 'var(--text-primary)');
-    myDriveBtn.textContent = 'My Drive';
-    myDriveBtn.onclick = () => {
-        currentPath = '/';
-        isAdminView = false;
-        renderApp();
+        // General
+        SERVER_URL: SERVER_URL,
     };
-    myDriveLi.appendChild(myDriveBtn);
-    breadcrumbsNav.appendChild(myDriveLi);
 
-    if (isAdminView && currentUser?.username === 'snaw') { // Check currentUser
-        breadcrumbsNav.classList.add('hidden');
-        const adminIndicator = document.createElement('li');
-        adminIndicator.className = 'flex items-center';
-        adminIndicator.innerHTML = '<span class="mx-2" style="color: var(--text-secondary);">/</span><span class="font-bold" style="color: var(--text-primary);">All Files (Admin View)</span>';
-        breadcrumbsNav.appendChild(adminIndicator);
-        breadcrumbsNav.classList.remove('hidden');
-        return;
+    loggedInUser = checkLocalAuth();
+    
+    // Attach desktop-level event listeners for this standalone page
+    attachDesktopEventListeners();
+    applyUserThemePreference(); // Apply theme for this page
+    updateClockDisplay(); // Start clock
+    initAudioOnFirstGesture(); // Initialize audio if this page can play sounds (e.g. for audio previews)
+    
+    // Initial render based on login status
+    if (loggedInUser) {
+        // Since this is now a full desktop app, we just initialize its UI and content.
+        // The desktop elements are already in library.html.
+        initializePageUI(document.body); // Pass body as the main container for finding elements
+        loadAndApplyGlobals(); // Apply user background etc.
     } else {
-        breadcrumbsNav.classList.remove('hidden');
+        // If not logged in, show the login modal on the desktop area.
+        const desktop = document.getElementById('desktop');
+        if(desktop) {
+            desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in to use SnugOS Browser.</p></div>`;
+        }
+        showLoginModal();
     }
-
-    let accumulatedPath = '/';
-    pathSegments.forEach((segment, index) => {
-        accumulatedPath += segment + '/';
-        let li = document.createElement('li');
-        li.className = 'flex items-center';
-        li.innerHTML = '<span class="mx-2" style="color: var(--text-secondary);">/</span>';
-        let btn = document.createElement('button');
-        btn.className = 'hover:underline font-medium';
-        btn.style.setProperty('color', 'var(--text-primary)');
-        btn.textContent = segment;
-        const navPath = accumulatedPath;
-        btn.onclick = () => {
-            currentPath = navPath;
-            renderApp();
-        };
-        li.appendChild(btn);
-        breadcrumbsNav.appendChild(li);
-    });
-}
+});
 
 
-function renderFileList(items) {
-    const fileListDiv = document.getElementById('file-list');
-    if (!fileListDiv) return;
+// --- File Management Functions (Adapted for Standalone) ---
 
-    fileListDiv.innerHTML = '';
+function initializePageUI(container) {
+    const myFilesBtn = container.querySelector('#my-files-btn');
+    const globalFilesBtn = container.querySelector('#global-files-btn');
+    const uploadBtn = container.querySelector('#uploadFileBtn');
+    const newFolderBtn = container.querySelector('#createFolderBtn');
+    const actualFileInput = document.getElementById('actualFileInput'); // This is in the main document
+    const snawAdminSection = container.querySelector('#snaw-admin-section'); // For admin view
+    const viewAllFilesBtn = container.querySelector('#view-all-files-btn'); // For admin view
 
-    if (items.length === 0) {
-        fileListDiv.innerHTML = `
-            <p class="col-span-full text-center py-8" style="color: var(--text-secondary);">
-                This folder is empty. Create a new folder or upload a file!
-            </p>
-        `;
-    }
-
-    items.forEach(item => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'shadow-lg hover:shadow-xl transition-shadow duration-200 p-4 flex flex-col items-start space-y-3 relative';
-        itemDiv.style.setProperty('background-color', 'var(--bg-window)');
-        itemDiv.style.setProperty('border', '1px solid var(--border-primary)');
-        itemDiv.style.setProperty('color', 'var(--text-primary)');
-        itemDiv.style.setProperty('border-radius', '3px');
-
-        itemDiv.draggable = true;
-        itemDiv.dataset.itemId = item.id;
-        itemDiv.dataset.itemType = item.mime_type;
-        itemDiv.dataset.itemName = item.file_name;
-        itemDiv.dataset.itemPath = item.path;
-
-        itemDiv.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('application/json', JSON.stringify({
-                id: item.id,
-                type: item.mime_type,
-                name: item.file_name,
-                path: item.path
-            }));
-            e.dataTransfer.effectAllowed = 'move';
-            itemDiv.classList.add('opacity-50');
-        });
-
-        itemDiv.addEventListener('dragend', (e) => {
-            itemDiv.classList.remove('opacity-50');
-        });
-
-
-        const isFolder = item.mime_type === 'application/vnd.snugos.folder';
-        const nameElement = document.createElement(isFolder ? 'button' : 'a');
-        nameElement.className = 'flex items-center text-left group w-full';
-        nameElement.style.setProperty('color', 'var(--text-primary)');
-        nameElement.innerHTML = (isFolder ? getFolderIcon() : getFileIcon()) + `<span class="font-${isFolder ? 'semibold' : 'medium'} text-lg truncate flex-grow">${item.file_name}</span>`;
-
-        if (isFolder) {
-            nameElement.onclick = () => {
-                currentPath = currentPath === '/' ? `/${item.file_name}/` : `${currentPath}${item.file_name}/`;
-                isAdminView = false;
-                renderApp();
-            };
-
-            // Make folders drop targets
-            fileListDiv.addEventListener('dragover', handleDropTargetDragOver); // Re-added drag listeners to main list div
-            fileListDiv.addEventListener('dragleave', handleDropTargetDragLeave);
-            fileListDiv.addEventListener('drop', handleDrop);
-
-            itemDiv.dataset.isDropTarget = 'true';
-            itemDiv.dataset.dropTargetPath = currentPath + item.file_name + '/';
-        } else {
-            nameElement.href = item.s3_url;
-            nameElement.target = '_blank';
-            nameElement.rel = 'noopener noreferrer';
-        }
-        itemDiv.appendChild(nameElement);
-
-        const actionsDiv = document.createElement('div');
-        actionsDiv.className = 'flex flex-wrap gap-2 pt-2 border-t w-full justify-start mt-auto';
-        actionsDiv.style.setProperty('border-color', 'var(--border-secondary)');
-
-        const renameBtn = document.createElement('button');
-        renameBtn.className = 'item-action-btn';
-        renameBtn.title = 'Rename';
-        renameBtn.innerHTML = getEditIcon();
-        renameBtn.onclick = () => handleRename(item);
-        actionsDiv.appendChild(renameBtn);
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'item-action-btn';
-        deleteBtn.title = 'Delete';
-        deleteBtn.innerHTML = getTrashIcon();
-        deleteBtn.onclick = () => handleDeleteItem(item);
-        actionsDiv.appendChild(deleteBtn);
-
-        if (!isFolder) {
-            const togglePublicBtn = document.createElement('button');
-            togglePublicBtn.className = 'item-action-btn';
-            togglePublicBtn.title = item.is_public ? "Make Private" : "Make Public";
-            togglePublicBtn.innerHTML = item.is_public ? getEyeOffIcon() : getEyeIcon();
-            togglePublicBtn.onclick = () => handleTogglePublic(item);
-            actionsDiv.appendChild(togglePublicBtn);
-
-            const shareLinkBtn = document.createElement('button');
-            shareLinkBtn.className = 'item-action-btn';
-            shareLinkBtn.title = 'Get Share Link';
-            shareLinkBtn.innerHTML = getShareIcon();
-            shareLinkBtn.onclick = () => handleShareLink(item);
-            actionsDiv.appendChild(shareLinkBtn);
-        }
-
-        itemDiv.appendChild(actionsDiv);
-        fileListDiv.appendChild(itemDiv);
-    });
-}
-
-// Renders file list for 'snaw' admin view (shows paths)
-function renderFileListAdmin(items) {
-    const fileListDiv = document.getElementById('file-list');
-    if (!fileListDiv) return;
-
-    fileListDiv.innerHTML = '';
-    const table = document.createElement('table');
-    table.className = 'w-full text-sm text-left';
-    table.style.setProperty('color', 'var(--text-primary)');
-    table.style.setProperty('border', '1px solid var(--border-primary)');
-    table.style.setProperty('background-color', 'var(--bg-window)');
-    table.style.setProperty('border-radius', '3px');
-
-    table.innerHTML = `
-        <thead style="background-color: var(--bg-title-bar); color: var(--text-title-bar);">
-            <tr>
-                <th class="p-3">Type</th>
-                <th class="p-3">Name</th>
-                <th class="p-3">Owner</th>
-                <th class="p-3">Path</th>
-                <th class="p-3">Size</th>
-                <th class="p-3">Public</th>
-                <th class="p-3">Actions</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    `;
-    const tbody = table.querySelector('tbody');
-
-    if (items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-3 text-center" style="color: var(--text-secondary);">No files found across all users.</td></tr>`;
-    }
-
-    items.forEach(item => {
-        const isFolder = item.mime_type === 'application/vnd.snugos.folder';
-        const row = document.createElement('tr');
-        row.className = 'border-b';
-        row.style.setProperty('border-color', 'var(--border-secondary)');
-        row.style.setProperty('background-color', 'var(--bg-window-content)');
-
-        let fileNameDisplay = item.file_name;
-        if (!isFolder) {
-            fileNameDisplay = `<a href="${item.s3_url}" target="_blank" rel="noopener noreferrer" class="hover:underline">${item.file_name}</a>`;
-        }
-
-        row.innerHTML = `
-            <td class="p-3">${isFolder ? 'Folder' : 'File'}</td>
-            <td class="p-3">${fileNameDisplay}</td>
-            <td class="p-3">${item.owner_username || item.user_id}</td>
-            <td class="p-3 truncate max-w-[200px]">${item.path}</td>
-            <td class="p-3">${item.file_size ? (item.file_size / 1024 / 1024).toFixed(2) + ' MB' : '-'}</td>
-            <td class="p-3">${item.is_public ? 'Yes' : 'No'}</td>
-            <td class="p-3">
-                <div class="flex flex-wrap gap-1">
-                    <button class="item-action-btn" title="Rename" onclick="handleRename(${JSON.stringify(item).replace(/"/g, '&quot;')})">${getEditIcon()}</button>
-                    <button class="item-action-btn" title="Delete" onclick="handleDeleteItem(${JSON.stringify(item).replace(/"/g, '&quot;')})" style="color: #EF4444;">${getTrashIcon()}</button>
-                    ${!isFolder ? `<button class="item-action-btn" title="${item.is_public ? 'Make Private' : 'Make Public'}" onclick="handleTogglePublic(${JSON.stringify(item).replace(/"/g, '&quot;')})">${item.is_public ? getEyeOffIcon() : getEyeIcon()}</button>` : ''}
-                    ${!isFolder ? `<button class="item-action-btn" title="Get Share Link" onclick="handleShareLink(${JSON.stringify(item).replace(/"/g, '&quot;')})">${getShareIcon()}</button>` : ''}
-                </div>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    fileListDiv.appendChild(table);
-}
-
-// --- Drag and Drop Handlers (for uploads and internal moves) ---
-
-function handleDropTargetDragOver(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.types.includes('Files') || e.dataTransfer.types.includes('application/json')) {
-        let targetElement = e.currentTarget;
-        if (targetElement.dataset.isDropTarget === 'true' || targetElement.id === 'file-list') {
-            targetElement.classList.add('drop-target-hover');
-        }
-    }
-}
-
-function handleDropTargetDragLeave(e) {
-    e.stopPropagation();
-    let targetElement = e.currentTarget;
-    if (targetElement.dataset.isDropTarget === 'true' || targetElement.id === 'file-list') {
-        targetElement.classList.remove('drop-target-hover');
-    }
-}
-
-async function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    let targetElement = e.currentTarget;
-    targetElement.classList.remove('drop-target-hover');
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const files = Array.from(e.dataTransfer.files);
-        await uploadFiles(files);
-        return;
-    }
-
-    try {
-        const draggedItemData = JSON.parse(e.dataTransfer.getData('application/json'));
-        const draggedItemId = draggedItemData.id;
-        const draggedItemType = draggedItemData.type;
-        const draggedItemName = draggedItemData.name;
-        const draggedItemCurrentPath = draggedItemData.path;
-
-        let dropTargetPath;
-
-        if (targetElement.id === 'file-list') {
-            dropTargetPath = currentPath;
-        } else if (targetElement.dataset.isDropTarget === 'true' && targetElement.dataset.itemType === 'application/vnd.snugos.folder') {
-            dropTargetPath = targetElement.dataset.dropTargetPath;
-        } else {
-            showMessage("Invalid drop target. You can only drop items into folders or the current directory's main area.", 3000); // Use local showMessage
-            return;
-        }
-
-        if (draggedItemId === targetElement.dataset.itemId && dropTargetPath === draggedItemCurrentPath) {
-            showMessage("Cannot drop an item onto itself (already in target location).", 3000); // Use local showMessage
-            return;
-        }
-
-        if (dropTargetPath === draggedItemCurrentPath) {
-            showMessage("Item is already in this location.", 3000); // Use local showMessage
-            return;
-        }
-
-        const draggedItemFullPath = draggedItemCurrentPath + draggedItemName + (draggedItemType === 'application/vnd.snugos.folder' ? '/' : '');
-        if (draggedItemType === 'application/vnd.snugos.folder' && dropTargetPath.startsWith(draggedItemFullPath)) {
-            showMessage("Cannot move a folder into its own subfolder.", 3000); // Use local showMessage
-            return;
-        }
-
-        await handleMoveItem(draggedItemId, dropTargetPath);
-
-    } catch (error) {
-        console.error("Drag and drop error:", error);
-        showMessage("An error occurred during drag and drop. " + error.message, 5000); // Use local showMessage
-    }
-}
-
-// --- Main App Renderer ---
-
-function renderApp() {
-    const loginPage = document.getElementById('login-page');
-    const appContent = document.getElementById('app-content');
-    const loggedInUserSpan = document.getElementById('logged-in-user');
-    const logoutBtn = document.getElementById('logout-btn');
-    const snawAdminSection = document.getElementById('snaw-admin-section'); // Ref to admin section
-
-    if (currentUser) { // Use local currentUser from checkLocalAuth or successful login
-        loginPage?.classList.add('hidden');
-        appContent?.classList.remove('hidden');
-        loggedInUserSpan.innerHTML = `Logged in as: <span class="font-semibold" style="color: var(--text-primary);">${currentUser.username}</span>`;
-        logoutBtn?.classList.remove('hidden');
-
-        if (currentUser.username === 'snaw') {
-            snawAdminSection?.classList.remove('hidden');
-        } else {
-            snawAdminSection?.classList.add('hidden');
-            isAdminView = false; // Ensure admin view is off if not 'snaw'
-        }
-
-        renderBreadcrumbs();
-        fetchFiles();
+    // Admin section visibility
+    if (loggedInUser?.username === 'snaw') {
+        snawAdminSection?.classList.remove('hidden');
     } else {
-        loggedInUserSpan.textContent = ''; // Clear user display
-        logoutBtn?.classList.add('hidden');
-        appContent?.classList.add('hidden'); // Hide app content
-        loginPage?.classList.remove('hidden'); // Show login page
-
-        // Reset login/register form titles/buttons
-        const authTitle = document.getElementById('auth-title');
-        const authBtnText = document.getElementById('auth-btn-text');
-        const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
-        if (authTitle && authBtnText && toggleAuthModeBtn) {
-            authTitle.textContent = 'Login to SnugOS Browser';
-            authBtnText.textContent = 'Login';
-            toggleAuthModeBtn.textContent = 'Need an account? Register';
-        }
+        snawAdminSection?.classList.add('hidden');
+        isAdminView = false;
     }
-}
 
-// --- Event Listeners ---
+    const updateNavStyling = () => {
+        if (myFilesBtn) {
+            myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
+            myFilesBtn.style.color = currentViewMode === 'my-files' ? 'var(--accent-active-text)' : 'var(--text-primary)';
+        }
+        if (globalFilesBtn) {
+            globalFilesBtn.style.backgroundColor = currentViewMode === 'global' ? 'var(--accent-active)' : 'transparent';
+            globalFilesBtn.style.color = currentViewMode === 'global' ? 'var(--accent-active-text)' : 'var(--text-primary)';
+        }
+    };
+    
+    if (myFilesBtn) myFilesBtn.addEventListener('click', () => {
+        currentViewMode = 'my-files';
+        currentPath = ['/'];
+        fetchAndRenderLibraryItems(document.body); // Re-render main body
+        updateNavStyling();
+    });
+    if (globalFilesBtn) globalFilesBtn.addEventListener('click', () => {
+        currentViewMode = 'global';
+        currentPath = ['/'];
+        fetchAndRenderLibraryItems(document.body); // Re-render main body
+        updateNavStyling();
+    });
 
-function attachBrowserEventListeners() {
-    const authForm = document.getElementById('auth-form');
-    const logoutBtn = document.getElementById('logout-btn');
-    const createFolderBtn = document.getElementById('create-folder-btn');
-    const uploadFileBtn = document.getElementById('upload-file-btn');
-    const fileUploadInput = document.getElementById('file-upload-input');
-    const viewAllFilesBtn = document.getElementById('view-all-files-btn');
-    const fileListDiv = document.getElementById('file-list');
-    const toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
+    [myFilesBtn, globalFilesBtn].forEach(btn => {
+        if (!btn) return;
+        const originalBg = btn.id === (currentViewMode === 'my-files' ? 'my-files-btn' : 'global-files-btn') ? 'var(--accent-active)' : 'transparent';
+        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === originalBg || btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
+        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
+    });
 
-    if (authForm) authForm.addEventListener('submit', handleAuthSubmit); // Ensure only one listener
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-    if (createFolderBtn) createFolderBtn.addEventListener('click', handleCreateFolder);
-    if (uploadFileBtn) uploadFileBtn.addEventListener('click', handleUploadClick);
-    if (fileUploadInput) fileUploadInput.addEventListener('change', handleFileInputChange);
+    if (uploadBtn) uploadBtn.addEventListener('click', () => actualFileInput.click());
+    if (actualFileInput) actualFileInput.addEventListener('change', e => {
+        handleFileUpload(e.target.files);
+        e.target.value = null; // Clear input after selection
+    });
+    if (newFolderBtn) newFolderBtn.addEventListener('click', createFolder);
 
     if (viewAllFilesBtn) {
         viewAllFilesBtn.addEventListener('click', () => {
             isAdminView = !isAdminView;
             if (isAdminView) {
-                currentPath = '/';
+                currentPath = ['/'];
             }
-            renderApp();
+            fetchAndRenderLibraryItems(document.body);
+            // No navigation style update for admin view, it's a toggle.
         });
     }
 
-    if (fileListDiv) {
-        fileListDiv.addEventListener('dragover', handleDropTargetDragOver);
-        fileListDiv.addEventListener('dragleave', handleDropTargetDragLeave);
-        fileListDiv.addEventListener('drop', handleDrop);
-    }
+    updateNavStyling();
+    fetchAndRenderLibraryItems(document.body); // Initial fetch and render for the page itself
+}
 
-    if (toggleAuthModeBtn) {
-        toggleAuthModeBtn.addEventListener('click', () => {
-            authMode = authMode === 'login' ? 'register' : 'login';
-            renderApp(); // Re-render to update form based on authMode
-        });
+function setupDesktopContextMenu() {
+    const desktop = document.getElementById('desktop');
+    if (!desktop) return;
+
+    desktop.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (e.target.closest('.window')) return;
+        const menuItems = [
+            { label: 'New Folder', action: () => createFolder() },
+            { label: 'Upload File', action: () => document.getElementById('actualFileInput').click() },
+            { separator: true },
+            { label: 'Refresh Files', action: () => fetchAndRenderLibraryItems(document.body) },
+            { separator: true },
+            { label: 'Change Background', action: () => document.getElementById('customBgInput').click() }
+        ];
+        createContextMenu(e, menuItems);
+    });
+
+    document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
+        if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+        const file = e.target.files[0];
+        
+        showNotification("Uploading background...", 2000);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', '/backgrounds/'); // Fixed path
+        try {
+            const token = localStorage.getItem('snugos_token');
+            const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const uploadResult = await uploadResponse.json();
+            if (!uploadResult.success) throw new Error(uploadResult.message);
+
+            const newBgUrl = uploadResult.file.s3_url;
+            await fetch(`${SERVER_URL}/api/profile/settings`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ background_url: newBgUrl })
+            });
+
+            showNotification("Background updated!", 2000);
+            loadAndApplyGlobals(); // Re-apply global background
+        } catch(error) {
+            showNotification(`Error: ${error.message}`, 4000);
+        }
+    });
+}
+
+function attachDesktopEventListeners() {
+    // Top-level elements
+    document.getElementById('startButton')?.addEventListener('click', toggleStartMenu);
+    document.getElementById('menuLogin')?.addEventListener('click', () => { toggleStartMenu(); showLoginModal(); });
+    document.getElementById('menuLogout')?.addEventListener('click', handleLogout);
+
+    // Links in the start menu (will open new tabs/windows)
+    document.getElementById('menuLaunchDaw')?.addEventListener('click', () => { window.open('/app/snaw.html', '_blank'); toggleStartMenu(); });
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', () => { window.open('/app/js/daw/browser/library.html', '_blank'); toggleStartMenu(); }); // Browser link
+    document.getElementById('menuViewProfiles')?.addEventListener('click', () => { window.open('/app/js/daw/profiles/profile.html', '_blank'); toggleStartMenu(); }); // Profile link
+    document.getElementById('menuOpenMessages')?.addEventListener('click', () => { window.open('/app/js/daw/messages/messages.html', '_blank'); toggleStartMenu(); }); // Messages link
+
+    // Generic context menu for desktop background
+    setupDesktopContextMenu();
+
+    // Standard desktop clock and full screen
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+}
+
+async function loadAndApplyGlobals() {
+    if (!loggedInUser) return;
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (data.success && data.profile.background_url) {
+            const desktop = document.getElementById('desktop');
+            if(desktop) {
+                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
+                desktop.style.backgroundSize = 'cover';
+                desktop.style.backgroundPosition = 'center';
+            }
+        }
+    } catch (error) {
+        console.error("Could not apply global settings:", error);
     }
 }
 
-// --- Initial Setup ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Check initial auth state on page load
-    token = localStorage.getItem('snugos_token'); // Get token from localStorage directly
-    if (token) {
-        fetchUserProfile(); // Attempt to fetch user profile if token exists
-    } else {
-        renderApp(); // Show login page if no token
+// --- File Management Functions ---
+
+async function fetchAndRenderLibraryItems(container) {
+    const fileViewArea = container.querySelector('#file-view-area');
+    const pathDisplay = container.querySelector('#library-path-display');
+    if (!fileViewArea || !pathDisplay) return;
+
+    fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">Loading...</p>`;
+    pathDisplay.textContent = currentPath.join('');
+
+    const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public'; // Uses currentViewMode
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Failed to fetch files');
+        fileViewArea.innerHTML = '';
+        if (currentPath.length > 1) {
+            fileViewArea.appendChild(renderFileItem({ file_name: '..', mime_type: 'folder' }, true));
+        }
+
+        if (data.items && data.items.length > 0) {
+            // Sort files and folders for consistent display
+            data.items.sort((a, b) => {
+                const aIsFolder = a.mime_type.includes('folder');
+                const bIsFolder = b.mime_type.includes('folder');
+                if (aIsFolder && !bIsFolder) return -1;
+                if (!aIsFolder && bIsFolder) return 1;
+                return a.file_name.localeCompare(b.file_name);
+            });
+            data.items.forEach(item => fileViewArea.appendChild(renderFileItem(item)));
+        } else if (currentPath.length <= 1) {
+            fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">This folder is empty.</p>`;
+        }
+    } catch (error) {
+        fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: red;">${error.message}</p>`;
+        showNotification(`Error loading files: ${error.message}`, 4000);
     }
-    attachBrowserEventListeners(); // Attach event listeners
-});
+}
+
+function renderFileItem(item, isParentFolder = false) {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'flex flex-col items-center justify-start text-center cursor-pointer rounded-md p-2 w-24 h-28 file-item-container';
+    itemDiv.style.color = 'var(--text-primary)';
+    
+    itemDiv.addEventListener('click', () => {
+        document.querySelectorAll('.file-item-container').forEach(el => el.style.backgroundColor = 'transparent');
+        itemDiv.style.backgroundColor = 'var(--accent-focus)';
+    });
+    itemDiv.addEventListener('dblclick', () => handleItemClick(item, isParentFolder));
+
+    let iconHtml = '';
+    const mime = isParentFolder ? 'folder' : (item.mime_type || '');
+
+    if (isParentFolder) {
+        iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.172 4L15.172 6H20V18H4V4H13.172ZM14.586 2H4A2 2 0 0 0 2 4V18A2 2 0 0 0 4 20H20A2 2 0 0 0 22 18V6A2 2 0 0 0 20 4H16L14.586 2Z"></path></svg>`;
+    } else if (mime.includes('folder')) {
+        iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h5.586l2 2H20v10H4V5zm0-2a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-6.414l-2-2H4z"/></svg>`;
+    } else if (mime.startsWith('image/')) {
+        iconHtml = `<img src="${item.s3_url}" class="w-16 h-16 object-cover border" style="border-color: var(--border-secondary);"/>`;
+    } else if (mime.startsWith('audio/')) {
+        iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55a4.002 4.002 0 00-3-1.55c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-8z"/></svg>`;
+    } else {
+        iconHtml = `<svg class="w-16 h-16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm7 1.5V9h5.5L13 3.5z"/></svg>`;
+    }
+
+    itemDiv.innerHTML = `<div class="relative">${iconHtml}</div><p class="text-xs mt-1 w-full break-words truncate" title="${isParentFolder ? '..' : item.file_name}">${isParentFolder ? '..' : item.file_name}</p>`;
+
+    const itemContainer = itemDiv.querySelector('.relative');
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'absolute top-0 right-0 flex flex-col space-y-1';
+
+    if (!isParentFolder && loggedInUser && item.user_id === loggedInUser.id) {
+        const shareBtn = document.createElement('button');
+        shareBtn.innerHTML = `<svg class="w-4 h-4" title="Share" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>`;
+        shareBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        shareBtn.style.backgroundColor = 'var(--bg-button)';
+        shareBtn.addEventListener('click', (e) => { e.stopPropagation(); handleShareFile(item); });
+        actionsContainer.appendChild(shareBtn);
+        
+        const privacyBtn = document.createElement('button');
+        if (item.is_public) {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Private" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8.9 6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2H8.9V6z"/></svg>`;
+        } else {
+            privacyBtn.innerHTML = `<svg class="w-4 h-4" title="Make Public" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 8V6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9z"/></svg>`;
+        }
+        privacyBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        privacyBtn.style.backgroundColor = item.is_public ? 'var(--accent-soloed)' : 'var(--bg-button)';
+        privacyBtn.addEventListener('click', (e) => { e.stopPropagation(); showShareModal(item); });
+        actionsContainer.appendChild(privacyBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>`;
+        deleteBtn.className = 'p-1 rounded-full opacity-60 hover:opacity-100';
+        deleteBtn.style.backgroundColor = 'var(--bg-button)';
+        deleteBtn.title = "Delete File";
+        deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); showDeleteModal(item); });
+        actionsContainer.appendChild(deleteBtn);
+    }
+    
+    itemContainer.appendChild(actionsContainer);
+    return itemDiv;
+}
+
+function handleItemClick(item, isParentFolder) {
+    if (isParentFolder) {
+        if (currentPath.length > 1) currentPath.pop();
+    } else if (item.mime_type && item.mime_type.includes('folder')) {
+        currentPath.push(item.file_name + '/');
+    } else {
+        window.open(item.s3_url, '_blank');
+        return;
+    }
+    fetchAndRenderLibraryItems(document.querySelector('.flex.h-full')); // Re-render library items
+}
+
+async function handleShareFile(item) {
+    showNotification("Generating secure link...", 1500);
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${item.id}/share-link`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        await navigator.clipboard.writeText(result.shareUrl);
+        showNotification("Sharable link copied! It expires in 1 hour.", 4000);
+    } catch (error) {
+        showNotification(`Could not generate link: ${error.message}`, 4000);
+    }
+}
+
+function showShareModal(item) {
+    const newStatus = !item.is_public;
+    const actionText = newStatus ? "publicly available" : "private";
+    const modalContent = `<p>Make '${item.file_name}' ${actionText}?</p>`;
+    showCustomModal('Confirm Action', modalContent, [
+        { label: 'Cancel' },
+        { label: 'Confirm', action: () => handleToggleFilePublic(item.id, newStatus) }
+    ]);
+}
+
+async function handleToggleFilePublic(fileId, newStatus) {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${fileId}/toggle-public`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ is_public: newStatus })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification('File status updated!', 2000);
+        fetchAndRenderLibraryItems(document.querySelector('.flex.h-full')); // Refresh library items
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
+}
+
+function showDeleteModal(item) {
+    const modalContent = `<p>Permanently delete '${item.file_name}'?</p><p class="text-sm mt-2" style="color:var(--accent-armed);">This cannot be undone.</p>`;
+    showCustomModal('Confirm Deletion', modalContent, [
+        { label: 'Cancel' },
+        { label: 'Delete', action: () => handleDeleteFile(item.id) }
+    ]);
+}
+
+async function handleDeleteFile(fileId) {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/files/${fileId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message);
+        showNotification('File deleted!', 2000);
+        fetchAndRenderLibraryItems(document.querySelector('.flex.h-full')); // Refresh library items
+    } catch (error) {
+        showNotification(`Error: ${error.message}`, 4000);
+    }
+}
+
+async function handleFileUpload(files) {
+    if (!loggedInUser || files.length === 0) return;
+    showNotification(`Uploading ${files.length} file(s)...`, 3000);
+    for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const serverPath = `/${currentPath.slice(1).join('')}`;
+        formData.append('path', serverPath);
+        try {
+            const token = localStorage.getItem('snugos_token');
+            const response = await fetch(`${SERVER_URL}/api/files/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+        } catch (error) {
+            showNotification(`Failed to upload '${file.name}': ${error.message}`, 5000);
+        }
+    }
+    fetchAndRenderLibraryItems(document.querySelector('.flex.h-full')); // Refresh library items
+}
+
+function createFolder() {
+    if (!loggedInUser) return;
+    showCustomModal('Create New Folder', `<input type="text" id="folderNameInput" class="w-full p-2" style="background-color: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border-input);" placeholder="Folder Name">`, [
+        { label: 'Cancel' },
+        { label: 'Create', action: async ()=>{
+            const folderName = document.getElementById('folderNameInput').value;
+            if (!folderName) return;
+            try {
+                const token = localStorage.getItem('snugos_token');
+                const response = await fetch(`${SERVER_URL}/api/folders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name: folderName, path: currentPath.join('/') })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message);
+                showNotification(`Folder '${folderName}' created!`, 2000);
+                fetchAndRenderLibraryItems(document.querySelector('.flex.h-full')); // Refresh library items
+            } catch (error) {
+                showNotification(`Error: ${error.message}`, 5000);
+            }
+        }}
+    ]);
+}
