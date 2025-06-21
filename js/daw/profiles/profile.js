@@ -234,9 +234,9 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.getCurrentUserThemePreference = getCurrentUserThemePreference;
 
     loggedInUser = checkLocalAuth();
-    loadAndApplyGlobals(); // Apply user background etc.
-    attachDesktopEventListeners(); // Attach desktop-wide listeners
-    updateClockDisplay(); // Start clock
+    loadAndApplyGlobals(); // Call local function loadAndApplyGlobals
+    attachDesktopEventListeners(); // Call local function attachDesktopEventListeners
+    updateClockDisplay(); // Call local function updateClockDisplay
     
     // Get username from URL parameters or default to logged-in user
     const urlParams = new URLSearchParams(window.location.search);
