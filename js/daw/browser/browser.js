@@ -21,89 +21,24 @@ let loggedInUser = null;
 let currentPath = ['/'];
 let currentViewMode = 'my-files';
 let appServices = {}; // This will now be populated locally for this standalone app.
+let isAdminView = false; // Flag for 'snaw' to view all files
 
-// --- Global UI and Utility Functions (Local to this standalone app) ---
-// These are functions that would normally be provided by welcome.js via appServices
-// but are now duplicated here to make this a truly standalone desktop-like app.
+// --- Global UI and Utility Functions (Defined first to ensure availability) ---
 
-function initAudioOnFirstGesture() {
-    const startAudio = async () => {
-        try {
-            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
-                await Tone.start();
-                console.log('AudioContext started successfully.');
-            }
-        } catch (e) { console.error('Could not start AudioContext:', e); }
-        document.body.removeEventListener('mousedown', startAudio);
-    };
-    document.body.addEventListener('mousedown', startAudio);
-}
-
-function updateClockDisplay() {
-    const clockDisplay = document.getElementById('taskbarClockDisplay');
-    if (clockDisplay) {
-        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function checkLocalAuth() {
+    try {
+        const token = localStorage.getItem('snugos_token');
+        if (!token) return null;
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem('snugos_token');
+            return null;
+        }
+        return { id: payload.id, username: payload.username };
+    } catch (e) {
+        localStorage.removeItem('snugos_token');
+        return null;
     }
-    setTimeout(updateClockDisplay, 60000);
-}
-
-function toggleStartMenu() {
-    document.getElementById('startMenu')?.classList.toggle('hidden');
-}
-
-function applyUserThemePreference() {
-    const preference = localStorage.getItem('snugos-theme');
-    const body = document.body;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
-    if (themeToApply === 'light') {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        localStorage.setItem('snugos-theme', 'light'); // Store explicit preference
-    } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        localStorage.setItem('snugos-theme', 'dark'); // Store explicit preference
-    }
-}
-
-function showLoginModal() {
-    const modalContent = `
-        <div class="space-y-4">
-            <div>
-                <h3 class="font-bold mb-2">Login</h3>
-                <form id="loginForm" class="space-y-3">
-                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
-                </form>
-            </div>
-            <hr style="border-color: var(--border-secondary);">
-            <div>
-                <h3 class="font-bold mb-2">Register</h3>
-                <form id="registerForm" class="space-y-3">
-                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
-                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
-                </form>
-            </div>
-        </div>
-    `;
-    const { overlay } = showCustomModal('Login or Register', modalContent, []);
-    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = overlay.querySelector('#loginUsername').value;
-        const password = overlay.querySelector('#loginPassword').value;
-        await handleLogin(username, password);
-        overlay.remove(); // Close modal after action
-    });
-    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = overlay.querySelector('#registerUsername').value;
-        const password = overlay.querySelector('#registerPassword').value;
-        await handleRegister(username, password);
-        overlay.remove(); // Close modal after action
-    });
 }
 
 async function handleLogin(username, password) {
@@ -154,6 +89,86 @@ function handleLogout() {
     window.location.reload(); // Reload the page to reflect logout status
 }
 
+function showLoginModal() {
+    const modalContent = `
+        <div class="space-y-4">
+            <div>
+                <h3 class="font-bold mb-2">Login</h3>
+                <form id="loginForm" class="space-y-3">
+                    <input type="text" id="loginUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Login</button>
+                </form>
+            </div>
+            <hr style="border-color: var(--border-secondary);">
+            <div>
+                <h3 class="font-bold mb-2">Register</h3>
+                <form id="registerForm" class="space-y-3">
+                    <input type="text" id="registerUsername" placeholder="Username" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <input type="password" id="registerPassword" placeholder="Password (min. 6)" required class="w-full p-2 border rounded" style="background-color: var(--bg-input); color: var(--text-primary);">
+                    <button type="submit" class="w-full p-2 rounded" style="background-color: var(--bg-button); color: var(--text-button); border: 1px solid var(--border-button);">Register</button>
+                </form>
+            </div>
+        </div>
+    `;
+    const { overlay } = showCustomModal('Login or Register', modalContent, []);
+    overlay.querySelector('#loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#loginUsername').value;
+        const password = overlay.querySelector('#loginPassword').value;
+        await handleLogin(username, password);
+        overlay.remove(); // Close modal after action
+    });
+    overlay.querySelector('#registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = overlay.querySelector('#registerUsername').value;
+        const password = overlay.querySelector('#registerPassword').value;
+        await handleRegister(username, password);
+        overlay.remove(); // Close modal after action
+    });
+}
+
+function initAudioOnFirstGesture() {
+    const startAudio = async () => {
+        try {
+            if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                await Tone.start();
+                console.log('AudioContext started successfully.');
+            }
+        } catch (e) { console.error('Could not start AudioContext:', e); }
+        document.body.removeEventListener('mousedown', startAudio);
+    };
+    document.body.addEventListener('mousedown', startAudio);
+}
+
+function updateClockDisplay() {
+    const clockDisplay = document.getElementById('taskbarClockDisplay');
+    if (clockDisplay) {
+        clockDisplay.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    setTimeout(updateClockDisplay, 60000);
+}
+
+function toggleStartMenu() {
+    document.getElementById('startMenu')?.classList.toggle('hidden');
+}
+
+function applyUserThemePreference() {
+    const preference = localStorage.getItem('snugos-theme');
+    const body = document.body;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
+    if (themeToApply === 'light') {
+        body.classList.remove('theme-dark');
+        body.classList.add('theme-light');
+        localStorage.setItem('snugos-theme', 'light');
+    } else {
+        body.classList.remove('theme-light');
+        body.classList.add('theme-dark');
+        localStorage.setItem('snugos-theme', 'dark');
+    }
+}
+
 function toggleFullScreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -164,155 +179,12 @@ function toggleFullScreen() {
     }
 }
 
-// --- END Global UI and Utility Functions ---
-
-
-// --- SnugWindow Related (If this file uses SnugWindows for sub-windows) ---
-// This app is a standalone desktop itself, but it might open SnugWindows for viewers etc.
-// Therefore, we need to populate appServices for its own SnugWindow instances.
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Populate appServices for this standalone desktop's context
-    appServices = {
-        // SnugWindow management from windowState.js (imported above)
-        createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
-        getWindowById: getWindowById, // from windowState.js
-        addWindowToStore: addWindowToStore, // from windowState.js
-        removeWindowFromStore: removeWindowFromStore, // from windowState.js
-        incrementHighestZ: incrementHighestZ, // from windowState.js
-        getHighestZ: getHighestZ, // from windowState.js
-        setHighestZ: setHighestZ, // from windowState.js
-        getOpenWindows: getOpenWindows, // from windowState.js
-        serializeWindows: serializeWindows, // from windowState.js
-        reconstructWindows: reconstructWindows, // from windowState.js
-
-        // Utilities from utils.js (imported above)
-        createContextMenu: createContextMenu, // from utils.js
-        showNotification: showNotification, // Local showNotification
-        showCustomModal: showCustomModal,   // Local showCustomModal
-        openFileViewerWindow: openFileViewerWindow, // From fileViewerUI.js
-        initializeFileViewerUI: initializeFileViewerUI, // From fileViewerUI.js
-
-        // appState.js functions (for theming etc.)
-        applyUserThemePreference: applyUserThemePreference, // Local function defined above
-        setCurrentUserThemePreference: setCurrentUserThemePreference, // from appState.js
-        getCurrentUserThemePreference: getCurrentUserThemePreference, // from appState.js
-
-        // DB functions (from db.js)
-        storeAudio: storeAudio,
-        getAudio: getAudio,
-        deleteAudio: deleteAudio,
-        storeAsset: storeAsset,
-        getAsset: getAsset,
-
-        // General
-        SERVER_URL: SERVER_URL,
-    };
-
-    loggedInUser = checkLocalAuth();
-    
-    // Attach desktop-level event listeners for this standalone page
-    attachDesktopEventListeners();
-    applyUserThemePreference(); // Apply theme for this page
-    updateClockDisplay(); // Start clock
-    initAudioOnFirstGesture(); // Initialize audio if this page can play sounds (e.g. for audio previews)
-    
-    // Initial render based on login status
-    if (loggedInUser) {
-        // Since this is now a full desktop app, we just initialize its UI and content.
-        // The desktop elements are already in library.html.
-        initializePageUI(document.body); // Pass body as the main container for finding elements
-        loadAndApplyGlobals(); // Apply user background etc.
-    } else {
-        // If not logged in, show the login modal on the desktop area.
-        const desktop = document.getElementById('desktop');
-        if(desktop) {
-            desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in to use SnugOS Browser.</p></div>`;
-        }
-        showLoginModal();
-    }
-});
-
-
-// --- File Management Functions (Adapted for Standalone) ---
-
-function initializePageUI(container) {
-    const myFilesBtn = container.querySelector('#my-files-btn');
-    const globalFilesBtn = container.querySelector('#global-files-btn');
-    const uploadBtn = container.querySelector('#uploadFileBtn');
-    const newFolderBtn = container.querySelector('#createFolderBtn');
-    const actualFileInput = document.getElementById('actualFileInput'); // This is in the main document
-    const snawAdminSection = container.querySelector('#snaw-admin-section'); // For admin view
-    const viewAllFilesBtn = container.querySelector('#view-all-files-btn'); // For admin view
-
-    // Admin section visibility
-    if (loggedInUser?.username === 'snaw') {
-        snawAdminSection?.classList.remove('hidden');
-    } else {
-        snawAdminSection?.classList.add('hidden');
-        isAdminView = false;
-    }
-
-    const updateNavStyling = () => {
-        if (myFilesBtn) {
-            myFilesBtn.style.backgroundColor = currentViewMode === 'my-files' ? 'var(--accent-active)' : 'transparent';
-            myFilesBtn.style.color = currentViewMode === 'my-files' ? 'var(--accent-active-text)' : 'var(--text-primary)';
-        }
-        if (globalFilesBtn) {
-            globalFilesBtn.style.backgroundColor = currentViewMode === 'global' ? 'var(--accent-active)' : 'transparent';
-            globalFilesBtn.style.color = currentViewMode === 'global' ? 'var(--accent-active-text)' : 'var(--text-primary)';
-        }
-    };
-    
-    if (myFilesBtn) myFilesBtn.addEventListener('click', () => {
-        currentViewMode = 'my-files';
-        currentPath = ['/'];
-        fetchAndRenderLibraryItems(document.body); // Re-render main body
-        updateNavStyling();
-    });
-    if (globalFilesBtn) globalFilesBtn.addEventListener('click', () => {
-        currentViewMode = 'global';
-        currentPath = ['/'];
-        fetchAndRenderLibraryItems(document.body); // Re-render main body
-        updateNavStyling();
-    });
-
-    [myFilesBtn, globalFilesBtn].forEach(btn => {
-        if (!btn) return;
-        const originalBg = btn.id === (currentViewMode === 'my-files' ? 'my-files-btn' : 'global-files-btn') ? 'var(--accent-active)' : 'transparent';
-        btn.addEventListener('mouseenter', () => { if(btn.style.backgroundColor === originalBg || btn.style.backgroundColor === 'transparent') btn.style.backgroundColor = 'var(--bg-button-hover)'; });
-        btn.addEventListener('mouseleave', () => { if(btn.style.backgroundColor !== 'var(--accent-active)') btn.style.backgroundColor = originalBg; });
-    });
-
-    if (uploadBtn) uploadBtn.addEventListener('click', () => actualFileInput.click());
-    if (actualFileInput) actualFileInput.addEventListener('change', e => {
-        handleFileUpload(e.target.files);
-        e.target.value = null; // Clear input after selection
-    });
-    if (newFolderBtn) newFolderBtn.addEventListener('click', createFolder);
-
-    if (viewAllFilesBtn) {
-        viewAllFilesBtn.addEventListener('click', () => {
-            isAdminView = !isAdminView;
-            if (isAdminView) {
-                currentPath = ['/'];
-            }
-            fetchAndRenderLibraryItems(document.body);
-            // No navigation style update for admin view, it's a toggle.
-        });
-    }
-
-    updateNavStyling();
-    fetchAndRenderLibraryItems(document.body); // Initial fetch and render for the page itself
-}
-
 function setupDesktopContextMenu() {
     const desktop = document.getElementById('desktop');
     if (!desktop) return;
 
     desktop.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        if (e.target.closest('.window')) return;
         const menuItems = [
             { label: 'New Folder', action: () => createFolder() },
             { label: 'Upload File', action: () => document.getElementById('actualFileInput').click() },
@@ -331,7 +203,7 @@ function setupDesktopContextMenu() {
         showNotification("Uploading background...", 2000);
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('path', '/backgrounds/'); // Fixed path
+        formData.append('path', '/backgrounds/');
         try {
             const token = localStorage.getItem('snugos_token');
             const uploadResponse = await fetch(`${SERVER_URL}/api/files/upload`, {
@@ -350,7 +222,7 @@ function setupDesktopContextMenu() {
             });
 
             showNotification("Background updated!", 2000);
-            loadAndApplyGlobals(); // Re-apply global background
+            loadAndApplyGlobals();
         } catch(error) {
             showNotification(`Error: ${error.message}`, 4000);
         }
@@ -365,7 +237,7 @@ function attachDesktopEventListeners() {
 
     // Links in the start menu (will open new tabs/windows)
     document.getElementById('menuLaunchDaw')?.addEventListener('click', () => { window.open('/app/snaw.html', '_blank'); toggleStartMenu(); });
-    document.getElementById('menuOpenLibrary')?.addEventListener('click', () => { window.open('/app/js/daw/browser/library.html', '_blank'); toggleStartMenu(); }); // Browser link
+    document.getElementById('menuOpenLibrary')?.addEventListener('click', () => { window.open('/app/js/daw/browser/browser.html', '_blank'); toggleStartMenu(); }); // Browser link
     document.getElementById('menuViewProfiles')?.addEventListener('click', () => { window.open('/app/js/daw/profiles/profile.html', '_blank'); toggleStartMenu(); }); // Profile link
     document.getElementById('menuOpenMessages')?.addEventListener('click', () => { window.open('/app/js/daw/messages/messages.html', '_blank'); toggleStartMenu(); }); // Messages link
 
@@ -405,7 +277,7 @@ async function fetchAndRenderLibraryItems(container) {
     fileViewArea.innerHTML = `<p class="w-full text-center italic" style="color: var(--text-secondary);">Loading...</p>`;
     pathDisplay.textContent = currentPath.join('');
 
-    const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public'; // Uses currentViewMode
+    const endpoint = currentViewMode === 'my-files' ? '/api/files/my' : '/api/files/public';
     try {
         const token = localStorage.getItem('snugos_token');
         const response = await fetch(`${SERVER_URL}${endpoint}?path=${encodeURIComponent(currentPath.join('/'))}`, {
@@ -419,7 +291,6 @@ async function fetchAndRenderLibraryItems(container) {
         }
 
         if (data.items && data.items.length > 0) {
-            // Sort files and folders for consistent display
             data.items.sort((a, b) => {
                 const aIsFolder = a.mime_type.includes('folder');
                 const bIsFolder = b.mime_type.includes('folder');
