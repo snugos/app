@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in or specify a user in the URL to view a profile.</p></div>`;
         }
-        showLoginModal(); // Call local function showLoginModal
+        showLoginModal();
     }
 });
 
