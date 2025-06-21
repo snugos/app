@@ -4,11 +4,11 @@
 
 // Corrected imports to be absolute paths
 import { SnugWindow } from '/app/js/daw/SnugWindow.js';
-import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js'; // Ensure these are imported
+import { showNotification, showCustomModal, createContextMenu } from '/app/js/daw/utils.js';
 import { storeAsset, getAsset } from '/app/js/daw/db.js';
-import * as Constants from '/app/js/daw/constants.js'; // Ensure constants are imported
-import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js'; // Corrected paths
-import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js'; // Corrected paths
+import * as Constants from '/app/js/daw/constants.js';
+import { getWindowById, addWindowToStore, removeWindowFromStore, incrementHighestZ, getHighestZ, setHighestZ, getOpenWindows, serializeWindows, reconstructWindows } from '/app/js/daw/state/windowState.js';
+import { getCurrentUserThemePreference, setCurrentUserThemePreference } from '/app/js/daw/state/appState.js';
 
 const SERVER_URL = 'https://snugos-server-api.onrender.com';
 let loggedInUser = null;
@@ -18,6 +18,7 @@ const appServices = {}; // This will be populated locally for this standalone ap
 
 // --- Global UI and Utility Functions (Defined first to ensure availability) ---
 
+// Authentication/Login/Logout Functions
 function checkLocalAuth() {
     try {
         const token = localStorage.getItem('snugos_token');
@@ -121,6 +122,7 @@ function showLoginModal() {
     });
 }
 
+// Global UI functions (clock, start menu, full screen, desktop event listeners)
 function updateClockDisplay() {
     const clockDisplay = document.getElementById('taskbarClockDisplay');
     if (clockDisplay) {
@@ -131,22 +133,6 @@ function updateClockDisplay() {
 
 function toggleStartMenu() {
     document.getElementById('startMenu')?.classList.toggle('hidden');
-}
-
-function applyUserThemePreference() {
-    const preference = localStorage.getItem('snugos-theme');
-    const body = document.body;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const themeToApply = preference || (prefersDark ? 'dark' : 'light');
-    if (themeToApply === 'light') {
-        body.classList.remove('theme-dark');
-        body.classList.add('theme-light');
-        localStorage.setItem('snugos-theme', 'light');
-    } else {
-        body.classList.remove('theme-light');
-        body.classList.add('theme-dark');
-        localStorage.setItem('snugos-theme', 'dark');
-    }
 }
 
 function toggleFullScreen() {
@@ -177,14 +163,52 @@ function attachDesktopEventListeners() {
         desktop.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const menuItems = [
-                { label: 'Open Browser', action: () => { window.open('/app/js/daw/browser/browser.html', '_blank'); toggleStartMenu(); } },
-                { label: 'Open Profile', action: () => { window.open('/app/js/daw/profiles/profile.html', '_blank'); toggleStartMenu(); } },
-                { separator: true },
-                { label: 'Login / Register', action: showLoginModal },
-                { label: 'Logout', action: handleLogout },
+                { label: 'Change Background', action: () => document.getElementById('customBgInput').click() }
             ];
             createContextMenu(e, menuItems);
         });
+
+        document.getElementById('customBgInput')?.addEventListener('change', async (e) => {
+            if(!e.target.files || !e.target.files[0] || !loggedInUser) return;
+            const file = e.target.files[0];
+            await handleBackgroundUpload(file);
+            e.target.value = null;
+        });
+    }
+
+    document.getElementById('menuToggleFullScreen')?.addEventListener('click', toggleFullScreen);
+}
+
+async function loadAndApplyGlobals() {
+    if (!loggedInUser) return;
+    try {
+        const token = localStorage.getItem('snugos_token');
+        const response = await fetch(`${SERVER_URL}/api/profile/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await response.json();
+        if (data.success && data.profile.background_url) {
+            const desktop = document.getElementById('desktop');
+            if(desktop) {
+                desktop.style.backgroundImage = `url(${data.profile.background_url})`;
+                desktop.style.backgroundSize = 'cover';
+                desktop.style.backgroundPosition = 'center';
+            }
+        }
+    } catch (error) {
+        console.error("Could not apply global settings:", error);
+    }
+}
+
+async function handleBackgroundUpload(file) {
+    if (!loggedInUser) {
+        showNotification('You must be logged in to save a background.', 3000);
+        return;
+    }
+    try {
+        await storeAsset(`background-for-user-${loggedInUser.id}`, file);
+        loadAndApplyGlobals(); // Re-apply global background
+        showNotification('Background saved locally!', 2000);
+    } catch (error) {
+        showNotification(`Error saving background: ${error.message}`, 3000);
     }
 }
 
@@ -204,6 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
     appServices.showNotification = showNotification;   // From utils.js
     appServices.showCustomModal = showCustomModal;     // From utils.js
 
+    // Global state imports for appServices
+    appServices.applyUserThemePreference = applyUserThemePreference;
+    appServices.setCurrentUserThemePreference = setCurrentUserThemePreference;
+    appServices.getCurrentUserThemePreference = getCurrentUserThemePreference;
+
     loggedInUser = checkLocalAuth(); // Check local auth on load
     loadAndApplyGlobals(); // Apply user background etc.
     attachDesktopEventListeners(); // Attach desktop-wide listeners
@@ -221,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(desktop) {
             desktop.innerHTML = `<div class="w-full h-full flex items-center justify-center"><p class="text-xl" style="color:var(--text-primary);">Please log in or specify a user in the URL to view a profile.</p></div>`;
         }
-        showLoginModal();
+        showLoginModal(); // Call local function showLoginModal
     }
 });
 
@@ -268,7 +297,7 @@ function updateProfileUI(profileData) {
     const joinDate = new Date(profileData.created_at).toLocaleDateString();
 
     let avatarContent = profileData.avatar_url
-        ? `<img src="${profileData.avatar_url}" alt="${profileData.username}'s avatar" class="w-full h-full object-cover">`
+        ? `<img src="${profileData.avatar_url}" alt="${profileData.username}'s avatar" class="w-full h-full object-cover" onerror="this.src='/app/assets/default-avatar.png';">`
         : `<span class="text-4xl font-bold">${profileData.username.charAt(0).toUpperCase()}</span>`;
 
     const uploadOverlay = isOwner ? `<div id="avatarOverlay" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer" title="Change Profile Picture"><svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 11.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 6.5 12 6.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/></svg></div>` : '';
