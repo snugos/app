@@ -74,7 +74,11 @@ export function initializeStateModule(services) {
 
 // --- Getters for Centralized State ---
 export function getTracksState() { return tracks; }
-export function getTrackByIdState(id) { return tracks.find(t => t.id === id); }
+export function getTrackByIdState(id) { 
+    // Convert id to number to handle string IDs from HTML data attributes
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    return tracks.find(t => t.id === numericId); 
+}
 
 export function getOpenWindowsState() { return openWindowsMap; }
 export function getWindowByIdState(id) { return openWindowsMap.get(id); }
