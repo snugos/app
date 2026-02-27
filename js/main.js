@@ -244,8 +244,8 @@ const appServices = {
         if (inspectorWindow?.element && !inspectorWindow.isMinimized) {
             const dzContainer = inspectorWindow.element.querySelector(`#drumPadDropZoneContainer-${trackId}-${padIndex}`);
             if (dzContainer) {
-                const existingAudioData = track.drumPads && track.drumPads[padIndex] ?
-                    { fileName: track.drumPads[padIndex].fileName, status: 'loaded' } :
+                const existingAudioData = track.drumSamplerPads && track.drumSamplerPads[padIndex] ?
+                    { fileName: track.drumSamplerPads[padIndex].originalFileName, status: track.drumSamplerPads[padIndex].status } :
                     { fileName: null, status: 'empty' };
                 dzContainer.innerHTML = createDropZoneHTML(trackId, `drumPadFileInput-${trackId}-${padIndex}`, 'DrumSampler', padIndex, existingAudioData);
                 const dzEl = dzContainer.querySelector('.drop-zone');
@@ -499,7 +499,7 @@ const appServices = {
     reorderMasterEffect: (effectId, newIndex) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -523,7 +523,7 @@ const appServices = {
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
     getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
-    _isReconstructingingDAW_flag: false,
+    _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },

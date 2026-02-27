@@ -208,7 +208,7 @@ export class Track {
                     }
 
                     this.drumSamplerPads[padIndex].audioBuffer = buffer;
-                    this.drumSamplerPads[padIndex].sampleName = fileName;
+                    this.drumSamplerPads[padIndex].originalFileName = fileName;
                     this.drumSamplerPads[padIndex].dbKey = dbKey;
                     this.drumSamplerPads[padIndex].status = 'loaded';
                 }

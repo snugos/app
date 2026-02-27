@@ -487,8 +487,8 @@ function initializeTypeSpecificInspectorControls(track, winEl) {
         // Set up drop zone for drum pad sample upload
         const dzContainerEl = winEl.querySelector(`#drumPadDropZoneContainer-${track.id}-${track.selectedDrumPadForEdit}`);
         if (dzContainerEl) {
-            const existingAudioData = track.drumPads && track.drumPads[track.selectedDrumPadForEdit] ? 
-                { fileName: track.drumPads[track.selectedDrumPadForEdit].fileName, status: 'loaded' } : 
+            const existingAudioData = track.drumSamplerPads && track.drumSamplerPads[track.selectedDrumPadForEdit] ? 
+                { fileName: track.drumSamplerPads[track.selectedDrumPadForEdit].originalFileName, status: track.drumSamplerPads[track.selectedDrumPadForEdit].status } : 
                 { fileName: null, status: 'empty' };
             dzContainerEl.innerHTML = createDropZoneHTML(track.id, `drumPadFileInput-${track.id}-${track.selectedDrumPadForEdit}`, 'DrumSampler', track.selectedDrumPadForEdit, existingAudioData);
             const dzEl = dzContainerEl.querySelector('.drop-zone');
@@ -884,16 +884,6 @@ export function openSoundBrowserWindow(savedState = null) {
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(null);
                 }
-            }
-        } else if (savedState && localAppServices.getCurrentLibraryName && localAppServices.updateSoundBrowserDisplayForLibrary) {
-            const currentLibNameFromState = localAppServices.getCurrentLibraryName();
-            console.log(`[UI SoundBrowser Open] Restoring from savedState. Current lib in state: ${currentLibNameFromState}`);
-             if (currentLibNameFromState && libSelect) {
-                libSelect.value = currentLibNameFromState;
-                localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
-            } else if (libSelect) {
-                libSelect.value = "";
-                localAppServices.updateSoundBrowserDisplayForLibrary(null);
             }
         }
     }
@@ -1548,11 +1538,11 @@ export function renderDrumSamplerPads(track) {
     const container = document.getElementById(`drumPadsGridContainer-${track.id}`);
     if (!container) return;
     
-    const numPads = 8; // 4x4 grid
+    const numPads = Constants.numDrumSamplerPads;
     let html = '';
     for (let i = 0; i < numPads; i++) {
-        const padData = track.drumPads && track.drumPads[i];
-        const hasSample = padData && padData.audioBuffer;
+        const padData = track.drumSamplerPads && track.drumSamplerPads[i];
+        const hasSample = padData && padData.status === 'loaded';
         const isSelected = track.selectedDrumPadForEdit === i;
         html += `<div class="drum-pad pad-button ${hasSample ? 'has-sample' : ''} ${isSelected ? 'selected-for-edit' : ''}" 
             data-pad-index="${i}" data-track-id="${track.id}">
@@ -1643,40 +1633,6 @@ export function updateSliceEditorUI(track) {
         container.querySelectorAll('.pad-button').forEach((pad, index) => {
             pad.classList.toggle('selected-for-edit', index === currentSliceIndex);
         });
-    }
-    
-    // Update knob values to reflect the selected slice's values
-    if (track.inspectorControls) {
-        if (track.inspectorControls.sliceVolume && sliceData) {
-            track.inspectorControls.sliceVolume.setValue(sliceData.volume !== undefined ? sliceData.volume : 0.7, false);
-        }
-        if (track.inspectorControls.slicePitch && sliceData) {
-            track.inspectorControls.slicePitch.setValue(sliceData.pitchShift !== undefined ? sliceData.pitchShift : 0, false);
-        }
-        if (track.inspectorControls.sliceEnvAttack && sliceData?.envelope) {
-            track.inspectorControls.sliceEnvAttack.setValue(sliceData.envelope.attack || 0.01, false);
-        }
-        if (track.inspectorControls.sliceEnvDecay && sliceData?.envelope) {
-            track.inspectorControls.sliceEnvDecay.setValue(sliceData.envelope.decay || 0.1, false);
-        }
-        if (track.inspectorControls.sliceEnvSustain && sliceData?.envelope) {
-            track.inspectorControls.sliceEnvSustain.setValue(sliceData.envelope.sustain !== undefined ? sliceData.envelope.sustain : 1.0, false);
-        }
-        if (track.inspectorControls.sliceEnvRelease && sliceData?.envelope) {
-            track.inspectorControls.sliceEnvRelease.setValue(sliceData.envelope.release || 0.1, false);
-        }
-        
-        // Update loop/reverse toggle buttons
-        const loopToggleBtn = document.getElementById(`sliceLoopToggle-${track.id}`);
-        if (loopToggleBtn) {
-            loopToggleBtn.textContent = sliceData.loop ? 'Loop: ON' : 'Loop: OFF';
-            loopToggleBtn.classList.toggle('active', sliceData.loop);
-        }
-        const reverseToggleBtn = document.getElementById(`sliceReverseToggle-${track.id}`);
-        if (reverseToggleBtn) {
-            reverseToggleBtn.textContent = sliceData.reverse ? 'Rev: ON' : 'Rev: OFF';
-            reverseToggleBtn.classList.toggle('active', sliceData.reverse);
-        }
     }
 }
 
