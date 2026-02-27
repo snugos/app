@@ -1456,6 +1456,11 @@ export class Track {
                     console.log(`[Track ${this.id}] Timeline: Scheduling AUDIO clip "${clip.name}" (ID: ${clip.id}) at ${effectivePlayStart.toFixed(2)}s for ${playDurationInWindow.toFixed(2)}s (offset ${offsetIntoSource.toFixed(2)}s)`);
                     const player = new Tone.Player();
                     this.clipPlayers.set(clip.id, player);
+                    // Capture the timing values for use in onload callback
+                    const clipEffectivePlayStart = effectivePlayStart;
+                    const clipOffsetIntoSource = offsetIntoSource;
+                    const clipPlayDuration = playDurationInWindow;
+                    
                     try {
                         const audioBlob = await getAudio(clip.sourceId);
                         if (audioBlob) {
@@ -1466,7 +1471,32 @@ export class Track {
                                     ? this.activeEffects[0].toneNode
                                     : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
                                 if (destNode) player.connect(destNode); else player.toDestination();
-                                player.start(effectivePlayStart, offsetIntoSource, playDurationInWindow);
+                                
+                                // Calculate correct start time relative to current transport position
+                                // The original effectivePlayStart may have already passed while loading
+                                const currentTransportTime = Tone.Transport.seconds;
+                                const timeSinceScheduled = currentTransportTime - clipEffectivePlayStart;
+                                
+                                // If we haven't reached the clip yet, use the original scheduled time
+                                // If we've passed it but still within the clip duration, adjust offset and start now
+                                let startTime;
+                                if (timeSinceScheduled < 0) {
+                                    // Clip hasn't started yet, use scheduled time
+                                    startTime = clipEffectivePlayStart;
+                                } else if (timeSinceScheduled < clipPlayDuration) {
+                                    // We've passed the start, adjust offset and start now
+                                    const adjustedOffset = clipOffsetIntoSource + timeSinceScheduled;
+                                    const remainingDuration = clipPlayDuration - timeSinceScheduled;
+                                    player.start(Tone.now(), adjustedOffset, remainingDuration);
+                                    console.log(`[Track ${this.id}] Audio clip "${clip.name}" starting late at offset ${adjustedOffset.toFixed(2)}s for ${remainingDuration.toFixed(2)}s`);
+                                    return; // Early return since we called start with Tone.now()
+                                } else {
+                                    // Clip has already finished, skip it
+                                    console.log(`[Track ${this.id}] Audio clip "${clip.name}" missed - scheduled at ${clipEffectivePlayStart.toFixed(2)}s but current time is ${currentTransportTime.toFixed(2)}s`);
+                                    return;
+                                }
+                                
+                                player.start(startTime, clipOffsetIntoSource, clipPlayDuration);
                             };
                             player.onerror = (err) => { console.error(`[Track ${this.id}] Player error for clip ${clip.id}:`, err); URL.revokeObjectURL(url); if(this.clipPlayers.has(clip.id)){try{if(!player.disposed)player.dispose()}catch(e){} this.clipPlayers.delete(clip.id);}};
                             await player.load(url);
@@ -1607,8 +1637,7 @@ export class Track {
                 console.log(`[Track ${this.id}] Sequencer mode: Starting patternPlayerSequence at transport offset: ${transportStartTime.toFixed(2)}s. Loop: ${this.patternPlayerSequence.loop}`);
                 try {
                     this.patternPlayerSequence.start(transportStartTime); 
-                } catch(e) {
-                    console.error(`[Track ${this.id}] Error starting patternPlayerSequence:`, e.message, e); 
+                } catch(e) { console.error(`[Track ${this.id}] Error starting patternPlayerSequence:`, e.message, e); 
                     try { if(!this.patternPlayerSequence.disposed) this.patternPlayerSequence.dispose(); } catch (disposeErr) {}
                     this.patternPlayerSequence = null;
                 }

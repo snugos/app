@@ -1477,11 +1477,33 @@ export function renderTimeline() {
     // Render each track as a lane
     let tracksHTML = '';
     tracks.forEach(track => {
+        let clipsHTML = '';
+        
+        // Render timeline clips for this track
+        if (track.timelineClips && track.timelineClips.length > 0) {
+            const pixelsPerSecond = 50; // Adjust based on zoom level
+            track.timelineClips.forEach(clip => {
+                const left = clip.startTime * pixelsPerSecond;
+                const width = (clip.duration || 2) * pixelsPerSecond;
+                const clipTypeClass = clip.type === 'audio' ? 'timeline-clip-audio' : 'timeline-clip-sequence';
+                const clipName = clip.name || 'Untitled';
+                
+                clipsHTML += `
+                    <div class="timeline-clip ${clipTypeClass}" 
+                         style="left: ${left}px; width: ${width}px;"
+                         data-clip-id="${clip.id}" 
+                         title="${clipName}">
+                        <span class="timeline-clip-name">${clipName}</span>
+                    </div>
+                `;
+            });
+        }
+        
         tracksHTML += `
             <div class="timeline-track-lane" data-track-id="${track.id}">
                 <div class="timeline-track-lane-name">${track.name}</div>
                 <div class="timeline-track-content" style="flex: 1; position: relative;">
-                    <!-- Clips would go here -->
+                    ${clipsHTML}
                 </div>
             </div>
         `;

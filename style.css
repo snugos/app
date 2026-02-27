@@ -764,6 +764,43 @@ input::placeholder,
     text-overflow: ellipsis;
     cursor: grab;
 }
+
+/* Timeline clip styles (used in renderTimeline) */
+.timeline-clip {
+    position: absolute;
+    height: 80%;
+    top: 10%;
+    border-radius: 3px;
+    box-sizing: border-box;
+    overflow: hidden;
+    color: white;
+    font-size: 11px;
+    padding: 2px 4px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-clip-audio {
+    background-color: #7c3aed;
+    border: 1px solid #E0BBE4;
+}
+
+.timeline-clip-sequence {
+    background-color: #059669;
+    border: 1px solid #34d399;
+}
+
+.timeline-clip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
 /* In style.css */
 :root {
     --timeline-track-name-width: 120px; /* Or your desired width */
