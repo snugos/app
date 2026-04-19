@@ -846,7 +846,7 @@ export class Track {
     }
 
     setSynthParam(paramPath, value) {
-        if (this.type !== 'Synth') return;
+        this._captureUndoState(`Set ${paramPath} on ${this.name}`);
         if (!this.instrument || this.instrument.disposed) {
             console.warn(`[Track ${this.id} setSynthParam] Synth instrument not available or disposed for param "${paramPath}".`);
             return;
@@ -903,15 +903,15 @@ export class Track {
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].pitchShift = parseInt(semitones);
     }
     setSliceLoop(sliceIndex, loop) {
-        this._captureUndoState(`Toggle slice ${sliceIndex+1} loop on ${this.name}`);
+        this._captureUndoState(`Set slice ${sliceIndex+1} loop on ${this.name}`);
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].loop = !!loop;
     }
     setSliceReverse(sliceIndex, reverse) {
-        this._captureUndoState(`Toggle slice ${sliceIndex+1} reverse on ${this.name}`);
+        this._captureUndoState(`Set slice ${sliceIndex+1} reverse on ${this.name}`);
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!reverse;
     }
     setSliceEnvelopeParam(sliceIndex, param, value) {
-        this._captureUndoState(`Set slice ${sliceIndex+1} envelope ${param} on ${this.name}`);
+        this._captureUndoState(`Set slice ${sliceIndex+1} envelope on ${this.name}`);
         if (this.slices && this.slices[sliceIndex] && this.slices[sliceIndex].envelope) {
             this.slices[sliceIndex].envelope[param] = parseFloat(value);
         }
@@ -933,33 +933,35 @@ export class Track {
     }
 
     setInstrumentSamplerRootNote(noteName) {
+        this._captureUndoState(`Set root note on ${this.name}`);
         if (this.instrumentSamplerSettings) {
             this.instrumentSamplerSettings.rootNote = noteName;
             this.setupToneSampler();
         }
     }
     setInstrumentSamplerLoop(loop) {
+        this._captureUndoState(`Toggle loop on ${this.name}`);
         if (this.instrumentSamplerSettings) {
             this.instrumentSamplerSettings.loop = !!loop;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loop = this.instrumentSamplerSettings.loop;
         }
     }
     setInstrumentSamplerLoopStart(time) {
-        if (this.instrumentSamplerSettings) {
         this._captureUndoState(`Set loop start on ${this.name}`);
+        if (this.instrumentSamplerSettings) {
             this.instrumentSamplerSettings.loopStart = parseFloat(time) || 0;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart;
         }
     }
     setInstrumentSamplerLoopEnd(time) {
-        if (this.instrumentSamplerSettings) {
         this._captureUndoState(`Set loop end on ${this.name}`);
+        if (this.instrumentSamplerSettings) {
             this.instrumentSamplerSettings.loopEnd = parseFloat(time) || 0;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loopEnd = this.instrumentSamplerSettings.loopEnd;
         }
     }
     setInstrumentSamplerEnv(param, value) {
-        this._captureUndoState(`Set envelope on ${this.name}`);
+        this._captureUndoState(`Set ${param} envelope on ${this.name}`);
         if (this.instrumentSamplerSettings && this.instrumentSamplerSettings.envelope) {
             this.instrumentSamplerSettings.envelope[param] = parseFloat(value);
             if (this.toneSampler && !this.toneSampler.disposed) {
@@ -1510,7 +1512,7 @@ export class Track {
                                     try { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); } catch(e){}
                                     try { if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); } catch(e){}
                                     try { if(tempGain && !tempGain.disposed) tempGain.dispose(); } catch(e){}
-                                }, time + playDuration + (sliceData.envelope?.release || 0.1) + 0.3);
+                                }, time + playDuration + (sliceData.envelope?.release || 0.3));
                             } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                                 if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
                                 this.slicerMonoEnvelope.triggerRelease(time);

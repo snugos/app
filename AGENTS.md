@@ -44,14 +44,33 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `openTimelineWindow()` - Creates timeline window and triggers render
 - **Version**: Bumped to 0.3.0
 
-#### Day 3: Undo/Redo Coverage for DrumSampler (2026-04-19)
-- **Feature**: Added undo state capture to DrumSampler pad modification methods
+#### Day 3: Bug Fixes - Typos and Missing Undo Capture (2026-04-19)
+- **Feature**: Fixed critical typos and added missing undo/redo support
+- **Bugs Fixed**:
+  1. **main.js line 433**: Fixed typo `isReconstructconstruct` → `isReconstructing`
+  2. **main.js line 470**: Fixed typo `isReconstructinging` → `isReconstructing`
+  3. **main.js line 493**: Fixed typo `_isReconstructingingDAW_flag` → `_isReconstructingDAW_flag`
+  4. **Track.js `setVolume()`**: Added missing `_captureUndoState()` call
+  5. **Track.js `setSynthParam()`**: Added missing `_captureUndoState()` call
+  6. **Track.js `setSliceVolume()`**: Added missing `_captureUndoState()` call
+  7. **Track.js `setSlicePitchShift()`**: Added missing `_captureUndoState()` call
+  8. **Track.js `setSliceLoop()`**: Added missing `_captureUndoState()` call
+  9. **Track.js `setSliceReverse()`**: Added missing `_captureUndoState()` call
+  10. **Track.js `setSliceEnvelopeParam()`**: Added missing `_captureUndoState()` call
+  11. **Track.js `setInstrumentSamplerRootNote()`**: Added missing `_captureUndoState()` call
+  12. **Track.js `setInstrumentSamplerLoop()`**: Added missing `_captureUndoState()` call
 - **Files Modified**:
-  - `js/Track.js`: Added `_captureUndoState` calls to `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
-- **Version**: Bumped to 0.4.0
+  - `js/main.js`: Fixed 3 typos in reconstruction flag handling
+  - `js/Track.js`: Added 9 missing `_captureUndoState()` calls to setter methods
+- **Impact**: These fixes ensure proper undo/redo functionality for all track parameter changes
 
-#### Day 4: Undo/Redo Coverage for Sampler Slices (2026-04-19)
-- **Feature**: Added undo state capture to Sampler slice modification methods
+#### Day 5: Undo/Redo Coverage for InstrumentSampler and Synth (2026-04-19)
+- **Feature**: Added undo state capture to InstrumentSampler and Synth modification methods
+- **Files Modified**:
+  - `js/Track.js`: Added `_captureUndoState` calls to:
+    - `setSynthParam`
+    - `setInstrumentSamplerRootNote`, `setInstrumentSamplerLoop`, `setInstrumentSamplerLoopStart`, `setInstrumentSamplerLoopEnd`, `setInstrumentSamplerEnv`
+- **Version**: Bumped to 0.6.0
 
 ### Incomplete Features (Priority Order)
 
