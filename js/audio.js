@@ -28,13 +28,6 @@ let recorder = null;
 
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
-    // MODIFICATION START: Debug to confirm function reference
-    if (typeof getLoadedZipFilesState !== 'undefined') { // Need to import it for this check to be valid
-        console.log('[Audio Init DEBUG] localAppServices.getLoadedZipFiles === getLoadedZipFilesState (from state.js import)?', localAppServices.getLoadedZipFiles === getLoadedZipFilesState);
-    } else {
-        // console.log('[Audio Init DEBUG] getLoadedZipFilesState not imported, cannot compare reference directly here.');
-    }
-    // MODIFICATION END
 }
 
 export function getMasterEffectsBusInputNode() {

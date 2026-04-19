@@ -475,6 +475,8 @@ export class Track {
             return;
         }
 
+        this._captureUndoState(`Set ${paramPath} on ${effectWrapper.type} effect on ${this.name}`);
+
         try {
             const keys = paramPath.split('.');
             let currentStoredParamLevel = effectWrapper.params;
@@ -534,7 +536,8 @@ export class Track {
         newIndex = Math.max(0, Math.min(newIndex, this.activeEffects.length - 1));
         if (oldIndex === newIndex) return;
 
-        console.log(`[Track ${this.id}] Reordering effect ${effectId} from index ${oldIndex} to ${newIndex}.`);
+        this._captureUndoState(`Reorder ${this.activeEffects[oldIndex].type} effect on ${this.name}`);
+
         const [effectToMove] = this.activeEffects.splice(oldIndex, 1);
         this.activeEffects.splice(newIndex, 0, effectToMove);
         this.rebuildEffectChain();
@@ -1220,6 +1223,8 @@ export class Track {
             return 0;
         }
 
+        this._captureUndoState(`Quantize Sequence ${activeSeq.name}`);
+        
         let quantizedCount = 0;
         const totalSteps = activeSeq.length;
 
@@ -1304,7 +1309,6 @@ export class Track {
             }
         });
 
-        this._captureUndoState(`Quantize Sequence ${activeSeq.name}`);
         return snappedCount;
     }
 
@@ -1572,7 +1576,10 @@ export class Track {
             console.warn(`[Track ${this.id}] addAudioClip called on non-Audio track type: ${this.type}`);
             return;
         }
-        const clipId = `audioclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
+        
+        this._captureUndoState(`Add Recorded Clip to ${this.name}`);
+        
+        const clipId = `seqclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
         const dbKey = `clip_${this.id}_${Date.now()}_${blob.size}.wav`; 
 
         try {
@@ -1593,8 +1600,6 @@ export class Track {
 
             this.timelineClips.push(newClip);
             console.log(`[Track ${this.id}] Added audio clip to timeline:`, newClip);
-            this._captureUndoState(`Add Recorded Clip to ${this.name}`);
-
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         } catch (error) {
             console.error(`[Track ${this.id} addAudioClip] Error:`, error);
@@ -1608,7 +1613,10 @@ export class Track {
             if (this.appServices.showNotification) this.appServices.showNotification("Audio files can only be added to Audio Tracks.", 3000);
             return null;
         }
-        const clipId = `audioclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+        
+        this._captureUndoState(`Add Audio File Clip "${clipName || audioFileBlob.name || 'Audio Clip'}" to ${this.name}`);
+        
+        const clipId = `seqclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
         const dbKey = `clip_${this.id}_${audioFileBlob.name.replace(/[^a-zA-Z0-9-_.]/g, '_')}_${audioFileBlob.size}_${Date.now()}`;
 
         try {
@@ -1631,8 +1639,6 @@ export class Track {
 
             this.timelineClips.push(newClip);
             console.log(`[Track ${this.id}] Added external audio file as clip to timeline:`, newClip);
-            this._captureUndoState(`Add Audio File Clip "${newClip.name}" to ${this.name}`);
-
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
             return newClip;
         } catch (error) {
@@ -1656,7 +1662,9 @@ export class Track {
             return null;
         }
 
-        const clipId = `seqclip_${this.id}_${sourceSequenceId}_${Date.now()}_${Math.random().toString(36).substr(2,7)}`;
+        this._captureUndoState(`Add Sequence Clip "${clipName || sourceSequence.name || 'Seq Clip'}" to ${this.name}`);
+        
+        const clipId = `seqclip_${this.id}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
         const sixteenthNoteTime = Tone.Time("16n").toSeconds(); 
         const duration = sourceSequence.length * sixteenthNoteTime;
 
@@ -1671,8 +1679,6 @@ export class Track {
 
         this.timelineClips.push(newClip);
         console.log(`[Track ${this.id}] Added sequence clip to timeline:`, newClip);
-        this._captureUndoState(`Add Sequence Clip "${newClip.name}" to ${this.name}`);
-
         if (this.appServices.renderTimeline) this.appServices.renderTimeline();
         return newClip;
     }
@@ -1973,10 +1979,10 @@ export class Track {
     async updateAudioClipPosition(clipId, newStartTime) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {
+            this._captureUndoState(`Move Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
             const oldStartTime = clip.startTime;
             clip.startTime = Math.max(0, parseFloat(newStartTime) || 0);
             console.log(`[Track ${this.id}] Updated ${clip.type} clip ${clipId} startTime from ${oldStartTime.toFixed(2)} to ${clip.startTime.toFixed(2)}`);
-            this._captureUndoState(`Move Clip "${clip.name || clip.id.slice(-4)}" on ${this.name}`);
 
             if (this.appServices.renderTimeline) this.appServices.renderTimeline();
 
