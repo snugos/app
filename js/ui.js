@@ -1580,7 +1580,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     
                     // Check scale lock - prevent placing notes outside scale
                     const scaleMode = localAppServices.getScaleMode ? localAppServices.getScaleMode() : { enabled: false, lock: false };
-                    if (isActive && scaleMode.enabled && scaleMode.lock && track.type === 'Synth' || track.type === 'InstrumentSampler') {
+                    if (isActive && scaleMode.enabled && scaleMode.lock && (track.type === 'Synth' || track.type === 'InstrumentSampler')) {
                         const rowLabel = rowLabels[row] || '';
                         const isInScale = (() => {
                             const match = rowLabel.match(/^([A-G]#?)(-?\d+)?$/);
