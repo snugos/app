@@ -398,11 +398,11 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstruction = false) => {
+    closeAllWindows: (isReconstructing = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
-                if (win && typeof win.close === 'function') win.close(isReconstruction);
+                if (win && typeof win.close === 'function') win.close(isReconstructing);
             });
         }
         if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
@@ -491,7 +491,7 @@ const appServices = {
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
     getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
-    _isReconstructingDAW_flag: false,
+    _isReconstructingingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },

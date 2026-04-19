@@ -50,6 +50,9 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/Track.js`: Added `_captureUndoState` calls to `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
 - **Version**: Bumped to 0.4.0
 
+#### Day 4: Undo/Redo Coverage for Sampler Slices (2026-04-19)
+- **Feature**: Added undo state capture to Sampler slice modification methods
+
 ### Incomplete Features (Priority Order)
 
 1. **Recording**: End-to-end test with real microphone
