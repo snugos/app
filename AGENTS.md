@@ -219,6 +219,18 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: These debug statements were left over from development and were cluttering the console output in production. The MODIFICATION markers were no longer needed as the features are now permanent.
 - **Version**: 0.8.0 (no bump needed, this was a code cleanup)
 
+#### Day 12: Bug Fix - Scale Mode State Function Imports (2026-04-19)
+- **Bug Fix**: Corrected import statement in `js/main.js`
+- **Issue**: The import was using incorrect ES6 rename syntax (`:` instead of `as`) for scale mode state setters
+- **Changed**:
+  - `setScaleModeEnabled: setScaleModeEnabledState` → `setScaleModeEnabledState` (direct import, no rename needed)
+  - `setScaleModeScale: setScaleModeScaleState` → `setScaleModeScaleState`
+  - `setScaleModeRoot: setScaleModeRootState` → `setScaleModeRootState`
+  - `setScaleModeLock: setScaleModeLockState` → `setScaleModeLockState`
+- **Impact**: TypeScript was incorrectly flagging these. Node.js `--check` passes fine. The actual function names in `state.js` already match what was being imported.
+- **Files Modified**: `js/main.js`
+- **Version**: 0.9.3 (no bump needed, this was a bug fix)
+
 #### Day 12: Velocity Editor Feature (2026-04-19)
 - **Feature**: Added visual velocity editor to the sequencer for editing note velocities
 - **Files Modified**:
