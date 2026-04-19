@@ -48,7 +48,6 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Feature**: Added metronome with toggle button and adjustable volume
 - **Files Modified**:
   - `js/constants.js`: Added METRONOME_VOLUME constant (0.5)
-  - `js/state.js`: Added metronomeEnabled and metronomeVolume state variables with getters/setters
   - `js/audio.js`: Added metronome functions:
     - `initializeMetronome()` - Creates synthetic click sounds (1kHz/1.5kHz sine bursts)
     - `startMetronome()` - Schedules clicks on Tone.Transport (accent on beats 1,3)
@@ -57,6 +56,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/eventHandlers.js`: Added metronome button handler in attachGlobalControlEvents
   - `js/main.js`: Wired metronome functions to appServices, added metronomeBtnGlobal to UI cache
   - `index.html`: Added Metro button to global controls bar
+- **Note**: State management for metronome was missing and added in Day 9
 - **Version**: Bumped to 0.7.0
 
 #### Day 5: Undo/Redo Coverage for InstrumentSampler and Synth (2026-04-19)
@@ -118,6 +118,18 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `X` (no modifier) - Octave up
   - Computer keyboard notes (A-K for white keys, W-U for black keys)
 - **Version**: Bumped to 0.7.3
+
+#### Day 9: Missing Metronome State Bug Fix (2026-04-19)
+- **Bug Fix**: Added missing metronome state variables and getters/setters to state.js
+- **Files Modified**:
+  - `js/state.js`: Added:
+    - `metronomeEnabled` and `metronomeVolume` state variables
+    - `getMetronomeEnabledState()`, `getMetronomeVolumeState()` getters
+    - `setMetronomeEnabledState()`, `setMetronomeVolumeState()` setters
+    - Metronome settings saved to `globalSettings` in `gatherProjectDataInternal()`
+    - Metronome settings restored in `reconstructDAWInternal()`
+- **Impact**: The metronome feature (added in Day 3) was missing its state management. This caused a runtime error because `main.js` was importing functions that didn't exist in `state.js`. The metronome settings now persist across project save/load.
+- **Version**: 0.7.3 (no bump needed, this was a bug fix for existing feature)
 
 ### Incomplete Features (Priority Order)
 

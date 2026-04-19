@@ -51,6 +51,10 @@ let recordingStartTime = 0;
 
 let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 
+// Metronome State
+let metronomeEnabled = false;
+let metronomeVolume = 0.5; // Default volume (0-1 range)
+
 // Undo/Redo
 let undoStack = [];
 let redoStack = [];
@@ -109,7 +113,7 @@ export function getPreviewPlayerState() { return previewPlayerGlobal; }
 export function getClipboardDataState() { return clipboardDataGlobal; }
 
 export function getArmedTrackIdState() { return armedTrackId; }
-export function getSoloedTrackIdState() { return soloedTrackId; }
+export function setSoloedTrackIdState(id) { soloedTrackId = id; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 export function getRecordingStartTimeState() { return recordingStartTime; }
@@ -117,6 +121,12 @@ export function getActiveSequencerTrackIdState() { return activeSequencerTrackId
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
 export function getPlaybackModeState() { return globalPlaybackMode; }
+
+// Metronome Getters/Setters
+export function getMetronomeEnabledState() { return metronomeEnabled; }
+export function getMetronomeVolumeState() { return metronomeVolume; }
+export function setMetronomeEnabledState(enabled) { metronomeEnabled = !!enabled; }
+export function setMetronomeVolumeState(volume) { metronomeVolume = Math.max(0, Math.min(1, parseFloat(volume) || 0.5)); }
 
 
 // --- Setters for Centralized State (called internally or via appServices) ---
@@ -518,6 +528,8 @@ export function gatherProjectDataInternal() {
                 armedTrackId: getArmedTrackIdState(),
                 highestZIndex: getHighestZState(),
                 playbackMode: getPlaybackModeState(),
+                metronomeEnabled: getMetronomeEnabledState(),
+                metronomeVolume: getMetronomeVolumeState(),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
@@ -696,6 +708,16 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
                         if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
                     }
                 });
+            }
+            // Restore metronome state
+            if (globalSettings.metronomeEnabled !== undefined) {
+                setMetronomeEnabledState(globalSettings.metronomeEnabled);
+            }
+            if (globalSettings.metronomeVolume !== undefined) {
+                setMetronomeVolumeState(globalSettings.metronomeVolume);
+                if (appServices.setMetronomeVolume) {
+                    appServices.setMetronomeVolume(globalSettings.metronomeVolume);
+                }
             }
         }
     } catch (error) {
