@@ -17,13 +17,21 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Feature**: Implemented complete DrumSampler UI controls
 - **Files Modified**:
   - `js/ui.js`: Replaced stub implementations with fully functional:
-    - `renderDrumSamplerPads(track)` - Renders 8 pad buttons with visual feedback for loaded/selected states
-    - `updateDrumPadControlsUI(track)` - Updates drop zone, volume/pitch knobs, and envelope controls
+    - `renderDrumSamplerPads(track)` - Renders 8 pad buttons with visual feedback
+    - `updateDrumPadControlsUI(track)` - Updates drop zone, volume/pitch knobs, envelope
     - `renderSamplePads(track)` - Renders slice pads for Sampler track
     - `updateSliceEditorUI(track)` - Updates slice editor controls
-    - `updateSequencerCellUI(sequencerElement, trackType, row, col, isActive)` - Updates sequencer cells
-    - `initializeDrumSamplerSpecificControls(track, winEl)` - Creates knobs for volume, pitch, and envelope
-- **Version**: Bumped to 0.2.0
+    - `updateSequencerCellUI(...)` - Updates sequencer cell styling
+    - `initializeDrumSamplerSpecificControls` - Creates knobs for volume/pitch/envelope
+  - `js/constants.js`: Bumped APP_VERSION to 0.2.0
+
+#### Day 1 cont: Tap Tempo Feature (2026-04-19)
+- **Feature**: Added tap tempo button to global controls bar
+- **Files Modified**:
+  - `index.html`: Added tap button next to BPM input
+  - `js/ui.js`: Added `handleTapTempo()` and `resetTapTempo()` functions
+  - `js/eventHandlers.js`: Wired up tap button click to tempo update
+  - `js/main.js`: Added tapBtnGlobal to UI cache, fixed typos in flag names
 
 ### Incomplete Features (Priority Order)
 
