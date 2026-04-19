@@ -1497,3 +1497,42 @@ export function highlightPlayingStep(trackId, stepIndex, isPlaying) {
 }
 
 
+
+// --- Additional UI Stubs ---
+export function renderSamplePads(container, pads, onPadClick) {
+    console.warn('[UI] renderSamplePads not implemented');
+}
+export function updateSliceEditorUI(trackId) {
+    console.warn('[UI] updateSliceEditorUI not implemented');
+}
+export function updateDrumPadControlsUI(trackId) {
+    console.warn('[UI] updateDrumPadControlsUI not implemented');
+}
+export function renderDrumSamplerPads(container, pads, onPadClick) {
+    console.warn('[UI] renderDrumSamplerPads not implemented');
+}
+export function updateSequencerCellUI(sequencerElement, trackType, row, col, isActive) {
+    console.warn('[UI] updateSequencerCellUI not implemented');
+}
+
+// --- Timeline Functions (Stubs) ---
+export function renderTimeline() {
+    console.warn('[UI] renderTimeline not implemented');
+}
+export function updatePlayheadPosition() {
+    // No-op
+}
+export function openTimelineWindow(savedState = null) {
+    console.warn('[UI] openTimelineWindow not implemented');
+    const windowId = 'timeline';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        const win = openWindows.get(windowId);
+        win.restore();
+        return win;
+    }
+    const contentHTML = '<div id="timeline-content" class="p-2 text-sm text-gray-700 dark:text-slate-300"><p>Timeline view coming soon.</p></div>';
+    const options = { width: 900, height: 300, minWidth: 600, minHeight: 200, closable: true, minimizable: true, resizable: true };
+    if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+    return localAppServices.createWindow(windowId, 'Timeline', contentHTML, options);
+}
