@@ -67,12 +67,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `setInstrumentSamplerRootNote`, `setInstrumentSamplerLoop`, `setInstrumentSamplerLoopStart`, `setInstrumentSamplerLoopEnd`, `setInstrumentSamplerEnv`
 - **Version**: Bumped to 0.6.0
 
-#### Day 6: Bug Fix - Reconstruction Flag Typo (2026-04-19)
-- **Bug Fix**: Fixed typos in reconstruction flag function names causing undo state capture to fail during project load
+#### Day 6: Undo/Redo Coverage for Effect Parameters and Audio Clips (2026-04-19)
+- **Feature**: Fixed undo state capture for additional track operations
 - **Files Modified**:
-  - `js/main.js`: Fixed `getIsReconstructconstructingDAW` → `getIsReconstructingDAW`, `isReconstructconstruct` → `isReconstructing`, `_isReconstructconstructingDAW_flag` → `_isReconstructingDAW_flag`
-  - `js/audio.js`: Fixed `isReconstructinging` → `isReconstructing`
-- **Impact**: These typos caused undo state to be incorrectly captured during project reconstruction, leading to bloated undo stacks
+  - `js/Track.js`: Added `_captureUndoState` calls to:
+    - `updateEffectParam` - Captures undo before effect parameter changes
+    - `reorderEffect` - Captures undo before effect reordering (already had call, verified correct placement)
+  - `js/constants.js`: Bumped APP_VERSION to 0.7.1
+- **Bug Fixed**: Effect parameter changes were not being captured for undo, making it impossible to undo effect tweaks
+- **Version**: Bumped to 0.7.1
+
+#### Day 7: Bug Fixes - Missing clipId, Undo State Timing, Debug Code (2026-04-19)
+- **Bug Fixes**: Fixed multiple issues found via ESLint static analysis
+- **Files Modified**:
+  - `js/Track.js`:
+    - Fixed missing `clipId` variable in `addSequenceClipToTimeline()` - was using undefined `clipId`
+    - Moved `_captureUndoState()` calls to happen BEFORE state changes in multiple methods (correct undo pattern)
+    - Added missing `_captureUndoState` calls in `reorderEffect` and `quantizeSequence`
+  - `js/audio.js`:
+    - Removed debug code that checked for undefined `getLoadedZipFilesState` (function wasn't imported)
+- **Impact**: The missing `clipId` bug would cause sequence clips to have undefined IDs, breaking clip management. The undo state timing fixes ensure undo works correctly by capturing state before modifications.
 
 ### Incomplete Features (Priority Order)
 
