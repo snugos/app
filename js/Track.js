@@ -1101,30 +1101,38 @@ export class Track {
     }
 
     setSliceVolume(sliceIndex, volume) {
+        this._captureUndoState(`Set Slice ${sliceIndex + 1} volume`);
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].volume = parseFloat(volume);
     }
     setSlicePitchShift(sliceIndex, semitones) {
+        this._captureUndoState(`Set Slice ${sliceIndex + 1} pitch`);
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].pitchShift = parseInt(semitones);
     }
     setSliceLoop(sliceIndex, loop) {
+        this._captureUndoState(`Set Slice ${sliceIndex + 1} loop`);
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].loop = !!loop;
     }
     setSliceReverse(sliceIndex, reverse) {
+        this._captureUndoState(`Set Slice ${sliceIndex + 1} reverse`);
         if (this.slices && this.slices[sliceIndex]) this.slices[sliceIndex].reverse = !!reverse;
     }
     setSliceEnvelopeParam(sliceIndex, param, value) {
+        this._captureUndoState(`Set Slice ${sliceIndex + 1} envelope`);
         if (this.slices && this.slices[sliceIndex] && this.slices[sliceIndex].envelope) {
             this.slices[sliceIndex].envelope[param] = parseFloat(value);
         }
     }
 
     setDrumSamplerPadVolume(padIndex, volume) {
+        this._captureUndoState(`Set Pad ${padIndex + 1} volume`);
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex]) this.drumSamplerPads[padIndex].volume = parseFloat(volume);
     }
     setDrumSamplerPadPitch(padIndex, pitch) {
+        this._captureUndoState(`Set Pad ${padIndex + 1} pitch`);
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex]) this.drumSamplerPads[padIndex].pitchShift = parseInt(pitch);
     }
     setDrumSamplerPadEnv(padIndex, param, value) {
+        this._captureUndoState(`Set Pad ${padIndex + 1} envelope`);
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex] && this.drumSamplerPads[padIndex].envelope) {
             this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value);
         }
