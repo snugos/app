@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.5.0"; // Undo/redo for Sampler slices
+export const APP_VERSION = "0.6.0"; // Undo/redo for InstrumentSampler and Synth
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
