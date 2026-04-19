@@ -1499,6 +1499,7 @@ export class Track {
             }
         });
 
+        this._captureUndoState(`Quantize Sequence ${activeSeq.name}`);
         return snappedCount;
     }
 

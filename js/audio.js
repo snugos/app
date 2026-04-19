@@ -565,7 +565,7 @@ export function getMimeTypeFromFilename(filename) {
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
     const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingDAW() : false;
 
-    if (localAppServices.captureStateForUndo && !isReconstructinging) {
+    if (localAppServices.captureStateForUndo && !isReconstructing) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
             `Pad ${padIndex + 1} on ${track.name}` :
             track.name;
@@ -634,7 +634,7 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
                 padData.dbKey = dbKey;
                 padData.status = 'loaded';
                 track.drumPadPlayers[padIndex] = new Tone.Player(newAudioBuffer); // Create new player
-                // Connection will be handled by rebuildEffectChain or play preview
+                // Connection will be handled by rebuildMasterEffectChain or play preview
             } else {
                 console.error(`[Audio commonLoadSampleLogic] Pad data not found for index ${padIndex} on track ${track.id}`);
                 throw new Error(`Pad data not found for index ${padIndex}.`);
