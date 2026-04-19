@@ -724,6 +724,17 @@ document.addEventListener('keydown', (event) => {
             if (tapBtn) tapBtn.click();
             return;
         }
+        if (key === 'q' && !(event.ctrlKey || event.metaKey)) {
+            // Toggle Scale Mode
+            if (localAppServices.getScaleModeEnabled && localAppServices.setScaleModeEnabled) {
+                const currentEnabled = localAppServices.getScaleModeEnabled();
+                localAppServices.setScaleModeEnabled(!currentEnabled);
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification(`Scale Mode: ${!currentEnabled ? 'ON' : 'OFF'}`, 1000);
+                }
+            }
+            return;
+        }
         
         const midNote = keyToMIDIMap[key];
         if (midNote !== undefined) {

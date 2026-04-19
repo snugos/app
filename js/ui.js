@@ -1577,12 +1577,86 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     if (!currentActiveSeq.data[row]) currentActiveSeq.data[row] = Array(currentActiveSeq.length).fill(null);
                     const currentStepData = currentActiveSeq.data[row][col];
                     const isActive = !(currentStepData?.active);
+                    
+                    // Check scale lock - prevent placing notes outside scale
+                    const scaleMode = localAppServices.getScaleMode ? localAppServices.getScaleMode() : { enabled: false, lock: false };
+                    if (isActive && scaleMode.enabled && scaleMode.lock && track.type === 'Synth' || track.type === 'InstrumentSampler') {
+                        const rowLabel = rowLabels[row] || '';
+                        const isInScale = (() => {
+                            const match = rowLabel.match(/^([A-G]#?)(-?\d+)?$/);
+                            if (!match) return true;
+                            const [, noteLetter, octave] = match;
+                            const rootNote = scaleMode.root || 'C';
+                            const scaleIntervals = Constants.SCALES[scaleMode.scale || 'Major'] || Constants.SCALES['Major'];
+                            const rootIndex = Constants.SCALE_ROOTS.indexOf(rootNote);
+                            const noteIndex = Constants.SCALE_ROOTS.indexOf(noteLetter);
+                            if (rootIndex === -1 || noteIndex === -1) return true;
+                            let interval = (noteIndex - rootIndex + 12) % 12;
+                            return scaleIntervals.includes(interval);
+                        })();
+                        if (!isInScale) {
+                            if (localAppServices.showNotification) {
+                                localAppServices.showNotification(`Note ${rowLabel} is not in ${scaleMode.scale} scale (${scaleMode.root}). Enable Scale Lock to allow out-of-scale notes.`, 2000);
+                            }
+                            return; // Block the note
+                        }
+                    }
+                    
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name} (${currentActiveSeq.name})`);
                     currentActiveSeq.data[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
                     updateSequencerCellUI(sequencerWindow.element, track.type, row, col, isActive);
                 }
             }
         });
+
+        // Scale mode event handlers (only for Synth/InstrumentSampler tracks)
+        if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
+            const scaleModeToggle = sequencerWindow.element.querySelector(`#scaleModeToggle-${track.id}`);
+            const scaleRootSelect = sequencerWindow.element.querySelector(`#scaleRootSelect-${track.id}`);
+            const scaleSelect = sequencerWindow.element.querySelector(`#scaleSelect-${track.id}`);
+            const scaleLockToggle = sequencerWindow.element.querySelector(`#scaleLockToggle-${track.id}`);
+
+            if (scaleModeToggle) {
+                scaleModeToggle.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeEnabled) {
+                        localAppServices.setScaleModeEnabled(e.target.checked);
+                    }
+                    if (scaleRootSelect) scaleRootSelect.disabled = !e.target.checked;
+                    if (scaleSelect) scaleSelect.disabled = !e.target.checked;
+                    if (scaleLockToggle) scaleLockToggle.disabled = !e.target.checked;
+                    // Re-render to update highlighting
+                    openTrackSequencerWindow(trackId, true);
+                });
+            }
+
+            if (scaleRootSelect) {
+                scaleRootSelect.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeRoot) {
+                        localAppServices.setScaleModeRoot(e.target.value);
+                    }
+                    // Re-render to update highlighting
+                    openTrackSequencerWindow(trackId, true);
+                });
+            }
+
+            if (scaleSelect) {
+                scaleSelect.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeScale) {
+                        localAppServices.setScaleModeScale(e.target.value);
+                    }
+                    // Re-render to update highlighting
+                    openTrackSequencerWindow(trackId, true);
+                });
+            }
+
+            if (scaleLockToggle) {
+                scaleLockToggle.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeLock) {
+                        localAppServices.setScaleModeLock(e.target.checked);
+                    }
+                });
+            }
+        }
 
     }
     return sequencerWindow;
