@@ -1822,24 +1822,111 @@ export function resetTapTempo() {
     tapTimes = [];
 }
 
-// --- Timeline Functions (Stubs) ---
+// --- Timeline Functions ---
+
 export function renderTimeline() {
-    console.warn('[UI] renderTimeline not implemented');
+    const win = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
+    if (!win?.element) return;
+    
+    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    const contentDiv = win.element.querySelector('#timelineContent');
+    if (!contentDiv) return;
+    
+    // Build timeline HTML
+    const beatWidth = Constants.TIMELINE_BEAT_WIDTH;
+    const trackHeight = Constants.TIMELINE_TRACK_HEIGHT;
+    const headerHeight = Constants.TIMELINE_HEADER_HEIGHT;
+    const bpm = Tone.Transport.bpm.value;
+    const pixelsPerSecond = (beatWidth * bpm) / 60;
+    const totalBars = Constants.MAX_BARS;
+    const stepsPerBar = Constants.STEPS_PER_BAR;
+    const pixelsPerBar = beatWidth * 4; // 4 beats per bar
+    const totalWidth = pixelsPerBar * totalBars;
+    
+    // Create time ruler
+    let rulerHTML = '<div class="timeline-ruler" style="height:30px;background:#2a2a2a;display:flex;align-items:flex-end;border-bottom:1px solid #444;">';
+    for (let bar = 0; bar < totalBars; bar++) {
+        rulerHTML += `<div class="timeline-bar-marker" style="position:absolute;left:${bar * pixelsPerBar}px;height:100%;border-left:1px solid #666;"></div>`;
+        rulerHTML += `<span style="position:absolute;left:${bar * pixelsPerBar + 4}px;font-size:10px;color:#aaa;">${bar + 1}</span>`;
+    }
+    rulerHTML += '</div>';
+    
+    // Create track lanes
+    let lanesHTML = '<div class="timeline-lanes" style="flex:1;overflow-y:auto;position:relative;">';
+    tracks.forEach((track, index) => {
+        const laneTop = index * trackHeight;
+        lanesHTML += `<div class="timeline-track-lane" data-track-id="${track.id}" style="position:absolute;top:${laneTop}px;left:0;width:100%;height:${trackHeight}px;background:${index % 2 === 0 ? '#1a1a1a' : '#222'};border-bottom:1px solid #333;">
+            <span style="position:sticky;left:0;background:#333;padding:2px 5px;font-size:11px;color:#ccc;z-index:5;">${track.name}</span>`;
+        
+        // Render clips if any
+        if (track.timelineClips && track.timelineClips.length > 0) {
+            track.timelineClips.forEach(clip => {
+                const clipLeft = clip.startTime * pixelsPerSecond;
+                const clipWidth = clip.duration * pixelsPerSecond;
+                const clipColor = clip.type === 'audio' ? '#4a9eff' : '#9f4aff';
+                lanesHTML += `<div class="timeline-clip" data-clip-id="${clip.id}" style="position:absolute;top:4px;left:${clipLeft}px;width:${clipWidth}px;height:${trackHeight - 8}px;background:${clipColor};border-radius:4px;cursor:pointer;overflow:hidden;box-shadow:0 0 4px rgba(0,0,0,0.5);">
+                    <span style="padding:2px 4px;font-size:10px;color:white;text-shadow:0 1px 2px black;">${clip.name || 'Clip'}</span>
+                </div>`;
+            });
+        }
+        lanesHTML += '</div>';
+    });
+    lanesHTML += '</div>';
+    
+    // Playhead line
+    const playheadHTML = `<div id="timelinePlayhead" style="position:absolute;top:0;left:0;width:2px;height:100%;background:#ff4444;z-index:10;pointer-events:none;"></div>`;
+    
+    contentDiv.innerHTML = `<div class="timeline-container" style="display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;">
+        ${rulerHTML}
+        <div class="timeline-tracks" style="flex:1;position:relative;overflow:auto;">${lanesHTML}${playheadHTML}</div>
+    </div>`;
+    
+    // Add clip click handlers
+    contentDiv.querySelectorAll('.timeline-clip').forEach(clipEl => {
+        clipEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const clipId = clipEl.dataset.clipId;
+            showNotification(`Selected clip: ${clipId}`, 1500);
+        });
+    });
+    
+    console.log('[UI renderTimeline] Timeline rendered with', tracks.length, 'tracks');
 }
+
 export function updatePlayheadPosition() {
-    // No-op
+    const win = localAppServices.getWindowById ? localAppServices.getWindowById('timeline') : null;
+    if (!win?.element) return;
+    
+    const playhead = win.element.querySelector('#timelinePlayhead');
+    if (!playhead) return;
+    
+    const playbackMode = localAppServices.getPlaybackMode ? localAppServices.getPlaybackMode() : 'sequencer';
+    if (playbackMode !== 'timeline') return;
+    
+    const bpm = Tone.Transport.bpm.value;
+    const beatWidth = Constants.TIMELINE_BEAT_WIDTH;
+    const pixelsPerSecond = (beatWidth * bpm) / 60;
+    const currentTime = Tone.Transport.seconds;
+    
+    playhead.style.left = `${currentTime * pixelsPerSecond}px`;
 }
+
 export function openTimelineWindow(savedState = null) {
-    console.warn('[UI] openTimelineWindow not implemented');
     const windowId = 'timeline';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
     if (openWindows.has(windowId) && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
+        renderTimeline(); // Refresh content when restoring
         return win;
     }
-    const contentHTML = '<div id="timeline-content" class="p-2 text-sm text-gray-700 dark:text-slate-300"><p>Timeline view coming soon.</p></div>';
-    const options = { width: 900, height: 300, minWidth: 600, minHeight: 200, closable: true, minimizable: true, resizable: true };
+    const contentHTML = '<div id="timelineContent" class="p-2 text-sm text-gray-700 dark:text-slate-300 h-full"><p class="text-center text-gray-400">Loading timeline...</p></div>';
+    const options = { width: 900, height: 300, minWidth: 600, minHeight: 200, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
-    return localAppServices.createWindow(windowId, 'Timeline', contentHTML, options);
+    const win = localAppServices.createWindow(windowId, 'Timeline', contentHTML, options);
+    
+    // Render timeline after window is created
+    setTimeout(() => renderTimeline(), 50);
+    
+    return win;
 }

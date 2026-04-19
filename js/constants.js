@@ -1,13 +1,17 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.2.0"; // DrumSampler UI implementation complete
+export const APP_VERSION = "0.3.0"; // Timeline view implementation
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
 export const MAX_BARS = 512; // Maximum number of bars a sequence can have
-
 export const MIN_TEMPO = 0; // Minimum tempo in BPM
 export const MAX_TEMPO = 999; // Maximum tempo in BPM
+
+// Timeline constants
+export const TIMELINE_BEAT_WIDTH = 40; // pixels per beat
+export const TIMELINE_TRACK_HEIGHT = 60; // pixels per track lane
+export const TIMELINE_HEADER_HEIGHT = 30; // pixels for time ruler
 
 // Note: Reversed for typical top-to-bottom piano roll display in a UI
 export const synthPitches = [

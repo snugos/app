@@ -26,12 +26,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/constants.js`: Bumped APP_VERSION to 0.2.0
 
 #### Day 1 cont: Tap Tempo Feature (2026-04-19)
-- **Feature**: Added tap tempo button to global controls bar
+- **Feature**: Added tap tempo functionality
 - **Files Modified**:
-  - `index.html`: Added tap button next to BPM input
   - `js/ui.js`: Added `handleTapTempo()` and `resetTapTempo()` functions
-  - `js/eventHandlers.js`: Wired up tap button click to tempo update
-  - `js/main.js`: Added tapBtnGlobal to UI cache, fixed typos in flag names
+  - `js/eventHandlers.js`: Wired tap button to tempo update
+  - `js/main.js`: Added tapBtnGlobal to UI cache
+  - `index.html`: Added tap button to global controls bar
+- **Version**: Bumped to 0.3.0
+
+#### Day 2: Timeline View Implementation (2026-04-19)
+- **Feature**: Implemented functional timeline view
+- **Files Modified**:
+  - `js/constants.js`: Added TIMELINE_BEAT_WIDTH, TIMELINE_TRACK_HEIGHT, TIMELINE_HEADER_HEIGHT
+  - `js/ui.js`: Replaced stub implementations with functional:
+    - `renderTimeline()` - Renders track lanes, time ruler, clips, and playhead
+    - `updatePlayheadPosition()` - Updates playhead position during playback
+    - `openTimelineWindow()` - Creates timeline window and triggers render
+- **Version**: Bumped to 0.3.0
 
 ### Incomplete Features (Priority Order)
 
@@ -43,10 +54,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
    - `captureStateForUndoInternal` exists in `js/state.js`
    - Need to audit all state mutations to ensure they call this function
 
-3. **Timeline View**: `renderTimeline` and `updatePlayheadPosition` are stubs
-   - Basic window structure exists but timeline rendering is not implemented
-
-4. **No Automated Tests**: Project lacks automated testing
+3. **No Automated Tests**: Project lacks automated testing
 
 ## Code Style Guidelines
 
