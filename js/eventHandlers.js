@@ -649,7 +649,7 @@ document.addEventListener('keydown', (event) => {
             return; 
         }
         if (event.metaKey || event.ctrlKey) {
-            if (!( (event.ctrlKey || event.metaKey) && (key === 'z' || key === 'y'))) { 
+            if (!( (event.ctrlKey || event.metaKey) && (key === 'z' || key === 'y' || key === 's' || key === 'o'))) { 
                  return;
             }
         }
@@ -662,9 +662,19 @@ document.addEventListener('keydown', (event) => {
              if (localAppServices.redoLastAction) localAppServices.redoLastAction();
             return;
         }
-        if (key === 'z' && !(event.ctrlKey || event.metaKey)) {
-            currentOctaveShift = Math.max(MIN_OCTAVE_SHIFT, currentOctaveShift - 1);
-            if (localAppServices.showNotification) localAppServices.showNotification(`Octave: ${currentOctaveShift}`, 1000);
+        if (key === 'z' && (event.ctrlKey || event.metaKey) && event.shiftKey) {
+            // Ctrl+Shift+Z as alternative for Redo
+            if (localAppServices.redoLastAction) localAppServices.redoLastAction();
+            return;
+        }
+        if (key === 's' && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            if (localAppServices.saveProject) localAppServices.saveProject();
+            return;
+        }
+        if (key === 'o' && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            if (localAppServices.loadProject) localAppServices.loadProject();
             return;
         }
         if (key === 'x' && !(event.ctrlKey || event.metaKey)) {
@@ -700,6 +710,18 @@ document.addEventListener('keydown', (event) => {
         }
         if (key === 'r' && !(event.ctrlKey || event.metaKey)) {
             if (localAppServices.toggleRecordArm) localAppServices.toggleRecordArm(-1);
+            return;
+        }
+        if (key === 't' && !(event.ctrlKey || event.metaKey)) {
+            // Toggle Metronome
+            const metronomeBtn = localAppServices.uiElementsCache?.metronomeBtnGlobal;
+            if (metronomeBtn) metronomeBtn.click();
+            return;
+        }
+        if (key === '`' && !(event.ctrlKey || event.metaKey)) {
+            // Tap Tempo
+            const tapBtn = localAppServices.uiElementsCache?.tapBtnGlobal;
+            if (tapBtn) tapBtn.click();
             return;
         }
         

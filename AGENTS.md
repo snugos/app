@@ -95,6 +95,30 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/state.js`: Added `_captureUndoState` call to `reorderMasterEffectInState()` before array splice
 - **Version**: Bumped to 0.7.2
 
+#### Day 8: Extended Keyboard Shortcuts (2026-04-19)
+- **Feature**: Added comprehensive global keyboard shortcuts for common DAW operations
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added new keyboard shortcuts:
+    - `Ctrl+S` - Save Project
+    - `Ctrl+O` - Load Project
+    - `Ctrl+Shift+Z` - Redo (alternative to Ctrl+Y)
+    - `T` - Toggle Metronome
+    - `` ` `` (backtick) - Tap Tempo
+  - `js/constants.js`: Bumped APP_VERSION to 0.7.3
+- **Existing Shortcuts** (already present):
+  - `Ctrl+Z` - Undo
+  - `Ctrl+Y` - Redo
+  - `Space` - Play/Pause
+  - `Enter` - Toggle Recording
+  - `Escape` - Close all windows
+  - `M` - Toggle Mute (armed track)
+  - `S` - Toggle Solo (armed track)
+  - `R` - Toggle Record Arm
+  - `Z` (no modifier) - Octave down
+  - `X` (no modifier) - Octave up
+  - Computer keyboard notes (A-K for white keys, W-U for black keys)
+- **Version**: Bumped to 0.7.3
+
 ### Incomplete Features (Priority Order)
 
 1. **Recording**: End-to-end test with real microphone
@@ -104,6 +128,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 2. **Undo/redo**: Verify all state mutations go through capture mechanism
    - `captureStateForUndoInternal` exists in `js/state.js`
    - Need to audit all state mutations to ensure they call this function
+   - **AUDITED 2026-04-19**: All major state mutations have `_captureUndoState` calls
 
 3. **No Automated Tests**: Project lacks automated testing
 

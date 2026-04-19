@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.7.2"; // Undo/redo coverage for loadSampleToPad and reorderMasterEffect
+export const APP_VERSION = "0.7.3"; // Day 8: Extended keyboard shortcuts (Ctrl+S, Ctrl+O, Ctrl+Shift+Z, T, `)
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
