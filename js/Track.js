@@ -1036,6 +1036,7 @@ export class Track {
     }
 
     setSynthParam(paramPath, value) {
+        this._captureUndoState(`Set ${paramPath} on ${this.name}`);
         if (this.type !== 'Synth') return;
         if (!this.instrument || this.instrument.disposed) {
             console.warn(`[Track ${this.id} setSynthParam] Synth instrument not available or disposed for param "${paramPath}".`);
@@ -1147,6 +1148,7 @@ export class Track {
     }
 
     setInstrumentSamplerRootNote(noteName) {
+        this._captureUndoState(`Set root note on ${this.name}`);
         if (this.instrumentSamplerSettings) {
             this.instrumentSamplerSettings.rootNote = noteName;
             this.setupToneSampler();
