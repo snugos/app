@@ -21,13 +21,10 @@ export function initializeUIModule(appServicesFromMain) {
     localAppServices = { ...localAppServices, ...appServicesFromMain };
 
     if (!localAppServices.getSelectedSoundForPreview) {
-        console.log('[UI Init] getSelectedSoundForPreview service not found in appServices, wiring locally.');
         localAppServices.getSelectedSoundForPreview = () => selectedSoundForPreviewData;
     }
     if (!localAppServices.setSelectedSoundForPreview) {
-        console.log('[UI Init] setSelectedSoundForPreview service not found in appServices, wiring locally.');
         localAppServices.setSelectedSoundForPreview = (data) => {
-            console.log('[UI setSelectedSoundForPreview] Setting selected sound data:', JSON.stringify(data));
             selectedSoundForPreviewData = data;
         };
     }
@@ -748,7 +745,7 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                 label.className = 'block text-xs font-medium mb-0.5 dark:text-slate-300';
                 label.textContent = paramDef.label + ':';
                 const select = document.createElement('select');
-                select.className = 'w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-600';
+                select.className = 'w-full p-1 border border-gray-300 rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-600';
                 paramDef.options.forEach(opt => {
                     const option = document.createElement('option');
                     option.value = typeof opt === 'object' ? opt.value : opt;
@@ -904,7 +901,6 @@ export function openSoundBrowserWindow(savedState = null) {
         win.restore();
         const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
         if (currentLibNameFromState && localAppServices.updateSoundBrowserDisplayForLibrary) {
-            console.log(`[UI SoundBrowser Re-Open/Restore] Updating display for already selected library: ${currentLibNameFromState}`);
             localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
         } else if (localAppServices.updateSoundBrowserDisplayForLibrary) {
              localAppServices.updateSoundBrowserDisplayForLibrary(null);
@@ -931,7 +927,6 @@ export function openSoundBrowserWindow(savedState = null) {
 
         libSelect.addEventListener('change', (e) => {
             const lib = e.target.value;
-            console.log(`[UI SoundBrowser] Library selected via dropdown: ${lib}`);
             if (lib && localAppServices.fetchSoundLibrary) {
                 localAppServices.fetchSoundLibrary(lib, Constants.soundLibraries[lib]);
             } else if (!lib && localAppServices.updateSoundBrowserDisplayForLibrary) {
@@ -950,31 +945,23 @@ export function openSoundBrowserWindow(savedState = null) {
 
         browserWindow.element.querySelector('#previewSoundBtn').addEventListener('click', () => {
             const selectedSound = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : null;
-            console.log('[UI PreviewButton] Clicked. Selected Sound:', JSON.stringify(selectedSound));
 
             if (selectedSound && typeof Tone !== 'undefined') {
                 let previewPlayer = localAppServices.getPreviewPlayer ? localAppServices.getPreviewPlayer() : null;
                 if (previewPlayer && !previewPlayer.disposed) {
-                    console.log('[UI PreviewButton] Disposing existing preview player.');
                     previewPlayer.stop(); previewPlayer.dispose();
                 }
                 const { fullPath, libraryName } = selectedSound;
-                console.log(`[UI PreviewButton] Attempting to preview: ${fullPath} from ${libraryName}`);
 
                 const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
                 if (loadedZips?.[libraryName] && loadedZips[libraryName] !== "loading") {
                     const zipEntry = loadedZips[libraryName].file(fullPath);
                     if (zipEntry) {
-                        console.log(`[UI PreviewButton] Found zipEntry for ${fullPath}. Converting to blob.`);
                         zipEntry.async("blob").then(blob => {
-                            console.log(`[UI PreviewButton] Blob created for ${fullPath}, size: ${blob.size}. Creating Object URL.`);
                             const url = URL.createObjectURL(blob);
-                            console.log(`[UI PreviewButton] Object URL: ${url}. Creating Tone.Player.`);
                             previewPlayer = new Tone.Player(url, () => {
-                                console.log(`[UI PreviewButton] Tone.Player loaded for ${url}. Starting playback.`);
                                 previewPlayer.start();
                                 URL.revokeObjectURL(url);
-                                console.log(`[UI PreviewButton] Object URL revoked for ${url}.`);
                             }).toDestination();
                             previewPlayer.onerror = (err) => {
                                 console.error(`[UI PreviewButton] Tone.Player error for ${url}:`, err);
@@ -1005,16 +992,13 @@ export function openSoundBrowserWindow(savedState = null) {
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-            console.log(`[UI SoundBrowser Open] Initial check. Current lib in state: ${currentLibNameFromState}, Dropdown value: ${libSelect?.value}`);
 
             if (currentLibNameFromState && soundTrees && soundTrees[currentLibNameFromState] && libSelect) {
-                console.log(`[UI SoundBrowser Open] State has current library '${currentLibNameFromState}' with loaded data. Setting dropdown and updating UI.`);
                 libSelect.value = currentLibNameFromState;
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
                 }
             } else {
-                console.log(`[UI SoundBrowser Open] No specific library active and loaded in state. Defaulting to "Select Library..." view.`);
                 if (libSelect) libSelect.value = "";
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(null);
@@ -1022,7 +1006,6 @@ export function openSoundBrowserWindow(savedState = null) {
             }
         } else if (savedState && localAppServices.getCurrentLibraryName && localAppServices.updateSoundBrowserDisplayForLibrary) {
             const currentLibNameFromState = localAppServices.getCurrentLibraryName();
-            console.log(`[UI SoundBrowser Open] Restoring from savedState. Current lib in state: ${currentLibNameFromState}`);
              if (currentLibNameFromState && libSelect) {
                 libSelect.value = currentLibNameFromState;
                 localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
@@ -1036,16 +1019,13 @@ export function openSoundBrowserWindow(savedState = null) {
 }
 
 export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = false, hasError = false) {
-    console.log(`[UI updateSoundBrowserDisplayForLibrary] START - Called for: '${libraryName}', isLoading: ${isLoading}, hasError: ${hasError}`);
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
 
     if (!browserWindowEl) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Sound Browser window element NOT FOUND. Aborting DOM updates.`);
         if (libraryName && !isLoading && !hasError) {
             const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
                 localAppServices.setCurrentLibraryName(libraryName);
-                console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. Library '${libraryName}' loaded. Set as current in global state.`);
             }
         }
         return;
@@ -1057,17 +1037,14 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
     const isWindowVisible = !browserWindowEl.closest('.window.minimized');
     const currentDropdownSelection = libSelect ? libSelect.value : null;
 
-    console.log(`[UI updateSoundBrowserDisplayForLibrary] Window visible: ${isWindowVisible}, Current dropdown: '${currentDropdownSelection}', Target library: '${libraryName}'`);
 
     let performFullUIUpdate = false;
 
     if (!isWindowVisible) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. No DOM update.`);
         if (libraryName && !isLoading && !hasError) {
             const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
                 localAppServices.setCurrentLibraryName(libraryName);
-                console.log(`[UI updateSoundBrowserDisplayForLibrary] Window NOT visible. Library '${libraryName}' loaded. Set as current in global state (as no global lib was active).`);
             }
         }
         return;
@@ -1075,36 +1052,28 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
 
     if (libraryName === currentDropdownSelection) {
         performFullUIUpdate = true;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Update current view for '${libraryName}'.`);
     } else if (currentDropdownSelection === "" && libraryName && !isLoading && !hasError) {
         performFullUIUpdate = true;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: Set initial view to '${libraryName}' from 'Select Library...'.`);
     } else if (libraryName && !isLoading && !hasError) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Update for '${libraryName}' (isLoading: ${isLoading}, hasError: ${hasError}), but current view is '${currentDropdownSelection}'.`);
         const currentGlobalLib = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
         if (!currentGlobalLib && localAppServices.setCurrentLibraryName) {
             localAppServices.setCurrentLibraryName(libraryName);
-             console.log(`[UI updateSoundBrowserDisplayForLibrary] Background load of '${libraryName}' successful. Set as current in global state (as no global lib was active).`);
         }
         return;
     } else if ((isLoading || hasError) && libraryName !== currentDropdownSelection) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Decision: NO CHANGE to visible UI. Loading/Error for non-selected library '${libraryName}'. Current view: '${currentDropdownSelection}'.`);
         return;
     }
 
 
     if (performFullUIUpdate) {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Proceeding with UI update for '${libraryName}'.`);
         if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(libraryName);
         if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath([]);
         if (libSelect && libSelect.value !== (libraryName || "")) {
-            console.log(`[UI updateSoundBrowserDisplayForLibrary] Setting libSelect.value to: '${libraryName || ""}' (was '${currentDropdownSelection}')`);
             libSelect.value = libraryName || "";
         }
     } else {
         if (!libraryName) {
              performFullUIUpdate = true;
-             console.log(`[UI updateSoundBrowserDisplayForLibrary] Condition: Explicitly setting to "Select a library" view.`);
              if (localAppServices.setCurrentLibraryName) localAppServices.setCurrentLibraryName(null);
              if (libSelect) libSelect.value = "";
         } else {
@@ -1117,16 +1086,13 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
         listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Select a library.</p>';
         pathDisplay.textContent = '/';
         if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(null);
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Select a library" view.`);
         return;
     }
 
     if (isLoading || (localAppServices.getLoadedZipFiles && localAppServices.getLoadedZipFiles()[libraryName] === "loading")) {
         listDiv.innerHTML = `<p class="text-gray-500 dark:text-slate-400 italic">Loading ${libraryName}...</p>`;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Loading ${libraryName}..." view.`);
     } else if (hasError) {
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`;
-        console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' failed." view.`);
     } else {
         const currentTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
@@ -1135,14 +1101,12 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
             if (treeForLib && Object.keys(treeForLib).length > 0) {
                 if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeForLib);
                 if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
-                console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering directory for library '${libraryName}'.`);
             } else {
                 console.warn(`[UI updateSoundBrowserDisplayForLibrary WARN] Tree for "${libraryName}" was found but considered empty or invalid.`);
                 listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data is empty or corrupt.</p>`;
             }
         } else {
             listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`;
-            console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view.`);
         }
     }
     pathDisplay.textContent = `/${libraryName || ''}/`;
@@ -1187,11 +1151,9 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
                 listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-purple-500').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-purple-500'));
                 listItem.classList.add('bg-blue-200', 'dark:bg-purple-500');
                 const soundToSelect = { fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName };
-                console.log('[UI SoundFile Click] Sound selected:', JSON.stringify(soundToSelect));
                 if (localAppServices.setSelectedSoundForPreview) {
                     localAppServices.setSelectedSoundForPreview(soundToSelect);
                     const checkSelected = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : { error: 'getSelectedSoundForPreview service not found' };
-                    console.log('[UI SoundFile Click] State after setSelectedSoundForPreview (via getter):', JSON.stringify(checkSelected));
                 } else {
                     console.warn('[UI SoundFile Click] setSelectedSoundForPreview service not available.');
                 }
@@ -1411,7 +1373,6 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
 }
 
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
-    console.log(`[UI openTrackSequencerWindow] Called for track ${trackId}. Force redraw: ${forceRedraw}, SavedState:`, savedState);
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (!track || track.type === 'Audio') {
         console.warn(`[UI openTrackSequencerWindow] Track ${trackId} not found or is Audio type. Aborting.`);
@@ -1424,11 +1385,9 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         const existingWindow = openWindows.get(windowId);
         if (existingWindow && typeof existingWindow.close === 'function') {
             try {
-                console.log(`[UI openTrackSequencerWindow] Force redraw: Closing existing window ${windowId}`);
                 existingWindow.close(true);
             } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
         } else {
-            console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not instance, or map is missing.`);
         }
     }
     if (openWindows.has(windowId) && !forceRedraw && !savedState) {
@@ -1458,7 +1417,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0)
                            ? desktopEl.offsetWidth
                            : 1024; // More robust fallback
-    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Desktop element: ${desktopEl ? 'found' : 'NOT found'}, offsetWidth: ${desktopEl?.offsetWidth}, safeDesktopWidth: ${safeDesktopWidth}, NumBars: ${numBars}`);
 
 
     let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
@@ -1490,7 +1448,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
         seqOptions.isMinimized = savedState.isMinimized;
     }
 
-    console.log(`[UI openTrackSequencerWindow] For track ${trackId}: Creating window with options:`, JSON.stringify(seqOptions));
     const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name} - ${activeSequence.name}`, contentDOM, seqOptions);
 
     if (sequencerWindow?.element) {
@@ -1520,7 +1477,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     };
                     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
                     e.dataTransfer.effectAllowed = 'copy';
-                    console.log(`[UI Sequencer DragStart] Dragging sequence: ${currentActiveSeq.name}`);
                 } else {
                     e.preventDefault();
                     console.warn(`[UI Sequencer DragStart] No active sequence to drag for track ${track.name}`);
@@ -2314,7 +2270,6 @@ export function renderTimeline() {
         });
     }
     
-    console.log('[UI renderTimeline] Timeline rendered with', tracks.length, 'tracks');
 }
 
 export function updatePlayheadPosition() {

@@ -308,7 +308,6 @@ export function createEffectInstance(effectType, initialParams = {}) {
 
 
     try {
-        console.log(`[EffectsRegistry createEffectInstance] Attempting to instantiate Tone.${definition.toneClass} with params:`, JSON.parse(JSON.stringify(paramsForInstance)));
         const instance = new Tone[definition.toneClass](paramsForInstance);
         return instance;
     } catch (e) {
@@ -316,10 +315,8 @@ export function createEffectInstance(effectType, initialParams = {}) {
         try {
             const instance = new Tone[definition.toneClass]();
             if (typeof instance.set === 'function') {
-                console.log(`[EffectsRegistry createEffectInstance Fallback] Using instance.set() for Tone.${definition.toneClass}`);
                 instance.set(paramsForInstance);
             } else {
-                console.log(`[EffectsRegistry createEffectInstance Fallback] Attempting manual parameter assignment for Tone.${definition.toneClass}`);
                 for (const keyPath in paramsForInstance) {
                     if (Object.prototype.hasOwnProperty.call(paramsForInstance, keyPath)) {
                          const value = paramsForInstance[keyPath];
@@ -341,10 +338,8 @@ export function createEffectInstance(effectType, initialParams = {}) {
                               const finalKey = keys[keys.length-1];
                               if (target[finalKey] && typeof target[finalKey].value !== 'undefined' && paramDefForPath?.isSignal) {
                                  target[finalKey].value = value;
-                                 console.log(`[EffectsRegistry Fallback] Set signal ${keyPath}.value = ${value}`);
                               } else {
                                  target[finalKey] = value;
-                                 console.log(`[EffectsRegistry Fallback] Set direct property ${keyPath} = ${value}`);
                               }
                          } else if (target) {
                             console.warn(`[EffectsRegistry Fallback] Property "${keys[keys.length-1]}" not found on target for path "${keyPath}" on Tone.${definition.toneClass}. Target object:`, target);

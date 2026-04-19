@@ -48,6 +48,11 @@ let globalPlaybackMode = 'sequencer'; // 'sequencer' or 'timeline'
 let metronomeEnabled = false;
 let metronomeVolume = 0.5; // Default volume (0-1 range)
 
+// Send Tracks State (Aux Buses)
+let sendTracksState = []; // Array of { id, name, effects, level, muted }
+let sendTrackIdCounter = 0;
+let trackSendsState = {}; // Map: trackId -> { sendId: level } (level 0-1.2, 0 = off)
+
 // Undo/Redo
 let undoStack = [];
 let redoStack = [];
@@ -67,7 +72,6 @@ export function initializeStateModule(services) {
     if (appServices && typeof appServices.setPlaybackMode !== 'function') {
         appServices.setPlaybackMode = setPlaybackModeStateInternal;
     }
-    console.log("[State] State module initialized. AppServices keys:", Object.keys(appServices));
 }
 
 // --- Getters for Centralized State ---
@@ -185,6 +189,77 @@ export function setSwingAmountState(amount) {
     swingState.amount = Math.max(0, Math.min(Constants.MAX_SWING_AMOUNT, parseInt(amount) || 0));
 }
 
+// Send Tracks State Getters
+export function getSendTracksState() { return [...sendTracksState]; }
+export function getSendTrackByIdState(id) { return sendTracksState.find(s => s.id === id); }
+export function getTrackSendsState() { return JSON.parse(JSON.stringify(trackSendsState)); }
+export function getTrackSendLevelState(trackId, sendId) {
+    return trackSendsState[trackId]?.[sendId] ?? Constants.DEFAULT_SEND_LEVEL;
+}
+
+// Send Tracks State Setters
+export function addSendTrackState(name = null) {
+    if (sendTracksState.length >= Constants.MAX_SEND_TRACKS) {
+        if (appServices.showNotification) appServices.showNotification(`Maximum ${Constants.MAX_SEND_TRACKS} send tracks allowed.`, 3000);
+        return null;
+    }
+    const id = ++sendTrackIdCounter;
+    const sendTrack = {
+        id,
+        name: name || `${Constants.DEFAULT_SEND_TRACK.name} ${id}`,
+        effects: [],
+        level: Constants.DEFAULT_SEND_TRACK.level,
+        muted: Constants.DEFAULT_SEND_TRACK.muted
+    };
+    sendTracksState.push(sendTrack);
+    
+    // Initialize send levels for all tracks to this new send
+    tracks.forEach(track => {
+        if (!trackSendsState[track.id]) trackSendsState[track.id] = {};
+        trackSendsState[track.id][id] = Constants.DEFAULT_SEND_LEVEL;
+    });
+    
+    return sendTrack;
+}
+
+export function removeSendTrackState(id) {
+    const index = sendTracksState.findIndex(s => s.id === id);
+    if (index !== -1) {
+        sendTracksState.splice(index, 1);
+        // Remove send levels for this send from all tracks
+        Object.keys(trackSendsState).forEach(trackId => {
+            delete trackSendsState[trackId][id];
+        });
+        return true;
+    }
+    return false;
+}
+
+export function setSendTrackNameState(id, name) {
+    const sendTrack = sendTracksState.find(s => s.id === id);
+    if (sendTrack) sendTrack.name = name;
+}
+
+export function setSendTrackLevelState(id, level) {
+    const sendTrack = sendTracksState.find(s => s.id === id);
+    if (sendTrack) sendTrack.level = Math.max(0, Math.min(Constants.SEND_LEVEL_MAX, level));
+}
+
+export function setSendTrackMutedState(id, muted) {
+    const sendTrack = sendTracksState.find(s => s.id === id);
+    if (sendTrack) sendTrack.muted = !!muted;
+}
+
+export function setSendTrackEffectsState(id, effects) {
+    const sendTrack = sendTracksState.find(s => s.id === id);
+    if (sendTrack) sendTrack.effects = Array.isArray(effects) ? effects : [];
+}
+
+export function setTrackSendLevelState(trackId, sendId, level) {
+    if (!trackSendsState[trackId]) trackSendsState[trackId] = {};
+    trackSendsState[trackId][sendId] = Math.max(Constants.SEND_LEVEL_MIN, Math.min(Constants.SEND_LEVEL_MAX, level));
+}
+
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
@@ -216,7 +291,6 @@ export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id
 
 export function setPlaybackModeStateInternal(mode) {
     const displayMode = typeof mode === 'string' ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Unknown';
-    console.log(`[State setPlaybackModeStateInternal] Attempting to set mode to: ${mode} (Display: ${displayMode}). Current mode: ${globalPlaybackMode}`);
 
     if (mode === 'sequencer' || mode === 'timeline') {
         if (globalPlaybackMode !== mode) {
@@ -226,25 +300,20 @@ export function setPlaybackModeStateInternal(mode) {
                 captureStateForUndoInternal(`Set Playback Mode to ${displayMode}`); // Fallback
             }
             globalPlaybackMode = mode;
-            console.log(`[State setPlaybackModeStateInternal] Playback mode changed to: ${globalPlaybackMode}`);
 
             if (Tone.Transport.state === 'started') {
-                console.log("[State setPlaybackModeStateInternal] Transport was started, stopping it.");
                 Tone.Transport.stop();
             }
             Tone.Transport.cancel(0); // Cancel all scheduled events
-            console.log("[State setPlaybackModeStateInternal] Tone.Transport events cancelled.");
 
             if (appServices.uiElementsCache?.playBtnGlobal) {
                 appServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
-                console.log("[State setPlaybackModeStateInternal] Play button text reset.");
             } else {
                 console.warn("[State setPlaybackModeStateInternal] Play button UI element not found in cache.");
             }
             document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
 
             const currentTracks = getTracksState();
-            console.log(`[State setPlaybackModeStateInternal] Re-initializing sequences/playback for ${currentTracks.length} tracks for new mode: ${globalPlaybackMode}.`);
             try {
                 currentTracks.forEach(track => {
                     if (track && track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
@@ -268,7 +337,6 @@ export function setPlaybackModeStateInternal(mode) {
                 appServices.renderTimeline();
             }
         } else {
-            console.log(`[State setPlaybackModeStateInternal] Mode is already ${mode}. No change.`);
         }
     } else {
         console.warn(`[State setPlaybackModeStateInternal] Invalid playback mode attempted: ${mode}. Expected 'sequencer' or 'timeline'.`);
@@ -281,7 +349,6 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
     // _isUserActionPlaceholder is used by UI event handlers to signify a brand new track from user action,
     // vs. a track being added during project load/undo/redo.
     const isBrandNewUserTrack = isUserAction && (!initialData || initialData._isUserActionPlaceholder);
-    console.log(`[State addTrackToStateInternal] Adding ${type} track. User Action: ${isUserAction}, Brand New: ${isBrandNewUserTrack}`);
 
     if (isBrandNewUserTrack) {
         captureStateForUndoInternal(`Add ${type} Track`);
@@ -542,7 +609,6 @@ export async function redoLastActionInternal() {
 
 // --- Project Data Handling ---
 export function gatherProjectDataInternal() {
-    console.log("[State gatherProjectDataInternal] Starting to gather project data...");
     try {
         const projectData = {
             version: Constants.APP_VERSION || "5.9.1", // Use a constant for app version
@@ -565,6 +631,14 @@ export function gatherProjectDataInternal() {
                 type: effect.type,
                 params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {} // Ensure params exist
             })),
+            sendTracks: getSendTracksState().map(send => ({
+                id: send.id,
+                name: send.name,
+                effects: send.effects ? JSON.parse(JSON.stringify(send.effects)) : [],
+                level: send.level,
+                muted: send.muted
+            })),
+            trackSends: getTrackSendsState(),
             tracks: getTracksState().map(track => {
                 if (!track || typeof track.id === 'undefined') {
                     console.warn("[State gatherProjectDataInternal] Invalid track object found, skipping:", track);
@@ -641,7 +715,6 @@ export function gatherProjectDataInternal() {
                     };
                 }).filter(ws => ws !== null)
         };
-        console.log("[State gatherProjectDataInternal] Project data gathered successfully.");
         return projectData;
     } catch (error) {
         console.error("[State gatherProjectDataInternal] Error gathering project data:", error);
@@ -658,7 +731,6 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         return;
     }
     
-    console.log(`[State reconstructDAWInternal] Starting reconstruction. isUndoRedo: ${isUndoRedo}`);
     if (appServices) appServices._isReconstructingDAW_flag = true;
 
     // --- Global Reset Phase ---
@@ -714,6 +786,34 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
         if (appServices.showNotification) appServices.showNotification("Error loading master effects.", 3000);
     }
 
+    // --- Send Tracks ---
+    try {
+        if (projectData.sendTracks && Array.isArray(projectData.sendTracks)) {
+            sendTracksState = []; // Reset
+            sendTrackIdCounter = 0;
+            for (const sendData of projectData.sendTracks) {
+                if (sendData && sendData.id) {
+                    const sendTrack = {
+                        id: sendData.id,
+                        name: sendData.name || `Send ${sendData.id}`,
+                        effects: sendData.effects || [],
+                        level: sendData.level !== undefined ? sendData.level : 1.0,
+                        muted: sendData.muted || false
+                    };
+                    sendTracksState.push(sendTrack);
+                    sendTrackIdCounter = Math.max(sendTrackIdCounter, sendData.id);
+                }
+            }
+            console.log(`[State reconstructDAWInternal] Restored ${sendTracksState.length} send tracks.`);
+        }
+        if (projectData.trackSends && typeof projectData.trackSends === 'object') {
+            trackSendsState = JSON.parse(JSON.stringify(projectData.trackSends));
+            console.log("[State reconstructDAWInternal] Restored track send levels.");
+        }
+    } catch (error) {
+        console.error("[State reconstructDAWInternal] Error restoring send tracks:", error);
+    }
+
     try { // --- Tracks ---
         if (projectData.tracks && Array.isArray(projectData.tracks)) {
             const trackPromises = projectData.tracks.map(trackData => {
@@ -723,7 +823,6 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             });
             await Promise.all(trackPromises);
             // After all tracks and their audio resources are initialized:
-            console.log(`[State reconstructDAWInternal] All track instances created. Now setting armed/soloed states.`);
             const globalSettings = projectData.globalSettings || {};
             if (globalSettings.armedTrackId !== null && typeof globalSettings.armedTrackId !== 'undefined') {
                 setArmedTrackIdState(globalSettings.armedTrackId);
@@ -773,13 +872,11 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             for (const winState of sortedWindowStates) {
                 if (!winState || !winState.id) { console.warn("[State reconstructDAWInternal] Invalid window state found:", winState); continue; }
                 const key = winState.initialContentKey || winState.id; // Use initialContentKey for routing
-                console.log(`[State reconstructDAWInternal] Reconstructing window: ${key}, ID: ${winState.id}`);
                 if (key === 'globalControls' && appServices.openGlobalControlsWindow) {
                     // FIX: Pass a callback to wire up controls even during reconstruction
                     // The callback will be called by openGlobalControlsWindow to attach event listeners
                     appServices.openGlobalControlsWindow((elements) => {
                         if (elements && appServices.attachGlobalControlEvents) {
-                            console.log("[State reconstructDAWInternal] Wiring up global controls after reconstruction");
                             appServices.attachGlobalControlEvents(elements);
                         }
                     }, winState);
@@ -828,7 +925,6 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
 
     if (appServices) appServices._isReconstructingDAW_flag = false;
     if (!isUndoRedo && appServices.showNotification) appServices.showNotification(`Project loaded successfully.`, 3500);
-    console.log("[State reconstructDAWInternal] Reconstruction finished.");
 }
 
 
@@ -947,7 +1043,6 @@ export async function exportToWavInternal() {
         }
         
         maxDuration = Math.min(maxDuration + 2, 600);
-        console.log(`[State exportToWavInternal] Export duration: ${maxDuration.toFixed(1)}s`);
 
         // Stop everything first
         Tone.Transport.stop();
@@ -968,7 +1063,6 @@ export async function exportToWavInternal() {
         
         // Connect master gain to recorder
         masterGain.connect(recorder);
-        console.log("[Export] Recorder connected to master gain");
 
         // Reset transport
         Tone.Transport.position = 0;
@@ -983,17 +1077,14 @@ export async function exportToWavInternal() {
 
         // Start recording and playback
         await recorder.start();
-        console.log("[Export] Recording started");
         
         Tone.Transport.start();
-        console.log("[Export] Transport started");
 
         // Wait for recording
         await new Promise(resolve => setTimeout(resolve, maxDuration * 1000 + 500));
 
         // Stop recording
         const recording = await recorder.stop();
-        console.log("[Export] Recording stopped, size:", recording.size);
 
         // Stop transport
         Tone.Transport.stop();
@@ -1021,7 +1112,6 @@ export async function exportToWavInternal() {
         URL.revokeObjectURL(url);
 
         appServices.showNotification("Export to WAV successful!", 3000);
-        console.log("[Export] Complete, size:", recording.size);
 
     } catch (error) {
         console.error("[State exportToWavInternal] Error:", error);

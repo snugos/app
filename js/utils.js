@@ -245,7 +245,6 @@ export function setupGenericDropZoneListeners(
                  console.warn("[Utils DropZone] loadFileCallback not provided for OS file drop.");
             }
         } else {
-            console.log("[Utils DropZone] Drop event did not contain recognized data (JSON or files).");
         }
     });
 

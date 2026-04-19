@@ -97,7 +97,6 @@ import {
     handleTapTempo, resetTapTempo
 } from './ui.js';
 
-console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
 
 // --- Global UI Elements Cache ---
 const uiElementsCache = {
@@ -346,7 +345,6 @@ const appServices = {
     },
 
     panicStopAllAudio: () => {
-        console.log("[AppServices] Panic Stop All Audio requested.");
         
         if (typeof Tone !== 'undefined') {
             Tone.Transport.stop();
@@ -385,7 +383,6 @@ const appServices = {
                         typeof track.gainNode.gain.cancelScheduledValues === 'function' &&
                         typeof track.gainNode.gain.linearRampToValueAtTime === 'function' &&
                         !track.gainNode.disposed) {
-                        console.log(`[AppServices Panic] Ramping down gain for synth track ${track.id}`);
                         try {
                             track.gainNode.gain.cancelScheduledValues(Tone.now());
                             track.gainNode.gain.linearRampToValueAtTime(0, Tone.now() + 0.02); 
@@ -413,7 +410,6 @@ const appServices = {
             });
         }
 
-        console.log("All audio and transport stopped via panic.");
         showSafeNotification("All audio stopped.", 1500);
     },
 
@@ -452,7 +448,6 @@ const appServices = {
         if(map && typeof map.clear === 'function') map.clear();
     },
     closeAllTrackWindows: (trackIdToClose) => {
-        console.log(`[Main appServices.closeAllTrackWindows] Called for trackId: ${trackIdToClose}`);
         const windowIdsToClose = [
             `trackInspector-${trackIdToClose}`, `effectsRack-${trackIdToClose}`, `sequencerWin-${trackIdToClose}`
         ];
@@ -573,7 +568,6 @@ const appServices = {
     },
     removeCustomDesktopBackground: removeCustomDesktopBackground,
     onPlaybackModeChange: (newMode) => {
-        console.log(`[Main appServices.onPlaybackModeChange] Called with newMode: ${newMode}`);
         if (uiElementsCache.playbackModeToggleBtnGlobal) {
             uiElementsCache.playbackModeToggleBtnGlobal.textContent = newMode === 'timeline' ? 'Mode: Timeline' : 'Mode: Sequencer';
             uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('active', newMode === 'timeline');
@@ -612,14 +606,12 @@ const appServices = {
             Tone.Transport.loop = true;
             Tone.Transport.loopStart = loopStartTime;
             Tone.Transport.loopEnd = loopEndTime;
-            console.log(`[Main updateLoopRegion] Loop enabled: ${loopStartTime.toFixed(2)}s to ${loopEndTime.toFixed(2)}s (bars ${loopRegion.startBar}-${loopRegion.endBar})`);
         } else {
             // When disabled, still keep transport looping but for a very long duration
             // This is needed to keep the transport alive during playback
             Tone.Transport.loop = true;
             Tone.Transport.loopStart = 0;
             Tone.Transport.loopEnd = 3600; // 1 hour max
-            console.log("[Main updateLoopRegion] Loop disabled, using full project range");
         }
     }
 };
@@ -734,7 +726,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 }
 
 async function initializeSnugOS() {
-    console.log("[Main initializeSnugOS] Initializing SnugOS...");
 
     try {
         // Cache UI elements - including the fixed global controls bar
@@ -769,7 +760,6 @@ async function initializeSnugOS() {
         // Add to cache
         Object.assign(uiElementsCache, globalElements);
         
-        console.log("[Main initializeSnugOS] Global controls bar elements cached:", Object.keys(globalElements).filter(k => globalElements[k]));
 
         try {
             const effectsRegistry = await import('./effectsRegistry.js');
@@ -778,7 +768,6 @@ async function initializeSnugOS() {
                 appServices.effectsRegistryAccess.getEffectParamDefinitions = effectsRegistry.getEffectParamDefinitions || (() => []);
                 appServices.effectsRegistryAccess.getEffectDefaultParams = effectsRegistry.getEffectDefaultParams || (() => ({}));
                 appServices.effectsRegistryAccess.synthEngineControlDefinitions = effectsRegistry.synthEngineControlDefinitions || {};
-                console.log("[Main initializeSnugOS] Effects registry dynamically imported and assigned.");
             } else {
                 console.error("[Main initializeSnugOS] appServices.effectsRegistryAccess is not defined before assigning registry.");
             }
@@ -826,7 +815,6 @@ async function initializeSnugOS() {
         }
 
         showSafeNotification(`Welcome to SnugOS ${Constants.APP_VERSION}!`, 2500);
-        console.log(`[Main initializeSnugOS] SnugOS Version ${Constants.APP_VERSION} Initialized.`);
 
     } catch (initError) {
         console.error("CRITICAL ERROR during SnugOS Initialization:", initError);
@@ -905,7 +893,6 @@ async function restoreDesktopBackground() {
             if (videoBlob) {
                 const objectUrl = URL.createObjectURL(videoBlob);
                 applyDesktopBackground(objectUrl, 'video');
-                console.log("[Main] Restored video background from IndexedDB");
             }
         } catch (e) {
             console.warn("Could not restore video background:", e);
@@ -933,4 +920,3 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 }
-console.log(`SCRIPT EXECUTION FINISHED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);

@@ -16,8 +16,6 @@ export class SnugWindow {
         this._isDragging = false; // Instance flag for dragging
         this._isResizing = false; // Instance flag for resizing
 
-        console.log(`[SnugWindow ${this.id} Constructor] Initializing window "${title}". Options:`, JSON.parse(JSON.stringify(options)));
-
         const desktopEl = this.appServices.uiElementsCache?.desktop || document.getElementById('desktop');
         if (!desktopEl) {
             console.error(`[SnugWindow CRITICAL ${this.id}] Desktop element not found. Cannot create window "${title}".`);
@@ -31,7 +29,6 @@ export class SnugWindow {
 
         const safeDesktopWidth = (desktopEl.offsetWidth > 0) ? desktopEl.offsetWidth : 1024; // Robust fallback
         const safeDesktopHeight = (desktopEl.offsetHeight > 0) ? desktopEl.offsetHeight : 768; // Robust fallback
-        console.log(`[SnugWindow ${this.id} Constructor] Desktop Dims: ${safeDesktopWidth}x${safeDesktopHeight}, Taskbar Height: ${taskbarHeightVal}`);
 
 
         const optMinWidth = parseFloat(options.minWidth);
@@ -97,8 +94,6 @@ export class SnugWindow {
             minimizable: options.minimizable !== undefined ? options.minimizable : true,
             resizable: options.resizable !== undefined ? options.resizable : true,
         };
-
-        console.log(`[SnugWindow ${this.id} Constructor] Calculated final this.options:`, JSON.parse(JSON.stringify(this.options)));
 
         this.element = document.createElement('div');
         this.element.id = `window-${this.id}`;
@@ -474,7 +469,6 @@ export class SnugWindow {
     }
 
     close(isReconstruction = false) {
-        console.log(`[SnugWindow ${this.id}] close() called for "${this.title}". IsReconstruction: ${isReconstruction}`);
         this._isDragging = false; // Ensure drag/resize flags are cleared
         this._isResizing = false;
 
@@ -505,7 +499,6 @@ export class SnugWindow {
         if (!isCurrentlyReconstructing && !isReconstruction) {
             this._captureUndo(`Close window "${oldWindowTitle}"`);
         }
-        console.log(`[SnugWindow ${this.id}] close() finished for "${oldWindowTitle}".`);
     }
 
     focus(skipUndoForFocusItself = false) { // skipUndo flag relates to undoing the focus action, not subsequent actions
@@ -519,12 +512,10 @@ export class SnugWindow {
             if (this.appServices.incrementHighestZ) {
                 const newZ = this.appServices.incrementHighestZ();
                 this.element.style.zIndex = newZ;
-                console.log(`[SnugWindow ${this.id}] Focused. New z-index: ${newZ}`);
             }
         } else if (currentZ > currentHighestZGlobal) { // This window was saved with a higher z-index
             if (this.appServices.setHighestZ) {
                 this.appServices.setHighestZ(currentZ);
-                console.log(`[SnugWindow ${this.id}] Focused. Current z-index ${currentZ} is now highest.`);
             }
         }
         // No undo capture for focus action itself as it's a transient UI state change.
@@ -547,8 +538,6 @@ export class SnugWindow {
             console.error(`[SnugWindow ${this.id} applyState] Invalid or null state object provided.`);
             return;
         }
-
-        console.log(`[SnugWindow ${this.id} applyState] Applying state:`, JSON.parse(JSON.stringify(state)));
 
         if (state.left) this.element.style.left = state.left;
         if (state.top) this.element.style.top = state.top;

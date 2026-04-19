@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.12.0"; // Day 16: Humanize Pattern Feature
+export const APP_VERSION = "0.13.0"; // Day 17: Send Effects / Aux Routing Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -144,3 +144,18 @@ export const DEFAULT_SWING = {
 
 export const MAX_SWING_AMOUNT = 100;
 export const SWING_SUBDIVISION = 8; // Swing applies to 8th notes (every other 16th note)
+
+// Send Track Constants
+export const MAX_SEND_TRACKS = 8; // Maximum number of send/aux tracks
+export const DEFAULT_SEND_LEVEL = 0; // Default send level (0 = off, -infinity dB)
+export const SEND_LEVEL_MIN = 0;
+export const SEND_LEVEL_MAX = 1.2; // 0dB = 1.0, can boost slightly above unity
+export const SEND_LEVEL_POST_FADER = true; // Sends are post-fader by default (after volume)
+
+// Default send track settings
+export const DEFAULT_SEND_TRACK = {
+    name: 'Send',
+    effects: [], // Effects chain for this send bus
+    level: 1.0,  // Output level of the send bus
+    muted: false
+};

@@ -44,7 +44,6 @@ const MAX_OCTAVE_SHIFT = 2;
 export function initializePrimaryEventListeners(appContext) {
     const services = appContext || localAppServices;
     const uiCache = services.uiElementsCache || {};
-    console.log('[EventHandlers initializePrimaryEventListeners] Initializing. uiCache keys:', Object.keys(uiCache));
 
     try {
         if (uiCache.startButton) {
@@ -103,71 +102,55 @@ export function initializePrimaryEventListeners(appContext) {
 
         const menuActions = {
             menuAddSynthTrack: () => {
-                console.log('[Menu] Add Synth Track clicked');
                 try {
                     services.addTrack?.('Synth', {_isUserActionPlaceholder: true});
                 } catch(e) { console.error('[Menu] Add Synth Track error:', e); }
             },
             menuAddSamplerTrack: () => {
-                console.log('[Menu] Add Sampler Track clicked');
                 try {
                     services.addTrack?.('Sampler', {_isUserActionPlaceholder: true});
                 } catch(e) { console.error('[Menu] Add Sampler error:', e); }
             },
             menuAddDrumSamplerTrack: () => {
-                console.log('[Menu] Add Drum Sampler clicked');
                 try {
                     services.addTrack?.('DrumSampler', {_isUserActionPlaceholder: true});
                 } catch(e) { console.error('[Menu] Drum Sampler error:', e); }
             },
             menuAddInstrumentSamplerTrack: () => {
-                console.log('[Menu] Add Instrument Sampler clicked');
                 try {
                     services.addTrack?.('InstrumentSampler', {_isUserActionPlaceholder: true});
                 } catch(e) { console.error('[Menu] Instrument Sampler error:', e); }
             },
             menuAddAudioTrack: () => {
-                console.log('[Menu] Add Audio Track clicked');
                 try {
                     services.addTrack?.('Audio', {_isUserActionPlaceholder: true});
                 } catch(e) { console.error('[Menu] Audio Track error:', e); }
             },
             menuOpenSoundBrowser: () => {
-                console.log('[Menu] Sound Browser clicked');
                 try {
                     services.openSoundBrowserWindow?.();
                 } catch(e) { console.error('[Menu] Sound Browser error:', e); }
             },
             menuOpenTimeline: () => {
-                console.log('[Menu] Timeline clicked');
                 try {
                     services.openTimelineWindow?.();
                 } catch(e) { console.error('[Menu] Timeline error:', e); }
             },
             menuOpenGlobalControls: () => {
-                console.log('[Menu] Global Controls clicked');
                 try {
                     services.openGlobalControlsWindow?.();
                 } catch(e) { console.error('[Menu] Global Controls error:', e); }
             },
             menuOpenMixer: () => {
-                console.log('[Menu] Mixer clicked');
                 try {
                     services.openMixerWindow?.();
                 } catch(e) { console.error('[Menu] Mixer error:', e); }
             },
             menuOpenMasterEffects: () => {
-                console.log('[Menu] Master Effects clicked');
                 try {
                     services.openMasterEffectsRackWindow?.();
                 } catch(e) { console.error('[Menu] Master Effects error:', e); }
             },
-            menuUndo: () => { console.log('[Menu] Undo clicked'); services.undoLastAction?.(); },
-            menuRedo: () => { console.log('[Menu] Redo clicked'); services.redoLastAction?.(); },
-            menuSaveProject: () => { console.log('[Menu] Save clicked'); services.saveProject?.(); },
-            menuLoadProject: () => { console.log('[Menu] Load clicked'); services.loadProject?.(); },
-            menuExportWav: () => { console.log('[Menu] Export clicked'); services.exportToWav?.(); },
-            menuToggleFullScreen: () => { console.log('[Menu] Fullscreen clicked'); toggleFullScreen(); },
             menuTetris: () => window.open("https://snugos.github.io/app/tetris.html", "_blank"),
         };
 
@@ -175,7 +158,6 @@ export function initializePrimaryEventListeners(appContext) {
             if (uiCache[menuItemId]) {
                 uiCache[menuItemId].addEventListener('click', (e) => {
                     e.stopPropagation();
-                    console.log(`[Menu] CLICK FIRED: ${menuItemId}`);
                     menuActions[menuItemId]();
                     if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
                 });
@@ -273,7 +255,6 @@ export function attachGlobalControlEvents(elements) {
                 }
 
                 const transport = Tone.Transport;
-                console.log(`[EventHandlers Play/Resume] Clicked. Transport state: ${transport.state}, time: ${transport.seconds.toFixed(2)}`);
 
                 const tracks = getTracks();
                 tracks.forEach(track => { if (typeof track.stopPlayback === 'function') track.stopPlayback(); });
@@ -289,7 +270,6 @@ export function attachGlobalControlEvents(elements) {
                     const startTime = wasPaused ? transport.seconds : 0;
                     if (!wasPaused) transport.position = 0;
 
-                    console.log(`[EventHandlers Play/Resume] Starting/Resuming from ${startTime.toFixed(2)}s.`);
                     
                     // Apply loop region settings before starting playback
                     if (localAppServices.updateLoopRegion) {
@@ -321,7 +301,6 @@ export function attachGlobalControlEvents(elements) {
                     playBtnGlobal.textContent = 'Pause';
                     playBtnGlobal.classList.add('playing');
                 } else { 
-                    console.log(`[EventHandlers Play/Resume] Pausing transport.`);
                     transport.pause();
                     playBtnGlobal.textContent = 'Play';
                     playBtnGlobal.classList.remove('playing');
@@ -339,7 +318,6 @@ export function attachGlobalControlEvents(elements) {
 
     if (stopBtnGlobal) {
         stopBtnGlobal.addEventListener('click', () => {
-            console.log("[EventHandlers StopAll] Stop All button clicked.");
             if (localAppServices.panicStopAllAudio) {
                 localAppServices.panicStopAllAudio();
             } else {
@@ -520,7 +498,6 @@ function onMIDISuccess(midiAccess) {
     }
 
     midiAccess.onstatechange = (event) => {
-        console.log(`[MIDI] State change: ${event.port.name}, State: ${event.port.state}, Type: ${event.port.type}`);
         setupMIDI(); 
         if (localAppServices.showNotification) {
             localAppServices.showNotification(`MIDI device ${event.port.name} ${event.port.state}.`, 2500);
@@ -554,7 +531,6 @@ export function selectMIDIInput(deviceId, silent = false) {
                     port.onmidimessage = handleMIDIMessage;
                     if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(port);
                     if (!silent && localAppServices.showNotification) localAppServices.showNotification(`MIDI Input: ${port.name} selected.`, 2000);
-                    console.log(`[MIDI] Input selected: ${port.name}`);
                 }).catch(err => {
                     console.error(`[MIDI] Error opening port ${input.name}:`, err);
                     if (!silent && localAppServices.showNotification) localAppServices.showNotification(`Error opening MIDI port: ${input.name}`, 3000);
@@ -1021,7 +997,6 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime, ap
                 services.showNotification("Invalid file type. Please drop an audio file.", 3000);
             }
         } else {
-            console.log("[EventHandlers handleTimelineLaneDrop] No recognized data in drop event for timeline.");
         }
     } catch (e) {
         console.error("[EventHandlers handleTimelineLaneDrop] Error processing dropped data:", e);

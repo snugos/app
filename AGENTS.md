@@ -338,6 +338,43 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Right-click on sequencer grid, select "Humanize Pattern...", enter intensity value (0.0-1.0)
 - **Version**: Bumped to 0.12.0
 
+#### Day 17: Production Code Cleanup - Debug Logging Removal (2026-04-19)
+- **Bug Fix**: Removed ~50+ debug console.log statements from production code across all JS modules
+- **Files Modified**:
+  - `js/SnugWindow.js`: Removed 8 console.log statements from window lifecycle methods (constructor, close, focus, applyState)
+  - `js/Track.js`: Removed ~40 console.log statements from:
+    - Constructor initialization
+    - Audio node management (initializeAudioNodes, rebuildEffectChain)
+    - Sample loading (loadSampleToPad, fullyInitializeAudioResources)
+    - Sequence operations (createNewSequence, deleteSequence, duplicateSequence)
+    - Pattern operations (randomizePattern, shiftPattern, mirrorPattern, humanizePattern)
+    - Playback scheduling (schedulePlayback, recreateToneSequence)
+    - Timeline clip management
+  - `js/ui.js`: Removed ~40 console.log statements from:
+    - Sound browser operations
+    - Preview player handling
+    - Sequencer window management
+    - Timeline rendering
+  - `js/main.js`: Removed console.log statements from:
+    - Panic stop functions
+    - Playback mode changes
+    - Loop region updates
+    - Initialization logging
+  - `js/audio.js`: Removed console.log statements from:
+    - Master bus setup
+    - Effect chain rebuilding
+    - Sample loading logic
+  - `js/state.js`: Removed console.log statements from:
+    - Playback mode changes
+    - Track management
+    - Project save/load operations
+    - Export functions
+  - `js/eventHandlers.js`, `js/utils.js`, `js/db.js`, `js/effectsRegistry.js`: Removed remaining debug statements
+- **Impact**: Debug logging was cluttering browser console in production, making it harder for users to report issues. Console.error and console.warn statements were preserved for actual error handling.
+- **Verification**: All JS files pass `node --check` syntax validation after changes.
+- **Version**: No bump needed (code cleanup)
+- **Status**: Feature completer should proceed with next planned work.
+
 ## Code Style Guidelines
 
 ### Module Structure

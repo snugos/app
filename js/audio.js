@@ -32,7 +32,6 @@ export function initializeAudioModule(appServicesFromMain) {
 
 export function getMasterEffectsBusInputNode() {
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed) {
-        console.log("[Audio getMasterEffectsBusInputNode] Master bus input node not ready or disposed, attempting setup.");
         setupMasterBus();
     }
     return masterEffectsBusInputNode;
@@ -40,7 +39,6 @@ export function getMasterEffectsBusInputNode() {
 
 export function getActualMasterGainNode() {
     if (!masterGainNodeActual || masterGainNodeActual.disposed) {
-        console.log("[Audio getActualMasterGainNode] Actual master gain node not ready or disposed, attempting setup.");
         setupMasterBus();
     }
     return masterGainNodeActual;
@@ -58,14 +56,11 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
         return true;
     }
 
-    console.log('[Audio initAudioContextAndMasterMeter] Attempting Tone.start(). Current context state:', Tone.context?.state);
     try {
         await Tone.start();
-        console.log('[Audio initAudioContextAndMasterMeter] Tone.start() completed. Context state:', Tone.context?.state);
 
         if (Tone.context && Tone.context.state === 'running') {
             if (!audioContextInitialized) {
-                console.log('[Audio initAudioContextAndMasterMeter] First time setup for master bus after context became running.');
                 setupMasterBus();
             } else if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed ||
                        !masterGainNodeActual || masterGainNodeActual.disposed ||
@@ -74,7 +69,6 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
                 setupMasterBus();
             }
             audioContextInitialized = true;
-            console.log('[Audio initAudioContextAndMasterMeter] Audio context initialized and running.');
             return true;
         } else {
             console.warn('[Audio initAudioContextAndMasterMeter] Audio context NOT running after Tone.start(). State:', Tone.context?.state);
@@ -101,7 +95,6 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
 }
 
 function setupMasterBus() {
-    console.log('[Audio setupMasterBus] Setting up master bus...');
     if (!Tone.context || Tone.context.state !== 'running') {
         console.warn('[Audio setupMasterBus] Audio context not running. Aborting master bus setup.');
         return;
@@ -112,7 +105,6 @@ function setupMasterBus() {
              try { masterEffectsBusInputNode.dispose(); } catch(e){ console.warn("[Audio setupMasterBus] Error disposing old master bus input:", e.message); }
         }
         masterEffectsBusInputNode = new Tone.Gain(); // Destination will be set by rebuildMasterEffectChain
-        console.log('[Audio setupMasterBus] Master effects bus input node created.');
     }
 
     if (!masterGainNodeActual || masterGainNodeActual.disposed) {
@@ -122,7 +114,6 @@ function setupMasterBus() {
         const initialMasterVolumeValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
         masterGainNodeActual = new Tone.Gain(initialMasterVolumeValue);
         if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(masterGainNodeActual.gain.value); // Update state module
-        console.log('[Audio setupMasterBus] Master gain node actual created with gain:', masterGainNodeActual.gain.value);
     }
 
     if (!masterMeterNode || masterMeterNode.disposed) {
@@ -130,14 +121,11 @@ function setupMasterBus() {
             try { masterMeterNode.dispose(); } catch(e) { console.warn("[Audio setupMasterBus] Error disposing old master meter:", e.message); }
         }
         masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
-        console.log('[Audio setupMasterBus] Master meter node created.');
     }
     rebuildMasterEffectChain(); // This will handle connections
-    console.log('[Audio setupMasterBus] Master bus setup process complete.');
 }
 
 export function rebuildMasterEffectChain() {
-    console.log('[Audio rebuildMasterEffectChain] Rebuilding master effect chain...');
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed ||
         !masterGainNodeActual || masterGainNodeActual.disposed ||
         !masterMeterNode || masterMeterNode.disposed) {
@@ -163,7 +151,6 @@ export function rebuildMasterEffectChain() {
 
     let currentAudioPathEnd = masterEffectsBusInputNode;
     const masterEffectsState = localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : [];
-    console.log(`[Audio rebuildMasterEffectChain] Master effects in state: ${masterEffectsState.length}`);
 
     masterEffectsState.forEach(effectState => {
         let effectNode = activeMasterEffectNodes.get(effectState.id);
@@ -172,7 +159,6 @@ export function rebuildMasterEffectChain() {
             effectNode = createEffectInstance(effectState.type, effectState.params);
             if (effectNode) {
                 activeMasterEffectNodes.set(effectState.id, effectNode);
-                console.log(`[Audio rebuildMasterEffectChain] Recreated master effect node for ${effectState.type} (ID: ${effectState.id}).`);
             } else {
                 console.error(`[Audio rebuildMasterEffectChain] CRITICAL: Failed to recreate master effect node for ${effectState.type} (ID: ${effectState.id}). Chain will be broken here.`);
                 return; // Skip connecting this effect if it failed to create
@@ -181,7 +167,6 @@ export function rebuildMasterEffectChain() {
 
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
             try {
-                console.log(`[Audio rebuildMasterEffectChain] Connecting ${currentAudioPathEnd.toString()} to ${effectNode.toString()} (${effectState.type})`);
                 currentAudioPathEnd.connect(effectNode);
                 currentAudioPathEnd = effectNode;
             } catch (e) {
@@ -197,7 +182,6 @@ export function rebuildMasterEffectChain() {
     // Connect the end of the effect chain to masterGainNodeActual
     if (currentAudioPathEnd && !currentAudioPathEnd.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
-            console.log(`[Audio rebuildMasterEffectChain] Connecting end of master effect chain (${currentAudioPathEnd.toString()}) to masterGainNodeActual.`);
             currentAudioPathEnd.connect(masterGainNodeActual);
         } catch (e) {
             console.error(`[Audio rebuildMasterEffectChain] Error connecting master chain output to masterGainNodeActual:`, e);
@@ -207,7 +191,6 @@ export function rebuildMasterEffectChain() {
          if (!masterEffectsBusInputNode.numberOfOutputs && masterGainNodeActual && !masterGainNodeActual.disposed) { // If no effects, connect input directly
             try {
                 masterEffectsBusInputNode.connect(masterGainNodeActual);
-                console.log("[Audio rebuildMasterEffectChain] Connected masterEffectsBusInputNode directly to masterGainNodeActual (no effects).");
             } catch (e) {
                 console.error("[Audio rebuildMasterEffectChain] Error directly connecting masterEffectsBusInputNode to masterGainNodeActual:", e.message);
             }
@@ -217,7 +200,6 @@ export function rebuildMasterEffectChain() {
     // Connect masterGainNodeActual to destination and meter
     if (masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
-            console.log('[Audio rebuildMasterEffectChain] Connecting masterGainNodeActual to destination and meter.');
             masterGainNodeActual.toDestination(); // Connects to Tone.Destination (context.destination)
             if (masterMeterNode && !masterMeterNode.disposed) {
                 masterGainNodeActual.connect(masterMeterNode);
@@ -228,7 +210,6 @@ export function rebuildMasterEffectChain() {
     } else {
          console.warn('[Audio rebuildMasterEffectChain] masterGainNodeActual not available for final connection.');
     }
-    console.log('[Audio rebuildMasterEffectChain] Master effect chain rebuild complete.');
 }
 
 
@@ -538,7 +519,6 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             `${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}`;
         const dbKey = `track-${track.id}-${dbKeySuffix}-${fileObject.size}-${fileObject.lastModified}`; // More unique key
         await storeAudio(dbKey, fileObject);
-        console.log(`[Audio commonLoadSampleLogic] Stored in DB with key: ${dbKey}`);
 
         const newAudioBuffer = await new Tone.Buffer().load(objectURLForTone);
 
@@ -677,7 +657,6 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         if (localAppServices.showNotification) localAppServices.showNotification(`Audio file "${sourceName}" is empty.`, 3000);
         return;
     }
-    console.log(`[Audio loadSampleFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track ${trackId} (${trackTypeHint})`);
     await commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint);
 }
 
@@ -746,7 +725,6 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         if (localAppServices.showNotification) localAppServices.showNotification(`Drum sample "${sourceName}" is empty.`, 3000);
         return;
     }
-    console.log(`[Audio loadDrumSamplerPadFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track ${trackId}, pad ${padIndex}`);
     await commonLoadSampleLogic(fileObject, sourceName, track, 'DrumSampler', padIndex);
 }
 
@@ -774,7 +752,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
     }
 
     if (localAppServices.showNotification) localAppServices.showNotification(`Loading "${fileName}" to ${track.name}...`, 2000);
-    console.log(`[Audio loadSoundFromBrowserToTarget] Attempting to load: ${fileName} from lib: ${libraryName} (Path: ${fullPath}) to Track ID: ${track.id} (${track.type}), Pad/Slice Index: ${targetPadOrSliceIndex}`);
 
     try {
         const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
@@ -791,7 +768,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         const inferredMimeType = getMimeTypeFromFilename(fileName);
         const finalMimeType = fileBlobFromZip.type && fileBlobFromZip.type !== "application/octet-stream" ? fileBlobFromZip.type : inferredMimeType;
         const blobToLoad = new File([fileBlobFromZip], fileName, { type: finalMimeType });
-        console.log(`[Audio loadSoundFromBrowserToTarget] Blob created from ZIP: ${fileName}, Type: ${blobToLoad.type}, Size: ${blobToLoad.size}`);
 
 
         if (track.type === 'DrumSampler') {
@@ -801,7 +777,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
                 actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.originalFileName); // Find first truly empty
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; // Fallback to selected
                 if (typeof actualPadIndex !== 'number' || actualPadIndex < 0) actualPadIndex = 0; // Final fallback
-                console.log(`[Audio loadSoundFromBrowserToTarget] Adjusted pad index for DrumSampler to: ${actualPadIndex}`);
             }
             await commonLoadSampleLogic(blobToLoad, fileName, track, 'DrumSampler', actualPadIndex);
         } else { // Sampler or InstrumentSampler
@@ -820,17 +795,14 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
     const loadedZips = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
     const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-    console.log(`[Audio fetchSoundLibrary ENTRY] Library: ${libraryName}, URL: ${zipUrl}, Autofetch: ${isAutofetch}.`);
     
     if (loadedZips && loadedZips[libraryName] && loadedZips[libraryName] !== "loading") {
-        console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} already loaded or processed.`);
         if (!isAutofetch && localAppServices.updateSoundBrowserDisplayForLibrary) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false);
         }
         return; // Already loaded
     }
     if (loadedZips && loadedZips[libraryName] === "loading") {
-        console.log(`[Audio fetchSoundLibrary INFO] ${libraryName} is currently being loaded by another call. Skipping this call.`);
         return; // Already being loaded
     }
 
@@ -840,19 +812,15 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
     }
 
     try {
-        console.log(`[Audio fetchSoundLibrary SET_LOADING_STATE] Setting ${libraryName} to "loading" state.`);
         const newLoadedZips = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
         newLoadedZips[libraryName] = "loading";
         if (localAppServices.setLoadedZipFilesState) localAppServices.setLoadedZipFilesState(newLoadedZips);
 
-        console.log(`[Audio fetchSoundLibrary HTTP_REQUEST] Fetching ${zipUrl} for ${libraryName}`);
         const response = await fetch(zipUrl);
-        console.log(`[Audio fetchSoundLibrary HTTP_RESPONSE] Response for ${libraryName} - Status: ${response.status}, OK: ${response.ok}`);
         if (!response.ok) {
             throw new Error(`HTTP error ${response.status} fetching ZIP for ${libraryName} from ${zipUrl}`);
         }
         const zipData = await response.arrayBuffer();
-        console.log(`[Audio fetchSoundLibrary ZIP_DATA_RECEIVED] Received arrayBuffer for ${libraryName}, length: ${zipData.byteLength}`);
 
         if (typeof JSZip === 'undefined') {
             console.error("[Audio fetchSoundLibrary JSZIP_ERROR] JSZip library not found. Cannot process library.");
@@ -860,9 +828,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
         }
 
         const jszip = new JSZip();
-        console.log(`[Audio fetchSoundLibrary JSZIP_LOAD_ASYNC_START] Starting jszip.loadAsync for ${libraryName}`);
         const loadedZipInstance = await jszip.loadAsync(zipData);
-        console.log(`[Audio fetchSoundLibrary JSZIP_LOAD_ASYNC_SUCCESS] JSZip successfully loaded ${libraryName}. Num files in zip: ${Object.keys(loadedZipInstance.files).length}`);
 
         // Get the latest state again before updating
         const latestLoadedZipsAfterLoad = localAppServices.getLoadedZipFiles ? { ...(localAppServices.getLoadedZipFiles()) } : {};
@@ -876,7 +842,6 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
 
         const fileTree = {};
         let audioFileCount = 0;
-        console.log(`[Audio fetchSoundLibrary PARSE_ZIP_START] Parsing files for ${libraryName}`);
         loadedZipInstance.forEach((relativePath, zipEntry) => {
             if (zipEntry.dir || relativePath.startsWith("__MACOSX") || relativePath.includes("/.") || relativePath.startsWith(".")) {
                 return; // Skip directories and hidden/system files
@@ -900,7 +865,6 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
                 }
             }
         });
-        console.log(`[Audio fetchSoundLibrary PARSE_ZIP_COMPLETE] Parsed ${audioFileCount} audio files for ${libraryName}. FileTree keys:`, Object.keys(fileTree));
 
         const latestSoundTrees = localAppServices.getSoundLibraryFileTrees ? { ...(localAppServices.getSoundLibraryFileTrees()) } : {};
         latestSoundTrees[libraryName] = fileTree;
@@ -911,7 +875,6 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = true)
             console.error(`[Audio Fetch ERROR] localAppServices.setSoundLibraryFileTreesState is UNDEFINED for ${libraryName} (soundTrees)`);
         }
 
-        console.log(`[Audio fetchSoundLibrary SUCCESS] Successfully loaded and processed library: ${libraryName}.`);
         if (localAppServices.updateSoundBrowserDisplayForLibrary) {
             localAppServices.updateSoundBrowserDisplayForLibrary(libraryName, false, false); // isLoading = false, hasError = false
         }
@@ -985,39 +948,30 @@ export function clearAllMasterEffectNodes() {
         }
     });
     activeMasterEffectNodes.clear();
-    console.log("[Audio clearAllMasterEffectNodes] All active master effect nodes cleared and disposed.");
     rebuildMasterEffectChain(); // Rebuild with an empty chain (input -> gain -> destination)
 }
 
 
 // --- Audio Recording Functions ---
 export async function startAudioRecording(track, isMonitoringEnabled) {
-    console.log("[Audio startAudioRecording] Called for track:", track?.name, "Monitoring:", isMonitoringEnabled);
 
     // Ensure previous instances are robustly closed and disposed
     if (mic) {
-        console.log("[Audio startAudioRecording] Existing mic instance found. State:", mic.state);
         if (mic.state === "started") {
-            try { mic.close(); console.log("[Audio startAudioRecording] Existing mic closed."); }
             catch (e) { console.warn("[Audio startAudioRecording] Error closing existing mic:", e.message); }
         }
         // Tone.UserMedia objects don't have a standard dispose method in the same way other Tone nodes do
         mic = null;
-        console.log("[Audio startAudioRecording] Previous mic instance nullified.");
     }
 
     if (recorder) {
-        console.log("[Audio startAudioRecording] Existing recorder instance found. State:", recorder.state, "Disposed:", recorder.disposed);
         if (recorder.state === "started") {
-            try { await recorder.stop(); console.log("[Audio startAudioRecording] Existing recorder stopped."); }
             catch (e) { console.warn("[Audio startAudioRecording] Error stopping existing recorder:", e.message); }
         }
         if (!recorder.disposed) {
-            try { recorder.dispose(); console.log("[Audio startAudioRecording] Existing recorder disposed."); }
             catch (e) { console.warn("[Audio startAudioRecording] Error disposing existing recorder:", e.message); }
         }
         recorder = null;
-        console.log("[Audio startAudioRecording] Previous recorder instance nullified.");
     }
 
     // Create new instances for a fresh start.
@@ -1026,9 +980,7 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
             echoCancellation: false, autoGainControl: false, noiseSuppression: false, latency: 0.01 // small latency hint
         }
     });
-    console.log("[Audio startAudioRecording] New Tone.UserMedia instance created.");
     recorder = new Tone.Recorder();
-    console.log("[Audio startAudioRecording] New Tone.Recorder instance created.");
 
     if (!track || track.type !== 'Audio' || !track.inputChannel || track.inputChannel.disposed) {
         const errorMsg = `Recording failed: Track (ID: ${track?.id}) is not a valid audio track or its input channel is missing/disposed. Type: ${track?.type}. Input channel valid: ${!!(track?.inputChannel && !track.inputChannel.disposed)}`;
@@ -1036,14 +988,12 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         if (localAppServices.showNotification) localAppServices.showNotification(errorMsg, 4000);
         return false;
     }
-    console.log(`[Audio startAudioRecording] Attempting to record on track: ${track.name} (ID: ${track.id})`);
 
     try {
         if (Tone.UserMedia.enumerateDevices && typeof Tone.UserMedia.enumerateDevices === 'function') {
             try {
                 const devices = await Tone.UserMedia.enumerateDevices();
                 const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
-                console.log("[Audio startAudioRecording] Available audio input devices:", audioInputDevices.map(d => ({ label: d.label, deviceId: d.deviceId, groupId: d.groupId })));
                 if (audioInputDevices.length === 0) console.warn("[Audio startAudioRecording] No audio input devices found by enumerateDevices.");
             } catch (enumError) {
                 console.error("[Audio startAudioRecording] Error enumerating devices:", enumError);
@@ -1052,27 +1002,20 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
             console.warn("[Audio startAudioRecording] Tone.UserMedia.enumerateDevices is not available or not a function.");
         }
 
-        console.log("[Audio startAudioRecording] Opening microphone (mic.open())...");
         await mic.open();
-        console.log("[Audio startAudioRecording] Microphone opened successfully. State:", mic.state, "Selected device label (mic.label):", mic.label || "N/A");
 
         // Disconnect mic from everything first to be safe
         try { mic.disconnect(); } catch (e) { /* ignore if not connected */ }
 
         if (isMonitoringEnabled) {
-            console.log("[Audio startAudioRecording] Monitoring is ON. Connecting mic to track inputChannel.");
             mic.connect(track.inputChannel);
         } else {
-            console.log("[Audio startAudioRecording] Monitoring is OFF.");
             // Ensure mic is not connected to the inputChannel if monitoring is off.
             // This might be redundant if disconnect above worked, but explicit check is safer.
         }
         mic.connect(recorder);
-        console.log("[Audio startAudioRecording] Mic connected to recorder.");
 
-        console.log("[Audio startAudioRecording] Starting recorder...");
         await recorder.start();
-        console.log("[Audio startAudioRecording] Recorder started. State:", recorder.state);
         return true;
 
     } catch (error) {
@@ -1101,13 +1044,11 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
 }
 
 export async function stopAudioRecording() {
-    console.log("[Audio stopAudioRecording] Called.");
     let blob = null;
 
     if (!recorder) {
         console.warn("[Audio stopAudioRecording] Recorder not initialized. Cannot stop recording.");
         if (mic && mic.state === "started") {
-            console.log("[Audio stopAudioRecording] Mic was started, closing it (recorder was null).");
             try { mic.close(); } catch(e) { console.warn("[Audio stopAudioRecording] Error closing mic (recorder null):", e.message); }
         }
         mic = null;
@@ -1116,9 +1057,7 @@ export async function stopAudioRecording() {
 
     if (recorder.state === "started") {
         try {
-            console.log("[Audio stopAudioRecording] Stopping recorder...");
             blob = await recorder.stop(); // This resolves with the Blob
-            console.log("[Audio stopAudioRecording] Recorder stopped. Blob received, size:", blob?.size, "type:", blob?.type);
         } catch (e) {
             console.error("[Audio stopAudioRecording] Error stopping recorder:", e);
             if (localAppServices.showNotification) localAppServices.showNotification("Error stopping recorder. Recording may be lost.", 3000);
@@ -1131,7 +1070,6 @@ export async function stopAudioRecording() {
     // Cleanup mic
     if (mic) {
         if (mic.state === "started") {
-            console.log("[Audio stopAudioRecording] Closing microphone.");
             try {
                 mic.disconnect(recorder); // Disconnect from recorder first
                 if (localAppServices.getRecordingTrackId) { // Disconnect from track input if monitoring was on
@@ -1141,18 +1079,15 @@ export async function stopAudioRecording() {
                     }
                 }
                 mic.close();
-                console.log("[Audio stopAudioRecording] Microphone closed and disconnected.");
             } catch (e) {
                 console.warn("[Audio stopAudioRecording] Error closing/disconnecting mic:", e.message);
             }
         }
         mic = null; // Nullify the global reference
-        console.log("[Audio stopAudioRecording] Mic instance nullified.");
     }
 
     // Cleanup recorder
     if (recorder && !recorder.disposed) {
-        console.log("[Audio stopAudioRecording] Disposing recorder instance.");
         try {
             recorder.dispose();
         } catch(e) {
@@ -1160,7 +1095,6 @@ export async function stopAudioRecording() {
         }
     }
     recorder = null;
-    console.log("[Audio stopAudioRecording] Recorder instance nullified and disposed.");
 
     // Process the recorded blob
     if (blob && blob.size > 0) {
@@ -1169,7 +1103,6 @@ export async function stopAudioRecording() {
         const track = recordingTrackId !== null && localAppServices.getTrackById ? localAppServices.getTrackById(recordingTrackId) : null;
 
         if (track) {
-            console.log(`[Audio stopAudioRecording] Processing recorded blob for track ${track.name} (ID: ${track.id}), original startTime: ${startTime}`);
             if (typeof track.addAudioClip === 'function') {
                 await track.addAudioClip(blob, startTime);
             } else {
@@ -1191,7 +1124,6 @@ export async function stopAudioRecording() {
 // --- Metronome Functions ---
 export function initializeMetronome() {
     if (metronomeInitialized) return;
-    console.log("[Audio initializeMetronome] Initializing metronome click players.");
     
     // Create synthetic click sounds using oscillators
     // A "click" player that can be triggered rapidly
@@ -1236,7 +1168,6 @@ export function initializeMetronome() {
         metronomeAccentPlayer.connect(getMasterEffectsBusInputNode());
         
         metronomeInitialized = true;
-        console.log("[Audio initializeMetronome] Metronome initialized successfully.");
     } catch (e) {
         console.error("[Audio initializeMetronome] Error initializing metronome:", e);
     }
@@ -1253,7 +1184,6 @@ export function startMetronome() {
         }
     }
     
-    console.log("[Audio startMetronome] Starting metronome.");
     const transport = Tone.getTransport();
     const bpm = transport.bpm.value;
     const beatDuration = 60 / bpm; // seconds per beat
@@ -1273,11 +1203,9 @@ export function startMetronome() {
     }, "16n"); // Repeat every 16th note for precision
     
     transport.start();
-    console.log("[Audio startMetronome] Metronome scheduled with ID:", metronomeScheduledEventId);
 }
 
 export function stopMetronome() {
-    console.log("[Audio stopMetronome] Stopping metronome.");
     const transport = Tone.getTransport();
     
     if (metronomeScheduledEventId !== null) {
@@ -1292,7 +1220,6 @@ export function stopMetronome() {
         metronomeAccentPlayer.stop();
     }
     
-    console.log("[Audio stopMetronome] Metronome stopped.");
 }
 
 export function setMetronomeVolume(volume) {

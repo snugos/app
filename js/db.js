@@ -26,16 +26,13 @@ function getDB() {
             };
 
             request.onsuccess = (event) => {
-                // console.log('[DB] Database opened successfully.');
                 resolve(event.target.result);
             };
 
             request.onupgradeneeded = (event) => {
-                console.log('[DB] Database upgrade needed.');
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(STORE_NAME)) {
                     db.createObjectStore(STORE_NAME);
-                    console.log(`[DB] Object store "${STORE_NAME}" created.`);
                 }
             };
         });
@@ -69,7 +66,6 @@ export async function storeAudio(key, audioBlob) {
             const request = store.put(audioBlob, key);
 
             request.onsuccess = () => {
-                // console.log(`[DB] Audio stored successfully with key: ${key}`);
                 resolve(request.result);
             };
             request.onerror = (event) => {
@@ -117,7 +113,6 @@ export async function getAudio(key) {
 
             request.onsuccess = () => {
                 if (request.result) {
-                    // console.log(`[DB] Audio retrieved successfully for key: ${key}`);
                     resolve(request.result);
                 } else {
                     // console.warn(`[DB] No audio found for key: ${key}`);
@@ -167,7 +162,6 @@ export async function deleteAudio(key) {
             const request = store.delete(key);
 
             request.onsuccess = () => {
-                // console.log(`[DB] Audio deleted successfully for key: ${key}`);
                 resolve();
             };
             request.onerror = (event) => {
@@ -212,7 +206,6 @@ export async function clearAllAudio() {
             const request = store.clear();
 
             request.onsuccess = () => {
-                console.log('[DB] All audio cleared from database.');
                 resolve();
             };
             request.onerror = (event) => {
