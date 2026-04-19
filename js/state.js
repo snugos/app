@@ -53,6 +53,8 @@ let soloedTrackId = null;
 let mutedTrackIds = []; // Array of muted track IDs for multi-mute support
 let armedTrackId = null;
 let isRecordingGlobal = false;
+export function isTrackRecordingState() { return isRecordingGlobal; }
+export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 let recordingTrackIdGlobal = null;
 let recordingStartTime = 0;
 
@@ -138,6 +140,7 @@ export function getWindowByIdState(id) { return openWindowsMap.get(id); }
 export function getHighestZState() { return highestZ; }
 export function getMasterEffectsState() { return masterEffectsChainState; }
 export function getMasterGainValueState() { return masterGainValueState; }
+export function getPlaybackModeState() { return globalPlaybackMode; }
 
 export function getMidiAccessState() { return midiAccessGlobal; }
 export function getActiveMIDIInputState() { return activeMIDIInputGlobal; }
@@ -206,6 +209,7 @@ export function setArmedTrackIdState(id) { armedTrackId = id; }
 export function setIsRecordingState(status) { isRecordingGlobal = !!status; }
 export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
 export function setRecordingStartTimeState(time) { recordingStartTime = Number.isFinite(time) ? time : 0; }
+export function getRecordingStartTimeState() { return recordingStartTime; }
 export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
 
 export function setPlaybackModeStateInternal(mode) {
