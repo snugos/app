@@ -818,6 +818,7 @@ export class Track {
     }
 
     setVolume(volume, fromInteraction = false) { 
+        if (!fromInteraction) this._captureUndoState(`Set volume on ${this.name}`);
         this.previousVolumeBeforeMute = Math.max(0, Math.min(parseFloat(volume) || 0, 1.5)); 
         if (this.gainNode && !this.gainNode.disposed && !this.isMuted) {
             try {
@@ -1646,7 +1647,7 @@ export class Track {
             return null;
         }
 
-        const sourceSequence = this.sequences.find(s => s.id === sourceSequenceId);
+        const sourceSequence = this.sequences ? this.sequences.find(s => s.id === sourceSequenceId) : null;
         if (!sourceSequence) {
             console.warn(`[Track ${this.id}] Source sequence with ID ${sourceSequenceId} not found.`);
             if (this.appServices.showNotification) this.appServices.showNotification("Source sequence not found.", 3000);
