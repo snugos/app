@@ -1767,19 +1767,59 @@ export function renderDrumSamplerPads(track) {
 
 export function updateSequencerCellUI(sequencerElement, trackType, row, col, isActive) {
     if (!sequencerElement) return;
-    
-    const cell = sequencerElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    const cell = sequencerElement.querySelector(`.seq-cell[data-row="${row}"][data-col="${col}"]`);
     if (!cell) return;
-    
     if (isActive) {
         cell.classList.add('active');
-        cell.style.backgroundColor = trackType === 'Synth' ? '#a855f7' : 
-                                     trackType === 'DrumSampler' ? '#22c55e' : 
-                                     trackType === 'Sampler' ? '#3b82f6' : '#eab308';
+        cell.style.backgroundColor = trackType === 'DrumSampler' ? '#ef4444' : (trackType === 'Sampler' ? '#3b82f6' : '#eab308');
     } else {
         cell.classList.remove('active');
         cell.style.backgroundColor = '';
     }
+}
+
+// --- Tap Tempo Feature ---
+let tapTimes = [];
+const TAP_TIMEOUT_MS = 2000; // Reset tap buffer after 2 seconds of inactivity
+
+export function handleTapTempo() {
+    const now = performance.now();
+    
+    // Reset if too much time has passed since last tap
+    if (tapTimes.length > 0 && (now - tapTimes[tapTimes.length - 1]) > TAP_TIMEOUT_MS) {
+        tapTimes = [];
+    }
+    
+    tapTimes.push(now);
+    
+    // Keep only the last 8 taps
+    if (tapTimes.length > 8) {
+        tapTimes.shift();
+    }
+    
+    // Need at least 2 taps to calculate tempo
+    if (tapTimes.length < 2) {
+        return null;
+    }
+    
+    // Calculate average interval between taps
+    let totalInterval = 0;
+    for (let i = 1; i < tapTimes.length; i++) {
+        totalInterval += tapTimes[i] - tapTimes[i - 1];
+    }
+    const avgInterval = totalInterval / (tapTimes.length - 1);
+    
+    // Convert interval (ms) to BPM
+    const bpm = 60000 / avgInterval;
+    
+    // Clamp to reasonable tempo range
+    const clampedBpm = Math.min(Constants.MAX_TEMPO, Math.max(Constants.MIN_TEMPO, bpm));
+    
+    return clampedBpm;
+}
+
+export function resetTapTempo() {
+    tapTimes = [];
 }
 
 // --- Timeline Functions (Stubs) ---

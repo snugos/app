@@ -207,7 +207,7 @@ export function attachGlobalControlEvents(elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
-    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal } = elements;
+    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, tapBtnGlobal } = elements;
 
     // Helper function to toggle play/pause icons
     function setPlayButtonState(isPlaying) {
@@ -391,6 +391,31 @@ export function attachGlobalControlEvents(elements) {
             }
         });
     } else { console.warn("[EventHandlers] tempoGlobalInput not found."); }
+
+    // Tap Tempo button handler
+    if (tapBtnGlobal) {
+        tapBtnGlobal.addEventListener('click', async () => {
+            try {
+                // Import handleTapTempo dynamically to avoid circular dependency
+                const { handleTapTempo } = await import('./ui.js');
+                const tappedBpm = handleTapTempo();
+                if (tappedBpm !== null) {
+                    Tone.Transport.bpm.value = tappedBpm;
+                    if (tempoGlobalInput) {
+                        tempoGlobalInput.value = tappedBpm.toFixed(1);
+                    }
+                    if (localAppServices.updateTaskbarTempoDisplay) {
+                        localAppServices.updateTaskbarTempoDisplay(tappedBpm);
+                    }
+                    // Show brief feedback
+                    tapBtnGlobal.style.backgroundColor = '#3a3a3a';
+                    setTimeout(() => { tapBtnGlobal.style.backgroundColor = ''; }, 100);
+                }
+            } catch (error) {
+                console.error("[EventHandlers TapTempo] Error:", error);
+            }
+        });
+    } else { console.warn("[EventHandlers] tapBtnGlobal not found."); }
 
     if (midiInputSelectGlobal) {
         midiInputSelectGlobal.addEventListener('change', (e) => {
