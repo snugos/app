@@ -4,7 +4,8 @@
 import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
-import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners } from './utils.js';
+import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect } from './audio.js';
 import {
     initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
     selectMIDIInput as eventSelectMIDIInput, 
@@ -18,7 +19,7 @@ import {
     handleTimelineLaneDrop
 } from './eventHandlers.js';
 import {
-    initializeStateModule,
+    initializeStateModule, 
     // State Getters
     getTracksState, getTrackByIdState, getOpenWindowsState, getWindowByIdState, getHighestZState,
     getMasterEffectsState, getMasterGainValueState,
@@ -44,371 +45,92 @@ import {
     addTrackToStateInternal, removeTrackFromStateInternal, renameTrackInState,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
     gatherProjectDataInternal, reconstructDAWInternal, saveProjectInternal,
-    loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal, exportStemsInternal
+    loadProjectInternal, handleProjectFileLoadInternal, exportToWavInternal, exportStemsInternal,
+    // Auto-save
+    startAutoSave, stopAutoSave,
+    // Auto-save (aliased for appServices surface)
+    autoSaveToLocalStorage as autoSaveNow,
+    recoverAutoSavedProject,
+    hasAutoSavedProject as hasAutoSavedProject_check,
+    getAutoSavedProjectTimestamp as getAutoSavedTimestamp,
+    clearAutoSavedProject as clearAutoSave,
+    // Sound Browser Favorites & Recent
+    getFavoriteSounds,
+    isFavorite,
+    addToRecentlyPlayed,
+    getRecentlyPlayedSounds,
+    clearRecentlyPlayed,
+    // Loop Region
+    setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars,
+    // Project Name
+    getProjectNameState, setProjectNameState,
+    // Synth Presets
+    getSynthPresets, saveSynthPreset, deleteSynthPreset,
 } from './state.js';
-import {
-    initializeAudioModule, initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary,
-    loadSoundFromBrowserToTarget, playSlicePreview, playDrumSamplerPadPreview,
-    loadSampleFile, loadDrumSamplerPadFile, autoSliceSample,
-    addMasterEffectToAudio,
-    removeMasterEffectFromAudio,
-    updateMasterEffectParamInAudio,
-    reorderMasterEffectInAudio,
-    getMimeTypeFromFilename, getMasterEffectsBusInputNode,
-    getActualMasterGainNode as getActualMasterGainNodeFromAudio,
-    clearAllMasterEffectNodes as clearAllMasterEffectNodesInAudio,
-    startAudioRecording,
-    stopAudioRecording
-} from './audio.js';
-import {
-    initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
-    openTrackInspectorWindow, openMixerWindow, updateMixerWindow, openSoundBrowserWindow,
-    renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep, drawWaveform,
-    drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI, updateDrumPadControlsUI, renderDrumSamplerPads,
-    renderEffectsList, renderEffectControls, createKnob,
-    updateSequencerCellUI,
-    openMasterEffectsRackWindow,
-    renderTimeline,
-    updatePlayheadPosition,
-    openTimelineWindow
-} from './ui.js';
 
-console.log(`SCRIPT EXECUTION STARTED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
+function panicStopAllAudio() {
+    console.log("[AppServices] Panic Stop All Audio requested.");
 
-// --- Global UI Elements Cache ---
-const uiElementsCache = {
-    desktop: null, taskbar: null, startButton: null, startMenu: null,
-    taskbarButtonsContainer: null, taskbarTempoDisplay: null, loadProjectInput: null,
-    customBgInput: null, sampleFileInput: null, notificationArea: null, modalContainer: null,
-    menuAddSynthTrack: null, menuAddSamplerTrack: null, menuAddDrumSamplerTrack: null,
-    menuAddInstrumentSamplerTrack: null, menuAddAudioTrack: null,
-    menuOpenSoundBrowser: null, menuOpenTimeline: null,
-    menuUndo: null, menuRedo: null,
-    menuSaveProject: null, menuLoadProject: null, menuExportWav: null,
-    menuExportStems: null, menuOpenGlobalControls: null,
-    menuOpenMixer: null, menuOpenMasterEffects: null,
-    menuToggleFullScreen: null, playBtnGlobal: null, recordBtnGlobal: null, stopBtnGlobal: null,
-    tempoGlobalInput: null, midiInputSelectGlobal: null, masterMeterContainerGlobal: null,
-    masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
-    playbackModeToggleBtnGlobal: null,
-};
+    if (typeof Tone !== 'undefined') {
+        Tone.Transport.stop();
+        Tone.Transport.cancel(0);
+    }
 
-const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
-const DESKTOP_BG_TYPE_KEY = 'snugosDesktopBgType'; // 'image' or 'video'
+    const playBtn = uiElementsCache.playBtnGlobal;
+    if (playBtn) {
+        playBtn.textContent = 'Play';
+        playBtn.classList.remove('playing');
+    }
 
-// Simple IndexedDB helper for video backgrounds (too large for localStorage)
-const bgDb = {
-    db: null,
-    async init() {
-        if (this.db) return this.db;
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open('SnugOSBackgrounds', 1);
-            request.onerror = () => reject(request.error);
-            request.onsuccess = () => { this.db = request.result; resolve(this.db); };
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains('backgrounds')) {
-                    db.createObjectStore('backgrounds');
+    const tracks = getTracksState();
+    if (tracks) {
+        tracks.forEach(track => {
+            if (track && typeof track.stopPlayback === 'function') {
+                try { track.stopPlayback(); } catch (e) { console.warn(`Error in track.stopPlayback() for track ${track.id}:`, e); }
+            }
+
+            if (track && track.instrument && !track.instrument.disposed) {
+                if (typeof track.instrument.releaseAll === 'function') {
+                    try { track.instrument.releaseAll(Tone.now()); } catch (e) { console.warn(`Error during instrument.releaseAll() for track ${track.id}:`, e); }
                 }
-            };
-        });
-    },
-    async save(key, blob) {
-        const db = await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('backgrounds', 'readwrite');
-            const store = tx.objectStore('backgrounds');
-            store.put(blob, key);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        });
-    },
-    async get(key) {
-        const db = await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('backgrounds', 'readonly');
-            const store = tx.objectStore('backgrounds');
-            const request = store.get(key);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
-        });
-    },
-    async remove(key) {
-        const db = await this.init();
-        return new Promise((resolve, reject) => {
-            const tx = db.transaction('backgrounds', 'readwrite');
-            const store = tx.objectStore('backgrounds');
-            store.delete(key);
-            tx.oncomplete = () => resolve();
-            tx.onerror = () => reject(tx.error);
-        });
-    }
-};
+                if ((track.type === 'Synth' || track.type === 'InstrumentSampler') &&
+                    track.gainNode && track.gainNode.gain &&
+                    typeof track.gainNode.gain.cancelScheduledValues === 'function' &&
+                    typeof track.gainNode.gain.linearRampToValueAtTime === 'function' &&
+                    !track.gainNode.disposed) {
+                    try {
+                        track.gainNode.gain.cancelScheduledValues(Tone.now());
+                        track.gainNode.gain.linearRampToValueAtTime(0, Tone.now() + 0.02);
+                    } catch (e) { console.warn(`Error ramping down gain for track ${track.id}:`, e); }
+                }
+            }
 
-async function handleCustomBackgroundUpload(event) {
-    if (!event?.target?.files?.[0]) return;
-    const file = event.target.files[0];
-    const isVideo = file.type.startsWith('video/');
-    const isImage = file.type.startsWith('image/');
-    
-    if (!isVideo && !isImage) {
-        showSafeNotification("Invalid file type. Please select an image or video.", 3000);
-        return;
+            if (track && track.type === 'Sampler' && !track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
+                if (track.slicerMonoPlayer.state === 'started' && !track.slicerMonoPlayer.disposed) {
+                    try { track.slicerMonoPlayer.stop(Tone.now()); } catch(e) {}
+                }
+                if (!track.slicerMonoEnvelope.disposed) {
+                    try { track.slicerMonoEnvelope.triggerRelease(Tone.now()); } catch(e) {}
+                }
+            }
+            if (track && track.type === 'DrumSampler' && track.drumPadPlayers) {
+                track.drumPadPlayers.forEach(player => {
+                    if (player && player.state === 'started' && !player.disposed) {
+                        try { player.stop(Tone.now()); } catch(e) {}
+                    }
+                });
+            }
+        });
     }
 
-    try {
-        if (isImage) {
-            // For images, use data URL in localStorage (smaller files)
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const dataURL = e.target.result;
-                localStorage.setItem(DESKTOP_BACKGROUND_KEY, dataURL);
-                localStorage.setItem(DESKTOP_BG_TYPE_KEY, 'image');
-                await applyDesktopBackground(dataURL, 'image');
-                showSafeNotification("Image background applied.", 2000);
-            };
-            reader.readAsDataURL(file);
-        } else if (isVideo) {
-            // For videos, store in IndexedDB and create object URL
-            showSafeNotification("Processing video background...", 2000);
-            await bgDb.save('desktopVideo', file);
-            localStorage.setItem(DESKTOP_BG_TYPE_KEY, 'video');
-            localStorage.removeItem(DESKTOP_BACKGROUND_KEY); // Clear any image
-            const objectUrl = URL.createObjectURL(file);
-            await applyDesktopBackground(objectUrl, 'video');
-            showSafeNotification("Video background applied.", 2000);
-        }
-    } catch (error) {
-        console.error("Error saving background:", error);
-        showSafeNotification("Could not save background: " + error.message, 4000);
-    }
-    
-    if (event.target) event.target.value = null;
+    console.log("All audio and transport stopped via panic.");
+    showSafeNotification("All audio stopped.", 1500);
 }
 
-async function removeCustomDesktopBackground() {
-    try {
-        localStorage.removeItem(DESKTOP_BACKGROUND_KEY);
-        localStorage.removeItem(DESKTOP_BG_TYPE_KEY);
-        await bgDb.remove('desktopVideo');
-        await applyDesktopBackground(null, null);
-        showSafeNotification("Custom background removed.", 2000);
-    } catch (error) {
-        console.error("Error removing background from storage:", error);
-        showSafeNotification("Could not remove background from storage.", 3000);
-    }
-}
-
-function showSafeNotification(message, duration) {
-    if (typeof utilShowNotification === 'function') {
-        utilShowNotification(message, duration);
-    } else {
-        console.warn("showNotification utility not available, logging to console:", message);
-    }
-}
+// MODIFICATION: Refined Panic Stop Service
+// panicStopAllAudio is now defined above
 
 const appServices = {
-    // UI Module Functions
-    openTrackInspectorWindow, openTrackEffectsRackWindow, openTrackSequencerWindow,
-    openMixerWindow, updateMixerWindow, openSoundBrowserWindow, openMasterEffectsRackWindow,
-    renderSoundBrowserDirectory, updateSoundBrowserDisplayForLibrary, highlightPlayingStep,
-    drawWaveform, drawInstrumentWaveform, renderSamplePads, updateSliceEditorUI,
-    updateDrumPadControlsUI, renderDrumSamplerPads, renderEffectsList, renderEffectControls,
-    createKnob, updateSequencerCellUI,
-    renderTimeline, openTimelineWindow,
-    showNotification: showSafeNotification, 
-    createContextMenu, 
-
-    // Audio Module Functions
-    initAudioContextAndMasterMeter, updateMeters, fetchSoundLibrary, loadSoundFromBrowserToTarget,
-    playSlicePreview, playDrumSamplerPadPreview, loadSampleFile, loadDrumSamplerPadFile,
-    autoSliceSample, getMimeTypeFromFilename,
-    getMasterEffectsBusInputNode,
-
-    // Drum Sampler specific function
-    selectDrumPad: (trackId, padIndex) => {
-        const track = getTrackByIdState ? getTrackByIdState(trackId) : null;
-        if (!track || track.type !== 'DrumSampler') {
-            console.warn(`[Main selectDrumPad] Invalid track ${trackId} or not a DrumSampler`);
-            return;
-        }
-        console.log(`[Main selectDrumPad] Selecting pad ${padIndex} for track ${trackId}`);
-        track.selectedDrumPadForEdit = padIndex;
-        
-        // Re-render the pad grid and update controls
-        if (typeof renderDrumSamplerPads === 'function') renderDrumSamplerPads(track);
-        if (typeof updateDrumPadControlsUI === 'function') updateDrumPadControlsUI(track);
-        
-        // Set up the drop zone for the newly selected pad
-        const inspectorWindow = getWindowByIdState(`trackInspector-${trackId}`);
-        if (inspectorWindow?.element && !inspectorWindow.isMinimized) {
-            const dzContainer = inspectorWindow.element.querySelector(`#drumPadDropZoneContainer-${trackId}-${padIndex}`);
-            if (dzContainer) {
-                const existingAudioData = track.drumSamplerPads && track.drumSamplerPads[padIndex] ?
-                    { fileName: track.drumSamplerPads[padIndex].originalFileName, status: track.drumSamplerPads[padIndex].status } :
-                    { fileName: null, status: 'empty' };
-                dzContainer.innerHTML = createDropZoneHTML(trackId, `drumPadFileInput-${trackId}-${padIndex}`, 'DrumSampler', padIndex, existingAudioData);
-                const dzEl = dzContainer.querySelector('.drop-zone');
-                const fileInputEl = dzContainer.querySelector(`#drumPadFileInput-${trackId}-${padIndex}`);
-                if (dzEl) setupGenericDropZoneListeners(dzEl, trackId, 'DrumSampler', padIndex, appServices.loadSoundFromBrowserToTarget, appServices.loadDrumSamplerPadFile);
-                if (fileInputEl) fileInputEl.onchange = (e) => { appServices.loadDrumSamplerPadFile(e, trackId, padIndex); };
-            }
-        }
-    },
-    getActualMasterGainNode: getActualMasterGainNodeFromAudio,
-    clearAllMasterEffectNodes: clearAllMasterEffectNodesInAudio,
-    startAudioRecording, stopAudioRecording,
-
-    // State Module Getters
-    getTracks: getTracksState, getTrackById: getTrackByIdState,
-    getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
-    getHighestZ: getHighestZState,
-    getMasterEffects: getMasterEffectsState, getMasterGainValue: getMasterGainValueState,
-    getMidiAccess: getMidiAccessState, getActiveMIDIInput: getActiveMIDIInputState,
-    getLoadedZipFiles: getLoadedZipFilesState, getSoundLibraryFileTrees: getSoundLibraryFileTreesState,
-    getCurrentLibraryName: getCurrentLibraryNameState, getCurrentSoundFileTree: getCurrentSoundFileTreeState,
-    getCurrentSoundBrowserPath: getCurrentSoundBrowserPathState, getPreviewPlayer: getPreviewPlayerState,
-    getClipboardData: getClipboardDataState, getArmedTrackId: getArmedTrackIdState,
-    getSoloedTrackId: getSoloedTrackIdState, isTrackRecording: isTrackRecordingState,
-    getRecordingTrackId: getRecordingTrackIdState,
-    getActiveSequencerTrackId: getActiveSequencerTrackIdState,
-    getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
-    getPlaybackMode: getPlaybackModeState,
-
-    // State Module Setters & Core Actions
-    addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
-    setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
-    setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState,
-    setMidiAccess: setMidiAccessState, setActiveMIDIInput: setActiveMIDIInputState,
-    setLoadedZipFilesState: setLoadedZipFilesState,
-    setSoundLibraryFileTreesState: setSoundLibraryFileTreesState,
-    setCurrentLibraryNameState, setCurrentSoundFileTreeState, setCurrentSoundBrowserPathState, setPreviewPlayerState,
-    setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
-    setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
-    setPlaybackModeState,
-    addMasterEffectToState, removeMasterEffectFromState,
-    updateMasterEffectParamInState, reorderMasterEffectInState,
-    // Core State Actions
-    addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
-    renameTrack: renameTrackInState,
-    captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
-    redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal,
-    reconstructDAW: reconstructDAWInternal, saveProject: saveProjectInternal,
-    loadProject: loadProjectInternal, handleProjectFileLoad: handleProjectFileLoadInternal,
-    exportToWav: exportToWavInternal,
-    exportStems: exportStemsInternal,
-
-    // Event Handler Passthroughs
-    selectMIDIInput: eventSelectMIDIInput, 
-    handleTrackMute: eventHandleTrackMute,
-    handleTrackSolo: eventHandleTrackSolo,
-    handleTrackArm: eventHandleTrackArm,
-    handleRemoveTrack: eventHandleRemoveTrack,
-    handleOpenTrackInspector: eventHandleOpenTrackInspector,
-    handleOpenEffectsRack: eventHandleOpenEffectsRack,
-    handleOpenSequencer: eventHandleOpenSequencer,
-    handleTimelineLaneDrop: handleTimelineLaneDrop,
-    attachGlobalControlEvents: attachGlobalControlEvents, // FIX: Expose for reconstruction
-
-    getAudioBlobFromSoundBrowserItem: async (soundData) => {
-        if (!soundData || !soundData.libraryName || !soundData.fullPath) {
-            console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);
-            return null;
-        }
-        const loadedZips = getLoadedZipFilesState(); 
-        if (loadedZips?.[soundData.libraryName] && loadedZips[soundData.libraryName] !== "loading") {
-            const zipEntry = loadedZips[soundData.libraryName].file(soundData.fullPath);
-            if (zipEntry) {
-                try {
-                    const blob = await zipEntry.async("blob");
-                    return new File([blob], soundData.fileName, { type: getMimeTypeFromFilename(soundData.fileName) });
-                } catch (e) {
-                    console.error("[AppServices getAudioBlob] Error getting blob from zipEntry:", e);
-                    return null;
-                }
-            } else {
-                console.warn(`[AppServices getAudioBlob] ZipEntry not found for ${soundData.fullPath} in ${soundData.libraryName}`);
-            }
-        } else {
-            console.warn(`[AppServices getAudioBlob] Library ${soundData.libraryName} not loaded or is loading.`);
-        }
-        return null;
-    },
-
-    // MODIFICATION: Refined Panic Stop Service
-    panicStopAllAudio: () => {
-        console.log("[AppServices] Panic Stop All Audio requested.");
-        
-        if (typeof Tone !== 'undefined') {
-            Tone.Transport.stop();
-            Tone.Transport.cancel(0); 
-        }
-
-        // Reset play button state
-        const playBtn = uiElementsCache.playBtnGlobal;
-        if (playBtn) {
-            playBtn.textContent = 'Play';
-            playBtn.classList.remove('playing');
-        }
-
-        const tracks = getTracksState();
-        if (tracks) {
-            tracks.forEach(track => {
-                if (track && typeof track.stopPlayback === 'function') {
-                    try {
-                        track.stopPlayback(); 
-                    } catch (e) {
-                        console.warn(`Error in track.stopPlayback() for track ${track.id}:`, e);
-                    }
-                }
-
-                if (track && track.instrument && !track.instrument.disposed) {
-                    if (typeof track.instrument.releaseAll === 'function') {
-                        try {
-                            track.instrument.releaseAll(Tone.now()); 
-                        } catch (e) {
-                            console.warn(`Error during instrument.releaseAll() for track ${track.id}:`, e);
-                        }
-                    }
-                    // Aggressive gain ramp-down for synth types
-                    if ((track.type === 'Synth' || track.type === 'InstrumentSampler') && 
-                        track.gainNode && track.gainNode.gain && 
-                        typeof track.gainNode.gain.cancelScheduledValues === 'function' &&
-                        typeof track.gainNode.gain.linearRampToValueAtTime === 'function' &&
-                        !track.gainNode.disposed) {
-                        console.log(`[AppServices Panic] Ramping down gain for synth track ${track.id}`);
-                        try {
-                            track.gainNode.gain.cancelScheduledValues(Tone.now());
-                            track.gainNode.gain.linearRampToValueAtTime(0, Tone.now() + 0.02); 
-                        } catch (e) {
-                            console.warn(`Error ramping down gain for track ${track.id}:`, e);
-                        }
-                    }
-                }
-                
-                if (track && track.type === 'Sampler' && !track.slicerIsPolyphonic && track.slicerMonoPlayer && track.slicerMonoEnvelope) {
-                    if (track.slicerMonoPlayer.state === 'started' && !track.slicerMonoPlayer.disposed) {
-                        try { track.slicerMonoPlayer.stop(Tone.now()); } catch(e) { console.warn("Error stopping mono slicer player during panic", e); }
-                    }
-                    if (!track.slicerMonoEnvelope.disposed) {
-                        try { track.slicerMonoEnvelope.triggerRelease(Tone.now()); } catch(e) { console.warn("Error releasing mono slicer envelope during panic", e); }
-                    }
-                }
-                if (track && track.type === 'DrumSampler' && track.drumPadPlayers) {
-                    track.drumPadPlayers.forEach(player => {
-                        if (player && player.state === 'started' && !player.disposed) {
-                            try { player.stop(Tone.now()); } catch(e) { console.warn("Error stopping drum pad player during panic", e); }
-                        }
-                    });
-                }
-            });
-        }
-
-        console.log("All audio and transport stopped via panic.");
-        showSafeNotification("All audio stopped.", 1500);
-    },
-    // END MODIFICATION
-
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
             uiElementsCache.taskbarTempoDisplay.textContent = `${parseFloat(tempo).toFixed(1)} BPM`;
@@ -464,7 +186,7 @@ const appServices = {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
             if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
-            if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
+            if (!((appServices.effectsRegistryAccess) && (appServices.effectsRegistryAccess).getEffectDefaultParams)) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
             }
             const defaultParams = appServices.effectsRegistryAccess.getEffectDefaultParams(effectType);
@@ -482,7 +204,7 @@ const appServices = {
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
                 const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -496,49 +218,84 @@ const appServices = {
         updateMasterEffectParamInState(effectId, paramPath, value);
         updateMasterEffectParamInAudio(effectId, paramPath, value);
     },
+    enableSidechainFromMicForEffect: (effectId) => {
+        if (!activeMasterEffectNodes || !activeMasterEffectNodes.has(effectId)) {
+            console.warn(`[Main enableSidechainFromMicForEffect] Master effect ${effectId} not found in active nodes.`);
+            return;
+        }
+        const compressorNode = activeMasterEffectNodes.get(effectId);
+        enableSidechainFromMic(compressorNode);
+    },
+    enableSidechainFromTrackForEffect: (effectId, trackId) => {
+        if (!activeMasterEffectNodes || !activeMasterEffectNodes.has(effectId)) {
+            console.warn(`[Main enableSidechainFromTrackForEffect] Master effect ${effectId} not found in active nodes.`);
+            return;
+        }
+        const compressorNode = activeMasterEffectNodes.get(effectId);
+        enableSidechainFromTrackIn(trackId, compressorNode);
+    },
+    disableSidechainForEffect: (effectId) => {
+        disableSidechainFromMic();
+    },
+    isMicOpenForSidechain: () => isMicOpenForSidechain(),
+    getSidechainBus: () => getSidechainBusInput(),
     reorderMasterEffect: (effectId, newIndex) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
-            reorderMasterEffectInAudio(effectId, newIndex); 
+            reorderMasterEffectInAudio(effectId, newIndex);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
         } catch (error) {
             console.error(`[Main reorderMasterEffect] Error reordering ${effectId}:`, error);
             showSafeNotification("Failed to reorder master effect.", 3000);
         }
     },
-    setActualMasterVolume: (volumeValue) => {
-        if (typeof getActualMasterGainNodeFromAudio === 'function') {
-            const actualMasterNode = getActualMasterGainNodeFromAudio();
+    setActualMasterVolume: (volumeValue, fromInteraction = false) => {
+        if (typeof getActualMasterGainNode === 'function') {
+            const actualMasterNode = getActualMasterGainNode();
             if (actualMasterNode && actualMasterNode.gain && typeof actualMasterNode.gain.setValueAtTime === 'function') {
                 try {
                     actualMasterNode.gain.setValueAtTime(volumeValue, Tone.now());
                 } catch (e) { console.error("Error setting master volume via Tone:", e); }
             } else { console.warn("Master gain node or its gain property not available."); }
-        } else { console.warn("getActualMasterGainNodeFromAudio service missing."); }
+        } else { console.warn("getActualMasterGainNode not available."); }
+        // Record master volume automation when user interacts with the knob
+        if (fromInteraction && appServices.masterAutomationArmed) {
+            const timeInSeconds = Tone.Transport.seconds;
+            writeMasterVolumeAutomation(timeInSeconds, volumeValue);
+            console.log(`[Main] Master volume automation recorded at time ${timeInSeconds.toFixed(3)}s, value ${volumeValue.toFixed(3)}`);
+        }
+    },
+    getMasterEffectsBus: () => {
+        if (typeof getMasterEffectsBusInputNode === 'function') {
+            return getMasterEffectsBusInputNode();
+        } else {
+            console.warn("getMasterEffectsBusInputNode not available.");
+            return null;
+        }
     },
     effectsRegistryAccess: {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
     updateTrackMeterUI: (trackId, level, isClipping) => {
         try {
-            const inspectorWindow = getWindowByIdState(`trackInspector-${trackId}`);
-            const mixerWindow = getWindowByIdState('mixer');
-            if (inspectorWindow?.element && !inspectorWindow.isMinimized) {
+            const inspectorWindow = getWindowByIdState ? getWindowByIdState(`trackInspector-${trackId}`) : null;
+            const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null;
+            if (((inspectorWindow) && (inspectorWindow).element) && !inspectorWindow.isMinimized) {
                 const meterBar = inspectorWindow.element.querySelector(`#trackMeterBar-${trackId}`);
                 if (meterBar) {
                     meterBar.style.width = `${Math.min(100, Math.max(0, level * 100))}%`;
                     meterBar.classList.toggle('clipping', isClipping);
                 }
             }
-            if (mixerWindow?.element && !mixerWindow.isMinimized) {
+            if (((mixerWindow) && (mixerWindow).element) && !mixerWindow.isMinimized) {
                 const meterBar = mixerWindow.element.querySelector(`#mixerTrackMeterBar-${trackId}`);
                 if (meterBar) {
                     meterBar.style.width = `${Math.min(100, Math.max(0, level * 100))}%`;
@@ -549,8 +306,8 @@ const appServices = {
     },
     updateMasterEffectsRackUI: () => {
         try {
-            const masterRackWindow = getWindowByIdState('masterEffectsRack');
-            if (masterRackWindow?.element && !masterRackWindow.isMinimized && typeof renderEffectsList === 'function') {
+            const masterRackWindow = getWindowByIdState ? getWindowByIdState('masterEffectsRack') : null;
+            if (((masterRackWindow) && (masterRackWindow).element) && !masterRackWindow.isMinimized && typeof renderEffectsList === 'function') {
                 const listDiv = masterRackWindow.element.querySelector('#effectsList-master');
                 const controlsContainer = masterRackWindow.element.querySelector('#effectControlsContainer-master');
                 if (listDiv && controlsContainer) {
@@ -572,11 +329,42 @@ const appServices = {
         } else {
             console.warn("[Main appServices.onPlaybackModeChange] Playback mode toggle button not found in UI cache.");
         }
-        if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
-            appServices.renderTimeline(); 
+        if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
+    },
+    updateProjectNameDisplay: (name) => {
+        if (uiElementsCache.projectNameBtnGlobal) {
+            uiElementsCache.projectNameBtnGlobal.textContent = name || 'Untitled Project';
         }
     },
-    renameTrackInState
+    renameTrackInState,
+
+    // Punch-in/out recording scheduling
+    scheduleRecordingForPunch,
+    cancelScheduledRecording,
+    cleanupRecordingScheduling,
+    exportToWav: exportToWavInternal,
+
+    // MIDI CC Learn / Mapping services
+    applyMidiCCToKnob: (targetId, value) => {
+        // Find the knob by its registered targetId and set its value
+        // Knobs register themselves with a unique targetId when created
+        if (typeof window._midiCCKnobRegistry === 'undefined') return;
+        const entry = window._midiCCKnobRegistry[targetId];
+        if (!entry) return;
+        try {
+            entry.knob.setValue(value, true, false);
+        } catch (e) { console.warn(`[applyMidiCCToKnob] Failed to set value for ${targetId}:`, e); }
+    },
+    registerKnobForMidiCC: (targetId, knob, ownerType, ownerId, paramPath) => {
+        if (typeof window._midiCCKnobRegistry === 'undefined') window._midiCCKnobRegistry = {};
+        window._midiCCKnobRegistry[targetId] = { knob, ownerType, ownerId, paramPath };
+        console.log(`[MIDI CC] Registered knob: ${targetId} (${ownerType}:${ownerId}, param: ${paramPath})`);
+    },
+    unregisterKnobForMidiCC: (targetId) => {
+        if (typeof window._midiCCKnobRegistry !== 'undefined') {
+            delete window._midiCCKnobRegistry[targetId];
+        }
+    },
 };
 
 function handleTrackUIUpdate(trackId, reason, detail) {
@@ -590,7 +378,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
     const getOpenWindowElement = (winId) => {
         if (!getWindowByIdState) return null;
         const win = getWindowByIdState(winId);
-        return (win?.element && !win.isMinimized) ? win.element : null;
+        return (((win) && (win).element) && !win.isMinimized) ? win.element : null;
     };
 
     const inspectorElement = getOpenWindowElement(`trackInspector-${trackId}`);
@@ -633,13 +421,13 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                     if(dzContainer) {
                         const audioData = track.type === 'Sampler' ? track.samplerAudioData : track.instrumentSamplerSettings;
                         const inputId = track.type === 'Sampler' ? `fileInput-${track.id}` : `instrumentFileInput-${track.id}`;
-                        dzContainer.innerHTML = createDropZoneHTML(track.id, inputId, track.type, null, {originalFileName: audioData?.fileName, status: 'loaded'});
+                        dzContainer.innerHTML = createDropZoneHTML(track.id, inputId, track.type, null, {originalFileName: ((audioData) && (audioData).fileName), status: 'loaded'});
                         const fileInputEl = dzContainer.querySelector(`#${inputId}`);
                         const loadFn = appServices.loadSampleFile;
                         if (fileInputEl && loadFn) fileInputEl.onchange = (e) => loadFn(e, track.id, track.type);
                         const newDropZoneDiv = dzContainer.querySelector('.drop-zone');
                         if (newDropZoneDiv && typeof setupGenericDropZoneListeners === 'function') {
-                            setupGenericDropZoneListeners(newDropZoneDiv, track.id, track.type, null, appServices.loadSoundFromBrowserToTarget, appServices.loadSampleFile, appServices.getTrackById);
+                            setupGenericDropZoneListeners(newDropZoneDiv, track.id, track.type, null, appServices.loadSoundFromBrowserToTarget, loadFn, appServices.getTrackById);
                         }
                     }
                 }
@@ -651,7 +439,7 @@ function handleTrackUIUpdate(trackId, reason, detail) {
                 break;
             case 'sequencerContentChanged':
                 if (sequencerElement && typeof openTrackSequencerWindow === 'function') {
-                    const seqWinInstance = getWindowByIdState(`sequencerWin-${trackId}`);
+                    const seqWinInstance = getWindowByIdState ? getWindowByIdState(`sequencerWin-${trackId}`) : null;
                     if(seqWinInstance) openTrackSequencerWindow(trackId, true, seqWinInstance.options);
                 }
                 if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') appServices.renderTimeline();
@@ -698,7 +486,7 @@ async function initializeSnugOS() {
             if (element) {
                  uiElementsCache[key] = element;
             } else {
-                if (['desktop', 'taskbar', 'notification-area', 'modalContainer'].includes(key)) {
+                if (['desktop', 'taskbar', 'notification-area', 'modal-container'].includes(key)) {
                     console.warn(`[Main initializeSnugOS] Critical UI Element ID "${key}" not found in DOM.`);
                 }
             }
@@ -716,7 +504,18 @@ async function initializeSnugOS() {
             masterMeterBarGlobal: document.getElementById('masterMeterBarGlobal'),
             midiIndicatorGlobal: document.getElementById('midiIndicatorGlobal'),
             keyboardIndicatorGlobal: document.getElementById('keyboardIndicatorGlobal'),
-            playbackModeToggleBtnGlobal: document.getElementById('playbackModeToggleBtnGlobal')
+            shortcutsBtnGlobal: document.getElementById('shortcutsBtnGlobal'),
+            octaveDisplayGlobal: document.getElementById('octaveDisplayGlobal'),
+            playbackModeToggleBtnGlobal: document.getElementById('playbackModeToggleBtnGlobal'),
+            metronomeBtnGlobal: document.getElementById('metronomeToggleBtnGlobal'),
+            loopToggleBtnGlobal: document.getElementById('loopToggleBtnGlobal'),
+            loopStartInputGlobal: document.getElementById('loopStartInputGlobal'),
+            loopEndInputGlobal: document.getElementById('loopEndInputGlobal'),
+            punchToggleBtnGlobal: document.getElementById('punchToggleBtnGlobal'),
+            punchInInputGlobal: document.getElementById('punchInInputGlobal'),
+            punchOutInputGlobal: document.getElementById('punchOutInputGlobal'),
+            projectNameBtnGlobal: document.getElementById('projectNameBtnGlobal'),
+            exportBtnGlobal: document.getElementById('exportBtnGlobal')
         };
         
         // Add to cache
@@ -764,13 +563,304 @@ async function initializeSnugOS() {
         };
         attachPlaybackModeHandler();
 
-        // Restore saved background (image or video)
-        await restoreDesktopBackground();
+        // Metronome toggle button handler
+        const attachMetronomeHandler = () => {
+            if (uiElementsCache.metronomeBtnGlobal) {
+                uiElementsCache.metronomeBtnGlobal.addEventListener('click', async () => {
+                    const audioReady = await initAudioContextAndMasterMeter(true);
+                    if (!audioReady) {
+                        showSafeNotification("Audio not ready. Click the page first.", 2000);
+                        return;
+                    }
+                    const newState = !isMetronomeEnabled();
+                    setMetronomeEnabled(newState);
+                    uiElementsCache.metronomeBtnGlobal.classList.toggle('active', newState);
+                    showSafeNotification(newState ? "Metronome ON" : "Metronome OFF", 1500);
+                });
+                // Sync button state in case it's already active
+                uiElementsCache.metronomeBtnGlobal.classList.toggle('active', isMetronomeEnabled());
+                console.log("[Main] Metronome toggle handler attached");
+            } else {
+                console.warn("[Main] Metronome button not found in cache, retrying...");
+                setTimeout(attachMetronomeHandler, 500);
+            }
+        };
+        attachMetronomeHandler();
+
+        // Count-in select dropdown handler
+        const attachCountInHandler = () => {
+            const countInSelect = document.getElementById('countInSelectGlobal');
+            if (countInSelect) {
+                countInSelect.addEventListener('change', (e) => {
+                    const bars = parseInt(e.target.value, 10);
+                    if (typeof setCountInBars === 'function') {
+                        setCountInBars(bars);
+                        console.log(`[Main] Count-in set to ${bars} bar(s)`);
+                    }
+                });
+                console.log("[Main] Count-in dropdown handler attached");
+            } else {
+                console.warn("[Main] Count-in select not found in DOM, retrying...");
+                setTimeout(attachCountInHandler, 500);
+            }
+        };
+        attachCountInHandler();
+
+        // Tap tempo button handler
+        const attachTapTempoHandler = () => {
+            const tapBtn = document.getElementById('tapTempoBtnGlobal');
+            const tempoInput = document.getElementById('tempoGlobalInput');
+            if (tapBtn && tempoInput) {
+                tapBtn.addEventListener('click', () => {
+                    tapTempo();
+                    const bpm = getTapTempoBpm();
+                    if (bpm !== null) {
+                        Tone.Transport.bpm.value = bpm;
+                        tempoInput.value = bpm;
+                        if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(bpm);
+                        showSafeNotification(`Tempo: ${bpm} BPM`, 800);
+                    } else {
+                        showSafeNotification("Keep tapping...", 500);
+                    }
+                });
+                console.log("[Main] Tap tempo handler attached");
+            } else {
+                console.warn("[Main] Tap tempo button or tempo input not found, retrying...");
+                setTimeout(attachTapTempoHandler, 500);
+            }
+        };
+        attachTapTempoHandler();
+
+        // Snap Grid toggle button handler
+        const attachSnapToggleHandler = () => {
+            const snapToggleBtn = document.getElementById('snapToggleBtnGlobal');
+            if (snapToggleBtn) {
+                const updateSnapButtonUI = () => {
+                    const currentSnap = window.SEQUENCER_SNAP_VALUE || 16;
+                    const snapLabel = currentSnap === 0 ? 'Off' : (currentSnap === 4 ? '1/4' : (currentSnap === 8 ? '1/8' : '1/16'));
+                    snapToggleBtn.textContent = `Snap: ${snapLabel}`;
+                    snapToggleBtn.classList.toggle('snap-active', currentSnap !== 0);
+                };
+                snapToggleBtn.addEventListener('click', () => {
+                    const currentSnap = window.SEQUENCER_SNAP_VALUE || 16;
+                    let nextSnap = 16;
+                    if (currentSnap === 16) nextSnap = 8;
+                    else if (currentSnap === 8) nextSnap = 4;
+                    else if (currentSnap === 4) nextSnap = 0;
+                    else if (currentSnap === 0) nextSnap = 16;
+                    window.SEQUENCER_SNAP_VALUE = nextSnap;
+                    updateSnapButtonUI();
+                    const snapLabel = nextSnap === 0 ? 'Off' : (nextSnap === 4 ? '1/4' : (nextSnap === 8 ? '1/8' : '1/16'));
+                    showSafeNotification(`Snap: ${snapLabel}`, 1500);
+                });
+                updateSnapButtonUI();
+                console.log("[Main] Snap toggle handler attached");
+            } else {
+                console.warn("[Main] Snap toggle button not found, retrying...");
+                setTimeout(attachSnapToggleHandler, 500);
+            }
+        };
+        attachSnapToggleHandler();
+
+        // Loop Region toggle button handler
+        const attachLoopRegionHandler = () => {
+            const loopToggleBtn = uiElementsCache.loopToggleBtnGlobal;
+            const loopStartInput = uiElementsCache.loopStartInputGlobal;
+            const loopEndInput = uiElementsCache.loopEndInputGlobal;
+            if (loopToggleBtn && loopStartInput && loopEndInput) {
+                loopToggleBtn.addEventListener('click', () => {
+                    const newEnabled = !isLoopRegionEnabled();
+                    setLoopRegionEnabled(newEnabled);
+                    loopToggleBtn.classList.toggle('loop-active', newEnabled);
+                    showSafeNotification(newEnabled ? "Loop ON" : "Loop OFF", 1500);
+                    // Update timeline region markers
+                    if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                });
+                // Sync button state
+                loopToggleBtn.classList.toggle('loop-active', isLoopRegionEnabled());
+
+                loopStartInput.addEventListener('change', (e) => {
+                    const startBars = parseInt(e.target.value, 10) || 0;
+                    const endBars = parseInt(loopEndInput.value, 10) || 16;
+                    if (setLoopRegion(startBars, endBars)) {
+                        if (isLoopRegionEnabled()) {
+                            Tone.Transport.loopStart = `${startBars}:0:0`;
+                            Tone.Transport.loopEnd = `${endBars}:0:0`;
+                        }
+                        showSafeNotification(`Loop: ${startBars} - ${endBars} bars`, 1000);
+                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                    }
+                });
+
+                loopEndInput.addEventListener('change', (e) => {
+                    const startBars = parseInt(loopStartInput.value, 10) || 0;
+                    const endBars = parseInt(e.target.value, 10) || 16;
+                    if (setLoopRegion(startBars, endBars)) {
+                        if (isLoopRegionEnabled()) {
+                            Tone.Transport.loopStart = `${startBars}:0:0`;
+                            Tone.Transport.loopEnd = `${endBars}:0:0`;
+                        }
+                        showSafeNotification(`Loop: ${startBars} - ${endBars} bars`, 1000);
+                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                    }
+                });
+
+                console.log("[Main] Loop region handlers attached");
+            } else {
+                console.warn("[Main] Loop region elements not found in cache, retrying...");
+                setTimeout(attachLoopRegionHandler, 500);
+            }
+        };
+        attachLoopRegionHandler();
+
+        // Punch In/Out toggle button handler
+        const attachPunchRegionHandler = () => {
+            const punchToggleBtn = uiElementsCache.punchToggleBtnGlobal;
+            const punchInInput = uiElementsCache.punchInInputGlobal;
+            const punchOutInput = uiElementsCache.punchOutInputGlobal;
+            if (punchToggleBtn && punchInInput && punchOutInput) {
+                punchToggleBtn.addEventListener('click', () => {
+                    const newEnabled = !isPunchRegionEnabled();
+                    setPunchRegionEnabled(newEnabled);
+                    punchToggleBtn.classList.toggle('punch-active', newEnabled);
+                    showSafeNotification(newEnabled ? "Punch In/Out ON" : "Punch In/Out OFF", 1500);
+                    // Update timeline region markers
+                    if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                });
+                punchToggleBtn.classList.toggle('punch-active', isPunchRegionEnabled());
+
+                punchInInput.addEventListener('change', (e) => {
+                    const inBars = parseInt(e.target.value, 10) || 0;
+                    const outBars = parseInt(punchOutInput.value, 10) || 16;
+                    if (setPunchRegion(inBars, outBars)) {
+                        showSafeNotification(`Punch: ${inBars} - ${outBars} bars`, 1000);
+                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                    }
+                });
+
+                punchOutInput.addEventListener('change', (e) => {
+                    const inBars = parseInt(punchInInput.value, 10) || 0;
+                    const outBars = parseInt(e.target.value, 10) || 16;
+                    if (setPunchRegion(inBars, outBars)) {
+                        showSafeNotification(`Punch: ${inBars} - ${outBars} bars`, 1000);
+                        if (localAppServices.updateTimelineRegionMarkers) localAppServices.updateTimelineRegionMarkers();
+                    }
+                });
+
+                console.log("[Main] Punch region handlers attached");
+            } else {
+                console.warn("[Main] Punch region elements not found in cache, retrying...");
+                setTimeout(attachPunchRegionHandler, 500);
+            }
+        };
+        attachPunchRegionHandler();
+
+        // Project name button handler - click to rename
+        const attachProjectNameHandler = () => {
+            const projectNameBtn = uiElementsCache.projectNameBtnGlobal;
+            if (projectNameBtn) {
+                projectNameBtn.addEventListener('click', () => {
+                    const currentName = getProjectNameState ? getProjectNameState() : 'Untitled Project';
+                    const newName = prompt('Enter project name:', currentName);
+                    if (newName !== null && newName.trim()) {
+                        const trimmedName = newName.trim();
+                        if (typeof setProjectNameState === 'function') {
+                            setProjectNameState(trimmedName);
+                        }
+                        projectNameBtn.textContent = trimmedName;
+                        projectNameBtn.title = 'Rename Project';
+                        showSafeNotification(`Project renamed to "${trimmedName}"`, 1500);
+                    }
+                });
+                console.log("[Main] Project name handler attached");
+            } else {
+                console.warn("[Main] Project name button not found in cache, retrying...");
+                setTimeout(attachProjectNameHandler, 500);
+            }
+        };
+        attachProjectNameHandler();
+
+        // Export mixdown to WAV handler
+        const attachExportHandler = () => {
+            const exportBtn = uiElementsCache.exportBtnGlobal;
+            if (exportBtn) {
+                exportBtn.addEventListener('click', async () => {
+                    // Check if there's any audio content
+                    const tracks = typeof getTracksState === 'function' ? getTracksState() : [];
+                    const hasContent = tracks.some(t => {
+                        if (!t) return false;
+                        const seq = t.getActiveSequence ? t.getActiveSequence() : null;
+                        if (seq && seq.data && seq.data.some(row => row && row.some(cell => cell && cell.active))) return true;
+                        if (t.audioClips && t.audioClips.length > 0) return true;
+                        return false;
+                    });
+
+                    const durationStr = prompt('Export duration in seconds:', hasContent ? '30' : '10');
+                    if (durationStr === null) return; // User cancelled
+                    const duration = parseFloat(durationStr);
+                    if (isNaN(duration) || duration <= 0) {
+                        showSafeNotification('Invalid export duration.', 2000);
+                        return;
+                    }
+
+                    showSafeNotification('Preparing export...', 1500);
+                    exportBtn.disabled = true;
+                    exportBtn.textContent = 'Exporting...';
+
+                    try {
+                        // Ensure audio context is running
+                        const audioReady = await initAudioContextAndMasterMeter(true);
+                        if (!audioReady) {
+                            showSafeNotification('Audio not ready. Click the page first.', 2000);
+                            return;
+                        }
+
+                        // Dynamically import exportMixdownToWav
+                        const audioModule = await import('./audio.js');
+                        if (typeof audioModule.exportMixdownToWav !== 'function') {
+                            throw new Error('Export function not available.');
+                        }
+
+                        showSafeNotification(`Recording ${duration}s mixdown...`, 2000);
+                        const recording = await audioModule.exportMixdownToWav(duration);
+
+                        if (recording && recording.size > 0) {
+                            // Convert to WAV blob and download
+                            // The recording from Tone.Recorder is typically a blob
+                            const url = URL.createObjectURL(recording);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            const projectName = typeof getProjectNameState === 'function' ? getProjectNameState() : 'snugos-export';
+                            a.download = `${projectName.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.webm`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            showSafeNotification('Export complete! File downloaded.', 3000);
+                        } else {
+                            showSafeNotification('Export failed: No audio recorded.', 3000);
+                        }
+                    } catch (err) {
+                        console.error('[Main] Export error:', err);
+                        showSafeNotification(`Export failed: ${err.message || 'Unknown error'}`, 3000);
+                    } finally {
+                        exportBtn.disabled = false;
+                        exportBtn.textContent = 'Export';
+                    }
+                });
+                console.log('[Main] Export handler attached');
+            } else {
+                console.warn('[Main] Export button not found in cache, retrying...');
+                setTimeout(attachExportHandler, 500);
+            }
+        };
+        attachExportHandler();
 
         if (typeof initializeStateModule === 'function') initializeStateModule(appServices); else console.error("initializeStateModule is not a function");
         if (typeof initializeUIModule === 'function') initializeUIModule(appServices); else console.error("initializeUIModule is not a function");
         if (typeof initializeAudioModule === 'function') initializeAudioModule(appServices); else console.error("initializeAudioModule is not a function");
-        if (typeof initializeEventHandlersModule === 'function') initializeEventHandlersModule(appServices); else console.error("initializeEventHandlersModule is not a function");
+        // Start context suspension monitoring for auto-recovery after browser tab inactivity
+        if (typeof startContextSuspensionMonitoring === 'function') startContextSuspensionMonitoring(3000);
 
         if (typeof initializePrimaryEventListeners === 'function') {
              initializePrimaryEventListeners(appServices);
@@ -787,6 +877,49 @@ async function initializeSnugOS() {
 
         if (Constants.soundLibraries && typeof fetchSoundLibrary === 'function') {
             Object.entries(Constants.soundLibraries).forEach(([name, url]) => fetchSoundLibrary(name, url, true)); 
+        }
+
+        // --- Auto-Save & Recovery ---
+        if (typeof startAutoSave === 'function') {
+            startAutoSave();
+        }
+        if (typeof hasAutoSavedProject === 'function' && hasAutoSavedProject()) {
+            const timestamp = typeof getAutoSavedProjectTimestamp === 'function' ? getAutoSavedProjectTimestamp() : null;
+            const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString() : 'unknown';
+            if (typeof showConfirmationDialog === 'function') {
+                showConfirmationDialog(
+                    'Recover Project?',
+                    `An auto-saved project was found from ${timeStr}. Would you like to recover it?`,
+                    async () => {
+                        // User clicked Recover
+                        try {
+                            const audioReady = await initAudioContextAndMasterMeter(false);
+                            if (!audioReady) {
+                                showSafeNotification("Audio not ready. Click the page first to recover.", 3000);
+                                return;
+                            }
+                            const savedProject = typeof recoverAutoSavedProject === 'function' ? await recoverAutoSavedProject() : null;
+                            if (savedProject) {
+                                appServices._isReconstructingDAW_flag = true;
+                                await reconstructDAWInternal(savedProject, false);
+                                appServices._isReconstructingDAW_flag = false;
+                                showSafeNotification("Project recovered from auto-save!", 3000);
+                                console.log("[Main] Auto-saved project recovered successfully");
+                            } else {
+                                showSafeNotification("Could not load auto-saved project.", 3000);
+                            }
+                        } catch (err) {
+                            console.error("[Main] Error recovering auto-saved project:", err);
+                            showSafeNotification("Error recovering project.", 3000);
+                        }
+                    },
+                    () => {
+                        // User clicked Dismiss - just keep current session
+                        if (typeof clearAutoSavedProject === 'function') clearAutoSavedProject();
+                        showSafeNotification("Auto-save dismissed. Current session kept.", 2000);
+                    }
+                );
+            }
         }
 
         if (appServices.openTimelineWindow && typeof appServices.openTimelineWindow === 'function') {
@@ -813,18 +946,25 @@ async function initializeSnugOS() {
 }
 
 function updateMetersLoop() {
-    try {
-        if (typeof updateMeters === 'function') {
-            const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null;
-            const mixerMasterMeterBar = mixerWindow?.element && !mixerWindow.isMinimized ? mixerWindow.element.querySelector('#mixerMasterMeterBar') : null;
-            const tracks = getTracksState ? getTracksState() : [];
-            updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks);
+    const now = performance.now();
+    const THROTTLE_MS = 33; // ~30fps
+    if (!updateMetersLoop._lastMeterUpdateTime) updateMetersLoop._lastMeterUpdateTime = 0;
+
+    if (now - updateMetersLoop._lastMeterUpdateTime >= THROTTLE_MS) {
+        updateMetersLoop._lastMeterUpdateTime = now;
+        try {
+            if (typeof updateMeters === 'function') {
+                const mixerWindow = getWindowByIdState ? getWindowByIdState('mixer') : null;
+                const mixerMasterMeterBar = ((mixerWindow) && (mixerWindow).element) && !mixerWindow.isMinimized ? mixerWindow.element.querySelector('#mixerMasterMeterBar') : null;
+                const tracks = getTracksState ? getTracksState() : [];
+                updateMeters(uiElementsCache.masterMeterBarGlobal, mixerMasterMeterBar, tracks);
+            }
+            if (typeof updatePlayheadPosition === 'function') {
+                updatePlayheadPosition();
+            }
+        } catch (loopError) {
+            console.warn("[Main updateMetersLoop] Error in UI update loop:", loopError);
         }
-        if (typeof updatePlayheadPosition === 'function') {
-            updatePlayheadPosition();
-        }
-    } catch (loopError) {
-        console.warn("[Main updateMetersLoop] Error in UI update loop:", loopError);
     }
     requestAnimationFrame(updateMetersLoop);
 }

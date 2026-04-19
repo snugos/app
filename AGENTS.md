@@ -268,3 +268,34 @@ Need to create `.github/workflows/deploy.yml` that:
 - **FX Slot Tags on Mixer Channel Strips** (`js/ui.js`, `style.css`): Each track channel in the mixer window now shows a row of clickable effect-slot tags beneath the FX button. Each tag displays the effect type name with a track-type color dot. Clicking a tag opens the effects rack and selects that effect's controls. The FX slots row is rendered in a `.mixer-fx-slots` flex container with scroll for overflow, and each button has `.mixer-fx-slot-btn` styling with hover/active scale effects. Effect tags are color-coded by track type (violet=Synth, teal=Sampler, orange=DrumSampler, pink=InstrumentSampler, gray=Audio). Added CSS classes for the FX slots container and button styling.
 - **Piano Keyboard Octave Display in Global Controls Bar** (`index.html`, `js/main.js`, `js/eventHandlers.js`): Added a visible octave shift display in the global controls bar so users can see the current octave offset at a glance while playing notes on the computer keyboard. The display shows "Oct: N" where N ranges from -2 to +2, styled as a compact monospace indicator next to the shortcuts (?) button. Updated all four Z/X octave shift handlers in `eventHandlers.js` to also update the `octaveDisplayGlobal` element's text content whenever the octave changes. This makes octave adjustment feel more responsive and visible.
 - **Note**: Git push works! zo.pub sync also works as fallback.
+
+### 2026-04-18 — Day 45
+- **Bug Fix: Missing toggleSequencerViewMode function** (`js/ui.js`, `js/eventHandlers.js`): The V key shortcut in eventHandlers.js called `toggleSequencerViewMode()` to toggle between Piano Roll and Step Grid views, but this function did not exist in ui.js — causing the toggle to fail silently. Added the missing `toggleSequencerViewMode()` function to ui.js which toggles the `sequencerViewMode` module variable and refreshes the active sequencer window (or finds any open sequencer window as fallback). Also added "V - Toggle Piano Roll / Step Grid view" to the keyboard shortcuts overlay under the Sequencer section.
+- **Note**: Git push works! zo.pub sync also works as fallback. Pushed to origin/LWB-with-Bugs successfully.
+### 2026-04-18 — Day 46
+- **Piano Roll Variable-Length Notes** (`js/ui.js`, `style.css`): The piano roll view now renders notes as horizontal bars spanning multiple steps instead of single-cell dots. Key changes:
+  1. **Pre-pass coverage calculation**: Before rendering, a `coveredCells` Set tracks which cells are spanned by longer notes (reading `stepData.length || 1`).
+  2. **Note bar rendering**: Note-start cells render a `.piano-note-bar` div with `width = noteLen * 20 - 1` px, using track-type color gradients. Hover tooltip shows note name, velocity %, and length in steps.
+  3. **Note body cells**: Covered (non-start) cells render as `.sequencer-note-body` with a subtle transparent highlight, making the bar body visible but clearly non-interactive.
+  4. **Right-click context menu**: Now includes a "Note Length (steps)" section with presets (1/2/4/8/16 steps) and +/-1 step adjustments. Also shows current note info in the header line.
+  5. **CSS**: Added `.piano-note-bar` classes (with synth/sampler/drum/instrument variants) and `.sequencer-note-body` with subtle body styling.
+  6. **setNoteLen()**: New function in the context menu handler that sets `currentActiveSeq.data[r][c].length` with undo capture and redraws the window.
+- **Note**: Git push works! zo.pub sync also works as fallback. Pushed to origin/LWB-with-Bugs successfully.
+### 2026-04-18 — Day 47
+- **Piano Roll Variable-Length Notes** (`js/ui.js`, `style.css`): The piano roll view now renders notes as horizontal bars spanning multiple steps instead of single-cell dots. Key changes:
+  1. **Pre-pass coverage calculation**: Before rendering, a `coveredCells` Set tracks which cells are spanned by longer notes (reading `stepData.length || 1`).
+  2. **Note bar rendering**: Note-start cells render a `.piano-note-bar` div with `width = noteLen * 20 - 1` px, using track-type color gradients. Hover tooltip shows note name, velocity %, and length in steps.
+  3. **Note body cells**: Covered (non-start) cells render as `.sequencer-note-body` with a subtle transparent highlight, making the bar body visible but clearly non-interactive.
+  4. **Right-click context menu**: Now includes a "Note Length (steps)" section with presets (1/2/4/8/16 steps) and +/-1 step adjustments. Also shows current note info in the header line.
+  5. **CSS**: Added `.piano-note-bar` classes (with synth/sampler/drum/instrument variants) and `.sequencer-note-body` with subtle body styling.
+  6. **setNoteLen()**: New function in the context menu handler that sets `currentActiveSeq.data[r][c].length` with undo capture and redraws the window.
+- **Bug Fix: Duplicate Function Cleanup** (`js/eventHandlers.js`): Removed massive duplication in eventHandlers.js where core handler functions were duplicated 10x each (from past merge conflicts). Cleaned up: `showKeyboardShortcutsModal` (10→1), `handleOpenSequencer` (5→1), `handleTrackMute` (10→1), `handleTrackSolo` (10→1), `handleTrackArm` (10→1), `handleRemoveTrack` (10→1), `handleOpenTrackInspector` (10→1), `handleOpenEffectsRack` (10→1). Removed 1296 lines of dead duplicate code. File reduced from 13882 to 12587 lines. This was a known issue in AGENTS.md.
+- **Note**: Git push works! zo.pub sync also works as fallback. Pushed to origin/LWB-with-Bugs successfully.
+### 2026-04-18 — Day 48
+- **Fixed top 3 high-severity bugs from error log**:
+  1. `updateSequencerCellUI` in ui.js: undefined variable `j` → `col` — all external cell UI updates were silently failing
+  2. `main.js`: `getIsReconstructingingDAW` (triple "g") typo fixed → `getIsReconstructingDAW` (6 replacements) — master effects couldn't be added/removed during DAW reconstruction
+  3. `audio.js` `rebuildMasterEffectChain`: early `return` in forEach now replaced with chain continuation — one bad effect no longer breaks all subsequent effects
+- Version bumped to 0.5.6
+- Git push works, zo.pub sync works
+
