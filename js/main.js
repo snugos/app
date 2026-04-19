@@ -241,7 +241,7 @@ const appServices = {
     getSidechainBus: () => getSidechainBusInput(),
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingingDAW() : false;
             if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex);
@@ -910,6 +910,9 @@ async function initializeSnugOS() {
         if (typeof startContextSuspensionMonitoring === 'function') startContextSuspensionMonitoring(3000);
 
         if (typeof initializePrimaryEventListeners === 'function') {
+             console.log('[Main] Calling initializePrimaryEventListeners. uiElementsCache keys:', Object.keys(appServices.uiElementsCache || {}));
+             console.log('[Main] startButton in cache:', !!appServices.uiElementsCache?.startButton);
+             console.log('[Main] startMenu in cache:', !!appServices.uiElementsCache?.startMenu);
              initializePrimaryEventListeners(appServices);
         } else { console.error("initializePrimaryEventListeners is not a function");}
 
