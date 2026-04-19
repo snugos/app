@@ -167,7 +167,6 @@ Need to create `.github/workflows/deploy.yml` that:
 
 ### 2026-04-18 — Day 25
 - **Bug Fix: isReconstructing typo cascade breaks undo/redo** (`js/main.js`): The undo/redo system was broken because state.js sets `appServices._isReconstructingDAW_flag` but main.js was reading `appServices._isReconstructingingDAW_flag` (with typo). This caused `addMasterEffect`, `removeMasterEffect`, and `reorderMasterEffect` to always see `isReconstructing = false`, bypassing the undo check and corrupting the undo stack on every master effect operation. Fixed all references: renamed `_isReconstructingingDAW_flag` → `_isReconstructingDAW_flag` and `getIsReconstructingingDAW` → `getIsReconstructingDAW` across main.js. The flag itself was already correctly named in state.js. This was a follow-up to Day 13's "typo cascade" fix which renamed the function but missed the property name and the initial getter definition.
-- **Bug Fix: isReconstructing typo cascade breaks undo/redo** (`js/main.js`): The undo/redo system was broken because state.js sets `appServices._isReconstructingDAW_flag` but main.js was reading `appServices._isReconstructingingDAW_flag` (with typo). This caused `addMasterEffect`, `removeMasterEffect`, and `reorderMasterEffect` to always see `isReconstructing = false`, bypassing the undo check and corrupting the undo stack on every master effect operation. Fixed all references: renamed `_isReconstructingingDAW_flag` → `_isReconstructingDAW_flag` and `getIsReconstructingingDAW` → `getIsReconstructingDAW` across main.js. The flag itself was already correctly named in state.js. This was a follow-up to Day 13's "typo cascade" fix which renamed the function but missed the property name and the initial getter definition.
 
 ### 2026-04-18 — Day 28
 - **Bug Fix: shiftSequenceNotes missing undo state capture** (`js/Track.js`, `js/ui.js`): The `shiftSequenceNotes()` method was modifying `activeSeq.data` directly without calling `_captureUndoState()`, so undo/redo never worked for Shift Notes Up/Down operations. The Track class already has `_captureUndoState()` used throughout the class (createNewSequence, deleteSequence, renameSequence, etc.), but `shiftSequenceNotes` was missing it. Fixed by adding `this._captureUndoState(\`Shift Notes ${semitones > 0 ? 'Down' : 'Up'} on ${activeSeq.name}\`)` right after `activeSeq.data = newData`.
@@ -312,7 +311,7 @@ Need to create `.github/workflows/deploy.yml` that:
 - **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`.
 
 ### 2026-04-19 — Day 54
-- **Undo/Redo Coverage: setSynthParam and setInstrumentSamplerRootNote** (`js/Track.js`): Added `_captureUndoState()` to `setSynthParam()` (called when adjusting synth engine knobs like filter cutoff, resonance, attack, etc.) and `setInstrumentSamplerRootNote()` (called when changing the root note mapping for instrument sampler tracks). Continues the undo coverage audit from Days 51-52.
+- **Undo/Redo Coverage: setSynthParam and setInstrumentSamplerRootNote** (`js/Track.js`): Added `_captureUndoState()` to `setSynthParam()` (called when adjusting synth engine knobs like filter cutoff, resonance, attack, etc.) and `setInstrumentSamplerRootNote()` (called when changing the root note mapping for instrument sampler tracks). Continues undo coverage audit from Days 51-52.
 - **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`
 
 ### 2026-04-19 — Day 55
@@ -321,5 +320,14 @@ Need to create `.github/workflows/deploy.yml` that:
 
 ### 2026-04-19 — Day 56
 - **Undo/Redo Coverage: setVolume and setPan** (`js/Track.js`): Added `_captureUndoState()` to `setVolume()` (volume knob changes) and `setPan()` (pan knob changes). Continues undo coverage audit from Days 51-55.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main`
+
+### 2026-04-19 — Day 57
+- **Project Save/Load: missing track properties** (`js/state.js`): Four track properties were not being saved or restored during project save/load or undo/redo:
+  1. `automationArmed` — not saved in `gatherProjectDataInternal`, not restored in `reconstructDAWInternal`
+  2. `trackColor` — not saved in `gatherProjectDataInternal`, not restored in `reconstructDAWInternal`
+  3. `panValue` — not saved in `gatherProjectDataInternal`, not restored in `reconstructDAWInternal`
+  4. `waveformZoom` — not saved in `gatherProjectDataInternal`, not restored in `reconstructDAWInternal`
+  Added all four to `gatherProjectDataInternal` (track save) and `reconstructDAWInternal` (track load). Also fixed a typo bug: Audio track `isMonitoringEnabled` was saving from `trackData.isMonitoringEnabled` instead of `track.isMonitoringEnabled`.
 - **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main`
 
