@@ -172,14 +172,17 @@ export function initializePrimaryEventListeners(appContext) {
         };
 
         for (const menuItemId in menuActions) {
-            if (uiCache[menuItemId]) {
-                console.log(`[Menu] Attaching listener to: ${menuItemId}`);
-                uiCache[menuItemId].addEventListener('click', () => {
+            const element = uiCache[menuItemId];
+            if (element) {
+                console.log(`[Menu] Found: ${menuItemId}, attaching click listener`);
+                element.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log(`[Menu] CLICK FIRED: ${menuItemId}`);
                     menuActions[menuItemId]();
                     if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
                 });
             } else {
-                console.warn(`[Menu] Element NOT found: ${menuItemId}`);
+                console.warn(`[Menu] NOT FOUND: ${menuItemId}`);
             }
         }
 
