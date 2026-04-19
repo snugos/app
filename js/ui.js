@@ -224,11 +224,11 @@ function buildInstrumentSamplerSpecificInspectorDOM(track) {
                 </div>
                 <div>
                     <label for="instrumentLoopStart-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop Start (s):</label>
-                    <input type="number" id="instrumentLoopStart-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                    <input type="number" id="instrumentLoopStart-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                 </div>
                 <div>
                     <label for="instrumentLoopEnd-${track.id}" class="block text-xs font-medium dark:text-slate-300">Loop End (s):</label>
-                    <input type="number" id="instrumentLoopEnd-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
+                    <input type="number" id="instrumentLoopEnd-${track.id}" step="0.001" class="w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-500">
                 </div>
             </div>
              <div class="text-xs font-medium mt-1 dark:text-slate-300">Envelope:</div>
@@ -374,6 +374,78 @@ function initializeSamplerSpecificControls(track, winEl) {
 }
 
 function initializeDrumSamplerSpecificControls(track, winEl) {
+    // First, set up the knobs for the selected drum pad
+    const createAndPlaceKnob = (placeholderId, options) => {
+        const placeholder = winEl.querySelector(`#${placeholderId}`);
+        if (placeholder) {
+            const knob = createKnob(options);
+            placeholder.innerHTML = '';
+            placeholder.appendChild(knob.element);
+            return knob;
+        }
+        return null;
+    };
+    
+    const selectedPadIndex = track.selectedDrumPadForEdit || 0;
+    const padData = track.drumSamplerPads?.[selectedPadIndex] || { volume: 0.7, pitchShift: 0, envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 } };
+    const env = padData.envelope || { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 };
+    
+    track.inspectorControls.drumPadVolume = createAndPlaceKnob(`drumPadVolumeKnob-${track.id}-placeholder`, {
+        label: 'Volume',
+        min: 0, max: 1, step: 0.01,
+        initialValue: padData.volume ?? 0.7,
+        decimals: 2,
+        trackRef: track,
+        onValueChange: (val) => track.setDrumPadVolume(selectedPadIndex, val)
+    });
+    
+    track.inspectorControls.drumPadPitch = createAndPlaceKnob(`drumPadPitchKnob-${track.id}-placeholder`, {
+        label: 'Pitch',
+        min: -24, max: 24, step: 1,
+        initialValue: padData.pitchShift ?? 0,
+        decimals: 0,
+        displaySuffix: 'st',
+        trackRef: track,
+        onValueChange: (val) => track.setDrumPadPitch(selectedPadIndex, val)
+    });
+    
+    track.inspectorControls.drumPadEnvAttack = createAndPlaceKnob(`drumPadEnvAttack-${track.id}-placeholder`, {
+        label: 'Attack',
+        min: 0.001, max: 2, step: 0.001,
+        initialValue: env.attack,
+        decimals: 3,
+        trackRef: track,
+        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'attack', val)
+    });
+    
+    track.inspectorControls.drumPadEnvDecay = createAndPlaceKnob(`drumPadEnvDecay-${track.id}-placeholder`, {
+        label: 'Decay',
+        min: 0.01, max: 2, step: 0.01,
+        initialValue: env.decay,
+        decimals: 2,
+        trackRef: track,
+        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'decay', val)
+    });
+    
+    track.inspectorControls.drumPadEnvSustain = createAndPlaceKnob(`drumPadEnvSustain-${track.id}-placeholder`, {
+        label: 'Sustain',
+        min: 0, max: 1, step: 0.01,
+        initialValue: env.sustain,
+        decimals: 2,
+        trackRef: track,
+        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'sustain', val)
+    });
+    
+    track.inspectorControls.drumPadEnvRelease = createAndPlaceKnob(`drumPadEnvRelease-${track.id}-placeholder`, {
+        label: 'Release',
+        min: 0.01, max: 2, step: 0.01,
+        initialValue: env.release,
+        decimals: 2,
+        trackRef: track,
+        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'release', val)
+    });
+    
+    // Then render the pads and update the UI
     renderDrumSamplerPads(track);
     updateDrumPadControlsUI(track);
 }
@@ -1498,21 +1570,200 @@ export function highlightPlayingStep(trackId, stepIndex, isPlaying) {
 
 
 
-// --- Additional UI Stubs ---
-export function renderSamplePads(container, pads, onPadClick) {
-    console.warn('[UI] renderSamplePads not implemented');
+// --- Additional UI Functions ---
+
+export function renderSamplePads(track) {
+    if (!track || track.type !== 'Sampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const container = inspectorWin?.element?.querySelector(`#samplePadsContainer-${track.id}`);
+    if (!container) return;
+
+    container.innerHTML = '';
+    const numSlices = track.slices?.length || Constants.numSlices;
+    
+    for (let i = 0; i < numSlices; i++) {
+        const sliceData = track.slices?.[i] || {};
+        const pad = document.createElement('button');
+        pad.className = `sample-pad p-1 border rounded text-xs transition-colors ${
+            i === track.selectedSliceForEdit ? 'bg-purple-500 text-white border-purple-600' : 
+            'bg-gray-100 dark:bg-slate-600 border-gray-300 dark:border-slate-500 hover:bg-gray-200 dark:hover:bg-slate-500'
+        }`;
+        pad.textContent = `${i + 1}`;
+        pad.title = sliceData.userDefined ? `Slice ${i + 1} (Custom)` : `Slice ${i + 1}`;
+        pad.dataset.sliceIndex = i;
+        pad.addEventListener('click', () => {
+            track.selectedSliceForEdit = i;
+            renderSamplePads(track);
+            updateSliceEditorUI(track);
+            if (localAppServices.playSlicePreview && track.audioBuffer) {
+                const slice = track.slices[i];
+                if (slice) localAppServices.playSlicePreview(track, i);
+            }
+        });
+        container.appendChild(pad);
+    }
 }
-export function updateSliceEditorUI(trackId) {
-    console.warn('[UI] updateSliceEditorUI not implemented');
+
+export function updateSliceEditorUI(track) {
+    if (!track || track.type !== 'Sampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const winEl = inspectorWin?.element;
+    if (!winEl) return;
+
+    const selectedSlice = track.slices?.[track.selectedSliceForEdit] || { volume: 0.7, pitchShift: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 }, loop: false, reverse: false };
+
+    // Update selected slice info display
+    const sliceInfo = winEl.querySelector(`#selectedSliceInfo-${track.id}`);
+    if (sliceInfo) sliceInfo.textContent = track.selectedSliceForEdit + 1;
+
+    // Update volume knob
+    if (track.inspectorControls.sliceVolume?.setValue) {
+        track.inspectorControls.sliceVolume.setValue(selectedSlice.volume, false);
+    }
+
+    // Update pitch knob
+    if (track.inspectorControls.slicePitch?.setValue) {
+        track.inspectorControls.slicePitch.setValue(selectedSlice.pitchShift || 0, false);
+    }
+
+    // Update loop toggle
+    const loopToggle = winEl.querySelector(`#sliceLoopToggle-${track.id}`);
+    if (loopToggle) {
+        loopToggle.textContent = selectedSlice.loop ? 'Loop: ON' : 'Loop: OFF';
+        loopToggle.classList.toggle('active', selectedSlice.loop);
+    }
+
+    // Update reverse toggle
+    const reverseToggle = winEl.querySelector(`#sliceReverseToggle-${track.id}`);
+    if (reverseToggle) {
+        reverseToggle.textContent = selectedSlice.reverse ? 'Rev: ON' : 'Rev: OFF';
+        reverseToggle.classList.toggle('active', selectedSlice.reverse);
+    }
+
+    // Update envelope knobs
+    const env = selectedSlice.envelope || { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 };
+    if (track.inspectorControls.sliceEnvAttack?.setValue) track.inspectorControls.sliceEnvAttack.setValue(env.attack, false);
+    if (track.inspectorControls.sliceEnvDecay?.setValue) track.inspectorControls.sliceEnvDecay.setValue(env.decay, false);
+    if (track.inspectorControls.sliceEnvSustain?.setValue) track.inspectorControls.sliceEnvSustain.setValue(env.sustain, false);
+    if (track.inspectorControls.sliceEnvRelease?.setValue) track.inspectorControls.sliceEnvRelease.setValue(env.release, false);
 }
-export function updateDrumPadControlsUI(trackId) {
-    console.warn('[UI] updateDrumPadControlsUI not implemented');
+
+export function updateDrumPadControlsUI(track) {
+    if (!track || track.type !== 'DrumSampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const winEl = inspectorWin?.element;
+    if (!winEl) return;
+
+    const selectedPadIndex = track.selectedDrumPadForEdit || 0;
+    const padData = track.drumSamplerPads?.[selectedPadIndex] || { volume: 0.7, pitchShift: 0, envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 } };
+
+    // Update selected pad info display
+    const padInfo = winEl.querySelector(`#selectedDrumPadInfo-${track.id}`);
+    if (padInfo) padInfo.textContent = selectedPadIndex + 1;
+
+    // Update drop zone for selected pad
+    const oldDropZoneContainer = winEl.querySelector(`[id^="drumPadDropZoneContainer-${track.id}"]`);
+    if (oldDropZoneContainer) {
+        const newContainerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
+        oldDropZoneContainer.id = newContainerId;
+        
+        const existingAudioData = { 
+            originalFileName: padData.originalFileName, 
+            status: padData.status || (padData.dbKey ? 'loaded' : (padData.originalFileName ? 'missing' : 'empty'))
+        };
+        const inputId = `drumPadFileInput-${track.id}-${selectedPadIndex}`;
+        oldDropZoneContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
+        
+        const dzEl = oldDropZoneContainer.querySelector('.drop-zone');
+        const fileInputEl = oldDropZoneContainer.querySelector(`#${inputId}`);
+        
+        if (dzEl) {
+            setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile, localAppServices.getTrackById);
+        }
+        if (fileInputEl) {
+            fileInputEl.onchange = (e) => {
+                localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex);
+            };
+        }
+    }
+
+    // Update volume knob
+    if (track.inspectorControls.drumPadVolume?.setValue) {
+        track.inspectorControls.drumPadVolume.setValue(padData.volume ?? 0.7, false);
+    }
+
+    // Update pitch knob
+    if (track.inspectorControls.drumPadPitch?.setValue) {
+        track.inspectorControls.drumPadPitch.setValue(padData.pitchShift ?? 0, false);
+    }
+
+    // Update envelope knobs
+    const env = padData.envelope || { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 };
+    if (track.inspectorControls.drumPadEnvAttack?.setValue) track.inspectorControls.drumPadEnvAttack.setValue(env.attack, false);
+    if (track.inspectorControls.drumPadEnvDecay?.setValue) track.inspectorControls.drumPadEnvDecay.setValue(env.decay, false);
+    if (track.inspectorControls.drumPadEnvSustain?.setValue) track.inspectorControls.drumPadEnvSustain.setValue(env.sustain, false);
+    if (track.inspectorControls.drumPadEnvRelease?.setValue) track.inspectorControls.drumPadEnvRelease.setValue(env.release, false);
 }
-export function renderDrumSamplerPads(container, pads, onPadClick) {
-    console.warn('[UI] renderDrumSamplerPads not implemented');
+
+export function renderDrumSamplerPads(track) {
+    if (!track || track.type !== 'DrumSampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const container = inspectorWin?.element?.querySelector(`#drumPadsGridContainer-${track.id}`);
+    if (!container) return;
+
+    container.innerHTML = '';
+    const numPads = Constants.numDrumSamplerPads || 8;
+    
+    for (let i = 0; i < numPads; i++) {
+        const padData = track.drumSamplerPads?.[i] || {};
+        const pad = document.createElement('button');
+        
+        const isSelected = i === track.selectedDrumPadForEdit;
+        const isLoaded = padData.status === 'loaded' || padData.dbKey;
+        
+        let bgClass = 'bg-gray-200 dark:bg-slate-600';
+        if (isSelected) {
+            bgClass = 'bg-purple-500 text-white';
+        } else if (isLoaded) {
+            bgClass = 'bg-green-100 dark:bg-green-800';
+        }
+        
+        pad.className = `drum-pad aspect-square p-1 border rounded text-xs font-medium transition-colors flex items-center justify-center ${bgClass} ${
+            isSelected ? 'border-purple-600 ring-2 ring-purple-400' : 'border-gray-300 dark:border-slate-500 hover:bg-gray-300 dark:hover:bg-slate-500'
+        }`;
+        pad.textContent = `${i + 1}`;
+        pad.title = padData.originalFileName ? `Pad ${i + 1}: ${padData.originalFileName}` : `Pad ${i + 1} (Empty)`;
+        pad.dataset.padIndex = i;
+        
+        pad.addEventListener('click', () => {
+            track.selectedDrumPadForEdit = i;
+            renderDrumSamplerPads(track);
+            updateDrumPadControlsUI(track);
+            // Play preview if sample is loaded
+            if (localAppServices.playDrumSamplerPadPreview && (padData.status === 'loaded' || padData.dbKey)) {
+                localAppServices.playDrumSamplerPadPreview(track, i);
+            }
+        });
+        
+        container.appendChild(pad);
+    }
 }
+
 export function updateSequencerCellUI(sequencerElement, trackType, row, col, isActive) {
-    console.warn('[UI] updateSequencerCellUI not implemented');
+    if (!sequencerElement) return;
+    
+    const cell = sequencerElement.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+    if (!cell) return;
+    
+    if (isActive) {
+        cell.classList.add('active');
+        cell.style.backgroundColor = trackType === 'Synth' ? '#a855f7' : 
+                                     trackType === 'DrumSampler' ? '#22c55e' : 
+                                     trackType === 'Sampler' ? '#3b82f6' : '#eab308';
+    } else {
+        cell.classList.remove('active');
+        cell.style.backgroundColor = '';
+    }
 }
 
 // --- Timeline Functions (Stubs) ---

@@ -509,7 +509,7 @@ export function selectMIDIInput(deviceId, silent = false) {
         }
     } catch (error) {
         console.error("[EventHandlers selectMIDIInput] Error:", error);
-        if (!silent && localAppServices.showNotification) showNotification("Error selecting MIDI input.", 3000);
+        if (!silent && localAppServices.showNotification) localAppServices.showNotification("Error selecting MIDI input.", 3000);
     }
 }
 
@@ -848,7 +848,7 @@ export async function handleTimelineLaneDrop(event, targetTrackId, startTime, ap
 
     if (!services || !services.getTrackById || !services.showNotification || !services.captureStateForUndo || !services.renderTimeline) {
         console.error("Required appServices not available in handleTimelineLaneDrop");
-        utilShowNotification("Internal error handling timeline drop.", 3000); 
+        showNotification("Internal error handling timeline drop.", 3000); 
         return;
     }
 
