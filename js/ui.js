@@ -1486,9 +1486,8 @@ export function renderSoundBrowserDirectoryFiltered(pathArray, treeNode, searchQ
                 listItem.appendChild(star);
                 listItem.innerHTML += `<span class="ml-1 text-[9px] text-gray-400 dark:text-slate-500">${nodeData.libraryName}</span>`;
                 listItem.addEventListener('click', () => {
-                    listDiv.querySelectorAll('.bg-blue-200,.dark\\\\:\\\\:bg-purple-500').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-purple-500'));
+                    listDiv.querySelectorAll('.bg-blue-200,.dark\\\\:\\:bg-purple-500').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-purple-500'));
                     listItem.classList.add('bg-blue-200', 'dark:bg-purple-500');
-                    }
                     if(previewBtn) previewBtn.disabled = false;
                 });
                 listItem.addEventListener('dragstart', (e) => { e.dataTransfer.setData("application/json", JSON.stringify({ fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName, type: 'sound-browser-item' })); e.dataTransfer.effectAllowed = "copy"; });
