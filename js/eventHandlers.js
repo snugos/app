@@ -528,6 +528,7 @@ const keyToMIDIMap = Constants.computerKeySynthMap || {
 };
 
 
+if (typeof document !== 'undefined') {
 document.addEventListener('keydown', (event) => {
     try {
         if (event.repeat) return;
@@ -569,22 +570,53 @@ document.addEventListener('keydown', (event) => {
             if (playBtn) playBtn.click();
             return;
         }
-
-        let midiNote = keyToMIDIMap[event.key]; 
-        if (midiNote === undefined && keyToMIDIMap[key]) midiNote = keyToMIDIMap[key]; 
-
-        if (midiNote !== undefined && !currentlyPressedComputerKeys[midiNote]) {
-            if (kbdIndicator) kbdIndicator.classList.add('active');
-            const finalNote = midiNote + (currentOctaveShift * 12);
-            if (finalNote >=0 && finalNote <= 127 && typeof armedTrack.instrument.triggerAttack === 'function') {
-                const freq = Tone.Frequency(finalNote, "midi").toNote();
-                armedTrack.instrument.triggerAttack(freq, Tone.now(), 0.7);
-                currentlyPressedComputerKeys[midiNote] = true;
-            }
+        if (key === 'Enter' && !(activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA'))) { 
+            event.preventDefault(); 
+            const recordBtn = localAppServices.uiElementsCache?.recordBtnGlobal;
+            if (recordBtn) recordBtn.click();
+            return;
         }
-    } catch (error) { console.error("[EventHandlers Keydown] Error:", error); }
+        if (key === 'Escape' || key === 'esc') {
+            const allWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : [];
+            allWindows.forEach(w => { if (w.close) w.close(); });
+            if (localAppServices.showNotification) localAppServices.showNotification('Closed all windows', 800);
+            return;
+        }
+        if (key === 'm' && !(event.ctrlKey || event.metaKey)) {
+            if (localAppServices.toggleMute) localAppServices.toggleMute(-1);
+            return;
+        }
+        if (key === 's' && !(event.ctrlKey || event.metaKey)) {
+            if (localAppServices.toggleSolo) localAppServices.toggleSolo(-1);
+            return;
+        }
+        if (key === 'r' && !(event.ctrlKey || event.metaKey)) {
+            if (localAppServices.toggleRecordArm) localAppServices.toggleRecordArm(-1);
+            return;
+        }
+        
+        const midNote = keyToMIDIMap[key];
+        if (midNote !== undefined) {
+            if (localAppServices.uiElementsCache?.keyboardIndicatorGlobal) {
+                localAppServices.uiElementsCache.keyboardIndicatorGlobal.textContent = key.toUpperCase();
+                localAppServices.uiElementsCache.keyboardIndicatorGlobal.style.fill = 'var(--theme-keyboard-key-active, #00ff88)';
+                setTimeout(() => {
+                    if (localAppServices.uiElementsCache?.keyboardIndicatorGlobal) {
+                        localAppServices.uiElementsCache.keyboardIndicatorGlobal.textContent = key.toUpperCase();
+                        localAppServices.uiElementsCache.keyboardIndicatorGlobal.style.fill = ''; 
+                    }
+                }, 100);
+            }
+            if (localAppServices.handleComputerKeyOn) localAppServices.handleComputerKeyOn(midNote + (currentOctaveShift * 12));
+            return;
+        }
+    } catch (error) {
+        console.error("[EventHandlers keydown] Error:", error);
+    }
 });
+}
 
+if (typeof document !== 'undefined') {
 document.addEventListener('keyup', (event) => {
     let armedTrack = null; 
     let midiNote = undefined;
@@ -633,10 +665,11 @@ document.addEventListener('keyup', (event) => {
         }
 
         if (midiNote !== undefined && currentlyPressedComputerKeys[midiNote]) {
-            delete currentlyPressedComputerKeys[midiNote]; 
+            delete currentlyPressedComputerKeys[midiNote];
         }
     }
 });
+}
 
 
 // --- Track Control Handlers ---
