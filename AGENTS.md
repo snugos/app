@@ -166,6 +166,45 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Right-click on sequencer grid to access pattern operations
 - **Version**: Bumped to 0.8.0
 
+#### Day 11: Scale Mode Feature (2026-04-19)
+- **Feature**: Added Scale Mode for the sequencer to constrain notes to musical scales
+- **Files Modified**:
+  - `js/constants.js`: Added:
+    - `SCALES` object with 17 scale definitions (Major, Minor, Pentatonic, Blues, Dorian, etc.)
+    - `SCALE_ROOTS` array for root note selection
+    - `DEFAULT_SCALE_MODE` default settings object
+    - Bumped APP_VERSION to 0.9.0
+  - `js/state.js`: Added:
+    - `scaleModeState` state variable
+    - Getters: `getScaleModeState()`, `getScaleModeEnabledState()`, `getScaleModeScaleState()`, `getScaleModeRootState()`, `getScaleModeLockState()`
+    - Setters: `setScaleModeState()`, `setScaleModeEnabledState()`, `setScaleModeScaleState()`, `setScaleModeRootState()`, `setScaleModeLockState()`
+    - Scale mode saved to `globalSettings` in `gatherProjectDataInternal()`
+    - Scale mode restored in `reconstructDAWInternal()`
+  - `js/ui.js`: Modified `buildSequencerContentDOM()`:
+    - Added scale mode controls (toggle, root selector, scale selector, lock toggle) for Synth/InstrumentSampler tracks
+    - Added visual highlighting: notes outside the selected scale appear dimmed (opacity-30)
+    - Added `isNoteInScale()` helper function for scale checking
+    - Added event handlers for scale mode controls in `openTrackSequencerWindow()`
+  - `js/main.js`: Wired scale mode state functions to appServices
+- **Feature Details**:
+  - Scale Mode Toggle: Enable/disable scale highlighting in sequencer
+  - Root Note Selector: Choose the root note (C through B)
+  - Scale Selector: Choose from 17 different scales
+  - Scale Lock: (Future) Will prevent placing notes outside the scale
+  - Visual Feedback: Notes outside the selected scale are dimmed in the sequencer grid
+- **Usage**: Open sequencer for a Synth or InstrumentSampler track, use Scale controls in the toolbar
+- **Version**: Bumped to 0.9.0
+
+#### Day 11: Debug Code Cleanup (2026-04-19)
+- **Bug Fix**: Removed debug console.log statements and MODIFICATION markers from production code
+- **Files Modified**:
+  - `js/audio.js`: Removed DEBUG console.log statements from `fetchSoundLibrary()` function and MODIFICATION START/END markers
+  - `js/ui.js`: Removed DEBUG console.log statements from `showAddEffectModal()`, `openSoundBrowserWindow()`, and `updateSoundBrowserDisplayForLibrary()` functions; removed MODIFICATION comment markers
+  - `js/Track.js`: Removed MODIFICATION START/END comment markers from `getDefaultSynthParams()`
+  - `js/main.js`: Removed MODIFICATION START/END comment markers from `panicStopAllAudio()`
+- **Impact**: These debug statements were left over from development and were cluttering the console output in production. The MODIFICATION markers were no longer needed as the features are now permanent.
+- **Version**: 0.8.0 (no bump needed, this was a code cleanup)
+
 ## Code Style Guidelines
 
 ### Module Structure
