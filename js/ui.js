@@ -1271,7 +1271,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const isNoteInScale = (noteName) => {
         if (!isScaleModeEnabled) return true;
         const rootNote = scaleMode.root;
-        const scaleIntervals = Constants.SCALES[scaleMode.scale] || Constants.SCALES['Chromatic'];
+        const scaleIntervals = Constants.SCALES[scaleMode.scale] || Constants.SCALES['Major'];
         
         // Extract note letter and octave
         const match = noteName.match(/^([A-G]#?)(\d)$/);
@@ -1321,12 +1321,32 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             </div>`;
     }
 
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class=\"controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700\"> <span class=\"font-semibold\">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for=\"seqLengthInput-${track.id}\">Bars: </label> <input type=\"number\" id=\"seqLengthInput-${track.id}\" value=\"${numBars}\" min=\"1\" max=\"${Constants.MAX_BARS || 16}\" class=\"w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200\"> ${scaleControlsHTML} </div> </div>`;
-    html += `<div class=\"sequencer-grid-layout\" style=\"display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;\"> <div class=\"sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700\"></div>`;
-    for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class=\"sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400\">${label}</div>`; }
+    // Velocity editor toggle button
+    const velocityEditorToggleHTML = `
+        <label class="flex items-center gap-0.5 cursor-pointer ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+            <input type="checkbox" id="velocityEditorToggle-${track.id}" class="w-3 h-3">
+            <span class="text-[10px]">Velocity</span>
+        </label>`;
+
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} </div> </div>`;
+    html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
+    for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
 
     const activeSequence = track.getActiveSequence();
     const sequenceData = activeSequence ? activeSequence.data : [];
+
+    // Calculate max velocity per column for velocity editor
+    const maxVelocityPerColumn = [];
+    for (let col = 0; col < totalSteps; col++) {
+        let maxVel = 0;
+        for (let row = 0; row < rows; row++) {
+            const stepData = sequenceData[row]?.[col];
+            if (stepData?.active && stepData.velocity !== undefined) {
+                maxVel = Math.max(maxVel, stepData.velocity);
+            }
+        }
+        maxVelocityPerColumn[col] = maxVel;
+    }
 
     for (let i = 0; i < rows; i++) {
         let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
@@ -1336,11 +1356,24 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         const isInScale = isNoteInScale(rowLabel);
         const scaleHighlightClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
         
-        html += `<div class=\"sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px] ${scaleHighlightClass}\" title=\"${rowLabels[i] || ''}\">${labelText}</div>`;
+        html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px] ${scaleHighlightClass}" title="${rowLabels[i] || ''}">${labelText}</div>`;
         for (let j = 0; j < totalSteps; j++) {
             const stepData = sequenceData[i]?.[j];
             let activeClass = '';
-            if (stepData?.active) { if (track.type === 'Synth') activeClass = 'active-synth'; else if (track.type === 'Sampler') activeClass = 'active-sampler'; else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler'; else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler'; }
+            let velocityAttr = '';
+            let velocityOpacityStyle = '';
+            if (stepData?.active) { 
+                if (track.type === 'Synth') activeClass = 'active-synth'; 
+                else if (track.type === 'Sampler') activeClass = 'active-sampler'; 
+                else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler'; 
+                else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
+                // Add velocity data attribute and opacity style
+                const velocity = stepData.velocity !== undefined ? stepData.velocity : Constants.defaultVelocity;
+                velocityAttr = `data-velocity="${velocity.toFixed(2)}"`;
+                // Scale opacity from 0.5 to 1.0 based on velocity (0.0-1.0)
+                const opacity = 0.5 + (velocity * 0.5);
+                velocityOpacityStyle = `style="opacity: ${opacity.toFixed(2)}"`;
+            }
             let beatBlockClass = (Math.floor((j % stepsPerBar) / 4) % 2 === 0) ? 'bg-gray-50 dark:bg-slate-700' : 'bg-white dark:bg-slate-750';
             if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-400 dark:border-l-slate-600';
             else if (j > 0 && j % (stepsPerBar / 2) === 0) beatBlockClass += ' border-l-gray-300 dark:border-l-slate-650';
@@ -1349,10 +1382,32 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             // Apply scale highlighting to cells
             const cellScaleClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
             
-            html += `<div class=\"sequencer-step-cell ${activeClass} ${beatBlockClass} ${cellScaleClass} border-r border-b border-gray-200 dark:border-slate-600\" data-row=\"${i}\" data-col=\"${j}\" title=\"R${i+1},S${j+1}\"></div>`;
+            html += `<div class="sequencer-step-cell ${activeClass} ${beatBlockClass} ${cellScaleClass} border-r border-b border-gray-200 dark:border-slate-600" data-row="${i}" data-col="${j}" data-active="${stepData?.active ? 'true' : 'false'}" ${velocityAttr} ${velocityOpacityStyle} title="R${i+1},S${j+1}${stepData?.active ? ` V:${Math.round((stepData.velocity || Constants.defaultVelocity) * 127)}` : ''}"></div>`;
         }
     }
-    html += `</div></div>`; return html;
+    html += `</div>`;
+    
+    // Velocity Editor Lane (initially hidden)
+    html += `<div id="velocityEditor-${track.id}" class="velocity-editor-lane hidden mt-1 border-t border-gray-400 dark:border-slate-600 pt-1">`;
+    html += `<div class="text-[10px] font-semibold mb-1 text-gray-500 dark:text-slate-400">Velocity Editor (click/drag on bars to edit)</div>`;
+    html += `<div class="velocity-editor-grid" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 60px; gap: 0px; width: fit-content;">`;
+    html += `<div class="velocity-label sticky left-0 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[9px] text-gray-400">VEL</div>`;
+    for (let col = 0; col < totalSteps; col++) {
+        const maxVel = maxVelocityPerColumn[col] || 0;
+        const barHeight = Math.round(maxVel * 56); // 60px max height - 4px padding
+        const barColor = maxVel > 0 ? '#7c3aed' : '#333333';
+        const beatsPerBar = 4;
+        const barNum = Math.floor(col / beatsPerBar) + 1;
+        const beatInBar = (col % beatsPerBar) + 1;
+        const isBeat = beatInBar === 1;
+        const borderClass = col % stepsPerBar === 0 && col > 0 ? 'border-l-2 border-l-gray-500' : '';
+        
+        html += `<div class="velocity-cell relative border-r border-b border-gray-300 dark:border-slate-600 ${borderClass} flex items-end justify-center p-0.5 cursor-pointer hover:bg-slate-700" data-col="${col}" data-max-velocity="${maxVel.toFixed(2)}" title="Step ${col + 1}: ${maxVel > 0 ? Math.round(maxVel * 127) : 'No notes'}">`;
+        html += `<div class="velocity-bar w-full rounded-t transition-all duration-75" style="height: ${barHeight}px; background-color: ${barColor};" data-col="${col}"></div>`;
+        html += `</div>`;
+    }
+    html += `</div></div>`;
+    html += `</div>`; return html;
 }
 
 export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
@@ -1481,7 +1536,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
             const menuItems = [
                 { label: `Copy "${currentActiveSeq.name}"`, action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentActiveSeq.data || [])), sequenceLength: currentActiveSeq.length }); showNotification(`Sequence "${currentActiveSeq.name}" copied.`, 2000); } } },
-                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (!clipboard || clipboard.type !== 'sequence' || !clipboard.data || (clipboard.sourceTrackType && currentTrackForMenu && clipboard.sourceTrackType !== currentTrackForMenu.type)) },
+                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
                 { separator: true },
                 { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
                 { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } },
@@ -1491,7 +1546,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     const density = prompt('Enter randomization density (0.0 - 1.0):', '0.3');
                     const densityValue = parseFloat(density);
                     if (isNaN(densityValue) || densityValue < 0 || densityValue > 1) { 
-                        showNotification('Invalid density value. Must be between 0 and 1.', 2000); 
+                        showNotification('Invalid density value. Must be between 0 and 1.', 3000); 
                         return; 
                     }
                     const count = currentTrackForMenu.randomizePattern(densityValue);
@@ -1566,49 +1621,6 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             });
         }
 
-        if (grid) grid.addEventListener('click', (e) => {
-            const targetCell = e.target.closest('.sequencer-step-cell');
-            if (targetCell) {
-                const row = parseInt(targetCell.dataset.row, 10); const col = parseInt(targetCell.dataset.col, 10);
-                const currentActiveSeq = track.getActiveSequence();
-                if (!currentActiveSeq || !currentActiveSeq.data) return;
-
-                if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
-                    if (!currentActiveSeq.data[row]) currentActiveSeq.data[row] = Array(currentActiveSeq.length).fill(null);
-                    const currentStepData = currentActiveSeq.data[row][col];
-                    const isActive = !(currentStepData?.active);
-                    
-                    // Check scale lock - prevent placing notes outside scale
-                    const scaleMode = localAppServices.getScaleMode ? localAppServices.getScaleMode() : { enabled: false, lock: false };
-                    if (isActive && scaleMode.enabled && scaleMode.lock && (track.type === 'Synth' || track.type === 'InstrumentSampler')) {
-                        const rowLabel = rowLabels[row] || '';
-                        const isInScale = (() => {
-                            const match = rowLabel.match(/^([A-G]#?)(-?\d+)?$/);
-                            if (!match) return true;
-                            const [, noteLetter, octave] = match;
-                            const rootNote = scaleMode.root || 'C';
-                            const scaleIntervals = Constants.SCALES[scaleMode.scale || 'Major'] || Constants.SCALES['Major'];
-                            const rootIndex = Constants.SCALE_ROOTS.indexOf(rootNote);
-                            const noteIndex = Constants.SCALE_ROOTS.indexOf(noteLetter);
-                            if (rootIndex === -1 || noteIndex === -1) return true;
-                            let interval = (noteIndex - rootIndex + 12) % 12;
-                            return scaleIntervals.includes(interval);
-                        })();
-                        if (!isInScale) {
-                            if (localAppServices.showNotification) {
-                                localAppServices.showNotification(`Note ${rowLabel} is not in ${scaleMode.scale} scale (${scaleMode.root}). Enable Scale Lock to allow out-of-scale notes.`, 2000);
-                            }
-                            return; // Block the note
-                        }
-                    }
-                    
-                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle Step (${row + 1},${col + 1}) on ${track.name} (${currentActiveSeq.name})`);
-                    currentActiveSeq.data[row][col] = isActive ? { active: true, velocity: Constants.defaultVelocity } : null;
-                    updateSequencerCellUI(sequencerWindow.element, track.type, row, col, isActive);
-                }
-            }
-        });
-
         // Scale mode event handlers (only for Synth/InstrumentSampler tracks)
         if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
             const scaleModeToggle = sequencerWindow.element.querySelector(`#scaleModeToggle-${track.id}`);
@@ -1656,6 +1668,164 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     }
                 });
             }
+        }
+
+        // Velocity Editor event handlers
+        const velocityEditorToggle = sequencerWindow.element.querySelector(`#velocityEditorToggle-${track.id}`);
+        const velocityEditorLane = sequencerWindow.element.querySelector(`#velocityEditor-${track.id}`);
+
+        if (velocityEditorToggle && velocityEditorLane) {
+            velocityEditorToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    velocityEditorLane.classList.remove('hidden');
+                } else {
+                    velocityEditorLane.classList.add('hidden');
+                }
+            });
+
+            // Velocity bar editing - click and drag to change velocity
+            let isDraggingVelocity = false;
+            let dragStartY = 0;
+            let dragStartVelocity = 0;
+            let dragCol = -1;
+
+            const handleVelocityDrag = (e) => {
+                if (!isDraggingVelocity) return;
+                e.preventDefault();
+                
+                const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                const deltaY = dragStartY - currentY;
+                const sensitivity = 0.01; // Adjust sensitivity
+                let newVelocity = dragStartVelocity + (deltaY * sensitivity);
+                newVelocity = Math.max(0.05, Math.min(1.0, newVelocity));
+                
+                // Update velocity for all active notes in this column
+                const currentActiveSeq = track.getActiveSequence();
+                if (!currentActiveSeq || !currentActiveSeq.data) return;
+                
+                const numRows = currentActiveSeq.data.length;
+                let hasActiveNotes = false;
+                
+                for (let row = 0; row < numRows; row++) {
+                    const stepData = currentActiveSeq.data[row]?.[dragCol];
+                    if (stepData && stepData.active) {
+                        stepData.velocity = newVelocity;
+                        hasActiveNotes = true;
+                        
+                        // Update cell visual
+                        const cell = sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${dragCol}"]`);
+                        if (cell) {
+                            const opacity = 0.5 + (newVelocity * 0.5);
+                            cell.style.opacity = opacity.toFixed(2);
+                            cell.dataset.velocity = newVelocity.toFixed(2);
+                            cell.title = `R${row+1},S${dragCol+1} V:${Math.round(newVelocity * 127)}`;
+                        }
+                    }
+                }
+                
+                if (hasActiveNotes) {
+                    // Update velocity bar visual
+                    const bar = velocityEditorLane.querySelector(`.velocity-bar[data-col="${dragCol}"]`);
+                    if (bar) {
+                        const barHeight = Math.round(newVelocity * 56);
+                        bar.style.height = `${barHeight}px`;
+                    }
+                    const cell = velocityEditorLane.querySelector(`.velocity-cell[data-col="${dragCol}"]`);
+                    if (cell) {
+                        cell.dataset.maxVelocity = newVelocity.toFixed(2);
+                        cell.title = `Step ${dragCol + 1}: ${Math.round(newVelocity * 127)}`;
+                    }
+                }
+            };
+
+            const handleVelocityDragEnd = () => {
+                if (isDraggingVelocity) {
+                    isDraggingVelocity = false;
+                    document.removeEventListener('mousemove', handleVelocityDrag);
+                    document.removeEventListener('mouseup', handleVelocityDragEnd);
+                    document.removeEventListener('touchmove', handleVelocityDrag);
+                    document.removeEventListener('touchend', handleVelocityDragEnd);
+                    
+                    // Recreate Tone sequence to apply velocity changes
+                    track.recreateToneSequence(true);
+                }
+            };
+
+            // Add click/drag handlers to velocity cells
+            const velocityCells = velocityEditorLane.querySelectorAll('.velocity-cell');
+            velocityCells.forEach(cell => {
+                cell.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const currentActiveSeq = track.getActiveSequence();
+                    if (!currentActiveSeq || !currentActiveSeq.data) return;
+                    
+                    // Check if there are active notes in this column
+                    const numRows = currentActiveSeq.data.length;
+                    let hasActiveNotes = false;
+                    let currentMaxVel = 0;
+                    
+                    for (let row = 0; row < numRows; row++) {
+                        const stepData = currentActiveSeq.data[row]?.[col];
+                        if (stepData && stepData.active) {
+                            hasActiveNotes = true;
+                            if (stepData.velocity > currentMaxVel) {
+                                currentMaxVel = stepData.velocity;
+                            }
+                        }
+                    }
+                    
+                    if (!hasActiveNotes) return;
+                    
+                    // Capture undo state before velocity change
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Edit velocity at step ${col + 1} on ${track.name}`);
+                    }
+                    
+                    isDraggingVelocity = true;
+                    dragStartY = e.clientY;
+                    dragStartVelocity = currentMaxVel;
+                    dragCol = col;
+                    
+                    document.addEventListener('mousemove', handleVelocityDrag);
+                    document.addEventListener('mouseup', handleVelocityDragEnd);
+                });
+
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const currentActiveSeq = track.getActiveSequence();
+                    if (!currentActiveSeq || !currentActiveSeq.data) return;
+                    
+                    const numRows = currentActiveSeq.data.length;
+                    let hasActiveNotes = false;
+                    let currentMaxVel = 0;
+                    
+                    for (let row = 0; row < numRows; row++) {
+                        const stepData = currentActiveSeq.data[row]?.[col];
+                        if (stepData && stepData.active) {
+                            hasActiveNotes = true;
+                            if (stepData.velocity > currentMaxVel) {
+                                currentMaxVel = stepData.velocity;
+                            }
+                        }
+                    }
+                    
+                    if (!hasActiveNotes) return;
+                    
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Edit velocity at step ${col + 1} on ${track.name}`);
+                    }
+                    
+                    isDraggingVelocity = true;
+                    dragStartY = e.touches[0].clientY;
+                    dragStartVelocity = currentMaxVel;
+                    dragCol = col;
+                    
+                    document.addEventListener('touchmove', handleVelocityDrag, { passive: false });
+                    document.addEventListener('touchend', handleVelocityDragEnd);
+                }, { passive: false });
+            });
         }
 
     }

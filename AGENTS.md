@@ -173,27 +173,41 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `SCALES` object with 17 scale definitions (Major, Minor, Pentatonic, Blues, Dorian, etc.)
     - `SCALE_ROOTS` array for root note selection
     - `DEFAULT_SCALE_MODE` default settings object
-    - Bumped APP_VERSION to 0.9.0
+    - Bumped APP_VERSION to 0.9.3
   - `js/state.js`: Added:
     - `scaleModeState` state variable
     - Getters: `getScaleModeState()`, `getScaleModeEnabledState()`, `getScaleModeScaleState()`, `getScaleModeRootState()`, `getScaleModeLockState()`
     - Setters: `setScaleModeState()`, `setScaleModeEnabledState()`, `setScaleModeScaleState()`, `setScaleModeRootState()`, `setScaleModeLockState()`
     - Scale mode saved to `globalSettings` in `gatherProjectDataInternal()`
     - Scale mode restored in `reconstructDAWInternal()`
-  - `js/ui.js`: Modified `buildSequencerContentDOM()`:
+  - `js/ui.js`: Modified `buildSequencerContentDOM()` and `openTrackSequencerWindow()`:
     - Added scale mode controls (toggle, root selector, scale selector, lock toggle) for Synth/InstrumentSampler tracks
     - Added visual highlighting: notes outside the selected scale appear dimmed (opacity-30)
     - Added `isNoteInScale()` helper function for scale checking
-    - Added event handlers for scale mode controls in `openTrackSequencerWindow()`
+    - Scale Lock prevents placing off-scale notes when enabled
+    - Added event handlers for scale mode controls
+  - `js/eventHandlers.js`: Added `Q` key to toggle scale mode
   - `js/main.js`: Wired scale mode state functions to appServices
 - **Feature Details**:
   - Scale Mode Toggle: Enable/disable scale highlighting in sequencer
   - Root Note Selector: Choose the root note (C through B)
   - Scale Selector: Choose from 17 different scales
-  - Scale Lock: (Future) Will prevent placing notes outside the scale
+  - Scale Lock: Prevents placing notes outside the selected scale
   - Visual Feedback: Notes outside the selected scale are dimmed in the sequencer grid
-- **Usage**: Open sequencer for a Synth or InstrumentSampler track, use Scale controls in the toolbar
-- **Version**: Bumped to 0.9.0
+  - Q Keyboard Shortcut: Toggle Scale Mode on/off
+- **Bug Fixes**:
+  - Fixed operator precedence bug in scale lock condition
+  - Fixed scale mode setters not properly wired to appServices
+- **Usage**: Open sequencer for a Synth or InstrumentSampler track, use Scale controls in toolbar
+- **Version**: Bumped to 0.9.3
+
+#### Day 11 cont: Scale Lock and Keyboard Shortcut (2026-04-19)
+- **Feature**: Added Scale Lock and keyboard shortcut for Scale Mode
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added `Q` key to toggle scale mode
+  - `js/ui.js`: Added scale lock check in grid click handler
+  - `js/main.js`: Fixed scale mode setters mapping
+- **Version**: 0.9.3
 
 #### Day 11: Debug Code Cleanup (2026-04-19)
 - **Bug Fix**: Removed debug console.log statements and MODIFICATION markers from production code
