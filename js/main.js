@@ -235,8 +235,8 @@ const appServices = {
     getSidechainBus: () => getSidechainBusInput(),
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -273,7 +273,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
+    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true,
     
     // State getters - exposed for UI and other modules
     getTracks: getTracksState,
@@ -303,7 +303,7 @@ const appServices = {
     getPlaybackMode: getPlaybackModeState,
     setPlaybackMode: setPlaybackModeState,
     
-    _isReconstructingDAW_flag: false,
+    _isReconstructingingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
@@ -359,6 +359,69 @@ const appServices = {
             uiElementsCache.projectNameBtnGlobal.textContent = name || 'Untitled Project';
         }
     },
+
+    // Track action handlers (called by ui.js via localAppServices)
+    handleTrackMute: (trackId) => {
+        const track = getTrackByIdState(trackId);
+        if (!track) return;
+        const newMuted = !track.isMuted;
+        const mutedIds = getMutedTrackIdsState ? getMutedTrackIdsState() : [];
+        let updatedIds;
+        if (newMuted) {
+            updatedIds = mutedIds.includes(trackId) ? mutedIds : [...mutedIds, trackId];
+        } else {
+            updatedIds = mutedIds.filter(id => id !== trackId);
+        }
+        if (setMutedTrackIdsState) setMutedTrackIdsState(updatedIds);
+        track.isMuted = newMuted;
+        if (track.applyMuteState) track.applyMuteState();
+        if (appServices.updateTrackUI) appServices.updateTrackUI(trackId, 'muteChanged');
+    },
+
+    handleTrackSolo: (trackId) => {
+        const track = getTrackByIdState(trackId);
+        if (!track) return;
+        const currentSoloedId = getSoloedTrackIdState ? getSoloedTrackIdState() : null;
+        const newSoloed = currentSoloedId !== trackId;
+        if (setSoloedTrackIdState) setSoloedTrackIdState(newSoloed ? trackId : null);
+        // Update all tracks' soloed state
+        const allTracks = getTracksState ? getTracksState() : [];
+        allTracks.forEach(t => {
+            t.isSoloed = (t.id === trackId) && newSoloed;
+            if (t.applyMuteState) t.applyMuteState();
+        });
+        if (appServices.updateTrackUI) {
+            allTracks.forEach(t => appServices.updateTrackUI(t.id, 'soloChanged'));
+        }
+    },
+
+    handleTrackArm: (trackId) => {
+        const track = getTrackByIdState(trackId);
+        if (!track) return;
+        const currentArmedId = getArmedTrackIdState ? getArmedTrackIdState() : null;
+        const newArmed = currentArmedId !== trackId;
+        if (setArmedTrackIdState) setArmedTrackIdState(newArmed ? trackId : null);
+        if (appServices.updateTrackUI) appServices.updateTrackUI(trackId, 'armChanged');
+    },
+
+    handleRemoveTrack: (trackId) => {
+        if (appServices.removeTrack) appServices.removeTrack(trackId);
+    },
+
+    handleOpenTrackInspector: (trackId) => {
+        if (typeof openTrackInspectorWindow === 'function') openTrackInspectorWindow(trackId);
+    },
+
+    handleOpenEffectsRack: (trackId) => {
+        if (appServices.openEffectsRackWindow) appServices.openEffectsRackWindow(trackId);
+    },
+
+    handleOpenSequencer: (trackId) => {
+        if (typeof openTrackSequencerWindow === 'function') openTrackSequencerWindow(trackId);
+    },
+
+    handleTimelineLaneDrop,
+
     renameTrackInState,
 
     // Punch-in/out recording scheduling
