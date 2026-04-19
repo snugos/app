@@ -288,7 +288,7 @@ Need to create `.github/workflows/deploy.yml` that:
 - Git push works, zo.pub sync works
 
 ### 2026-04-19 — Day 49
-- **Bug Fix: isReconstructing typo cascade in add/remove/reorder master effects** (`js/main.js`): Day 48 fixed `getIsReconstructingingDAW` (triple "g") but a different typo variant `getIsReconstructingDAW` (double "g") was still present in 4 locations (lines 192, 212, 229, 267) and the local variable `isReconstructinging` (double "g") on line 213. These caused undo bypass to fail silently for all master effect operations because the misspelled function returned `undefined` (always falsy), making `isReconstructing = false` regardless of actual state. Fixed all occurrences:
+- **Bug Fix: isReconstructing typo cascade in add/remove/reorder master effects** (`js/main.js`): Day 48 fixed `getIsReconstructingingDAW` (triple "g") but a different typo variant `getIsReconstructingingDAW` (double "g") was still present in 4 locations (lines 192, 212, 229, 267) and the local variable `isReconstructinging` (double "g") on line 213. These caused undo bypass to fail silently for all master effect operations because the misspelled function returned `undefined` (always falsy), making `isReconstructing = false` regardless of actual state. Fixed all occurrences:
   1. `appServices.getIsReconstructingingDAW()` → `appServices.getIsReconstructingDAW()` (lines 192, 212, 229)
   2. `!isReconstructinging` → `!isReconstructing` (line 213)
   3. `_isReconstructingingDAW_flag` → `_isReconstructingDAW_flag` (line 267)
@@ -301,12 +301,17 @@ Need to create `.github/workflows/deploy.yml` that:
 
 ### 2026-04-19 — Day 51
 - **Undo/Redo Coverage: setTrackColor and setEffectBypass** (`js/Track.js`): Added `_captureUndoState()` calls to two methods that were missing undo capture — `setTrackColor()` and `setEffectBypass()`. These were identified as gaps during the "verify all state mutations go through capture mechanism" audit. Now both methods capture undo state before modifying track state.
-- **Pushed**: commit `d9910d4` to `origin/LWB-with-Bugs` successfully.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`
+
 ### 2026-04-19 — Day 52
 - **Undo/Redo Coverage: Slicer slice setters + DrumSampler pad setters** (`js/Track.js`): Added `_captureUndoState()` to all slicer slice parameter setters (`setSliceVolume`, `setSlicePitchShift`, `setSliceLoop`, `setSliceReverse`, `setSliceEnvelopeParam`) and all drum sampler pad parameter setters (`setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`). All now capture undo state before modifying their respective data structures. Continues the undo coverage audit from Day 51.
-- **Pushed**: commit `52619d1` to `origin/LWB-with-Bugs` successfully.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`
 
 ### 2026-04-19 — Day 53
 - **Sync to main branch**: Pushed all LWB-with-Bugs changes to origin/main via `git push origin LWB-with-Bugs:main`. All recent commits (Days 49-52) are now on both branches.
-- **Pushed**: commit `084d472` to `origin/main` successfully.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`.
+
+### 2026-04-19 — Day 54
+- **Undo/Redo Coverage: setSynthParam and setInstrumentSamplerRootNote** (`js/Track.js`): Added `_captureUndoState()` to `setSynthParam()` (called when adjusting synth engine knobs like filter cutoff, resonance, attack, etc.) and `setInstrumentSamplerRootNote()` (called when changing the root note mapping for instrument sampler tracks). Continues the undo coverage audit from Days 51-52.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`
 
