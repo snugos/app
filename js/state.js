@@ -36,6 +36,14 @@ let currentSoundFileTreeGlobal = null;
 let currentSoundBrowserPathGlobal = [];
 let previewPlayerGlobal = null;
 
+// Getters for Sound Browser State
+export function getLoadedZipFilesState() { return loadedZipFilesGlobal; }
+export function setLoadedZipFilesState(val) {
+    loadedZipFilesGlobal = Array.isArray(val) ? val : {};
+}
+export function getSoundLibraryFileTreesState() { return soundLibraryFileTreesGlobal; }
+export function setSoundLibraryFileTreesState(val) { soundLibraryFileTreesGlobal = val; }
+
 // Clipboard
 let clipboardDataGlobal = { type: null, data: null, sourceTrackType: null, sequenceLength: null };
 
@@ -145,37 +153,34 @@ export function getArmedTrackIdState() { return armedTrackId; }
 export function getSoloedTrackIdState() { return soloedTrackId; }
 export function setSoloedTrackIdState(id) {
     const previousId = soloedTrackId;
-    soloedTrackId = (id === null || id === undefined) ? null : id;
-    console.log(`[State setSoloedTrackIdState] Changed soloed track: ${previousId} → ${soloedTrackId}`);
+    soloedTrackId = (id === undefined || id === null) ? null : id;
+    if (appServices && typeof appServices.onSoloedTrackChanged === 'function') {
+        appServices.onSoloedTrackChanged(soloedTrackId, previousId);
+    }
 }
 export function getMutedTrackIdsState() { return [...mutedTrackIds]; }
 export function setMutedTrackIdsState(ids) {
-    mutedTrackIds = Array.isArray(ids) ? ids : [];
-    console.log(`[State setMutedTrackIdsState] Changed muted tracks:`, mutedTrackIds);
-}
-export function isTrackRecordingState() { return isRecordingGlobal; }
-export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
-export function getRecordingStartTimeState() { 
-    // FIX: If recordingStartTime is a transport position string (e.g., "0:0:0"), convert to seconds for timeline use
-    // Otherwise return the numeric value directly
-    if (typeof recordingStartTime === 'string') {
-        try {
-            // Convert Tone.Transport.Position string to seconds
-            return Tone.Time(recordingStartTime).toSeconds();
-        } catch (e) {
-            console.warn("[State getRecordingStartTimeState] Error converting position string to seconds:", e);
-            return 0;
-        }
+    mutedTrackIds = Array.isArray(ids) ? [...ids] : [];
+    if (appServices && typeof appServices.onMutedTracksChanged === 'function') {
+        appServices.onMutedTracksChanged(mutedTrackIds);
     }
-    return recordingStartTime; 
 }
-export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
-export function getUndoStackState() { return undoStack; }
-export function getRedoStackState() { return redoStack; }
-export function getPlaybackModeState() { return globalPlaybackMode; }
-export function getProjectNameState() { return projectNameState; }
-export function setProjectNameState(name) { projectNameState = typeof name === 'string' && name.trim() ? name.trim() : 'Untitled Project'; }
-
+export function isTrackMutedState(trackId) {
+    return mutedTrackIds.includes(trackId);
+}
+export function setTrackMutedState(trackId, muted) {
+    if (muted) {
+        if (!mutedTrackIds.includes(trackId)) mutedTrackIds.push(trackId);
+    } else {
+        mutedTrackIds = mutedTrackIds.filter(id => id !== trackId);
+    }
+    if (appServices && typeof appServices.onMutedTracksChanged === 'function') {
+        appServices.onMutedTracksChanged(mutedTrackIds);
+    }
+}
+export function isTrackSoloedState(trackId) {
+    return soloedTrackId === trackId;
+}
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
