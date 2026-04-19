@@ -1576,6 +1576,71 @@ export class Track {
         return true;
     }
 
+    /**
+     * Humanize the pattern by adding slight random variations to velocity.
+     * Makes patterns sound less robotic and more natural.
+     * @param {number} intensity - How much variation to apply (0-1)
+     * @returns {number} Number of notes humanized
+     */
+    humanizePattern(intensity = 0.3) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} humanizePattern] No active sequence found.`);
+            return 0;
+        }
+
+        this._captureUndoState(`Humanize pattern on ${activeSeq.name}`);
+        
+        let humanizedCount = 0;
+        const totalSteps = activeSeq.length;
+        const numRows = activeSeq.data.length;
+        const clampedIntensity = Math.max(0, Math.min(1, intensity));
+        const velocityRange = clampedIntensity * 0.3; // Max 0.3 variation at full intensity
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (cell && cell.active) {
+                    // Calculate beat position (0-15 within a bar for 16ths)
+                    const beatPosition = col % Constants.STEPS_PER_BAR;
+                    const isDownbeat = beatPosition === 0;
+                    const isStrongBeat = beatPosition % 4 === 0;
+                    
+                    // Apply random velocity variation
+                    let velocityDelta = (Math.random() * 2 - 1) * velocityRange;
+                    
+                    // Add slight accent on downbeats and strong beats
+                    if (isDownbeat) {
+                        velocityDelta += clampedIntensity * 0.05;
+                    } else if (isStrongBeat) {
+                        velocityDelta += clampedIntensity * 0.02;
+                    }
+                    
+                    // Apply the variation
+                    const baseVelocity = cell.velocity !== undefined ? cell.velocity : Constants.defaultVelocity;
+                    let newVelocity = baseVelocity + velocityDelta;
+                    
+                    // Clamp velocity to valid range (0.1 to 1.0)
+                    newVelocity = Math.max(0.1, Math.min(1.0, newVelocity));
+                    
+                    cell.velocity = newVelocity;
+                    humanizedCount++;
+                }
+            }
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        console.log(`[Track ${this.id}] Humanized pattern with intensity ${clampedIntensity}, ${humanizedCount} notes affected.`);
+        return humanizedCount;
+    }
+
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
         if (this.type === 'Audio') return;
         const activeSeq = this.getActiveSequence();

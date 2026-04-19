@@ -315,6 +315,29 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: The swing feature in Track.js (applies swing feel to off-beat notes during playback) would not work because `this.appServices.getSwingEnabledState` and `this.appServices.getSwingAmountState` returned undefined. The swing state also would not persist on project save/load.
 - **Version**: No bump needed (this was a bug fix for incomplete feature)
 
+#### Day 16: Humanize Pattern Feature (2026-04-19)
+- **Feature**: Added Humanize Pattern functionality to add natural velocity variations to patterns
+- **Files Modified**:
+  - `js/Track.js`: Added `humanizePattern(intensity)` method:
+    - Applies random velocity variations based on intensity (0-1)
+    - Adds slight accent on downbeats and strong beats for natural groove
+    - Velocity range: ±(intensity * 0.3) around original velocity
+    - Clamps velocities to valid range (0.1 to 1.0)
+    - Returns count of notes humanized
+  - `js/ui.js`: Added "Humanize Pattern..." menu item to sequencer context menu:
+    - Prompts for intensity value (0.0 - 1.0)
+    - Calls `humanizePattern()` on current track
+    - Shows notification with count of notes affected
+  - `js/constants.js`: Bumped APP_VERSION to 0.12.0
+- **Feature Details**:
+  - Intensity: Controls how much variation is applied (0 = none, 1 = maximum)
+  - Velocity Randomization: Each note gets a random velocity adjustment
+  - Beat Accenting: Downbeats get +5% velocity boost, strong beats get +2% boost
+  - Natural Feel: Makes programmed patterns sound less robotic
+  - Undo Support: Changes are captured for undo/redo
+- **Usage**: Right-click on sequencer grid, select "Humanize Pattern...", enter intensity value (0.0-1.0)
+- **Version**: Bumped to 0.12.0
+
 ## Code Style Guidelines
 
 ### Module Structure

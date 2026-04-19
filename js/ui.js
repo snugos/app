@@ -1574,7 +1574,18 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                         showNotification('Pattern mirrored vertically (pitches inverted).', 2000);
                         if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
                     }
-                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') }
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Humanize Pattern...', action: () => { 
+                    const intensity = prompt('Enter humanize intensity (0.0 - 1.0):', '0.3');
+                    const intensityValue = parseFloat(intensity);
+                    if (isNaN(intensityValue) || intensityValue < 0 || intensityValue > 1) { 
+                        showNotification('Invalid intensity value. Must be between 0 and 1.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.humanizePattern(intensityValue);
+                    showNotification(`Humanized pattern: ${count} notes affected.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } }
             ];
             createContextMenu(event, menuItems, localAppServices);
         };

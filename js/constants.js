@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.11.0"; // Day 14: Loop Region UI and Keyboard Shortcut
+export const APP_VERSION = "0.12.0"; // Day 16: Humanize Pattern Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
