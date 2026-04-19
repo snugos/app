@@ -73,7 +73,7 @@ Need to create `.github/workflows/deploy.yml` that:
 - App loads and is functional (basic track creation, sound browser, transport)
 - **Metronome** (`audio.js`): Added Tone.Transport-synced metronome with triangle-wave click synth. Bar 1 uses C6 accent, beat 1 uses C5, all other 16ths silent. Connected directly to `Tone.Destination` (bypasses master bus so it's always audible). Toggle wired to global control bar "Metronome" button. Functions: `setMetronomeEnabled`, `isMetronomeEnabled`, `setMetronomeVolume`.
 - **Global controls bar**: Added "Metronome" toggle button between Master meter and MIDI/KBD indicators. Blue active state when on.
-- **Bug fixes**: Fixed typos `isReconstructinging` → `isReconstructinging` in main.js.
+- **Bug fixes**: Fixed typos `isReconstructinging` → `isReconstructing` in main.js.
 - **Version**: Bumped to 0.2.0 in `constants.js`.
 
 ### 2026-04-17 — Day 2
@@ -298,4 +298,9 @@ Need to create `.github/workflows/deploy.yml` that:
 ### 2026-04-19 — Day 50
 - **CI/CD: GitHub Actions Deploy Workflow** (`.github/workflows/deploy.yml`): Created `.github/workflows/deploy.yml` that triggers on push to `LWB-with-Bugs`, uploads pages artifact, and deploys via `actions/deploy-pages@v4`. However, push was rejected due to OAuth token lacking `workflow` scope — the workflow file cannot be pushed from CLI. Must be created via GitHub web UI or repo settings. This completes the CI/CD TODO (was already done in Day 33 but the workflow file couldn't be pushed). GitHub Pages deployment will work once the workflow file is created manually in the repo.
 - **CI/CD TODO marked done** in Known Issues section.
+
+### 2026-04-19 — Day 51
+- **Undo/Redo Coverage: setTrackColor and setEffectBypass** (`js/Track.js`): Added `_captureUndoState()` calls to two methods that were missing undo capture — `setTrackColor()` and `setEffectBypass()`. These were identified as gaps during the "verify all state mutations go through capture mechanism" audit. Now both methods capture undo state before modifying track state.
+- **Pushed**: commit `d9910d4` to `origin/LWB-with-Bugs` successfully.
+### 2026-04-19 — Day 52
 
