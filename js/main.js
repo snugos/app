@@ -279,7 +279,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
+    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true,
     
     // State getters - exposed for UI and other modules
     getTracks: getTracksState,
@@ -544,7 +544,25 @@ async function initializeSnugOS() {
             punchInInputGlobal: document.getElementById('punchInInputGlobal'),
             punchOutInputGlobal: document.getElementById('punchOutInputGlobal'),
             projectNameBtnGlobal: document.getElementById('projectNameBtnGlobal'),
-            exportBtnGlobal: document.getElementById('exportBtnGlobal')
+            exportBtnGlobal: document.getElementById('exportBtnGlobal'),
+            // Start menu elements
+            startButton: document.getElementById('startButton'),
+            startMenu: document.getElementById('startMenu'),
+            menuTetris: document.getElementById('menuTetris'),
+            menuAddSynthTrack: document.getElementById('menuAddSynthTrack'),
+            menuAddSamplerTrack: document.getElementById('menuAddSamplerTrack'),
+            menuAddDrumSamplerTrack: document.getElementById('menuAddDrumSamplerTrack'),
+            menuAddInstrumentSamplerTrack: document.getElementById('menuAddInstrumentSamplerTrack'),
+            menuOpenSoundBrowser: document.getElementById('menuOpenSoundBrowser'),
+            menuOpenMixer: document.getElementById('menuOpenMixer'),
+            menuOpenMasterEffects: document.getElementById('menuOpenMasterEffects'),
+            menuUndo: document.getElementById('menuUndo'),
+            menuRedo: document.getElementById('menuRedo'),
+            menuSaveProject: document.getElementById('menuSaveProject'),
+            menuLoadProject: document.getElementById('menuLoadProject'),
+            loadProjectInput: document.getElementById('loadProjectInput'),
+            menuExportWav: document.getElementById('menuExportWav'),
+            menuToggleFullScreen: document.getElementById('menuToggleFullScreen')
         };
         
         // Add to cache
