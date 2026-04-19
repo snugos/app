@@ -207,7 +207,7 @@ export function attachGlobalControlEvents(elements) {
         console.error("[EventHandlers attachGlobalControlEvents] Elements object is null or undefined.");
         return;
     }
-    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, tapBtnGlobal } = elements;
+    const { playBtnGlobal, recordBtnGlobal, stopBtnGlobal, tempoGlobalInput, midiInputSelectGlobal, playbackModeToggleBtnGlobal, tapBtnGlobal, metronomeBtnGlobal } = elements;
 
     // Helper function to toggle play/pause icons
     function setPlayButtonState(isPlaying) {
@@ -227,6 +227,37 @@ export function attachGlobalControlEvents(elements) {
 
     // Initialize to stopped state
     setPlayButtonState(false);
+
+    // Metronome button handler
+    if (metronomeBtnGlobal) {
+        let metronomeEnabled = false;
+        const { startMetronome, stopMetronome, setMetronomeVolume, initializeMetronome } = localAppServices;
+        
+        metronomeBtnGlobal.addEventListener('click', async () => {
+            try {
+                const audioReady = await localAppServices.initAudioContextAndMasterMeter(true);
+                if (!audioReady) {
+                    showNotification("Audio context not ready.", 3000);
+                    return;
+                }
+                
+                metronomeEnabled = !metronomeEnabled;
+                
+                if (metronomeEnabled) {
+                    if (initializeMetronome) initializeMetronome();
+                    if (startMetronome) startMetronome();
+                    metronomeBtnGlobal.classList.add('playing');
+                    showNotification("Metronome ON", 1500);
+                } else {
+                    if (stopMetronome) stopMetronome();
+                    metronomeBtnGlobal.classList.remove('playing');
+                    showNotification("Metronome OFF", 1500);
+                }
+            } catch (error) {
+                console.error("[EventHandlers Metronome] Error:", error);
+            }
+        });
+    } else { console.warn("[EventHandlers] metronomeBtnGlobal not found."); }
 
     if (playBtnGlobal) {
         playBtnGlobal.addEventListener('click', async () => {

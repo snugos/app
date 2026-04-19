@@ -28,6 +28,8 @@ import {
     getClipboardDataState, getArmedTrackIdState, getSoloedTrackIdState, isTrackRecordingState,
     getRecordingTrackIdState,
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState,
+    getMetronomeEnabledState,
+    getMetronomeVolumeState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -38,6 +40,8 @@ import {
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
+    setMetronomeEnabledState,
+    setMetronomeVolumeState,
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -58,7 +62,11 @@ import {
     getActualMasterGainNode as getActualMasterGainNodeFromAudio,
     clearAllMasterEffectNodes as clearAllMasterEffectNodesInAudio,
     startAudioRecording,
-    stopAudioRecording
+    stopAudioRecording,
+    initializeMetronome,
+    startMetronome,
+    stopMetronome,
+    setMetronomeVolume
 } from './audio.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -92,6 +100,7 @@ const uiElementsCache = {
     masterMeterBarGlobal: null, midiIndicatorGlobal: null, keyboardIndicatorGlobal: null,
     playbackModeToggleBtnGlobal: null,
     tapBtnGlobal: null,
+    metronomeBtnGlobal: null,
 };
 
 const DESKTOP_BACKGROUND_KEY = 'snugosDesktopBackground';
@@ -244,6 +253,8 @@ const appServices = {
     getActiveSequencerTrackId: getActiveSequencerTrackIdState,
     getUndoStack: getUndoStackState, getRedoStack: getRedoStackState,
     getPlaybackMode: getPlaybackModeState,
+    getMetronomeEnabled: getMetronomeEnabledState,
+    getMetronomeVolume: getMetronomeVolumeState,
 
     // State Module Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
@@ -256,6 +267,8 @@ const appServices = {
     setClipboardDataState, setArmedTrackIdState, setSoloedTrackIdState, setIsRecordingState,
     setRecordingTrackIdState, setRecordingStartTimeState, setActiveSequencerTrackIdState,
     setPlaybackModeState,
+    setMetronomeEnabledState,
+    setMetronomeVolumeState,
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -429,8 +442,8 @@ const appServices = {
 
     addMasterEffect: async (effectType) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            const isReconstructing = appServices.getIsReconstructingingDAW ? appServices.getIsReconstructconstructingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -449,8 +462,8 @@ const appServices = {
             const effects = getMasterEffectsState();
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
-                const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                const isReconstructinging = appServices.getIsReconstructconstructingDAW ? appServices.getIsReconstructconstructingDAW() : false;
+                if (!isReconstructconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -466,8 +479,8 @@ const appServices = {
     },
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructinging = appServices.getIsReconstructconstructingDAW ? appServices.getIsReconstructconstructingDAW() : false;
+            if (!isReconstructconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -490,8 +503,8 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
-    _isReconstructingDAW_flag: false,
+    getIsReconstructconstructingDAW: () => appServices._isReconstructconstructingDAW_flag === true, 
+    _isReconstructconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
@@ -543,7 +556,10 @@ const appServices = {
         if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
             appServices.renderTimeline(); 
         }
-    }
+    },
+    startMetronome: startMetronome,
+    stopMetronome: stopMetronome,
+    setMetronomeVolume: setMetronomeVolume
 };
 
 function handleTrackUIUpdate(trackId, reason, detail) {
@@ -684,7 +700,8 @@ async function initializeSnugOS() {
             midiIndicatorGlobal: document.getElementById('midiIndicatorGlobal'),
             keyboardIndicatorGlobal: document.getElementById('keyboardIndicatorGlobal'),
             playbackModeToggleBtnGlobal: document.getElementById('playbackModeToggleBtnGlobal'),
-            tapBtnGlobal: document.getElementById('tapBtnGlobal')
+            tapBtnGlobal: document.getElementById('tapBtnGlobal'),
+            metronomeBtnGlobal: document.getElementById('metronomeBtnGlobal')
         };
         
         // Add to cache

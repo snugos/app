@@ -16,6 +16,11 @@ let audioContextInitialized = false;
 
 let localAppServices = {};
 
+// Metronome
+let metronomeClickPlayer = null;
+let metronomeAccentPlayer = null;
+let metronomeInitialized = false;
+
 // Variables for audio recording
 let mic = null;
 let recorder = null;
@@ -518,7 +523,7 @@ export function getMimeTypeFromFilename(filename) {
 async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint, padIndex = null) {
     const isReconstructing = localAppServices.getIsReconstructingDAW ? localAppServices.getIsReconstructingDAW() : false;
 
-    if (localAppServices.captureStateForUndo && !isReconstructing) {
+    if (localAppServices.captureStateForUndo && !isReconstructinging) {
         const targetName = trackTypeHint === 'DrumSampler' && padIndex !== null ?
             `Pad ${padIndex + 1} on ${track.name}` :
             track.name;
@@ -1228,5 +1233,122 @@ export async function stopAudioRecording() {
         if (localAppServices.showNotification) localAppServices.showNotification("Recording was empty. No clip created.", 2000);
     } else if (!blob && recorder?.state === "started") { // Should be caught by try/catch around recorder.stop()
         console.warn("[Audio stopAudioRecording] Recorder was in 'started' state but stop() did not yield a blob.");
+    }
+}
+
+// --- Metronome Functions ---
+export function initializeMetronome() {
+    if (metronomeInitialized) return;
+    console.log("[Audio initializeMetronome] Initializing metronome click players.");
+    
+    // Create synthetic click sounds using oscillators
+    // A "click" player that can be triggered rapidly
+    const clickFreq = 1000; // 1kHz click
+    const accentFreq = 1500; // Higher pitch for accent
+    
+    try {
+        // Create buffers for click sounds programmatically
+        const clickDuration = 0.015; // 15ms click
+        const sampleRate = 44100;
+        const clickSamples = Math.floor(clickDuration * sampleRate);
+        
+        // Generate click buffer - short burst of sine wave with fast decay
+        const clickBuffer = new Tone.Buffer(true); // empty buffer, will fill manually
+        const clickArray = new Float32Array(clickSamples);
+        for (let i = 0; i < clickSamples; i++) {
+            const t = i / sampleRate;
+            const envelope = Math.exp(-t * 150); // Fast decay
+            clickArray[i] = Math.sin(2 * Math.PI * clickFreq * t) * envelope;
+        }
+        clickBuffer.set(clickArray, 0);
+        
+        // Generate accent buffer - slightly different pitch and longer
+        const accentDuration = 0.025; // 25ms accent
+        const accentSamples = Math.floor(accentDuration * sampleRate);
+        const accentArray = new Float32Array(accentSamples);
+        for (let i = 0; i < accentSamples; i++) {
+            const t = i / sampleRate;
+            const envelope = Math.exp(-t * 100); // Slower decay
+            accentArray[i] = Math.sin(2 * Math.PI * accentFreq * t) * envelope;
+        }
+        const accentBuffer = new Tone.Buffer(true);
+        accentBuffer.set(accentArray, 0);
+        
+        metronomeClickPlayer = new Tone.Player(clickBuffer);
+        metronomeAccentPlayer = new Tone.Player(accentBuffer);
+        metronomeClickPlayer.volume.value = Tone.gainToDb(Constants.METRONOME_VOLUME || 0.5);
+        metronomeAccentPlayer.volume.value = Tone.gainToDb(Constants.METRONOME_VOLUME || 0.5);
+        
+        // Connect to master bus
+        metronomeClickPlayer.connect(getMasterEffectsBusInputNode());
+        metronomeAccentPlayer.connect(getMasterEffectsBusInputNode());
+        
+        metronomeInitialized = true;
+        console.log("[Audio initializeMetronome] Metronome initialized successfully.");
+    } catch (e) {
+        console.error("[Audio initializeMetronome] Error initializing metronome:", e);
+    }
+}
+
+let metronomeScheduledEventId = null;
+
+export function startMetronome() {
+    if (!metronomeInitialized || !Tone.getTransport().running) {
+        if (!metronomeInitialized) initializeMetronome();
+        if (!Tone.getTransport().running) {
+            console.warn("[Audio startMetronome] Transport not running, cannot start metronome.");
+            return;
+        }
+    }
+    
+    console.log("[Audio startMetronome] Starting metronome.");
+    const transport = Tone.getTransport();
+    const bpm = transport.bpm.value;
+    const beatDuration = 60 / bpm; // seconds per beat
+    
+    // Schedule metronome clicks using Tone.Transport
+    let currentBeat = 0;
+    metronomeScheduledEventId = transport.scheduleRepeat((time) => {
+        const isAccent = currentBeat % 4 === 0;
+        const player = isAccent ? metronomeAccentPlayer : metronomeClickPlayer;
+        
+        if (player && !player.disposed) {
+            player.start(time);
+        }
+        
+        currentBeat++;
+        if (currentBeat >= 16) currentBeat = 0; // Reset every 16 beats (1 bar)
+    }, "16n"); // Repeat every 16th note for precision
+    
+    transport.start();
+    console.log("[Audio startMetronome] Metronome scheduled with ID:", metronomeScheduledEventId);
+}
+
+export function stopMetronome() {
+    console.log("[Audio stopMetronome] Stopping metronome.");
+    const transport = Tone.getTransport();
+    
+    if (metronomeScheduledEventId !== null) {
+        transport.clear(metronomeScheduledEventId);
+        metronomeScheduledEventId = null;
+    }
+    
+    if (metronomeClickPlayer && !metronomeClickPlayer.disposed) {
+        metronomeClickPlayer.stop();
+    }
+    if (metronomeAccentPlayer && !metronomeAccentPlayer.disposed) {
+        metronomeAccentPlayer.stop();
+    }
+    
+    console.log("[Audio stopMetronome] Metronome stopped.");
+}
+
+export function setMetronomeVolume(volume) {
+    const vol = Math.max(0, Math.min(1, volume));
+    if (metronomeClickPlayer && !metronomeClickPlayer.disposed) {
+        metronomeClickPlayer.volume.value = Tone.gainToDb(vol);
+    }
+    if (metronomeAccentPlayer && !metronomeAccentPlayer.disposed) {
+        metronomeAccentPlayer.volume.value = Tone.gainToDb(vol);
     }
 }
