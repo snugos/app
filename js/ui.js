@@ -788,11 +788,6 @@ function showAddEffectModal(owner, ownerType) {
     let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
     const AVAILABLE_EFFECTS_LOCAL = localAppServices.effectsRegistryAccess?.AVAILABLE_EFFECTS || {};
     
-    // DEBUG: Log what we're getting
-    console.log('[showAddEffectModal] effectsRegistryAccess:', localAppServices.effectsRegistryAccess);
-    console.log('[showAddEffectModal] AVAILABLE_EFFECTS_LOCAL keys:', Object.keys(AVAILABLE_EFFECTS_LOCAL));
-    console.log('[showAddEffectModal] AVAILABLE_EFFECTS_LOCAL length:', Object.keys(AVAILABLE_EFFECTS_LOCAL).length);
-    
     for (const effectKey in AVAILABLE_EFFECTS_LOCAL) { modalContentHTML += `<li class="p-1.5 hover:bg-purple-200 dark:hover:bg-purple-600 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`; }
     modalContentHTML += `</ul></div>`;
     const modal = showCustomModal(`Add Effect to ${ownerName}`, modalContentHTML, [], 'add-effect-modal');
@@ -856,7 +851,7 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
             onReadyCallback({
                 playBtnGlobal: win.element.querySelector('#playBtnGlobal'),
                 recordBtnGlobal: win.element.querySelector('#recordBtnGlobal'),
-                stopBtnGlobal: win.element.querySelector('#stopBtnGlobal'), // MODIFICATION: Include stop button
+                stopBtnGlobal: win.element.querySelector('#stopBtnGlobal'),
                 tempoGlobalInput: win.element.querySelector('#tempoGlobalInput'),
                 midiInputSelectGlobal: win.element.querySelector('#midiInputSelectGlobal'),
                 masterMeterContainerGlobal: win.element.querySelector('#masterMeterContainerGlobal'),
@@ -869,7 +864,6 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         return win;
     }
 
-    // MODIFICATION: Added stopBtnGlobal to the HTML and adjusted grid layout
     const contentHTML = `<div id="global-controls-content" class="p-2.5 space-y-3 text-sm text-gray-700 dark:text-slate-300">
         <div class="grid grid-cols-3 gap-2 items-center">
             <button id="playBtnGlobal" title="Play/Pause (Spacebar)" class="bg-pink-400 hover:bg-pink-500 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-pink-500 dark:hover:bg-pink-600">Play</button>
@@ -882,14 +876,14 @@ export function openGlobalControlsWindow(onReadyCallback, savedState = null) {
         <div class="flex justify-between items-center text-xs mt-1.5"> <span id="midiIndicatorGlobal" title="MIDI Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">MIDI</span> <span id="keyboardIndicatorGlobal" title="Computer Keyboard Activity" class="px-2 py-1 rounded-full bg-gray-300 text-gray-600 font-medium transition-colors duration-150 dark:bg-slate-600 dark:text-slate-300">KBD</span> </div>
         <div class="mt-2"> <button id="playbackModeToggleBtnGlobal" title="Toggle Playback Mode (Sequencer/Timeline)" class="w-full bg-violet-400 hover:bg-violet-500 text-white font-semibold py-1.5 px-3 rounded shadow transition-colors duration-150 dark:bg-violet-500 dark:hover:bg-violet-600">Mode: Sequencer</button> </div>
     </div>`;
-    const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId }; // Adjusted height slightly
+    const options = { width: 280, height: 360, minWidth: 250, minHeight: 340, closable: true, minimizable: true, resizable: true, initialContentKey: windowId };
     if (savedState) Object.assign(options, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
     const newWindow = localAppServices.createWindow(windowId, 'Global Controls', contentHTML, options);
     if (newWindow?.element && typeof onReadyCallback === 'function') {
         onReadyCallback({
             playBtnGlobal: newWindow.element.querySelector('#playBtnGlobal'),
             recordBtnGlobal: newWindow.element.querySelector('#recordBtnGlobal'),
-            stopBtnGlobal: newWindow.element.querySelector('#stopBtnGlobal'), // MODIFICATION: Include stop button
+            stopBtnGlobal: newWindow.element.querySelector('#stopBtnGlobal'),
             tempoGlobalInput: newWindow.element.querySelector('#tempoGlobalInput'),
             midiInputSelectGlobal: newWindow.element.querySelector('#midiInputSelectGlobal'),
             masterMeterContainerGlobal: newWindow.element.querySelector('#masterMeterContainerGlobal'),
@@ -1011,7 +1005,6 @@ export function openSoundBrowserWindow(savedState = null) {
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-            console.log(`[UI SoundBrowser Open DEBUG] Initial Global State Check. currentLibNameFromState: ${currentLibNameFromState}. soundTrees keys: ${soundTrees ? Object.keys(soundTrees) : 'undefined'}. soundTrees[Drums] exists: ${soundTrees ? !!soundTrees["Drums"] : 'false'}`);
             console.log(`[UI SoundBrowser Open] Initial check. Current lib in state: ${currentLibNameFromState}, Dropdown value: ${libSelect?.value}`);
 
             if (currentLibNameFromState && soundTrees && soundTrees[currentLibNameFromState] && libSelect) {
@@ -1021,7 +1014,7 @@ export function openSoundBrowserWindow(savedState = null) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
                 }
             } else {
-                console.log(`[UI SoundBrowser Open] No specific library active and loaded in state (or soundTrees issue). Defaulting to "Select Library..." view.`);
+                console.log(`[UI SoundBrowser Open] No specific library active and loaded in state. Defaulting to "Select Library..." view.`);
                 if (libSelect) libSelect.value = "";
                 if (localAppServices.updateSoundBrowserDisplayForLibrary) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(null);
@@ -1135,25 +1128,21 @@ export function updateSoundBrowserDisplayForLibrary(libraryName, isLoading = fal
         listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" failed.</p>`;
         console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' failed." view.`);
     } else {
-        console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] About to check trees. Library: ${libraryName}`);
         const currentTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
-        console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Current trees from getSoundLibraryFileTrees. Keys:`, currentTrees ? Object.keys(currentTrees) : 'undefined');
 
         if (currentTrees && currentTrees[libraryName]) {
             const treeForLib = currentTrees[libraryName];
-            console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Found tree for "${libraryName}". Keys:`, treeForLib ? Object.keys(treeForLib) : 'Tree is null/undefined');
             if (treeForLib && Object.keys(treeForLib).length > 0) {
-                 console.log(`[UI updateSoundBrowserDisplayForLibrary DEBUG] Tree for "${libraryName}" is NOT empty.`);
-                 if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeForLib);
-                 if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
-                 console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering directory for library '${libraryName}'.`);
+                if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeForLib);
+                if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory([], localAppServices.getCurrentSoundFileTree());
+                console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering directory for library '${libraryName}'.`);
             } else {
-                console.warn(`[UI updateSoundBrowserDisplayForLibrary WARN] Tree for "${libraryName}" was found but considered empty or invalid. Tree:`, treeForLib);
+                console.warn(`[UI updateSoundBrowserDisplayForLibrary WARN] Tree for "${libraryName}" was found but considered empty or invalid.`);
                 listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data is empty or corrupt.</p>`;
             }
         } else {
             listDiv.innerHTML = `<p class="text-red-500">Error: Library "${libraryName}" data not found after attempting load.</p>`;
-            console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view. (Checked currentTrees['${libraryName}'])`);
+            console.log(`[UI updateSoundBrowserDisplayForLibrary] Rendering "Error: Library '${libraryName}' data not found." view.`);
         }
     }
     pathDisplay.textContent = `/${libraryName || ''}/`;
@@ -1273,17 +1262,81 @@ export function renderMixer(container) {
 function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const stepsPerBar = Constants.STEPS_PER_BAR;
     const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar;
+    
+    // Get scale mode settings
+    const scaleMode = localAppServices.getScaleMode ? localAppServices.getScaleMode() : Constants.DEFAULT_SCALE_MODE;
+    const isScaleModeEnabled = scaleMode.enabled && (track.type === 'Synth' || track.type === 'InstrumentSampler');
+    
+    // Helper function to check if a note is in the scale
+    const isNoteInScale = (noteName) => {
+        if (!isScaleModeEnabled) return true;
+        const rootNote = scaleMode.root;
+        const scaleIntervals = Constants.SCALES[scaleMode.scale] || Constants.SCALES['Chromatic'];
+        
+        // Extract note letter and octave
+        const match = noteName.match(/^([A-G]#?)(\d)$/);
+        if (!match) return true;
+        
+        const [, noteLetter, octave] = match;
+        
+        // Calculate semitone distance from root
+        const rootIndex = Constants.SCALE_ROOTS.indexOf(rootNote);
+        const noteIndex = Constants.SCALE_ROOTS.indexOf(noteLetter);
+        
+        if (rootIndex === -1 || noteIndex === -1) return true;
+        
+        // Calculate interval (semitones) from root to this note
+        let interval = (noteIndex - rootIndex + 12) % 12;
+        
+        // Check if interval is in the scale
+        return scaleIntervals.includes(interval);
+    };
 
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" class="w-12 p-0.5 border rounded text-xs dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> </div> </div>`;
-    html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
-    for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
+    // Build scale controls HTML (only for Synth/InstrumentSampler tracks)
+    let scaleControlsHTML = '';
+    if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
+        const scaleOptions = Object.keys(Constants.SCALES).map(s => 
+            `<option value="${s}" ${s === scaleMode.scale ? 'selected' : ''}>${s}</option>`
+        ).join('');
+        const rootOptions = Constants.SCALE_ROOTS.map(r => 
+            `<option value="${r}" ${r === scaleMode.root ? 'selected' : ''}>${r}</option>`
+        ).join('');
+        
+        scaleControlsHTML = `
+            <div class="scale-mode-controls flex items-center gap-1 ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+                <label class="flex items-center gap-0.5 cursor-pointer">
+                    <input type="checkbox" id="scaleModeToggle-${track.id}" ${scaleMode.enabled ? 'checked' : ''} class="w-3 h-3">
+                    <span class="text-[10px]">Scale</span>
+                </label>
+                <select id="scaleRootSelect-${track.id}" class="w-10 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" ${!scaleMode.enabled ? 'disabled' : ''}>
+                    ${rootOptions}
+                </select>
+                <select id="scaleSelect-${track.id}" class="w-24 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" ${!scaleMode.enabled ? 'disabled' : ''}>
+                    ${scaleOptions}
+                </select>
+                <label class="flex items-center gap-0.5 cursor-pointer" title="Lock: only allow notes in scale">
+                    <input type="checkbox" id="scaleLockToggle-${track.id}" ${scaleMode.lock ? 'checked' : ''} class="w-3 h-3" ${!scaleMode.enabled ? 'disabled' : ''}>
+                    <span class="text-[10px]">🔒</span>
+                </label>
+            </div>`;
+    }
+
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class=\"controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700\"> <span class=\"font-semibold\">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for=\"seqLengthInput-${track.id}\">Bars: </label> <input type=\"number\" id=\"seqLengthInput-${track.id}\" value=\"${numBars}\" min=\"1\" max=\"${Constants.MAX_BARS || 16}\" class=\"w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200\"> ${scaleControlsHTML} </div> </div>`;
+    html += `<div class=\"sequencer-grid-layout\" style=\"display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;\"> <div class=\"sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700\"></div>`;
+    for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class=\"sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400\">${label}</div>`; }
 
     const activeSequence = track.getActiveSequence();
     const sequenceData = activeSequence ? activeSequence.data : [];
 
     for (let i = 0; i < rows; i++) {
-        let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
-        html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px]" title="${rowLabels[i] || ''}">${labelText}</div>`;
+        let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + \"..\";
+        
+        // Check if this row is in the scale (for highlighting)
+        const rowLabel = rowLabels[i] || '';
+        const isInScale = isNoteInScale(rowLabel);
+        const scaleHighlightClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
+        
+        html += `<div class=\"sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px] ${scaleHighlightClass}\" title=\"${rowLabels[i] || ''}\">${labelText}</div>`;
         for (let j = 0; j < totalSteps; j++) {
             const stepData = sequenceData[i]?.[j];
             let activeClass = '';
@@ -1292,7 +1345,11 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-400 dark:border-l-slate-600';
             else if (j > 0 && j % (stepsPerBar / 2) === 0) beatBlockClass += ' border-l-gray-300 dark:border-l-slate-650';
             else if (j > 0 && j % (stepsPerBar / 4) === 0) beatBlockClass += ' border-l-gray-200 dark:border-l-slate-675';
-            html += `<div class="sequencer-step-cell ${activeClass} ${beatBlockClass} border-r border-b border-gray-200 dark:border-slate-600" data-row="${i}" data-col="${j}" title="R${i+1},S${j+1}"></div>`;
+            
+            // Apply scale highlighting to cells
+            const cellScaleClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
+            
+            html += `<div class=\"sequencer-step-cell ${activeClass} ${beatBlockClass} ${cellScaleClass} border-r border-b border-gray-200 dark:border-slate-600\" data-row=\"${i}\" data-col=\"${j}\" title=\"R${i+1},S${j+1}\"></div>`;
         }
     }
     html += `</div></div>`; return html;
@@ -1322,7 +1379,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
     if (openWindows.has(windowId) && !forceRedraw && !savedState) {
         const win = openWindows.get(windowId);
         win.restore();
-        if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
+        if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null);
         return win;
     }
 

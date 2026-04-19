@@ -106,6 +106,37 @@ export function getMetronomeVolumeState() { return metronomeVolume; }
 export function setMetronomeEnabledState(enabled) { metronomeEnabled = !!enabled; }
 export function setMetronomeVolumeState(volume) { metronomeVolume = Math.max(0, Math.min(1, parseFloat(volume) || 0.5)); }
 
+// Scale Mode State
+let scaleModeState = { ...Constants.DEFAULT_SCALE_MODE };
+
+export function getScaleModeState() { return { ...scaleModeState }; }
+export function setScaleModeState(settings) {
+    if (typeof settings === 'object' && settings !== null) {
+        scaleModeState = {
+            enabled: !!settings.enabled,
+            scale: settings.scale || Constants.DEFAULT_SCALE_MODE.scale,
+            root: settings.root || Constants.DEFAULT_SCALE_MODE.root,
+            lock: !!settings.lock
+        };
+    }
+}
+export function getScaleModeEnabledState() { return scaleModeState.enabled; }
+export function setScaleModeEnabledState(enabled) { scaleModeState.enabled = !!enabled; }
+export function getScaleModeScaleState() { return scaleModeState.scale; }
+export function setScaleModeScaleState(scale) {
+    if (Constants.SCALES[scale]) {
+        scaleModeState.scale = scale;
+    }
+}
+export function getScaleModeRootState() { return scaleModeState.root; }
+export function setScaleModeRootState(root) {
+    if (Constants.SCALE_ROOTS.includes(root)) {
+        scaleModeState.root = root;
+    }
+}
+export function getScaleModeLockState() { return scaleModeState.lock; }
+export function setScaleModeLockState(lock) { scaleModeState.lock = !!lock; }
+
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
@@ -477,6 +508,7 @@ export function gatherProjectDataInternal() {
                 playbackMode: getPlaybackModeState(),
                 metronomeEnabled: getMetronomeEnabledState(),
                 metronomeVolume: getMetronomeVolumeState(),
+                scaleMode: getScaleModeState(),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
@@ -665,6 +697,10 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
                 if (appServices.setMetronomeVolume) {
                     appServices.setMetronomeVolume(globalSettings.metronomeVolume);
                 }
+            }
+            // Restore scale mode state
+            if (globalSettings.scaleMode !== undefined) {
+                setScaleModeState(globalSettings.scaleMode);
             }
         }
     } catch (error) {

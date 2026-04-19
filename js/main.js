@@ -30,6 +30,11 @@ import {
     getActiveSequencerTrackIdState, getUndoStackState, getRedoStackState, getPlaybackModeState,
     getMetronomeEnabledState,
     getMetronomeVolumeState,
+    getScaleModeState,
+    getScaleModeEnabledState,
+    getScaleModeScaleState,
+    getScaleModeRootState,
+    getScaleModeLockState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -42,6 +47,11 @@ import {
     setPlaybackModeState,
     setMetronomeEnabledState,
     setMetronomeVolumeState,
+    setScaleModeState,
+    setScaleModeEnabledState,
+    setScaleModeScaleState,
+    setScaleModeRootState,
+    setScaleModeLockState,
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -269,6 +279,11 @@ const appServices = {
     setPlaybackModeState,
     setMetronomeEnabledState,
     setMetronomeVolumeState,
+    setScaleModeState,
+    setScaleModeEnabledState,
+    setScaleModeScaleState,
+    setScaleModeRootState,
+    setScaleModeLockState,
     addMasterEffectToState, removeMasterEffectFromState,
     updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
@@ -316,7 +331,6 @@ const appServices = {
         return null;
     },
 
-    // MODIFICATION: Refined Panic Stop Service
     panicStopAllAudio: () => {
         console.log("[AppServices] Panic Stop All Audio requested.");
         
@@ -388,7 +402,6 @@ const appServices = {
         console.log("All audio and transport stopped via panic.");
         showSafeNotification("All audio stopped.", 1500);
     },
-    // END MODIFICATION
 
     updateTaskbarTempoDisplay: (tempo) => {
         if (uiElementsCache.taskbarTempoDisplay) {
@@ -411,7 +424,7 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstructing = false) => {
+    closeAllWindows: (isReconstructinging = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
@@ -442,8 +455,8 @@ const appServices = {
 
     addMasterEffect: async (effectType) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -479,8 +492,8 @@ const appServices = {
     },
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();

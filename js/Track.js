@@ -243,20 +243,18 @@ export class Track {
 
     // --- Synth Specific ---
     getDefaultSynthParams() {
-        // MODIFICATION: Change default oscillator type, decay, and sustain
         return {
             portamento: 0.01,
             oscillator: { type: 'sine' }, 
             envelope: { 
                 attack: 0.005, 
-                decay: 2, // Decay "all the way up"
-                sustain: 0, // Sustain "all the way down"
+                decay: 2,
+                sustain: 0,
                 release: 1 
             },
             filter: { type: 'lowpass', rolloff: -12, Q: 1, frequency: 1000 }, 
             filterEnvelope: { attack: 0.06, decay: 0.2, sustain: 0.5, release: 2, baseFrequency: 200, octaves: 7, exponent: 2 }
         };
-        // END MODIFICATION
     }
 
     // --- Audio Node Initialization and Chaining ---
@@ -1749,7 +1747,7 @@ export class Track {
                     let notePlayedThisStep = false;
                     Constants.synthPitches.forEach((pitchName, rowIndex) => {
                         const step = sequenceDataForTone[rowIndex]?.[col];
-                        if (step?.active) {
+                        if (step && step.active) {
                             if (!this.instrumentSamplerIsPolyphonic && !notePlayedThisStep) {
                                 this.toneSampler.releaseAll(time); notePlayedThisStep = true;
                             }

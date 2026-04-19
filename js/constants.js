@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.8.0"; // Day 9: Pattern Operations (Randomize, Shift Left/Right, Mirror Horizontal/Vertical)
+export const APP_VERSION = "0.9.0"; // Day 11: Scale Mode - constrain sequencer notes to musical scales
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -93,4 +93,37 @@ export const computerKeySamplerMap = {
     'Digit7': samplerMIDINoteStart + 6,
     'Digit8': samplerMIDINoteStart + 7
     // Can extend to 'Digit9', 'Digit0' or other keys if more pads/slices are common
+};
+
+// Musical Scales - intervals from root note (0 = root, 1 = semitone)
+// Each scale is defined as an array of semitone intervals from the root
+export const SCALES = {
+    'Chromatic': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // All 12 semitones
+    'Major': [0, 2, 4, 5, 7, 9, 11], // Ionian mode
+    'Minor': [0, 2, 3, 5, 7, 8, 10], // Natural minor / Aeolian mode
+    'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11], // Harmonic minor
+    'Melodic Minor': [0, 2, 3, 5, 7, 9, 11], // Melodic minor (ascending)
+    'Pentatonic Major': [0, 2, 4, 7, 9], // Major pentatonic
+    'Pentatonic Minor': [0, 3, 5, 7, 10], // Minor pentatonic
+    'Blues': [0, 3, 5, 6, 7, 10], // Blues scale
+    'Dorian': [0, 2, 3, 5, 7, 9, 10], // Dorian mode
+    'Phrygian': [0, 1, 3, 5, 7, 8, 10], // Phrygian mode
+    'Lydian': [0, 2, 4, 6, 7, 9, 11], // Lydian mode
+    'Mixolydian': [0, 2, 4, 5, 7, 9, 10], // Mixolydian mode
+    'Locrian': [0, 1, 3, 5, 6, 8, 10], // Locrian mode
+    'Whole Tone': [0, 2, 4, 6, 8, 10], // Whole tone scale
+    'Diminished': [0, 2, 3, 5, 6, 8, 9, 11], // Diminished scale (octatonic)
+    'Arabic': [0, 1, 4, 5, 7, 8, 11], // Arabic scale
+    'Japanese': [0, 1, 5, 7, 8], // Japanese pentatonic (In scale)
+};
+
+// Root notes for scale selection
+export const SCALE_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+// Default scale mode settings
+export const DEFAULT_SCALE_MODE = {
+    enabled: false,
+    scale: 'Major',
+    root: 'C',
+    lock: false // If true, only allow notes within the scale
 };
