@@ -251,6 +251,17 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open sequencer for any track, click "Velocity" checkbox in toolbar, drag on velocity bars to edit velocities
 - **Version**: Bumped to 0.10.0
 
+#### Day 13: Typo Bug Fixes in main.js (2026-04-19)
+- **Bug Fixes**: Fixed multiple typo bugs in main.js affecting reconstruction logic
+- **Files Modified**:
+  - `js/main.js`:
+    - Fixed `isReconstructinging` typo → `isReconstructing` (variable name)
+    - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingDAW` (function name)
+    - Fixed `isReconstructconstructing` typo → `isReconstructing` (variable name)
+    - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
+- **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructing` flag is correctly checked during project load/reconstruction operations.
+- **Version**: No bump needed (bug fix)
+
 ## Code Style Guidelines
 
 ### Module Structure

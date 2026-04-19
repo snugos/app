@@ -137,6 +137,35 @@ export function setScaleModeRootState(root) {
 export function getScaleModeLockState() { return scaleModeState.lock; }
 export function setScaleModeLockState(lock) { scaleModeState.lock = !!lock; }
 
+// Loop Region State
+let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
+
+export function getLoopRegionState() { return { ...loopRegionState }; }
+export function setLoopRegionState(settings) {
+    if (typeof settings === 'object' && settings !== null) {
+        loopRegionState = {
+            enabled: !!settings.enabled,
+            startBar: Math.max(1, parseInt(settings.startBar) || Constants.DEFAULT_LOOP_REGION.startBar),
+            endBar: Math.max(loopRegionState.startBar || Constants.DEFAULT_LOOP_REGION.startBar, parseInt(settings.endBar) || Constants.DEFAULT_LOOP_REGION.endBar),
+            minimumBars: Constants.DEFAULT_LOOP_REGION.minimumBars
+        };
+    }
+}
+export function getLoopRegionEnabledState() { return loopRegionState.enabled; }
+export function setLoopRegionEnabledState(enabled) { loopRegionState.enabled = !!enabled; }
+export function getLoopRegionStartBarState() { return loopRegionState.startBar; }
+export function setLoopRegionStartBarState(bar) {
+    const barNum = Math.max(1, parseInt(bar) || 1);
+    if (barNum <= loopRegionState.endBar) {
+        loopRegionState.startBar = barNum;
+    }
+}
+export function getLoopRegionEndBarState() { return loopRegionState.endBar; }
+export function setLoopRegionEndBarState(bar) {
+    const barNum = Math.max(loopRegionState.startBar, parseInt(bar) || loopRegionState.startBar);
+    loopRegionState.endBar = Math.min(barNum, Constants.MAX_BARS);
+}
+
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
@@ -509,6 +538,7 @@ export function gatherProjectDataInternal() {
                 metronomeEnabled: getMetronomeEnabledState(),
                 metronomeVolume: getMetronomeVolumeState(),
                 scaleMode: getScaleModeState(),
+                loopRegion: getLoopRegionState(),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
@@ -701,6 +731,10 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             // Restore scale mode state
             if (globalSettings.scaleMode !== undefined) {
                 setScaleModeState(globalSettings.scaleMode);
+            }
+            // Restore loop region state
+            if (globalSettings.loopRegion !== undefined) {
+                setLoopRegionState(globalSettings.loopRegion);
             }
         }
     } catch (error) {

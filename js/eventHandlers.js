@@ -735,6 +735,24 @@ document.addEventListener('keydown', (event) => {
             }
             return;
         }
+        if (key === 'l' && !(event.ctrlKey || event.metaKey)) {
+            // Toggle Loop Region
+            if (localAppServices.getLoopRegionEnabled && localAppServices.setLoopRegionEnabled) {
+                const currentEnabled = localAppServices.getLoopRegionEnabled();
+                localAppServices.setLoopRegionEnabled(!currentEnabled);
+                if (localAppServices.captureStateForUndo) {
+                    localAppServices.captureStateForUndo(`Toggle Loop Region ${!currentEnabled ? 'ON' : 'OFF'}`);
+                }
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification(`Loop Region: ${!currentEnabled ? 'ON' : 'OFF'}`, 1000);
+                }
+                // Update Tone.Transport loop settings
+                if (localAppServices.updateLoopRegion) {
+                    localAppServices.updateLoopRegion();
+                }
+            }
+            return;
+        }
         
         const midNote = keyToMIDIMap[key];
         if (midNote !== undefined) {

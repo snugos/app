@@ -51,8 +51,6 @@ import {
     setScaleModeScale as setScaleModeScaleState,
     setScaleModeRoot as setScaleModeRootState,
     setScaleModeLock as setScaleModeLockState,
-    addMasterEffectToState, removeMasterEffectFromState,
-    updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -269,8 +267,7 @@ const appServices = {
     getScaleModeScale: getScaleModeScaleState,
     getScaleModeRoot: getScaleModeRootState,
     getScaleModeLock: getScaleModeLockState,
-
-    // State Module Setters & Core Actions
+    // State Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
     setMasterEffects: setMasterEffectsState, setMasterGainValue: setMasterGainValueState,
@@ -287,8 +284,6 @@ const appServices = {
     setScaleModeScale: setScaleModeScaleState,
     setScaleModeRoot: setScaleModeRootState,
     setScaleModeLock: setScaleModeLockState,
-    addMasterEffectToState, removeMasterEffectFromState,
-    updateMasterEffectParamInState, reorderMasterEffectInState,
     // Core State Actions
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
     captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
@@ -459,7 +454,7 @@ const appServices = {
     addMasterEffect: async (effectType) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -479,7 +474,7 @@ const appServices = {
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
                 const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -496,7 +491,7 @@ const appServices = {
     reorderMasterEffect: (effectId, newIndex) => {
         try {
             const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -575,7 +570,42 @@ const appServices = {
     },
     startMetronome: startMetronome,
     stopMetronome: stopMetronome,
-    setMetronomeVolume: setMetronomeVolume
+    setMetronomeVolume: setMetronomeVolume,
+    // Loop Region
+    getLoopRegionState,
+    getLoopRegionEnabled: getLoopRegionEnabledState,
+    getLoopRegionStartBar: getLoopRegionStartBarState,
+    getLoopRegionEndBar: getLoopRegionEndBarState,
+    setLoopRegionState,
+    setLoopRegionEnabled: setLoopRegionEnabledState,
+    setLoopRegionStartBar: setLoopRegionStartBarState,
+    setLoopRegionEndBar: setLoopRegionEndBarState,
+    updateLoopRegion: () => {
+        // Apply loop region to Tone.Transport
+        const loopRegion = getLoopRegionState();
+        if (loopRegion.enabled) {
+            const bpm = Tone.Transport.bpm.value;
+            const secondsPerBeat = 60 / bpm;
+            const beatsPerBar = 4; // 4/4 time
+            const barDuration = beatsPerBar * secondsPerBeat;
+            
+            // Convert 1-indexed bars to 0-indexed for time calculations
+            const loopStartTime = (loopRegion.startBar - 1) * barDuration;
+            const loopEndTime = loopRegion.endBar * barDuration;
+            
+            Tone.Transport.loop = true;
+            Tone.Transport.loopStart = loopStartTime;
+            Tone.Transport.loopEnd = loopEndTime;
+            console.log(`[Main updateLoopRegion] Loop enabled: ${loopStartTime.toFixed(2)}s to ${loopEndTime.toFixed(2)}s (bars ${loopRegion.startBar}-${loopRegion.endBar})`);
+        } else {
+            // When disabled, still keep transport looping but for a very long duration
+            // This is needed to keep the transport alive during playback
+            Tone.Transport.loop = true;
+            Tone.Transport.loopStart = 0;
+            Tone.Transport.loopEnd = 3600; // 1 hour max
+            console.log("[Main updateLoopRegion] Loop disabled, using full project range");
+        }
+    }
 };
 
 function handleTrackUIUpdate(trackId, reason, detail) {

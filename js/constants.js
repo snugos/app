@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.10.0"; // Day 12: Velocity Editor - visual editing of note velocities in sequencer
+export const APP_VERSION = "0.11.0"; // Day 13: Loop Region - set loop points for playback
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -126,4 +126,12 @@ export const DEFAULT_SCALE_MODE = {
     scale: 'Major',
     root: 'C',
     lock: false // If true, only allow notes within the scale
+};
+
+// Default loop region settings
+export const DEFAULT_LOOP_REGION = {
+    enabled: false,
+    startBar: 1,     // 1-indexed bar number
+    endBar: 4,       // 1-indexed bar number
+    minimumBars: 1   // Minimum loop length in bars
 };
