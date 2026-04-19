@@ -499,6 +499,9 @@ export class Track {
             console.warn(`[Track ${this.id}] ToneNode for effect ${effectId} ("${effectWrapper.type}") is invalid or disposed.`);
             return;
         }
+        if (this.appServices.captureStateForUndo) {
+            this.appServices.captureStateForUndo(`${bypassed ? 'Bypass' : 'Enable'} ${effectWrapper.type} on ${this.name}`);
+        }
         try {
             effectWrapper.toneNode.bypass = !!bypassed;
             console.log(`[Track ${this.id}] Effect "${effectWrapper.type}" (ID: ${effectId}) bypass set to ${!!bypassed}`);
@@ -1128,6 +1131,7 @@ export class Track {
     }
 
     setTrackColor(color) {
+        this._captureUndoState(`Change color on ${this.name}`);
         this.trackColor = color;
         if (this.appServices.updateTrackUI) {
             this.appServices.updateTrackUI(this.id, 'trackColorChanged');
