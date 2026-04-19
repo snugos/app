@@ -408,6 +408,7 @@ export class Track {
 
 
     addEffect(effectType) {
+        this._captureUndoState(`Add ${effectType} to ${this.name}`);
         if (!this.appServices.effectsRegistryAccess) {
             console.error(`[Track ${this.id}] effectsRegistryAccess not available via appServices.`);
             if (this.appServices.showNotification) this.appServices.showNotification("Cannot add effect: Effects registry missing.", 3000);
@@ -442,6 +443,7 @@ export class Track {
 
     removeEffect(effectId) {
         const effectIndex = this.activeEffects.findIndex(e => e.id === effectId);
+        this._captureUndoState(`Remove effect from ${this.name}`);
         if (effectIndex > -1) {
             const effectToRemove = this.activeEffects[effectIndex];
             console.log(`[Track ${this.id}] Removing effect "${effectToRemove.type}" (ID: ${effectId})`);
@@ -935,17 +937,20 @@ export class Track {
     }
     setInstrumentSamplerLoopStart(time) {
         if (this.instrumentSamplerSettings) {
+        this._captureUndoState(`Set loop start on ${this.name}`);
             this.instrumentSamplerSettings.loopStart = parseFloat(time) || 0;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loopStart = this.instrumentSamplerSettings.loopStart;
         }
     }
     setInstrumentSamplerLoopEnd(time) {
         if (this.instrumentSamplerSettings) {
+        this._captureUndoState(`Set loop end on ${this.name}`);
             this.instrumentSamplerSettings.loopEnd = parseFloat(time) || 0;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loopEnd = this.instrumentSamplerSettings.loopEnd;
         }
     }
     setInstrumentSamplerEnv(param, value) {
+        this._captureUndoState(`Set envelope on ${this.name}`);
         if (this.instrumentSamplerSettings && this.instrumentSamplerSettings.envelope) {
             this.instrumentSamplerSettings.envelope[param] = parseFloat(value);
             if (this.toneSampler && !this.toneSampler.disposed) {
@@ -1058,6 +1063,7 @@ export class Track {
 
 
     setActiveSequence(sequenceId) {
+        this._captureUndoState(`Switch sequence on ${this.name}`);
         if (this.type === 'Audio') return;
         const seq = this.sequences ? this.sequences.find(s => s.id === sequenceId) : null;
         if (seq && this.activeSequenceId !== sequenceId) {
@@ -1101,6 +1107,260 @@ export class Track {
         this.recreateToneSequence(true);
         if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
         console.log(`[Track ${this.id}] Doubled length of sequence "${activeSeq.name}" to ${newLength} steps.`);
+    }
+
+    shiftSequenceNotes(semitones) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} shiftSequenceNotes] No active sequence found.`);
+            return 0;
+        }
+
+        let shiftedCount = 0;
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        // Determine row shift based on track type
+        let rowShift = 0;
+        if (this.type === 'Synth' || this.type === 'InstrumentSampler') {
+            rowShift = -semitones; // Higher pitch = lower row index
+        } else {
+            // For Sampler/DrumSampler, just return 0 (can't meaningfully shift pads)
+            return 0;
+        }
+
+        if (rowShift === 0) return 0;
+
+        const newData = activeSeq.data.map((row, rowIndex) => {
+            const newRow = Array(totalSteps).fill(null);
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row && row[col];
+                if (stepData && stepData.active) {
+                    const sourceRow = rowIndex + rowShift;
+                    if (sourceRow >= 0 && sourceRow < numRows) {
+                        newRow[col] = { ...stepData };
+                        shiftedCount++;
+                    }
+                }
+            }
+            return newRow;
+        });
+
+        activeSeq.data = newData;
+        this._captureUndoState(`Shift Notes ${semitones > 0 ? 'Down' : 'Up'} on ${activeSeq.name}`);
+        return shiftedCount;
+    }
+
+    humanizeVelocity(amount = 0.15) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} humanizeVelocity] No active sequence found.`);
+            return 0;
+        }
+
+        let humanizedCount = 0;
+        const totalSteps = activeSeq.length;
+
+        activeSeq.data.forEach(row => {
+            if (!row) return;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active && stepData.velocity !== undefined) {
+                    const variation = (Math.random() * 2 - 1) * amount; // -amount to +amount
+                    const newVelocity = Math.max(0.05, Math.min(1.0, stepData.velocity + variation));
+                    row[col].velocity = Math.round(newVelocity * 100) / 100; // Round to 2 decimal places
+                    humanizedCount++;
+                }
+            }
+        });
+
+        return humanizedCount;
+    }
+
+    // Set the length (in steps) of a note at a specific row/col
+    setNoteLength(row, col, lengthInSteps) {
+        this._captureUndoState(`Set note length on ${this.name}`);
+        if (this.type === 'Audio') return;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return;
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return;
+        const clamped = Math.max(1, Math.min(lengthInSteps, activeSeq.length - col));
+        activeSeq.data[row][col].length = clamped;
+    }
+
+    // Get the length (in steps) of a note at a specific row/col
+    getNoteLength(row, col) {
+        if (this.type === 'Audio') return 1;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return 1;
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return 0;
+        return stepData.length || 1;
+    }
+
+    quantizeSequence(quantizeTo = 16) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} quantizeSequence] No active sequence found.`);
+            return 0;
+        }
+
+        let quantizedCount = 0;
+        const totalSteps = activeSeq.length;
+
+        // For each step, find the nearest quantizeTo grid point and move the note there
+        // If a note is at column C and quantizeTo=N, the snapped column is Math.round(C/N)*N
+        activeSeq.data.forEach(row => {
+            if (!row) return;
+            const newRow = Array(totalSteps).fill(null);
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const snappedCol = Math.round(col / quantizeTo) * quantizeTo;
+                    if (snappedCol !== col) {
+                        newRow[snappedCol] = { ...stepData };
+                        quantizedCount++;
+                    }
+                }
+            }
+            // Copy over any notes that got placed back into the original row structure
+            row.forEach((cell, col) => {
+                if (cell && cell.active) {
+                    const snappedCol = Math.round(col / quantizeTo) * quantizeTo;
+                    const existing = newRow.find(n => n && n.active && n !== cell);
+                    if (snappedCol >= 0 && snappedCol < totalSteps) {
+                        const newCell = newRow[snappedCol];
+                        if (newCell && newCell !== cell) {
+                            // There was already a note placed there — keep both? No, overwrite
+                            row[snappedCol] = { ...cell };
+                        }
+                    }
+                }
+            });
+        });
+
+        // Simpler approach: for each note, snap its column in place
+        let snappedCount = 0;
+        const notesToMove = []; // Collect {row, oldCol, data} to move after iteration
+        activeSeq.data.forEach((row, rowIndex) => {
+            if (!row) return;
+            for (let col = 0; col < totalSteps; col++) {
+                const stepData = row[col];
+                if (stepData && stepData.active) {
+                    const snappedCol = Math.round(col / quantizeTo) * quantizeTo;
+                    if (snappedCol !== col) {
+                        notesToMove.push({ rowIndex, fromCol: col, toCol: snappedCol, data: { ...stepData } });
+                    }
+                }
+            }
+        });
+
+        // Clear original positions
+        notesToMove.forEach(({ rowIndex, fromCol }) => {
+            if (activeSeq.data[rowIndex]) {
+                activeSeq.data[rowIndex][fromCol] = null;
+            }
+        });
+
+        // Place at snapped positions (if collisions, first note wins)
+        notesToMove.forEach(({ toCol, data, rowIndex }) => {
+            if (activeSeq.data[rowIndex] && !activeSeq.data[rowIndex][toCol]) {
+                activeSeq.data[rowIndex][toCol] = data;
+                snappedCount++;
+            } else {
+                // Find nearest free slot
+                let placed = false;
+                for (let delta = 1; delta < quantizeTo; delta++) {
+                    const down = toCol - delta;
+                    const up = toCol + delta;
+                    if (down >= 0 && activeSeq.data[rowIndex] && !activeSeq.data[rowIndex][down]) {
+                        activeSeq.data[rowIndex][down] = data;
+                        placed = true;
+                        snappedCount++;
+                        break;
+                    }
+                    if (up < totalSteps && activeSeq.data[rowIndex] && !activeSeq.data[rowIndex][up]) {
+                        activeSeq.data[rowIndex][up] = data;
+                        placed = true;
+                        snappedCount++;
+                        break;
+                    }
+                }
+            }
+        });
+
+        this._captureUndoState(`Quantize Sequence ${activeSeq.name}`);
+        return snappedCount;
+    }
+
+    copySequenceSection(startCol, endCol) {
+        if (this.type === 'Audio') return null;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} copySequenceSection] No active sequence found.`);
+            return null;
+        }
+
+        const sectionData = [];
+        for (let rowIndex = 0; rowIndex < activeSeq.data.length; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            const newRow = [];
+            for (let col = startCol; col <= endCol; col++) {
+                if (col >= 0 && col < row.length) {
+                    newRow.push(row[col]);
+                } else {
+                    newRow.push(null);
+                }
+            }
+            sectionData.push(newRow);
+        }
+
+        return sectionData;
+    }
+
+    pasteSequenceSection(sectionData, targetCol, skipUndo = false) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data || !sectionData) {
+            console.warn(`[Track ${this.id} pasteSequenceSection] No active sequence or no section data.`);
+            return 0;
+        }
+
+        let pastedCount = 0;
+        const sectionNumRows = sectionData.length;
+        const sectionLength = sectionData[0]?.length || 0;
+
+        for (let rowIndex = 0; rowIndex < activeSeq.data.length; rowIndex++) {
+            const targetRow = activeSeq.data[rowIndex];
+            if (!targetRow) continue;
+
+            const sourceRowIndex = rowIndex < sectionNumRows ? rowIndex : (sectionNumRows > 1 ? sectionNumRows - 1 : 0);
+            const sourceRow = sectionData[sourceRowIndex];
+            if (!sourceRow) continue;
+
+            for (let colIndex = 0; colIndex < sectionLength; colIndex++) {
+                const targetColIndex = targetCol + colIndex;
+                if (targetColIndex < 0 || targetColIndex >= targetRow.length) continue;
+                const noteData = sourceRow[colIndex];
+                if (noteData && noteData.active) {
+                    if (!targetRow[targetColIndex] || !targetRow[targetColIndex].active) {
+                        pastedCount++;
+                    }
+                    targetRow[targetColIndex] = JSON.parse(JSON.stringify(noteData));
+                } else {
+                    if (targetColIndex >= 0 && targetColIndex < targetRow.length) {
+                        targetRow[targetColIndex] = null;
+                    }
+                }
+            }
+        }
+
+        return pastedCount;
     }
 
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
