@@ -19,7 +19,8 @@ let highestZ = 100;
 
 // Master Audio Chain
 let masterEffectsChainState = []; // Array of {id, type, params, toneNode (managed by audio.js)}
-let masterGainValueState = Tone.dbToGain(0); // Linear gain value
+// Use numeric fallback until Tone.js is available (Tone.dbToGain(0) = 1.0 linear)
+let masterGainValueState = (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0; // Linear gain value
 
 // MIDI State
 let midiAccessGlobal = null;
@@ -125,7 +126,7 @@ export function setHighestZState(value) { highestZ = Number.isFinite(value) ? va
 export function incrementHighestZState() { return ++highestZ; }
 
 export function setMasterEffectsState(newChain) { masterEffectsChainState = Array.isArray(newChain) ? newChain : []; }
-export function setMasterGainValueState(value) { masterGainValueState = Number.isFinite(value) ? value : Tone.dbToGain(0); }
+export function setMasterGainValueState(value) { masterGainValueState = Number.isFinite(value) ? value : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0; }
 
 export function setMidiAccessState(access) { midiAccessGlobal = access; }
 export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
@@ -641,7 +642,7 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     try { // --- Global Settings ---
         const gs = projectData.globalSettings || {};
         Tone.Transport.bpm.value = Number.isFinite(gs.tempo) ? gs.tempo : 120;
-        setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : Tone.dbToGain(0));
+        setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0);
         if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
         setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');
         if (appServices.updateTaskbarTempoDisplay) appServices.updateTaskbarTempoDisplay(Tone.Transport.bpm.value);
