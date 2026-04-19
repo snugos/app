@@ -644,6 +644,10 @@ export function gatherProjectDataInternal() {
                     sequences: track.type !== 'Audio' && track.sequences ? JSON.parse(JSON.stringify(track.sequences)) : [],
                     activeSequenceId: track.type !== 'Audio' ? track.activeSequenceId : null,
                     timelineClips: track.timelineClips ? JSON.parse(JSON.stringify(track.timelineClips)) : [],
+                    trackColor: track.trackColor,
+                    automationArmed: track.automationArmed || false,
+                    panValue: track.panValue || 0,
+                    waveformZoom: track.waveformZoom || 1
                 };
                 // Type-specific parameters
                 if (track.type === 'Synth') {
@@ -681,10 +685,23 @@ export function gatherProjectDataInternal() {
                     trackData.instrumentSamplerIsPolyphonic = track.instrumentSamplerIsPolyphonic;
                 }
                  if (track.type === 'Audio') { // Audio track specific settings
-                    trackData.isMonitoringEnabled = track.isMonitoringEnabled;
+                    trackData.isMonitoringEnabled = track.isMonitoringEnabled || false;
                 }
                 // Remove deprecated/runtime-only properties if they accidentally get included
                 delete trackData.sequenceData; delete trackData.sequenceLength;
+                // Restore track color, automation armed, pan, waveform zoom
+                if (typeof trackData.trackColor === 'string') {
+                    newTrack.trackColor = trackData.trackColor;
+                }
+                if (typeof trackData.automationArmed === 'boolean') {
+                    newTrack.automationArmed = trackData.automationArmed;
+                }
+                if (typeof trackData.panValue === 'number') {
+                    newTrack.panValue = trackData.panValue;
+                }
+                if (typeof trackData.waveformZoom === 'number') {
+                    newTrack.waveformZoom = trackData.waveformZoom;
+                }
                 return trackData;
             }).filter(td => td !== null), // Filter out any skipped invalid tracks
             windowStates: Array.from(getOpenWindowsState().values())
