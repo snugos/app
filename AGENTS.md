@@ -319,3 +319,7 @@ Need to create `.github/workflows/deploy.yml` that:
 - **Undo/Redo Coverage: setInstrumentSamplerLoop** (`js/Track.js`): Added `_captureUndoState()` to `setInstrumentSamplerLoop()` method. Continues undo coverage audit from Days 51-54.
 - **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main`
 
+### 2026-04-19 — Day 56
+- **Undo/Redo Coverage: setVolume and setPan** (`js/Track.js`): Added `_captureUndoState()` to `setVolume()` (volume knob changes) and `setPan()` (pan knob changes). Continues undo coverage audit from Days 51-55.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main`
+
