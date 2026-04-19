@@ -1427,7 +1427,42 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }, disabled: (!clipboard || clipboard.type !== 'sequence' || !clipboard.data || (clipboard.sourceTrackType && currentTrackForMenu && clipboard.sourceTrackType !== currentTrackForMenu.type)) },
                 { separator: true },
                 { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
-                { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } }
+                { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } },
+                { separator: true },
+                { label: '--- Pattern Operations ---', header: true },
+                { label: 'Randomize Pattern...', action: () => { 
+                    const density = prompt('Enter randomization density (0.0 - 1.0):', '0.3');
+                    const densityValue = parseFloat(density);
+                    if (isNaN(densityValue) || densityValue < 0 || densityValue > 1) { 
+                        showNotification('Invalid density value. Must be between 0 and 1.', 2000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.randomizePattern(densityValue);
+                    showNotification(`Randomized pattern: ${count} notes activated.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Shift Pattern Left ←', action: () => { 
+                    const count = currentTrackForMenu.shiftPatternLeft();
+                    showNotification(`Pattern shifted left: ${count} notes moved.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Shift Pattern Right →', action: () => { 
+                    const count = currentTrackForMenu.shiftPatternRight();
+                    showNotification(`Pattern shifted right: ${count} notes moved.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Mirror Horizontal (⇌)', action: () => { 
+                    currentTrackForMenu.mirrorPatternHorizontal();
+                    showNotification('Pattern mirrored horizontally.', 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Mirror Vertical (⇅)', action: () => { 
+                    const success = currentTrackForMenu.mirrorPatternVertical();
+                    if (success) {
+                        showNotification('Pattern mirrored vertically (pitches inverted).', 2000);
+                        if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    }
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') }
             ];
             createContextMenu(event, menuItems, localAppServices);
         };

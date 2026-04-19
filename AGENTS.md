@@ -131,18 +131,25 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: The metronome feature (added in Day 3) was missing its state management. This caused a runtime error because `main.js` was importing functions that didn't exist in `state.js`. The metronome settings now persist across project save/load.
 - **Version**: 0.7.3 (no bump needed, this was a bug fix for existing feature)
 
-### Incomplete Features (Priority Order)
-
-1. **Recording**: End-to-end test with real microphone
-   - Recording functions exist in `js/audio.js` (`startAudioRecording`, `stopAudioRecording`)
-   - Need to verify microphone permissions and audio routing
-
-2. **Undo/redo**: Verify all state mutations go through capture mechanism
-   - `captureStateForUndoInternal` exists in `js/state.js`
-   - Need to audit all state mutations to ensure they call this function
-   - **AUDITED 2026-04-19**: All major state mutations have `_captureUndoState` calls
-
-3. **No Automated Tests**: Project lacks automated testing
+#### Day 10: Pattern Operations (2026-04-19)
+- **Feature**: Added pattern manipulation operations for the sequencer
+- **Files Modified**:
+  - `js/Track.js`: Added new methods:
+    - `randomizePattern(density)` - Randomly activates notes with given density (0-1)
+    - `shiftPatternLeft()` - Shifts all notes one step left
+    - `shiftPatternRight()` - Shifts all notes one step right
+    - `mirrorPatternHorizontal()` - Reverses the pattern horizontally (time)
+    - `mirrorPatternVertical()` - Reverses the pattern vertically (pitch inversion, Synth/InstrumentSampler only)
+  - `js/ui.js`: Added context menu items in sequencer window:
+    - "Pattern Operations" header
+    - "Randomize Pattern..." - Prompts for density value
+    - "Shift Pattern Left" - Moves pattern one step earlier
+    - "Shift Pattern Right" - Moves pattern one step later
+    - "Mirror Horizontal" - Reverses pattern in time
+    - "Mirror Vertical" - Inverts pitches (only enabled for Synth tracks)
+  - `js/constants.js`: Bumped APP_VERSION to 0.8.0
+- **Usage**: Right-click on sequencer grid to access pattern operations
+- **Version**: Bumped to 0.8.0
 
 ## Code Style Guidelines
 

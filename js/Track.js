@@ -1374,6 +1374,210 @@ export class Track {
         return pastedCount;
     }
 
+    // --- Pattern Operations ---
+    
+    /**
+     * Randomize the pattern by randomly activating notes with a given density.
+     * @param {number} density - Probability of each note being active (0 to 1)
+     * @returns {number} Number of notes activated
+     */
+    randomizePattern(density = 0.3) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} randomizePattern] No active sequence found.`);
+            return 0;
+        }
+
+        this._captureUndoState(`Randomize pattern on ${activeSeq.name}`);
+        
+        let activatedCount = 0;
+        const totalSteps = activeSeq.length;
+        const numRows = activeSeq.data.length;
+        const clampedDensity = Math.max(0, Math.min(1, density));
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            
+            for (let col = 0; col < totalSteps; col++) {
+                if (Math.random() < clampedDensity) {
+                    // Create a note
+                    row[col] = {
+                        active: true,
+                        velocity: Constants.defaultVelocity + (Math.random() * 0.2 - 0.1), // Slight velocity variation
+                        length: 1
+                    };
+                    activatedCount++;
+                } else {
+                    row[col] = null;
+                }
+            }
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        console.log(`[Track ${this.id}] Randomized pattern with density ${clampedDensity}, activated ${activatedCount} notes.`);
+        return activatedCount;
+    }
+
+    /**
+     * Shift all notes one step to the left. Notes at column 0 are removed.
+     * @returns {number} Number of notes shifted
+     */
+    shiftPatternLeft() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} shiftPatternLeft] No active sequence found.`);
+            return 0;
+        }
+
+        this._captureUndoState(`Shift pattern left on ${activeSeq.name}`);
+        
+        let shiftedCount = 0;
+        const totalSteps = activeSeq.length;
+        const numRows = activeSeq.data.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            
+            // Count notes that will be lost at column 0
+            let lostCount = 0;
+            if (row[0] && row[0].active) lostCount++;
+            
+            // Shift all notes left by one
+            for (let col = 0; col < totalSteps - 1; col++) {
+                row[col] = row[col + 1];
+                if (row[col] && row[col].active) shiftedCount++;
+            }
+            row[totalSteps - 1] = null; // Clear the last column
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        console.log(`[Track ${this.id}] Shifted pattern left, ${shiftedCount} notes moved.`);
+        return shiftedCount;
+    }
+
+    /**
+     * Shift all notes one step to the right. Notes at the last column are removed.
+     * @returns {number} Number of notes shifted
+     */
+    shiftPatternRight() {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} shiftPatternRight] No active sequence found.`);
+            return 0;
+        }
+
+        this._captureUndoState(`Shift pattern right on ${activeSeq.name}`);
+        
+        let shiftedCount = 0;
+        const totalSteps = activeSeq.length;
+        const numRows = activeSeq.data.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            
+            // Shift all notes right by one (iterate from end to start)
+            for (let col = totalSteps - 1; col > 0; col--) {
+                row[col] = row[col - 1];
+                if (row[col] && row[col].active) shiftedCount++;
+            }
+            row[0] = null; // Clear the first column
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        console.log(`[Track ${this.id}] Shifted pattern right, ${shiftedCount} notes moved.`);
+        return shiftedCount;
+    }
+
+    /**
+     * Mirror the pattern horizontally (reverse the order of columns).
+     * @returns {boolean} Success
+     */
+    mirrorPatternHorizontal() {
+        if (this.type === 'Audio') return false;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} mirrorPatternHorizontal] No active sequence found.`);
+            return false;
+        }
+
+        this._captureUndoState(`Mirror pattern horizontally on ${activeSeq.name}`);
+        
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            
+            // Reverse the row
+            const reversed = row.slice().reverse();
+            // Copy back
+            for (let col = 0; col < totalSteps; col++) {
+                row[col] = reversed[col];
+            }
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        console.log(`[Track ${this.id}] Mirrored pattern horizontally.`);
+        return true;
+    }
+
+    /**
+     * Mirror the pattern vertically (reverse the order of rows).
+     * Only meaningful for Synth and InstrumentSampler tracks where rows represent pitch.
+     * @returns {boolean} Success
+     */
+    mirrorPatternVertical() {
+        if (this.type === 'Audio') return false;
+        if (this.type !== 'Synth' && this.type !== 'InstrumentSampler') {
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification('Vertical mirror only works on Synth tracks.', 2000);
+            }
+            return false;
+        }
+        
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} mirrorPatternVertical] No active sequence found.`);
+            return false;
+        }
+
+        this._captureUndoState(`Mirror pattern vertically on ${activeSeq.name}`);
+        
+        // Reverse the entire data array (rows)
+        const numRows = activeSeq.data.length;
+        const reversedData = activeSeq.data.slice().reverse();
+        
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            activeSeq.data[rowIndex] = reversedData[rowIndex];
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        console.log(`[Track ${this.id}] Mirrored pattern vertically (inverted pitches).`);
+        return true;
+    }
+
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
         if (this.type === 'Audio') return;
         const activeSeq = this.getActiveSequence();
