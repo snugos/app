@@ -263,6 +263,15 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open sequencer for any track, click "Velocity" checkbox in toolbar, drag on velocity bars to edit velocities
 - **Version**: Bumped to 0.10.0
 
+#### Day 12 cont: Syntax Error Fix (2026-04-19)
+- **Bug Fix**: Fixed syntax error in ui.js that caused parsing failure
+- **Issue**: Extra `)` character in Paste menu item action callback
+- **Files Modified**:
+  - `js/ui.js`: Fixed misplaced `)` before `}` in sequencer context menu Paste action
+  - `js/constants.js`: Bumped APP_VERSION to 0.10.1
+- **Impact**: The syntax error would have caused the entire ui.js module to fail loading
+- **Version**: Bumped to 0.10.1
+
 #### Day 13: Typo Bug Fixes in main.js (2026-04-19)
 - **Bug Fixes**: Fixed multiple typo bugs in main.js affecting reconstruction logic
 - **Files Modified**:
