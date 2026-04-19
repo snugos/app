@@ -73,7 +73,7 @@ Need to create `.github/workflows/deploy.yml` that:
 - App loads and is functional (basic track creation, sound browser, transport)
 - **Metronome** (`audio.js`): Added Tone.Transport-synced metronome with triangle-wave click synth. Bar 1 uses C6 accent, beat 1 uses C5, all other 16ths silent. Connected directly to `Tone.Destination` (bypasses master bus so it's always audible). Toggle wired to global control bar "Metronome" button. Functions: `setMetronomeEnabled`, `isMetronomeEnabled`, `setMetronomeVolume`.
 - **Global controls bar**: Added "Metronome" toggle button between Master meter and MIDI/KBD indicators. Blue active state when on.
-- **Bug fixes**: Fixed typos `isReconstructinging` → `isReconstructing` in main.js.
+- **Bug fixes**: Fixed typos `isReconstructinging` → `isReconstructinging` in main.js.
 - **Version**: Bumped to 0.2.0 in `constants.js`.
 
 ### 2026-04-17 — Day 2
@@ -339,4 +339,8 @@ Need to create `.github/workflows/deploy.yml` that:
   - `Sequencer view mode toggle`: Removed mode switch log
   - `UI module init`: Removed setSelectedSoundForPreview verbose logs
 - **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main`
+
+### 2026-04-19 — Day 59
+- **Remove debug console.log statements** (`js/audio.js`, `js/state.js`): Cleaned up verbose DEBUG/FETCH/INFO logging from audio.js (3000+ chars from `fetchSoundLibrary` and `initializeAudioModule`) and state.js (3194 chars from initialization and state get/set). Kept essential warnings (context state, node disposal, errors) and useful state change logs (solo/mute/playback). Kept Track.js constructor/init logs (informational, helpful for troubleshooting). Total ~6200 chars of developer logging removed from production code.
+- **Pushed to both branches**:
 
