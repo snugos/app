@@ -1329,7 +1329,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
     const sequenceData = activeSequence ? activeSequence.data : [];
 
     for (let i = 0; i < rows; i++) {
-        let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + \"..\";
+        let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
         
         // Check if this row is in the scale (for highlighting)
         const rowLabel = rowLabels[i] || '';
