@@ -11,6 +11,8 @@ import {
 
 // --- Project Metadata ---
 let projectNameState = 'Untitled Project';
+export function getProjectNameState() { return projectNameState; }
+export function setProjectNameState(name) { projectNameState = typeof name === 'string' ? name : 'Untitled Project'; }
 
 // --- Centralized State Variables ---
 let tracks = [];
@@ -211,6 +213,10 @@ export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
 export function setRecordingStartTimeState(time) { recordingStartTime = Number.isFinite(time) ? time : 0; }
 export function getRecordingStartTimeState() { return recordingStartTime; }
 export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
+export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
+
+export function getUndoStackState() { return [...undoStack]; }
+export function getRedoStackState() { return [...redoStack]; }
 
 export function setPlaybackModeStateInternal(mode) {
     const displayMode = typeof mode === 'string' ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Unknown';
