@@ -1681,13 +1681,30 @@ export class Track {
                     : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
                 if (!effectsChainStartPoint) return;
 
+                // Apply swing to off-beat notes (odd columns in 16th note grid)
+                let swingTime = time;
+                const swingEnabled = this.appServices.getSwingEnabledState ? this.appServices.getSwingEnabledState() : false;
+                const swingAmount = this.appServices.getSwingAmountState ? this.appServices.getSwingAmountState() : 0;
+                
+                if (swingEnabled && swingAmount > 0) {
+                    // Swing affects odd-numbered 16th notes (off-beats)
+                    // In a 16th note grid: columns 1, 3, 5, 7, 9, 11, 13, 15 are off-beats
+                    if (col % 2 === 1) {
+                        // Calculate swing delay: swingAmount is 0-100
+                        // At 100%, off-beats are delayed by half a 16th note (making it triplet feel)
+                        const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
+                        const swingDelay = (swingAmount / 100) * (sixteenthNoteDuration / 2);
+                        swingTime = time + swingDelay;
+                    }
+                }
+
                 if (this.type === 'Synth' && this.instrument && !this.instrument.disposed) {
                     let notePlayedThisStep = false;
                     for (let rowIndex = 0; rowIndex < Constants.synthPitches.length; rowIndex++) {
                         const pitchName = Constants.synthPitches[rowIndex];
                         const step = sequenceDataForTone[rowIndex]?.[col];
                         if (step?.active && !notePlayedThisStep) {
-                            this.instrument.triggerAttackRelease(pitchName, "16n", time, step.velocity * Constants.defaultVelocity); 
+                            this.instrument.triggerAttackRelease(pitchName, "16n", swingTime, step.velocity * Constants.defaultVelocity); 
                             notePlayedThisStep = true;
                         }
                     }

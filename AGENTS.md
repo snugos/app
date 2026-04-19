@@ -306,6 +306,15 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open Timeline window, use Loop controls in toolbar, or press L to toggle loop
 - **Version**: Bumped to 0.11.0
 
+#### Day 15: Swing Feature Bug Fix - Missing AppServices Wiring (2026-04-19)
+- **Bug Fix**: Fixed incomplete Swing/Groove feature - swing state functions were defined in state.js and referenced in Track.js but were never imported/wired in main.js
+- **Files Modified**:
+  - `js/main.js`: Added swing state function imports and wired them to appServices:
+    - `getSwingState`, `getSwingEnabledState`, `getSwingAmountState` (getters)
+    - `setSwingState`, `setSwingEnabledState`, `setSwingAmountState` (setters)
+- **Impact**: The swing feature in Track.js (applies swing feel to off-beat notes during playback) would not work because `this.appServices.getSwingEnabledState` and `this.appServices.getSwingAmountState` returned undefined. The swing state also would not persist on project save/load.
+- **Version**: No bump needed (this was a bug fix for incomplete feature)
+
 ## Code Style Guidelines
 
 ### Module Structure

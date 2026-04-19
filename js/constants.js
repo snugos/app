@@ -135,3 +135,12 @@ export const DEFAULT_LOOP_REGION = {
     endBar: 4,       // 1-indexed bar number
     minimumBars: 1   // Minimum loop length in bars
 };
+
+// Default swing/groove settings
+export const DEFAULT_SWING = {
+    enabled: false,
+    amount: 0        // 0-100 percentage (0 = straight, 100 = maximum swing)
+};
+
+export const MAX_SWING_AMOUNT = 100;
+export const SWING_SUBDIVISION = 8; // Swing applies to 8th notes (every other 16th note)

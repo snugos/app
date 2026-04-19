@@ -166,6 +166,25 @@ export function setLoopRegionEndBarState(bar) {
     loopRegionState.endBar = Math.min(barNum, Constants.MAX_BARS);
 }
 
+// Swing/Groove State
+let swingState = { ...Constants.DEFAULT_SWING };
+
+export function getSwingState() { return { ...swingState }; }
+export function setSwingState(settings) {
+    if (typeof settings === 'object' && settings !== null) {
+        swingState = {
+            enabled: !!settings.enabled,
+            amount: Math.max(0, Math.min(Constants.MAX_SWING_AMOUNT, parseInt(settings.amount) || 0))
+        };
+    }
+}
+export function getSwingEnabledState() { return swingState.enabled; }
+export function setSwingEnabledState(enabled) { swingState.enabled = !!enabled; }
+export function getSwingAmountState() { return swingState.amount; }
+export function setSwingAmountState(amount) {
+    swingState.amount = Math.max(0, Math.min(Constants.MAX_SWING_AMOUNT, parseInt(amount) || 0));
+}
+
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
@@ -539,6 +558,7 @@ export function gatherProjectDataInternal() {
                 metronomeVolume: getMetronomeVolumeState(),
                 scaleMode: getScaleModeState(),
                 loopRegion: getLoopRegionState(),
+                swing: getSwingState(),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,
@@ -735,6 +755,10 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             // Restore loop region state
             if (globalSettings.loopRegion !== undefined) {
                 setLoopRegionState(globalSettings.loopRegion);
+            }
+            // Restore swing state
+            if (globalSettings.swing !== undefined) {
+                setSwingState(globalSettings.swing);
             }
         }
     } catch (error) {

@@ -35,6 +35,10 @@ import {
     getScaleModeScaleState,
     getScaleModeRootState,
     getScaleModeLockState,
+    // Swing state
+    getSwingState,
+    getSwingEnabledState,
+    getSwingAmountState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -51,6 +55,10 @@ import {
     setScaleModeScaleState,
     setScaleModeRootState,
     setScaleModeLockState,
+    // Swing state setters
+    setSwingState,
+    setSwingEnabledState,
+    setSwingAmountState,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -267,6 +275,10 @@ const appServices = {
     getScaleModeScale: getScaleModeScaleState,
     getScaleModeRoot: getScaleModeRootState,
     getScaleModeLock: getScaleModeLockState,
+    // Swing state
+    getSwingState,
+    getSwingEnabledState,
+    getSwingAmountState,
     // State Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
@@ -284,6 +296,10 @@ const appServices = {
     setScaleModeScaleState,
     setScaleModeRootState,
     setScaleModeLockState,
+    // Swing state setters
+    setSwingState,
+    setSwingEnabledState,
+    setSwingAmountState,
     // Core State Actions
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
     captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
