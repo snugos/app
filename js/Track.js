@@ -176,6 +176,7 @@ export class Track {
      * @param {Object} sampleSource Data source (file object or sound browser metadata).
      */
     async loadSampleToPad(padIndex, sampleSource) {
+        this._captureUndoState(`Load sample to pad ${padIndex + 1} on ${this.name}`);
         try {
             let audioData;
             let fileName = sampleSource.fileName;

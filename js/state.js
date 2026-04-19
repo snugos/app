@@ -405,6 +405,10 @@ export function reorderMasterEffectInState(effectId, newIndex) {
         if (oldIndex === -1) console.warn(`[State reorderMasterEffectInState] Effect ID ${effectId} not found.`);
         return;
     }
+    if (appServices.captureStateForUndo) {
+        const effect = masterEffectsChainState[oldIndex];
+        appServices.captureStateForUndo(`Reorder Master effect "${effect?.type || effectId}"`);
+    }
     const [effectToMove] = masterEffectsChainState.splice(oldIndex, 1);
     masterEffectsChainState.splice(newIndex, 0, effectToMove);
 }
