@@ -864,6 +864,7 @@ export class Track {
     }
 
     setVolume(volume, fromInteraction = false) {
+        this._captureUndoState(`Set volume on ${this.name}`);
         this.previousVolumeBeforeMute = Math.max(0, Math.min(parseFloat(volume) || 0, 1.5));
         if (this.gainNode && !this.gainNode.disposed && !this.isMuted) {
             try {
