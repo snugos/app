@@ -67,6 +67,13 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `setInstrumentSamplerRootNote`, `setInstrumentSamplerLoop`, `setInstrumentSamplerLoopStart`, `setInstrumentSamplerLoopEnd`, `setInstrumentSamplerEnv`
 - **Version**: Bumped to 0.6.0
 
+#### Day 6: Bug Fix - Reconstruction Flag Typo (2026-04-19)
+- **Bug Fix**: Fixed typos in reconstruction flag function names causing undo state capture to fail during project load
+- **Files Modified**:
+  - `js/main.js`: Fixed `getIsReconstructconstructingDAW` → `getIsReconstructingDAW`, `isReconstructconstruct` → `isReconstructing`, `_isReconstructconstructingDAW_flag` → `_isReconstructingDAW_flag`
+  - `js/audio.js`: Fixed `isReconstructinging` → `isReconstructing`
+- **Impact**: These typos caused undo state to be incorrectly captured during project reconstruction, leading to bloated undo stacks
+
 ### Incomplete Features (Priority Order)
 
 1. **Recording**: End-to-end test with real microphone
