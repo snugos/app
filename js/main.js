@@ -232,7 +232,7 @@ const appServices = {
     getSidechainBus: () => getSidechainBusInput(),
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingingDAW() : false;
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
             if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex);
@@ -269,7 +269,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true,
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
     
     // State getters - exposed for UI and other modules
     getTracks: getTracksState,
@@ -299,7 +299,7 @@ const appServices = {
     getPlaybackMode: getPlaybackModeState,
     setPlaybackMode: setPlaybackModeState,
     
-    _isReconstructingingDAW_flag: false,
+    _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
