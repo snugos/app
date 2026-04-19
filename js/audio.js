@@ -62,10 +62,8 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
         return true;
     }
 
-    console.log('[Audio initAudioContextAndMasterMeter] Attempting Tone.start(). Current context state:', ((Tone.context) && (Tone.context).state));
     try {
         await Tone.start();
-        console.log('[Audio initAudioContextAndMasterMeter] Tone.start() completed. Context state:', ((Tone.context) && (Tone.context).state));
 
         if (Tone.context && Tone.context.state === 'running') {
             if (!audioContextInitialized) {
@@ -81,7 +79,6 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
             console.log('[Audio initAudioContextAndMasterMeter] Audio context initialized and running.');
             return true;
         } else {
-            console.warn('[Audio initAudioContextAndMasterMeter] Audio context NOT running after Tone.start(). State:', ((Tone.context) && (Tone.context).state));
             const message = "AudioContext could not be started. Please click again or refresh the page.";
             if (localAppServices.showNotification) {
                 localAppServices.showNotification(message, 5000);
@@ -92,7 +89,6 @@ export async function initAudioContextAndMasterMeter(isUserInitiated = false) {
             return false;
         }
     } catch (error) {
-        console.error("[Audio initAudioContextAndMasterMeter] Error during Tone.start() or master bus setup:", error);
         const message = `Error initializing audio: ${error.message || 'Please check console.'}. Try interacting with the page or refreshing.`;
         if (localAppServices.showNotification) {
             localAppServices.showNotification(message, 5000);
@@ -116,7 +112,6 @@ function setupMasterBus() {
              try { masterEffectsBusInputNode.dispose(); } catch(e){ console.warn("[Audio setupMasterBus] Error disposing old master bus input:", e.message); }
         }
         masterEffectsBusInputNode = new Tone.Gain(); // Destination will be set by rebuildMasterEffectChain
-        console.log('[Audio setupMasterBus] Master effects bus input node created.');
     }
 
     if (!masterGainNodeActual || masterGainNodeActual.disposed) {
@@ -126,7 +121,6 @@ function setupMasterBus() {
         const initialMasterVolumeValue = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
         masterGainNodeActual = new Tone.Gain(initialMasterVolumeValue);
         if (localAppServices.setMasterGainValueState) localAppServices.setMasterGainValueState(masterGainNodeActual.gain.value); // Update state module
-        console.log('[Audio setupMasterBus] Master gain node actual created with gain:', masterGainNodeActual.gain.value);
     }
 
     if (!masterMeterNode || masterMeterNode.disposed) {
@@ -134,14 +128,12 @@ function setupMasterBus() {
             try { masterMeterNode.dispose(); } catch(e) { console.warn("[Audio setupMasterBus] Error disposing old master meter:", e.message); }
         }
         masterMeterNode = new Tone.Meter({ smoothing: 0.8 });
-        console.log('[Audio setupMasterBus] Master meter node created.');
     }
     rebuildMasterEffectChain(); // This will handle connections
     console.log('[Audio setupMasterBus] Master bus setup process complete.');
 }
 
 export function rebuildMasterEffectChain() {
-    console.log('[Audio rebuildMasterEffectChain] Rebuilding master effect chain...');
     if (!masterEffectsBusInputNode || masterEffectsBusInputNode.disposed ||
         !masterGainNodeActual || masterGainNodeActual.disposed ||
         !masterMeterNode || masterMeterNode.disposed) {
@@ -167,7 +159,6 @@ export function rebuildMasterEffectChain() {
 
     let currentAudioPathEnd = masterEffectsBusInputNode;
     const masterEffectsState = localAppServices.getMasterEffects ? localAppServices.getMasterEffects() : [];
-    console.log(`[Audio rebuildMasterEffectChain] Master effects in state: ${masterEffectsState.length}`);
 
     masterEffectsState.forEach(effectState => {
         let effectNode = activeMasterEffectNodes.get(effectState.id);
@@ -176,7 +167,7 @@ export function rebuildMasterEffectChain() {
             effectNode = createEffectInstance(effectState.type, effectState.params);
             if (effectNode) {
                 activeMasterEffectNodes.set(effectState.id, effectNode);
-                console.log(`[Audio rebuildMasterEffectChain] Recreated master effect node for ${effectState.type} (ID: ${effectState.id}).`);
+
             } else {
                 console.error(`[Audio rebuildMasterEffectChain] Failed to recreate master effect node for ${effectState.type} (ID: ${effectState.id}). Skipping but continuing to next effect.`);
                 // Don't return — continue so subsequent effects still get connected through the chain
@@ -186,7 +177,7 @@ export function rebuildMasterEffectChain() {
 
         if (currentAudioPathEnd && !currentAudioPathEnd.disposed) {
             try {
-                console.log(`[Audio rebuildMasterEffectChain] Connecting ${currentAudioPathEnd.toString()} to ${effectNode.toString()} (${effectState.type})`);
+
                 currentAudioPathEnd.connect(effectNode);
                 currentAudioPathEnd = effectNode;
             } catch (e) {
@@ -202,7 +193,7 @@ export function rebuildMasterEffectChain() {
     // Connect the end of the effect chain to masterGainNodeActual
     if (currentAudioPathEnd && !currentAudioPathEnd.disposed && masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
-            console.log(`[Audio rebuildMasterEffectChain] Connecting end of master effect chain (${currentAudioPathEnd.toString()}) to masterGainNodeActual.`);
+
             currentAudioPathEnd.connect(masterGainNodeActual);
         } catch (e) {
             console.error(`[Audio rebuildMasterEffectChain] Error connecting master chain output to masterGainNodeActual:`, e);
@@ -212,7 +203,6 @@ export function rebuildMasterEffectChain() {
          if (!masterEffectsBusInputNode.numberOfOutputs && masterGainNodeActual && !masterGainNodeActual.disposed) { // If no effects, connect input directly
             try {
                 masterEffectsBusInputNode.connect(masterGainNodeActual);
-                console.log("[Audio rebuildMasterEffectChain] Connected masterEffectsBusInputNode directly to masterGainNodeActual (no effects).");
             } catch (e) {
                 console.error("[Audio rebuildMasterEffectChain] Error directly connecting masterEffectsBusInputNode to masterGainNodeActual:", e.message);
             }
@@ -222,7 +212,6 @@ export function rebuildMasterEffectChain() {
     // Connect masterGainNodeActual to destination and meter
     if (masterGainNodeActual && !masterGainNodeActual.disposed) {
         try {
-            console.log('[Audio rebuildMasterEffectChain] Connecting masterGainNodeActual to destination and meter.');
             masterGainNodeActual.toDestination(); // Connects to Tone.Destination (context.destination)
             if (masterMeterNode && !masterMeterNode.disposed) {
                 masterGainNodeActual.connect(masterMeterNode);
@@ -306,7 +295,7 @@ export function updateMasterEffectParamInAudio(effectId, paramPath, value) {
 }
 
 export function handleSidechainParamChangeForEffect(effectId, effectNode, sidechainValue) {
-    console.log(`[Audio handleSidechainParamChangeForEffect] Effect ${effectId}, sidechain setting: ${sidechainValue}`);
+
     if (sidechainValue === 'off') {
         disableSidechainFromMic();
         sidechainTrackAssignments.delete(effectId);
@@ -317,7 +306,7 @@ export function handleSidechainParamChangeForEffect(effectId, effectNode, sidech
         if (assignment && assignment.trackId) {
             enableSidechainFromTrackIn(assignment.trackId, effectNode);
         } else {
-            console.log(`[Audio handleSidechainParamChangeForEffect] track-in selected but no track assigned for effect ${effectId}. Will connect when track is chosen via enableSidechainFromTrackForEffect.`);
+
         }
     }
 }
@@ -580,7 +569,6 @@ async function commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHin
             `${trackTypeHint}-${sourceName.replace(/[^a-zA-Z0-9-_.]/g, '_')}`;
         const dbKey = `track-${track.id}-${dbKeySuffix}-${fileObject.size}-${fileObject.lastModified}`; // More unique key
         await storeAudio(dbKey, fileObject);
-        console.log(`[Audio commonLoadSampleLogic] Stored in DB with key: ${dbKey}`);
 
         const newAudioBuffer = await new Tone.Buffer().load(objectURLForTone);
 
@@ -719,7 +707,6 @@ export async function loadSampleFile(eventOrUrl, trackId, trackTypeHint, fileNam
         if (localAppServices.showNotification) localAppServices.showNotification(`Audio file "${sourceName}" is empty.`, 3000);
         return;
     }
-    console.log(`[Audio loadSampleFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track ${trackId} (${trackTypeHint})`);
     await commonLoadSampleLogic(fileObject, sourceName, track, trackTypeHint);
 }
 
@@ -788,7 +775,6 @@ export async function loadDrumSamplerPadFile(eventOrUrl, trackId, padIndex, file
         if (localAppServices.showNotification) localAppServices.showNotification(`Drum sample "${sourceName}" is empty.`, 3000);
         return;
     }
-    console.log(`[Audio loadDrumSamplerPadFile] Attempting to load "${sourceName}" (Type: ${fileObject.type}, Size: ${fileObject.size}) for track ${trackId}, pad ${padIndex}`);
     await commonLoadSampleLogic(fileObject, sourceName, track, 'DrumSampler', padIndex);
 }
 
@@ -833,8 +819,6 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
         const inferredMimeType = getMimeTypeFromFilename(fileName);
         const finalMimeType = fileBlobFromZip.type && fileBlobFromZip.type !== "application/octet-stream" ? fileBlobFromZip.type : inferredMimeType;
         const blobToLoad = new File([fileBlobFromZip], fileName, { type: finalMimeType });
-        console.log(`[Audio loadSoundFromBrowserToTarget] Blob created from ZIP: ${fileName}, Type: ${blobToLoad.type}, Size: ${blobToLoad.size}`);
-
 
         if (track.type === 'DrumSampler') {
             let actualPadIndex = targetPadOrSliceIndex;
@@ -843,7 +827,7 @@ export async function loadSoundFromBrowserToTarget(soundData, targetTrackId, tar
                 actualPadIndex = track.drumSamplerPads.findIndex(p => !p.dbKey && !p.originalFileName); // Find first truly empty
                 if (actualPadIndex === -1) actualPadIndex = track.selectedDrumPadForEdit; // Fallback to selected
                 if (typeof actualPadIndex !== 'number' || actualPadIndex < 0) actualPadIndex = 0; // Final fallback
-                console.log(`[Audio loadSoundFromBrowserToTarget] Adjusted pad index for DrumSampler to: ${actualPadIndex}`);
+
             }
             await commonLoadSampleLogic(blobToLoad, fileName, track, 'DrumSampler', actualPadIndex);
         } else { // Sampler or InstrumentSampler
@@ -862,13 +846,12 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
 
     const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-    console.log(`[Audio fetchSoundLibrary ENTRY] Library: ${libraryName}, URL: ${zipUrl}, Autofetch: ${isAutofetch}.`);
     if (loadedZips && typeof loadedZips === 'object') { // Ensure loadedZips is an object before keying
-        console.log(`[Audio fetchSoundLibrary ENTRY] Existing loadedZips keys:`, Object.keys(loadedZips), `Status for ${libraryName}:`, loadedZips[libraryName]);
+
     } else {
     }
     if (soundTrees && typeof soundTrees === 'object') {
-        console.log(`[Audio fetchSoundLibrary ENTRY] Existing soundTrees keys:`, Object.keys(soundTrees));
+
     } else {
     }
 
@@ -912,7 +895,7 @@ export async function fetchSoundLibrary(libraryName, zipUrl, isAutofetch = false
         const checkZipsAfterSet = localAppServices.getLoadedZipFiles ? localAppServices.getLoadedZipFiles() : {};
         const checkTreesAfterSet = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
         if (checkTreesAfterSet[libraryName]) {
-             console.log(`[Audio Fetch DEBUG] Verified tree for ${libraryName} in state has children count:`, Object.keys(checkTreesAfterSet[libraryName]).length);
+
         }
 
 
@@ -1435,10 +1418,8 @@ export function startContextSuspensionMonitoring(intervalMs = 3000) {
             console.warn(`[Audio ContextMonitor] Context suspended (count: ${contextSuspendedCount}). Attempting auto-resume...`);
             Tone.context.resume().then(() => {
                 if (Tone.context.state === 'running') {
-                    console.log('[Audio ContextMonitor] Context resumed successfully after suspension.');
                     // Re-initialize master bus components if they were disposed
                     if (masterEffectsBusInputNode?.disposed || masterGainNodeActual?.disposed || masterMeterNode?.disposed) {
-                        console.log('[Audio ContextMonitor] Master bus components disposed during suspension. Re-initializing...');
                         setupMasterBus();
                     }
                     // Emit a notification if this was a significant suspension
@@ -1457,7 +1438,6 @@ export function startContextSuspensionMonitoring(intervalMs = 3000) {
         } else if (currentState === 'running') {
             // Context is running — reset the suspension counter if we were previously suspended
             if (contextSuspendedCount > 0) {
-                console.log('[Audio ContextMonitor] Context running normally. Resetting suspension counter.');
                 contextSuspendedCount = 0;
             }
         }
@@ -1489,7 +1469,6 @@ export async function exportMixdownToWav(durationSeconds) {
     const wasPlaying = Tone.Transport.state === 'started';
     if (wasPlaying) {
         Tone.Transport.pause();
-        console.log('[Audio exportMixdownToWav] Transport paused.');
     }
 
     try {
@@ -1505,7 +1484,6 @@ export async function exportMixdownToWav(durationSeconds) {
 
         // Connect master gain to recorder
         masterGain.connect(recorder);
-        console.log('[Audio exportMixdownToWav] Recorder connected to master gain.');
 
         // Reset transport state
         Tone.Transport.position = 0;
@@ -1527,17 +1505,14 @@ export async function exportMixdownToWav(durationSeconds) {
 
         // Start recording and transport
         await recorder.start();
-        console.log('[Audio exportMixdownToWav] Recording started.');
 
         Tone.Transport.start();
-        console.log('[Audio exportMixdownToWav] Transport started.');
 
         // Wait for full duration
         await new Promise(resolve => setTimeout(resolve, safeDuration * 1000 + 500));
 
         // Stop recording
         const recording = await recorder.stop();
-        console.log('[Audio exportMixdownToWav] Recording stopped, size:', recording?.size);
 
         // Stop transport and cleanup
         Tone.Transport.stop();
@@ -1562,7 +1537,6 @@ export async function exportMixdownToWav(durationSeconds) {
         // Restore transport state
         if (wasPlaying) {
             Tone.Transport.start();
-            console.log('[Audio exportMixdownToWav] Transport resumed.');
         }
     }
 }
@@ -1580,7 +1554,6 @@ export async function exportMixdownToWav(durationSeconds) {
 //     const wasPlaying = Tone.Transport.state === 'started';
 //     if (wasPlaying) {
 //         Tone.Transport.pause();
-//         console.log('[Audio exportMixdownToWav] Transport paused for offline rendering.');
 //     }
 
 //     try {
@@ -1613,7 +1586,6 @@ export async function exportMixdownToWav(durationSeconds) {
 //         // Restore transport state
 //         if (wasPlaying) {
 //             Tone.Transport.start();
-//             console.log('[Audio exportMixdownToWav] Transport resumed.');
 //         }
 //     }
 // }
@@ -1682,7 +1654,6 @@ export function getSidechainBusInput() {
             try { sidechainBus.dispose(); } catch(e) {}
         }
         sidechainBus = new Tone.Gain(1);
-        console.log('[Audio getSidechainBusInput] Created sidechain bus input node.');
     }
     return sidechainBus;
 }
@@ -1693,7 +1664,6 @@ export async function enableSidechainFromMic(compressorNode) {
         return false;
     }
     if (micForSidechain && micForSidechain.state === 'started') {
-        console.log('[Audio enableSidechainFromMic] Mic already open for sidechain, connecting to compressor.');
         const bus = getSidechainBusInput();
         try { micForSidechain.connect(bus); } catch(e) {}
         try { bus.connect(compressorNode); } catch(e) {}
@@ -1708,7 +1678,6 @@ export async function enableSidechainFromMic(compressorNode) {
         const bus = getSidechainBusInput();
         try { micStream.connect(bus); } catch(e) {}
         try { bus.connect(compressorNode); } catch(e) {}
-        console.log('[Audio enableSidechainFromMic] Mic opened and routed to compressor for sidechain.');
         if (localAppServices.showNotification) {
             localAppServices.showNotification('Sidechain: Mic connected to compressor.', 2000);
         }
@@ -1727,7 +1696,6 @@ export function disableSidechainFromMic() {
         try { micForSidechain.disconnect(); } catch(e) {}
         try { micForSidechain.close(); } catch(e) {}
         micForSidechain = null;
-        console.log('[Audio disableSidechainFromMic] Mic disconnected from sidechain bus.');
     }
     if (sidechainBus) {
         try { sidechainBus.disconnect(); } catch(e) {}
@@ -1751,7 +1719,6 @@ export async function enableSidechainFromTrackIn(trackId, compressorNode) {
     const bus = getSidechainBusInput();
     try { track.inputChannel.connect(bus); } catch(e) {}
     try { bus.connect(compressorNode); } catch(e) {}
-    console.log(`[Audio enableSidechainFromTrackIn] Track ${track.name} input routed to compressor for sidechain.`);
     return true;
 }
 
@@ -1761,7 +1728,6 @@ export function disableSidechainBus() {
         try { sidechainBus.dispose(); } catch(e) {}
         sidechainBus = null;
     }
-    console.log('[Audio disableSidechainBus] Sidechain bus disposed.');
 }
 
 export function isMicOpenForSidechain() {

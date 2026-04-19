@@ -63,7 +63,6 @@ import {
 const uiElementsCache = {};
 
 function panicStopAllAudio() {
-    console.log("[AppServices] Panic Stop All Audio requested.");
 
     if (typeof Tone !== 'undefined') {
         Tone.Transport.stop();
@@ -117,11 +116,9 @@ function panicStopAllAudio() {
         });
     }
 
-    console.log("All audio and transport stopped via panic.");
     showSafeNotification("All audio stopped.", 1500);
 }
 
-// MODIFICATION: Refined Panic Stop Service
 // panicStopAllAudio is now defined above
 
 const appServices = {
@@ -258,7 +255,6 @@ const appServices = {
         if (fromInteraction && appServices.masterAutomationArmed) {
             const timeInSeconds = Tone.Transport.seconds;
             writeMasterVolumeAutomation(timeInSeconds, volumeValue);
-            console.log(`[Main] Master volume automation recorded at time ${timeInSeconds.toFixed(3)}s, value ${volumeValue.toFixed(3)}`);
         }
     },
     getMasterEffectsBus: () => {
@@ -345,7 +341,6 @@ const appServices = {
     },
     removeCustomDesktopBackground: removeCustomDesktopBackground,
     onPlaybackModeChange: (newMode) => {
-        console.log(`[Main appServices.onPlaybackModeChange] Called with newMode: ${newMode}`);
         if (uiElementsCache.playbackModeToggleBtnGlobal) {
             uiElementsCache.playbackModeToggleBtnGlobal.textContent = newMode === 'timeline' ? 'Mode: Timeline' : 'Mode: Sequencer';
             uiElementsCache.playbackModeToggleBtnGlobal.classList.toggle('active', newMode === 'timeline');
@@ -444,7 +439,6 @@ const appServices = {
     registerKnobForMidiCC: (targetId, knob, ownerType, ownerId, paramPath) => {
         if (typeof window._midiCCKnobRegistry === 'undefined') window._midiCCKnobRegistry = {};
         window._midiCCKnobRegistry[targetId] = { knob, ownerType, ownerId, paramPath };
-        console.log(`[MIDI CC] Registered knob: ${targetId} (${ownerType}:${ownerId}, param: ${paramPath})`);
     },
     unregisterKnobForMidiCC: (targetId) => {
         if (typeof window._midiCCKnobRegistry !== 'undefined') {
@@ -563,7 +557,6 @@ function handleTrackUIUpdate(trackId, reason, detail) {
 }
 
 async function initializeSnugOS() {
-    console.log("[Main initializeSnugOS] Initializing SnugOS...");
 
     try {
         // Cache UI elements - including the fixed global controls bar
@@ -625,19 +618,15 @@ async function initializeSnugOS() {
         // Add to cache
         Object.assign(uiElementsCache, globalElements);
         
-        // Direct event listener for Start button (backup)
         const startBtn = document.getElementById('startButton');
         const startMenu = document.getElementById('startMenu');
         if (startBtn && startMenu) {
             startBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 startMenu.classList.toggle('hidden');
-                console.log('[Main] Start button clicked, menu toggled');
             });
-            console.log('[Main] Direct start button listener attached');
         }
         
-        console.log("[Main initializeSnugOS] Global controls bar elements cached:", Object.keys(globalElements).filter(k => globalElements[k]));
 
         try {
             const effectsRegistry = await import('./effectsRegistry.js');
@@ -1052,7 +1041,6 @@ async function initializeSnugOS() {
         }
 
         showSafeNotification(`Welcome to SnugOS ${Constants.APP_VERSION}!`, 2500);
-        console.log(`[Main initializeSnugOS] SnugOS Version ${Constants.APP_VERSION} Initialized.`);
 
     } catch (initError) {
         console.error("CRITICAL ERROR during SnugOS Initialization:", initError);
@@ -1166,7 +1154,6 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 window.addEventListener('load', () => {
-    console.log('[Main] Window loaded, attaching direct start button listener...');
     const startBtn = document.getElementById('startButton');
     const startMenu = document.getElementById('startMenu');
     if (startBtn && startMenu) {
@@ -1174,9 +1161,7 @@ window.addEventListener('load', () => {
             e.stopPropagation();
             e.preventDefault();
             startMenu.classList.toggle('hidden');
-            console.log('[Main] Start button clicked via window.load listener');
         });
-        console.log('[Main] Direct start button listener attached via window.load');
     } else {
         console.error('[Main] Start button or menu not found');
     }
