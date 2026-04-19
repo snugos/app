@@ -172,10 +172,8 @@ export function initializePrimaryEventListeners(appContext) {
         };
 
         for (const menuItemId in menuActions) {
-            const element = uiCache[menuItemId];
-            if (element) {
-                console.log(`[Menu] Found: ${menuItemId}, attaching click listener`);
-                element.addEventListener('click', (e) => {
+            if (uiCache[menuItemId]) {
+                uiCache[menuItemId].addEventListener('click', (e) => {
                     e.stopPropagation();
                     console.log(`[Menu] CLICK FIRED: ${menuItemId}`);
                     menuActions[menuItemId]();
