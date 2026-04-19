@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.9.0"; // Day 11: Scale Mode - constrain sequencer notes to musical scales
+export const APP_VERSION = "0.10.0"; // Day 12: Velocity Editor - visual editing of note velocities in sequencer
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

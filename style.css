@@ -441,6 +441,37 @@ button.active { /* Generic active state for other toggles if needed */
     z-index: 5; 
 }
 
+/* --- Velocity Editor Lane --- */
+.velocity-editor-lane {
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.velocity-editor-lane.hidden {
+    display: none;
+}
+
+.velocity-cell {
+    background-color: #222222;
+    transition: background-color 0.1s ease;
+}
+
+.velocity-cell:hover {
+    background-color: #333333;
+}
+
+.velocity-bar {
+    background-color: #7c3aed;
+    border-radius: 2px;
+    min-height: 2px;
+    transition: height 0.05s ease, background-color 0.1s ease;
+}
+
+.velocity-cell:hover .velocity-bar {
+    background-color: #9f5afd;
+}
+
 /* --- Notification Area --- */
 #notification-area { /* ... unchanged ... */ }
 .notification-message { /* ... unchanged ... */ }

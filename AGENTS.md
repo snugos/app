@@ -219,6 +219,38 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: These debug statements were left over from development and were cluttering the console output in production. The MODIFICATION markers were no longer needed as the features are now permanent.
 - **Version**: 0.8.0 (no bump needed, this was a code cleanup)
 
+#### Day 12: Velocity Editor Feature (2026-04-19)
+- **Feature**: Added visual velocity editor to the sequencer for editing note velocities
+- **Files Modified**:
+  - `js/ui.js`:
+    - Modified `buildSequencerContentDOM()` to add:
+      - Velocity toggle checkbox in sequencer toolbar
+      - Velocity editor lane below the piano roll grid
+      - Velocity bars showing max velocity per column
+      - Velocity data attributes on cells (data-velocity, data-active)
+      - Visual opacity feedback based on velocity (0.5-1.0 opacity range)
+    - Added velocity editor event handlers in `openTrackSequencerWindow()`:
+      - Toggle visibility of velocity editor lane
+      - Click/drag on velocity bars to change velocity
+      - Updates cell visuals in real-time during drag
+      - Captures undo state before velocity changes
+      - Recreates Tone sequence after editing to apply changes
+  - `style.css`: Added velocity editor styling:
+    - `.velocity-editor-lane` - container styling
+    - `.velocity-cell` - individual velocity bar cells
+    - `.velocity-bar` - the actual velocity bar indicator
+    - Hover effects and transitions
+  - `js/constants.js`: Bumped APP_VERSION to 0.10.0
+- **Feature Details**:
+  - Velocity Toggle: "Velocity" checkbox in sequencer toolbar to show/hide velocity editor
+  - Visual Bars: Height represents maximum velocity of active notes in each column
+  - Click/Drag Editing: Drag up/down on bars to change velocity (affects all active notes in that column)
+  - Visual Feedback: Note cells show opacity based on velocity (brighter = higher velocity)
+  - Tooltips: Cells show velocity value (0-127) in tooltip
+  - Undo Support: Velocity changes are captured for undo/redo
+- **Usage**: Open sequencer for any track, click "Velocity" checkbox in toolbar, drag on velocity bars to edit velocities
+- **Version**: Bumped to 0.10.0
+
 ## Code Style Guidelines
 
 ### Module Structure
