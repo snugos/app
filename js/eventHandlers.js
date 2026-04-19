@@ -102,33 +102,84 @@ export function initializePrimaryEventListeners(appContext) {
         }
 
         const menuActions = {
-            menuAddSynthTrack: () => services.addTrack?.('Synth', {_isUserActionPlaceholder: true}),
-            menuAddSamplerTrack: () => services.addTrack?.('Sampler', {_isUserActionPlaceholder: true}),
-            menuAddDrumSamplerTrack: () => services.addTrack?.('DrumSampler', {_isUserActionPlaceholder: true}),
-            menuAddInstrumentSamplerTrack: () => services.addTrack?.('InstrumentSampler', {_isUserActionPlaceholder: true}),
-            menuAddAudioTrack: () => services.addTrack?.('Audio', {_isUserActionPlaceholder: true}),
-            menuOpenSoundBrowser: () => services.openSoundBrowserWindow?.(),
-            menuOpenTimeline: () => services.openTimelineWindow?.(),
-            menuOpenGlobalControls: () => services.openGlobalControlsWindow?.(),
-            menuOpenMixer: () => services.openMixerWindow?.(),
-            menuOpenMasterEffects: () => services.openMasterEffectsRackWindow?.(),
-            menuUndo: () => services.undoLastAction?.(),
-            menuRedo: () => services.redoLastAction?.(),
-            menuSaveProject: () => services.saveProject?.(),
-            menuLoadProject: () => services.loadProject?.(),
-            menuExportWav: () => services.exportToWav?.(),
-            menuToggleFullScreen: toggleFullScreen,
+            menuAddSynthTrack: () => {
+                console.log('[Menu] Add Synth Track clicked');
+                try {
+                    services.addTrack?.('Synth', {_isUserActionPlaceholder: true});
+                } catch(e) { console.error('[Menu] Add Synth Track error:', e); }
+            },
+            menuAddSamplerTrack: () => {
+                console.log('[Menu] Add Sampler Track clicked');
+                try {
+                    services.addTrack?.('Sampler', {_isUserActionPlaceholder: true});
+                } catch(e) { console.error('[Menu] Add Sampler error:', e); }
+            },
+            menuAddDrumSamplerTrack: () => {
+                console.log('[Menu] Add Drum Sampler clicked');
+                try {
+                    services.addTrack?.('DrumSampler', {_isUserActionPlaceholder: true});
+                } catch(e) { console.error('[Menu] Drum Sampler error:', e); }
+            },
+            menuAddInstrumentSamplerTrack: () => {
+                console.log('[Menu] Add Instrument Sampler clicked');
+                try {
+                    services.addTrack?.('InstrumentSampler', {_isUserActionPlaceholder: true});
+                } catch(e) { console.error('[Menu] Instrument Sampler error:', e); }
+            },
+            menuAddAudioTrack: () => {
+                console.log('[Menu] Add Audio Track clicked');
+                try {
+                    services.addTrack?.('Audio', {_isUserActionPlaceholder: true});
+                } catch(e) { console.error('[Menu] Audio Track error:', e); }
+            },
+            menuOpenSoundBrowser: () => {
+                console.log('[Menu] Sound Browser clicked');
+                try {
+                    services.openSoundBrowserWindow?.();
+                } catch(e) { console.error('[Menu] Sound Browser error:', e); }
+            },
+            menuOpenTimeline: () => {
+                console.log('[Menu] Timeline clicked');
+                try {
+                    services.openTimelineWindow?.();
+                } catch(e) { console.error('[Menu] Timeline error:', e); }
+            },
+            menuOpenGlobalControls: () => {
+                console.log('[Menu] Global Controls clicked');
+                try {
+                    services.openGlobalControlsWindow?.();
+                } catch(e) { console.error('[Menu] Global Controls error:', e); }
+            },
+            menuOpenMixer: () => {
+                console.log('[Menu] Mixer clicked');
+                try {
+                    services.openMixerWindow?.();
+                } catch(e) { console.error('[Menu] Mixer error:', e); }
+            },
+            menuOpenMasterEffects: () => {
+                console.log('[Menu] Master Effects clicked');
+                try {
+                    services.openMasterEffectsRackWindow?.();
+                } catch(e) { console.error('[Menu] Master Effects error:', e); }
+            },
+            menuUndo: () => { console.log('[Menu] Undo clicked'); services.undoLastAction?.(); },
+            menuRedo: () => { console.log('[Menu] Redo clicked'); services.redoLastAction?.(); },
+            menuSaveProject: () => { console.log('[Menu] Save clicked'); services.saveProject?.(); },
+            menuLoadProject: () => { console.log('[Menu] Load clicked'); services.loadProject?.(); },
+            menuExportWav: () => { console.log('[Menu] Export clicked'); services.exportToWav?.(); },
+            menuToggleFullScreen: () => { console.log('[Menu] Fullscreen clicked'); toggleFullScreen(); },
             menuTetris: () => window.open("https://snugos.github.io/app/tetris.html", "_blank"),
         };
 
         for (const menuItemId in menuActions) {
             if (uiCache[menuItemId]) {
+                console.log(`[Menu] Attaching listener to: ${menuItemId}`);
                 uiCache[menuItemId].addEventListener('click', () => {
                     menuActions[menuItemId]();
                     if (uiCache.startMenu) uiCache.startMenu.classList.add('hidden');
                 });
             } else {
-                console.log(`[Menu] Element not found: ${menuItemId}`);
+                console.warn(`[Menu] Element NOT found: ${menuItemId}`);
             }
         }
 
