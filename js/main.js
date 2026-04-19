@@ -279,7 +279,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true,
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true,
     
     // State getters - exposed for UI and other modules
     getTracks: getTracksState,
@@ -567,6 +567,18 @@ async function initializeSnugOS() {
         
         // Add to cache
         Object.assign(uiElementsCache, globalElements);
+        
+        // Direct event listener for Start button (backup)
+        const startBtn = document.getElementById('startButton');
+        const startMenu = document.getElementById('startMenu');
+        if (startBtn && startMenu) {
+            startBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                startMenu.classList.toggle('hidden');
+                console.log('[Main] Start button clicked, menu toggled');
+            });
+            console.log('[Main] Direct start button listener attached');
+        }
         
         console.log("[Main initializeSnugOS] Global controls bar elements cached:", Object.keys(globalElements).filter(k => globalElements[k]));
 
