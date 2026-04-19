@@ -912,12 +912,15 @@ export class Track {
     }
 
     setDrumSamplerPadVolume(padIndex, volume) {
+        this._captureUndoState(`Set pad ${padIndex+1} volume on ${this.name}`);
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex]) this.drumSamplerPads[padIndex].volume = parseFloat(volume);
     }
     setDrumSamplerPadPitch(padIndex, pitch) {
+        this._captureUndoState(`Set pad ${padIndex+1} pitch on ${this.name}`);
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex]) this.drumSamplerPads[padIndex].pitchShift = parseInt(pitch);
     }
     setDrumSamplerPadEnv(padIndex, param, value) {
+        this._captureUndoState(`Set pad ${padIndex+1} envelope on ${this.name}`);
         if (this.drumSamplerPads && this.drumSamplerPads[padIndex] && this.drumSamplerPads[padIndex].envelope) {
             this.drumSamplerPads[padIndex].envelope[param] = parseFloat(value);
         }
@@ -1724,7 +1727,7 @@ export class Track {
                                 URL.revokeObjectURL(url);
                                 const destNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
                                     ? this.activeEffects[0].toneNode
-                                    : (this.gainNode && !this.gainNode.disposed ? this.gainNode : null);
+                                    : (this.gainNode || null);
                                 if (destNode) player.connect(destNode); else player.toDestination();
                                 player.start(effectivePlayStart, offsetIntoSource, playDurationInWindow);
                             };
