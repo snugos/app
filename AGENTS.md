@@ -88,6 +88,13 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Removed debug code that checked for undefined `getLoadedZipFilesState` (function wasn't imported)
 - **Impact**: The missing `clipId` bug would cause sequence clips to have undefined IDs, breaking clip management. The undo state timing fixes ensure undo works correctly by capturing state before modifications.
 
+#### Day 7 cont: Additional Undo/Redo Coverage (2026-04-19)
+- **Feature**: Added missing undo state capture to `loadSampleToPad` and `reorderMasterEffectInState`
+- **Files Modified**:
+  - `js/Track.js`: Added `_captureUndoState` at start of `loadSampleToPad()` method
+  - `js/state.js`: Added `_captureUndoState` call to `reorderMasterEffectInState()` before array splice
+- **Version**: Bumped to 0.7.2
+
 ### Incomplete Features (Priority Order)
 
 1. **Recording**: End-to-end test with real microphone
