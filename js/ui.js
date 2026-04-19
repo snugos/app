@@ -32,7 +32,6 @@ let sequencerViewMode = 'step';
 
 export function toggleSequencerViewMode() {
     sequencerViewMode = sequencerViewMode === 'step' ? 'piano' : 'step';
-    console.log(`[UI] Sequencer view mode switched to: ${sequencerViewMode}`);
     // Refresh the active sequencer window if one is open
     const armed = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
     if (armed && localAppServices.openTrackSequencerWindow) {
@@ -58,14 +57,11 @@ export function initializeUIModule(appServicesFromMain) {
 
     if (!localAppServices.getSelectedSoundForPreview) {
         console.log('[UI Init] getSelectedSoundForPreview service not found in appServices, wiring locally.');
-        localAppServices.getSelectedSoundForPreview = () => selectedSoundForPreviewData;
     }
     if (!localAppServices.setSelectedSoundForPreview) {
         console.log('[UI Init] setSelectedSoundForPreview service not found in appServices, wiring locally.');
-        localAppServices.setSelectedSoundForPreview = (data) => {
             console.log('[UI setSelectedSoundForPreview] Setting selected sound data:', JSON.stringify(data));
             selectedSoundForPreviewData = data;
-        };
     }
 
     if (!localAppServices.effectsRegistryAccess) {
@@ -938,10 +934,6 @@ function showAddEffectModal(owner, ownerType) {
     let modalContentHTML = `<div class="max-h-60 overflow-y-auto"><ul class="list-none p-0 m-0">`;
     const AVAILABLE_EFFECTS_LOCAL = ((localAppServices.effectsRegistryAccess) && (localAppServices.effectsRegistryAccess).AVAILABLE_EFFECTS) || {};
     
-    // DEBUG: Log what we're getting
-    console.log('[showAddEffectModal] effectsRegistryAccess:', localAppServices.effectsRegistryAccess);
-    console.log('[showAddEffectModal] AVAILABLE_EFFECTS_LOCAL keys:', Object.keys(AVAILABLE_EFFECTS_LOCAL));
-    console.log('[showAddEffectModal] AVAILABLE_EFFECTS_LOCAL length:', Object.keys(AVAILABLE_EFFECTS_LOCAL).length);
     
     for (const effectKey in AVAILABLE_EFFECTS_LOCAL) { modalContentHTML += `<li class="p-1.5 hover:bg-purple-200 dark:hover:bg-purple-600 cursor-pointer border-b dark:border-slate-600 text-sm dark:text-slate-200" data-effect-type="${effectKey}">${AVAILABLE_EFFECTS_LOCAL[effectKey].displayName}</li>`; }
     modalContentHTML += `</ul></div>`;
@@ -1285,8 +1277,6 @@ export function openSoundBrowserWindow(savedState = null) {
             const currentLibNameFromState = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : null;
             const soundTrees = localAppServices.getSoundLibraryFileTrees ? localAppServices.getSoundLibraryFileTrees() : {};
 
-            console.log(`[UI SoundBrowser Open DEBUG] Initial Global State Check. currentLibNameFromState: ${currentLibNameFromState}. soundTrees keys: ${soundTrees ? Object.keys(soundTrees) : 'undefined'}. soundTrees[Drums] exists: ${soundTrees ? !!soundTrees["Drums"] : 'false'}`);
-            console.log(`[UI SoundBrowser Open] Initial check. Current lib in state: ${currentLibNameFromState}, Dropdown value: ${((libSelect) && (libSelect).value)}`);
 
             if (currentLibNameFromState && soundTrees && soundTrees[currentLibNameFromState] && libSelect) {
                 console.log(`[UI SoundBrowser Open] State has current library '${currentLibNameFromState}' with loaded data. Setting dropdown and updating UI.`);
@@ -1498,13 +1488,6 @@ export function renderSoundBrowserDirectoryFiltered(pathArray, treeNode, searchQ
                 listItem.addEventListener('click', () => {
                     listDiv.querySelectorAll('.bg-blue-200,.dark\\\\:\\\\:bg-purple-500').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-purple-500'));
                     listItem.classList.add('bg-blue-200', 'dark:bg-purple-500');
-                    console.log('[UI SoundFile Click] Sound selected:', JSON.stringify(soundToSelect));
-                    if (localAppServices.setSelectedSoundForPreview) {
-                        localAppServices.setSelectedSoundForPreview(soundToSelect);
-                        const checkSelected = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : { error: 'getSelectedSoundForPreview service not found' };
-                        console.log('[UI SoundFile Click] State after setSelectedSoundForPreview (via getter):', JSON.stringify(checkSelected));
-                    } else {
-                        console.warn('[UI SoundFile Click] setSelectedSoundForPreview service not available.');
                     }
                     if(previewBtn) previewBtn.disabled = false;
                 });
