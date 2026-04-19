@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.10.1"; // Day 12 cont: Fixed syntax error in ui.js sequencer context menu
+export const APP_VERSION = "0.11.0"; // Day 14: Loop Region UI and Keyboard Shortcut
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

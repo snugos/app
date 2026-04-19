@@ -283,6 +283,29 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructing` flag is correctly checked during project load/reconstruction operations.
 - **Version**: No bump needed (bug fix)
 
+#### Day 14: Loop Region UI Implementation (2026-04-19)
+- **Feature**: Implemented complete Loop Region UI controls with visual overlay and keyboard shortcut
+- **Files Modified**:
+  - `js/ui.js`: Modified `renderTimeline()` to add:
+    - Loop region controls toolbar (toggle checkbox, start bar input, end bar input)
+    - Visual loop region overlay in timeline ruler (green highlighted area)
+    - Event handlers for loop toggle, start bar, and end bar inputs
+    - Real-time re-render when loop settings change
+  - `js/eventHandlers.js`: 
+    - Added 'L' keyboard shortcut to toggle loop region
+    - Modified play button handler to call `updateLoopRegion()` before starting playback
+  - `js/constants.js`: Bumped APP_VERSION to 0.11.0
+- **Feature Details**:
+  - Loop Toggle: Checkbox to enable/disable loop region
+  - Start Bar Input: Set the first bar of the loop (1-indexed)
+  - End Bar Input: Set the last bar of the loop (1-indexed)
+  - Visual Overlay: Green highlighted area in timeline ruler showing loop range
+  - L Keyboard Shortcut: Toggle loop region on/off
+  - Persistence: Loop region settings are already saved/loaded via existing state management
+- **Backend Note**: The loop region state management (`getLoopRegionState`, `setLoopRegionEnabled`, etc.) and `updateLoopRegion()` function were already implemented in `js/state.js` and `js/main.js` but lacked UI controls
+- **Usage**: Open Timeline window, use Loop controls in toolbar, or press L to toggle loop
+- **Version**: Bumped to 0.11.0
+
 ## Code Style Guidelines
 
 ### Module Structure

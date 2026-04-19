@@ -1536,7 +1536,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
             const menuItems = [
                 { label: `Copy "${currentActiveSeq.name}"`, action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentActiveSeq.data || [])), sequenceLength: currentActiveSeq.length }); showNotification(`Sequence "${currentActiveSeq.name}" copied.`, 2000); } } },
-                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } },
+                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
                 { separator: true },
                 { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
                 { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } },
@@ -2179,11 +2179,44 @@ export function renderTimeline() {
     const pixelsPerBar = beatWidth * 4; // 4 beats per bar
     const totalWidth = pixelsPerBar * totalBars;
     
-    // Create time ruler
-    let rulerHTML = '<div class="timeline-ruler" style="height:30px;background:#2a2a2a;display:flex;align-items:flex-end;border-bottom:1px solid #444;">';
+    // Get loop region state
+    const loopRegion = localAppServices.getLoopRegionState ? localAppServices.getLoopRegionState() : Constants.DEFAULT_LOOP_REGION;
+    
+    // Create loop region controls
+    let loopControlsHTML = `
+        <div class="loop-region-controls flex items-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700">
+            <label class="flex items-center gap-1 text-xs text-zinc-300 cursor-pointer">
+                <input type="checkbox" id="loopRegionToggle" class="w-4 h-4 accent-green-500" ${loopRegion.enabled ? 'checked' : ''}>
+                <span>Loop</span>
+            </label>
+            <div class="flex items-center gap-1 text-xs text-zinc-400">
+                <span>Start:</span>
+                <input type="number" id="loopStartBar" min="1" max="${Constants.MAX_BARS}" value="${loopRegion.startBar}" 
+                    class="w-14 px-1 py-0.5 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-center">
+            </div>
+            <div class="flex items-center gap-1 text-xs text-zinc-400">
+                <span>End:</span>
+                <input type="number" id="loopEndBar" min="1" max="${Constants.MAX_BARS}" value="${loopRegion.endBar}" 
+                    class="w-14 px-1 py-0.5 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-center">
+            </div>
+            <span class="text-xs text-zinc-500 ml-2">Press L to toggle loop</span>
+        </div>
+    `;
+    
+    // Create time ruler with loop region overlay
+    let rulerHTML = '<div class="timeline-ruler" style="height:30px;background:#2a2a2a;display:flex;align-items:flex-end;border-bottom:1px solid #444;position:relative;overflow:hidden;">';
+    
+    // Loop region overlay (visual highlight)
+    if (loopRegion.enabled) {
+        const loopStartX = (loopRegion.startBar - 1) * pixelsPerBar;
+        const loopEndX = loopRegion.endBar * pixelsPerBar;
+        const loopWidth = loopEndX - loopStartX;
+        rulerHTML += `<div class="loop-region-overlay" style="position:absolute;top:0;left:${loopStartX}px;width:${loopWidth}px;height:100%;background:rgba(34,197,94,0.2);border-left:2px solid #22c55e;border-right:2px solid #22c55e;z-index:1;"></div>`;
+    }
+    
     for (let bar = 0; bar < totalBars; bar++) {
-        rulerHTML += `<div class="timeline-bar-marker" style="position:absolute;left:${bar * pixelsPerBar}px;height:100%;border-left:1px solid #666;"></div>`;
-        rulerHTML += `<span style="position:absolute;left:${bar * pixelsPerBar + 4}px;font-size:10px;color:#aaa;">${bar + 1}</span>`;
+        rulerHTML += `<div class="timeline-bar-marker" style="position:absolute;left:${bar * pixelsPerBar}px;height:100%;border-left:1px solid #666;z-index:2;"></div>`;
+        rulerHTML += `<span style="position:absolute;left:${bar * pixelsPerBar + 4}px;font-size:10px;color:#aaa;z-index:3;">${bar + 1}</span>`;
     }
     rulerHTML += '</div>';
     
@@ -2213,6 +2246,7 @@ export function renderTimeline() {
     const playheadHTML = `<div id="timelinePlayhead" style="position:absolute;top:0;left:0;width:2px;height:100%;background:#ff4444;z-index:10;pointer-events:none;"></div>`;
     
     contentDiv.innerHTML = `<div class="timeline-container" style="display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;">
+        ${loopControlsHTML}
         ${rulerHTML}
         <div class="timeline-tracks" style="flex:1;position:relative;overflow:auto;">${lanesHTML}${playheadHTML}</div>
     </div>`;
@@ -2225,6 +2259,49 @@ export function renderTimeline() {
             showNotification(`Selected clip: ${clipId}`, 1500);
         });
     });
+    
+    // Add loop region control handlers
+    const loopToggle = contentDiv.querySelector('#loopRegionToggle');
+    const loopStartInput = contentDiv.querySelector('#loopStartBar');
+    const loopEndInput = contentDiv.querySelector('#loopEndBar');
+    
+    if (loopToggle) {
+        loopToggle.addEventListener('change', (e) => {
+            if (localAppServices.setLoopRegionEnabled) {
+                localAppServices.setLoopRegionEnabled(e.target.checked);
+                if (localAppServices.updateLoopRegion) {
+                    localAppServices.updateLoopRegion();
+                }
+                renderTimeline(); // Refresh to show/hide overlay
+            }
+        });
+    }
+    
+    if (loopStartInput) {
+        loopStartInput.addEventListener('change', (e) => {
+            const val = parseInt(e.target.value) || 1;
+            if (localAppServices.setLoopRegionStartBar) {
+                localAppServices.setLoopRegionStartBar(val);
+                if (localAppServices.updateLoopRegion) {
+                    localAppServices.updateLoopRegion();
+                }
+                renderTimeline();
+            }
+        });
+    }
+    
+    if (loopEndInput) {
+        loopEndInput.addEventListener('change', (e) => {
+            const val = parseInt(e.target.value) || 4;
+            if (localAppServices.setLoopRegionEndBar) {
+                localAppServices.setLoopRegionEndBar(val);
+                if (localAppServices.updateLoopRegion) {
+                    localAppServices.updateLoopRegion();
+                }
+                renderTimeline();
+            }
+        });
+    }
     
     console.log('[UI renderTimeline] Timeline rendered with', tracks.length, 'tracks');
 }

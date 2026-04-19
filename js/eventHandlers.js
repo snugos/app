@@ -290,10 +290,16 @@ export function attachGlobalControlEvents(elements) {
                     if (!wasPaused) transport.position = 0;
 
                     console.log(`[EventHandlers Play/Resume] Starting/Resuming from ${startTime.toFixed(2)}s.`);
-                    transport.loop = true; 
-                    transport.loopStart = 0;
-                    transport.loopEnd = 3600; 
-
+                    
+                    // Apply loop region settings before starting playback
+                    if (localAppServices.updateLoopRegion) {
+                        localAppServices.updateLoopRegion();
+                    } else {
+                        // Fallback if updateLoopRegion not available
+                        transport.loop = true; 
+                        transport.loopStart = 0;
+                        transport.loopEnd = 3600;
+                    }
                     if (!silentKeepAliveBuffer && Tone.context) {
                         try {
                             silentKeepAliveBuffer = Tone.context.createBuffer(1, 1, Tone.context.sampleRate);
@@ -556,7 +562,7 @@ export function selectMIDIInput(deviceId, silent = false) {
                 });
             } else {
                 if (localAppServices.setActiveMIDIInput) localAppServices.setActiveMIDIInput(null);
-                if (!silent && localAppServices.showNotification) localAppServices.showNotification("Selected MIDI input not found.", 2000);
+                if (!silent && deviceId !== "" && localAppServices.showNotification) showNotification("Selected MIDI input not found.", 2000);
                 console.warn(`[MIDI] Input with ID ${deviceId} not found.`);
             }
         } else {
