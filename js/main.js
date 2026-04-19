@@ -1108,4 +1108,22 @@ window.addEventListener('beforeunload', (e) => {
     }
 });
 
+window.addEventListener('load', () => {
+    console.log('[Main] Window loaded, attaching direct start button listener...');
+    const startBtn = document.getElementById('startButton');
+    const startMenu = document.getElementById('startMenu');
+    if (startBtn && startMenu) {
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            startMenu.classList.toggle('hidden');
+            console.log('[Main] Start button clicked via window.load listener');
+        });
+        console.log('[Main] Direct start button listener attached via window.load');
+    } else {
+        console.error('[Main] Start button or menu not found');
+    }
+});
+
 console.log(`SCRIPT EXECUTION FINISHED - SnugOS (main.js - Version ${Constants.APP_VERSION})`);
+window._snugOSMainLoaded = true;
