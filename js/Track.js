@@ -1155,6 +1155,7 @@ export class Track {
         }
     }
     setInstrumentSamplerLoop(loop) {
+        this._captureUndoState(`Toggle loop on ${this.name}`);
         if (this.instrumentSamplerSettings) {
             this.instrumentSamplerSettings.loop = !!loop;
             if (this.toneSampler && !this.toneSampler.disposed) this.toneSampler.loop = this.instrumentSamplerSettings.loop;
