@@ -25,6 +25,10 @@ let metronomeInitialized = false;
 let mic = null;
 let recorder = null;
 
+// Send Bus Audio Nodes
+let sendBusNodes = new Map(); // Map: sendId -> { inputGain, effectsChain, outputGain }
+let trackSendNodes = new Map(); // Map: trackId -> { sendId: sendGainNode }
+
 
 export function initializeAudioModule(appServicesFromMain) {
     localAppServices = appServicesFromMain;
@@ -958,7 +962,7 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
     // Ensure previous instances are robustly closed and disposed
     if (mic) {
         if (mic.state === "started") {
-            catch (e) { console.warn("[Audio startAudioRecording] Error closing existing mic:", e.message); }
+            try { mic.close(); } catch(e) { console.warn("[Audio startAudioRecording] Error closing existing mic:", e.message); }
         }
         // Tone.UserMedia objects don't have a standard dispose method in the same way other Tone nodes do
         mic = null;
@@ -966,10 +970,10 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
 
     if (recorder) {
         if (recorder.state === "started") {
-            catch (e) { console.warn("[Audio startAudioRecording] Error stopping existing recorder:", e.message); }
+            try { recorder.stop(); } catch(e) { console.warn("[Audio startAudioRecording] Error stopping existing recorder:", e.message); }
         }
         if (!recorder.disposed) {
-            catch (e) { console.warn("[Audio startAudioRecording] Error disposing existing recorder:", e.message); }
+            try { recorder.dispose(); } catch(e) { console.warn("[Audio startAudioRecording] Error disposing existing recorder:", e.message); }
         }
         recorder = null;
     }
@@ -1031,14 +1035,10 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         if (localAppServices.showNotification) localAppServices.showNotification(userMessage, 6000);
 
         // Cleanup on error
-        if (mic) {
-            if (mic.state === "started") try { mic.close(); } catch(e) { console.warn("Cleanup error closing mic:", e.message); }
-            mic = null;
+        if (mic && mic.state === "started") {
+            try { mic.close(); } catch(e) { console.warn("[Audio stopAudioRecording] Error closing mic (recorder null):", e.message); }
         }
-        if (recorder) {
-            if (!recorder.disposed) try { recorder.dispose(); } catch(e) { console.warn("Cleanup error disposing recorder:", e.message); }
-            recorder = null;
-        }
+        mic = null;
         return false;
     }
 }
