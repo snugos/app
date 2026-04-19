@@ -908,6 +908,7 @@ export class Track {
     }
 
     setPan(panValue, fromInteraction = false) {
+        this._captureUndoState(`Set pan on ${this.name}`);
         const clampedPan = Math.max(-1, Math.min(parseFloat(panValue) || 0, 1));
         this.panValue = clampedPan;
         if (this.panNode && !this.panNode.disposed) {
