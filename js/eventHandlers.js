@@ -351,7 +351,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -1553,7 +1553,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -2755,7 +2755,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -3957,7 +3957,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -5159,7 +5159,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -6361,7 +6361,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -7563,7 +7563,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -8765,7 +8765,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -9967,7 +9967,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -11169,7 +11169,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
@@ -12515,7 +12515,7 @@ export function attachGlobalControlEvents(elements) {
                     const metronomeOn = isMetronomeEnabled();
 
                     // Helper function to actually start playback
-                    const doStartPlayback = () => {
+                    const doStartPlayback = async () => {
                         transport.loop = true; 
                         transport.loopStart = 0;
                         transport.loopEnd = 3600; 
