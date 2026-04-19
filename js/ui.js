@@ -396,7 +396,7 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
         initialValue: padData.volume ?? 0.7,
         decimals: 2,
         trackRef: track,
-        onValueChange: (val) => track.setDrumPadVolume(selectedPadIndex, val)
+        onValueChange: (val) => track.setDrumSamplerPadVolume(selectedPadIndex, val)
     });
     
     track.inspectorControls.drumPadPitch = createAndPlaceKnob(`drumPadPitchKnob-${track.id}-placeholder`, {
@@ -406,7 +406,7 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
         decimals: 0,
         displaySuffix: 'st',
         trackRef: track,
-        onValueChange: (val) => track.setDrumPadPitch(selectedPadIndex, val)
+        onValueChange: (val) => track.setDrumSamplerPadPitch(selectedPadIndex, val)
     });
     
     track.inspectorControls.drumPadEnvAttack = createAndPlaceKnob(`drumPadEnvAttack-${track.id}-placeholder`, {
@@ -415,7 +415,7 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
         initialValue: env.attack,
         decimals: 3,
         trackRef: track,
-        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'attack', val)
+        onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'attack', val)
     });
     
     track.inspectorControls.drumPadEnvDecay = createAndPlaceKnob(`drumPadEnvDecay-${track.id}-placeholder`, {
@@ -424,7 +424,7 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
         initialValue: env.decay,
         decimals: 2,
         trackRef: track,
-        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'decay', val)
+        onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'decay', val)
     });
     
     track.inspectorControls.drumPadEnvSustain = createAndPlaceKnob(`drumPadEnvSustain-${track.id}-placeholder`, {
@@ -433,7 +433,7 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
         initialValue: env.sustain,
         decimals: 2,
         trackRef: track,
-        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'sustain', val)
+        onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'sustain', val)
     });
     
     track.inspectorControls.drumPadEnvRelease = createAndPlaceKnob(`drumPadEnvRelease-${track.id}-placeholder`, {
@@ -442,7 +442,7 @@ function initializeDrumSamplerSpecificControls(track, winEl) {
         initialValue: env.release,
         decimals: 2,
         trackRef: track,
-        onValueChange: (val) => track.setDrumPadEnvelope(selectedPadIndex, 'release', val)
+        onValueChange: (val) => track.setDrumSamplerPadEnv(selectedPadIndex, 'release', val)
     });
     
     // Then render the pads and update the UI
@@ -727,19 +727,32 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
     } else {
         effectDef.params.forEach(paramDef => {
             const controlWrapper = document.createElement('div');
-            let initialValue; const pathKeys = paramDef.key.split('.'); let tempVal = effectWrapper.params;
-            for (const key of pathKeys) { if (tempVal && typeof tempVal === 'object' && key in tempVal) tempVal = tempVal[key]; else { tempVal = undefined; break; } }
-            initialValue = (tempVal !== undefined) ? tempVal : paramDef.defaultValue;
+            let initialValue;
+            const pathKeys = paramDef.key.split('.');
+            let currentValObj = effectWrapper.params;
+            for (const key of pathKeys) {
+                if (currentValObj && typeof currentValObj === 'object' && key in currentValObj) {
+                    currentValObj = currentValObj[key];
+                } else {
+                    currentValObj = undefined;
+                    break;
+                }
+            }
+            initialValue = (currentValObj !== undefined) ? currentValObj : paramDef.defaultValue;
 
             if (paramDef.type === 'knob') {
                 const knob = createKnob({ label: paramDef.label, min: paramDef.min, max: paramDef.max, step: paramDef.step, initialValue: initialValue, decimals: paramDef.decimals, displaySuffix: paramDef.displaySuffix, trackRef: (ownerType === 'track' ? owner : null), onValueChange: (val) => { if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, val); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, val); } });
                 controlWrapper.appendChild(knob.element);
             } else if (paramDef.type === 'select') {
-                const label = document.createElement('label'); label.className = 'block text-xs font-medium mb-0.5 dark:text-slate-300'; label.textContent = paramDef.label + ':';
-                const select = document.createElement('select'); select.className = 'w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-600';
+                const label = document.createElement('label');
+                label.className = 'block text-xs font-medium mb-0.5 dark:text-slate-300';
+                label.textContent = paramDef.label + ':';
+                const select = document.createElement('select');
+                select.className = 'w-full p-1 border rounded text-xs bg-gray-50 dark:bg-slate-600 dark:text-slate-200 dark:border-slate-600';
                 paramDef.options.forEach(opt => {
                     const option = document.createElement('option');
-                    option.value = typeof opt === 'object' ? opt.value : opt; option.textContent = typeof opt === 'object' ? opt.text : opt;
+                    option.value = typeof opt === 'object' ? opt.value : opt;
+                    option.textContent = typeof opt === 'object' ? opt.text : opt;
                     select.appendChild(option);
                 });
                 select.value = initialValue;
@@ -747,9 +760,11 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                     const newValue = e.target.value;
                     const finalValue = (typeof paramDef.defaultValue === 'number' && !isNaN(parseFloat(newValue))) ? parseFloat(newValue) : newValue;
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Change ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
-                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, finalValue); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, finalValue);
+                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, finalValue);
+                    else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, finalValue);
                 });
-                controlWrapper.appendChild(label); controlWrapper.appendChild(select);
+                controlWrapper.appendChild(label);
+                controlWrapper.appendChild(select);
             } else if (paramDef.type === 'toggle') {
                 const button = document.createElement('button');
                 button.className = `w-full p-1 border rounded text-xs dark:border-slate-500 dark:text-slate-300 ${initialValue ? 'bg-purple-400 text-white dark:bg-purple-500' : 'bg-gray-200 dark:bg-slate-600'}`;
@@ -757,7 +772,8 @@ export function renderEffectControls(owner, ownerType, effectId, controlsContain
                 button.addEventListener('click', () => {
                     const newValue = !initialValue;
                     if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Toggle ${paramDef.label} for ${effectWrapper.type} on ${ownerType === 'track' ? owner.name : 'Master'}`);
-                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue); else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, newValue);
+                    if (ownerType === 'track' && owner) owner.updateEffectParam(effectId, paramDef.key, newValue);
+                    else if (localAppServices.updateMasterEffectParam) localAppServices.updateMasterEffectParam(effectId, paramDef.key, newValue);
                 });
                 controlWrapper.appendChild(button);
             }
@@ -1300,7 +1316,7 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 existingWindow.close(true);
             } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
         } else {
-            console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not an instance, or map is missing.`);
+            console.log(`[UI openTrackSequencerWindow] Force redraw: Window ${windowId} found in map but no close method or not instance, or map is missing.`);
         }
     }
     if (openWindows.has(windowId) && !forceRedraw && !savedState) {
