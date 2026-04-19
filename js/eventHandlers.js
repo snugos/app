@@ -962,7 +962,7 @@ document.addEventListener('keydown', (event) => {
                     }
                     if (cb.type === 'selection' && cb.sourceTrackType === track.type) {
                         // Paste selection
-                        const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                        let currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
                         if (!currentActiveSeq) return;
                         const sequencerWindow = track._lastOpenedSequencerWindow;
                         if (sequencerWindow && sequencerWindow.element) {
@@ -996,7 +996,8 @@ document.addEventListener('keydown', (event) => {
                         }
                         // No selection - paste at beginning
                         if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Selection on ${track.name}`);
-                        const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                        // currentActiveSeq is already declared above, just reassign
+                        currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
                         if (!currentActiveSeq) return;
                         const r1 = 0, c1 = 0;
                         const rows = cb.data.length;
@@ -1015,7 +1016,7 @@ document.addEventListener('keydown', (event) => {
                         return;
                     } else if (cb.type === 'sequence' && cb.sourceTrackType === track.type) {
                         // Full sequence paste
-                        const currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
+                        currentActiveSeq = track.getActiveSequence ? track.getActiveSequence() : null;
                         if (!currentActiveSeq) return;
                         if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${track.name}`);
                         currentActiveSeq.data = JSON.parse(JSON.stringify(cb.data));

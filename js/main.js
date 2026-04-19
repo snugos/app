@@ -5,18 +5,9 @@ import { SnugWindow } from './SnugWindow.js';
 import * as Constants from './constants.js';
 // setupGenericDropZoneListeners is imported here but used via appServices by ui.js
 import { showNotification as utilShowNotification, createContextMenu, createDropZoneHTML, setupGenericDropZoneListeners, showConfirmationDialog } from './utils.js';
-import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect } from './audio.js';
+import { getActualMasterGainNode, getMasterEffectsBusInputNode, writeMasterVolumeAutomation, getMasterVolumeAutomation, setMasterVolumeAutomation, startContextSuspensionMonitoring, getSidechainBusInput, enableSidechainFromMic, disableSidechainFromMic, enableSidechainFromTrackIn, disableSidechainBus, isMicOpenForSidechain, handleSidechainParamChangeForEffect, getLoopRegion, setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars } from './audio.js';
 import {
-    initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents,
-    selectMIDIInput as eventSelectMIDIInput, 
-    handleTrackMute as eventHandleTrackMute,
-    handleTrackSolo as eventHandleTrackSolo,
-    handleTrackArm as eventHandleTrackArm,
-    handleRemoveTrack as eventHandleRemoveTrack,
-    handleOpenTrackInspector as eventHandleOpenTrackInspector,
-    handleOpenEffectsRack as eventHandleOpenEffectsRack,
-    handleOpenSequencer as eventHandleOpenSequencer,
-    handleTimelineLaneDrop
+    initializeEventHandlersModule, initializePrimaryEventListeners, setupMIDI, attachGlobalControlEvents
 } from './eventHandlers.js';
 import {
     initializeStateModule, 
@@ -60,8 +51,8 @@ import {
     addToRecentlyPlayed,
     getRecentlyPlayedSounds,
     clearRecentlyPlayed,
-    // Loop Region
-    setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars,
+    // Loop Region - REMOVE from state.js import
+    // setLoopRegion, setLoopRegionEnabled, isLoopRegionEnabled, getLoopStartBars, getLoopEndBars,
     // Project Name
     getProjectNameState, setProjectNameState,
     // Synth Presets
@@ -241,8 +232,8 @@ const appServices = {
     getSidechainBus: () => getSidechainBusInput(),
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex);
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -715,7 +706,7 @@ async function initializeSnugOS() {
                 updateSnapButtonUI();
                 console.log("[Main] Snap toggle handler attached");
             } else {
-                console.warn("[Main] Snap toggle button not found, retrying...");
+                console.warn("[Main] Snap toggle button not found in cache, retrying...");
                 setTimeout(attachSnapToggleHandler, 500);
             }
         };
