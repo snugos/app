@@ -315,3 +315,7 @@ Need to create `.github/workflows/deploy.yml` that:
 - **Undo/Redo Coverage: setSynthParam and setInstrumentSamplerRootNote** (`js/Track.js`): Added `_captureUndoState()` to `setSynthParam()` (called when adjusting synth engine knobs like filter cutoff, resonance, attack, etc.) and `setInstrumentSamplerRootNote()` (called when changing the root note mapping for instrument sampler tracks). Continues the undo coverage audit from Days 51-52.
 - **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main` via `git push origin LWB-with-Bugs && git push origin LWB-with-Bugs:main`
 
+### 2026-04-19 — Day 55
+- **Undo/Redo Coverage: setInstrumentSamplerLoop** (`js/Track.js`): Added `_captureUndoState()` to `setInstrumentSamplerLoop()` method. Continues undo coverage audit from Days 51-54.
+- **Pushed to both branches**: `origin/LWB-with-Bugs` and `origin/main`
+
