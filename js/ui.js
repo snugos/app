@@ -1559,6 +1559,46 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
                 } },
                 { separator: true },
+                { label: '--- Arpeggiator ---', header: true },
+                { label: 'Arpeggiate Up ↑', action: () => { 
+                    const count = currentTrackForMenu.arpeggiatePattern('up', 16, 1);
+                    if (count > 0 && localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Arpeggiate Down ↓', action: () => { 
+                    const count = currentTrackForMenu.arpeggiatePattern('down', 16, 1);
+                    if (count > 0 && localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Arpeggiate Up-Down ↕', action: () => { 
+                    const count = currentTrackForMenu.arpeggiatePattern('updown', 16, 1);
+                    if (count > 0 && localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Arpeggiate Down-Up ↕', action: () => { 
+                    const count = currentTrackForMenu.arpeggiatePattern('downup', 16, 1);
+                    if (count > 0 && localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Arpeggiate Random 🎲', action: () => { 
+                    const modeInput = prompt('Enter mode (up, down, updown, downup, random, converge, diverge):', 'up');
+                    const validModes = ['up', 'down', 'updown', 'downup', 'random', 'converge', 'diverge'];
+                    if (!validModes.includes(modeInput)) { 
+                        showNotification('Invalid mode. Use: up, down, updown, downup, random, converge, or diverge.', 3000); 
+                        return; 
+                    }
+                    const rateInput = prompt('Enter rate (8, 16, or 32 for 1/8th, 1/16th, 1/32nd notes):', '16');
+                    const rateValue = parseInt(rateInput, 10);
+                    if (isNaN(rateValue) || ![8, 16, 32].includes(rateValue)) { 
+                        showNotification('Invalid rate. Must be 8, 16, or 32.', 3000); 
+                        return; 
+                    }
+                    const octavesInput = prompt('Enter number of octaves (1-4):', '1');
+                    const octavesValue = parseInt(octavesInput, 10);
+                    if (isNaN(octavesValue) || octavesValue < 1 || octavesValue > 4) { 
+                        showNotification('Invalid octave value. Must be between 1 and 4.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.arpeggiatePattern(modeInput, rateValue, octavesValue);
+                    if (count > 0 && localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { separator: true },
                 { label: '--- Transpose ---', header: true },
                 { label: 'Transpose Up ↑ (+1 semitone)', action: () => { 
                     const count = currentTrackForMenu.shiftSequenceNotes(-1);
@@ -2552,7 +2592,7 @@ function buildMixerMasterStripHTML() {
         <div class="text-[10px] text-orange-300 font-semibold w-full text-center mb-1">MASTER</div>
         
         <!-- Master Level Meter -->
-        <div class="w-10 h-32 bg-[#101010] rounded border border-[#303030] relative mb-1">
+        <div class="w-10 h-16 bg-[#101010] rounded border border-[#303030] relative mb-1">
             <div id="mixerMasterMeterBar" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 transition-all duration-75" style="height: 0%"></div>
         </div>
         

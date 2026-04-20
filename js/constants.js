@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.20.0"; // Day 22: Ghost Notes Feature
+export const APP_VERSION = "0.21.0"; // Day 23: Arpeggiator Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

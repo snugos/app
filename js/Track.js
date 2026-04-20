@@ -1161,6 +1161,191 @@ export class Track {
         return humanizedCount;
     }
 
+    /**
+     * Arpeggiate the pattern - creates an arpeggio from existing notes.
+     * @param {string} mode - Arpeggio mode: 'up', 'down', 'updown', 'downup', 'random', 'converge', 'diverge'
+     * @param {number} rate - Note rate: 8 (1/8), 16 (1/16), 32 (1/32)
+     * @param {number} octaves - Number of octaves to span (1-4)
+     * @returns {number} Number of notes created in the arpeggio
+     */
+    arpeggiatePattern(mode = 'up', rate = 16, octaves = 1) {
+        if (this.type === 'Audio') return 0;
+        if (this.type !== 'Synth' && this.type !== 'InstrumentSampler') {
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification('Arpeggiator only works on Synth and InstrumentSampler tracks.', 3000);
+            }
+            return 0;
+        }
+        
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} arpeggiatePattern] No active sequence found.`);
+            return 0;
+        }
+
+        this._captureUndoState(`Arpeggiate pattern on ${activeSeq.name}`);
+        
+        const totalSteps = activeSeq.length;
+        const numRows = activeSeq.data.length;
+        
+        // Find all active notes to build the chord
+        const activeNotes = [];
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            
+            for (let col = 0; col < totalSteps; col++) {
+                const cell = row[col];
+                if (cell && cell.active) {
+                    // Store the pitch index (from top, so invert)
+                    const pitchIndex = numRows - 1 - rowIndex;
+                    const velocity = cell.velocity !== undefined ? cell.velocity : Constants.defaultVelocity;
+                    activeNotes.push({ pitchIndex, velocity, originalRow: rowIndex });
+                }
+            }
+        }
+
+        if (activeNotes.length === 0) {
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification('No notes found to arpeggiate. Add some notes first.', 3000);
+            }
+            return 0;
+        }
+
+        // Get unique pitches sorted (lowest to highest)
+        const uniquePitches = [...new Set(activeNotes.map(n => n.pitchIndex))].sort((a, b) => a - b);
+        
+        // Calculate steps per note based on rate
+        // rate 16 = 16th notes = 1 step per note (at 16 steps per bar)
+        // rate 8 = 8th notes = 2 steps per note
+        // rate 32 = 32nd notes = 0.5 steps (we'll use 1 step and double the pattern)
+        let stepsPerNote = Math.floor(Constants.STEPS_PER_BAR / rate);
+        if (stepsPerNote < 1) stepsPerNote = 1;
+        
+        // Build the arpeggio sequence
+        let arpSequence = [];
+        const clampedOctaves = Math.max(1, Math.min(4, octaves));
+        
+        // Build extended pitch list for multiple octaves
+        let extendedPitches = [];
+        for (let oct = 0; oct < clampedOctaves; oct++) {
+            const octaveShift = oct * 12; // 12 semitones per octave
+            for (const p of uniquePitches) {
+                extendedPitches.push(p + octaveShift);
+            }
+        }
+        
+        // Filter out pitches that would exceed the valid range
+        const maxPitchIndex = numRows - 1;
+        extendedPitches = extendedPitches.filter(p => p <= maxPitchIndex);
+        
+        if (extendedPitches.length === 0) {
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification('Arpeggio would exceed valid pitch range.', 3000);
+            }
+            return 0;
+        }
+        
+        // Generate arpeggio based on mode
+        switch (mode) {
+            case 'up':
+                arpSequence = [...extendedPitches];
+                break;
+            case 'down':
+                arpSequence = [...extendedPitches].reverse();
+                break;
+            case 'updown':
+                arpSequence = [...extendedPitches, ...[...extendedPitches].slice(1, -1).reverse()];
+                break;
+            case 'downup':
+                arpSequence = [...extendedPitches].reverse();
+                arpSequence = [...arpSequence, ...arpSequence.slice(1, -1).reverse()];
+                break;
+            case 'random':
+                arpSequence = [];
+                const randomPool = [...extendedPitches];
+                for (let i = randomPool.length * 2; i > 0; i--) {
+                    const randomIndex = Math.floor(Math.random() * randomPool.length);
+                    arpSequence.push(randomPool[randomIndex]);
+                }
+                break;
+            case 'converge':
+                // Play from outer edges inward
+                arpSequence = [];
+                const convergePitches = [...extendedPitches];
+                while (convergePitches.length > 0) {
+                    if (convergePitches.length === 1) {
+                        arpSequence.push(convergePitches.shift());
+                    } else {
+                        arpSequence.push(convergePitches.shift());
+                        arpSequence.push(convergePitches.pop());
+                    }
+                }
+                break;
+            case 'diverge':
+                // Play from center outward
+                arpSequence = [];
+                const divergePitches = [...extendedPitches];
+                const midPoint = Math.floor(divergePitches.length / 2);
+                const left = divergePitches.slice(0, midPoint).reverse();
+                const right = divergePitches.slice(midPoint);
+                const maxLen = Math.max(left.length, right.length);
+                for (let i = 0; i < maxLen; i++) {
+                    if (i < left.length) arpSequence.push(left[i]);
+                    if (i < right.length) arpSequence.push(right[i]);
+                }
+                break;
+            default:
+                arpSequence = [...extendedPitches];
+        }
+        
+        // Clear the existing pattern
+        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            for (let col = 0; col < totalSteps; col++) {
+                row[col] = null;
+            }
+        }
+        
+        // Place the arpeggio notes
+        let noteCount = 0;
+        let currentStep = 0;
+        const avgVelocity = activeNotes.reduce((sum, n) => sum + n.velocity, 0) / activeNotes.length;
+        
+        while (currentStep < totalSteps) {
+            for (let i = 0; i < arpSequence.length && currentStep < totalSteps; i++) {
+                const pitchIndex = arpSequence[i];
+                // Convert pitch index back to row index (inverted because display is reversed)
+                const rowIndex = numRows - 1 - pitchIndex;
+                
+                if (rowIndex >= 0 && rowIndex < numRows) {
+                    const row = activeSeq.data[rowIndex];
+                    if (row) {
+                        row[currentStep] = {
+                            active: true,
+                            velocity: avgVelocity + (Math.random() * 0.1 - 0.05), // Slight variation
+                            length: stepsPerNote
+                        };
+                        noteCount++;
+                    }
+                }
+                currentStep += stepsPerNote;
+            }
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        
+        if (this.appServices.showNotification) {
+            this.appServices.showNotification(`Arpeggiated: ${noteCount} notes created (${mode}, 1/${rate}, ${clampedOctaves} octave${clampedOctaves > 1 ? 's' : ''}).`, 3000);
+        }
+        
+        return noteCount;
+    }
+
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
         this._captureUndoState(`Set note length on ${this.name}`);
@@ -1200,31 +1385,19 @@ export class Track {
         // If a note is at column C and quantizeTo=N, the snapped column is Math.round(C/N)*N
         activeSeq.data.forEach(row => {
             if (!row) return;
-            const newRow = Array(totalSteps).fill(null);
             for (let col = 0; col < totalSteps; col++) {
                 const stepData = row[col];
                 if (stepData && stepData.active) {
+                    const sourceRow = row;
+                    const sourceCol = col;
                     const snappedCol = Math.round(col / quantizeTo) * quantizeTo;
                     if (snappedCol !== col) {
-                        newRow[snappedCol] = { ...stepData };
+                        row[sourceCol] = null; 
+                        row[snappedCol] = { ...stepData };
                         quantizedCount++;
                     }
                 }
             }
-            // Copy over any notes that got placed back into the original row structure
-            row.forEach((cell, col) => {
-                if (cell && cell.active) {
-                    const snappedCol = Math.round(col / quantizeTo) * quantizeTo;
-                    const existing = newRow.find(n => n && n.active && n !== cell);
-                    if (snappedCol >= 0 && snappedCol < totalSteps) {
-                        const newCell = newRow[snappedCol];
-                        if (newCell && newCell !== cell) {
-                            // There was already a note placed there — keep both? No, overwrite
-                            row[snappedCol] = { ...cell };
-                        }
-                    }
-                }
-            });
         });
 
         // Simpler approach: for each note, snap its column in place
@@ -1733,7 +1906,20 @@ export class Track {
                         const pitchName = Constants.synthPitches[rowIndex];
                         const step = sequenceDataForTone[rowIndex]?.[col];
                         if (step?.active && !notePlayedThisStep) {
-                            this.instrument.triggerAttackRelease(pitchName, "16n", swingTime, step.velocity * Constants.defaultVelocity); 
+                            // Check if this is the start of a note (not a continuation of a longer note)
+                            // A note starts at col if there's no active note at col-1, or if the note at col-1 has a length that doesn't reach col
+                            const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
+                            const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
+                            
+                            if (isNoteStart) {
+                                // Calculate duration based on note length (in 16th note steps)
+                                const noteLength = step.length || 1;
+                                const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
+                                const noteDuration = noteLength * sixteenthNoteDuration;
+                                const durationNotation = `${noteLength}n`; // e.g., "1n" for 16th, "2n" for 8th, "4n" for quarter
+                                
+                                this.instrument.triggerAttackRelease(pitchName, noteDuration, swingTime, step.velocity * Constants.defaultVelocity);
+                            }
                             notePlayedThisStep = true;
                         }
                     }
@@ -1750,7 +1936,7 @@ export class Track {
                                 const tempPlayer = new Tone.Player(this.audioBuffer);
                                 const tempEnv = new Tone.AmplitudeEnvelope(sliceData.envelope);
                                 const tempGain = new Tone.Gain(targetVolumeLinear);
-                                tempPlayer.chain(tempEnv, tempGain, effectsChainStartPoint);
+                                tempPlayer.chain(tempEnv, tempGain);
                                 tempPlayer.playbackRate = playbackRate; tempPlayer.reverse = sliceData.reverse || false; tempPlayer.loop = sliceData.loop || false;
                                 tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
                                 tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
@@ -1762,7 +1948,6 @@ export class Track {
                                 Tone.Transport.scheduleOnce(() => {
                                     try { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); } catch(e){}
                                     try { if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); } catch(e){}
-                                    try { if(tempGain && !tempGain.disposed) tempGain.dispose(); } catch(e){}
                                 }, time + playDuration + (sliceData.envelope?.release || 0.3));
                             } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                                 if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);
@@ -1797,10 +1982,19 @@ export class Track {
                     Constants.synthPitches.forEach((pitchName, rowIndex) => {
                         const step = sequenceDataForTone[rowIndex]?.[col];
                         if (step && step.active) {
-                            if (!this.instrumentSamplerIsPolyphonic && !notePlayedThisStep) {
-                                this.toneSampler.releaseAll(time); notePlayedThisStep = true;
+                            // Check if this is the start of a note
+                            const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
+                            const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
+                            
+                            if (isNoteStart) {
+                                // Calculate duration based on note length
+                                const noteLength = step.length || 1;
+                                const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
+                                const noteDuration = noteLength * sixteenthNoteDuration;
+                                
+                                this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), noteDuration, time, step.velocity * Constants.defaultVelocity);
                             }
-                            this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), "16n", time, step.velocity * Constants.defaultVelocity);
+                            notePlayedThisStep = true;
                         }
                     });
                 }
@@ -2075,7 +2269,6 @@ export class Track {
                                         Tone.Transport.scheduleOnce(() => {
                                             try { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); } catch(e){}
                                             try { if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); } catch(e){}
-                                            try { if(tempGain && !tempGain.disposed) tempGain.dispose(); } catch(e){}
                                         }, time + playDurationPart + (sliceData.envelope?.release || 0.1) + 0.3);
                                     } else if (this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed && this.slicerMonoEnvelope && !this.slicerMonoEnvelope.disposed && this.slicerMonoGain && !this.slicerMonoGain.disposed) {
                                         if (this.slicerMonoPlayer.state === 'started') this.slicerMonoPlayer.stop(time);

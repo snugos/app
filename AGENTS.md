@@ -504,6 +504,45 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open sequencer for a Synth/InstrumentSampler track, use "Ghost:" dropdown in toolbar to select another track to show
 - **Version**: Bumped to 0.20.0
 
+#### Day 23: Arpeggiator Feature (2026-04-20)
+- **Feature**: Added comprehensive Arpeggiator functionality to transform chords into arpeggiated patterns
+- **Files Modified**:
+  - `js/Track.js`: Added `arpeggiatePattern(mode, rate, octaves)` method:
+    - Extracts unique pitches from existing notes to build chord
+    - Supports 7 arpeggio modes: up, down, updown, downup, random, converge, diverge
+    - Supports 3 rates: 1/8, 1/16, 1/32 notes
+    - Supports 1-4 octave range with automatic pitch extension
+    - Filters pitches that exceed valid range
+    - Clears existing pattern and places arpeggiated notes
+    - Captures undo state before modification
+    - Shows notification with note count and settings
+  - `js/ui.js`: Added Arpeggiator context menu items in sequencer window:
+    - "Arpeggiate Up ↑" - Arpeggiates notes from lowest to highest
+    - "Arpeggiate Down ↓" - Arpeggiates notes from highest to lowest
+    - "Arpeggiate Up-Down ↕" - Plays up then back down
+    - "Arpeggiate Down-Up ↕" - Plays down then back up
+    - "Arpeggiate Random 🎲" - Randomizes note order
+    - "Arpeggiate Converge ⇥" - Plays from outer edges inward
+    - "Arpeggiate Diverge ⇤" - Plays from center outward
+    - "Custom Arpeggio..." - Prompts for mode, rate, and octave settings
+  - `js/constants.js`: Bumped APP_VERSION to 0.21.0
+- **Feature Details**:
+  - Mode Options:
+    - Up: Notes play from lowest to highest pitch
+    - Down: Notes play from highest to lowest pitch
+    - Up-Down: Notes play up then back down (excludes duplicates)
+    - Down-Up: Notes play down then back up (excludes duplicates)
+    - Random: Notes play in random order with more variety
+    - Converge: Notes play from outer pitch edges toward center
+    - Diverge: Notes play from center pitch outward to edges
+  - Rate Options: 1/8 notes (2 steps), 1/16 notes (1 step), 1/32 notes (1 step, faster)
+  - Octave Range: Extends the arpeggio across multiple octaves (1-4)
+  - Velocity: Uses average velocity from source notes with slight variation
+  - Track Types: Only works on Synth and InstrumentSampler tracks
+- **Workflow**: Place a chord in the sequencer, right-click, select arpeggio mode
+- **Usage**: Open sequencer for a Synth/InstrumentSampler track, place notes (chord), right-click on grid, select Arpeggiator option
+- **Version**: Bumped to 0.21.0
+
 ## Code Style Guidelines
 
 ### Module Structure
