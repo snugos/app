@@ -39,6 +39,11 @@ import {
     getSwingState,
     getSwingEnabledState,
     getSwingAmountState,
+    // Send Tracks state
+    getSendTracksState,
+    getSendTrackByIdState,
+    getTrackSendsState,
+    getTrackSendLevelState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -59,6 +64,14 @@ import {
     setSwingState,
     setSwingEnabledState,
     setSwingAmountState,
+    // Send Tracks setters
+    addSendTrackState,
+    removeSendTrackState,
+    setSendTrackNameState,
+    setSendTrackLevelState,
+    setSendTrackMutedState,
+    setSendTrackEffectsState,
+    setTrackSendLevelState,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -81,7 +94,20 @@ import {
     initializeMetronome,
     startMetronome,
     stopMetronome,
-    setMetronomeVolume
+    setMetronomeVolume,
+    // Send Bus functions
+    createSendBusInAudio,
+    deleteSendBusFromAudio,
+    addEffectToSendBus,
+    removeEffectFromSendBus,
+    updateSendBusEffectParam,
+    setSendBusLevel,
+    setSendBusMuted,
+    connectTrackToSendBus,
+    disconnectTrackFromSendBus,
+    setTrackSendLevel,
+    getSendBusNodes,
+    getTrackSendNodes
 } from './audio.js';
 import {
     initializeUIModule, openTrackEffectsRackWindow, openTrackSequencerWindow, openGlobalControlsWindow,
@@ -252,6 +278,20 @@ const appServices = {
     clearAllMasterEffectNodes: clearAllMasterEffectNodesInAudio,
     startAudioRecording, stopAudioRecording,
 
+    // Send Bus Audio Functions
+    createSendBusInAudio,
+    deleteSendBusFromAudio,
+    addEffectToSendBus,
+    removeEffectFromSendBus,
+    updateSendBusEffectParam,
+    setSendBusLevel,
+    setSendBusMuted,
+    connectTrackToSendBus,
+    disconnectTrackFromSendBus,
+    setTrackSendLevel,
+    getSendBusNodes,
+    getTrackSendNodes,
+
     // State Module Getters
     getTracks: getTracksState, getTrackById: getTrackByIdState,
     getOpenWindows: getOpenWindowsState, getWindowById: getWindowByIdState,
@@ -278,6 +318,11 @@ const appServices = {
     getSwingState,
     getSwingEnabledState,
     getSwingAmountState,
+    // Send Tracks state
+    getSendTracksState,
+    getSendTrackByIdState,
+    getTrackSendsState,
+    getTrackSendLevelState,
     // State Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
@@ -299,6 +344,14 @@ const appServices = {
     setSwingState,
     setSwingEnabledState,
     setSwingAmountState,
+    // Send Tracks setters
+    addSendTrackState,
+    removeSendTrackState,
+    setSendTrackNameState,
+    setSendTrackLevelState,
+    setSendTrackMutedState,
+    setSendTrackEffectsState,
+    setTrackSendLevelState,
     // Core State Actions
     addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
     captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
@@ -434,11 +487,11 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstructing = false) => {
+    closeAllWindows: (isReconstructinging = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
-                if (win && typeof win.close === 'function') win.close(isReconstructing);
+                if (win && typeof win.close === 'function') win.close(isReconstructinging);
             });
         }
         if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
@@ -464,8 +517,8 @@ const appServices = {
 
     addMasterEffect: async (effectType) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            const isReconstructinging = appServices.getIsReconstructingingDAW ? appServices.getIsReconstructingingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -484,7 +537,7 @@ const appServices = {
             const effects = getMasterEffectsState();
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
-                const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+                const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingingDAW() : false;
                 if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
@@ -525,7 +578,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
+    getIsReconstructingingDAW: () => appServices._isReconstructingingDAW_flag === true, 
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,

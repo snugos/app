@@ -1231,3 +1231,282 @@ export function setMetronomeVolume(volume) {
         metronomeAccentPlayer.volume.value = Tone.gainToDb(vol);
     }
 }
+
+// --- Send Bus Management ---
+
+export function createSendBusInAudio(sendId) {
+    if (!Tone.context || Tone.context.state !== 'running') {
+        console.warn('[Audio createSendBusInAudio] Audio context not running. Aborting send bus creation.');
+        return null;
+    }
+    if (sendBusNodes.has(sendId)) {
+        console.warn(`[Audio createSendBusInAudio] Send bus ${sendId} already exists.`);
+        return sendBusNodes.get(sendId);
+    }
+
+    const inputGain = new Tone.Gain(0); // Will be controlled by track send levels
+    const outputGain = new Tone.Gain(1);
+    const effectsChain = [];
+
+    sendBusNodes.set(sendId, {
+        id: sendId,
+        inputGain: inputGain,
+        effectsChain: effectsChain,
+        outputGain: outputGain,
+        activeEffectNodes: new Map()
+    });
+
+    // Connect: input -> effects -> output -> master bus (wet signal only)
+    try {
+        inputGain.connect(outputGain);
+        outputGain.connect(masterEffectsBusInputNode);
+    } catch (e) {
+        console.warn(`[Audio createSendBusInAudio] Error connecting send bus ${sendId} to master:`, e.message);
+    }
+
+    return sendBusNodes.get(sendId);
+}
+
+export function deleteSendBusFromAudio(sendId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio deleteSendBusFromAudio] Send bus ${sendId} not found.`);
+        return;
+    }
+
+    // Dispose all effect nodes
+    busData.activeEffectNodes.forEach((node, effectId) => {
+        if (node && !node.disposed) {
+            try { node.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing effect ${effectId}:`, e.message); }
+        }
+    });
+
+    // Dispose gain nodes
+    if (busData.inputGain && !busData.inputGain.disposed) {
+        try { busData.inputGain.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing inputGain:`, e.message); }
+    }
+    if (busData.outputGain && !busData.outputGain.disposed) {
+        try { busData.outputGain.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing outputGain:`, e.message); }
+    }
+
+    sendBusNodes.delete(sendId);
+
+    // Remove track connections to this send
+    trackSendNodes.forEach((sendsMap, trackId) => {
+        if (sendsMap.has(sendId)) {
+            const sendGainNode = sendsMap.get(sendId);
+            if (sendGainNode && !sendGainNode.disposed) {
+                try { sendGainNode.dispose(); } catch (e) { console.warn(`[Audio deleteSendBusFromAudio] Error disposing track send gain for track ${trackId}:`, e.message); }
+            }
+            sendsMap.delete(sendId);
+        }
+    });
+}
+
+export function addEffectToSendBus(sendId, effectType, params) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio addEffectToSendBus] Send bus ${sendId} not found.`);
+        return null;
+    }
+
+    const toneNode = createEffectInstance(effectType, params || {});
+    if (!toneNode) {
+        console.warn(`[Audio addEffectToSendBus] Failed to create Tone.js instance for effect ${effectType}.`);
+        return null;
+    }
+
+    const effectId = `send_${sendId}_effect_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
+    busData.effectsChain.push({ id: effectId, type: effectType, params: params || {} });
+    busData.activeEffectNodes.set(effectId, toneNode);
+
+    rebuildSendBusChain(sendId);
+    return effectId;
+}
+
+export function removeEffectFromSendBus(sendId, effectId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio removeEffectFromSendBus] Send bus ${sendId} not found.`);
+        return;
+    }
+
+    const nodeToRemove = busData.activeEffectNodes.get(effectId);
+    if (nodeToRemove) {
+        if (!nodeToRemove.disposed) {
+            try { nodeToRemove.dispose(); } catch (e) { console.warn(`[Audio removeEffectFromSendBus] Error disposing effect ${effectId}:`, e.message); }
+        }
+        busData.activeEffectNodes.delete(effectId);
+    }
+
+    const effectIndex = busData.effectsChain.findIndex(e => e.id === effectId);
+    if (effectIndex > -1) {
+        busData.effectsChain.splice(effectIndex, 1);
+    }
+
+    rebuildSendBusChain(sendId);
+}
+
+export function updateSendBusEffectParam(sendId, effectId, paramPath, value) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio updateSendBusEffectParam] Send bus ${sendId} not found.`);
+        return;
+    }
+
+    const effectNode = busData.activeEffectNodes.get(effectId);
+    if (!effectNode || effectNode.disposed) {
+        console.warn(`[Audio updateSendBusEffectParam] Effect node ${effectId} not found or disposed.`);
+        return;
+    }
+
+    try {
+        const keys = paramPath.split('.');
+        let targetObject = effectNode;
+        for (let i = 0; i < keys.length - 1; i++) {
+            if (targetObject && typeof targetObject[keys[i]] !== 'undefined') {
+                targetObject = targetObject[keys[i]];
+            } else {
+                throw new Error(`Path ${keys.slice(0, i + 1).join('.')} not found on Tone node.`);
+            }
+        }
+        const finalParamKey = keys[keys.length - 1];
+        const paramInstance = targetObject[finalParamKey];
+
+        if (paramInstance && typeof paramInstance.value !== 'undefined' && typeof paramInstance.rampTo === 'function') {
+            paramInstance.rampTo(value, 0.02);
+        } else if (paramInstance && typeof paramInstance.value !== 'undefined') {
+            paramInstance.value = value;
+        } else {
+            targetObject[finalParamKey] = value;
+        }
+    } catch (err) {
+        console.error(`[Audio updateSendBusEffectParam] Error updating param "${paramPath}" for send effect ${effectId}:`, err);
+    }
+}
+
+export function setSendBusLevel(sendId, level) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio setSendBusLevel] Send bus ${sendId} not found.`);
+        return;
+    }
+    if (busData.outputGain && !busData.outputGain.disposed) {
+        busData.outputGain.gain.value = Math.max(0, Math.min(Constants.SEND_LEVEL_MAX, level));
+    }
+}
+
+export function setSendBusMuted(sendId, muted) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio setSendBusMuted] Send bus ${sendId} not found.`);
+        return;
+    }
+    if (busData.outputGain && !busData.outputGain.disposed) {
+        busData.outputGain.gain.value = muted ? 0 : 1;
+    }
+}
+
+function rebuildSendBusChain(sendId) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio rebuildSendBusChain] Send bus ${sendId} not found.`);
+        return;
+    }
+
+    // Disconnect everything
+    try { busData.inputGain.disconnect(); } catch (e) { /* ignore */ }
+    busData.activeEffectNodes.forEach((node) => {
+        if (node && !node.disposed) {
+            try { node.disconnect(); } catch (e) { /* ignore */ }
+        }
+    });
+    try { busData.outputGain.disconnect(); } catch (e) { /* ignore */ }
+
+    // Rebuild chain: input -> effects -> output -> master bus
+    let currentNode = busData.inputGain;
+    busData.effectsChain.forEach(effect => {
+        const toneNode = busData.activeEffectNodes.get(effect.id);
+        if (toneNode && !toneNode.disposed && currentNode) {
+            try { currentNode.connect(toneNode); } catch (e) { console.warn(`[Audio rebuildSendBusChain] Error connecting to ${effect.type}:`, e.message); }
+            currentNode = toneNode;
+        }
+    });
+
+    if (currentNode && !currentNode.disposed && busData.outputGain && !busData.outputGain.disposed) {
+        try { currentNode.connect(busData.outputGain); } catch (e) { console.warn(`[Audio rebuildSendBusChain] Error connecting to outputGain:`, e.message); }
+    }
+
+    if (busData.outputGain && !busData.outputGain.disposed && masterEffectsBusInputNode && !masterEffectsBusInputNode.disposed) {
+        try { busData.outputGain.connect(masterEffectsBusInputNode); } catch (e) { console.warn(`[Audio rebuildSendBusChain] Error connecting outputGain to master:`, e.message); }
+    }
+}
+
+export function connectTrackToSendBus(trackId, sendId) {
+    if (!sendBusNodes.has(sendId)) {
+        console.warn(`[Audio connectTrackToSendBus] Send bus ${sendId} does not exist.`);
+        return null;
+    }
+
+    let trackSends = trackSendNodes.get(trackId);
+    if (!trackSends) {
+        trackSends = new Map();
+        trackSendNodes.set(trackId, trackSends);
+    }
+
+    if (trackSends.has(sendId)) {
+        return trackSends.get(sendId); // Already connected
+    }
+
+    const busData = sendBusNodes.get(sendId);
+    const sendGainNode = new Tone.Gain(0); // Start at zero, controlled by setTrackSendLevel
+
+    trackSends.set(sendId, sendGainNode);
+
+    // Connect track output to send gain to input gain
+    // The actual connection to track output is done in Track.js via rebuildEffectChain
+    if (busData.inputGain && !busData.inputGain.disposed) {
+        try { sendGainNode.connect(busData.inputGain); } catch (e) { console.warn(`[Audio connectTrackToSendBus] Error connecting send gain to bus input:`, e.message); }
+    }
+
+    return sendGainNode;
+}
+
+export function disconnectTrackFromSendBus(trackId, sendId) {
+    const trackSends = trackSendNodes.get(trackId);
+    if (!trackSends || !trackSends.has(sendId)) {
+        return;
+    }
+
+    const sendGainNode = trackSends.get(sendId);
+    if (sendGainNode && !sendGainNode.disposed) {
+        try { sendGainNode.disconnect(); } catch (e) { /* ignore */ }
+        try { sendGainNode.dispose(); } catch (e) { console.warn(`[Audio disconnectTrackFromSendBus] Error disposing send gain:`, e.message); }
+    }
+    trackSends.delete(sendId);
+}
+
+export function setTrackSendLevel(trackId, sendId, level) {
+    const trackSends = trackSendNodes.get(trackId);
+    if (!trackSends || !trackSends.has(sendId)) {
+        // Try to connect if not already connected
+        if (sendBusNodes.has(sendId)) {
+            connectTrackToSendBus(trackId, sendId);
+        } else {
+            return;
+        }
+    }
+
+    const sendGainNode = trackSends.get(sendId);
+    if (sendGainNode && !sendGainNode.disposed) {
+        sendGainNode.gain.value = Math.max(Constants.SEND_LEVEL_MIN, Math.min(Constants.SEND_LEVEL_MAX, level));
+    }
+}
+
+export function getSendBusNodes() {
+    return sendBusNodes;
+}
+
+export function getTrackSendNodes() {
+    return trackSendNodes;
+}
