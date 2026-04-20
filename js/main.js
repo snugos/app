@@ -385,6 +385,16 @@ const appServices = {
     handleTimelineLaneDrop: handleTimelineLaneDrop,
     attachGlobalControlEvents: attachGlobalControlEvents, // FIX: Expose for reconstruction
 
+    // Project Save/Load/Export
+    saveProject: saveProjectInternal,
+    loadProject: loadProjectInternal,
+    handleProjectFileLoad: handleProjectFileLoadInternal,
+    exportToWav: exportToWavInternal,
+
+    // Undo/Redo
+    undoLastAction: undoLastActionInternal,
+    redoLastAction: redoLastActionInternal,
+
     getAudioBlobFromSoundBrowserItem: async (soundData) => {
         if (!soundData || !soundData.libraryName || !soundData.fullPath) {
             console.warn("[AppServices getAudioBlob] Invalid soundData:", soundData);

@@ -189,6 +189,36 @@ export function initializePrimaryEventListeners(appContext) {
                 } catch(e) { console.error('[Menu] Master Effects error:', e); }
             },
             menuTetris: () => window.open("https://snugos.github.io/app/tetris.html", "_blank"),
+            menuSaveProject: () => {
+                try {
+                    services.saveProject?.();
+                } catch(e) { console.error('[Menu] Save Project error:', e); }
+            },
+            menuLoadProject: () => {
+                try {
+                    services.loadProject?.();
+                } catch(e) { console.error('[Menu] Load Project error:', e); }
+            },
+            menuExportWav: () => {
+                try {
+                    services.exportToWav?.();
+                } catch(e) { console.error('[Menu] Export WAV error:', e); }
+            },
+            menuUndo: () => {
+                try {
+                    services.undoLastAction?.();
+                } catch(e) { console.error('[Menu] Undo error:', e); }
+            },
+            menuRedo: () => {
+                try {
+                    services.redoLastAction?.();
+                } catch(e) { console.error('[Menu] Redo error:', e); }
+            },
+            menuToggleFullScreen: () => {
+                try {
+                    toggleFullScreen();
+                } catch(e) { console.error('[Menu] Toggle Full Screen error:', e); }
+            }
         };
 
         for (const menuItemId in menuActions) {

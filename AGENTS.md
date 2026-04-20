@@ -424,6 +424,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Use Menu > Import Audio File... or drag audio file onto desktop
 - **Version**: Bumped to 0.17.0
 
+#### Day 20: Menu Item Handlers - Save/Load/Export/Undo/Redo/Fullscreen (2026-04-20)
+- **Feature**: Implemented missing menu item handlers that existed in HTML but had no JavaScript handlers
+- **Files Modified**:
+  - `js/eventHandlers.js`: Added handlers to `menuActions` object for:
+    - `menuSaveProject` - Calls `services.saveProject()` to export project as .snug file
+    - `menuLoadProject` - Calls `services.loadProject()` to trigger file picker for .snug files
+    - `menuExportWav` - Calls `services.exportToWav()` to render and download project as WAV
+    - `menuUndo` - Calls `services.undoLastAction()` for undo functionality
+    - `menuRedo` - Calls `services.redoLastAction()` for redo functionality
+    - `menuToggleFullScreen` - Toggles browser fullscreen mode
+  - `js/main.js`: Added service aliases to `appServices` object:
+    - `saveProject: saveProjectInternal`
+    - `loadProject: loadProjectInternal`
+    - `handleProjectFileLoad: handleProjectFileLoadInternal`
+    - `exportToWav: exportToWavInternal`
+    - `undoLastAction: undoLastActionInternal`
+    - `redoLastAction: redoLastActionInternal`
+  - `js/constants.js`: Bumped APP_VERSION to 0.18.0
+- **Feature Details**:
+  - Save Project: Exports current project state as .snug JSON file
+  - Load Project: Opens file picker to load .snug project files
+  - Export to WAV: Renders the full project mix using Tone.Recorder and downloads as WAV
+  - Undo/Redo: Access to undo/redo history from menu
+  - Fullscreen: Toggle browser fullscreen mode
+- **Backend Note**: The `exportToWavInternal` function in state.js was already implemented but had no UI wiring. The menu item existed in index.html but had no click handler.
+- **Impact**: All menu items in the Start Menu are now functional
+- **Version**: Bumped to 0.18.0
+
 ## Code Style Guidelines
 
 ### Module Structure
