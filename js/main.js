@@ -100,6 +100,7 @@ import {
     deleteSendBusFromAudio,
     addEffectToSendBus,
     removeEffectFromSendBus,
+    reorderEffectInSendBus,
     updateSendBusEffectParam,
     setSendBusLevel,
     setSendBusMuted,
@@ -117,6 +118,7 @@ import {
     renderEffectsList, renderEffectControls, createKnob,
     updateSequencerCellUI,
     openMasterEffectsRackWindow,
+    openSendEffectsWindow,
     renderTimeline,
     updatePlayheadPosition,
     openTimelineWindow,
@@ -283,6 +285,7 @@ const appServices = {
     deleteSendBusFromAudio,
     addEffectToSendBus,
     removeEffectFromSendBus,
+    reorderEffectInSendBus,
     updateSendBusEffectParam,
     setSendBusLevel,
     setSendBusMuted,
@@ -537,7 +540,7 @@ const appServices = {
             const effects = getMasterEffectsState();
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
-                const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingingDAW() : false;
+                const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
                 if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
@@ -634,39 +637,20 @@ const appServices = {
     startMetronome: startMetronome,
     stopMetronome: stopMetronome,
     setMetronomeVolume: setMetronomeVolume,
-    // Loop Region
-    getLoopRegionState,
-    getLoopRegionEnabled: getLoopRegionEnabledState,
-    getLoopRegionStartBar: getLoopRegionStartBarState,
-    getLoopRegionEndBar: getLoopRegionEndBarState,
-    setLoopRegionState,
-    setLoopRegionEnabled: setLoopRegionEnabledState,
-    setLoopRegionStartBar: setLoopRegionStartBarState,
-    setLoopRegionEndBar: setLoopRegionEndBarState,
-    updateLoopRegion: () => {
-        // Apply loop region to Tone.Transport
-        const loopRegion = getLoopRegionState();
-        if (loopRegion.enabled) {
-            const bpm = Tone.Transport.bpm.value;
-            const secondsPerBeat = 60 / bpm;
-            const beatsPerBar = 4; // 4/4 time
-            const barDuration = beatsPerBar * secondsPerBeat;
-            
-            // Convert 1-indexed bars to 0-indexed for time calculations
-            const loopStartTime = (loopRegion.startBar - 1) * barDuration;
-            const loopEndTime = loopRegion.endBar * barDuration;
-            
-            Tone.Transport.loop = true;
-            Tone.Transport.loopStart = loopStartTime;
-            Tone.Transport.loopEnd = loopEndTime;
-        } else {
-            // When disabled, still keep transport looping but for a very long duration
-            // This is needed to keep the transport alive during playback
-            Tone.Transport.loop = true;
-            Tone.Transport.loopStart = 0;
-            Tone.Transport.loopEnd = 3600; // 1 hour max
-        }
-    }
+    // Send Bus functions
+    createSendBusInAudio,
+    deleteSendBusFromAudio,
+    addEffectToSendBus,
+    removeEffectFromSendBus,
+    reorderEffectInSendBus,
+    updateSendBusEffectParam,
+    setSendBusLevel,
+    setSendBusMuted,
+    connectTrackToSendBus,
+    disconnectTrackFromSendBus,
+    setTrackSendLevel,
+    getSendBusNodes,
+    getTrackSendNodes
 };
 
 function handleTrackUIUpdate(trackId, reason, detail) {

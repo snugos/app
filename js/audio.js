@@ -1009,7 +1009,7 @@ export async function startAudioRecording(track, isMonitoringEnabled) {
         await mic.open();
 
         // Disconnect mic from everything first to be safe
-        try { mic.disconnect(); } catch (e) { /* ignore if not connected */ }
+        try { mic.disconnect(); } catch(e) { /* ignore if not connected */ }
 
         if (isMonitoringEnabled) {
             mic.connect(track.inputChannel);
@@ -1343,6 +1343,29 @@ export function removeEffectFromSendBus(sendId, effectId) {
     if (effectIndex > -1) {
         busData.effectsChain.splice(effectIndex, 1);
     }
+
+    rebuildSendBusChain(sendId);
+}
+
+export function reorderEffectInSendBus(sendId, effectId, newIndex) {
+    const busData = sendBusNodes.get(sendId);
+    if (!busData) {
+        console.warn(`[Audio reorderEffectInSendBus] Send bus ${sendId} not found.`);
+        return;
+    }
+
+    const currentIndex = busData.effectsChain.findIndex(e => e.id === effectId);
+    if (currentIndex === -1) {
+        console.warn(`[Audio reorderEffectInSendBus] Effect ${effectId} not found in send bus ${sendId}.`);
+        return;
+    }
+
+    // Clamp newIndex to valid range
+    const clampedIndex = Math.max(0, Math.min(newIndex, busData.effectsChain.length - 1));
+    
+    // Remove from current position and insert at new position
+    const [effect] = busData.effectsChain.splice(currentIndex, 1);
+    busData.effectsChain.splice(clampedIndex, 0, effect);
 
     rebuildSendBusChain(sendId);
 }
