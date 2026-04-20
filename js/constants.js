@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.14.0"; // Day 18: Send Effects / Aux Routing Implementation
+export const APP_VERSION = "0.16.0"; // Day 19: Restored missing sequencer window functions
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

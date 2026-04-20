@@ -1200,6 +1200,866 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     });
 }
 
+
+// --- Sequencer Window ---
+
+function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
+    const stepsPerBar = Constants.STEPS_PER_BAR;
+    const totalSteps = Number.isFinite(numBars) && numBars > 0 ? numBars * stepsPerBar : Constants.defaultStepsPerBar;
+    
+    // Get scale mode settings
+    const scaleMode = localAppServices.getScaleMode ? localAppServices.getScaleMode() : Constants.DEFAULT_SCALE_MODE;
+    const isScaleModeEnabled = scaleMode.enabled && (track.type === 'Synth' || track.type === 'InstrumentSampler');
+    
+    // Helper function to check if a note is in the scale
+    const isNoteInScale = (noteName) => {
+        if (!isScaleModeEnabled) return true;
+        const rootNote = scaleMode.root;
+        const scaleIntervals = Constants.SCALES[scaleMode.scale] || Constants.SCALES['Major'];
+        
+        // Extract note letter and octave
+        const match = noteName.match(/^([A-G]#?)(\d)$/);
+        if (!match) return true;
+        
+        const [, noteLetter, octave] = match;
+        
+        // Calculate semitone distance from root
+        const rootIndex = Constants.SCALE_ROOTS.indexOf(rootNote);
+        const noteIndex = Constants.SCALE_ROOTS.indexOf(noteLetter);
+        
+        if (rootIndex === -1 || noteIndex === -1) return true;
+        
+        // Calculate interval (semitones) from root to this note
+        let interval = (noteIndex - rootIndex + 12) % 12;
+        
+        // Check if interval is in the scale
+        return scaleIntervals.includes(interval);
+    };
+
+    // Build scale controls HTML (only for Synth/InstrumentSampler tracks)
+    let scaleControlsHTML = '';
+    if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
+        const scaleOptions = Object.keys(Constants.SCALES).map(s => 
+            `<option value="${s}" ${s === scaleMode.scale ? 'selected' : ''}>${s}</option>`
+        ).join('');
+        const rootOptions = Constants.SCALE_ROOTS.map(r => 
+            `<option value="${r}" ${r === scaleMode.root ? 'selected' : ''}>${r}</option>`
+        ).join('');
+        
+        scaleControlsHTML = `
+            <div class="scale-mode-controls flex items-center gap-1 ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+                <label class="flex items-center gap-0.5 cursor-pointer">
+                    <input type="checkbox" id="scaleModeToggle-${track.id}" ${scaleMode.enabled ? 'checked' : ''} class="w-3 h-3">
+                    <span class="text-[10px]">Scale</span>
+                </label>
+                <select id="scaleRootSelect-${track.id}" class="w-10 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" ${!scaleMode.enabled ? 'disabled' : ''}>
+                    ${rootOptions}
+                </select>
+                <select id="scaleSelect-${track.id}" class="w-24 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" ${!scaleMode.enabled ? 'disabled' : ''}>
+                    ${scaleOptions}
+                </select>
+                <label class="flex items-center gap-0.5 cursor-pointer" title="Lock: only allow notes in scale">
+                    <input type="checkbox" id="scaleLockToggle-${track.id}" ${scaleMode.lock ? 'checked' : ''} class="w-3 h-3" ${!scaleMode.enabled ? 'disabled' : ''}>
+                    <span class="text-[10px]">🔒</span>
+                </label>
+            </div>`;
+    }
+
+    // Velocity editor toggle button
+    const velocityEditorToggleHTML = `
+        <label class="flex items-center gap-0.5 cursor-pointer ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+            <input type="checkbox" id="velocityEditorToggle-${track.id}" class="w-3 h-3">
+            <span class="text-[10px]">Velocity</span>
+        </label>`;
+
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} </div> </div>`;
+    html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
+    for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
+
+    const activeSequence = track.getActiveSequence();
+    const sequenceData = activeSequence ? activeSequence.data : [];
+
+    // Calculate max velocity per column for velocity editor
+    const maxVelocityPerColumn = [];
+    for (let col = 0; col < totalSteps; col++) {
+        let maxVel = 0;
+        for (let row = 0; row < rows; row++) {
+            const stepData = sequenceData[row]?.[col];
+            if (stepData?.active && stepData.velocity !== undefined) {
+                maxVel = Math.max(maxVel, stepData.velocity);
+            }
+        }
+        maxVelocityPerColumn[col] = maxVel;
+    }
+
+    for (let i = 0; i < rows; i++) {
+        let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
+        
+        // Check if this row is in the scale (for highlighting)
+        const rowLabel = rowLabels[i] || '';
+        const isInScale = isNoteInScale(rowLabel);
+        const scaleHighlightClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
+        
+        html += `<div class="sequencer-label-cell sticky left-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-end pr-1 text-[10px] ${scaleHighlightClass}" title="${rowLabels[i] || ''}">${labelText}</div>`;
+        for (let j = 0; j < totalSteps; j++) {
+            const stepData = sequenceData[i]?.[j];
+            let activeClass = '';
+            let velocityAttr = '';
+            let velocityOpacityStyle = '';
+            if (stepData?.active) { 
+                if (track.type === 'Synth') activeClass = 'active-synth'; 
+                else if (track.type === 'Sampler') activeClass = 'active-sampler'; 
+                else if (track.type === 'DrumSampler') activeClass = 'active-drum-sampler'; 
+                else if (track.type === 'InstrumentSampler') activeClass = 'active-instrument-sampler';
+                // Add velocity data attribute and opacity style
+                const velocity = stepData.velocity !== undefined ? stepData.velocity : Constants.defaultVelocity;
+                velocityAttr = `data-velocity="${velocity.toFixed(2)}"`;
+                // Scale opacity from 0.5 to 1.0 based on velocity (0.0-1.0)
+                const opacity = 0.5 + (velocity * 0.5);
+                velocityOpacityStyle = `style="opacity: ${opacity.toFixed(2)}"`;
+            }
+            let beatBlockClass = (Math.floor((j % stepsPerBar) / 4) % 2 === 0) ? 'bg-gray-50 dark:bg-slate-700' : 'bg-white dark:bg-slate-750';
+            if (j % stepsPerBar === 0 && j > 0) beatBlockClass += ' border-l-2 border-l-gray-400 dark:border-l-slate-600';
+            else if (j > 0 && j % (stepsPerBar / 2) === 0) beatBlockClass += ' border-l-gray-300 dark:border-l-slate-650';
+            else if (j > 0 && j % (stepsPerBar / 4) === 0) beatBlockClass += ' border-l-gray-200 dark:border-l-slate-675';
+            
+            // Apply scale highlighting to cells
+            const cellScaleClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
+            
+            html += `<div class="sequencer-step-cell ${activeClass} ${beatBlockClass} ${cellScaleClass} border-r border-b border-gray-200 dark:border-slate-600" data-row="${i}" data-col="${j}" data-active="${stepData?.active ? 'true' : 'false'}" ${velocityAttr} ${velocityOpacityStyle} title="R${i+1},S${j+1}${stepData?.active ? ` V:${Math.round((stepData.velocity || Constants.defaultVelocity) * 127)}` : ''}"></div>`;
+        }
+    }
+    html += `</div>`;
+    
+    // Velocity Editor Lane (initially hidden)
+    html += `<div id="velocityEditor-${track.id}" class="velocity-editor-lane hidden mt-1 border-t border-gray-400 dark:border-slate-600 pt-1">`;
+    html += `<div class="text-[10px] font-semibold mb-1 text-gray-500 dark:text-slate-400">Velocity Editor (click/drag on bars to edit)</div>`;
+    html += `<div class="velocity-editor-grid" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 60px; gap: 0px; width: fit-content;">`;
+    html += `<div class="velocity-label sticky left-0 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[9px] text-gray-400">VEL</div>`;
+    for (let col = 0; col < totalSteps; col++) {
+        const maxVel = maxVelocityPerColumn[col] || 0;
+        const barHeight = Math.round(maxVel * 56); // 60px max height - 4px padding
+        const barColor = maxVel > 0 ? '#7c3aed' : '#333333';
+        const beatsPerBar = 4;
+        const barNum = Math.floor(col / beatsPerBar) + 1;
+        const beatInBar = (col % beatsPerBar) + 1;
+        const isBeat = beatInBar === 1;
+        const borderClass = col % stepsPerBar === 0 && col > 0 ? 'border-l-2 border-l-gray-500' : '';
+        
+        html += `<div class="velocity-cell relative border-r border-b border-gray-300 dark:border-slate-600 ${borderClass} flex items-end justify-center p-0.5 cursor-pointer hover:bg-slate-700" data-col="${col}" data-max-velocity="${maxVel.toFixed(2)}" title="Step ${col + 1}: ${maxVel > 0 ? Math.round(maxVel * 127) : 'No notes'}">`;
+        html += `<div class="velocity-bar w-full rounded-t transition-all duration-75" style="height: ${barHeight}px; background-color: ${barColor};" data-col="${col}"></div>`;
+        html += `</div>`;
+    }
+    html += `</div></div>`;
+    html += `</div>`; return html;
+}
+
+export function openTrackSequencerWindow(trackId, forceRedraw = false, savedState = null) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track || track.type === 'Audio') {
+        console.warn(`[UI openTrackSequencerWindow] Track ${trackId} not found or is Audio type. Aborting.`);
+        return null;
+    }
+    const windowId = `sequencerWin-${trackId}`;
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+
+    if (forceRedraw && openWindows.has(windowId)) {
+        const existingWindow = openWindows.get(windowId);
+        if (existingWindow && typeof existingWindow.close === 'function') {
+            try {
+                existingWindow.close(true);
+            } catch (e) {console.warn(`[UI openTrackSequencerWindow] Error closing existing sequencer window for redraw for track ${trackId}:`, e)}
+        } else {
+        }
+    }
+    if (openWindows.has(windowId) && !forceRedraw && !savedState) {
+        const win = openWindows.get(windowId);
+        win.restore();
+        if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null);
+        return win;
+    }
+
+    const activeSequence = track.getActiveSequence();
+    if (!activeSequence) {
+        console.error(`[UI openTrackSequencerWindow] Track ${trackId} has no active sequence. Cannot open sequencer.`);
+        return null;
+    }
+
+    let rows, rowLabels;
+    const numBars = activeSequence.length > 0 ? Math.max(1, activeSequence.length / Constants.STEPS_PER_BAR) : 1;
+
+    if (track.type === 'Synth' || track.type === 'InstrumentSampler') { rows = Constants.synthPitches.length; rowLabels = Constants.synthPitches; }
+    else if (track.type === 'Sampler') { rows = track.slices.length > 0 ? track.slices.length : Constants.numSlices; rowLabels = Array.from({ length: rows }, (_, i) => `Slice ${i + 1}`); }
+    else if (track.type === 'DrumSampler') { rows = Constants.numDrumSamplerPads; rowLabels = Array.from({ length: rows }, (_, i) => `Pad ${i + 1}`); }
+    else { rows = 0; rowLabels = []; }
+
+    const contentDOM = buildSequencerContentDOM(track, rows, rowLabels, numBars);
+
+    const desktopEl = localAppServices.uiElementsCache?.desktop || document.getElementById('desktop');
+    const safeDesktopWidth = (desktopEl && typeof desktopEl.offsetWidth === 'number' && desktopEl.offsetWidth > 0)
+                           ? desktopEl.offsetWidth
+                           : 1024; // More robust fallback
+
+
+    let calculatedWidth = Math.max(400, Math.min(900, safeDesktopWidth - 40));
+    let calculatedHeight = 400;
+
+    if (!Number.isFinite(calculatedWidth) || calculatedWidth <= 0) {
+        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedWidth (${calculatedWidth}) for track ${trackId}, defaulting to 600.`);
+        calculatedWidth = 600;
+    }
+    if (!Number.isFinite(calculatedHeight) || calculatedHeight <= 0) {
+        console.warn(`[UI openTrackSequencerWindow] Invalid calculatedHeight (${calculatedHeight}) for track ${trackId}, defaulting to 400.`);
+        calculatedHeight = 400;
+    }
+
+    const seqOptions = {
+        width: calculatedWidth,
+        height: calculatedHeight,
+        minWidth: 400,
+        minHeight: 250,
+        initialContentKey: windowId,
+        onCloseCallback: () => { if (localAppServices.getActiveSequencerTrackId && localAppServices.getActiveSequencerTrackId() === trackId && localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(null); }
+    };
+    if (savedState) {
+        if (Number.isFinite(parseInt(savedState.left,10))) seqOptions.x = parseInt(savedState.left,10);
+        if (Number.isFinite(parseInt(savedState.top,10))) seqOptions.y = parseInt(savedState.top,10);
+        if (Number.isFinite(parseInt(savedState.width,10)) && parseInt(savedState.width,10) >= seqOptions.minWidth) seqOptions.width = parseInt(savedState.width,10);
+        if (Number.isFinite(parseInt(savedState.height,10)) && parseInt(savedState.height,10) >= seqOptions.minHeight) seqOptions.height = parseInt(savedState.height,10);
+        if (Number.isFinite(parseInt(savedState.zIndex))) seqOptions.zIndex = parseInt(savedState.zIndex);
+        seqOptions.isMinimized = savedState.isMinimized;
+    }
+
+    const sequencerWindow = localAppServices.createWindow(windowId, `Sequencer: ${track.name} - ${activeSequence.name}`, contentDOM, seqOptions);
+
+    if (sequencerWindow?.element) {
+        const allCells = Array.from(sequencerWindow.element.querySelectorAll('.sequencer-step-cell'));
+        sequencerWindow.stepCellsGrid = [];
+        const currentSequenceLength = activeSequence ? activeSequence.length : Constants.defaultStepsPerBar;
+        for (let i = 0; i < rows; i++) {
+            sequencerWindow.stepCellsGrid[i] = allCells.slice(i * currentSequenceLength, (i + 1) * currentSequenceLength);
+        }
+        sequencerWindow.lastPlayedCol = -1;
+
+
+        if (localAppServices.setActiveSequencerTrackId) localAppServices.setActiveSequencerTrackId(trackId);
+        const grid = sequencerWindow.element.querySelector('.sequencer-grid-layout');
+        const controlsDiv = sequencerWindow.element.querySelector('.sequencer-container .controls');
+
+        if (controlsDiv) {
+            controlsDiv.draggable = true;
+            controlsDiv.addEventListener('dragstart', (e) => {
+                const currentActiveSeq = track.getActiveSequence();
+                if (currentActiveSeq) {
+                    const dragData = {
+                        type: 'sequence-timeline-drag',
+                        sourceSequenceId: currentActiveSeq.id,
+                        sourceTrackId: track.id,
+                        clipName: currentActiveSeq.name
+                    };
+                    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
+                    e.dataTransfer.effectAllowed = 'copy';
+                } else {
+                    e.preventDefault();
+                    console.warn(`[UI Sequencer DragStart] No active sequence to drag for track ${track.name}`);
+                }
+            });
+        }
+
+
+        const sequencerContextMenuHandler = (event) => {
+            event.preventDefault(); event.stopPropagation();
+            const currentTrackForMenu = localAppServices.getTrackById ? localAppServices.getTrackById(track.id) : null; if (!currentTrackForMenu) return;
+            const currentActiveSeq = currentTrackForMenu.getActiveSequence(); if(!currentActiveSeq) return;
+            const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
+            const menuItems = [
+                { label: `Copy "${currentActiveSeq.name}"`, action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentActiveSeq.data || [])), sequenceLength: currentActiveSeq.length }); showNotification(`Sequence "${currentActiveSeq.name}" copied.`, 2000); } } },
+                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); },
+                { separator: true },
+                { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); },
+                { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } },
+                { separator: true },
+                { label: '--- Pattern Operations ---', header: true },
+                { label: 'Randomize Pattern...', action: () => { 
+                    const density = prompt('Enter randomization density (0.0 - 1.0):', '0.3');
+                    const densityValue = parseFloat(density);
+                    if (isNaN(densityValue) || densityValue < 0 || densityValue > 1) { 
+                        showNotification('Invalid density value. Must be between 0 and 1.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.randomizePattern(densityValue);
+                    showNotification(`Randomized pattern: ${count} notes activated.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Shift Pattern Left ←', action: () => { 
+                    const count = currentTrackForMenu.shiftPatternLeft();
+                    showNotification(`Pattern shifted left: ${count} notes moved.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Shift Pattern Right →', action: () => { 
+                    const count = currentTrackForMenu.shiftPatternRight();
+                    showNotification(`Pattern shifted right: ${count} notes moved.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Mirror Horizontal (⇌)', action: () => { 
+                    currentTrackForMenu.mirrorPatternHorizontal();
+                    showNotification('Pattern mirrored horizontally.', 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Mirror Vertical (⇅)', action: () => { 
+                    const success = currentTrackForMenu.mirrorPatternVertical();
+                    if (success) {
+                        showNotification('Pattern mirrored vertically (pitches inverted).', 2000);
+                        if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    }
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Humanize Pattern...', action: () => { 
+                    const intensity = prompt('Enter humanize intensity (0.0 - 1.0):', '0.3');
+                    const intensityValue = parseFloat(intensity);
+                    if (isNaN(intensityValue) || intensityValue < 0 || intensityValue > 1) { 
+                        showNotification('Invalid intensity value. Must be between 0 and 1.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.humanizePattern(intensityValue);
+                    showNotification(`Humanized pattern: ${count} notes affected.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } }
+            ];
+            createContextMenu(event, menuItems, localAppServices);
+        };
+        if (grid) grid.addEventListener('contextmenu', sequencerContextMenuHandler);
+        if (controlsDiv) controlsDiv.addEventListener('contextmenu', sequencerContextMenuHandler);
+
+        // Handle bars input change
+        const barsInput = sequencerWindow.element.querySelector(`#seqLengthInput-${track.id}`);
+        if (barsInput) {
+            barsInput.addEventListener('change', (e) => {
+                const newNumBars = parseInt(e.target.value, 10);
+                if (!Number.isFinite(newNumBars) || newNumBars < 1 || newNumBars > (Constants.MAX_BARS || 16)) {
+                    showNotification(`Invalid number of bars. Must be 1-${Constants.MAX_BARS || 16}.`, 2000);
+                    e.target.value = Math.max(1, activeSequence.length / Constants.STEPS_PER_BAR);
+                    return;
+                }
+                const newLength = newNumBars * Constants.STEPS_PER_BAR;
+                if (newLength === activeSequence.length) return; // No change
+                
+                if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Change sequence length to ${newNumBars} bars`);
+                
+                // Resize the sequence data
+                const numRows = activeSequence.data ? activeSequence.data.length : (rows || 1);
+                let hasActiveNotes = false;
+                
+                for (let row = 0; row < numRows; row++) {
+                    if (activeSequence.data[row]?.length > newLength) {
+                        activeSequence.data[row] = activeSequence.data[row].slice(0, newLength);
+                        hasActiveNotes = true;
+                    }
+                }
+                activeSequence.length = newLength;
+                
+                // Recreate the Tone sequence
+                track.recreateToneSequence(true);
+                
+                // Re-render the sequencer window
+                openTrackSequencerWindow(trackId, true);
+                showNotification(`Sequence length changed to ${newNumBars} bars.`, 1500);
+            });
+        }
+
+        // Scale mode event handlers (only for Synth/InstrumentSampler tracks)
+        if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
+            const scaleModeToggle = sequencerWindow.element.querySelector(`#scaleModeToggle-${track.id}`);
+            const scaleRootSelect = sequencerWindow.element.querySelector(`#scaleRootSelect-${track.id}`);
+            const scaleSelect = sequencerWindow.element.querySelector(`#scaleSelect-${track.id}`);
+            const scaleLockToggle = sequencerWindow.element.querySelector(`#scaleLockToggle-${track.id}`);
+
+            if (scaleModeToggle) {
+                scaleModeToggle.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeEnabled) {
+                        localAppServices.setScaleModeEnabled(e.target.checked);
+                    }
+                    if (scaleRootSelect) scaleRootSelect.disabled = !e.target.checked;
+                    if (scaleSelect) scaleSelect.disabled = !e.target.checked;
+                    if (scaleLockToggle) scaleLockToggle.disabled = !e.target.checked;
+                    // Re-render to update highlighting
+                    openTrackSequencerWindow(trackId, true);
+                });
+            }
+
+            if (scaleRootSelect) {
+                scaleRootSelect.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeRoot) {
+                        localAppServices.setScaleModeRoot(e.target.value);
+                    }
+                    // Re-render to update highlighting
+                    openTrackSequencerWindow(trackId, true);
+                });
+            }
+
+            if (scaleSelect) {
+                scaleSelect.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeScale) {
+                        localAppServices.setScaleModeScale(e.target.value);
+                    }
+                    // Re-render to update highlighting
+                    openTrackSequencerWindow(trackId, true);
+                });
+            }
+
+            if (scaleLockToggle) {
+                scaleLockToggle.addEventListener('change', (e) => {
+                    if (localAppServices.setScaleModeLock) {
+                        localAppServices.setScaleModeLock(e.target.checked);
+                    }
+                });
+            }
+        }
+
+        // Velocity Editor event handlers
+        const velocityEditorToggle = sequencerWindow.element.querySelector(`#velocityEditorToggle-${track.id}`);
+        const velocityEditorLane = sequencerWindow.element.querySelector(`#velocityEditor-${track.id}`);
+
+        if (velocityEditorToggle && velocityEditorLane) {
+            velocityEditorToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    velocityEditorLane.classList.remove('hidden');
+                } else {
+                    velocityEditorLane.classList.add('hidden');
+                }
+            });
+
+            // Velocity bar editing - click and drag to change velocity
+            let isDraggingVelocity = false;
+            let dragStartY = 0;
+            let dragStartVelocity = 0;
+            let dragCol = -1;
+
+            const handleVelocityDrag = (e) => {
+                if (!isDraggingVelocity) return;
+                e.preventDefault();
+                
+                const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                const deltaY = dragStartY - currentY;
+                const sensitivity = 0.01; // Adjust sensitivity
+                let newVelocity = dragStartVelocity + (deltaY * sensitivity);
+                newVelocity = Math.max(0.05, Math.min(1.0, newVelocity));
+                
+                // Update velocity for all active notes in this column
+                const currentActiveSeq = track.getActiveSequence();
+                if (!currentActiveSeq || !currentActiveSeq.data) return;
+                
+                const numRows = currentActiveSeq.data.length;
+                let hasActiveNotes = false;
+                
+                for (let row = 0; row < numRows; row++) {
+                    const stepData = currentActiveSeq.data[row]?.[dragCol];
+                    if (stepData && stepData.active) {
+                        stepData.velocity = newVelocity;
+                        hasActiveNotes = true;
+                        
+                        // Update cell visual
+                        const cell = sequencerWindow.element.querySelector(`.sequencer-step-cell[data-row="${row}"][data-col="${dragCol}"]`);
+                        if (cell) {
+                            const opacity = 0.5 + (newVelocity * 0.5);
+                            cell.style.opacity = opacity.toFixed(2);
+                            cell.dataset.velocity = newVelocity.toFixed(2);
+                            cell.title = `R${row+1},S${dragCol+1} V:${Math.round(newVelocity * 127)}`;
+                        }
+                    }
+                }
+                
+                if (hasActiveNotes) {
+                    // Update velocity bar visual
+                    const bar = velocityEditorLane.querySelector(`.velocity-bar[data-col="${dragCol}"]`);
+                    if (bar) {
+                        const barHeight = Math.round(newVelocity * 56);
+                        bar.style.height = `${barHeight}px`;
+                    }
+                    const cell = velocityEditorLane.querySelector(`.velocity-cell[data-col="${dragCol}"]`);
+                    if (cell) {
+                        cell.dataset.maxVelocity = newVelocity.toFixed(2);
+                        cell.title = `Step ${dragCol + 1}: ${Math.round(newVelocity * 127)}`;
+                    }
+                }
+            };
+
+            const handleVelocityDragEnd = () => {
+                if (isDraggingVelocity) {
+                    isDraggingVelocity = false;
+                    document.removeEventListener('mousemove', handleVelocityDrag);
+                    document.removeEventListener('mouseup', handleVelocityDragEnd);
+                    document.removeEventListener('touchmove', handleVelocityDrag);
+                    document.removeEventListener('touchend', handleVelocityDragEnd);
+                    
+                    // Recreate Tone sequence to apply velocity changes
+                    track.recreateToneSequence(true);
+                }
+            };
+
+            // Add click/drag handlers to velocity cells
+            const velocityCells = velocityEditorLane.querySelectorAll('.velocity-cell');
+            velocityCells.forEach(cell => {
+                cell.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const currentActiveSeq = track.getActiveSequence();
+                    if (!currentActiveSeq || !currentActiveSeq.data) return;
+                    
+                    // Check if there are active notes in this column
+                    const numRows = currentActiveSeq.data.length;
+                    let hasActiveNotes = false;
+                    let currentMaxVel = 0;
+                    
+                    for (let row = 0; row < numRows; row++) {
+                        const stepData = currentActiveSeq.data[row]?.[col];
+                        if (stepData && stepData.active) {
+                            hasActiveNotes = true;
+                            if (stepData.velocity > currentMaxVel) {
+                                currentMaxVel = stepData.velocity;
+                            }
+                        }
+                    }
+                    
+                    if (!hasActiveNotes) return;
+                    
+                    // Capture undo state before velocity change
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Edit velocity at step ${col + 1} on ${track.name}`);
+                    }
+                    
+                    isDraggingVelocity = true;
+                    dragStartY = e.clientY;
+                    dragStartVelocity = currentMaxVel;
+                    dragCol = col;
+                    
+                    document.addEventListener('mousemove', handleVelocityDrag);
+                    document.addEventListener('mouseup', handleVelocityDragEnd);
+                });
+
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const currentActiveSeq = track.getActiveSequence();
+                    if (!currentActiveSeq || !currentActiveSeq.data) return;
+                    
+                    const numRows = currentActiveSeq.data.length;
+                    let hasActiveNotes = false;
+                    let currentMaxVel = 0;
+                    
+                    for (let row = 0; row < numRows; row++) {
+                        const stepData = currentActiveSeq.data[row]?.[col];
+                        if (stepData && stepData.active) {
+                            hasActiveNotes = true;
+                            if (stepData.velocity > currentMaxVel) {
+                                currentMaxVel = stepData.velocity;
+                            }
+                        }
+                    }
+                    
+                    if (!hasActiveNotes) return;
+                    
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Edit velocity at step ${col + 1} on ${track.name}`);
+                    }
+                    
+                    isDraggingVelocity = true;
+                    dragStartY = e.touches[0].clientY;
+                    dragStartVelocity = currentMaxVel;
+                    dragCol = col;
+                    
+                    document.addEventListener('touchmove', handleVelocityDrag, { passive: false });
+                    document.addEventListener('touchend', handleVelocityDragEnd);
+                }, { passive: false });
+            });
+        }
+
+    }
+    return sequencerWindow;
+}
+
+// --- UI Update & Drawing Functions ---
+export function drawWaveform(track) {
+    if (!track?.waveformCanvasCtx || !track.audioBuffer?.loaded) {
+        if (track?.waveformCanvasCtx) {
+            const canvas = track.waveformCanvasCtx.canvas;
+            track.waveformCanvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+            track.waveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#101010' : '#e0e0e0';
+            track.waveformCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            track.waveformCanvasCtx.fillStyle = canvas.classList.contains('dark') ? '#E0BBE4' : '#a0a0a0';
+            track.waveformCanvasCtx.textAlign = 'center';
+            track.waveformCanvasCtx.fillText('No audio loaded or processed', canvas.width / 2, canvas.height / 2);
+        }
+        return;
+    }
+    const canvas = track.waveformCanvasCtx.canvas; const ctx = track.waveformCanvasCtx;
+    const buffer = track.audioBuffer.get(); const data = buffer.getChannelData(0);
+    const step = Math.ceil(data.length / canvas.width); const amp = canvas.height / 2;
+    ctx.fillStyle = ctx.canvas.classList.contains('dark') ? '#101010' : '#f0f0f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 1; ctx.strokeStyle = ctx.canvas.classList.contains('dark') ? '#957DAD' : '#957DAD';
+    ctx.beginPath(); ctx.moveTo(0, amp);
+    for (let i = 0; i < canvas.width; i++) {
+        let min = 1.0; let max = -1.0;
+        for (let j = 0; j < step; j++) { const datum = data[(i * step) + j]; if (datum < min) min = datum; if (datum > max) max = datum; }
+        ctx.lineTo(i, (1 + min) * amp); ctx.lineTo(i, (1 + max) * amp);
+    }
+    ctx.lineTo(canvas.width, amp); ctx.stroke();
+    track.slices.forEach((slice, index) => {
+        if (slice.duration <= 0) return;
+        const startX = (slice.offset / buffer.duration) * canvas.width;
+        const endX = ((slice.offset + slice.duration) / buffer.duration) * canvas.width;
+        ctx.fillStyle = index === track.selectedSliceForEdit ? 'rgba(255, 0, 0, 0.3)' : (ctx.canvas.classList.contains('dark') ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0, 0, 255, 0.15)');
+        ctx.fillRect(startX, 0, endX - startX, canvas.height);
+        ctx.strokeStyle = index === track.selectedSliceForEdit ? 'rgba(255,0,0,0.7)' : (ctx.canvas.classList.contains('dark') ? 'rgba(96, 165, 250, 0.5)' : 'rgba(0,0,255,0.4)');
+        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(startX, 0); ctx.lineTo(startX, canvas.height); ctx.moveTo(endX, 0); ctx.lineTo(endX, canvas.height); ctx.stroke();
+        ctx.fillStyle = index === track.selectedSliceForEdit ? '#FEC8D8' : (ctx.canvas.classList.contains('dark') ? '#E0BBE4' : '#0000cc');
+        ctx.font = '10px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`S${index + 1}`, startX + 2, 10);
+    });
+}
+
+export function drawInstrumentWaveform(track) {
+    if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
+        if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message, similar to drawWaveform */ } return;
+    }
+    const canvas = track.instrumentWaveformCanvasCtx.canvas; const ctx = track.instrumentWaveformCanvasCtx;
+    const buffer = track.instrumentSamplerSettings.audioBuffer.get(); const data = buffer.getChannelData(0);
+    const step = Math.ceil(data.length / canvas.width); const amp = canvas.height / 2;
+    ctx.fillStyle = canvas.classList.contains('dark') ? '#101010' : '#f0f0f0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 1; ctx.strokeStyle = canvas.classList.contains('dark') ? '#D291BC' : '#D291BC';
+    ctx.beginPath(); ctx.moveTo(0, amp);
+    for (let i = 0; i < canvas.width; i++) { let min = 1.0; let max = -1.0; for (let j = 0; j < step; j++) { const datum = data[(i * step) + j]; if (datum < min) min = datum; if (datum > max) max = datum; } ctx.lineTo(i, (1 + min) * amp); ctx.lineTo(i, (1 + max) * amp); }
+    ctx.lineTo(canvas.width, amp); ctx.stroke();
+    if (track.instrumentSamplerSettings.loop) {
+        const loopStartX = (track.instrumentSamplerSettings.loopStart / buffer.duration) * canvas.width;
+        const loopEndX = (track.instrumentSamplerSettings.loopEnd / buffer.duration) * canvas.width;
+        ctx.fillStyle = canvas.classList.contains('dark') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(0, 255, 0, 0.2)';
+        ctx.fillRect(loopStartX, 0, loopEndX - loopStartX, canvas.height);
+        ctx.strokeStyle = canvas.classList.contains('dark') ? 'rgba(52, 211, 153, 0.6)' : 'rgba(0,200,0,0.6)';
+        ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(loopStartX, 0); ctx.lineTo(loopStartX, canvas.height); ctx.moveTo(loopEndX, 0); ctx.lineTo(loopEndX, canvas.height); ctx.stroke();
+    }
+}
+
+
+
+export function highlightPlayingStep(trackId, stepIndex, isPlaying) {
+    // Highlight the current playing step in the sequencer grid
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) return;
+    
+    // Find the sequencer window for this track
+    const sequencerWin = localAppServices.getWindowById ? localAppServices.getWindowById('sequencerWin-' + trackId) : null;
+    if (!sequencerWin || !sequencerWin.element) return;
+    
+    // Remove playing class from all cells
+    sequencerWin.element.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => {
+        cell.classList.remove('playing');
+    });
+    
+    if (isPlaying && stepIndex >= 0) {
+        // Add playing class to current step cell
+        const cell = sequencerWin.element.querySelector('[data-step="' + stepIndex + '"]');
+        if (cell) {
+            cell.classList.add('playing');
+        }
+    }
+}
+
+
+
+// --- Additional UI Functions ---
+
+export function renderSamplePads(track) {
+    if (!track || track.type !== 'Sampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const container = inspectorWin?.element?.querySelector(`#samplePadsContainer-${track.id}`);
+    if (!container) return;
+
+    container.innerHTML = '';
+    const numSlices = track.slices?.length || Constants.numSlices;
+    
+    for (let i = 0; i < numSlices; i++) {
+        const sliceData = track.slices?.[i] || {};
+        const pad = document.createElement('button');
+        pad.className = `sample-pad p-1 border rounded text-xs transition-colors ${
+            i === track.selectedSliceForEdit ? 'bg-purple-500 text-white border-purple-600' : 
+            'bg-gray-100 dark:bg-slate-600 border-gray-300 dark:border-slate-500 hover:bg-gray-200 dark:hover:bg-slate-500'
+        }`;
+        pad.textContent = `${i + 1}`;
+        pad.title = sliceData.userDefined ? `Slice ${i + 1} (Custom)` : `Slice ${i + 1}`;
+        pad.dataset.sliceIndex = i;
+        pad.addEventListener('click', () => {
+            track.selectedSliceForEdit = i;
+            renderSamplePads(track);
+            updateSliceEditorUI(track);
+            if (localAppServices.playSlicePreview && track.audioBuffer) {
+                const slice = track.slices[i];
+                if (slice) localAppServices.playSlicePreview(track, i);
+            }
+        });
+        container.appendChild(pad);
+    }
+}
+
+export function updateSliceEditorUI(track) {
+    if (!track || track.type !== 'Sampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const winEl = inspectorWin?.element;
+    if (!winEl) return;
+
+    const selectedSlice = track.slices?.[track.selectedSliceForEdit] || { volume: 0.7, pitchShift: 0, envelope: { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 }, loop: false, reverse: false };
+
+    // Update selected slice info display
+    const sliceInfo = winEl.querySelector(`#selectedSliceInfo-${track.id}`);
+    if (sliceInfo) sliceInfo.textContent = track.selectedSliceForEdit + 1;
+
+    // Update volume knob
+    if (track.inspectorControls.sliceVolume?.setValue) {
+        track.inspectorControls.sliceVolume.setValue(selectedSlice.volume, false);
+    }
+
+    // Update pitch knob
+    if (track.inspectorControls.slicePitch?.setValue) {
+        track.inspectorControls.slicePitch.setValue(selectedSlice.pitchShift || 0, false);
+    }
+
+    // Update loop toggle
+    const loopToggle = winEl.querySelector(`#sliceLoopToggle-${track.id}`);
+    if (loopToggle) {
+        loopToggle.textContent = selectedSlice.loop ? 'Loop: ON' : 'Loop: OFF';
+        loopToggle.classList.toggle('active', selectedSlice.loop);
+    }
+
+    // Update reverse toggle
+    const reverseToggle = winEl.querySelector(`#sliceReverseToggle-${track.id}`);
+    if (reverseToggle) {
+        reverseToggle.textContent = selectedSlice.reverse ? 'Rev: ON' : 'Rev: OFF';
+        reverseToggle.classList.toggle('active', selectedSlice.reverse);
+    }
+
+    // Update envelope knobs
+    const env = selectedSlice.envelope || { attack: 0.01, decay: 0.1, sustain: 1.0, release: 0.1 };
+    if (track.inspectorControls.sliceEnvAttack?.setValue) track.inspectorControls.sliceEnvAttack.setValue(env.attack, false);
+    if (track.inspectorControls.sliceEnvDecay?.setValue) track.inspectorControls.sliceEnvDecay.setValue(env.decay, false);
+    if (track.inspectorControls.sliceEnvSustain?.setValue) track.inspectorControls.sliceEnvSustain.setValue(env.sustain, false);
+    if (track.inspectorControls.sliceEnvRelease?.setValue) track.inspectorControls.sliceEnvRelease.setValue(env.release, false);
+}
+
+export function updateDrumPadControlsUI(track) {
+    if (!track || track.type !== 'DrumSampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const winEl = inspectorWin?.element;
+    if (!winEl) return;
+
+    const selectedPadIndex = track.selectedDrumPadForEdit || 0;
+    const padData = track.drumSamplerPads?.[selectedPadIndex] || { volume: 0.7, pitchShift: 0, envelope: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 } };
+
+    // Update selected pad info display
+    const padInfo = winEl.querySelector(`#selectedDrumPadInfo-${track.id}`);
+    if (padInfo) padInfo.textContent = selectedPadIndex + 1;
+
+    // Update drop zone for selected pad
+    const oldDropZoneContainer = winEl.querySelector(`[id^="drumPadDropZoneContainer-${track.id}"]`);
+    if (oldDropZoneContainer) {
+        const newContainerId = `drumPadDropZoneContainer-${track.id}-${selectedPadIndex}`;
+        oldDropZoneContainer.id = newContainerId;
+        
+        const existingAudioData = { 
+            originalFileName: padData.originalFileName, 
+            status: padData.status || (padData.dbKey ? 'loaded' : (padData.originalFileName ? 'missing' : 'empty'))
+        };
+        const inputId = `drumPadFileInput-${track.id}-${selectedPadIndex}`;
+        oldDropZoneContainer.innerHTML = createDropZoneHTML(track.id, inputId, 'DrumSampler', selectedPadIndex, existingAudioData);
+        
+        const dzEl = oldDropZoneContainer.querySelector('.drop-zone');
+        const fileInputEl = oldDropZoneContainer.querySelector(`#${inputId}`);
+        
+        if (dzEl) {
+            setupGenericDropZoneListeners(dzEl, track.id, 'DrumSampler', selectedPadIndex, localAppServices.loadSoundFromBrowserToTarget, localAppServices.loadDrumSamplerPadFile, localAppServices.getTrackById);
+        }
+        if (fileInputEl) {
+            fileInputEl.onchange = (e) => {
+                localAppServices.loadDrumSamplerPadFile(e, track.id, selectedPadIndex);
+            };
+        }
+    }
+
+    // Update volume knob
+    if (track.inspectorControls.drumPadVolume?.setValue) {
+        track.inspectorControls.drumPadVolume.setValue(padData.volume ?? 0.7, false);
+    }
+
+    // Update pitch knob
+    if (track.inspectorControls.drumPadPitch?.setValue) {
+        track.inspectorControls.drumPadPitch.setValue(padData.pitchShift ?? 0, false);
+    }
+
+    // Update envelope knobs
+    const env = padData.envelope || { attack: 0.005, decay: 0.2, sustain: 0, release: 0.1 };
+    if (track.inspectorControls.drumPadEnvAttack?.setValue) track.inspectorControls.drumPadEnvAttack.setValue(env.attack, false);
+    if (track.inspectorControls.drumPadEnvDecay?.setValue) track.inspectorControls.drumPadEnvDecay.setValue(env.decay, false);
+    if (track.inspectorControls.drumPadEnvSustain?.setValue) track.inspectorControls.drumPadEnvSustain.setValue(env.sustain, false);
+    if (track.inspectorControls.drumPadEnvRelease?.setValue) track.inspectorControls.drumPadEnvRelease.setValue(env.release, false);
+}
+
+export function renderDrumSamplerPads(track) {
+    if (!track || track.type !== 'DrumSampler') return;
+    const inspectorWin = localAppServices.getWindowById ? localAppServices.getWindowById(`trackInspector-${track.id}`) : null;
+    const container = inspectorWin?.element?.querySelector(`#drumPadsGridContainer-${track.id}`);
+    if (!container) return;
+
+    container.innerHTML = '';
+    const numPads = Constants.numDrumSamplerPads || 8;
+    
+    for (let i = 0; i < numPads; i++) {
+        const padData = track.drumSamplerPads?.[i] || {};
+        const pad = document.createElement('button');
+        
+        const isSelected = i === track.selectedDrumPadForEdit;
+        const isLoaded = padData.status === 'loaded' || padData.dbKey;
+        
+        let bgClass = 'bg-gray-200 dark:bg-slate-600';
+        if (isSelected) {
+            bgClass = 'bg-purple-500 text-white';
+        } else if (isLoaded) {
+            bgClass = 'bg-green-100 dark:bg-green-800';
+        }
+        
+        pad.className = `drum-pad aspect-square p-1 border rounded text-xs font-medium transition-colors flex items-center justify-center ${bgClass} ${
+            isSelected ? 'border-purple-600 ring-2 ring-purple-400' : 'border-gray-300 dark:border-slate-500 hover:bg-gray-300 dark:hover:bg-slate-500'
+        }`;
+        pad.textContent = `${i + 1}`;
+        pad.title = padData.originalFileName ? `Pad ${i + 1}: ${padData.originalFileName}` : `Pad ${i + 1} (Empty)`;
+        pad.dataset.padIndex = i;
+        
+        pad.addEventListener('click', () => {
+            track.selectedDrumPadForEdit = i;
+            renderDrumSamplerPads(track);
+            updateDrumPadControlsUI(track);
+            // Play preview if sample is loaded
+            if (localAppServices.playDrumSamplerPadPreview && (padData.status === 'loaded' || padData.dbKey)) {
+                localAppServices.playDrumSamplerPadPreview(track, i);
+            }
+        });
+        
+        container.appendChild(pad);
+    }
+}
+
+
+export function updateSequencerCellUI(sequencerElement, trackType, row, col, isActive) {
+    if (!sequencerElement) return;
+    const cell = sequencerElement.querySelector(`.seq-cell[data-row="${row}"][data-col="${col}"]`);
+    if (!cell) return;
+    if (isActive) {
+        cell.classList.add('active');
+        cell.style.backgroundColor = trackType === 'DrumSampler' ? '#ef4444' : (trackType === 'Sampler' ? '#3b82f6' : '#eab308');
+    } else {
+        cell.classList.remove('active');
+        cell.style.backgroundColor = '';
+    }
+}
+
 // --- Tap Tempo Feature ---
 let tapTimes = [];
 const TAP_TIMEOUT_MS = 2000; // Reset tap buffer after 2 seconds of inactivity
