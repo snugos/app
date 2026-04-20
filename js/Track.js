@@ -383,6 +383,21 @@ export class Track {
             console.error(`[Track ${this.id} rebuildEffectChain] CRITICAL: Final track output node is invalid or master bus is unavailable. No output connection made.`);
         }
 
+        // --- Connect to Send Buses (Aux Routing) ---
+        // Connect track output to each send bus so that send levels control the amount sent
+        const sendTracks = this.appServices.getSendTracks ? this.appServices.getSendTracks() : [];
+        sendTracks.forEach(sendTrack => {
+            if (this.appServices.connectTrackToSendBus && this.appServices.getSendBusNodes) {
+                const sendBusNodes = this.appServices.getSendBusNodes();
+                if (sendBusNodes && sendBusNodes.has(sendTrack.id)) {
+                    const sendGainNode = this.appServices.connectTrackToSendBus(this.id, sendTrack.id);
+                    if (sendGainNode && finalTrackOutput && !finalTrackOutput.disposed) {
+                        try { finalTrackOutput.connect(sendGainNode); } catch (e) { /* Ignore if already connected or connection fails */ }
+                    }
+                }
+            }
+        });
+
         this.applyMuteState();
         this.applySoloState();
     }
