@@ -1041,15 +1041,6 @@ export function openSoundBrowserWindow(savedState = null) {
                     localAppServices.updateSoundBrowserDisplayForLibrary(null);
                 }
             }
-        } else if (savedState && localAppServices.getCurrentLibraryName && localAppServices.updateSoundBrowserDisplayForLibrary) {
-            const currentLibNameFromState = localAppServices.getCurrentLibraryName();
-             if (currentLibNameFromState && libSelect) {
-                libSelect.value = currentLibNameFromState;
-                localAppServices.updateSoundBrowserDisplayForLibrary(currentLibNameFromState);
-            } else if (libSelect) {
-                libSelect.value = "";
-                localAppServices.updateSoundBrowserDisplayForLibrary(null);
-            }
         }
     }
     return browserWindow;
@@ -1255,6 +1246,13 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             <span class="text-[10px]">Velocity</span>
         </label>`;
 
+    // Probability editor toggle button
+    const probabilityEditorToggleHTML = `
+        <label class="flex items-center gap-0.5 cursor-pointer ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+            <input type="checkbox" id="probabilityEditorToggle-${track.id}" class="w-3 h-3">
+            <span class="text-[10px]">Probability</span>
+        </label>`;
+
     // Ghost Track selector (for showing notes from other tracks)
     const allTracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     const compatibleGhostTracks = allTracks.filter(t => t.id !== track.id && (t.type === 'Synth' || t.type === 'InstrumentSampler'));
@@ -1274,7 +1272,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             </select>
         </label>` : '';
 
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} ${probabilityEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
 

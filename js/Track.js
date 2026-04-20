@@ -549,56 +549,6 @@ export class Track {
         try {
             if (this.type === 'Synth') {
                 await this.initializeInstrument();
-            } else if (this.type === 'Sampler') {
-                if (this.samplerAudioData && (this.samplerAudioData.dbKey || this.samplerAudioData.audioBufferDataURL)) {
-                    let audioFileBlob;
-                    if (this.samplerAudioData.dbKey) {
-                        try {
-                            audioFileBlob = await getAudio(this.samplerAudioData.dbKey);
-                            if (!audioFileBlob) {
-                                console.warn(`[Track ${this.id} Sampler] Sample not found in DB for key: ${this.samplerAudioData.dbKey}. Filename: ${this.samplerAudioData.fileName}`);
-                                this.samplerAudioData.status = 'missing_db';
-                            }
-                        } catch (err) {
-                            console.error(`[Track ${this.id} Sampler] Error getting audio from DB for key ${this.samplerAudioData.dbKey}:`, err);
-                            this.samplerAudioData.status = 'error';
-                            if (this.appServices.showNotification) this.appServices.showNotification(`Error loading sample ${this.samplerAudioData.fileName || 'from database'}.`, 3000);
-                        }
-                    } else if (this.samplerAudioData.audioBufferDataURL) { 
-                        try {
-                            const response = await fetch(this.samplerAudioData.audioBufferDataURL);
-                            if (!response.ok) throw new Error(`Failed to fetch data URL for ${this.samplerAudioData.fileName}`);
-                            audioFileBlob = await response.blob();
-                        } catch (fetchErr) {
-                            console.error(`[Track ${this.id} Sampler] Error fetching audio from data URL for ${this.samplerAudioData.fileName}:`, fetchErr);
-                            this.samplerAudioData.status = 'error';
-                            if (this.appServices.showNotification) this.appServices.showNotification(`Error loading sample ${this.samplerAudioData.fileName || 'from data URL'}.`, 3000);
-                        }
-                    }
-
-                    if (audioFileBlob) {
-                        const objectURL = URL.createObjectURL(audioFileBlob);
-                        try {
-                            if (this.audioBuffer && !this.audioBuffer.disposed) try {this.audioBuffer.dispose();} catch(e){console.warn("Err disposing old audioBuffer",e)}
-                            this.disposeSlicerMonoNodes();
-                            this.audioBuffer = await new Tone.Buffer().load(objectURL);
-                            this.samplerAudioData.status = 'loaded';
-                            if (!this.slicerIsPolyphonic) this.setupSlicerMonoNodes();
-                            if (this.appServices.autoSliceSample && this.audioBuffer.loaded && this.slices.every(s => s.duration === 0)) {
-                                this.appServices.autoSliceSample(this.id);
-                            }
-                        } catch (toneLoadErr) {
-                            console.error(`[Track ${this.id} Sampler] Tone.Buffer load error for ${this.samplerAudioData.fileName}:`, toneLoadErr);
-                            this.samplerAudioData.status = 'error';
-                            if (this.appServices.showNotification) this.appServices.showNotification(`Error processing sample ${this.samplerAudioData.fileName}. It might be corrupted or an unsupported format.`, 4000);
-                        } finally {
-                            URL.revokeObjectURL(objectURL);
-                        }
-                    } else if (this.samplerAudioData.status !== 'error' && this.samplerAudioData.status !== 'missing_db') {
-                        this.samplerAudioData.status = (this.samplerAudioData.dbKey || this.samplerAudioData.audioBufferDataURL) ? 'missing' : 'empty';
-                        console.warn(`[Track ${this.id} Sampler] Audio file blob was null for ${this.samplerAudioData.fileName}, status set to ${this.samplerAudioData.status}`);
-                    }
-                }
             } else if (this.type === 'DrumSampler') {
                 for (let i = 0; i < this.drumSamplerPads.length; i++) {
                     const pad = this.drumSamplerPads[i];
@@ -1197,153 +1147,23 @@ export class Track {
             for (let col = 0; col < totalSteps; col++) {
                 const cell = row[col];
                 if (cell && cell.active) {
-                    // Store the pitch index (from top, so invert)
-                    const pitchIndex = numRows - 1 - rowIndex;
-                    const velocity = cell.velocity !== undefined ? cell.velocity : Constants.defaultVelocity;
-                    activeNotes.push({ pitchIndex, velocity, originalRow: rowIndex });
-                }
-            }
-        }
-
-        if (activeNotes.length === 0) {
-            if (this.appServices.showNotification) {
-                this.appServices.showNotification('No notes found to arpeggiate. Add some notes first.', 3000);
-            }
-            return 0;
-        }
-
-        // Get unique pitches sorted (lowest to highest)
-        const uniquePitches = [...new Set(activeNotes.map(n => n.pitchIndex))].sort((a, b) => a - b);
-        
-        // Calculate steps per note based on rate
-        // rate 16 = 16th notes = 1 step per note (at 16 steps per bar)
-        // rate 8 = 8th notes = 2 steps per note
-        // rate 32 = 32nd notes = 0.5 steps (we'll use 1 step and double the pattern)
-        let stepsPerNote = Math.floor(Constants.STEPS_PER_BAR / rate);
-        if (stepsPerNote < 1) stepsPerNote = 1;
-        
-        // Build the arpeggio sequence
-        let arpSequence = [];
-        const clampedOctaves = Math.max(1, Math.min(4, octaves));
-        
-        // Build extended pitch list for multiple octaves
-        let extendedPitches = [];
-        for (let oct = 0; oct < clampedOctaves; oct++) {
-            const octaveShift = oct * 12; // 12 semitones per octave
-            for (const p of uniquePitches) {
-                extendedPitches.push(p + octaveShift);
-            }
-        }
-        
-        // Filter out pitches that would exceed the valid range
-        const maxPitchIndex = numRows - 1;
-        extendedPitches = extendedPitches.filter(p => p <= maxPitchIndex);
-        
-        if (extendedPitches.length === 0) {
-            if (this.appServices.showNotification) {
-                this.appServices.showNotification('Arpeggio would exceed valid pitch range.', 3000);
-            }
-            return 0;
-        }
-        
-        // Generate arpeggio based on mode
-        switch (mode) {
-            case 'up':
-                arpSequence = [...extendedPitches];
-                break;
-            case 'down':
-                arpSequence = [...extendedPitches].reverse();
-                break;
-            case 'updown':
-                arpSequence = [...extendedPitches, ...[...extendedPitches].slice(1, -1).reverse()];
-                break;
-            case 'downup':
-                arpSequence = [...extendedPitches].reverse();
-                arpSequence = [...arpSequence, ...arpSequence.slice(1, -1).reverse()];
-                break;
-            case 'random':
-                arpSequence = [];
-                const randomPool = [...extendedPitches];
-                for (let i = randomPool.length * 2; i > 0; i--) {
-                    const randomIndex = Math.floor(Math.random() * randomPool.length);
-                    arpSequence.push(randomPool[randomIndex]);
-                }
-                break;
-            case 'converge':
-                // Play from outer edges inward
-                arpSequence = [];
-                const convergePitches = [...extendedPitches];
-                while (convergePitches.length > 0) {
-                    if (convergePitches.length === 1) {
-                        arpSequence.push(convergePitches.shift());
-                    } else {
-                        arpSequence.push(convergePitches.shift());
-                        arpSequence.push(convergePitches.pop());
+                    // Check if this is the start of a note (not a continuation of a longer note)
+                    // A note starts at col if there's no active note at col-1, or if the note at col-1 has a length that doesn't reach col
+                    const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
+                    const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
+                    
+                    if (isNoteStart) {
+                        // Calculate duration based on note length (in 16th note steps)
+                        const noteLength = step.length || 1;
+                        const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
+                        const noteDuration = noteLength * sixteenthNoteDuration;
+                        
+                        this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), noteDuration, time, step.velocity * Constants.defaultVelocity);
                     }
+                    notePlayedThisStep = true;
                 }
-                break;
-            case 'diverge':
-                // Play from center outward
-                arpSequence = [];
-                const divergePitches = [...extendedPitches];
-                const midPoint = Math.floor(divergePitches.length / 2);
-                const left = divergePitches.slice(0, midPoint).reverse();
-                const right = divergePitches.slice(midPoint);
-                const maxLen = Math.max(left.length, right.length);
-                for (let i = 0; i < maxLen; i++) {
-                    if (i < left.length) arpSequence.push(left[i]);
-                    if (i < right.length) arpSequence.push(right[i]);
-                }
-                break;
-            default:
-                arpSequence = [...extendedPitches];
-        }
-        
-        // Clear the existing pattern
-        for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
-            const row = activeSeq.data[rowIndex];
-            if (!row) continue;
-            for (let col = 0; col < totalSteps; col++) {
-                row[col] = null;
             }
         }
-        
-        // Place the arpeggio notes
-        let noteCount = 0;
-        let currentStep = 0;
-        const avgVelocity = activeNotes.reduce((sum, n) => sum + n.velocity, 0) / activeNotes.length;
-        
-        while (currentStep < totalSteps) {
-            for (let i = 0; i < arpSequence.length && currentStep < totalSteps; i++) {
-                const pitchIndex = arpSequence[i];
-                // Convert pitch index back to row index (inverted because display is reversed)
-                const rowIndex = numRows - 1 - pitchIndex;
-                
-                if (rowIndex >= 0 && rowIndex < numRows) {
-                    const row = activeSeq.data[rowIndex];
-                    if (row) {
-                        row[currentStep] = {
-                            active: true,
-                            velocity: avgVelocity + (Math.random() * 0.1 - 0.05), // Slight variation
-                            length: stepsPerNote
-                        };
-                        noteCount++;
-                    }
-                }
-                currentStep += stepsPerNote;
-            }
-        }
-
-        this.recreateToneSequence(true);
-        if (this.appServices.updateTrackUI) {
-            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-        }
-        
-        if (this.appServices.showNotification) {
-            this.appServices.showNotification(`Arpeggiated: ${noteCount} notes created (${mode}, 1/${rate}, ${clampedOctaves} octave${clampedOctaves > 1 ? 's' : ''}).`, 3000);
-        }
-        
-        return noteCount;
     }
 
     // Set the length (in steps) of a note at a specific row/col
@@ -1381,6 +1201,35 @@ export class Track {
         const stepData = activeSeq.data[row]?.[col];
         if (!stepData || !stepData.active) return 0;
         return stepData.length || 1;
+    }
+
+    // Set the probability of a note at a specific row/col (0.0 to 1.0)
+    setNoteProbability(row, col, probability) {
+        if (this.type === 'Audio') return false;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return false;
+        
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return false;
+        
+        const clamped = Math.max(0, Math.min(1, probability));
+        if (stepData.probability === clamped) return false; // No change
+        
+        this._captureUndoState(`Set note probability on ${this.name}`);
+        stepData.probability = clamped;
+        
+        this.recreateToneSequence(true);
+        return true;
+    }
+
+    // Get the probability of a note at a specific row/col
+    getNoteProbability(row, col) {
+        if (this.type === 'Audio') return 1.0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return 1.0;
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return 1.0;
+        return stepData.probability !== undefined ? stepData.probability : 1.0;
     }
 
     quantizeSequence(quantizeTo = 16) {
@@ -1920,7 +1769,7 @@ export class Track {
                     for (let rowIndex = 0; rowIndex < Constants.synthPitches.length; rowIndex++) {
                         const pitchName = Constants.synthPitches[rowIndex];
                         const step = sequenceDataForTone[rowIndex]?.[col];
-                        if (step?.active && !notePlayedThisStep) {
+                        if (step && step.active) {
                             // Check if this is the start of a note (not a continuation of a longer note)
                             // A note starts at col if there's no active note at col-1, or if the note at col-1 has a length that doesn't reach col
                             const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
@@ -1942,6 +1791,10 @@ export class Track {
                      (this.slices || []).forEach((sliceData, sliceIndex) => {
                         const step = sequenceDataForTone[sliceIndex]?.[col];
                         if (step?.active && sliceData?.duration > 0 && this.audioBuffer?.loaded) {
+                            // Check probability for Sampler
+                            const noteProbability = step.probability !== undefined ? step.probability : Constants.DEFAULT_NOTE_PROBABILITY;
+                            if (noteProbability < 1.0 && Math.random() > noteProbability) return;
+                            
                             const targetVolumeLinear = sliceData.volume * step.velocity;
                             const playbackRate = Math.pow(2, (sliceData.pitchShift || 0) / 12);
                             let playDuration = sliceData.duration / playbackRate;
@@ -1986,6 +1839,10 @@ export class Track {
                         const step = sequenceDataForTone[padIndex]?.[col];
                         const padData = this.drumSamplerPads[padIndex];
                         if (step?.active && padData && this.drumPadPlayers[padIndex] && !this.drumPadPlayers[padIndex].disposed && this.drumPadPlayers[padIndex].loaded) {
+                            // Check probability for DrumSampler
+                            const noteProbability = step.probability !== undefined ? step.probability : Constants.DEFAULT_NOTE_PROBABILITY;
+                            if (noteProbability < 1.0 && Math.random() > noteProbability) return;
+                            
                             const player = this.drumPadPlayers[padIndex];
                             player.volume.value = Tone.gainToDb(padData.volume * step.velocity * 0.7);
                             player.playbackRate = Math.pow(2, (padData.pitchShift || 0) / 12);
