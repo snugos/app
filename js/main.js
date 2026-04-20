@@ -42,15 +42,10 @@ import {
     getSwingEnabledState,
     getSwingAmountState,
     // Send Tracks state
-    getSendTracksState,
-    getSendTrackByIdState,
+    getSendTracksState as getSendTracks,
+    getSendTrackByIdState as getSendTrackById,
     getTrackSendsState,
-    getTrackSendLevelState,
-    // Aliases for mixer
-    getSendTracks: getSendTracksState,
-    getSendTrackById: getSendTrackByIdState,
-    getTrackSendLevel: getTrackSendLevelState,
-    // State Setters
+    getTrackSendLevelState as getTrackSendLevel,
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
     setMidiAccessState, setActiveMIDIInputState,
@@ -73,17 +68,12 @@ import {
     setSwingEnabledState,
     setSwingAmountState,
     // Send Tracks setters
-    addSendTrackState,
     removeSendTrackState,
     setSendTrackNameState,
-    setSendTrackLevelState,
-    setSendTrackMutedState,
-    setSendTrackEffectsState,
-    setTrackSendLevelState,
-    // Aliases for mixer
-    addSendTrack: addSendTrackState,
-    setSendTrackMuted: setSendTrackMutedState,
-    setSendTrackLevel: setSendTrackLevelState,
+    setTrackSendLevelState as setTrackSendLevel,
+    addSendTrackState as addSendTrack,
+    setSendTrackMutedState as setSendTrackMuted,
+    setSendTrackLevelState as setSendTrackLevel,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -344,9 +334,9 @@ const appServices = {
     getTrackSendsState,
     getTrackSendLevelState,
     // Aliases for mixer
-    getSendTracks: getSendTracksState,
-    getSendTrackById: getSendTrackByIdState,
-    getTrackSendLevel: getTrackSendLevelState,
+    getSendTracksState as getSendTracks,
+    getSendTrackByIdState as getSendTrackById,
+    getTrackSendLevelState as getTrackSendLevel,
     // State Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
@@ -379,9 +369,9 @@ const appServices = {
     setSendTrackEffectsState,
     setTrackSendLevelState,
     // Aliases for mixer
-    addSendTrack: addSendTrackState,
-    setSendTrackMuted: setSendTrackMutedState,
-    setSendTrackLevel: setSendTrackLevelState,
+    addSendTrackState as addSendTrack,
+    setSendTrackMutedState as setSendTrackMuted,
+    setSendTrackLevelState as setSendTrackLevel,
     // Event Handler Passthroughs
     selectMIDIInput: eventSelectMIDIInput, 
     handleTrackMute: eventHandleTrackMute,
@@ -519,7 +509,7 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstructing = false) => {
+    closeAllWindows: (isReconstructinging = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
@@ -555,8 +545,8 @@ const appServices = {
 
     addMasterEffect: async (effectType) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -576,7 +566,7 @@ const appServices = {
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
                 const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -592,8 +582,8 @@ const appServices = {
     },
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
+            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructConstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
             if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();
@@ -616,8 +606,8 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true, 
-    _isReconstructingingDAW_flag: false,
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
+    _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
