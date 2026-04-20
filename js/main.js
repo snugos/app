@@ -333,6 +333,7 @@ const appServices = {
     getScaleModeLock: getScaleModeLockState,
     // Ghost Track state
     getGhostTrackId: getGhostTrackIdState,
+    setGhostTrackId: setGhostTrackIdState,
     // Swing state
     getSwingState,
     getSwingEnabledState,
@@ -522,7 +523,7 @@ const appServices = {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
-                if (win && typeof win.close === 'function') win.close(isReconstructing);
+                if (win && typeof win.close === 'function') win.close(isReconstructinging);
             });
         }
         if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
@@ -615,8 +616,8 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
-    _isReconstructingDAW_flag: false,
+    getIsReconstructingDAW: () => appServices._isReconstructingingDAW_flag === true, 
+    _isReconstructingingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
     setTransportEventsInitialized: (value) => { appServices._transportEventsInitialized_flag = !!value; },
