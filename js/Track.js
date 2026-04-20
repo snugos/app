@@ -368,14 +368,14 @@ export class Track {
         }
 
         if (this.gainNode && !this.gainNode.disposed && this.trackMeter && !this.trackMeter.disposed) {
-            catch (e) { console.error(`[Track ${this.id}] Error connecting gainNode to trackMeter:`, e); }
+            try { this.gainNode.connect(this.trackMeter); } catch (e) { console.error(`[Track ${this.id}] Error connecting gainNode to trackMeter:`, e); }
         }
 
         const masterBusInput = this.appServices.getMasterEffectsBusInputNode ? this.appServices.getMasterEffectsBusInputNode() : null;
         const finalTrackOutput = (this.trackMeter && !this.trackMeter.disposed) ? this.trackMeter : this.gainNode;
 
         if (finalTrackOutput && !finalTrackOutput.disposed && masterBusInput && !masterBusInput.disposed) {
-            catch (e) { console.error(`[Track ${this.id}] Error connecting final output to masterBusInput:`, e); }
+            try { finalTrackOutput.connect(masterBusInput); } catch (e) { console.error(`[Track ${this.id}] Error connecting final output to masterBusInput:`, e); }
         } else if (finalTrackOutput && !finalTrackOutput.disposed) {
             console.warn(`[Track ${this.id} rebuildEffectChain] Master effects bus input not available. Connecting directly to destination as fallback.`);
             try { finalTrackOutput.toDestination(); } catch (e) { console.error(`[Track ${this.id}] Error connecting final output to destination:`, e); }
@@ -1740,7 +1740,10 @@ export class Track {
                                 tempPlayer.loopStart = sliceData.offset; tempPlayer.loopEnd = sliceData.offset + sliceData.duration;
                                 tempPlayer.start(time, sliceData.offset, sliceData.loop ? undefined : playDuration);
                                 tempEnv.triggerAttack(time);
-                                if (!sliceData.loop) tempEnv.triggerRelease(time + playDuration * 0.95);
+                                if (!sliceData.loop) {
+                                    const releaseTime = time + playDuration - (sliceData.envelope.release * 0.05);
+                                    tempEnv.triggerRelease(Math.max(time, releaseTime));
+                                }
                                 Tone.Transport.scheduleOnce(() => {
                                     try { if(tempPlayer && !tempPlayer.disposed) tempPlayer.dispose(); } catch(e){}
                                     try { if(tempEnv && !tempEnv.disposed) tempEnv.dispose(); } catch(e){}
