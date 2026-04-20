@@ -375,6 +375,33 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Version**: No bump needed (code cleanup)
 - **Status**: Feature completer should proceed with next planned work.
 
+#### Day 18: Mixer Window Implementation (2026-04-20)
+- **Feature**: Implemented complete Mixer window UI for track mixing and send bus management
+- **Files Modified**:
+  - `js/ui.js`: Added new functions:
+    - `openMixerWindow()` - Opens the mixer window with track strips, send bus strips, and master strip
+    - `buildMixerContentDOM()` - Builds the mixer content HTML
+    - `buildMixerTrackStripHTML()` - Creates individual track strips with fader, pan, mute/solo/arm, meter, and send level controls
+    - `buildMixerSendStripHTML()` - Creates send bus strips with level control, mute, and effects button
+    - `buildMixerMasterStripHTML()` - Creates the master output strip with volume fader and meter
+    - `initializeMixerEventHandlers()` - Wires up all mixer control events
+    - `updateMixerWindow()` - Updates mixer UI when track state changes
+  - `js/main.js`: Added aliases for mixer functions to appServices:
+    - `getSendTracks`, `getSendTrackById`, `getTrackSendLevel` (state getters)
+    - `addSendTrack`, `setSendTrackMuted`, `setSendTrackLevel` (state setters)
+    - `createSendBus` (alias for `createSendBusInAudio`)
+    - `getOpenWindowElement` (helper for mixer UI updates)
+  - `js/constants.js`: Bumped APP_VERSION to 0.15.0
+- **Feature Details**:
+  - Track Strips: Each track has a vertical strip with name, mute/solo/arm buttons, level meter, volume fader, pan knob, and send level controls
+  - Send Bus Strips: Each send bus has a strip with name, mute button, level meter, level fader, and effects button
+  - Master Strip: Master output with level meter and volume fader
+  - Add Send Bus: Button to create new send buses (up to MAX_SEND_TRACKS limit)
+  - Real-time Updates: Mixer UI updates when track state changes (mute, solo, arm, volume, pan)
+- **Backend Note**: The send bus audio engine infrastructure was implemented in Day 18 (audio engine commit). This feature adds the UI layer to control send effects.
+- **Usage**: Open Mixer from menu (Menu > Mixer) to access mixing controls
+- **Version**: Bumped to 0.15.0
+
 ## Code Style Guidelines
 
 ### Module Structure

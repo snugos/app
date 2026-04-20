@@ -1409,6 +1409,449 @@ export function updatePlayheadPosition() {
     playhead.style.left = `${currentTime * pixelsPerSecond}px`;
 }
 
+export function openMixerWindow(savedState = null) {
+    const windowId = 'mixer';
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    const contentDOM = buildMixerContentDOM();
+    const options = {
+        width: 800,
+        height: 400,
+        minWidth: 600,
+        minHeight: 300,
+        closable: true,
+        minimizable: true,
+        resizable: true,
+        initialContentKey: windowId
+    };
+    if (savedState) {
+        Object.assign(options, {
+            x: parseInt(savedState.left, 10),
+            y: parseInt(savedState.top, 10),
+            width: parseInt(savedState.width, 10),
+            height: parseInt(savedState.height, 10),
+            zIndex: savedState.zIndex,
+            isMinimized: savedState.isMinimized
+        });
+    }
+
+    const mixerWindow = localAppServices.createWindow(windowId, 'Mixer', contentDOM, options);
+
+    // Initialize mixer event handlers
+    if (mixerWindow?.element) {
+        initializeMixerEventHandlers(mixerWindow.element);
+    }
+
+    return mixerWindow;
+}
+
+function buildMixerContentDOM() {
+    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    const sendTracks = localAppServices.getSendTracks ? localAppServices.getSendTracks() : [];
+
+    let trackStripsHTML = '';
+    tracks.forEach(track => {
+        trackStripsHTML += buildMixerTrackStripHTML(track, sendTracks);
+    });
+
+    let sendStripsHTML = '';
+    sendTracks.forEach(send => {
+        sendStripsHTML += buildMixerSendStripHTML(send);
+    });
+
+    return `<div id="mixerContent" class="flex h-full bg-[#1a1a1a] text-gray-200 text-xs overflow-x-auto">
+        <!-- Track Strips -->
+        <div id="mixerTracksContainer" class="flex flex-shrink-0">
+            ${trackStripsHTML}
+        </div>
+        
+        <!-- Separator -->
+        <div class="w-1 bg-[#303030] flex-shrink-0"></div>
+        
+        <!-- Send Bus Strips -->
+        <div id="mixerSendsContainer" class="flex flex-shrink-0">
+            ${sendStripsHTML}
+            <!-- Add Send Bus Button -->
+            <div class="flex flex-col items-center justify-center w-16 h-full bg-[#252525] border-r border-[#303030]">
+                <button id="addSendBusBtn" class="p-2 bg-[#3a3a3a] hover:bg-[#4a4a4a] rounded text-gray-300" title="Add Send Bus">
+                    <span class="text-lg">+</span>
+                </button>
+                <span class="text-[10px] mt-1 text-gray-500">Add Send</span>
+            </div>
+        </div>
+        
+        <!-- Separator -->
+        <div class="w-1 bg-[#303030] flex-shrink-0"></div>
+        
+        <!-- Master Strip -->
+        ${buildMixerMasterStripHTML()}
+    </div>`;
+}
+
+function buildMixerTrackStripHTML(track, sendTracks) {
+    const muted = track.muted;
+    const soloed = localAppServices.getSoloedTrackId ? localAppServices.getSoloedTrackId() === track.id : false;
+    const armed = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() === track.id : false;
+    const volume = track.volume !== undefined ? track.volume : 0.8;
+    const pan = track.pan !== undefined ? track.pan : 0;
+
+    // Build send level knobs HTML
+    let sendKnobsHTML = '';
+    sendTracks.forEach(send => {
+        const sendLevel = localAppServices.getTrackSendLevel ? localAppServices.getTrackSendLevel(track.id, send.id) : 0;
+        sendKnobsHTML += `
+            <div class="flex flex-col items-center mb-1">
+                <span class="text-[9px] text-gray-500 truncate w-10 text-center" title="${send.name}">${send.name.substring(0, 4)}</span>
+                <div class="send-knob-container" data-track-id="${track.id}" data-send-id="${send.id}">
+                    <input type="range" min="0" max="100" value="${Math.round(sendLevel * 100)}" 
+                        class="send-level-slider w-8 h-1 bg-[#404040] rounded appearance-none cursor-pointer"
+                        data-track-id="${track.id}" data-send-id="${send.id}">
+                </div>
+            </div>`;
+    });
+
+    return `<div class="mixer-track-strip flex flex-col items-center w-16 h-full bg-[#252525] border-r border-[#303030] p-1" data-track-id="${track.id}">
+        <!-- Track Name -->
+        <div class="text-[10px] text-gray-300 truncate w-full text-center mb-1" title="${track.name}">${track.name}</div>
+        
+        <!-- Mute/Solo/Arm Buttons -->
+        <div class="flex gap-0.5 mb-1">
+            <button class="mixer-btn mute-btn w-5 h-4 text-[8px] rounded ${muted ? 'bg-red-600 text-white' : 'bg-[#3a3a3a] text-gray-400 hover:bg-[#4a4a4a]'}" 
+                data-track-id="${track.id}" title="Mute">M</button>
+            <button class="mixer-btn solo-btn w-5 h-4 text-[8px] rounded ${soloed ? 'bg-yellow-600 text-white' : 'bg-[#3a3a3a] text-gray-400 hover:bg-[#4a4a4a]'}" 
+                data-track-id="${track.id}" title="Solo">S</button>
+            <button class="mixer-btn arm-btn w-5 h-4 text-[8px] rounded ${armed ? 'bg-red-500 text-white' : 'bg-[#3a3a3a] text-gray-400 hover:bg-[#4a4a4a]'}" 
+                data-track-id="${track.id}" title="Record Arm">R</button>
+        </div>
+        
+        <!-- Level Meter -->
+        <div class="w-8 h-24 bg-[#101010] rounded border border-[#303030] relative mb-1">
+            <div id="mixerTrackMeter-${track.id}" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 transition-all duration-75" style="height: 0%"></div>
+        </div>
+        
+        <!-- Volume Fader -->
+        <input type="range" min="0" max="100" value="${Math.round(volume * 100)}" 
+            class="mixer-fader w-3 h-16 bg-[#404040] rounded appearance-none cursor-pointer mb-1" 
+            data-track-id="${track.id}" orient="vertical" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;">
+        
+        <!-- Pan Knob -->
+        <div class="flex flex-col items-center mb-1">
+            <span class="text-[8px] text-gray-500">Pan</span>
+            <input type="range" min="-50" max="50" value="${Math.round(pan * 50)}" 
+                class="pan-knob w-8 h-1 bg-[#404040] rounded appearance-none cursor-pointer" 
+                data-track-id="${track.id}">
+        </div>
+        
+        <!-- Send Level Knobs -->
+        <div class="sends-container flex flex-col items-center border-t border-[#303030] pt-1 mt-1">
+            <span class="text-[8px] text-gray-500 mb-1">Sends</span>
+            ${sendKnobsHTML}
+        </div>
+    </div>`;
+}
+
+function buildMixerSendStripHTML(send) {
+    const level = send.level !== undefined ? send.level : 1.0;
+    const muted = send.muted || false;
+
+    return `<div class="mixer-send-strip flex flex-col items-center w-16 h-full bg-[#202020] border-r border-[#303030] p-1" data-send-id="${send.id}">
+        <!-- Send Name -->
+        <div class="text-[10px] text-purple-300 truncate w-full text-center mb-1" title="${send.name}">${send.name}</div>
+        
+        <!-- Mute Button -->
+        <button class="mixer-send-btn mute-btn w-8 h-4 text-[8px] rounded ${muted ? 'bg-red-600 text-white' : 'bg-[#3a3a3a] text-gray-400 hover:bg-[#4a4a4a]'}" 
+            data-send-id="${send.id}" title="Mute Send">M</button>
+        
+        <!-- Level Meter (simplified) -->
+        <div class="w-6 h-16 bg-[#101010] rounded border border-[#303030] relative my-1">
+            <div id="mixerSendMeter-${send.id}" class="absolute bottom-0 left-0 right-0 bg-purple-500 transition-all duration-75" style="height: 0%"></div>
+        </div>
+        
+        <!-- Level Fader -->
+        <input type="range" min="0" max="100" value="${Math.round(level * 100)}" 
+            class="send-fader w-3 h-12 bg-[#404040] rounded appearance-none cursor-pointer mb-1" 
+            data-send-id="${send.id}" orient="vertical" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;">
+        
+        <!-- Effects Button -->
+        <button class="send-effects-btn w-8 h-4 text-[8px] rounded bg-purple-500 hover:bg-purple-600 text-white" 
+            data-send-id="${send.id}" title="Open Send Effects">FX</button>
+    </div>`;
+}
+
+function buildMixerMasterStripHTML() {
+    const masterVolume = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : 0.8;
+
+    return `<div class="mixer-master-strip flex flex-col items-center w-20 h-full bg-[#1e1e1e] border-r border-[#303030] p-1">
+        <!-- Master Label -->
+        <div class="text-[10px] text-orange-300 font-semibold w-full text-center mb-1">MASTER</div>
+        
+        <!-- Master Level Meter -->
+        <div class="w-10 h-32 bg-[#101010] rounded border border-[#303030] relative mb-1">
+            <div id="mixerMasterMeterBar" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 transition-all duration-75" style="height: 0%"></div>
+        </div>
+        
+        <!-- Master Volume Fader -->
+        <input type="range" min="0" max="100" value="${Math.round(masterVolume * 100)}" 
+            class="master-fader w-4 h-20 bg-[#404040] rounded appearance-none cursor-pointer" 
+            id="masterVolumeFader" orient="vertical" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;">
+        
+        <span class="text-[8px] text-gray-500 mt-1">Volume</span>
+    </div>`;
+}
+
+function initializeMixerEventHandlers(mixerElement) {
+    // Track mute/solo/arm buttons
+    mixerElement.querySelectorAll('.mixer-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const trackId = parseInt(e.target.dataset.trackId);
+            const action = e.target.classList.contains('mute-btn') ? 'mute' :
+                          e.target.classList.contains('solo-btn') ? 'solo' : 'arm';
+            handleMixerButtonAction(trackId, action);
+        });
+    });
+
+    // Track volume faders
+    mixerElement.querySelectorAll('.mixer-fader').forEach(fader => {
+        fader.addEventListener('input', (e) => {
+            const trackId = parseInt(e.target.dataset.trackId);
+            const value = parseInt(e.target.value) / 100;
+            handleMixerVolumeChange(trackId, value);
+        });
+    });
+
+    // Track pan knobs
+    mixerElement.querySelectorAll('.pan-knob').forEach(knob => {
+        knob.addEventListener('input', (e) => {
+            const trackId = parseInt(e.target.dataset.trackId);
+            const value = parseInt(e.target.value) / 50; // -1 to 1
+            handleMixerPanChange(trackId, value);
+        });
+    });
+
+    // Send level sliders
+    mixerElement.querySelectorAll('.send-level-slider').forEach(slider => {
+        slider.addEventListener('input', (e) => {
+            const trackId = parseInt(e.target.dataset.trackId);
+            const sendId = parseInt(e.target.dataset.sendId);
+            const value = parseInt(e.target.value) / 100;
+            handleMixerSendLevelChange(trackId, sendId, value);
+        });
+    });
+
+    // Add Send Bus button
+    const addSendBtn = mixerElement.querySelector('#addSendBusBtn');
+    if (addSendBtn) {
+        addSendBtn.addEventListener('click', () => {
+            handleAddSendBus();
+        });
+    }
+
+    // Send bus mute buttons
+    mixerElement.querySelectorAll('.mixer-send-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const sendId = parseInt(e.target.dataset.sendId);
+            const isMuted = !e.target.classList.contains('bg-red-600');
+            handleMixerSendMute(sendId, isMuted);
+        });
+    });
+
+    // Send bus level faders
+    mixerElement.querySelectorAll('.send-fader').forEach(fader => {
+        fader.addEventListener('input', (e) => {
+            const sendId = parseInt(e.target.dataset.sendId);
+            const value = parseInt(e.target.value) / 100;
+            handleMixerSendLevelChangeFader(sendId, value);
+        });
+    });
+
+    // Send bus effects buttons
+    mixerElement.querySelectorAll('.send-effects-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const sendId = parseInt(e.target.dataset.sendId);
+            if (localAppServices.openSendEffectsWindow) {
+                localAppServices.openSendEffectsWindow(sendId);
+            }
+        });
+    });
+
+    // Master volume fader
+    const masterFader = mixerElement.querySelector('#masterVolumeFader');
+    if (masterFader) {
+        masterFader.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value) / 100;
+            handleMixerMasterVolumeChange(value);
+        });
+    }
+}
+
+function handleMixerButtonAction(trackId, action) {
+    if (action === 'mute') {
+        handleTrackMute(trackId);
+    } else if (action === 'solo') {
+        handleTrackSolo(trackId);
+    } else if (action === 'arm') {
+        handleTrackArm(trackId);
+    }
+    // Update the mixer UI
+    updateMixerWindow();
+}
+
+function handleMixerVolumeChange(trackId, value) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (track && track.setVolume) {
+        track.setVolume(value);
+    }
+}
+
+function handleMixerPanChange(trackId, value) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (track && track.setPan) {
+        track.setPan(value);
+    }
+}
+
+function handleMixerSendLevelChange(trackId, sendId, value) {
+    if (localAppServices.setTrackSendLevel) {
+        localAppServices.setTrackSendLevel(trackId, sendId, value);
+    }
+    if (localAppServices.setTrackSendLevelState) {
+        localAppServices.setTrackSendLevelState(trackId, sendId, value);
+    }
+}
+
+function handleAddSendBus() {
+    if (localAppServices.addSendTrack) {
+        const sendTrack = localAppServices.addSendTrack();
+        if (sendTrack && localAppServices.createSendBus) {
+            localAppServices.createSendBus(sendTrack.id);
+        }
+        updateMixerWindow();
+    }
+}
+
+function handleMixerSendMute(sendId, muted) {
+    if (localAppServices.setSendTrackMuted) {
+        localAppServices.setSendTrackMuted(sendId, muted);
+    }
+    if (localAppServices.setSendBusMuted) {
+        localAppServices.setSendBusMuted(sendId, muted);
+    }
+    updateMixerWindow();
+}
+
+function handleMixerSendLevelChangeFader(sendId, value) {
+    if (localAppServices.setSendTrackLevel) {
+        localAppServices.setSendTrackLevel(sendId, value);
+    }
+    if (localAppServices.setSendBusLevel) {
+        localAppServices.setSendBusLevel(sendId, value);
+    }
+}
+
+function handleMixerMasterVolumeChange(value) {
+    if (localAppServices.setMasterGainValue) {
+        localAppServices.setMasterGainValue(value);
+    }
+}
+
+export function updateMixerWindow() {
+    const mixerElement = localAppServices.getOpenWindowElement ? localAppServices.getOpenWindowElement('mixer') : null;
+    if (!mixerElement) return;
+
+    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    const sendTracks = localAppServices.getSendTracks ? localAppServices.getSendTracks() : [];
+    const soloedTrackId = localAppServices.getSoloedTrackId ? localAppServices.getSoloedTrackId() : null;
+    const armedTrackId = localAppServices.getArmedTrackId ? localAppServices.getArmedTrackId() : null;
+
+    // Update track strips
+    tracks.forEach(track => {
+        const trackStrip = mixerElement.querySelector(`.mixer-track-strip[data-track-id="${track.id}"]`);
+        if (trackStrip) {
+            // Update mute button
+            const muteBtn = trackStrip.querySelector('.mute-btn');
+            if (muteBtn) {
+                muteBtn.classList.toggle('bg-red-600', track.muted);
+                muteBtn.classList.toggle('text-white', track.muted);
+                muteBtn.classList.toggle('bg-[#3a3a3a]', !track.muted);
+                muteBtn.classList.toggle('text-gray-400', !track.muted);
+            }
+
+            // Update solo button
+            const soloBtn = trackStrip.querySelector('.solo-btn');
+            if (soloBtn) {
+                const isSoloed = soloedTrackId === track.id;
+                soloBtn.classList.toggle('bg-yellow-600', isSoloed);
+                soloBtn.classList.toggle('text-white', isSoloed);
+                soloBtn.classList.toggle('bg-[#3a3a3a]', !isSoloed);
+                soloBtn.classList.toggle('text-gray-400', !isSoloed);
+            }
+
+            // Update arm button
+            const armBtn = trackStrip.querySelector('.arm-btn');
+            if (armBtn) {
+                const isArmed = armedTrackId === track.id;
+                armBtn.classList.toggle('bg-red-500', isArmed);
+                armBtn.classList.toggle('text-white', isArmed);
+                armBtn.classList.toggle('bg-[#3a3a3a]', !isArmed);
+                armBtn.classList.toggle('text-gray-400', !isArmed);
+            }
+
+            // Update volume fader
+            const fader = trackStrip.querySelector('.mixer-fader');
+            if (fader && track.volume !== undefined) {
+                fader.value = Math.round(track.volume * 100);
+            }
+
+            // Update pan knob
+            const panKnob = trackStrip.querySelector('.pan-knob');
+            if (panKnob && track.pan !== undefined) {
+                panKnob.value = Math.round(track.pan * 50);
+            }
+
+            // Update send level sliders
+            sendTracks.forEach(send => {
+                const sendSlider = trackStrip.querySelector(`.send-level-slider[data-send-id="${send.id}"]`);
+                if (sendSlider) {
+                    const sendLevel = localAppServices.getTrackSendLevel ? localAppServices.getTrackSendLevel(track.id, send.id) : 0;
+                    sendSlider.value = Math.round(sendLevel * 100);
+                }
+            });
+        }
+    });
+
+    // Update send bus strips
+    sendTracks.forEach(send => {
+        const sendStrip = mixerElement.querySelector(`.mixer-send-strip[data-send-id="${send.id}"]`);
+        if (sendStrip) {
+            // Update mute button
+            const muteBtn = sendStrip.querySelector('.mute-btn');
+            if (muteBtn) {
+                muteBtn.classList.toggle('bg-red-600', send.muted);
+                muteBtn.classList.toggle('text-white', send.muted);
+                muteBtn.classList.toggle('bg-[#3a3a3a]', !send.muted);
+                muteBtn.classList.toggle('text-gray-400', !send.muted);
+            }
+
+            // Update level fader
+            const fader = sendStrip.querySelector('.send-fader');
+            if (fader && send.level !== undefined) {
+                fader.value = Math.round(send.level * 100);
+            }
+        }
+    });
+
+    // Update master fader
+    const masterFader = mixerElement.querySelector('#masterVolumeFader');
+    if (masterFader) {
+        const masterVolume = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : 0.8;
+        masterFader.value = Math.round(masterVolume * 100);
+    }
+}
+
 export function openTimelineWindow(savedState = null) {
     const windowId = 'timeline';
     const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();

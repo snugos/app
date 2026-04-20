@@ -44,6 +44,10 @@ import {
     getSendTrackByIdState,
     getTrackSendsState,
     getTrackSendLevelState,
+    // Aliases for mixer
+    getSendTracks: getSendTracksState,
+    getSendTrackById: getSendTrackByIdState,
+    getTrackSendLevel: getTrackSendLevelState,
     // State Setters
     addWindowToStoreState, removeWindowFromStoreState, setHighestZState, incrementHighestZState,
     setMasterEffectsState, setMasterGainValueState,
@@ -72,6 +76,10 @@ import {
     setSendTrackMutedState,
     setSendTrackEffectsState,
     setTrackSendLevelState,
+    // Aliases for mixer
+    addSendTrack: addSendTrackState,
+    setSendTrackMuted: setSendTrackMutedState,
+    setSendTrackLevel: setSendTrackLevelState,
     // Core State Actions
     addTrackToStateInternal, removeTrackFromStateInternal,
     captureStateForUndoInternal, undoLastActionInternal, redoLastActionInternal,
@@ -294,6 +302,8 @@ const appServices = {
     setTrackSendLevel,
     getSendBusNodes,
     getTrackSendNodes,
+    // Alias for mixer
+    createSendBus: createSendBusInAudio,
 
     // State Module Getters
     getTracks: getTracksState, getTrackById: getTrackByIdState,
@@ -326,6 +336,10 @@ const appServices = {
     getSendTrackByIdState,
     getTrackSendsState,
     getTrackSendLevelState,
+    // Aliases for mixer
+    getSendTracks: getSendTracksState,
+    getSendTrackById: getSendTrackByIdState,
+    getTrackSendLevel: getTrackSendLevelState,
     // State Setters & Core Actions
     addWindowToStore: addWindowToStoreState, removeWindowFromStore: removeWindowFromStoreState,
     setHighestZ: setHighestZState, incrementHighestZ: incrementHighestZState,
@@ -355,14 +369,10 @@ const appServices = {
     setSendTrackMutedState,
     setSendTrackEffectsState,
     setTrackSendLevelState,
-    // Core State Actions
-    addTrack: addTrackToStateInternal, removeTrack: removeTrackFromStateInternal,
-    captureStateForUndo: captureStateForUndoInternal, undoLastAction: undoLastActionInternal,
-    redoLastAction: redoLastActionInternal, gatherProjectData: gatherProjectDataInternal,
-    reconstructDAW: reconstructDAWInternal, saveProject: saveProjectInternal,
-    loadProject: loadProjectInternal, handleProjectFileLoad: handleProjectFileLoadInternal,
-    exportToWav: exportToWavInternal,
-
+    // Aliases for mixer
+    addSendTrack: addSendTrackState,
+    setSendTrackMuted: setSendTrackMutedState,
+    setSendTrackLevel: setSendTrackLevelState,
     // Event Handler Passthroughs
     selectMIDIInput: eventSelectMIDIInput, 
     handleTrackMute: eventHandleTrackMute,
@@ -490,11 +500,11 @@ const appServices = {
             uiElementsCache.recordBtnGlobal.classList.toggle('recording', isRec);
         } else { console.warn("Global record button not found in cache."); }
     },
-    closeAllWindows: (isReconstructinging = false) => {
+    closeAllWindows: (isReconstructing = false) => {
         const openWindows = getOpenWindowsState();
         if (openWindows && typeof openWindows.forEach === 'function') {
             openWindows.forEach(win => {
-                if (win && typeof win.close === 'function') win.close(isReconstructinging);
+                if (win && typeof win.close === 'function') win.close(isReconstructing);
             });
         }
         if (appServices.clearOpenWindowsMap) appServices.clearOpenWindowsMap();
@@ -517,11 +527,17 @@ const appServices = {
     updateTrackUI: handleTrackUIUpdate, 
     createWindow: (id, title, content, options) => new SnugWindow(id, title, content, options, appServices),
     uiElementsCache: uiElementsCache, 
+    // Add getOpenWindowElement for mixer
+    getOpenWindowElement: (winId) => {
+        if (!getWindowByIdState) return null;
+        const win = getWindowByIdState(winId);
+        return (win?.element && !win.isMinimized) ? win.element : null;
+    },
 
     addMasterEffect: async (effectType) => {
         try {
-            const isReconstructinging = appServices.getIsReconstructingingDAW ? appServices.getIsReconstructingingDAW() : false;
-            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
@@ -581,7 +597,7 @@ const appServices = {
         AVAILABLE_EFFECTS: null, getEffectParamDefinitions: null,
         getEffectDefaultParams: null, synthEngineControlDefinitions: null,
     },
-    getIsReconstructingingDAW: () => appServices._isReconstructingingDAW_flag === true, 
+    getIsReconstructingDAW: () => appServices._isReconstructingDAW_flag === true, 
     _isReconstructingDAW_flag: false,
     _transportEventsInitialized_flag: false,
     getTransportEventsInitialized: () => appServices._transportEventsInitialized_flag,
