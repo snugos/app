@@ -1190,11 +1190,15 @@ export function updateMixerWindow() {
 
 export function renderMixer(container) {
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    const sendTracks = localAppServices.getSendTracks ? localAppServices.getSendTracks() : [];
     container.innerHTML = '';
+    
+    // Master track
     const masterTrackDiv = document.createElement('div');
     masterTrackDiv.className = 'mixer-track master-track inline-block align-top p-1.5 border rounded bg-gray-200 dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
     masterTrackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="Master">Master</div> <div id="masterVolumeKnob-mixer-placeholder" class="h-16 mx-auto mb-1"></div> <div id="mixerMasterMeterContainer" class="h-3 w-full bg-gray-300 dark:bg-slate-600 rounded border border-gray-400 dark:border-slate-500 overflow-hidden mt-1"> <div id="mixerMasterMeterBar" class="h-full bg-purple-400 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div>`;
     container.appendChild(masterTrackDiv);
+    
     const masterVolKnobPlaceholder = masterTrackDiv.querySelector('#masterVolumeKnob-mixer-placeholder');
     if (masterVolKnobPlaceholder) {
         const masterGainNode = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : Tone.dbToGain(0);
@@ -1207,17 +1211,131 @@ export function renderMixer(container) {
         masterVolKnobPlaceholder.innerHTML = ''; masterVolKnobPlaceholder.appendChild(masterVolKnob.element);
     }
 
+    // Send Tracks section
+    if (sendTracks.length > 0) {
+        const sendSectionHeader = document.createElement('div');
+        sendSectionHeader.className = 'inline-block align-top p-1.5 w-2 text-xs text-center border-r border-gray-500 dark:border-slate-600 mr-1';
+        sendSectionHeader.innerHTML = '<div class="font-semibold text-gray-500" style="writing-mode: vertical-rl; text-orientation: mixed;">SENDS</div>';
+        container.appendChild(sendSectionHeader);
+        
+        sendTracks.forEach(sendTrack => {
+            const sendDiv = document.createElement('div');
+            sendDiv.className = 'mixer-track send-track inline-block align-top p-1.5 border rounded bg-yellow-100 dark:bg-yellow-900/30 dark:border-yellow-700 shadow w-24 mr-2 text-xs';
+            sendDiv.innerHTML = `
+                <div class="track-name font-semibold truncate mb-1 dark:text-yellow-200" title="${sendTrack.name}">${sendTrack.name}</div>
+                <div id="sendLevelKnob-mixer-${sendTrack.id}-placeholder" class="h-16 mx-auto mb-1"></div>
+                <div class="grid grid-cols-2 gap-0.5 my-1">
+                    <button id="sendMuteBtn-${sendTrack.id}" title="Mute Send" class="px-1 py-0.5 text-xs border rounded dark:border-yellow-600 dark:text-yellow-100 dark:hover:bg-yellow-800 ${sendTrack.muted ? 'muted bg-red-200 dark:bg-red-800' : ''}">${sendTrack.muted ? 'U' : 'M'}</button>
+                </div>
+                <button id="sendEffectsBtn-${sendTrack.id}" title="Open Effects" class="w-full px-1 py-0.5 text-xs border rounded dark:border-yellow-600 dark:text-yellow-100 dark:hover:bg-yellow-800">FX</button>
+            `;
+            container.appendChild(sendDiv);
+            
+            // Send level knob
+            const levelKnobPlaceholder = sendDiv.querySelector(`#sendLevelKnob-mixer-${sendTrack.id}-placeholder`);
+            if (levelKnobPlaceholder) {
+                const levelKnob = createKnob({
+                    label: `S${sendTrack.id}`,
+                    min: 0, max: Constants.SEND_LEVEL_MAX, step: 0.01,
+                    initialValue: sendTrack.level,
+                    decimals: 2,
+                    onValueChange: (val, o, fromInteraction) => {
+                        if (localAppServices.setSendTrackLevelState) localAppServices.setSendTrackLevelState(sendTrack.id, val);
+                        if (localAppServices.setSendBusOutputLevel) localAppServices.setSendBusOutputLevel(sendTrack.id, val);
+                        if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set ${sendTrack.name} level to ${val.toFixed(2)}`);
+                    }
+                });
+                levelKnobPlaceholder.innerHTML = '';
+                levelKnobPlaceholder.appendChild(levelKnob.element);
+            }
+            
+            // Mute button
+            sendDiv.querySelector(`#sendMuteBtn-${sendTrack.id}`)?.addEventListener('click', () => {
+                if (localAppServices.setSendTrackMutedState) {
+                    const newMuted = !sendTrack.muted;
+                    localAppServices.setSendTrackMutedState(sendTrack.id, newMuted);
+                    if (localAppServices.muteSendBus) localAppServices.muteSendBus(sendTrack.id, newMuted);
+                    if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`${newMuted ? 'Mute' : 'Unmute'} ${sendTrack.name}`);
+                    if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
+                }
+            });
+            
+            // Effects button
+            sendDiv.querySelector(`#sendEffectsBtn-${sendTrack.id}`)?.addEventListener('click', () => {
+                if (localAppServices.openSendEffectsWindow) localAppServices.openSendEffectsWindow(sendTrack.id);
+            });
+        });
+    }
+    
+    // Regular tracks
     tracks.forEach(track => {
         const trackDiv = document.createElement('div');
         trackDiv.className = 'mixer-track inline-block align-top p-1.5 border rounded bg-white dark:bg-slate-700 dark:border-slate-600 shadow w-24 mr-2 text-xs';
-        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div> <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div> <div class="grid grid-cols-2 gap-0.5 my-1"> <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button> <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button> </div> <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5"> <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-pink-400 transition-all duration-50 ease-linear" style="width: 0%;"></div> </div>`;
+        
+        // Build send knobs HTML for this track
+        let sendKnobsHTML = '';
+        sendTracks.forEach(sendTrack => {
+            const sendLevel = localAppServices.getTrackSendLevelState ? localAppServices.getTrackSendLevelState(track.id, sendTrack.id) : 0;
+            sendKnobsHTML += `<div id="sendKnob-track-${track.id}-send-${sendTrack.id}-placeholder" class="h-10 mx-auto" title="Send to ${sendTrack.name}"></div>`;
+        });
+        
+        trackDiv.innerHTML = `<div class="track-name font-semibold truncate mb-1 dark:text-slate-200" title="${track.name}">${track.name}</div> 
+            <div id="volumeKnob-mixer-${track.id}-placeholder" class="h-16 mx-auto mb-1"></div> 
+            <div class="grid grid-cols-2 gap-0.5 my-1"> 
+                <button id="mixerMuteBtn-${track.id}" title="Mute" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isMuted ? 'muted' : ''}">${track.isMuted ? 'U' : 'M'}</button> 
+                <button id="mixerSoloBtn-${track.id}" title="Solo" class="px-1 py-0.5 text-xs border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600 ${track.isSoloed ? 'soloed' : ''}">${track.isSoloed ? 'U' : 'S'}</button> 
+            </div> 
+            <div id="mixerTrackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden mt-0.5"> 
+                <div id="mixerTrackMeterBar-${track.id}" class="h-full bg-pink-400 transition-all duration-50 ease-linear" style="width: 0%;"></div> 
+            </div>
+            ${sendTracks.length > 0 ? `<div class="send-knobs mt-1 border-t border-gray-300 dark:border-slate-600 pt-1">${sendKnobsHTML}</div>` : ''}`;
+        
         trackDiv.addEventListener('contextmenu', (e) => { e.preventDefault(); createContextMenu(e, [ {label: "Open Inspector", action: () => localAppServices.handleOpenTrackInspector(track.id)}, {label: "Open Effects Rack", action: () => localAppServices.handleOpenEffectsRack(track.id)}, {label: "Open Sequencer", action: () => localAppServices.handleOpenSequencer(track.id)}, {separator: true}, {label: track.isMuted ? "Unmute" : "Mute", action: () => localAppServices.handleTrackMute(track.id)}, {label: track.isSoloed ? "Unsolo" : "Solo", action: () => localAppServices.handleTrackSolo(track.id)}, {label: (localAppServices.getArmedTrackId && localAppServices.getArmedTrackId() === track.id) ? "Disarm Input" : "Arm for Input", action: () => localAppServices.handleTrackArm(track.id)}, {separator: true}, {label: "Remove Track", action: () => localAppServices.handleRemoveTrack(track.id)} ], localAppServices); });
         container.appendChild(trackDiv);
+        
         const volKnobPlaceholder = trackDiv.querySelector(`#volumeKnob-mixer-${track.id}-placeholder`);
         if (volKnobPlaceholder) { const volKnob = createKnob({ label: `Vol ${track.id}`, min: 0, max: 1.2, step: 0.01, initialValue: track.previousVolumeBeforeMute, decimals: 2, trackRef: track, onValueChange: (val, o, fromInteraction) => track.setVolume(val, fromInteraction) }); volKnobPlaceholder.innerHTML = ''; volKnobPlaceholder.appendChild(volKnob.element); }
         trackDiv.querySelector(`#mixerMuteBtn-${track.id}`).addEventListener('click', () => localAppServices.handleTrackMute(track.id));
         trackDiv.querySelector(`#mixerSoloBtn-${track.id}`).addEventListener('click', () => localAppServices.handleTrackSolo(track.id));
+        
+        // Add send knobs for this track
+        sendTracks.forEach(sendTrack => {
+            const sendKnobPlaceholder = trackDiv.querySelector(`#sendKnob-track-${track.id}-send-${sendTrack.id}-placeholder`);
+            if (sendKnobPlaceholder) {
+                const sendLevel = localAppServices.getTrackSendLevelState ? localAppServices.getTrackSendLevelState(track.id, sendTrack.id) : 0;
+                const sendKnob = createKnob({
+                    label: `S${sendTrack.id}`,
+                    min: Constants.SEND_LEVEL_MIN, max: Constants.SEND_LEVEL_MAX, step: 0.01,
+                    initialValue: sendLevel,
+                    decimals: 2,
+                    onValueChange: (val, o, fromInteraction) => {
+                        if (localAppServices.setTrackSendLevelState) localAppServices.setTrackSendLevelState(track.id, sendTrack.id, val);
+                        if (localAppServices.setTrackSendLevel) localAppServices.setTrackSendLevel(track.id, sendTrack.id, val);
+                        if (fromInteraction && localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Set ${track.name} -> ${sendTrack.name} send to ${val.toFixed(2)}`);
+                    }
+                });
+                sendKnobPlaceholder.innerHTML = '';
+                sendKnobPlaceholder.appendChild(sendKnob.element);
+            }
+        });
     });
+    
+    // Add "Add Send Track" button
+    if (sendTracks.length < Constants.MAX_SEND_TRACKS) {
+        const addSendBtn = document.createElement('button');
+        addSendBtn.className = 'inline-block align-top p-1.5 border border-dashed border-gray-400 dark:border-slate-500 rounded w-24 mr-2 text-xs text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-700';
+        addSendBtn.innerHTML = '+ Add Send';
+        addSendBtn.addEventListener('click', () => {
+            if (localAppServices.addSendTrack && localAppServices.captureStateForUndo && localAppServices.updateMixerWindow) {
+                const newSend = localAppServices.addSendTrack();
+                if (newSend) {
+                    localAppServices.captureStateForUndo(`Added ${newSend.name}`);
+                    localAppServices.updateMixerWindow();
+                }
+            }
+        });
+        container.appendChild(addSendBtn);
+    }
 }
 
 // --- Sequencer Window ---
@@ -1492,9 +1610,9 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
             const menuItems = [
                 { label: `Copy "${currentActiveSeq.name}"`, action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentActiveSeq.data || [])), sequenceLength: currentActiveSeq.length }); showNotification(`Sequence "${currentActiveSeq.name}" copied.`, 2000); } } },
-                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
+                { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); },
                 { separator: true },
-                { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); }); } },
+                { label: `Erase "${currentActiveSeq.name}"`, action: () => { showConfirmationDialog(`Erase Sequence "${currentActiveSeq.name}" for ${currentTrackForMenu.name}?`, "This will clear all notes. This can be undone.", () => { if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Erase Sequence ${currentActiveSeq.name} for ${currentTrackForMenu.name}`); let numRowsErase = currentActiveSeq.data.length; currentActiveSeq.data = Array(numRowsErase).fill(null).map(() => Array(currentActiveSeq.length).fill(null)); currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence "${currentActiveSeq.name}" erased.`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); },
                 { label: `Double Length of "${currentActiveSeq.name}"`, action: () => { const currentNumBars = currentActiveSeq.length / Constants.STEPS_PER_BAR; if (currentNumBars * 2 > (Constants.MAX_BARS || 16)) { showNotification(`Exceeds max of ${Constants.MAX_BARS || 16} bars.`, 3000); return; } currentTrackForMenu.doubleSequence(); showNotification(`Sequence length doubled for "${currentActiveSeq.name}".`, 2000); } },
                 { separator: true },
                 { label: '--- Pattern Operations ---', header: true },
@@ -1565,18 +1683,14 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                 
                 // Resize the sequence data
                 const numRows = activeSequence.data ? activeSequence.data.length : (rows || 1);
-                const newData = [];
-                for (let r = 0; r < numRows; r++) {
-                    newData[r] = [];
-                    for (let c = 0; c < newLength; c++) {
-                        if (activeSequence.data && activeSequence.data[r] && activeSequence.data[r][c]) {
-                            newData[r][c] = activeSequence.data[r][c];
-                        } else {
-                            newData[r][c] = null;
-                        }
+                let hasActiveNotes = false;
+                
+                for (let row = 0; row < numRows; row++) {
+                    if (activeSequence.data[row]?.length > newLength) {
+                        activeSequence.data[row] = activeSequence.data[row].slice(0, newLength);
+                        hasActiveNotes = true;
                     }
                 }
-                activeSequence.data = newData;
                 activeSequence.length = newLength;
                 
                 // Recreate the Tone sequence
@@ -2183,7 +2297,7 @@ export function renderTimeline() {
     
     for (let bar = 0; bar < totalBars; bar++) {
         rulerHTML += `<div class="timeline-bar-marker" style="position:absolute;left:${bar * pixelsPerBar}px;height:100%;border-left:1px solid #666;z-index:2;"></div>`;
-        rulerHTML += `<span style="position:absolute;left:${bar * pixelsPerBar + 4}px;font-size:10px;color:#aaa;z-index:3;">${bar + 1}</span>`;
+        rulerHTML += `<span style="position:sticky;left:0;background:#333;padding:2px 5px;font-size:11px;color:#ccc;z-index:3;">${bar + 1}</span>`;
     }
     rulerHTML += '</div>';
     

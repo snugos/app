@@ -362,7 +362,7 @@ export class Track {
             }
         } else {
             if (this.type === 'Audio' && this.inputChannel && !this.inputChannel.disposed) {
-                catch(e) { console.error(`[Track ${this.id}] Error connecting inputChannel to gainNode:`, e); }
+                try { this.inputChannel.connect(this.gainNode); } catch(e) { console.error(`[Track ${this.id}] Error connecting inputChannel to gainNode:`, e); }
             } else {
             }
         }
