@@ -452,6 +452,30 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: All menu items in the Start Menu are now functional
 - **Version**: Bumped to 0.18.0
 
+#### Day 21: Transpose and Quantize Pattern UI (2026-04-20)
+- **Feature**: Added UI controls for Transpose and Quantize pattern operations in sequencer context menu
+- **Files Modified**:
+  - `js/ui.js`: Added new context menu items in sequencer window:
+    - "Transpose Up ↑ (+1 semitone)" - Shifts all notes up one semitone
+    - "Transpose Down ↓ (-1 semitone)" - Shifts all notes down one semitone
+    - "Transpose by..." - Prompts for semitone value (-12 to +12) for custom transposition
+    - "Quantize Pattern..." - Prompts for quantize value (1, 2, 4, 8, 16) to snap notes to grid
+  - `js/constants.js`: Bumped APP_VERSION to 0.19.0
+- **Feature Details**:
+  - Transpose Operations: Shift note pitches up or down by semitones
+    - Works only on Synth and InstrumentSampler tracks (disabled for DrumSampler/Sampler)
+    - Custom transpose allows ±12 semitones (one octave)
+    - Notes that would fall outside the valid range are discarded
+  - Quantize Operation: Snap notes to rhythmic grid
+    - Quantize values: 1 (whole note), 2 (half note), 4 (quarter note), 8 (eighth note), 16 (sixteenth note)
+    - Notes are moved to nearest grid position
+    - Collision handling: if destination is occupied, finds nearest free slot
+  - Undo Support: Both operations capture state for undo/redo
+  - Visual Feedback: Notifications show count of notes affected
+- **Backend Note**: The `shiftSequenceNotes()` and `quantizeSequence()` methods already existed in Track.js but had no UI wiring
+- **Usage**: Right-click on sequencer grid, use Transpose or Timing sections in context menu
+- **Version**: Bumped to 0.19.0
+
 ## Code Style Guidelines
 
 ### Module Structure

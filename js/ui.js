@@ -588,7 +588,9 @@ export function openTrackInspectorWindow(trackId, savedState = null) {
     // Larger window for DrumSampler to show pads
     const baseHeight = track.type === 'DrumSampler' ? 580 : 450;
     const inspectorOptions = { width: 320, height: baseHeight, minWidth: 280, minHeight: 350, initialContentKey: windowId, onCloseCallback: () => { /* main.js can clear track.inspectorWindow if needed */ } };
-    if (savedState) { Object.assign(inspectorOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized }); }
+    if (savedState) {
+        Object.assign(inspectorOptions, { x: parseInt(savedState.left,10), y: parseInt(savedState.top,10), width: parseInt(savedState.width,10), height: parseInt(savedState.height,10), zIndex: savedState.zIndex, isMinimized: savedState.isMinimized });
+    }
 
     const inspectorWindow = localAppServices.createWindow(windowId, `Inspector: ${track.name}`, contentDOM, inspectorOptions);
 
@@ -1523,6 +1525,59 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     const count = currentTrackForMenu.humanizePattern(intensityValue);
                     showNotification(`Humanized pattern: ${count} notes affected.`, 2000);
                     if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { separator: true },
+                { label: '--- Transpose ---', header: true },
+                { label: 'Transpose Up ↑ (+1 semitone)', action: () => { 
+                    const count = currentTrackForMenu.shiftSequenceNotes(-1);
+                    if (count > 0) {
+                        showNotification(`Transposed up: ${count} notes shifted.`, 2000);
+                        if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    } else {
+                        showNotification('No notes to transpose.', 2000);
+                    }
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Transpose Down ↓ (-1 semitone)', action: () => { 
+                    const count = currentTrackForMenu.shiftSequenceNotes(1);
+                    if (count > 0) {
+                        showNotification(`Transposed down: ${count} notes shifted.`, 2000);
+                        if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    } else {
+                        showNotification('No notes to transpose.', 2000);
+                    }
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { label: 'Transpose by...', action: () => { 
+                    const semitones = prompt('Enter semitones to transpose (+/- 12):', '0');
+                    const semitonesValue = parseInt(semitones, 10);
+                    if (isNaN(semitonesValue) || semitonesValue < -12 || semitonesValue > 12) { 
+                        showNotification('Invalid value. Must be between -12 and 12.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.shiftSequenceNotes(-semitonesValue);
+                    if (count > 0) {
+                        showNotification(`Transposed ${semitonesValue > 0 ? 'up' : 'down'} ${Math.abs(semitonesValue)} semitones: ${count} notes shifted.`, 2000);
+                        if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    } else {
+                        showNotification('No notes to transpose.', 2000);
+                    }
+                }, disabled: (currentTrackForMenu.type !== 'Synth' && currentTrackForMenu.type !== 'InstrumentSampler') },
+                { separator: true },
+                { label: '--- Timing ---', header: true },
+                { label: 'Quantize Pattern...', action: () => { 
+                    const quantizeValue = prompt('Enter quantize value (1, 2, 4, 8, or 16):', '16');
+                    const qVal = parseInt(quantizeValue, 10);
+                    if (isNaN(qVal) || ![1, 2, 4, 8, 16].includes(qVal)) { 
+                        showNotification('Invalid quantize value. Must be 1, 2, 4, 8, or 16.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.quantizeSequence(qVal);
+                    if (count > 0) {
+                        showNotification(`Quantized to 1/${qVal} notes: ${count} notes moved.`, 2000);
+                        currentTrackForMenu.recreateToneSequence(true);
+                        if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                    } else {
+                        showNotification('No notes needed quantizing.', 2000);
+                    }
                 } }
             ];
             createContextMenu(event, menuItems, localAppServices);
