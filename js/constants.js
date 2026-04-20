@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.21.0"; // Day 23: Arpeggiator Feature
+export const APP_VERSION = "0.22.0"; // Day 24: Note Probability Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -159,3 +159,6 @@ export const DEFAULT_SEND_TRACK = {
     level: 1.0,  // Output level of the send bus
     muted: false
 };
+
+// Note Probability constants
+export const DEFAULT_NOTE_PROBABILITY = 1.0; // Default probability (1.0 = always play)

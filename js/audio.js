@@ -1533,3 +1533,85 @@ export function getSendBusNodes() {
 export function getTrackSendNodes() {
     return trackSendNodes;
 }
+
+/**
+ * Panic - Stop all audio immediately
+ * This function is an emergency stop that:
+ * 1. Stops Tone.Transport
+ * 2. Cancels all scheduled events
+ * 3. Stops all playing sounds on all tracks
+ * 4. Shows notification
+ */
+export function panicAllAudio() {
+    console.log('[Audio] PANIC - Stopping all audio immediately');
+    
+    // Stop Tone.Transport
+    try {
+        Tone.Transport.stop();
+        Tone.Transport.cancel(); // Cancel all scheduled events
+    } catch (e) {
+        console.warn('[Audio panicAllAudio] Error stopping Transport:', e.message);
+    }
+    
+    // Stop all tracks' audio
+    const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    if (tracks && Array.isArray(tracks)) {
+        tracks.forEach(track => {
+            if (!track) return;
+            
+            // Stop any sequence playback
+            if (track.sequence && typeof track.sequence.stop === 'function') {
+                try {
+                    track.sequence.stop();
+                    track.sequence.clear();
+                } catch (e) { /* ignore */ }
+            }
+            
+            // Stop drum pad players
+            if (track.drumPadPlayers && Array.isArray(track.drumPadPlayers)) {
+                track.drumPadPlayers.forEach(player => {
+                    if (player && !player.disposed && typeof player.stop === 'function') {
+                        try { player.stop(); } catch (e) { /* ignore */ }
+                    }
+                });
+            }
+            
+            // Stop slicer mono player
+            if (track.slicerMonoPlayer && !track.slicerMonoPlayer.disposed) {
+                try {
+                    if (track.slicerMonoPlayer.state === 'started') {
+                        track.slicerMonoPlayer.stop();
+                    }
+                } catch (e) { /* ignore */ }
+            }
+            
+            // Stop instrument sampler
+            if (track.toneSampler && !track.toneSampler.disposed) {
+                try {
+                    track.toneSampler.releaseAll();
+                } catch (e) { /* ignore */ }
+            }
+            
+            // Stop any recording in progress
+            if (track.type === 'Audio' && track.isRecording) {
+                try {
+                    if (localAppServices.stopAudioRecording) {
+                        localAppServices.stopAudioRecording(track.id);
+                    }
+                } catch (e) { /* ignore */ }
+            }
+        });
+    }
+    
+    // Stop metronome if playing
+    try {
+        if (metronomeInitialized) {
+            stopMetronome();
+        }
+    } catch (e) { /* ignore */ }
+    
+    // Show notification
+    if (localAppServices.showNotification) {
+        localAppServices.showNotification('⚠ PANIC - All audio stopped', 2000);
+    }
+}

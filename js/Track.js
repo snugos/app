@@ -1348,14 +1348,29 @@ export class Track {
 
     // Set the length (in steps) of a note at a specific row/col
     setNoteLength(row, col, lengthInSteps) {
-        this._captureUndoState(`Set note length on ${this.name}`);
-        if (this.type === 'Audio') return;
+        if (this.type === 'Audio') return false;
+        if (this.type === 'DrumSampler') return false;
+        
         const activeSeq = this.getActiveSequence();
-        if (!activeSeq || !activeSeq.data) return;
+        if (!activeSeq || !activeSeq.data) return false;
+        
         const stepData = activeSeq.data[row]?.[col];
-        if (!stepData || !stepData.active) return;
+        if (!stepData || !stepData.active) return false;
+        
         const clamped = Math.max(1, Math.min(lengthInSteps, activeSeq.length - col));
-        activeSeq.data[row][col].length = clamped;
+        if (stepData.length === clamped) return false; // No change
+        
+        this._captureUndoState(`Set note length on ${this.name}`);
+        
+        stepData.length = clamped;
+        
+        this.recreateToneSequence(true);
+        
+        if (this.appServices.showNotification) {
+            this.appServices.showNotification(`Note length set to ${clamped} step${clamped > 1 ? 's' : ''}.`, 1500);
+        }
+        
+        return true;
     }
 
     // Get the length (in steps) of a note at a specific row/col
