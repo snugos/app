@@ -96,6 +96,43 @@ export function initializePrimaryEventListeners(appContext) {
                     console.error("[EventHandlers] createContextMenu function not available.");
                 }
             });
+
+            // Desktop dragover handler for audio files
+            uiCache.desktop.addEventListener('dragover', (e) => {
+                const hasAudioFiles = e.dataTransfer.types.includes('Files') || 
+                    e.dataTransfer.types.includes('application/json');
+                if (hasAudioFiles) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                }
+            });
+
+            // Desktop drop handler for audio files
+            uiCache.desktop.addEventListener('drop', async (e) => {
+                const files = e.dataTransfer.files;
+                if (!files || files.length === 0) return;
+                
+                const file = files[0];
+                if (!file.type.startsWith('audio/')) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                try {
+                    showNotification(`Importing "${file.name}"...`, 2000);
+                    // Create a new Audio track and add the file as a clip
+                    if (services.addTrack) {
+                        const newTrack = await services.addTrack('Audio', { name: file.name.replace(/\.[^/.]+$/, "") });
+                        if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
+                            await newTrack.addExternalAudioFileAsClip(file, 0, file.name);
+                            showNotification(`Audio file "${file.name}" imported successfully.`, 3000);
+                        }
+                    }
+                } catch (error) {
+                    console.error("[EventHandlers DesktopDrop] Error:", error);
+                    showNotification("Failed to import audio file.", 3000);
+                }
+            });
         } else {
              console.warn('[EventHandlers initializePrimaryEventListeners] Desktop element (uiCache.desktop) NOT found in uiCache!');
         }
@@ -131,15 +168,15 @@ export function initializePrimaryEventListeners(appContext) {
                     services.openSoundBrowserWindow?.();
                 } catch(e) { console.error('[Menu] Sound Browser error:', e); }
             },
-            menuOpenTimeline: () => {
+            menuImportAudioFile: () => {
                 try {
-                    services.openTimelineWindow?.();
-                } catch(e) { console.error('[Menu] Timeline error:', e); }
-            },
-            menuOpenGlobalControls: () => {
-                try {
-                    services.openGlobalControlsWindow?.();
-                } catch(e) { console.error('[Menu] Global Controls error:', e); }
+                    const importInput = document.getElementById('importAudioFileInput');
+                    if (importInput) {
+                        importInput.click();
+                    } else {
+                        console.error('[Menu] Import Audio File input not found');
+                    }
+                } catch(e) { console.error('[Menu] Import Audio File error:', e); }
             },
             menuOpenMixer: () => {
                 try {
@@ -176,6 +213,36 @@ export function initializePrimaryEventListeners(appContext) {
             });
         } else {
             console.warn("[EventHandlers] Load project input (uiCache.loadProjectInput) not found.");
+        }
+
+        // Import Audio File input handler
+        const importAudioFileInput = document.getElementById('importAudioFileInput');
+        if (importAudioFileInput) {
+            importAudioFileInput.addEventListener('change', async (e) => {
+                try {
+                    if (!e.target.files || e.target.files.length === 0) return;
+                    const file = e.target.files[0];
+                    
+                    if (!file.type.startsWith('audio/')) {
+                        showNotification("Please select a valid audio file.", 3000);
+                        return;
+                    }
+                    
+                    // Create a new Audio track and add the file as a clip
+                    if (services.addTrack) {
+                        showNotification(`Importing "${file.name}"...`, 2000);
+                        const newTrack = await services.addTrack('Audio', { name: file.name.replace(/\.[^/.]+$/, "") });
+                        if (newTrack && typeof newTrack.addExternalAudioFileAsClip === 'function') {
+                            await newTrack.addExternalAudioFileAsClip(file, 0, file.name);
+                            showNotification(`Audio file "${file.name}" imported successfully.`, 3000);
+                        }
+                    }
+                } catch (error) {
+                    console.error("[EventHandlers ImportAudioFile] Error:", error);
+                    showNotification("Failed to import audio file.", 3000);
+                }
+                e.target.value = ''; // Reset input
+            });
         }
 
     } catch (error) {

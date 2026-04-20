@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.16.0"; // Day 19: Restored missing sequencer window functions
+export const APP_VERSION = "0.17.0"; // Day 19: Audio Import Feature - Menu item, desktop drop support
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

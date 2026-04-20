@@ -402,6 +402,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open Mixer from menu (Menu > Mixer) to access mixing controls
 - **Version**: Bumped to 0.15.0
 
+#### Day 19: Audio Import Feature (2026-04-20)
+- **Feature**: Added comprehensive audio file import functionality with menu item and desktop drag-and-drop support
+- **Files Modified**:
+  - `index.html`: Added "Add Audio Track" and "Import Audio File..." menu items to start menu, added hidden file input for importing audio files
+  - `js/eventHandlers.js`: Added:
+    - `menuImportAudioFile` action to trigger file import dialog
+    - Desktop `dragover` event handler for audio files
+    - Desktop `drop` event handler to create new Audio track from dropped file
+    - Import audio file input change handler to create new Audio track and add file as clip
+  - `js/constants.js`: Bumped APP_VERSION to 0.17.0
+- **Feature Details**:
+  - Menu Import: "Import Audio File..." opens file picker, creates new Audio track with imported file
+  - Desktop Drop: Drag audio files onto desktop to automatically create new Audio track
+  - Track Naming: New tracks are named after the imported file (without extension)
+  - Feedback: Notifications show import progress and success/error messages
+- **Workflow Improvements**:
+  - Users can now quickly import audio files without manually creating tracks first
+  - Audio files can be dropped onto timeline lanes (existing feature) or onto desktop (new)
+  - Streamlines the workflow for bringing external audio into the DAW
+- **Usage**: Use Menu > Import Audio File... or drag audio file onto desktop
+- **Version**: Bumped to 0.17.0
+
 ## Code Style Guidelines
 
 ### Module Structure
