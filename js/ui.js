@@ -1154,52 +1154,33 @@ export function renderSoundBrowserDirectory(pathArray, treeNode) {
     const browserWindowEl = localAppServices.getWindowById ? localAppServices.getWindowById('soundBrowser')?.element : null;
     if (!browserWindowEl || !treeNode) return;
     const listDiv = browserWindowEl.querySelector('#soundBrowserList');
+    const libSelect = browserWindowEl.querySelector('#librarySelect');
     const pathDisplay = browserWindowEl.querySelector('#currentPathDisplay');
-    const previewBtn = browserWindowEl.querySelector('#previewSoundBtn');
-    listDiv.innerHTML = '';
-    const currentLibName = localAppServices.getCurrentLibraryName ? localAppServices.getCurrentLibraryName() : '';
-    pathDisplay.textContent = `/${currentLibName}${pathArray.length > 0 ? '/' : ''}${pathArray.join('/')}`;
+    const isWindowVisible = !browserWindowEl.closest('.window.minimized');
+    const currentDropdownSelection = libSelect ? libSelect.value : null;
 
-    if (localAppServices.setSelectedSoundForPreview) {
-        localAppServices.setSelectedSoundForPreview(null);
+
+    let performFullUIUpdate = false;
+
+    if (!isWindowVisible) {
+        if (treeNode && Object.keys(treeNode).length > 0) {
+            if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeNode);
+            if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory(pathArray, localAppServices.getCurrentSoundFileTree());
+        }
+        return;
     }
-    if(previewBtn) previewBtn.disabled = true;
 
-    const items = [];
-    for (const name in treeNode) { if (treeNode[name]?.type) items.push({ name, type: treeNode[name].type, nodeData: treeNode[name] }); }
-    items.sort((a, b) => { if (a.type === 'folder' && b.type !== 'folder') return -1; if (a.type !== 'folder' && b.type === 'folder') return 1; return a.name.localeCompare(b.name); });
-    if (items.length === 0) { listDiv.innerHTML = '<p class="text-gray-500 dark:text-slate-400 italic">Empty folder.</p>'; return; }
-
-    items.forEach(itemObj => {
-        const {name, nodeData} = itemObj; const listItem = document.createElement('div');
-        listItem.className = 'p-1 hover:bg-purple-200 dark:hover:bg-purple-600 cursor-pointer border-b dark:border-slate-600 text-xs flex items-center';
-        listItem.draggable = nodeData.type === 'file';
-        const icon = document.createElement('span'); icon.className = 'mr-1.5'; icon.textContent = nodeData.type === 'folder' ? '📁' : '🎵'; listItem.appendChild(icon);
-        const text = document.createElement('span'); text.textContent = name; listItem.appendChild(text);
-        if (nodeData.type === 'folder') {
-            listItem.addEventListener('click', () => {
-                const newPath = [...pathArray, name];
-                if (localAppServices.setCurrentSoundBrowserPath) localAppServices.setCurrentSoundBrowserPath(newPath);
-                renderSoundBrowserDirectory(newPath, nodeData.children);
-            });
-        }
-        else { // File
-            listItem.addEventListener('click', () => {
-                listDiv.querySelectorAll('.bg-blue-200,.dark\\:bg-purple-500').forEach(el => el.classList.remove('bg-blue-200', 'dark:bg-purple-500'));
-                listItem.classList.add('bg-blue-200', 'dark:bg-purple-500');
-                const soundToSelect = { fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName };
-                if (localAppServices.setSelectedSoundForPreview) {
-                    localAppServices.setSelectedSoundForPreview(soundToSelect);
-                    const checkSelected = localAppServices.getSelectedSoundForPreview ? localAppServices.getSelectedSoundForPreview() : { error: 'getSelectedSoundForPreview service not found' };
-                } else {
-                    console.warn('[UI SoundFile Click] setSelectedSoundForPreview service not available.');
-                }
-                if(previewBtn) previewBtn.disabled = false;
-            });
-            listItem.addEventListener('dragstart', (e) => { e.dataTransfer.setData("application/json", JSON.stringify({ fileName: name, fullPath: nodeData.fullPath, libraryName: currentLibName, type: 'sound-browser-item' })); e.dataTransfer.effectAllowed = "copy"; });
-        }
-        listDiv.appendChild(listItem);
-    });
+    if (treeNode && currentDropdownSelection === (treeNode.libraryName || "")) {
+        performFullUIUpdate = true;
+    } else if (currentDropdownSelection === "" && treeNode && Object.keys(treeNode).length > 0) {
+        performFullUIUpdate = true;
+    } else if (treeNode && Object.keys(treeNode).length > 0) {
+        if (localAppServices.setCurrentSoundFileTree) localAppServices.setCurrentSoundFileTree(treeNode);
+        if (localAppServices.renderSoundBrowserDirectory) localAppServices.renderSoundBrowserDirectory(pathArray, localAppServices.getCurrentSoundFileTree());
+    } else {
+        console.warn(`[UI renderSoundBrowserDirectory WARN] Tree node was empty or invalid.`);
+        listDiv.innerHTML = `<p class="text-red-500">Error: Library "${treeNode?.libraryName || ''}" data is empty or corrupt.</p>`;
+    }
 }
 
 
@@ -1274,12 +1255,55 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             <span class="text-[10px]">Velocity</span>
         </label>`;
 
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} </div> </div>`;
+    // Ghost Track selector (for showing notes from other tracks)
+    const allTracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
+    const compatibleGhostTracks = allTracks.filter(t => t.id !== track.id && (t.type === 'Synth' || t.type === 'InstrumentSampler'));
+    const currentGhostTrackId = localAppServices.getGhostTrackId ? localAppServices.getGhostTrackId() : null;
+    
+    let ghostTrackOptionsHTML = '<option value="">None</option>';
+    compatibleGhostTracks.forEach(t => {
+        const selected = currentGhostTrackId === t.id ? 'selected' : '';
+        ghostTrackOptionsHTML += `<option value="${t.id}" ${selected}>${t.name}</option>`;
+    });
+    
+    const ghostTrackSelectHTML = compatibleGhostTracks.length > 0 ? `
+        <label class="flex items-center gap-0.5 cursor-pointer ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+            <span class="text-[10px]">Ghost:</span>
+            <select id="ghostTrackSelect-${track.id}" class="w-24 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">
+                ${ghostTrackOptionsHTML}
+            </select>
+        </label>` : '';
+
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
 
     const activeSequence = track.getActiveSequence();
     const sequenceData = activeSequence ? activeSequence.data : [];
+
+    // Get ghost track data for rendering ghost notes
+    const ghostTrackId = currentGhostTrackId ? parseInt(currentGhostTrackId) : null;
+    const ghostTrack = ghostTrackId ? (localAppServices.getTrackById ? localAppServices.getTrackById(ghostTrackId) : null) : null;
+    const ghostSequence = ghostTrack ? ghostTrack.getActiveSequence() : null;
+    const ghostSequenceData = ghostSequence ? ghostSequence.data : [];
+    
+    // Build a map of ghost notes for quick lookup
+    const ghostNotesMap = new Map(); // key: "row-col" -> true
+    if (ghostSequenceData.length > 0 && rowLabels) {
+        for (let ghostRow = 0; ghostRow < ghostSequenceData.length; ghostRow++) {
+            for (let ghostCol = 0; ghostCol < (ghostSequenceData[ghostRow]?.length || 0); ghostCol++) {
+                const ghostStep = ghostSequenceData[ghostRow]?.[ghostCol];
+                if (ghostStep?.active) {
+                    // Map ghost pitch to current track's row
+                    const ghostPitch = Constants.synthPitches[ghostRow];
+                    const currentRowIndex = rowLabels.indexOf(ghostPitch);
+                    if (currentRowIndex !== -1) {
+                        ghostNotesMap.set(`${currentRowIndex}-${ghostCol}`, true);
+                    }
+                }
+            }
+        }
+    }
 
     // Calculate max velocity per column for velocity editor
     const maxVelocityPerColumn = [];
@@ -1308,6 +1332,14 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             let activeClass = '';
             let velocityAttr = '';
             let velocityOpacityStyle = '';
+            let ghostClass = '';
+            
+            // Check for ghost note at this position
+            const isGhostNote = ghostNotesMap.has(`${i}-${j}`);
+            if (isGhostNote && !stepData?.active) {
+                ghostClass = 'ghost-note';
+            }
+            
             if (stepData?.active) { 
                 if (track.type === 'Synth') activeClass = 'active-synth'; 
                 else if (track.type === 'Sampler') activeClass = 'active-sampler'; 
@@ -1328,7 +1360,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             // Apply scale highlighting to cells
             const cellScaleClass = isScaleModeEnabled && !isInScale ? 'opacity-30' : '';
             
-            html += `<div class="sequencer-step-cell ${activeClass} ${beatBlockClass} ${cellScaleClass} border-r border-b border-gray-200 dark:border-slate-600" data-row="${i}" data-col="${j}" data-active="${stepData?.active ? 'true' : 'false'}" ${velocityAttr} ${velocityOpacityStyle} title="R${i+1},S${j+1}${stepData?.active ? ` V:${Math.round((stepData.velocity || Constants.defaultVelocity) * 127)}` : ''}"></div>`;
+            html += `<div class="sequencer-step-cell ${activeClass} ${ghostClass} ${beatBlockClass} ${cellScaleClass} border-r border-b border-gray-200 dark:border-slate-600" data-row="${i}" data-col="${j}" data-active="${stepData?.active ? 'true' : 'false'}" ${velocityAttr} ${velocityOpacityStyle} title="R${i+1},S${j+1}${stepData?.active ? ` V:${Math.round((stepData.velocity || Constants.defaultVelocity) * 127)}` : ''}${isGhostNote ? ' [Ghost]' : ''}"></div>`;
         }
     }
     html += `</div>`;
@@ -1668,6 +1700,21 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     }
                 });
             }
+        }
+
+        // Ghost Track event handlers
+        const ghostTrackSelect = sequencerWindow.element.querySelector(`#ghostTrackSelect-${track.id}`);
+        if (ghostTrackSelect) {
+            ghostTrackSelect.addEventListener('change', (e) => {
+                const selectedTrackId = e.target.value ? parseInt(e.target.value) : null;
+                if (localAppServices.setGhostTrackId) {
+                    localAppServices.setGhostTrackId(selectedTrackId);
+                }
+                // Re-render to show ghost notes
+                openTrackSequencerWindow(trackId, true);
+                const ghostTrack = selectedTrackId ? (localAppServices.getTrackById ? localAppServices.getTrackById(selectedTrackId) : null) : null;
+                showNotification(ghostTrack ? `Showing ghost notes from "${ghostTrack.name}"` : 'Ghost notes cleared', 2000);
+            });
         }
 
         // Velocity Editor event handlers

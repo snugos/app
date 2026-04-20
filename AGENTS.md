@@ -476,6 +476,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Right-click on sequencer grid, use Transpose or Timing sections in context menu
 - **Version**: Bumped to 0.19.0
 
+#### Day 22: Ghost Notes Feature (2026-04-20)
+- **Feature**: Added Ghost Notes functionality to show notes from other tracks dimmed in the sequencer
+- **Files Modified**:
+  - `js/state.js`: Added:
+    - `ghostTrackIdState` state variable
+    - `getGhostTrackIdState()` getter
+    - `setGhostTrackIdState(trackId)` setter
+  - `js/main.js`: Added ghost track state function imports and wired to appServices
+  - `js/ui.js`: Modified `buildSequencerContentDOM()`:
+    - Added ghost track dropdown selector in sequencer toolbar
+    - Added ghost note data extraction and mapping
+    - Added ghost note rendering with `.ghost-note` CSS class
+    - Added event handler for ghost track selection
+  - `style.css`: Added `.ghost-note` styling:
+    - Dimmed purple background (30% opacity)
+    - Dashed border for visual distinction
+    - Overall opacity of 0.4
+  - `js/constants.js`: Bumped APP_VERSION to 0.20.0
+- **Feature Details**:
+  - Ghost Track Selector: Dropdown in sequencer toolbar to select another track to show as "ghost notes"
+  - Compatible Tracks: Only Synth and InstrumentSampler tracks can be shown as ghost notes
+  - Visual Rendering: Ghost notes appear as dimmed, dashed cells in the sequencer grid
+  - Pitch Mapping: Ghost notes are mapped to the current track's pitch range
+  - Non-interference: Ghost notes don't interfere with active notes (only shown where no active note exists)
+  - Notification Feedback: Shows notification when ghost track is selected or cleared
+- **Usage**: Open sequencer for a Synth/InstrumentSampler track, use "Ghost:" dropdown in toolbar to select another track to show
+- **Version**: Bumped to 0.20.0
+
 ## Code Style Guidelines
 
 ### Module Structure

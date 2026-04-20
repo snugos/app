@@ -35,6 +35,8 @@ import {
     getScaleModeScaleState,
     getScaleModeRootState,
     getScaleModeLockState,
+    // Ghost Track state
+    getGhostTrackIdState,
     // Swing state
     getSwingState,
     getSwingEnabledState,
@@ -64,6 +66,8 @@ import {
     setScaleModeScaleState,
     setScaleModeRootState,
     setScaleModeLockState,
+    // Ghost Track state setters
+    setGhostTrackIdState,
     // Swing state setters
     setSwingState,
     setSwingEnabledState,
@@ -327,6 +331,8 @@ const appServices = {
     getScaleModeScale: getScaleModeScaleState,
     getScaleModeRoot: getScaleModeRootState,
     getScaleModeLock: getScaleModeLockState,
+    // Ghost Track state
+    getGhostTrackId: getGhostTrackIdState,
     // Swing state
     getSwingState,
     getSwingEnabledState,
@@ -357,6 +363,8 @@ const appServices = {
     setScaleModeScaleState,
     setScaleModeRootState,
     setScaleModeLockState,
+    // Ghost Track state setters
+    setGhostTrackIdState,
     // Swing state setters
     setSwingState,
     setSwingEnabledState,

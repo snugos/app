@@ -441,6 +441,13 @@ button.active { /* Generic active state for other toggles if needed */
     z-index: 5; 
 }
 
+/* Ghost note styling - dimmed notes from other tracks */
+.sequencer-step-cell.ghost-note {
+    background-color: rgba(124, 58, 237, 0.3) !important; /* Dimmed purple */
+    border: 1px dashed rgba(124, 58, 237, 0.5) !important;
+    opacity: 0.4;
+}
+
 /* --- Velocity Editor Lane --- */
 .velocity-editor-lane {
     background-color: #1a1a1a;
