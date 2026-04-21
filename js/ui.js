@@ -2815,7 +2815,7 @@ function buildMixerTrackStripHTML(track, sendTracks) {
         
         <!-- Level Meter -->
         <div class="w-8 h-24 bg-[#101010] rounded border border-[#303030] relative mb-1">
-            <div id="mixerTrackMeter-${track.id}" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 transition-all duration-75" style="height: 0%"></div>
+            <div id="mixerTrackMeterBar-${track.id}" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-green-500 via-yellow-500 to-red-500 transition-all duration-75" style="height: 0%"></div>
         </div>
         
         <!-- Volume Fader -->
