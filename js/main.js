@@ -18,7 +18,7 @@ import {
     handleTimelineLaneDrop
 } from './eventHandlers.js';
 import {
-    initializeStateModule,
+    initializeStateModule, 
     // State Getters
     getTracksState, getTrackByIdState, getOpenWindowsState, getWindowByIdState, getHighestZState,
     getMasterEffectsState, getMasterGainValueState,
@@ -124,6 +124,7 @@ import {
     renderTimeline,
     updatePlayheadPosition,
     openTimelineWindow,
+    openAudioClipEditorWindow,
     handleTapTempo, resetTapTempo
 } from './ui.js';
 
@@ -566,7 +567,7 @@ const appServices = {
             const effect = effects ? effects.find(e => e.id === effectId) : null;
             if (effect) {
                 const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-                if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
+                if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Remove ${effect.type} from Master`);
                 removeMasterEffectFromState(effectId);
                 await removeMasterEffectFromAudio(effectId);
                 if (appServices.updateMasterEffectsRackUI) appServices.updateMasterEffectsRackUI();

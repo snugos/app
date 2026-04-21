@@ -2622,12 +2622,53 @@ export function renderTimeline() {
         <div class="timeline-tracks" style="flex:1;position:relative;overflow:auto;">${lanesHTML}${playheadHTML}</div>
     </div>`;
     
-    // Add clip click handlers
+    // Add clip click/dblclick handlers
     contentDiv.querySelectorAll('.timeline-clip').forEach(clipEl => {
+        const clipId = clipEl.dataset.clipId;
+        const trackId = clipEl.closest('.timeline-track-lane')?.dataset.trackId;
+        
+        // Double-click to open editor
+        clipEl.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            if (trackId && localAppServices.openAudioClipEditorWindow) {
+                localAppServices.openAudioClipEditorWindow(trackId, clipId);
+            } else {
+                showNotification(`Selected clip: ${clipId}`, 1500);
+            }
+        });
+        
+        // Single click shows notification
         clipEl.addEventListener('click', (e) => {
             e.stopPropagation();
-            const clipId = clipEl.dataset.clipId;
             showNotification(`Selected clip: ${clipId}`, 1500);
+        });
+        
+        // Right-click context menu for clip
+        clipEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const menuItems = [
+                { label: 'Open Clip Editor', action: () => {
+                    if (localAppServices.openAudioClipEditorWindow) {
+                        localAppServices.openAudioClipEditorWindow(trackId, clipId);
+                    }
+                }},
+                { label: 'Delete Clip', action: () => {
+                    if (trackId) {
+                        const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                        if (track && track.deleteTimelineClip) {
+                            if (localAppServices.captureStateForUndo) {
+                                localAppServices.captureStateForUndo(`Delete clip from ${track.name}`);
+                            }
+                            track.deleteTimelineClip(clipId);
+                            if (localAppServices.renderTimeline) localAppServices.renderTimeline();
+                            showNotification('Clip deleted', 1500);
+                        }
+                    }
+                }},
+            ];
+            createContextMenu(e, menuItems, localAppServices);
         });
     });
     
@@ -3135,6 +3176,139 @@ export function updateMixerWindow() {
         const masterVolume = localAppServices.getMasterGainValue ? localAppServices.getMasterGainValue() : 0.8;
         masterFader.value = Math.round(masterVolume * 100);
     }
+}
+
+export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
+    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+    if (!track) { console.error(`[UI] Track ${trackId} not found for audio clip editor.`); return null; }
+    
+    const clip = track.timelineClips ? track.timelineClips.find(c => c.id === clipId) : null;
+    if (!clip) { console.error(`[UI] Clip ${clipId} not found in track ${trackId}.`); return null; }
+
+    const windowId = `audioClipEditor-${clipId}`;
+    const openWindows = localAppServices.getOpenWindows ? localAppServices.getOpenWindows() : new Map();
+    if (openWindows.has(windowId) && !savedState) {
+        openWindows.get(windowId).restore();
+        return openWindows.get(windowId);
+    }
+
+    function buildClipEditorContent() {
+        const fadeIn = clip.fadeIn || 0;
+        const fadeOut = clip.fadeOut || 0;
+        const startTime = clip.startTime || 0;
+        const duration = clip.duration || 0;
+        const name = clip.name || 'Untitled Clip';
+        
+        return `<div id="audioClipEditorContent-${clipId}" class="p-3 space-y-4 text-sm">
+            <h3 class="text-base font-semibold dark:text-slate-200">Audio Clip Editor</h3>
+            
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Clip Name</label>
+                <input type="text" id="clipNameInput-${clipId}" value="${name}" 
+                    class="w-full px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400">Start Time (s)</label>
+                    <input type="number" id="clipStartTime-${clipId}" value="${startTime.toFixed(2)}" step="0.01" min="0"
+                        class="w-full px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs text-zinc-400">Duration (s)</label>
+                    <input type="number" id="clipDuration-${clipId}" value="${duration.toFixed(2)}" step="0.01" min="0.1"
+                        class="w-full px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm" readonly>
+                </div>
+            </div>
+            
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Fade In (seconds)</label>
+                <div class="flex items-center gap-2">
+                    <input type="range" id="clipFadeInSlider-${clipId}" min="0" max="${Math.min(duration/2, 10).toFixed(2)}" step="0.01" value="${fadeIn.toFixed(2)}"
+                        class="flex-1 accent-blue-500">
+                    <input type="number" id="clipFadeInInput-${clipId}" value="${fadeIn.toFixed(2)}" step="0.01" min="0" max="${Math.min(duration/2, 10).toFixed(2)}"
+                        class="w-20 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm text-center">
+                </div>
+            </div>
+            
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Fade Out (seconds)</label>
+                <div class="flex items-center gap-2">
+                    <input type="range" id="clipFadeOutSlider-${clipId}" min="0" max="${Math.min(duration/2, 10).toFixed(2)}" step="0.01" value="${fadeOut.toFixed(2)}"
+                        class="flex-1 accent-blue-500">
+                    <input type="number" id="clipFadeOutInput-${clipId}" value="${fadeOut.toFixed(2)}" step="0.01" min="0" max="${Math.min(duration/2, 10).toFixed(2)}"
+                        class="w-20 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm text-center">
+                </div>
+            </div>
+            
+            <div class="pt-2 border-t border-zinc-700 flex gap-2">
+                <button id="applyClipChangesBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium">Apply</button>
+                <button id="deleteClipBtn-${clipId}" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium">Delete</button>
+            </div>
+        </div>`;
+    }
+
+    const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
+        width: 360, height: 340, minWidth: 300, minHeight: 280, initialContentKey: windowId
+    });
+
+    if (editorWindow?.element) {
+        const el = editorWindow.element;
+        
+        // Sync slider and input for fade in
+        const fadeInSlider = el.querySelector(`#clipFadeInSlider-${clipId}`);
+        const fadeInInput = el.querySelector(`#clipFadeInInput-${clipId}`);
+        if (fadeInSlider && fadeInInput) {
+            fadeInSlider.addEventListener('input', () => { fadeInInput.value = parseFloat(fadeInSlider.value).toFixed(2); });
+            fadeInInput.addEventListener('input', () => { fadeInSlider.value = parseFloat(fadeInInput.value).toFixed(2); });
+        }
+        
+        // Sync slider and input for fade out
+        const fadeOutSlider = el.querySelector(`#clipFadeOutSlider-${clipId}`);
+        const fadeOutInput = el.querySelector(`#clipFadeOutInput-${clipId}`);
+        if (fadeOutSlider && fadeOutInput) {
+            fadeOutSlider.addEventListener('input', () => { fadeOutInput.value = parseFloat(fadeOutSlider.value).toFixed(2); });
+            fadeOutInput.addEventListener('input', () => { fadeOutInput.value = parseFloat(fadeOutInput.value).toFixed(2); });
+        }
+        
+        // Apply button
+        const applyBtn = el.querySelector(`#applyClipChangesBtn-${clipId}`);
+        if (applyBtn) {
+            applyBtn.addEventListener('click', () => {
+                const newFadeIn = parseFloat(fadeInInput.value) || 0;
+                const newFadeOut = parseFloat(fadeOutInput.value) || 0;
+                const newStartTime = parseFloat(el.querySelector(`#clipStartTime-${clipId}`).value) || 0;
+                const newName = el.querySelector(`#clipNameInput-${clipId}`).value;
+                
+                if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, newFadeIn);
+                if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
+                if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
+                
+                clip.name = newName;
+                showNotification(`Clip settings applied`, 1500);
+                editorWindow.close();
+                if (localAppServices.renderTimeline) localAppServices.renderTimeline();
+            });
+        }
+        
+        // Delete button
+        const deleteBtn = el.querySelector(`#deleteClipBtn-${clipId}`);
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                if (localAppServices.captureStateForUndo) {
+                    localAppServices.captureStateForUndo(`Delete clip "${clip.name || clipId}" from ${track.name}`);
+                }
+                if (track.deleteTimelineClip) {
+                    track.deleteTimelineClip(clipId);
+                }
+                showNotification(`Clip deleted`, 1500);
+                editorWindow.close();
+                if (localAppServices.renderTimeline) localAppServices.renderTimeline();
+            });
+        }
+    }
+    
+    return editorWindow;
 }
 
 export function openTimelineWindow(savedState = null) {
