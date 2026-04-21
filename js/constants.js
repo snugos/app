@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.28.0"; // Day 29: Timeline Markers
+export const APP_VERSION = "0.30.0"; // Day 31: Audio Clip Color
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -184,6 +184,27 @@ export const TRACK_COLORS = [
 ];
 
 export const DEFAULT_TRACK_COLOR_INDEX = 0; // Default to first color (red)
+
+// Clip Color constants
+export const CLIP_COLORS = [
+    '#4a9eff', // Bright Blue (default for audio clips)
+    '#ff6b6b', // Red
+    '#feca57', // Yellow
+    '#48dbfb', // Cyan
+    '#1dd1a1', // Green
+    '#ff9ff3', // Pink
+    '#f368e0', // Magenta
+    '#ff9f43', // Orange
+    '#5f27cd', // Purple
+    '#c8d6e5', // Gray
+    '#00d2d3', // Teal
+    '#ff6348', // Coral
+    '#7bed9f', // Mint
+    '#a29bfe', // Lavender
+    '#fd79a8', // Rose
+    '#e17055'  // Terra
+];
+export const DEFAULT_CLIP_COLOR = '#4a9eff'; // Default clip color (matches current audio clip color)
 
 // Audio Clip Fade In/Out Constants
 export const DEFAULT_AUDIO_CLIP_FADE_IN = 0;    // Default fade in time in seconds

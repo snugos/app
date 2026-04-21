@@ -2693,7 +2693,7 @@ export function renderTimeline() {
             track.timelineClips.forEach(clip => {
                 const clipLeft = clip.startTime * pixelsPerSecond;
                 const clipWidth = clip.duration * pixelsPerSecond;
-                const clipColor = clip.type === 'audio' ? '#4a9eff' : '#9f4aff';
+                const clipColor = clip.color || (clip.type === 'audio' ? '#4a9eff' : '#9f4aff');
                 lanesHTML += `<div class="timeline-clip" data-clip-id="${clip.id}" style="position:absolute;top:4px;left:${clipLeft}px;width:${clipWidth}px;height:${trackHeight - 8}px;background:${clipColor};border-radius:4px;cursor:pointer;overflow:hidden;box-shadow:0 0 4px rgba(0,0,0,0.5);">
                     <span style="padding:2px 4px;font-size:10px;color:white;text-shadow:0 1px 2px black;">${clip.name || 'Clip'}</span>
                 </div>`;
@@ -3434,6 +3434,17 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 </div>
             </div>
             
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Clip Color</label>
+                <div id="clipColorSwatches-${clipId}" class="flex gap-1 flex-wrap">
+                    ${Constants.CLIP_COLORS.map((c, i) => {
+                        const isSelected = (clip.color || (clip.type === 'audio' ? '#4a9eff' : '#9f4aff')) === c;
+                        const border = isSelected ? 'border-white border-2' : 'border-transparent border';
+                        return `<button class="clip-color-swatch w-5 h-5 rounded cursor-pointer transition-all ${border}" style="background:${c};" data-color="${c}" title="${c}"></button>`;
+                    }).join('')}
+                </div>
+            </div>
+            
             <div class="pt-2 border-t border-zinc-700 flex gap-2 flex-wrap">
                 <button id="normalizeClipBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-medium">Normalize</button>
                 <button id="applyClipChangesBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium">Apply</button>
@@ -3443,7 +3454,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     }
 
     const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
-        width: 360, height: 450, minWidth: 300, minHeight: 300, initialContentKey: windowId
+        width: 380, height: 520, minWidth: 320, minHeight: 400, initialContentKey: windowId
     });
 
     if (editorWindow?.element) {
@@ -3480,6 +3491,28 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             gainSlider.addEventListener('input', updateGainDisplay);
             gainInput.addEventListener('input', () => { gainSlider.value = parseFloat(gainInput.value); updateGainDisplay(); });
         }
+        
+        // Clip color swatches
+        const colorSwatches = el.querySelectorAll(`.clip-color-swatch`);
+        colorSwatches.forEach(swatch => {
+            swatch.addEventListener('click', () => {
+                if (localAppServices.captureStateForUndo) {
+                    localAppServices.captureStateForUndo(`Change clip color on "${clip.name || clipId}"`);
+                }
+                const newColor = swatch.dataset.color;
+                if (track.setAudioClipColor) {
+                    track.setAudioClipColor(clipId, newColor);
+                    clip.color = newColor;
+                }
+                // Update selection UI
+                colorSwatches.forEach(s => {
+                    s.classList.remove('border-white', 'border-2');
+                    s.classList.add('border-transparent');
+                });
+                swatch.classList.remove('border-transparent');
+                swatch.classList.add('border-white', 'border-2');
+            });
+        });
         
         // Normalize button
         const normalizeBtn = el.querySelector(`#normalizeClipBtn-${clipId}`);

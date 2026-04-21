@@ -2534,6 +2534,27 @@ export class Track {
         return clip ? (clip.reverse || false) : false;
     }
 
+    setAudioClipColor(clipId, color) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Color on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.color = color;
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipColor(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip) return Constants.DEFAULT_CLIP_COLOR;
+        if (clip.color && Constants.CLIP_COLORS.includes(clip.color)) {
+            return clip.color;
+        }
+        // For sequence clips, return purple; for audio clips, return blue
+        return (clip.type === 'audio') ? '#4a9eff' : '#9f4aff';
+    }
+
     async normalizeAudioClip(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (!clip || !clip.sourceId) return false;
