@@ -3141,8 +3141,11 @@ function buildMixerTrackStripHTML(track, sendTracks) {
     });
 
     return `<div class="mixer-track-strip flex flex-col items-center w-16 h-full bg-[#252525] border-r border-[#303030] p-1" data-track-id="${track.id}">
+        <!-- Track Color Indicator -->
+        <div class="w-full h-1 rounded-sm mb-1" style="background:${track.color || '#666'};"></div>
+        
         <!-- Track Name -->
-        <div class="text-[10px] text-gray-300 truncate w-full text-center mb-1" title="${track.name}">${track.name}</div>
+        <div class="text-[10px] text-gray-300 truncate w-full text-center mb-1" title="${track.name}" style="border-left: 2px solid ${track.color || '#666'}; padding-left: 2px;">${track.name}</div>
         
         <!-- Mute/Solo/Arm Buttons -->
         <div class="flex gap-0.5 mb-1">

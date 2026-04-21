@@ -795,6 +795,21 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open Mixer window, drag the Pan knob on an Audio track strip
 - **Version**: Bumped to 0.36.0
 
+#### Day 39: Mixer Track Color Indicator (2026-04-21)
+- **Feature**: Added track color indicators to the Mixer window for visual track identification
+- **Files Modified**:
+  - `js/ui.js`: Modified `buildMixerTrackStripHTML()` to add:
+    - Colored bar at top of each track strip using track color
+    - Colored left border on track name with color indicator
+  - `js/constants.js`: Bumped APP_VERSION to 0.37.0
+- **Feature Details**:
+  - Track Color Bar: Small colored bar at the top of each mixer track strip
+  - Track Name Border: Track name has a colored left border matching track color
+  - Visual Feedback: Makes it easy to identify tracks in the mixer when many tracks are present
+  - Consistency: Matches the color indicator style used in the Timeline view
+- **Usage**: Open Mixer window, each track strip shows its color at top and on the track name
+- **Version**: Bumped to 0.37.0
+
 ## Code Style Guidelines
 
 ### Module Structure
