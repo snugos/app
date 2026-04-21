@@ -702,3 +702,17 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Track methods: `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
 - UI element IDs: `<type><controlName>-<trackId>-placeholder` for knob placeholders
 - Container IDs: `<type>Container-<trackId>-<subtype>` for specific containers
+#### Day 33: Audio Clip Reverse Feature + Bug Fixes (2026-04-21)
+- **Bug Fix**: Fixed `getAudioClipGain` method in Track.js - it was incorrectly returning a color value instead of the gain value
+- **Bug Fix**: Added missing `setAudioClipReverse` and `getAudioClipReverse` methods to Track.js for audio clip reverse functionality
+- **Bug Fix**: Added missing `setAudioClipColor` and `getAudioClipColor` methods to Track.js - these were being called from ui.js but didn't exist in Track.js
+- **Feature**: Added `setAudioClipReverse` method with undo state capture for audio clip reverse playback
+- **Feature**: Added `getAudioClipReverse` method to retrieve clip reverse state
+- **Feature**: Added `setAudioClipColor` method with undo state capture for clip color changes
+- **Feature**: Added `getAudioClipColor` method to retrieve clip color
+- **Feature**: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant to constants.js
+- **Files Modified**:
+  - `js/Track.js`: Added `setAudioClipReverse`, `getAudioClipReverse`, `setAudioClipColor`, `getAudioClipColor` methods; fixed `getAudioClipGain` to return gain value
+  - `js/constants.js`: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant, bumped APP_VERSION to 0.32.0
+- **Impact**: The missing methods caused runtime errors when using the Audio Clip Editor's color selector and reverse checkbox. The getAudioClipGain bug would cause incorrect gain values to be retrieved.
+- **Version**: Bumped to 0.32.0

@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.31.0"; // Day 32: Timeline Clip Delete Bug Fix
+export const APP_VERSION = "0.32.0"; // Day 33: Audio Clip Reverse Feature + Bug Fixes
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

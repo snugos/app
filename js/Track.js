@@ -2553,11 +2553,7 @@ export class Track {
     getAudioClipGain(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (!clip) return Constants.DEFAULT_AUDIO_CLIP_GAIN;
-        if (clip.color && Constants.CLIP_COLORS.includes(clip.color)) {
-            return clip.color;
-        }
-        // For sequence clips, return purple; for audio clips, return blue
-        return (clip.type === 'audio') ? '#4a9eff' : '#9f4aff';
+        return clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN;
     }
 
     async normalizeAudioClip(clipId) {
@@ -2589,6 +2585,43 @@ export class Track {
             console.error(`[Track ${this.id} normalizeAudioClip] Error:`, e);
             return false;
         }
+    }
+
+    setAudioClipColor(clipId, color) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Color on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.color = color;
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipColor(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip) return '#4a9eff';
+        if (clip.color && Constants.CLIP_COLORS.includes(clip.color)) {
+            return clip.color;
+        }
+        // For sequence clips, return purple; for audio clips, return blue
+        return (clip.type === 'audio') ? '#4a9eff' : '#9f4aff';
+    }
+
+    setAudioClipReverse(clipId, reverse) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Reverse on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.reverse = !!reverse;
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipReverse(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.reverse || false) : false;
     }
 
     dispose() {
