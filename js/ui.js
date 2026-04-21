@@ -3237,6 +3237,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         const startTime = clip.startTime || 0;
         const duration = clip.duration || 0;
         const name = clip.name || 'Untitled Clip';
+        const gain = clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN;
+        const gainDb = gain > 0 ? (20 * Math.log10(gain)).toFixed(1) : '-∞';
         
         return `<div id="audioClipEditorContent-${clipId}" class="p-3 space-y-4 text-sm">
             <h3 class="text-base font-semibold dark:text-slate-200">Audio Clip Editor</h3>
@@ -3261,6 +3263,16 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             </div>
             
             <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Gain (dB: <span id="gainDbDisplay-${clipId}">${gainDb}</span>)</label>
+                <div class="flex items-center gap-2">
+                    <input type="range" id="clipGainSlider-${clipId}" min="0" max="4" step="0.01" value="${gain}"
+                        class="flex-1 accent-green-500">
+                    <input type="number" id="clipGainInput-${clipId}" value="${gain.toFixed(2)}" step="0.01" min="0" max="4"
+                        class="w-20 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm text-center">
+                </div>
+            </div>
+            
+            <div class="space-y-1">
                 <label class="text-xs text-zinc-400">Fade In (seconds)</label>
                 <div class="flex items-center gap-2">
                     <input type="range" id="clipFadeInSlider-${clipId}" min="0" max="${Math.min(duration/2, 10).toFixed(2)}" step="0.01" value="${fadeIn.toFixed(2)}"
@@ -3280,7 +3292,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 </div>
             </div>
             
-            <div class="pt-2 border-t border-zinc-700 flex gap-2">
+            <div class="pt-2 border-t border-zinc-700 flex gap-2 flex-wrap">
+                <button id="normalizeClipBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-medium">Normalize</button>
                 <button id="applyClipChangesBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium">Apply</button>
                 <button id="deleteClipBtn-${clipId}" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-medium">Delete</button>
             </div>
@@ -3288,7 +3301,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     }
 
     const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
-        width: 360, height: 340, minWidth: 300, minHeight: 280, initialContentKey: windowId
+        width: 360, height: 420, minWidth: 300, minHeight: 280, initialContentKey: windowId
     });
 
     if (editorWindow?.element) {
@@ -3307,7 +3320,36 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         const fadeOutInput = el.querySelector(`#clipFadeOutInput-${clipId}`);
         if (fadeOutSlider && fadeOutInput) {
             fadeOutSlider.addEventListener('input', () => { fadeOutInput.value = parseFloat(fadeOutSlider.value).toFixed(2); });
-            fadeOutInput.addEventListener('input', () => { fadeOutInput.value = parseFloat(fadeOutInput.value).toFixed(2); });
+            fadeOutInput.addEventListener('input', () => { fadeOutSlider.value = parseFloat(fadeOutInput.value).toFixed(2); });
+        }
+        
+        // Sync slider and input for gain
+        const gainSlider = el.querySelector(`#clipGainSlider-${clipId}`);
+        const gainInput = el.querySelector(`#clipGainInput-${clipId}`);
+        const gainDbDisplay = el.querySelector(`#gainDbDisplay-${clipId}`);
+        if (gainSlider && gainInput) {
+            const updateGainDisplay = () => {
+                const g = parseFloat(gainSlider.value);
+                gainInput.value = g.toFixed(2);
+                if (gainDbDisplay) {
+                    gainDbDisplay.textContent = g > 0 ? (20 * Math.log10(g)).toFixed(1) : '-∞';
+                }
+            };
+            gainSlider.addEventListener('input', updateGainDisplay);
+            gainInput.addEventListener('input', () => { gainSlider.value = parseFloat(gainInput.value); updateGainDisplay(); });
+        }
+        
+        // Normalize button
+        const normalizeBtn = el.querySelector(`#normalizeClipBtn-${clipId}`);
+        if (normalizeBtn) {
+            normalizeBtn.addEventListener('click', async () => {
+                if (track.normalizeAudioClip) {
+                    const success = await track.normalizeAudioClip(clipId);
+                    if (success) {
+                        if (localAppServices.renderTimeline) localAppServices.renderTimeline();
+                    }
+                }
+            });
         }
         
         // Apply button
@@ -3318,10 +3360,12 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 const newFadeOut = parseFloat(fadeOutInput.value) || 0;
                 const newStartTime = parseFloat(el.querySelector(`#clipStartTime-${clipId}`).value) || 0;
                 const newName = el.querySelector(`#clipNameInput-${clipId}`).value;
+                const newGain = parseFloat(gainInput.value) || Constants.DEFAULT_AUDIO_CLIP_GAIN;
                 
                 if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, newFadeIn);
                 if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
                 if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
+                if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
                 
                 clip.name = newName;
                 showNotification(`Clip settings applied`, 1500);

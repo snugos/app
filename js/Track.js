@@ -2165,21 +2165,22 @@ export class Track {
                                 const fadeOut = clip.fadeOut || 0;
                                 
                                 // Start at volume 0 for fade in effect
+                                const clipGain = clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN;
                                 fadeGain.gain.setValueAtTime(0, effectivePlayStart);
                                 
                                 // Apply fade in (ramp to 1 over fadeIn duration)
                                 if (fadeIn > 0 && clipStartInWindow < fadeIn) {
                                     const actualFadeIn = Math.min(fadeIn, playDurationInWindow);
-                                    fadeGain.gain.linearRampToValueAtTime(1, effectivePlayStart + actualFadeIn);
+                                    fadeGain.gain.linearRampToValueAtTime(clipGain, effectivePlayStart + actualFadeIn);
                                 } else {
-                                    fadeGain.gain.setValueAtTime(1, effectivePlayStart);
+                                    fadeGain.gain.setValueAtTime(clipGain, effectivePlayStart);
                                 }
                                 
                                 // Apply fade out (ramp to 0 near end)
                                 if (fadeOut > 0) {
                                     const fadeOutStart = effectivePlayStart + playDurationInWindow - fadeOut;
                                     if (fadeOutStart > effectivePlayStart) {
-                                        fadeGain.gain.setValueAtTime(1, fadeOutStart);
+                                        fadeGain.gain.setValueAtTime(clipGain, fadeOutStart);
                                         fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + playDurationInWindow);
                                     }
                                 }
@@ -2469,6 +2470,53 @@ export class Track {
     getAudioClipFadeOut(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         return clip ? (clip.fadeOut || 0) : 0;
+    }
+
+    setAudioClipGain(clipId, gain) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Gain on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.gain = Math.max(Constants.MIN_AUDIO_CLIP_GAIN, Math.min(parseFloat(gain) || Constants.DEFAULT_AUDIO_CLIP_GAIN, Constants.MAX_AUDIO_CLIP_GAIN));
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipGain(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN) : Constants.DEFAULT_AUDIO_CLIP_GAIN;
+    }
+
+    async normalizeAudioClip(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip || !clip.sourceId) return false;
+        this._captureUndoState(`Normalize "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+        try {
+            const audioBlob = await getAudio(clip.sourceId);
+            if (!audioBlob) return false;
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioContext = Tone.context?.rawContext;
+            if (!audioContext) return false;
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            const peaks = audioBuffer.getChannelData(0);
+            let maxSample = 0;
+            for (let i = 0; i < peaks.length; i++) {
+                const abs = Math.abs(peaks[i]);
+                if (abs > maxSample) maxSample = abs;
+            }
+            if (maxSample > 0) {
+                clip.gain = Constants.GAIN_NORMALIZE_TARGET / maxSample;
+            } else {
+                clip.gain = Constants.DEFAULT_AUDIO_CLIP_GAIN;
+            }
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            if (this.appServices.showNotification) this.appServices.showNotification(`Normalized to ${(20 * Math.log10(clip.gain)).toFixed(1)} dB`, 2000);
+            return true;
+        } catch (e) {
+            console.error(`[Track ${this.id} normalizeAudioClip] Error:`, e);
+            return false;
+        }
     }
 
     dispose() {

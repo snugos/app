@@ -596,6 +596,35 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open sequencer for any track, right-click on grid, select Note Repeat / Roll option
 - **Version**: Bumped to 0.23.0
 
+#### Day 27: Audio Clip Gain and Normalize (2026-04-20)
+- **Feature**: Added gain control and normalize functionality to the Audio Clip Editor
+- **Files Modified**:
+  - `js/Track.js`: Added new methods:
+    - `setAudioClipGain(clipId, gain)` - Sets gain (0-4 range) for audio clip playback
+    - `getAudioClipGain(clipId)` - Gets current gain value for a clip
+    - `normalizeAudioClip(clipId)` - Analyzes audio peaks and sets gain to normalize to 0dB
+  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
+    - Added Gain slider with dB display (range 0-4, shows -∞ to +12dB)
+    - Added Normalize button to auto-normalize clip to 0dB
+    - Added gain sync handlers to update dB display in real-time
+    - Window height increased to 420px to accommodate new controls
+    - Apply button now saves gain changes to clip
+  - `js/constants.js`: Added gain constants:
+    - `DEFAULT_AUDIO_CLIP_GAIN` (1.0)
+    - `MIN_AUDIO_CLIP_GAIN` (0)
+    - `MAX_AUDIO_CLIP_GAIN` (4.0)
+    - `GAIN_NORMALIZE_TARGET` (1.0)
+  - `js/Track.js`: Modified audio clip playback scheduling to apply clip gain during fade in/out
+- **Feature Details**:
+  - Gain Slider: Adjusts clip volume from silence (0) to +12dB boost (4.0)
+  - dB Display: Real-time display of gain in decibels (-∞ to +12dB)
+  - Normalize: Analyzes audio peaks and calculates gain to bring maximum to 0dB
+  - Apply Button: Saves gain setting along with fade in/out and position changes
+  - Playback Integration: Clip gain is applied during audio scheduling with fade in/out
+- **Backend Note**: The audio clip gain is applied via a FadeGain node during playback scheduling
+- **Usage**: Double-click an audio clip in the Timeline to open the Audio Clip Editor, adjust gain or click Normalize
+- **Version**: Bumped to 0.25.0
+
 ## Code Style Guidelines
 
 ### Module Structure

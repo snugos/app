@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.24.0"; // Day 26: Track Color Feature
+export const APP_VERSION = "0.25.0"; // Day 27: Audio Clip Gain and Normalize
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -189,3 +189,9 @@ export const DEFAULT_TRACK_COLOR_INDEX = 0; // Default to first color (red)
 export const DEFAULT_AUDIO_CLIP_FADE_IN = 0;    // Default fade in time in seconds
 export const DEFAULT_AUDIO_CLIP_FADE_OUT = 0;   // Default fade out time in seconds
 export const MAX_AUDIO_CLIP_FADE = 10;          // Maximum fade time in seconds
+
+// Audio Clip Gain Constants
+export const DEFAULT_AUDIO_CLIP_GAIN = 1.0;    // Default gain (0dB = 1.0, no change)
+export const MIN_AUDIO_CLIP_GAIN = 0;          // Minimum gain (silence)
+export const MAX_AUDIO_CLIP_GAIN = 4.0;         // Maximum gain (12dB boost)
+export const GAIN_NORMALIZE_TARGET = 1.0;      // Target gain for normalize (0dB)
