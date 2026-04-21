@@ -11,6 +11,8 @@ import {
     handleOpenTrackInspector, handleOpenEffectsRack, handleOpenSequencer
 } from './eventHandlers.js';
 import { getTracksState } from './state.js';
+import { getAudio } from './db.js';
+import { getAudio } from './db.js';
 
 
 // Module-level state for appServices, to be set by main.js
@@ -3674,8 +3676,27 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         });
         
         // Draw waveform preview after window is created
-        setTimeout(() => {
-            drawClipWaveform(clipId, clip.audioBuffer);
+        setTimeout(async () => {
+            // Load audio buffer from IndexedDB for waveform display
+            if (clip.sourceId) {
+                try {
+                    const audioBlob = await getAudio(clip.sourceId);
+                    if (audioBlob) {
+                        const arrayBuffer = await audioBlob.arrayBuffer();
+                        const audioContext = Tone.context?.rawContext;
+                        if (audioContext) {
+                            const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                            const toneBuffer = new Tone.Buffer(decodedBuffer);
+                            drawClipWaveform(clipId, toneBuffer);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`[AudioClipEditor] Failed to load waveform for clip ${clipId}:`, e);
+                }
+            }
+            // Fallback: show "No audio loaded" if we couldn't load the buffer
+            drawClipWaveform(clipId, null);
         }, 100);
         
         // Normalize button
