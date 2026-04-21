@@ -765,3 +765,20 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Track methods: `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
 - UI element IDs: `<type><controlName>-<trackId>-placeholder` for knob placeholders
 - Container IDs: `<type>Container-<trackId>-<subtype>` for specific containers
+
+#### Day 36: Audio Clip Editor Waveform Loading Bug Fix (2026-04-21)
+- **Bug Fix**: Fixed waveform preview not loading in Audio Clip Editor
+- **Issue**: The waveform loading code passed `clip.audioBuffer` directly to `drawClipWaveform()`, but `audioBuffer` was never stored on the clip object - only `clip.sourceId` (an IndexedDB key) was available
+- **Files Modified**:
+  - `js/ui.js`: 
+    - Added import for `getAudio` from `db.js`
+    - Modified waveform loading code to:
+      - Fetch audio blob from IndexedDB using `clip.sourceId`
+      - Decode audio data using `Tone.context.rawContext`
+      - Create a `Tone.Buffer` from the decoded data
+      - Pass the Tone.Buffer to `drawClipWaveform()`
+      - Added proper error handling with fallback to "No audio loaded"
+  - `js/constants.js`: No version bump needed (bug fix for existing feature)
+- **Impact**: The waveform preview in the Audio Clip Editor now correctly displays audio waveforms for clips that have audio loaded in IndexedDB
+- **Version**: No bump (bug fix)
+
