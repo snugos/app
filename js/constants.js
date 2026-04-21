@@ -198,3 +198,29 @@ export const GAIN_NORMALIZE_TARGET = 1.0;      // Target gain for normalize (0dB
 
 // Audio Clip Reverse Constants
 export const DEFAULT_AUDIO_CLIP_REVERSE = false; // Default reverse state (false = forward)
+
+// Chord Mode constants
+export const CHORD_TYPES = {
+    'major': [0, 4, 7],
+    'minor': [0, 3, 7],
+    'augmented': [0, 4, 8],
+    'diminished': [0, 3, 6],
+    'sus2': [0, 2, 7],
+    'sus4': [0, 5, 7],
+    'major7': [0, 4, 7, 11],
+    'minor7': [0, 3, 7, 10],
+    'dominant7': [0, 4, 7, 10],
+    'diminished7': [0, 3, 6, 9],
+    'halfDiminished7': [0, 3, 6, 10],
+    'major6': [0, 4, 7, 9],
+    'minor6': [0, 3, 7, 9],
+    'power': [0, 7],
+    'fifth': [0, 7]
+};
+
+export const DEFAULT_CHORD_MODE = {
+    enabled: false,
+    root: 0,  // 0 = C, 1 = C#, etc.
+    type: 'major',
+    lockChord: false
+};
