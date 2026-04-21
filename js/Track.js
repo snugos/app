@@ -2614,6 +2614,22 @@ export class Track {
         return (clip.type === 'audio') ? '#4a9eff' : '#9f4aff';
     }
 
+    setAudioClipName(clipId, name) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Rename Clip "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.name = name && name.trim() ? name.trim() : 'Untitled Clip';
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipName(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.name || 'Untitled Clip') : 'Clip Not Found';
+    }
+
     setAudioClipReverse(clipId, reverse) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {

@@ -3727,10 +3727,10 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
                 if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
                 if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
+                if (track.setAudioClipName) track.setAudioClipName(clipId, newName);
                 if (track.setAudioClipReverse) track.setAudioClipReverse(clipId, newReverse);
                 if (track.setAudioClipPlaybackRate) track.setAudioClipPlaybackRate(clipId, parseFloat(el.querySelector(`#clipPlaybackRateInput-${clipId}`)?.value) || Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE);
                 
-                clip.name = newName;
                 showNotification(`Clip settings applied`, 1500);
                 editorWindow.close();
                 if (localAppServices.renderTimeline) localAppServices.renderTimeline();
