@@ -35,6 +35,12 @@ import {
     getScaleModeScaleState,
     getScaleModeRootState,
     getScaleModeLockState,
+    // Chord Mode state
+    getChordModeState,
+    getChordModeEnabledState,
+    getChordModeRootState,
+    getChordModeTypeState,
+    getChordModeLockState,
     // Ghost Track state
     getGhostTrackIdState,
     // Swing state
@@ -61,6 +67,16 @@ import {
     setScaleModeScaleState,
     setScaleModeRootState,
     setScaleModeLockState,
+    // Chord Mode state setters
+    setChordModeEnabledState,
+    setChordModeRootState,
+    setChordModeTypeState,
+    setChordModeLockState,
+    // Chord Mode state setters
+    setChordModeEnabledState,
+    setChordModeRootState,
+    setChordModeTypeState,
+    setChordModeLockState,
     // Ghost Track state setters
     setGhostTrackIdState,
     // Swing state setters
@@ -322,6 +338,12 @@ const appServices = {
     getScaleModeScale: getScaleModeScaleState,
     getScaleModeRoot: getScaleModeRootState,
     getScaleModeLock: getScaleModeLockState,
+    // Chord Mode state
+    getChordModeState,
+    getChordModeEnabledState,
+    getChordModeRootState,
+    getChordModeTypeState,
+    getChordModeLockState,
     // Ghost Track state
     getGhostTrackId: getGhostTrackIdState,
     setGhostTrackId: setGhostTrackIdState,
@@ -355,6 +377,11 @@ const appServices = {
     setScaleModeScaleState,
     setScaleModeRootState,
     setScaleModeLockState,
+    // Chord Mode state setters
+    setChordModeEnabledState,
+    setChordModeRootState,
+    setChordModeTypeState,
+    setChordModeLockState,
     // Ghost Track state setters
     setGhostTrackIdState,
     // Swing state setters
@@ -583,7 +610,7 @@ const appServices = {
     },
     reorderMasterEffect: (effectId, newIndex) => {
         try {
-            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
             if (!isReconstructConstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Reorder Master effect`);
             reorderMasterEffectInState(effectId, newIndex);
             reorderMasterEffectInAudio(effectId, newIndex); 
@@ -797,7 +824,7 @@ async function initializeSnugOS() {
             if (element) {
                  uiElementsCache[key] = element;
             } else {
-                if (['desktop', 'taskbar', 'notification-area', 'modalContainer'].includes(key)) {
+                if (['desktop', 'taskbar', 'notification-area', 'modal-container'].includes(key)) {
                     console.warn(`[Main initializeSnugOS] Critical UI Element ID "${key}" not found in DOM.`);
                 }
             }

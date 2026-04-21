@@ -133,6 +133,29 @@ export function setScaleModeRootState(root) { scaleModeState.root = root || 'C';
 export function getScaleModeLockState() { return scaleModeState.lock; }
 export function setScaleModeLockState(lock) { scaleModeState.lock = !!lock; }
 
+// Chord Mode State (for constraining notes to chord tones)
+let chordModeState = { ...Constants.DEFAULT_CHORD_MODE };
+
+export function getChordModeState() { return chordModeState; }
+
+export function setChordModeState(state) {
+    if (state && typeof state === 'object') {
+        chordModeState = { ...Constants.DEFAULT_CHORD_MODE, ...state };
+    }
+}
+
+export function getChordModeEnabledState() { return chordModeState.enabled; }
+export function setChordModeEnabledState(enabled) { chordModeState.enabled = !!enabled; }
+
+export function getChordModeRootState() { return chordModeState.root; }
+export function setChordModeRootState(root) { chordModeState.root = Math.max(0, Math.min(11, parseInt(root) || 0)); }
+
+export function getChordModeTypeState() { return chordModeState.type; }
+export function setChordModeTypeState(type) { chordModeState.type = type || 'major'; }
+
+export function getChordModeLockState() { return chordModeState.lockChord; }
+export function setChordModeLockState(lock) { chordModeState.lockChord = !!lock; }
+
 // Ghost Track State (for showing notes from other tracks in sequencer)
 let ghostTrackIdState = null; // null = no ghost track, or track ID
 
@@ -553,6 +576,7 @@ export function gatherProjectDataInternal() {
                 metronomeEnabled: getMetronomeEnabledState(),
                 metronomeVolume: getMetronomeVolumeState(),
                 scaleMode: getScaleModeState(),
+                chordMode: getChordModeState(),
                 loopRegion: getLoopRegionState(),
                 swing: getSwingState(),
                 timelineMarkers: JSON.parse(JSON.stringify(getTimelineMarkersState())),
@@ -782,6 +806,10 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
             // Restore scale mode state
             if (globalSettings.scaleMode !== undefined) {
                 setScaleModeState(globalSettings.scaleMode);
+            }
+            // Restore chord mode state
+            if (globalSettings.chordMode !== undefined) {
+                setChordModeState(globalSettings.chordMode);
             }
             // Restore loop region state
             if (globalSettings.loopRegion !== undefined) {
