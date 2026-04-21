@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.33.0"; // Day 34: Audio Clip Editor Waveform Preview
+export const APP_VERSION = "0.34.0"; // Day 35: Audio Clip Playback Rate Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -219,6 +219,11 @@ export const GAIN_NORMALIZE_TARGET = 1.0;      // Target gain for normalize (0dB
 
 // Audio Clip Reverse Constants
 export const DEFAULT_AUDIO_CLIP_REVERSE = false; // Default reverse state (false = forward)
+
+// Audio Clip Playback Rate Constants
+export const DEFAULT_AUDIO_CLIP_PLAYBACK_RATE = 1.0; // Default playback rate (normal speed)
+export const MIN_AUDIO_CLIP_PLAYBACK_RATE = 0.25;    // Minimum playback rate (0.25x - very slow)
+export const MAX_AUDIO_CLIP_PLAYBACK_RATE = 4.0;      // Maximum playback rate (4x - very fast)
 
 // Chord Mode constants
 export const CHORD_TYPES = {

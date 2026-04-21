@@ -2197,6 +2197,12 @@ export class Track {
                                 // Set reverse if needed
                                 player.reverse = clip.reverse || false;
                                 
+                                // Set playback rate if specified
+                                const clipPlaybackRate = clip.playbackRate !== undefined ? clip.playbackRate : Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
+                                if (clipPlaybackRate !== 1.0) {
+                                    player.playbackRate = clipPlaybackRate;
+                                }
+                                
                                 // Calculate actual fade times based on clip playback window
                                 const clipStartInWindow = effectivePlayStart - clipActualStart;
                                 const clipEndInWindow = effectivePlayStart + clip.duration;
@@ -2622,6 +2628,23 @@ export class Track {
     getAudioClipReverse(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         return clip ? (clip.reverse || false) : false;
+    }
+
+    setAudioClipPlaybackRate(clipId, rate) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Playback Rate on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.playbackRate = Math.max(Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE, Math.min(parseFloat(rate) || Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE, Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE));
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipPlaybackRate(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip) return Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
+        return clip.playbackRate !== undefined ? clip.playbackRate : Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
     }
 
     dispose() {

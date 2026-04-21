@@ -3498,6 +3498,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         const name = clip.name || 'Untitled Clip';
         const gain = clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN;
         const gainDb = gain > 0 ? (20 * Math.log10(gain)).toFixed(1) : '-∞';
+        const playbackRate = clip.playbackRate !== undefined ? clip.playbackRate : Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
         
         return `<div id="audioClipEditorContent-${clipId}" class="p-3 space-y-4 text-sm">
             <h3 class="text-base font-semibold dark:text-slate-200">Audio Clip Editor</h3>
@@ -3553,11 +3554,21 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             
             <div class="space-y-1">
                 <label class="text-xs text-zinc-400">Playback Options</label>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 flex-wrap">
                     <label class="flex items-center gap-1.5 text-zinc-300 text-xs cursor-pointer">
                         <input type="checkbox" id="clipReverse-${clipId}" ${clip.reverse ? 'checked' : ''} class="accent-purple-500">
                         <span>Reverse</span>
                     </label>
+                </div>
+            </div>
+            
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Playback Rate (<span id="playbackRateDisplay-${clipId}">${playbackRate.toFixed(2)}x</span>)</label>
+                <div class="flex items-center gap-2">
+                    <input type="range" id="clipPlaybackRateSlider-${clipId}" min="${Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE}" max="${Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE}" step="0.05" value="${playbackRate}"
+                        class="flex-1 accent-orange-500">
+                    <input type="number" id="clipPlaybackRateInput-${clipId}" value="${playbackRate.toFixed(2)}" step="0.05" min="${Constants.MIN_AUDIO_CLIP_PLAYBACK_RATE}" max="${Constants.MAX_AUDIO_CLIP_PLAYBACK_RATE}"
+                        class="w-20 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm text-center">
                 </div>
             </div>
             
@@ -3624,6 +3635,22 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             gainInput.addEventListener('input', () => { gainSlider.value = parseFloat(gainInput.value); updateGainDisplay(); });
         }
         
+        // Sync slider and input for playback rate
+        const playbackRateSlider = el.querySelector(`#clipPlaybackRateSlider-${clipId}`);
+        const playbackRateInput = el.querySelector(`#clipPlaybackRateInput-${clipId}`);
+        const playbackRateDisplay = el.querySelector(`#playbackRateDisplay-${clipId}`);
+        if (playbackRateSlider && playbackRateInput) {
+            const updatePlaybackRateDisplay = () => {
+                const r = parseFloat(playbackRateSlider.value);
+                playbackRateInput.value = r.toFixed(2);
+                if (playbackRateDisplay) {
+                    playbackRateDisplay.textContent = r.toFixed(2) + 'x';
+                }
+            };
+            playbackRateSlider.addEventListener('input', updatePlaybackRateDisplay);
+            playbackRateInput.addEventListener('input', () => { playbackRateSlider.value = parseFloat(playbackRateInput.value); updatePlaybackRateDisplay(); });
+        }
+        
         // Clip color swatches
         const colorSwatches = el.querySelectorAll(`.clip-color-swatch`);
         colorSwatches.forEach(swatch => {
@@ -3680,6 +3707,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
                 if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
                 if (track.setAudioClipReverse) track.setAudioClipReverse(clipId, newReverse);
+                if (track.setAudioClipPlaybackRate) track.setAudioClipPlaybackRate(clipId, parseFloat(el.querySelector(`#clipPlaybackRateInput-${clipId}`)?.value) || Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE);
                 
                 clip.name = newName;
                 showNotification(`Clip settings applied`, 1500);
