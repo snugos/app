@@ -543,6 +543,59 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open sequencer for a Synth/InstrumentSampler track, place notes (chord), right-click on grid, select Arpeggiator option
 - **Version**: Bumped to 0.21.0
 
+#### Day 24: Note Probability Feature (2026-04-20)
+- **Feature**: Added Note Probability editor for controlling the chance that notes will play during playback
+- **Files Modified**:
+  - `js/Track.js`: Added note probability methods:
+    - `setNoteProbability(row, col, probability)` - Sets probability (0.0-1.0) for a note
+    - `getNoteProbability(row, col)` - Gets probability for a note (default 1.0)
+    - Modified sequence scheduling to check probability before playing notes
+  - `js/ui.js`: Added Probability Editor UI:
+    - Probability toggle checkbox in sequencer toolbar
+    - Probability editor lane below piano roll grid
+    - Visual probability bars (teal color) showing probability per column
+    - Click/drag editing on probability bars
+    - Real-time visual feedback during editing
+    - Recreates Tone sequence after editing to apply changes
+  - `js/constants.js`: Added `DEFAULT_NOTE_PROBABILITY` constant (1.0), bumped APP_VERSION to 0.22.0
+  - `style.css`: Added `.probability-editor-lane` styling
+- **Feature Details**:
+  - Probability Toggle: "Prob" checkbox in sequencer toolbar to show/hide probability editor
+  - Visual Bars: Height represents maximum probability of active notes in each column
+  - Click/Drag Editing: Drag up/down on bars to change probability (affects all active notes in that column)
+  - Range: 0% = note never plays, 100% = note always plays
+  - Randomization: During playback, each note has a chance to play based on its probability setting
+  - Works with: Synth, InstrumentSampler, Sampler, and DrumSampler tracks
+- **Usage**: Open sequencer for any track, click "Prob" checkbox in toolbar, drag on probability bars to edit
+- **Version**: Bumped to 0.22.0
+
+#### Day 25: Note Repeat / Roll Feature (2026-04-20)
+- **Feature**: Added Note Repeat / Roll functionality for creating drum rolls and rapid note repetitions
+- **Files Modified**:
+  - `js/Track.js`: Added `noteRepeat(row, startCol, count, fadeAmount)` method:
+    - Creates a roll by repeating a note across consecutive steps
+    - Supports optional velocity fade (decrescendo) for natural drum rolls
+    - Works with existing notes or creates new notes if position is empty
+    - Clamps all parameters to valid ranges
+    - Captures undo state before modification
+    - Returns count of notes created
+  - `js/ui.js`: Added Note Repeat context menu items in sequencer window:
+    - "Drum Roll (4 notes)..." - Quick 4-note roll with prompts for row and start position
+    - "Drum Roll (8 notes)..." - Quick 8-note roll with prompts for row and start position
+    - "Roll with Fade..." - Roll with customizable fade amount for decrescendo effect
+    - "Custom Note Repeat..." - Full control over count (1-32) and fade amount
+  - `js/constants.js`: Bumped APP_VERSION to 0.23.0
+- **Feature Details**:
+  - Row/Pitch Selection: Choose which row (pitch) to apply the roll
+  - Start Position: Choose the starting step (0-indexed)
+  - Note Count: Create 1-32 consecutive notes
+  - Velocity Fade: Optional fade from 0 (no fade) to 1 (maximum fade)
+  - Decrescendo Effect: Higher fade values create natural drum roll decay
+  - Works with: All track types with sequencers (Synth, InstrumentSampler, Sampler, DrumSampler)
+- **Workflow**: Right-click on sequencer grid, select Note Repeat option, enter parameters
+- **Usage**: Open sequencer for any track, right-click on grid, select Note Repeat / Roll option
+- **Version**: Bumped to 0.23.0
+
 ## Code Style Guidelines
 
 ### Module Structure
