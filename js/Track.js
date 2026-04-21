@@ -1619,13 +1619,6 @@ export class Track {
                     // Apply random velocity variation
                     let velocityDelta = (Math.random() * 2 - 1) * velocityRange;
                     
-                    // Add slight accent on downbeats and strong beats
-                    if (isDownbeat) {
-                        velocityDelta += clampedIntensity * 0.05;
-                    } else if (isStrongBeat) {
-                        velocityDelta += clampedIntensity * 0.02;
-                    }
-                    
                     // Apply the variation
                     const baseVelocity = cell.velocity !== undefined ? cell.velocity : Constants.defaultVelocity;
                     let newVelocity = baseVelocity + velocityDelta;
@@ -2125,26 +2118,59 @@ export class Track {
                 if (clip.type === 'audio') {
                     if (!clip.sourceId) { console.warn(`[Track ${this.id}] Audio clip ${clip.id} has no sourceId.`); continue; }
                     const player = new Tone.Player();
+                    // Create a gain node for fade in/out
+                    const fadeGain = new Tone.Gain(1).connect(
+                        (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
+                            ? this.activeEffects[0].toneNode
+                            : (this.gainNode || null)
+                    );
                     this.clipPlayers.set(clip.id, player);
+                    this.clipPlayers.set(`${clip.id}_gain`, fadeGain);
                     try {
                         const audioBlob = await getAudio(clip.sourceId);
                         if (audioBlob) {
                             const url = URL.createObjectURL(audioBlob);
                             player.onload = () => {
                                 URL.revokeObjectURL(url);
-                                const destNode = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
-                                    ? this.activeEffects[0].toneNode
-                                    : (this.gainNode || null);
-                                if (destNode) player.connect(destNode); else player.toDestination();
+                                // Connect player to fade gain instead of directly to destination
+                                player.connect(fadeGain);
+                                
+                                // Calculate actual fade times based on clip playback window
+                                const clipStartInWindow = effectivePlayStart - clipActualStart;
+                                const clipEndInWindow = effectivePlayEnd - clipActualStart;
+                                const fadeIn = clip.fadeIn || 0;
+                                const fadeOut = clip.fadeOut || 0;
+                                
+                                // Start at volume 0 for fade in effect
+                                fadeGain.gain.setValueAtTime(0, effectivePlayStart);
+                                
+                                // Apply fade in (ramp to 1 over fadeIn duration)
+                                if (fadeIn > 0 && clipStartInWindow < fadeIn) {
+                                    const actualFadeIn = Math.min(fadeIn, playDurationInWindow);
+                                    fadeGain.gain.linearRampToValueAtTime(1, effectivePlayStart + actualFadeIn);
+                                } else {
+                                    fadeGain.gain.setValueAtTime(1, effectivePlayStart);
+                                }
+                                
+                                // Apply fade out (ramp to 0 near end)
+                                if (fadeOut > 0) {
+                                    const fadeOutStart = effectivePlayStart + playDurationInWindow - fadeOut;
+                                    if (fadeOutStart > effectivePlayStart) {
+                                        fadeGain.gain.setValueAtTime(1, fadeOutStart);
+                                        fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + playDurationInWindow);
+                                    }
+                                }
+                                
                                 player.start(effectivePlayStart, offsetIntoSource, playDurationInWindow);
                             };
-                            player.onerror = (err) => { console.error(`[Track ${this.id}] Player error for clip ${clip.id}:`, err); URL.revokeObjectURL(url); if(this.clipPlayers.has(clip.id)){try{if(!player.disposed)player.dispose()}catch(e){}this.clipPlayers.delete(clip.id);}};
+                            player.onerror = (err) => { console.error(`[Track ${this.id}] Player error for clip ${clip.id}:`, err); URL.revokeObjectURL(url); if(this.clipPlayers.has(clip.id)){try{if(!player.disposed)player.dispose()}catch(e){}this.clipPlayers.delete(clip.id);} if(this.clipPlayers.has(`${clip.id}_gain`)){try{if(!fadeGain.disposed)fadeGain.dispose()}catch(e){}this.clipPlayers.delete(`${clip.id}_gain`);}};
                             await player.load(url);
                         } else {
                             console.warn(`[Track ${this.id}] Blob not found for audio clip ${clip.id} (source ${clip.sourceId})`);
                             if(!player.disposed) player.dispose(); this.clipPlayers.delete(clip.id);
+                            if(!fadeGain.disposed) fadeGain.dispose(); this.clipPlayers.delete(`${clip.id}_gain`);
                         }
-                    } catch (err) { console.error(`[Track ${this.id}] Error loading/scheduling audio clip ${clip.id}:`, err); if(this.clipPlayers.has(clip.id)){const p = this.clipPlayers.get(clip.id); if(p && !p.disposed) try{p.dispose()}catch(e){}this.clipPlayers.delete(clip.id);}}
+                    } catch (err) { console.error(`[Track ${this.id}] Error loading/scheduling audio clip ${clip.id}:`, err); if(this.clipPlayers.has(clip.id)){const p = this.clipPlayers.get(clip.id); if(p && !p.disposed) try{p.dispose()}catch(e){}this.clipPlayers.delete(clip.id);} if(this.clipPlayers.has(`${clip.id}_gain`)){const g = this.clipPlayers.get(`${clip.id}_gain`); if(g && !g.disposed) try{g.dispose()}catch(e){}this.clipPlayers.delete(`${clip.id}_gain`);}}
                 } else if (clip.type === 'sequence') {
                     const sourceSequence = this.sequences ? this.sequences.find(s => s.id === clip.sourceSequenceId) : null;
                     if (sourceSequence?.data?.length > 0 && sourceSequence.length > 0) {
@@ -2384,6 +2410,42 @@ export class Track {
         } else {
             console.warn(`[Track ${this.id}] Could not find clip ${clipId} to update its position.`);
         }
+    }
+
+    setAudioClipFadeIn(clipId, fadeTime) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Fade In on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            // Clamp fade time to valid range (0 to clip duration, max 10s)
+            const maxFade = Math.min(clip.duration, Constants.MAX_AUDIO_CLIP_FADE);
+            clip.fadeIn = Math.max(0, Math.min(parseFloat(fadeTime) || 0, maxFade));
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    setAudioClipFadeOut(clipId, fadeTime) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Fade Out on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            // Clamp fade time to valid range (0 to clip duration, max 10s)
+            const maxFade = Math.min(clip.duration, Constants.MAX_AUDIO_CLIP_FADE);
+            clip.fadeOut = Math.max(0, Math.min(parseFloat(fadeTime) || 0, maxFade));
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipFadeIn(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.fadeIn || 0) : 0;
+    }
+
+    getAudioClipFadeOut(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.fadeOut || 0) : 0;
     }
 
     dispose() {

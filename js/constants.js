@@ -162,3 +162,8 @@ export const DEFAULT_SEND_TRACK = {
 
 // Note Probability constants
 export const DEFAULT_NOTE_PROBABILITY = 1.0; // Default probability (1.0 = always play)
+
+// Audio Clip Fade In/Out Constants
+export const DEFAULT_AUDIO_CLIP_FADE_IN = 0;    // Default fade in time in seconds
+export const DEFAULT_AUDIO_CLIP_FADE_OUT = 0;   // Default fade out time in seconds
+export const MAX_AUDIO_CLIP_FADE = 10;          // Maximum fade time in seconds
