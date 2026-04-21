@@ -664,6 +664,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Double-click an audio clip in Timeline to open editor, click color swatch to change
 - **Version**: Bumped to 0.30.0
 
+#### Day 32: Timeline Clip Delete Bug Fix (2026-04-21)
+- **Bug Fix**: Added missing `deleteTimelineClip` method to Track class - Timeline clip deletion was calling a method that didn't exist
+- **Issue**: Both the Timeline context menu (renderTimeline) and Audio Clip Editor (openAudioClipEditorWindow) were calling `track.deleteTimelineClip(clipId)` but this method was never implemented in Track.js, causing silent failures when users tried to delete clips
+- **Files Modified**:
+  - `js/Track.js`: Added new method `deleteTimelineClip(clipId)`:
+    - Finds clip by ID in timelineClips array
+    - Captures undo state before deletion
+    - Removes clip from timelineClips array
+    - Cleans up any playing audio for that clip from clipPlayers Map
+    - Calls renderTimeline to refresh the UI
+  - `js/ui.js`: Removed redundant `captureStateForUndo` calls before `deleteTimelineClip` since the method now handles undo internally
+    - Timeline context menu delete handler
+    - Audio Clip Editor delete button handler
+- **Impact**: Users can now successfully delete audio clips from both the Timeline (right-click context menu) and the Audio Clip Editor (Delete button)
+- **Version**: Bumped to 0.31.0
+
 ## Code Style Guidelines
 
 ### Module Structure

@@ -1295,10 +1295,19 @@ export class Track {
             for (let col = 0; col < totalSteps; col++) {
                 const stepData = row[col];
                 if (stepData && stepData.active) {
-                    const snappedCol = Math.round(col / quantizeTo) * quantizeTo;
-                    if (snappedCol !== col) {
-                        notesToMove.push({ rowIndex, fromCol: col, toCol: snappedCol, data: { ...stepData } });
+                    // Check if this is the start of a note
+                    const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
+                    const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
+                    
+                    if (isNoteStart) {
+                        // Calculate duration based on note length
+                        const noteLength = step.length || 1;
+                        const sixteenthNoteDuration = Tone.Time("16n").toSeconds();
+                        const noteDuration = noteLength * sixteenthNoteDuration;
+                        
+                        this.toneSampler.triggerAttackRelease(Tone.Frequency(pitchName).toNote(), noteDuration, time, step.velocity * Constants.defaultVelocity);
                     }
+                    notePlayedThisStep = true;
                 }
             }
         });
@@ -2425,7 +2434,7 @@ export class Track {
         }
         
         // Stop slicer mono player if active
-        if (this.type === 'Sampler' && this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed) {
+        if (this.type === 'Sampler' && this.slicerIsPolyphonic && this.slicerMonoPlayer && !this.slicerMonoPlayer.disposed) {
             try {
                 if (this.slicerMonoPlayer.state === 'started') {
                     this.slicerMonoPlayer.stop(Tone.now());
@@ -2502,6 +2511,34 @@ export class Track {
         return clip ? (clip.fadeOut || 0) : 0;
     }
 
+    deleteTimelineClip(clipId) {
+        const clipIndex = this.timelineClips.findIndex(c => c.id === clipId);
+        if (clipIndex === -1) {
+            if (this.appServices.showNotification) this.appServices.showNotification('Clip not found', 1500);
+            return false;
+        }
+        const clip = this.timelineClips[clipIndex];
+        this._captureUndoState(`Delete "${clip.name || 'Clip'}" from ${this.name}`);
+        this.timelineClips.splice(clipIndex, 1);
+        // Stop playback for this clip if it's playing
+        if (this.clipPlayers && this.clipPlayers.has(clipId)) {
+            const player = this.clipPlayers.get(clipId);
+            if (player && !player.disposed) {
+                try { player.stop(); player.dispose(); } catch(e) {}
+            }
+            this.clipPlayers.delete(clipId);
+        }
+        if (this.clipPlayers.has(`${clipId}_gain`)) {
+            const gain = this.clipPlayers.get(`${clipId}_gain`);
+            if (gain && !gain.disposed) {
+                try { gain.dispose(); } catch(e) {}
+            }
+            this.clipPlayers.delete(`${clipId}_gain`);
+        }
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        return true;
+    }
+
     setAudioClipGain(clipId, gain) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {
@@ -2515,39 +2552,7 @@ export class Track {
 
     getAudioClipGain(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
-        return clip ? (clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN) : Constants.DEFAULT_AUDIO_CLIP_GAIN;
-    }
-
-    setAudioClipReverse(clipId, reverse) {
-        const clip = this.timelineClips.find(c => c.id === clipId);
-        if (clip) {
-            this._captureUndoState(`Set Reverse on \"${clip.name || clip.id.slice(-4)}\" in ${this.name}`);
-            clip.reverse = Boolean(reverse);
-            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
-            return true;
-        }
-        return false;
-    }
-
-    getAudioClipReverse(clipId) {
-        const clip = this.timelineClips.find(c => c.id === clipId);
-        return clip ? (clip.reverse || false) : false;
-    }
-
-    setAudioClipColor(clipId, color) {
-        const clip = this.timelineClips.find(c => c.id === clipId);
-        if (clip) {
-            this._captureUndoState(`Set Color on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
-            clip.color = color;
-            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
-            return true;
-        }
-        return false;
-    }
-
-    getAudioClipColor(clipId) {
-        const clip = this.timelineClips.find(c => c.id === clipId);
-        if (!clip) return Constants.DEFAULT_CLIP_COLOR;
+        if (!clip) return Constants.DEFAULT_AUDIO_CLIP_GAIN;
         if (clip.color && Constants.CLIP_COLORS.includes(clip.color)) {
             return clip.color;
         }

@@ -2749,11 +2749,7 @@ export function renderTimeline() {
                     if (trackId) {
                         const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
                         if (track && track.deleteTimelineClip) {
-                            if (localAppServices.captureStateForUndo) {
-                                localAppServices.captureStateForUndo(`Delete clip from ${track.name}`);
-                            }
                             track.deleteTimelineClip(clipId);
-                            if (localAppServices.renderTimeline) localAppServices.renderTimeline();
                             showNotification('Clip deleted', 1500);
                         }
                     }
@@ -3555,9 +3551,6 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         const deleteBtn = el.querySelector(`#deleteClipBtn-${clipId}`);
         if (deleteBtn) {
             deleteBtn.addEventListener('click', () => {
-                if (localAppServices.captureStateForUndo) {
-                    localAppServices.captureStateForUndo(`Delete clip "${clip.name || clipId}" from ${track.name}`);
-                }
                 if (track.deleteTimelineClip) {
                     track.deleteTimelineClip(clipId);
                 }
