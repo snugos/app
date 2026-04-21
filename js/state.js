@@ -113,11 +113,83 @@ export function setMetronomeVolumeState(volume) { metronomeVolume = Math.max(0, 
 // Scale Mode State
 let scaleModeState = { ...Constants.DEFAULT_SCALE_MODE };
 
+export function getScaleModeState() { return scaleModeState; }
+
+export function setScaleModeState(state) {
+    if (state && typeof state === 'object') {
+        scaleModeState = { ...Constants.DEFAULT_SCALE_MODE, ...state };
+    }
+}
+
+export function getScaleModeEnabledState() { return scaleModeState.enabled; }
+export function setScaleModeEnabledState(enabled) { scaleModeState.enabled = !!enabled; }
+
+export function getScaleModeScaleState() { return scaleModeState.scale; }
+export function setScaleModeScaleState(scale) { scaleModeState.scale = scale || 'Major'; }
+
+export function getScaleModeRootState() { return scaleModeState.root; }
+export function setScaleModeRootState(root) { scaleModeState.root = root || 'C'; }
+
+export function getScaleModeLockState() { return scaleModeState.lock; }
+export function setScaleModeLockState(lock) { scaleModeState.lock = !!lock; }
+
 // Ghost Track State (for showing notes from other tracks in sequencer)
 let ghostTrackIdState = null; // null = no ghost track, or track ID
 
 export function getGhostTrackIdState() { return ghostTrackIdState; }
 export function setGhostTrackIdState(trackId) { ghostTrackIdState = trackId; }
+
+// Timeline Markers State
+let timelineMarkersState = []; // Array of { id, name, bar, color }
+let timelineMarkerIdCounter = 0;
+
+export function getTimelineMarkersState() { return timelineMarkersState; }
+
+export function getTimelineMarkerByIdState(id) {
+    return timelineMarkersState.find(m => m.id === id);
+}
+
+export function addTimelineMarkerState(name, bar, color = null) {
+    if (timelineMarkersState.length >= Constants.MAX_TIMELINE_MARKERS) {
+        return null; // Max markers reached
+    }
+    const id = timelineMarkerIdCounter++;
+    const marker = {
+        id,
+        name: name || `Marker ${timelineMarkersState.length + 1}`,
+        bar: Math.max(1, Math.min(parseInt(bar) || 1, Constants.MAX_BARS)),
+        color: color || Constants.DEFAULT_MARKER_COLOR
+    };
+    timelineMarkersState.push(marker);
+    // Sort by bar position
+    timelineMarkersState.sort((a, b) => a.bar - b.bar);
+    return marker;
+}
+
+export function setTimelineMarkerState(id, updates) {
+    const marker = timelineMarkersState.find(m => m.id === id);
+    if (marker) {
+        if (updates.name !== undefined) marker.name = updates.name;
+        if (updates.bar !== undefined) marker.bar = Math.max(1, Math.min(parseInt(updates.bar) || 1, Constants.MAX_BARS));
+        if (updates.color !== undefined) marker.color = updates.color;
+        timelineMarkersState.sort((a, b) => a.bar - b.bar);
+        return marker;
+    }
+    return null;
+}
+
+export function removeTimelineMarkerState(id) {
+    const index = timelineMarkersState.findIndex(m => m.id === id);
+    if (index !== -1) {
+        timelineMarkersState.splice(index, 1);
+        return true;
+    }
+    return false;
+}
+
+export function clearTimelineMarkersState() {
+    timelineMarkersState = [];
+}
 
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
@@ -483,6 +555,7 @@ export function gatherProjectDataInternal() {
                 scaleMode: getScaleModeState(),
                 loopRegion: getLoopRegionState(),
                 swing: getSwingState(),
+                timelineMarkers: JSON.parse(JSON.stringify(getTimelineMarkersState())),
             },
             masterEffects: getMasterEffectsState().map(effect => ({
                 id: effect.id,

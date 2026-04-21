@@ -2660,8 +2660,10 @@ export function renderTimeline() {
     let lanesHTML = '<div class="timeline-lanes" style="flex:1;overflow-y:auto;position:relative;">';
     tracks.forEach((track, index) => {
         const laneTop = index * trackHeight;
-        lanesHTML += `<div class="timeline-track-lane" data-track-id="${track.id}" style="position:absolute;top:${laneTop}px;left:0;width:100%;height:${trackHeight}px;background:${index % 2 === 0 ? '#1a1a1a' : '#222'};border-bottom:1px solid #333;">
-            <span style="position:sticky;left:0;background:#333;padding:2px 5px;font-size:11px;color:#ccc;z-index:5;">${track.name}</span>`;
+        lanesHTML += `<div class="timeline-track-lane" data-track-id="${track.id}" style="position:absolute;top:${laneTop}px;left:0;width:100%;height:${trackHeight}px;background:${index % 2 === 0 ? '#1a1a1a' : '#222'};border-bottom:1px solid #333;">`;
+        // Add track color indicator (colored left border on the lane header)
+        const trackColor = track.color || '#666';
+        lanesHTML += `<span style="position:sticky;left:0;background:#333;padding:2px 5px;font-size:11px;color:#ccc;z-index:5;border-left:3px solid ${trackColor};">${track.name}</span>`;
         
         // Render clips if any
         if (track.timelineClips && track.timelineClips.length > 0) {

@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.27.0"; // Day 28: Audio Clip Reverse Playback
+export const APP_VERSION = "0.28.0"; // Day 29: Timeline Markers
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -223,4 +223,25 @@ export const DEFAULT_CHORD_MODE = {
     root: 0,  // 0 = C, 1 = C#, etc.
     type: 'major',
     lockChord: false
+};
+
+// Timeline Markers constants
+export const MAX_TIMELINE_MARKERS = 64; // Maximum number of markers
+export const DEFAULT_MARKER_COLOR = '#ff9f43'; // Default marker color (orange)
+export const MARKER_COLORS = [
+    '#ff6b6b', // Red
+    '#feca57', // Yellow
+    '#48dbfb', // Cyan
+    '#1dd1a1', // Green
+    '#ff9ff3', // Pink
+    '#f368e0', // Magenta
+    '#ff9f43', // Orange
+    '#54a0ff', // Blue
+    '#5f27cd', // Purple
+    '#c8d6e5', // Gray
+];
+export const DEFAULT_MARKER = {
+    name: 'Marker',
+    bar: 1, // 1-indexed bar number
+    color: DEFAULT_MARKER_COLOR
 };
