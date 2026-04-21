@@ -2796,6 +2796,86 @@ export function renderTimeline() {
         });
     }
     
+    // Add marker control handlers
+    const addMarkerBtn = contentDiv.querySelector('#addMarkerBtn');
+    const clearMarkersBtn = contentDiv.querySelector('#clearMarkersBtn');
+    
+    if (addMarkerBtn) {
+        addMarkerBtn.addEventListener('click', () => {
+            if (markers.length >= Constants.MAX_TIMELINE_MARKERS) {
+                showNotification(`Maximum ${Constants.MAX_TIMELINE_MARKERS} markers reached`, 2000);
+                return;
+            }
+            const currentBar = parseInt(prompt('Enter bar number for new marker:', '1')) || 1;
+            if (currentBar >= 1 && currentBar <= Constants.MAX_BARS) {
+                const markerName = prompt('Enter marker name:', `Marker ${markers.length + 1}`) || `Marker ${markers.length + 1}`;
+                if (localAppServices.addTimelineMarkerState) {
+                    localAppServices.addTimelineMarkerState(markerName, currentBar);
+                    renderTimeline();
+                    showNotification(`Marker "${markerName}" added at bar ${currentBar}`, 1500);
+                }
+            } else {
+                showNotification('Invalid bar number', 1500);
+            }
+        });
+    }
+    
+    if (clearMarkersBtn) {
+        clearMarkersBtn.addEventListener('click', () => {
+            if (markers.length === 0) return;
+            if (localAppServices.clearTimelineMarkersState) {
+                localAppServices.clearTimelineMarkersState();
+                renderTimeline();
+                showNotification('All markers cleared', 1500);
+            }
+        });
+    }
+    
+    // Add double-click on ruler to add marker at that position
+    const ruler = contentDiv.querySelector('.timeline-ruler');
+    if (ruler) {
+        ruler.addEventListener('dblclick', (e) => {
+            if (markers.length >= Constants.MAX_TIMELINE_MARKERS) {
+                showNotification(`Maximum ${Constants.MAX_TIMELINE_MARKERS} markers reached`, 2000);
+                return;
+            }
+            const rect = ruler.getBoundingClientRect();
+            const scrollLeft = ruler.parentElement?.scrollLeft || 0;
+            const x = e.clientX - rect.left + scrollLeft;
+            const bar = Math.floor(x / pixelsPerBar) + 1;
+            if (bar >= 1 && bar <= Constants.MAX_BARS) {
+                const markerName = prompt('Enter marker name:', `Marker ${markers.length + 1}`) || `Marker ${markers.length + 1}`;
+                if (localAppServices.addTimelineMarkerState) {
+                    localAppServices.addTimelineMarkerState(markerName, bar);
+                    renderTimeline();
+                    showNotification(`Marker "${markerName}" added at bar ${bar}`, 1500);
+                }
+            }
+        });
+    }
+    
+    // Add right-click context menu on markers to delete them
+    contentDiv.querySelectorAll('.timeline-marker').forEach(markerEl => {
+        markerEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const markerId = parseInt(markerEl.dataset.markerId);
+            const marker = markers.find(m => m.id === markerId);
+            if (!marker) return;
+            
+            const menuItems = [
+                { label: `Delete "${marker.name || 'Marker'}"`, action: () => {
+                    if (localAppServices.removeTimelineMarkerState) {
+                        localAppServices.removeTimelineMarkerState(markerId);
+                        renderTimeline();
+                        showNotification('Marker deleted', 1500);
+                    }
+                }}
+            ];
+            createContextMenu(e, menuItems, localAppServices);
+        });
+    });
+    
 }
 
 export function updatePlayheadPosition() {
