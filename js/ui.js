@@ -2618,6 +2618,9 @@ export function renderTimeline() {
     // Get loop region state
     const loopRegion = localAppServices.getLoopRegionState ? localAppServices.getLoopRegionState() : Constants.DEFAULT_LOOP_REGION;
     
+    // Get timeline markers
+    const markers = localAppServices.getTimelineMarkersState ? localAppServices.getTimelineMarkersState() : [];
+    
     // Create loop region controls
     let loopControlsHTML = `
         <div class="loop-region-controls flex items-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700">
@@ -2636,6 +2639,16 @@ export function renderTimeline() {
                     class="w-14 px-1 py-0.5 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-center">
             </div>
             <span class="text-xs text-zinc-500 ml-2">Press L to toggle loop</span>
+        </div>
+    `;
+    
+    // Create marker controls
+    let markerControlsHTML = `
+        <div class="marker-controls flex items-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700">
+            <span class="text-xs text-zinc-400 font-semibold">Markers:</span>
+            <button id="addMarkerBtn" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded">+ Add</button>
+            <button id="clearMarkersBtn" class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded ${markers.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${markers.length === 0 ? 'disabled' : ''}>Clear All</button>
+            <span class="text-xs text-zinc-500 ml-2">${markers.length}/${Constants.MAX_TIMELINE_MARKERS}</span>
         </div>
     `;
     
@@ -2685,6 +2698,7 @@ export function renderTimeline() {
     
     contentDiv.innerHTML = `<div class="timeline-container" style="display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;">
         ${loopControlsHTML}
+        ${markerControlsHTML}
         ${rulerHTML}
         <div class="timeline-tracks" style="flex:1;position:relative;overflow:auto;">${lanesHTML}${playheadHTML}</div>
     </div>`;

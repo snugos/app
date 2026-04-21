@@ -47,6 +47,13 @@ import {
     getSwingState,
     getSwingEnabledState,
     getSwingAmountState,
+    // Timeline Markers state
+    getTimelineMarkersState,
+    getTimelineMarkerByIdState,
+    addTimelineMarkerState,
+    setTimelineMarkerState,
+    removeTimelineMarkerState,
+    clearTimelineMarkersState,
     // Send Tracks state
     getSendTracksState as getSendTracks,
     getSendTrackByIdState as getSendTrackById,
@@ -351,6 +358,13 @@ const appServices = {
     getSwingState,
     getSwingEnabledState,
     getSwingAmountState,
+    // Timeline Markers state
+    getTimelineMarkersState,
+    getTimelineMarkerByIdState,
+    addTimelineMarkerState,
+    setTimelineMarkerState,
+    removeTimelineMarkerState,
+    clearTimelineMarkersState,
     // Send Tracks state
     getSendTracksState,
     getSendTrackByIdState,
@@ -573,8 +587,8 @@ const appServices = {
 
     addMasterEffect: async (effectType) => {
         try {
-            const isReconstructinging = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
-            if (!isReconstructinging && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
+            const isReconstructing = appServices.getIsReconstructingDAW ? appServices.getIsReconstructingDAW() : false;
+            if (!isReconstructing && appServices.captureStateForUndo) appServices.captureStateForUndo(`Add ${effectType} to Master`);
 
             if (!appServices.effectsRegistryAccess?.getEffectDefaultParams) {
                 console.error("effectsRegistryAccess.getEffectDefaultParams not available."); return;
