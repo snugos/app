@@ -505,6 +505,7 @@ export function gatherProjectDataInternal() {
                 const trackData = { // Base data
                     id: track.id, type: track.type, name: track.name,
                     isMuted: track.isMuted,
+                    color: track.color, // Track color for visual identification
                     volume: track.previousVolumeBeforeMute, // Store the actual volume, not the muted one
                     activeEffects: (track.activeEffects || []).map(effect => ({
                         id: effect.id, type: effect.type,
