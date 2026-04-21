@@ -1278,6 +1278,36 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             </div>`;
     }
 
+    // Build chord controls HTML (only for Synth/InstrumentSampler tracks)
+    let chordControlsHTML = '';
+    if (track.type === 'Synth' || track.type === 'InstrumentSampler') {
+        const chordMode = localAppServices.getChordMode ? localAppServices.getChordMode() : Constants.DEFAULT_CHORD_MODE;
+        const chordTypeOptions = Object.keys(Constants.CHORD_TYPES).map(t => 
+            `<option value="${t}" ${t === chordMode.type ? 'selected' : ''}>${t}</option>`
+        ).join('');
+        const rootOptions = Constants.SCALE_ROOTS.map(r => 
+            `<option value="${r}" ${r === chordMode.root ? 'selected' : ''}>${r}</option>`
+        ).join('');
+        
+        chordControlsHTML = `
+            <div class="chord-mode-controls flex items-center gap-1 ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+                <label class="flex items-center gap-0.5 cursor-pointer">
+                    <input type="checkbox" id="chordModeToggle-${track.id}" ${chordMode.enabled ? 'checked' : ''} class="w-3 h-3">
+                    <span class="text-[10px]">Chord</span>
+                </label>
+                <select id="chordRootSelect-${track.id}" class="w-10 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" ${!chordMode.enabled ? 'disabled' : ''}>
+                    ${rootOptions}
+                </select>
+                <select id="chordTypeSelect-${track.id}" class="w-20 p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200" ${!chordMode.enabled ? 'disabled' : ''}>
+                    ${chordTypeOptions}
+                </select>
+                <label class="flex items-center gap-0.5 cursor-pointer" title="Lock: only allow chord tones">
+                    <input type="checkbox" id="chordLockToggle-${track.id}" ${chordMode.lockChord ? 'checked' : ''} class="w-3 h-3" ${!chordMode.enabled ? 'disabled' : ''}>
+                    <span class="text-[10px]">🔒</span>
+                </label>
+            </div>`;
+    }
+
     // Velocity editor toggle button
     const velocityEditorToggleHTML = `
         <label class="flex items-center gap-0.5 cursor-pointer ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
@@ -1311,7 +1341,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             </select>
         </label>` : '';
 
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${velocityEditorToggleHTML} ${probabilityEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${chordControlsHTML} ${velocityEditorToggleHTML} ${probabilityEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
 
@@ -1935,6 +1965,53 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     }
                 });
             }
+        }
+
+        // Chord Mode event handlers
+        const chordModeToggle = sequencerWindow.element.querySelector(`#chordModeToggle-${track.id}`);
+        const chordRootSelect = sequencerWindow.element.querySelector(`#chordRootSelect-${track.id}`);
+        const chordTypeSelect = sequencerWindow.element.querySelector(`#chordTypeSelect-${track.id}`);
+        const chordLockToggle = sequencerWindow.element.querySelector(`#chordLockToggle-${track.id}`);
+
+        if (chordModeToggle) {
+            chordModeToggle.addEventListener('change', (e) => {
+                if (localAppServices.setChordModeEnabledState) {
+                    localAppServices.setChordModeEnabledState(e.target.checked);
+                }
+                if (chordRootSelect) chordRootSelect.disabled = !e.target.checked;
+                if (chordTypeSelect) chordTypeSelect.disabled = !e.target.checked;
+                if (chordLockToggle) chordLockToggle.disabled = !e.target.checked;
+                // Re-render to update highlighting
+                openTrackSequencerWindow(trackId, true);
+            });
+        }
+
+        if (chordRootSelect) {
+            chordRootSelect.addEventListener('change', (e) => {
+                if (localAppServices.setChordModeRootState) {
+                    localAppServices.setChordModeRootState(e.target.value);
+                }
+                // Re-render to update highlighting
+                openTrackSequencerWindow(trackId, true);
+            });
+        }
+
+        if (chordTypeSelect) {
+            chordTypeSelect.addEventListener('change', (e) => {
+                if (localAppServices.setChordModeTypeState) {
+                    localAppServices.setChordModeTypeState(e.target.value);
+                }
+                // Re-render to update highlighting
+                openTrackSequencerWindow(trackId, true);
+            });
+        }
+
+        if (chordLockToggle) {
+            chordLockToggle.addEventListener('change', (e) => {
+                if (localAppServices.setChordModeLockState) {
+                    localAppServices.setChordModeLockState(e.target.checked);
+                }
+            });
         }
 
         // Ghost Track event handlers

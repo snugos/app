@@ -814,6 +814,17 @@ document.addEventListener('keydown', (event) => {
             }
             return;
         }
+        if (key === 'c' && !(event.ctrlKey || event.metaKey) && !event.altKey) {
+            // Toggle Chord Mode
+            if (localAppServices.getChordModeEnabledState && localAppServices.setChordModeEnabledState) {
+                const currentEnabled = localAppServices.getChordModeEnabledState();
+                localAppServices.setChordModeEnabledState(!currentEnabled);
+                if (localAppServices.showNotification) {
+                    localAppServices.showNotification(`Chord Mode: ${!currentEnabled ? 'ON' : 'OFF'}`, 1000);
+                }
+            }
+            return;
+        }
         if (key === 'l' && !(event.ctrlKey || event.metaKey)) {
             // Toggle Loop Region
             if (localAppServices.getLoopRegionEnabled && localAppServices.setLoopRegionEnabled) {
