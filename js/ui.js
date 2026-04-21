@@ -145,6 +145,22 @@ export function createKnob(options) {
     return { element: container, setValue, getValue: () => currentValue, type: 'knob', refreshVisuals: updateKnobVisual };
 }
 
+// --- Track Color Swatches Builder ---
+function buildTrackColorSwatches(track) {
+    const colors = Constants.TRACK_COLORS;
+    let html = '';
+    for (let i = 0; i < colors.length; i++) {
+        const color = colors[i];
+        const isSelected = track.color === color;
+        const borderClass = isSelected ? 'ring-2 ring-white ring-offset-1 ring-offset-gray-100 dark:ring-offset-slate-800' : 'hover:scale-110';
+        html += `<button class="track-color-swatch w-5 h-5 rounded cursor-pointer transition-all ${borderClass}" 
+            data-color="${color}" 
+            style="background-color: ${color};" 
+            title="${color}"></button>`;
+    }
+    return html;
+}
+
 // --- Specific Inspector DOM Builders ---
 function buildSynthSpecificInspectorDOM(track) {
     const engineType = track.synthEngineType || 'MonoSynth';
@@ -565,6 +581,12 @@ function buildTrackInspectorContentDOM(track) {
             <div id="trackMeterContainer-${track.id}" class="h-3 w-full bg-gray-200 dark:bg-slate-600 rounded border border-gray-300 dark:border-slate-500 overflow-hidden my-1">
                 <div id="trackMeterBar-${track.id}" class="h-full bg-pink-400 transition-all duration-50 ease-linear" style="width: 0%;"></div>
             </div>
+            <div id="trackColor-${track.id}" class="flex items-center gap-1 mt-1">
+                <span class="text-xs text-gray-500 dark:text-slate-400">Color:</span>
+                <div id="trackColorSwatches-${track.id}" class="flex gap-1 flex-wrap">
+                    ${buildTrackColorSwatches(track)}
+                </div>
+            </div>
             <div class="type-specific-controls mt-1 border-t dark:border-slate-600 pt-1">${specificControlsHTML}</div>
             <div class="inspector-nav grid ${track.type === 'Audio' ? 'grid-cols-2' : 'grid-cols-3'} gap-1 mt-2">
                 <button id="openEffectsBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Effects</button>
@@ -623,6 +645,23 @@ function initializeCommonInspectorControls(track, winEl) {
     winEl.querySelector(`#removeTrackBtn-${track.id}`)?.addEventListener('click', () => handleRemoveTrack(track.id));
     winEl.querySelector(`#openEffectsBtn-${track.id}`)?.addEventListener('click', () => handleOpenEffectsRack(track.id));
     winEl.querySelector(`#openSequencerBtn-${track.id}`)?.addEventListener('click', () => handleOpenSequencer(track.id));
+
+    // Track color swatches
+    const colorSwatches = winEl.querySelectorAll(`.track-color-swatch`);
+    colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            const newColor = swatch.dataset.color;
+            if (track.setTrackColor) {
+                track.setTrackColor(newColor);
+            }
+            // Update visual selection
+            colorSwatches.forEach(s => {
+                s.classList.remove('ring-2', 'ring-white', 'ring-offset-1', 'ring-offset-gray-100', 'dark:ring-offset-slate-800');
+            });
+            swatch.classList.add('ring-2', 'ring-white', 'ring-offset-1', 'ring-offset-gray-100', 'dark:ring-offset-slate-800');
+            showNotification(`Track color changed`, 1500);
+        });
+    });
 }
 
 

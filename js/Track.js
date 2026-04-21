@@ -27,6 +27,14 @@ export class Track {
         this.isSoloed = currentSoloedId === this.id;
         this.previousVolumeBeforeMute = initialData?.volume ?? 0.7;
 
+        // Track color for visual identification
+        if (initialData?.color !== undefined) {
+            this.color = initialData.color;
+        } else {
+            const trackCount = this.appServices.getTracks ? this.appServices.getTracks().length : 0;
+            this.color = Constants.TRACK_COLORS[trackCount % Constants.TRACK_COLORS.length];
+        }
+
         // Synth specific
         if (this.type === 'Synth') {
             this.synthEngineType = initialData?.synthEngineType || 'MonoSynth';
@@ -752,6 +760,21 @@ export class Track {
                 this.gainNode.gain.setValueAtTime(this.previousVolumeBeforeMute, Tone.now());
             } catch (e) { console.error(`[Track ${this.id}] Error setting gainNode volume:`, e); }
         }
+    }
+
+    setTrackColor(color) {
+        this._captureUndoState(`Set color on ${this.name}`);
+        this.color = color;
+        if (this.appServices.renderTimeline) {
+            this.appServices.renderTimeline();
+        }
+        if (this.appServices.updateMixerWindow) {
+            this.appServices.updateMixerWindow();
+        }
+    }
+
+    getTrackColor() {
+        return this.color;
     }
 
     applyMuteState() {
@@ -2101,7 +2124,7 @@ export class Track {
         if (playbackMode === 'timeline') {
             for (const clip of this.timelineClips) {
                 if (!clip || typeof clip.startTime !== 'number' || typeof clip.duration !== 'number') {
-                    console.warn(`[Track ${this.id}] Skipping invalid clip:`, clip);
+                    console.warn(`[Track ${this.id} schedulePlayback] Skipping invalid clip:`, clip);
                     continue;
                 }
                 const clipActualStart = clip.startTime;
@@ -2137,7 +2160,7 @@ export class Track {
                                 
                                 // Calculate actual fade times based on clip playback window
                                 const clipStartInWindow = effectivePlayStart - clipActualStart;
-                                const clipEndInWindow = effectivePlayEnd - clipActualStart;
+                                const clipEndInWindow = effectivePlayStart + clip.duration;
                                 const fadeIn = clip.fadeIn || 0;
                                 const fadeOut = clip.fadeOut || 0;
                                 
@@ -2163,7 +2186,7 @@ export class Track {
                                 
                                 player.start(effectivePlayStart, offsetIntoSource, playDurationInWindow);
                             };
-                            player.onerror = (err) => { console.error(`[Track ${this.id}] Player error for clip ${clip.id}:`, err); URL.revokeObjectURL(url); if(this.clipPlayers.has(clip.id)){try{if(!player.disposed)player.dispose()}catch(e){}this.clipPlayers.delete(clip.id);} if(this.clipPlayers.has(`${clip.id}_gain`)){try{if(!fadeGain.disposed)fadeGain.dispose()}catch(e){}this.clipPlayers.delete(`${clip.id}_gain`);}};
+                            player.onerror = (err) => { console.error(`[Track ${this.id}] Player error for clip ${clip.id}:`, err); URL.revokeObjectURL(url); if(this.clipPlayers.has(clip.id)){try{if(!player.disposed)player.dispose()}catch(e){}this.clipPlayers.delete(clip.id);} if(this.clipPlayers.has(`${clip.id}_gain`)){try{if(!fadeGain.disposed)fadeGain.dispose()}catch(e){}this.clipPlayers.delete(`${clip.id}_gain`);}}
                             await player.load(url);
                         } else {
                             console.warn(`[Track ${this.id}] Blob not found for audio clip ${clip.id} (source ${clip.sourceId})`);

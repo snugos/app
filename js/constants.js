@@ -163,6 +163,28 @@ export const DEFAULT_SEND_TRACK = {
 // Note Probability constants
 export const DEFAULT_NOTE_PROBABILITY = 1.0; // Default probability (1.0 = always play)
 
+// Track Color constants
+export const TRACK_COLORS = [
+    '#ff6b6b', // Red
+    '#feca57', // Yellow
+    '#48dbfb', // Cyan
+    '#1dd1a1', // Green
+    '#ff9ff3', // Pink
+    '#f368e0', // Magenta
+    '#ff9f43', // Orange
+    '#54a0ff', // Blue
+    '#5f27cd', // Purple
+    '#c8d6e5', // Gray
+    '#00d2d3', // Teal
+    '#ff6348', // Coral
+    '#7bed9f', // Mint
+    '#a29bfe', // Lavender
+    '#fd79a8', // Rose
+    '#e17055'  // Terra
+];
+
+export const DEFAULT_TRACK_COLOR_INDEX = 0; // Default to first color (red)
+
 // Audio Clip Fade In/Out Constants
 export const DEFAULT_AUDIO_CLIP_FADE_IN = 0;    // Default fade in time in seconds
 export const DEFAULT_AUDIO_CLIP_FADE_OUT = 0;   // Default fade out time in seconds
