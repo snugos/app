@@ -277,7 +277,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Files Modified**:
   - `js/main.js`:
     - Fixed `isReconstructinging` typo → `isReconstructing` (variable name)
-    - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingDAW` (function name)
+    - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingingDAW` (function name)
     - Fixed `isReconstructconstructing` typo → `isReconstructing` (variable name)
     - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
 - **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructing` flag is correctly checked during project load/reconstruction operations.
@@ -325,7 +325,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Clamps velocities to valid range (0.1 to 1.0)
     - Returns count of notes humanized
   - `js/ui.js`: Added "Humanize Pattern..." menu item to sequencer context menu:
-    - Prompts for intensity value (0.0 - 1.0)
+    - Prompts for intensity value (0.0-1.0)
     - Calls `humanizePattern()` on current track
     - Shows notification with count of notes affected
   - `js/constants.js`: Bumped APP_VERSION to 0.12.0
@@ -388,7 +388,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `updateMixerWindow()` - Updates mixer UI when track state changes
   - `js/main.js`: Added aliases for mixer functions to appServices:
     - `getSendTracks`, `getSendTrackById`, `getTrackSendLevel` (state getters)
-    - `addSendTrack`, `setSendTrackMuted`, `setSendTrackLevel` (state setters)
+    - `addSendTrack`, `setSendTrackMuted`, `setTrackSendLevel` (state setters)
     - `createSendBus` (alias for `createSendBusInAudio`)
     - `getOpenWindowElement` (helper for mixer UI updates)
   - `js/constants.js`: Bumped APP_VERSION to 0.15.0
@@ -523,7 +523,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - "Arpeggiate Down-Up ↕" - Plays down then back up
     - "Arpeggiate Random 🎲" - Randomizes note order
     - "Arpeggiate Converge ⇥" - Plays from outer edges inward
-    - "Arpeggiate Diverge ⇤" - Plays from center outward
+    - "Arpeggiate Diverge ⇤" - Plays from center outward to edges
     - "Custom Arpeggio..." - Prompts for mode, rate, and octave settings
   - `js/constants.js`: Bumped APP_VERSION to 0.21.0
 - **Feature Details**:
@@ -641,6 +641,28 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Right-click on marker shows delete context menu
   - Add/Clear buttons in marker controls bar work correctly
 - **Version**: Bumped to 0.29.0
+
+#### Day 31: Audio Clip Color Feature (2026-04-21)
+- **Feature**: Added customizable colors for audio clips in the timeline and Audio Clip Editor
+- **Files Modified**:
+  - `js/constants.js`: Added:
+    - `CLIP_COLORS` array (16 colors similar to track colors)
+    - `DEFAULT_CLIP_COLOR` constant ('#4a9eff' - bright blue)
+  - `js/Track.js`: Added new methods:
+    - `setAudioClipColor(clipId, color)` - Sets clip color with undo state capture
+    - `getAudioClipColor(clipId)` - Gets clip color, falls back to type-based default
+  - `js/ui.js`: Modified:
+    - `openAudioClipEditorWindow()` - Added clip color swatch selector
+    - `renderTimeline()` - Uses clip.color if set, falls back to type-based color
+    - Increased window size to 380x520 to accommodate new controls
+  - `js/constants.js`: Bumped APP_VERSION to 0.30.0
+- **Feature Details**:
+  - 16 color options displayed as swatches in Audio Clip Editor
+  - Color changes captured for undo/redo
+  - Timeline renders clips with their custom color
+  - Default colors maintained for audio (blue) and sequence (purple) clips
+- **Usage**: Double-click an audio clip in Timeline to open editor, click color swatch to change
+- **Version**: Bumped to 0.30.0
 
 ## Code Style Guidelines
 
