@@ -280,7 +280,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingingDAW` (function name)
     - Fixed `isReconstructconstructing` typo → `isReconstructinging` (variable name)
     - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
-- **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructing` flag is correctly checked during project load/reconstruction operations.
+- **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructinging` flag is correctly checked during project load/reconstruction operations.
 - **Version**: No bump needed (bug fix)
 
 #### Day 14: Loop Region UI Implementation (2026-04-19)
@@ -743,6 +743,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Double-click an audio clip in Timeline to open editor, adjust Playback Rate slider or enter value
 - **Version**: Bumped to 0.34.0
 
+#### Day 36: Audio Clip Editor Waveform Loading Bug Fix (2026-04-21)
+- **Bug Fix**: Fixed waveform preview not loading in Audio Clip Editor
+- **Issue**: The waveform loading code passed `clip.audioBuffer` directly to `drawClipWaveform()`, but `audioBuffer` was never stored on the clip object - only `clip.sourceId` (an IndexedDB key) was available
+- **Files Modified**:
+  - `js/ui.js`: 
+    - Added import for `getAudio` from `db.js`
+    - Modified waveform loading code to:
+      - Fetch audio blob from IndexedDB using `clip.sourceId`
+      - Decode audio data using `Tone.context.rawContext`
+      - Create a `Tone.Buffer` from the decoded data
+      - Pass the Tone.Buffer to `drawClipWaveform()`
+      - Added proper error handling with fallback to "No audio loaded"
+  - `js/constants.js`: No version bump needed (bug fix for existing feature)
+- **Impact**: The waveform preview in the Audio Clip Editor now correctly displays audio waveforms for clips that have audio loaded in IndexedDB
+- **Version**: No bump (bug fix)
+
+#### Day 37: Audio Clip Name Feature (2026-04-21)
+- **Feature**: Added proper undo state capture for clip name changes in Audio Clip Editor
+- **Bug Fix**: The Apply button in the Audio Clip Editor was directly assigning `clip.name = newName` instead of using a proper Track.js method, bypassinging undo state capture
+- **Files Modified**:
+  - `js/Track.js`: Added new methods:
+    - `setAudioClipName(clipId, name)` - Sets clip name with undo state capture
+    - `getAudioClipName(clipId)` - Gets clip name
+  - `js/ui.js`: Modified Apply button handler to use `track.setAudioClipName(clipId, newName)` instead of direct assignment
+  - `js/constants.js`: Bumped APP_VERSION to 0.35.0
+- **Impact**: Clip renaming now properly captures undo state, allowing users to undo accidental renames
+- **Version**: Bumped to 0.35.0
+
 ## Code Style Guidelines
 
 ### Module Structure
@@ -765,20 +793,4 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Track methods: `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
 - UI element IDs: `<type><controlName>-<trackId>-placeholder` for knob placeholders
 - Container IDs: `<type>Container-<trackId>-<subtype>` for specific containers
-
-#### Day 36: Audio Clip Editor Waveform Loading Bug Fix (2026-04-21)
-- **Bug Fix**: Fixed waveform preview not loading in Audio Clip Editor
-- **Issue**: The waveform loading code passed `clip.audioBuffer` directly to `drawClipWaveform()`, but `audioBuffer` was never stored on the clip object - only `clip.sourceId` (an IndexedDB key) was available
-- **Files Modified**:
-  - `js/ui.js`: 
-    - Added import for `getAudio` from `db.js`
-    - Modified waveform loading code to:
-      - Fetch audio blob from IndexedDB using `clip.sourceId`
-      - Decode audio data using `Tone.context.rawContext`
-      - Create a `Tone.Buffer` from the decoded data
-      - Pass the Tone.Buffer to `drawClipWaveform()`
-      - Added proper error handling with fallback to "No audio loaded"
-  - `js/constants.js`: No version bump needed (bug fix for existing feature)
-- **Impact**: The waveform preview in the Audio Clip Editor now correctly displays audio waveforms for clips that have audio loaded in IndexedDB
-- **Version**: No bump (bug fix)
 
