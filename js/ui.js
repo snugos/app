@@ -2384,6 +2384,60 @@ export function drawWaveform(track) {
     });
 }
 
+export function drawClipWaveform(clipId, audioBuffer) {
+    const canvas = document.getElementById(`clipWaveformCanvas-${clipId}`);
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    
+    if (!audioBuffer?.loaded) {
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('No audio loaded', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    const buffer = audioBuffer.get();
+    const data = buffer.getChannelData(0);
+    const step = Math.ceil(data.length / canvas.width);
+    const amp = canvas.height / 2;
+    
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#4a9eff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, amp);
+    
+    for (let i = 0; i < canvas.width; i++) {
+        let min = 1.0;
+        let max = -1.0;
+        for (let j = 0; j < step; j++) {
+            const datum = data[(i * step) + j];
+            if (datum < min) min = datum;
+            if (datum > max) max = datum;
+        }
+        ctx.lineTo(i, (1 + min) * amp);
+        ctx.lineTo(i, (1 + max) * amp);
+    }
+    
+    ctx.lineTo(canvas.width, amp);
+    ctx.stroke();
+    
+    // Draw center line
+    ctx.strokeStyle = '#333';
+    ctx.beginPath();
+    ctx.moveTo(0, amp);
+    ctx.lineTo(canvas.width, amp);
+    ctx.stroke();
+}
+
 export function drawInstrumentWaveform(track) {
     if (!track?.instrumentWaveformCanvasCtx || !track.instrumentSamplerSettings.audioBuffer?.loaded) {
         if (track?.instrumentWaveformCanvasCtx) { /* Draw 'No audio' message, similar to drawWaveform */ } return;
@@ -3518,6 +3572,11 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 </div>
             </div>
             
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Waveform Preview</label>
+                <canvas id="clipWaveformCanvas-${clipId}" class="w-full h-20 bg-zinc-800 rounded border border-zinc-600"></canvas>
+            </div>
+            
             <div class="pt-2 border-t border-zinc-700 flex gap-2 flex-wrap">
                 <button id="normalizeClipBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-medium">Normalize</button>
                 <button id="applyClipChangesBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium">Apply</button>
@@ -3527,7 +3586,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     }
 
     const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
-        width: 380, height: 520, minWidth: 320, minHeight: 400, initialContentKey: windowId
+        width: 380, height: 560, minWidth: 320, minHeight: 450, initialContentKey: windowId
     });
 
     if (editorWindow?.element) {
@@ -3586,6 +3645,11 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 swatch.classList.add('border-white', 'border-2');
             });
         });
+        
+        // Draw waveform preview after window is created
+        setTimeout(() => {
+            drawClipWaveform(clipId, clip.audioBuffer);
+        }, 100);
         
         // Normalize button
         const normalizeBtn = el.querySelector(`#normalizeClipBtn-${clipId}`);

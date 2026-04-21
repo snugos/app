@@ -276,7 +276,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Bug Fixes**: Fixed multiple typo bugs in main.js affecting reconstruction logic
 - **Files Modified**:
   - `js/main.js`:
-    - Fixed `isReconstructinging` typo → `isReconstructing` (variable name)
+    - Fixed `isReconstructinging` typo → `isReconstructinging` (variable name)
     - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingingDAW` (function name)
     - Fixed `isReconstructconstructing` typo → `isReconstructing` (variable name)
     - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
@@ -557,7 +557,10 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Click/drag editing on probability bars
     - Real-time visual feedback during editing
     - Recreates Tone sequence after editing to apply changes
-  - `js/constants.js`: Added `DEFAULT_NOTE_PROBABILITY` constant (1.0), bumped APP_VERSION to 0.22.0
+  - `js/constants.js`: Added gain constants:
+    - `DEFAULT_NOTE_PROBABILITY` constant (1.0)
+    - `MIN_NOTE_PROBABILITY` (0)
+    - `MAX_NOTE_PROBABILITY` (1.0)
   - `style.css`: Added `.probability-editor-lane` styling
 - **Feature Details**:
   - Probability Toggle: "Prob" checkbox in sequencer toolbar to show/hide probability editor
@@ -664,21 +667,42 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Double-click an audio clip in Timeline to open editor, click color swatch to change
 - **Version**: Bumped to 0.30.0
 
-#### Day 32: Timeline Clip Delete Bug Fix (2026-04-21)
-- **Bug Fix**: Added missing `deleteTimelineClip` method to Track class - Timeline clip deletion was calling a method that didn't exist
-- **Issue**: Both the Timeline context menu (renderTimeline) and Audio Clip Editor (openAudioClipEditorWindow) were calling `track.deleteTimelineClip(clipId)` but this method was never implemented in Track.js, causing silent failures when users tried to delete clips
+#### Day 32: Audio Clip Reverse Feature + Bug Fixes (2026-04-21)
+- **Bug Fix**: Fixed `getAudioClipGain` method in Track.js - it was incorrectly returning a color value instead of the gain value
+- **Bug Fix**: Added missing `setAudioClipReverse` and `getAudioClipReverse` methods to Track.js for audio clip reverse functionality
+- **Bug Fix**: Added missing `setAudioClipColor` and `getAudioClipColor` methods to Track.js - these were being called from ui.js but didn't exist in Track.js
+- **Feature**: Added `setAudioClipReverse` method with undo state capture for audio clip reverse playback
+- **Feature**: Added `getAudioClipReverse` method to retrieve clip reverse state
+- **Feature**: Added `setAudioClipColor` method with undo state capture for clip color changes
+- **Feature**: Added `getAudioClipColor` method to retrieve clip color
+- **Feature**: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant to constants.js
 - **Files Modified**:
-  - `js/Track.js`: Added new method `deleteTimelineClip(clipId)`:
-    - Finds clip by ID in timelineClips array
-    - Captures undo state before deletion
-    - Removes clip from timelineClips array
-    - Cleans up any playing audio for that clip from clipPlayers Map
-    - Calls renderTimeline to refresh the UI
-  - `js/ui.js`: Removed redundant `captureStateForUndo` calls before `deleteTimelineClip` since the method now handles undo internally
-    - Timeline context menu delete handler
-    - Audio Clip Editor delete button handler
-- **Impact**: Users can now successfully delete audio clips from both the Timeline (right-click context menu) and the Audio Clip Editor (Delete button)
-- **Version**: Bumped to 0.31.0
+  - `js/Track.js`: Added `setAudioClipReverse`, `getAudioClipReverse`, `setAudioClipColor`, `getAudioClipColor` methods; fixed `getAudioClipGain` to return gain value
+  - `js/constants.js`: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant, bumped APP_VERSION to 0.32.0
+- **Impact**: The missing methods caused runtime errors when using the Audio Clip Editor's color selector and reverse checkbox. The getAudioClipGain bug would cause incorrect gain values to be retrieved.
+- **Version**: Bumped to 0.32.0
+
+#### Day 34: Audio Clip Editor Waveform Preview (2026-04-21)
+- **Feature**: Added waveform preview to the Audio Clip Editor for visual feedback of audio content
+- **Files Modified**:
+  - `js/ui.js`: Added new function `drawClipWaveform(clipId, audioBuffer)`:
+    - Draws waveform visualization on a canvas element
+    - Shows "No audio loaded" message when buffer is not available
+    - Uses blue stroke color (#4a9eff) matching audio clip default color
+    - Center line for visual reference
+    - Responsive canvas sizing
+  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
+    - Added waveform canvas element below clip color swatches
+    - Increased window height from 520px to 560px to accommodate new control
+    - Added call to `drawClipWaveform()` after window creation to render the waveform
+  - `js/constants.js`: No version bump needed (already at correct version for feature scope)
+- **Feature Details**:
+  - Waveform Preview: Visual representation of the audio clip's waveform in the editor
+  - Shows "No audio loaded" when the clip has no audio data
+  - Blue color matching audio clip theme
+  - Renders shortly after window opens (100ms delay for DOM readiness)
+- **Usage**: Double-click an audio clip in Timeline to open editor, waveform appears below color swatches
+- **Version**: 0.33.0
 
 ## Code Style Guidelines
 
@@ -702,17 +726,3 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - Track methods: `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
 - UI element IDs: `<type><controlName>-<trackId>-placeholder` for knob placeholders
 - Container IDs: `<type>Container-<trackId>-<subtype>` for specific containers
-#### Day 33: Audio Clip Reverse Feature + Bug Fixes (2026-04-21)
-- **Bug Fix**: Fixed `getAudioClipGain` method in Track.js - it was incorrectly returning a color value instead of the gain value
-- **Bug Fix**: Added missing `setAudioClipReverse` and `getAudioClipReverse` methods to Track.js for audio clip reverse functionality
-- **Bug Fix**: Added missing `setAudioClipColor` and `getAudioClipColor` methods to Track.js - these were being called from ui.js but didn't exist in Track.js
-- **Feature**: Added `setAudioClipReverse` method with undo state capture for audio clip reverse playback
-- **Feature**: Added `getAudioClipReverse` method to retrieve clip reverse state
-- **Feature**: Added `setAudioClipColor` method with undo state capture for clip color changes
-- **Feature**: Added `getAudioClipColor` method to retrieve clip color
-- **Feature**: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant to constants.js
-- **Files Modified**:
-  - `js/Track.js`: Added `setAudioClipReverse`, `getAudioClipReverse`, `setAudioClipColor`, `getAudioClipColor` methods; fixed `getAudioClipGain` to return gain value
-  - `js/constants.js`: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant, bumped APP_VERSION to 0.32.0
-- **Impact**: The missing methods caused runtime errors when using the Audio Clip Editor's color selector and reverse checkbox. The getAudioClipGain bug would cause incorrect gain values to be retrieved.
-- **Version**: Bumped to 0.32.0
