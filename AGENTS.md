@@ -625,6 +625,23 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Double-click an audio clip in the Timeline to open the Audio Clip Editor, adjust gain or click Normalize
 - **Version**: Bumped to 0.25.0
 
+#### Day 30: Timeline Markers UI Fix (2026-04-21)
+- **Bug Fix**: Fixed Timeline Markers not rendering on the ruler in the Timeline window
+- **Issue**: The Timeline Markers feature was added in Day 29 (constants and state management), but the UI rendering code was incomplete - markers were not being visually rendered on the timeline ruler
+- **Files Modified**:
+  - `js/ui.js`: Added marker rendering loop in `renderTimeline()`:
+    - Renders each marker as a colored vertical bar on the ruler at the correct bar position
+    - Marker divs have `data-marker-id` attribute for event handling
+    - Tooltips show marker name and bar number
+    - Color uses the marker's color property or default marker color
+    - Right-click context menu handlers were already present (added by substrate-bot)
+- **Feature Details**:
+  - Markers now appear as colored vertical bars on the timeline ruler
+  - Double-click on ruler creates a new marker at that position
+  - Right-click on marker shows delete context menu
+  - Add/Clear buttons in marker controls bar work correctly
+- **Version**: Bumped to 0.29.0
+
 ## Code Style Guidelines
 
 ### Module Structure
