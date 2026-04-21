@@ -3318,6 +3318,16 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 </div>
             </div>
             
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Playback Options</label>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-1.5 text-zinc-300 text-xs cursor-pointer">
+                        <input type="checkbox" id="clipReverse-${clipId}" ${clip.reverse ? 'checked' : ''} class="accent-purple-500">
+                        <span>Reverse</span>
+                    </label>
+                </div>
+            </div>
+            
             <div class="pt-2 border-t border-zinc-700 flex gap-2 flex-wrap">
                 <button id="normalizeClipBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded text-sm font-medium">Normalize</button>
                 <button id="applyClipChangesBtn-${clipId}" class="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium">Apply</button>
@@ -3327,7 +3337,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     }
 
     const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
-        width: 360, height: 420, minWidth: 300, minHeight: 280, initialContentKey: windowId
+        width: 360, height: 450, minWidth: 300, minHeight: 300, initialContentKey: windowId
     });
 
     if (editorWindow?.element) {
@@ -3387,11 +3397,13 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 const newStartTime = parseFloat(el.querySelector(`#clipStartTime-${clipId}`).value) || 0;
                 const newName = el.querySelector(`#clipNameInput-${clipId}`).value;
                 const newGain = parseFloat(gainInput.value) || Constants.DEFAULT_AUDIO_CLIP_GAIN;
+                const newReverse = el.querySelector(`#clipReverse-${clipId}`)?.checked || false;
                 
                 if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, newFadeIn);
                 if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
                 if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
                 if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
+                if (track.setAudioClipReverse) track.setAudioClipReverse(clipId, newReverse);
                 
                 clip.name = newName;
                 showNotification(`Clip settings applied`, 1500);

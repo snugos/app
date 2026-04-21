@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.26.0"; // Day 27: Audio Clip Gain and Normalize
+export const APP_VERSION = "0.27.0"; // Day 28: Audio Clip Reverse Playback
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -195,3 +195,6 @@ export const DEFAULT_AUDIO_CLIP_GAIN = 1.0;    // Default gain (0dB = 1.0, no ch
 export const MIN_AUDIO_CLIP_GAIN = 0;          // Minimum gain (silence)
 export const MAX_AUDIO_CLIP_GAIN = 4.0;         // Maximum gain (12dB boost)
 export const GAIN_NORMALIZE_TARGET = 1.0;      // Target gain for normalize (0dB)
+
+// Audio Clip Reverse Constants
+export const DEFAULT_AUDIO_CLIP_REVERSE = false; // Default reverse state (false = forward)

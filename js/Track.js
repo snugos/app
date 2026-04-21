@@ -2185,6 +2185,9 @@ export class Track {
                                 // Connect player to fade gain instead of directly to destination
                                 player.connect(fadeGain);
                                 
+                                // Set reverse if needed
+                                player.reverse = clip.reverse || false;
+                                
                                 // Calculate actual fade times based on clip playback window
                                 const clipStartInWindow = effectivePlayStart - clipActualStart;
                                 const clipEndInWindow = effectivePlayStart + clip.duration;
@@ -2513,6 +2516,22 @@ export class Track {
     getAudioClipGain(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         return clip ? (clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN) : Constants.DEFAULT_AUDIO_CLIP_GAIN;
+    }
+
+    setAudioClipReverse(clipId, reverse) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Reverse on \"${clip.name || clip.id.slice(-4)}\" in ${this.name}`);
+            clip.reverse = Boolean(reverse);
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipReverse(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.reverse || false) : false;
     }
 
     async normalizeAudioClip(clipId) {
