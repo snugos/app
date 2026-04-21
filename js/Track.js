@@ -1148,7 +1148,7 @@ export class Track {
                 const cell = row[col];
                 if (cell && cell.active) {
                     // Check if this is the start of a note (not a continuation of a longer note)
-                    // A note starts at col if there's no active note at col-1, or if the note at col-1 has a length that doesn't reach col
+                    // A note starts at column C if there's no active note at column C-1, or if the note at column C-1 has a length that doesn't reach column C
                     const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
                     const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
                     
@@ -1646,6 +1646,93 @@ export class Track {
         return humanizedCount;
     }
 
+    // Note Repeat / Roll - Creates a roll by repeating a note at a specific position across multiple consecutive steps with optional velocity fade (decrescendo). This is useful for creating drum rolls or rapid note repetitions
+    noteRepeat(row, startCol, count, fadeAmount = 0) {
+        if (this.type === 'Audio') return 0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} noteRepeat] No active sequence found.`);
+            return 0;
+        }
+
+        // Validate parameters
+        const numRows = activeSeq.data.length;
+        const totalSteps = activeSeq.length;
+        
+        // Clamp row to valid range
+        const validRow = Math.max(0, Math.min(row, numRows - 1));
+        // Clamp startCol to valid range
+        const validStartCol = Math.max(0, Math.min(startCol, totalSteps - 1));
+        // Clamp count to remaining steps
+        const validCount = Math.max(1, Math.min(count, totalSteps - validStartCol));
+        // Clamp fadeAmount to 0-1
+        const validFade = Math.max(0, Math.min(1, fadeAmount));
+
+        // Check if there's a note at the specified position
+        const sourceNote = activeSeq.data[validRow]?.[validStartCol];
+        if (!sourceNote || !sourceNote.active) {
+            // If no note at the position, create a new note with default velocity
+            this._captureUndoState(`Note Repeat on ${activeSeq.name}`);
+            
+            const baseVelocity = Constants.defaultVelocity;
+            
+            for (let i = 0; i < validCount; i++) {
+                const col = validStartCol + i;
+                if (col >= totalSteps) break;
+                
+                // Calculate velocity with optional fade
+                let velocity = baseVelocity;
+                if (validFade > 0 && i > 0) {
+                    const fadeProgress = i / (validCount - 1 || 1);
+                    velocity = baseVelocity * (1 - validFade * fadeProgress);
+                }
+                
+                // Ensure the row exists
+                if (!activeSeq.data[validRow]) {
+                    activeSeq.data[validRow] = Array(totalSteps).fill(null);
+                }
+                
+                activeSeq.data[validRow][col] = {
+                    active: true,
+                    velocity: Math.max(0.1, velocity)
+                };
+            }
+        } else {
+            // Repeat an existing note
+            this._captureUndoState(`Note Repeat on ${activeSeq.name}`);
+            
+            const baseVelocity = sourceNote.velocity !== undefined ? sourceNote.velocity : Constants.defaultVelocity;
+            
+            for (let i = 0; i < validCount; i++) {
+                const col = validStartCol + i;
+                if (col >= totalSteps) break;
+                
+                // Calculate velocity with optional fade
+                let velocity = baseVelocity;
+                if (validFade > 0 && i > 0) {
+                    const fadeProgress = i / (validCount - 1 || 1);
+                    velocity = baseVelocity * (1 - validFade * fadeProgress);
+                }
+                
+                // Ensure the row exists
+                if (!activeSeq.data[validRow]) {
+                    activeSeq.data[validRow] = Array(totalSteps).fill(null);
+                }
+                
+                activeSeq.data[validRow][col] = {
+                    active: true,
+                    velocity: Math.max(0.1, velocity)
+                };
+            }
+        }
+
+        this.recreateToneSequence(true);
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
+        }
+        return validCount;
+    }
+
     setSequenceLength(newLengthInSteps, skipUndoCapture = false) {
         if (this.type === 'Audio') return;
         const activeSeq = this.getActiveSequence();
@@ -1654,12 +1741,11 @@ export class Track {
             return;
         }
 
-        const oldActualLength = activeSeq.length || 0;
         let validatedNewLength = Math.max(Constants.STEPS_PER_BAR, parseInt(newLengthInSteps) || Constants.defaultStepsPerBar);
         validatedNewLength = Math.ceil(validatedNewLength / Constants.STEPS_PER_BAR) * Constants.STEPS_PER_BAR;
         validatedNewLength = Math.min(validatedNewLength, Constants.MAX_BARS * Constants.STEPS_PER_BAR);
 
-        if (oldActualLength === validatedNewLength && activeSeq.length === validatedNewLength) return; 
+        if (activeSeq.length === validatedNewLength) return; 
 
         if (!skipUndoCapture) {
             this._captureUndoState(`Set Seq Length for "${activeSeq.name}" on ${this.name} to ${validatedNewLength / Constants.STEPS_PER_BAR} bars`);
@@ -1771,7 +1857,7 @@ export class Track {
                         const step = sequenceDataForTone[rowIndex]?.[col];
                         if (step && step.active) {
                             // Check if this is the start of a note (not a continuation of a longer note)
-                            // A note starts at col if there's no active note at col-1, or if the note at col-1 has a length that doesn't reach col
+                            // A note starts at column C if there's no active note at column C-1, or if the note at column C-1 has a length that doesn't reach column C
                             const prevStep = col > 0 ? sequenceDataForTone[rowIndex]?.[col - 1] : null;
                             const isNoteStart = !prevStep?.active || (prevStep.length !== undefined && prevStep.length <= 1);
                             

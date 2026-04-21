@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.22.0"; // Day 24: Note Probability Feature
+export const APP_VERSION = "0.23.0"; // Day 25: Note Repeat / Roll Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

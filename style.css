@@ -479,6 +479,37 @@ button.active { /* Generic active state for other toggles if needed */
     background-color: #9f5afd;
 }
 
+/* --- Probability Editor Lane --- */
+.probability-editor-lane {
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.probability-editor-lane.hidden {
+    display: none;
+}
+
+.probability-cell {
+    background-color: #222222;
+    transition: background-color 0.1s ease;
+}
+
+.probability-cell:hover {
+    background-color: #333333;
+}
+
+.probability-bar {
+    background-color: #0d9488;
+    border-radius: 2px;
+    min-height: 2px;
+    transition: height 0.05s ease, background-color 0.1s ease;
+}
+
+.probability-cell:hover .probability-bar {
+    background-color: #14b8a6;
+}
+
 /* --- Notification Area --- */
 #notification-area { /* ... unchanged ... */ }
 .notification-message { /* ... unchanged ... */ }

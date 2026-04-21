@@ -1316,6 +1316,22 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         maxVelocityPerColumn[col] = maxVel;
     }
 
+    // Calculate max probability per column for probability editor
+    const maxProbabilityPerColumn = [];
+    for (let col = 0; col < totalSteps; col++) {
+        let maxProb = 0;
+        for (let row = 0; row < rows; row++) {
+            const stepData = sequenceData[row]?.[col];
+            if (stepData?.active && stepData.probability !== undefined) {
+                maxProb = Math.max(maxProb, stepData.probability);
+            } else if (stepData?.active) {
+                // Default probability is 1.0 for active notes without explicit probability
+                maxProb = Math.max(maxProb, Constants.DEFAULT_NOTE_PROBABILITY || 1.0);
+            }
+        }
+        maxProbabilityPerColumn[col] = maxProb || (maxVel > 0 ? Constants.DEFAULT_NOTE_PROBABILITY || 1.0 : 0);
+    }
+
     for (let i = 0; i < rows; i++) {
         let labelText = rowLabels[i] || `R${i + 1}`; if (labelText.length > 6) labelText = labelText.substring(0,5) + "..";
         
@@ -1383,6 +1399,28 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         html += `</div>`;
     }
     html += `</div></div>`;
+    
+    // Probability Editor Lane (initially hidden)
+    html += `<div id="probabilityEditor-${track.id}" class="probability-editor-lane hidden mt-1 border-t border-gray-400 dark:border-slate-600 pt-1">`;
+    html += `<div class="text-[10px] font-semibold mb-1 text-gray-500 dark:text-slate-400">Probability Editor (click/drag on bars to edit - 0% = never plays, 100% = always plays)</div>`;
+    html += `<div class="probability-editor-grid" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 60px; gap: 0px; width: fit-content;">`;
+    html += `<div class="probability-label sticky left-0 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[9px] text-gray-400">PROB</div>`;
+    for (let col = 0; col < totalSteps; col++) {
+        const maxProb = maxProbabilityPerColumn[col] || 0;
+        const barHeight = Math.round(maxProb * 56); // 60px max height - 4px padding
+        const barColor = maxProb > 0 ? '#0d9488' : '#333333';
+        const beatsPerBar = 4;
+        const barNum = Math.floor(col / beatsPerBar) + 1;
+        const beatInBar = (col % beatsPerBar) + 1;
+        const isBeat = beatInBar === 1;
+        const borderClass = col % stepsPerBar === 0 && col > 0 ? 'border-l-2 border-l-gray-500' : '';
+        
+        html += `<div class="probability-cell relative border-r border-b border-gray-300 dark:border-slate-600 ${borderClass} flex items-end justify-center p-0.5 cursor-pointer hover:bg-slate-700" data-col="${col}" data-max-probability="${maxProb.toFixed(2)}" title="Step ${col + 1}: ${maxProb > 0 ? Math.round(maxProb * 100) + '%' : 'No notes'}">`;
+        html += `<div class="probability-bar w-full rounded-t transition-all duration-75" style="height: ${barHeight}px; background-color: ${barColor};" data-col="${col}"></div>`;
+        html += `</div>`;
+    }
+    html += `</div></div>`;
+    
     html += `</div>`; return html;
 }
 
@@ -1648,6 +1686,100 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     } else {
                         showNotification('No notes needed quantizing.', 2000);
                     }
+                } },
+                { separator: true },
+                { label: '--- Note Repeat / Roll ---', header: true },
+                { label: 'Drum Roll (4 notes)...', action: () => { 
+                    const rowInput = prompt('Enter row/pitch index (0 = top):', '0');
+                    const row = parseInt(rowInput, 10);
+                    if (isNaN(row) || row < 0) { 
+                        showNotification('Invalid row value.', 3000); 
+                        return; 
+                    }
+                    const startColInput = prompt('Enter start step (0-indexed):', '0');
+                    const startCol = parseInt(startColInput, 10);
+                    if (isNaN(startCol) || startCol < 0) { 
+                        showNotification('Invalid start step.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.noteRepeat(row, startCol, 4, 0);
+                    showNotification(`Created drum roll: ${count} notes.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Drum Roll (8 notes)...', action: () => { 
+                    const rowInput = prompt('Enter row/pitch index (0 = top):', '0');
+                    const row = parseInt(rowInput, 10);
+                    if (isNaN(row) || row < 0) { 
+                        showNotification('Invalid row value.', 3000); 
+                        return; 
+                    }
+                    const startColInput = prompt('Enter start step (0-indexed):', '0');
+                    const startCol = parseInt(startColInput, 10);
+                    if (isNaN(startCol) || startCol < 0) { 
+                        showNotification('Invalid start step.', 3000); 
+                        return; 
+                    }
+                    const count = currentTrackForMenu.noteRepeat(row, startCol, 8, 0);
+                    showNotification(`Created drum roll: ${count} notes.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Roll with Fade...', action: () => { 
+                    const rowInput = prompt('Enter row/pitch index (0 = top):', '0');
+                    const row = parseInt(rowInput, 10);
+                    if (isNaN(row) || row < 0) { 
+                        showNotification('Invalid row value.', 3000); 
+                        return; 
+                    }
+                    const startColInput = prompt('Enter start step (0-indexed):', '0');
+                    const startCol = parseInt(startColInput, 10);
+                    if (isNaN(startCol) || startCol < 0) { 
+                        showNotification('Invalid start step.', 3000); 
+                        return; 
+                    }
+                    const countInput = prompt('Enter number of notes (1-16):', '8');
+                    const count = parseInt(countInput, 10);
+                    if (isNaN(count) || count < 1 || count > 16) { 
+                        showNotification('Invalid count. Must be 1-16.', 3000); 
+                        return; 
+                    }
+                    const fadeInput = prompt('Enter fade amount (0.0 - 1.0):', '0.5');
+                    const fade = parseFloat(fadeInput);
+                    if (isNaN(fade) || fade < 0 || fade > 1) { 
+                        showNotification('Invalid fade value. Must be between 0 and 1.', 3000); 
+                        return; 
+                    }
+                    const noteCount = currentTrackForMenu.noteRepeat(row, startCol, count, fade);
+                    showNotification(`Created roll with fade: ${noteCount} notes.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                } },
+                { label: 'Custom Note Repeat...', action: () => { 
+                    const rowInput = prompt('Enter row/pitch index (0 = top):', '0');
+                    const row = parseInt(rowInput, 10);
+                    if (isNaN(row) || row < 0) { 
+                        showNotification('Invalid row value.', 3000); 
+                        return; 
+                    }
+                    const startColInput = prompt('Enter start step (0-indexed):', '0');
+                    const startCol = parseInt(startColInput, 10);
+                    if (isNaN(startCol) || startCol < 0) { 
+                        showNotification('Invalid start step.', 3000); 
+                        return; 
+                    }
+                    const countInput = prompt('Enter number of notes (1-32):', '4');
+                    const count = parseInt(countInput, 10);
+                    if (isNaN(count) || count < 1 || count > 32) { 
+                        showNotification('Invalid count. Must be 1-32.', 3000); 
+                        return; 
+                    }
+                    const fadeInput = prompt('Enter fade amount (0.0 - 1.0, 0 = none):', '0');
+                    const fade = parseFloat(fadeInput);
+                    if (isNaN(fade) || fade < 0 || fade > 1) { 
+                        showNotification('Invalid fade value. Must be between 0 and 1.', 3000); 
+                        return; 
+                    }
+                    const noteCount = currentTrackForMenu.noteRepeat(row, startCol, count, fade);
+                    showNotification(`Created note repeat: ${noteCount} notes.`, 2000);
+                    if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
                 } }
             ];
             createContextMenu(event, menuItems, localAppServices);
@@ -1909,6 +2041,159 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
                     
                     document.addEventListener('touchmove', handleVelocityDrag, { passive: false });
                     document.addEventListener('touchend', handleVelocityDragEnd);
+                }, { passive: false });
+            });
+        }
+
+        // Probability Editor event handlers
+        const probabilityEditorToggle = sequencerWindow.element.querySelector(`#probabilityEditorToggle-${track.id}`);
+        const probabilityEditorLane = sequencerWindow.element.querySelector(`#probabilityEditor-${track.id}`);
+
+        if (probabilityEditorToggle && probabilityEditorLane) {
+            probabilityEditorToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    probabilityEditorLane.classList.remove('hidden');
+                } else {
+                    probabilityEditorLane.classList.add('hidden');
+                }
+            });
+
+            // Probability bar editing - click and drag to change probability
+            let isDraggingProbability = false;
+            let dragStartYProb = 0;
+            let dragStartProbability = 0;
+            let dragColProb = -1;
+
+            const handleProbabilityDrag = (e) => {
+                if (!isDraggingProbability) return;
+                e.preventDefault();
+                
+                const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                const deltaY = dragStartYProb - currentY;
+                const sensitivity = 0.003; // Adjust sensitivity for 0-1 range
+                let newProbability = dragStartProbability + (deltaY * sensitivity);
+                newProbability = Math.max(0, Math.min(1, newProbability));
+                
+                // Update probability for all active notes in this column
+                const currentActiveSeq = track.getActiveSequence();
+                if (!currentActiveSeq || !currentActiveSeq.data) return;
+                
+                const numRows = currentActiveSeq.data.length;
+                let hasActiveNotes = false;
+                
+                for (let row = 0; row < numRows; row++) {
+                    const stepData = currentActiveSeq.data[row]?.[dragColProb];
+                    if (stepData && stepData.active) {
+                        stepData.probability = newProbability;
+                        hasActiveNotes = true;
+                    }
+                }
+                
+                if (hasActiveNotes) {
+                    // Update probability bar visual
+                    const bar = probabilityEditorLane.querySelector(`.probability-bar[data-col="${dragColProb}"]`);
+                    if (bar) {
+                        const barHeight = Math.round(newProbability * 56);
+                        bar.style.height = `${barHeight}px`;
+                        bar.style.backgroundColor = newProbability > 0 ? '#0d9488' : '#333333';
+                    }
+                    const cell = probabilityEditorLane.querySelector(`.probability-cell[data-col="${dragColProb}"]`);
+                    if (cell) {
+                        cell.dataset.maxProbability = newProbability.toFixed(2);
+                        cell.title = `Step ${dragColProb + 1}: ${Math.round(newProbability * 100)}%`;
+                    }
+                }
+            };
+
+            const handleProbabilityDragEnd = () => {
+                if (isDraggingProbability) {
+                    isDraggingProbability = false;
+                    document.removeEventListener('mousemove', handleProbabilityDrag);
+                    document.removeEventListener('mouseup', handleProbabilityDragEnd);
+                    document.removeEventListener('touchmove', handleProbabilityDrag);
+                    document.removeEventListener('touchend', handleProbabilityDragEnd);
+                    
+                    // Recreate Tone sequence to apply probability changes
+                    track.recreateToneSequence(true);
+                }
+            };
+
+            // Add click/drag handlers to probability cells
+            const probabilityCells = probabilityEditorLane.querySelectorAll('.probability-cell');
+            probabilityCells.forEach(cell => {
+                cell.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const currentActiveSeq = track.getActiveSequence();
+                    if (!currentActiveSeq || !currentActiveSeq.data) return;
+                    
+                    // Check if there are active notes in this column
+                    const numRows = currentActiveSeq.data.length;
+                    let hasActiveNotes = false;
+                    let currentMaxProb = 0;
+                    
+                    for (let row = 0; row < numRows; row++) {
+                        const stepData = currentActiveSeq.data[row]?.[col];
+                        if (stepData && stepData.active) {
+                            hasActiveNotes = true;
+                            const prob = stepData.probability !== undefined ? stepData.probability : (Constants.DEFAULT_NOTE_PROBABILITY || 1.0);
+                            if (prob > currentMaxProb) {
+                                currentMaxProb = prob;
+                            }
+                        }
+                    }
+                    
+                    if (!hasActiveNotes) return;
+                    
+                    // Capture undo state before probability change
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Edit probability at step ${col + 1} on ${track.name}`);
+                    }
+                    
+                    isDraggingProbability = true;
+                    dragStartYProb = e.clientY;
+                    dragStartProbability = currentMaxProb;
+                    dragColProb = col;
+                    
+                    document.addEventListener('mousemove', handleProbabilityDrag);
+                    document.addEventListener('mouseup', handleProbabilityDragEnd);
+                });
+
+                cell.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const col = parseInt(cell.dataset.col, 10);
+                    const currentActiveSeq = track.getActiveSequence();
+                    if (!currentActiveSeq || !currentActiveSeq.data) return;
+                    
+                    const numRows = currentActiveSeq.data.length;
+                    let hasActiveNotes = false;
+                    let currentMaxProb = 0;
+                    
+                    for (let row = 0; row < numRows; row++) {
+                        const stepData = currentActiveSeq.data[row]?.[col];
+                        if (stepData && stepData.active) {
+                            hasActiveNotes = true;
+                            const prob = stepData.probability !== undefined ? stepData.probability : (Constants.DEFAULT_NOTE_PROBABILITY || 1.0);
+                            if (prob > currentMaxProb) {
+                                currentMaxProb = prob;
+                            }
+                        }
+                    }
+                    
+                    if (!hasActiveNotes) return;
+                    
+                    // Capture undo state before probability change
+                    if (localAppServices.captureStateForUndo) {
+                        localAppServices.captureStateForUndo(`Edit probability at step ${col + 1} on ${track.name}`);
+                    }
+                    
+                    isDraggingProbability = true;
+                    dragStartYProb = e.touches[0].clientY;
+                    dragStartProbability = currentMaxProb;
+                    dragColProb = col;
+                    
+                    document.addEventListener('touchmove', handleProbabilityDrag, { passive: false });
+                    document.addEventListener('touchend', handleProbabilityDragEnd);
                 }, { passive: false });
             });
         }
