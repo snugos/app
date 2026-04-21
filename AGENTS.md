@@ -278,7 +278,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/main.js`:
     - Fixed `isReconstructinging` typo → `isReconstructinging` (variable name)
     - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingingDAW` (function name)
-    - Fixed `isReconstructconstructing` typo → `isReconstructing` (variable name)
+    - Fixed `isReconstructconstructing` typo → `isReconstructinging` (variable name)
     - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
 - **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructing` flag is correctly checked during project load/reconstruction operations.
 - **Version**: No bump needed (bug fix)
@@ -522,8 +522,8 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - "Arpeggiate Up-Down ↕" - Plays up then back down
     - "Arpeggiate Down-Up ↕" - Plays down then back up
     - "Arpeggiate Random 🎲" - Randomizes note order
-    - "Arpeggiate Converge ⇥" - Plays from outer edges inward
-    - "Arpeggiate Diverge ⇤" - Plays from center outward to edges
+    - "Arpeggiate Converge ⇥" - Plays from outer pitch edges toward center
+    - "Arpeggiate Diverge ⇤" - Plays from center pitch outward to edges
     - "Custom Arpeggio..." - Prompts for mode, rate, and octave settings
   - `js/constants.js`: Bumped APP_VERSION to 0.21.0
 - **Feature Details**:
@@ -667,19 +667,31 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Double-click an audio clip in Timeline to open editor, click color swatch to change
 - **Version**: Bumped to 0.30.0
 
-#### Day 32: Audio Clip Reverse Feature + Bug Fixes (2026-04-21)
-- **Bug Fix**: Fixed `getAudioClipGain` method in Track.js - it was incorrectly returning a color value instead of the gain value
-- **Bug Fix**: Added missing `setAudioClipReverse` and `getAudioClipReverse` methods to Track.js for audio clip reverse functionality
-- **Bug Fix**: Added missing `setAudioClipColor` and `getAudioClipColor` methods to Track.js - these were being called from ui.js but didn't exist in Track.js
-- **Feature**: Added `setAudioClipReverse` method with undo state capture for audio clip reverse playback
-- **Feature**: Added `getAudioClipReverse` method to retrieve clip reverse state
-- **Feature**: Added `setAudioClipColor` method with undo state capture for clip color changes
-- **Feature**: Added `getAudioClipColor` method to retrieve clip color
-- **Feature**: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant to constants.js
+#### Day 32: Audio Clip Playback Rate Feature (2026-04-21)
+- **Feature**: Added playback rate control to the Audio Clip Editor for variable speed audio playback
 - **Files Modified**:
-  - `js/Track.js`: Added `setAudioClipReverse`, `getAudioClipReverse`, `setAudioClipColor`, `getAudioClipColor` methods; fixed `getAudioClipGain` to return gain value
-  - `js/constants.js`: Added `DEFAULT_AUDIO_CLIP_REVERSE` constant, bumped APP_VERSION to 0.32.0
-- **Impact**: The missing methods caused runtime errors when using the Audio Clip Editor's color selector and reverse checkbox. The getAudioClipGain bug would cause incorrect gain values to be retrieved.
+  - `js/constants.js`: Added playback rate constants:
+    - `DEFAULT_AUDIO_CLIP_PLAYBACK_RATE` (1.0)
+    - `MIN_AUDIO_CLIP_PLAYBACK_RATE` (0.25)
+    - `MAX_AUDIO_CLIP_PLAYBACK_RATE` (4.0)
+    - Bumped APP_VERSION to 0.32.0
+  - `js/Track.js`: Added new methods:
+    - `setAudioClipPlaybackRate(clipId, rate)` - Sets playback rate with undo state capture
+    - `getAudioClipPlaybackRate(clipId)` - Gets clip playback rate (default 1.0)
+    - Modified audio clip playback scheduling to apply rate to Tone.Player
+  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
+    - Added Playback Rate section with slider + number input
+    - Synced slider/input for real-time value display
+    - Apply button saves playback rate changes
+    - Window uses flex-wrap for responsive layout
+- **Feature Details**:
+  - Playback Rate Range: 0.25x (very slow) to 4x (very fast)
+  - Slider: Drag to adjust playback speed
+  - Number Input: Direct entry for precise values
+  - Real-time Display: Shows current rate (e.g., "1.50x")
+  - Apply Button: Saves rate changes along with other clip settings
+  - Playback Integration: Rate is applied to Tone.Player during audio scheduling
+- **Usage**: Double-click an audio clip in Timeline to open editor, adjust Playback Rate slider or enter value
 - **Version**: Bumped to 0.32.0
 
 #### Day 34: Audio Clip Editor Waveform Preview (2026-04-21)
@@ -703,6 +715,33 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Renders shortly after window opens (100ms delay for DOM readiness)
 - **Usage**: Double-click an audio clip in Timeline to open editor, waveform appears below color swatches
 - **Version**: 0.33.0
+
+#### Day 35: Audio Clip Playback Rate Feature (2026-04-21)
+- **Feature**: Added playback rate control to the Audio Clip Editor for variable speed audio playback
+- **Files Modified**:
+  - `js/constants.js`: Added playback rate constants:
+    - `DEFAULT_AUDIO_CLIP_PLAYBACK_RATE` (1.0)
+    - `MIN_AUDIO_CLIP_PLAYBACK_RATE` (0.25)
+    - `MAX_AUDIO_CLIP_PLAYBACK_RATE` (4.0)
+    - Bumped APP_VERSION to 0.34.0
+  - `js/Track.js`: Added new methods:
+    - `setAudioClipPlaybackRate(clipId, rate)` - Sets playback rate with undo state capture
+    - `getAudioClipPlaybackRate(clipId)` - Gets clip playback rate (default 1.0)
+    - Modified audio clip playback scheduling to apply rate to Tone.Player
+  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
+    - Added Playback Rate section with slider + number input
+    - Synced slider/input for real-time value display
+    - Apply button saves playback rate changes
+    - Window uses flex-wrap for responsive layout
+- **Feature Details**:
+  - Playback Rate Range: 0.25x (very slow) to 4x (very fast)
+  - Slider: Drag to adjust playback speed
+  - Number Input: Direct entry for precise values
+  - Real-time Display: Shows current rate (e.g., "1.50x")
+  - Apply Button: Saves rate changes along with other clip settings
+  - Playback Integration: Rate is applied to Tone.Player during audio scheduling
+- **Usage**: Double-click an audio clip in Timeline to open editor, adjust Playback Rate slider or enter value
+- **Version**: Bumped to 0.34.0
 
 ## Code Style Guidelines
 
