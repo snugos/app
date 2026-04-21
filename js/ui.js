@@ -2667,6 +2667,16 @@ export function renderTimeline() {
         rulerHTML += `<div class="timeline-bar-marker" style="position:absolute;left:${bar * pixelsPerBar}px;height:100%;border-left:1px solid #666;z-index:2;"></div>`;
         rulerHTML += `<span style="position:sticky;left:0;background:#333;padding:2px 5px;font-size:11px;color:#ccc;z-index:3;">${bar + 1}</span>`;
     }
+    
+    // Render timeline markers on the ruler
+    markers.forEach(marker => {
+        const markerX = (marker.bar - 1) * pixelsPerBar + pixelsPerBar / 2;
+        const markerColor = marker.color || Constants.DEFAULT_MARKER_COLOR;
+        rulerHTML += `<div class="timeline-marker" data-marker-id="${marker.id}" 
+            style="position:absolute;left:${markerX}px;top:0;width:4px;height:100%;background:${markerColor};cursor:pointer;z-index:5;"
+            title="${marker.name || 'Marker'} @ Bar ${marker.bar}"></div>`;
+    });
+    
     rulerHTML += '</div>';
     
     // Create track lanes
