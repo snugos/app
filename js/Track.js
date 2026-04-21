@@ -1366,6 +1366,33 @@ export class Track {
         return sectionData;
     }
 
+    cutSequenceSection(startCol, endCol) {
+        if (this.type === 'Audio') return null;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) {
+            console.warn(`[Track ${this.id} cutSequenceSection] No active sequence found.`);
+            return null;
+        }
+
+        const sectionData = [];
+        for (let rowIndex = 0; rowIndex < activeSeq.data.length; rowIndex++) {
+            const row = activeSeq.data[rowIndex];
+            if (!row) continue;
+            const newRow = [];
+            for (let col = startCol; col <= endCol; col++) {
+                if (col >= 0 && col < row.length) {
+                    newRow.push(row[col]);
+                    row[col] = null;
+                } else {
+                    newRow.push(null);
+                }
+            }
+            sectionData.push(newRow);
+        }
+
+        return sectionData;
+    }
+
     pasteSequenceSection(sectionData, targetCol, skipUndo = false) {
         if (this.type === 'Audio') return 0;
         const activeSeq = this.getActiveSequence();
@@ -1779,7 +1806,7 @@ export class Track {
         const currentSequenceData = activeSeq.data || [];
         activeSeq.data = Array(numRows).fill(null).map((_, rIndex) => {
             const currentRow = currentSequenceData[rIndex] || [];
-            const newRow = Array(activeSeq.length).fill(null);
+            const newRow = Array(activeSeq.length || Constants.defaultStepsPerBar).fill(null);
             for (let c = 0; c < Math.min(currentRow.length, activeSeq.length); c++) newRow[c] = currentRow[c];
             return newRow;
         });

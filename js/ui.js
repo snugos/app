@@ -1582,6 +1582,32 @@ export function openTrackSequencerWindow(trackId, forceRedraw = false, savedStat
             const currentActiveSeq = currentTrackForMenu.getActiveSequence(); if(!currentActiveSeq) return;
             const clipboard = localAppServices.getClipboardData ? localAppServices.getClipboardData() : {};
             const menuItems = [
+                { label: `Cut "${currentActiveSeq.name}"`, action: () => {
+                    const selection = localAppServices.getSelectedSequenceSelection ? localAppServices.getSelectedSequenceSelection() : null;
+                    if (selection && selection.startCol !== undefined && selection.endCol !== undefined) {
+                        const cutData = currentTrackForMenu.cutSequenceSection(selection.startCol, selection.endCol);
+                        if (cutData && localAppServices.setClipboardData) {
+                            localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: cutData, sequenceLength: selection.endCol - selection.startCol + 1, startCol: selection.startCol });
+                            currentTrackForMenu.recreateToneSequence(true);
+                            if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Sequence cut.`, 2000);
+                        }
+                    } else {
+                        const startStr = prompt('Enter start column (0-indexed):', '0');
+                        const startCol = parseInt(startStr, 10);
+                        if (isNaN(startCol) || startCol < 0) { showNotification('Invalid start column.', 2000); return; }
+                        const endStr = prompt('Enter end column (0-indexed):', String(currentActiveSeq.length - 1));
+                        const endCol = parseInt(endStr, 10);
+                        if (isNaN(endCol) || endCol < startCol) { showNotification('Invalid end column.', 2000); return; }
+                        const cutData = currentTrackForMenu.cutSequenceSection(startCol, endCol);
+                        if (cutData && localAppServices.setClipboardData) {
+                            localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: cutData, sequenceLength: endCol - startCol + 1, startCol: startCol });
+                            currentTrackForMenu.recreateToneSequence(true);
+                            if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged');
+                            showNotification(`Sequence cut (columns ${startCol}-${endCol}).`, 2000);
+                        }
+                    }
+                } },
                 { label: `Copy "${currentActiveSeq.name}"`, action: () => { if (localAppServices.setClipboardData) { localAppServices.setClipboardData({ type: 'sequence', sourceTrackType: currentTrackForMenu.type, data: JSON.parse(JSON.stringify(currentActiveSeq.data || [])), sequenceLength: currentActiveSeq.length }); showNotification(`Sequence "${currentActiveSeq.name}" copied.`, 2000); } } },
                 { label: `Paste into "${currentActiveSeq.name}"`, action: () => { if (!clipboard || clipboard.type !== 'sequence' || !clipboard.data) { showNotification("Clipboard empty or no sequence data.", 2000); return; } if (clipboard.sourceTrackType !== currentTrackForMenu.type) { showNotification(`Track types mismatch. Can't paste ${clipboard.sourceTrackType} sequence into ${currentTrackForMenu.type} track.`, 3000); return; } if (localAppServices.captureStateForUndo) localAppServices.captureStateForUndo(`Paste Sequence into ${currentActiveSeq.name} on ${currentTrackForMenu.name}`); currentActiveSeq.data = JSON.parse(JSON.stringify(clipboard.data)); currentActiveSeq.length = clipboard.sequenceLength; currentTrackForMenu.recreateToneSequence(true); showNotification(`Sequence pasted into "${currentActiveSeq.name}".`, 2000); if(localAppServices.updateTrackUI) localAppServices.updateTrackUI(track.id, 'sequencerContentChanged'); } },
                 { separator: true },
