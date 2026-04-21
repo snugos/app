@@ -589,6 +589,11 @@ function buildTrackInspectorContentDOM(track) {
                     ${buildTrackColorSwatches(track)}
                 </div>
             </div>
+            <div id="trackName-${track.id}" class="flex items-center gap-1 mt-1">
+                <label for="trackNameInput-${track.id}" class="text-xs text-gray-500 dark:text-slate-400">Name:</label>
+                <input type="text" id="trackNameInput-${track.id}" value="${track.name}" 
+                    class="flex-1 px-2 py-0.5 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-xs">
+            </div>
             <div class="type-specific-controls mt-1 border-t dark:border-slate-600 pt-1">${specificControlsHTML}</div>
             <div class="inspector-nav grid ${track.type === 'Audio' ? 'grid-cols-2' : 'grid-cols-3'} gap-1 mt-2">
                 <button id="openEffectsBtn-${track.id}" class="px-1 py-0.5 border rounded bg-gray-200 hover:bg-gray-300 dark:bg-slate-600 dark:hover:bg-slate-500 dark:border-slate-500">Effects</button>

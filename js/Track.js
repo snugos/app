@@ -785,6 +785,31 @@ export class Track {
         return this.pan;
     }
 
+    setTrackName(newName) {
+        if (!newName || typeof newName !== 'string' || newName.trim().length === 0) {
+            if (this.appServices.showNotification) {
+                this.appServices.showNotification('Track name cannot be empty.', 2000);
+            }
+            return false;
+        }
+        this._captureUndoState(`Rename track to "${newName}"`);
+        this.name = newName.trim();
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'nameChanged');
+        }
+        if (this.appServices.renderTimeline) {
+            this.appServices.renderTimeline();
+        }
+        if (this.appServices.updateMixerWindow) {
+            this.appServices.updateMixerWindow();
+        }
+        return true;
+    }
+
+    getTrackName() {
+        return this.name;
+    }
+
     setTrackColor(color) {
         this._captureUndoState(`Set color on ${this.name}`);
         this.color = color;
@@ -1893,14 +1918,18 @@ export class Track {
             this.patternPlayerSequence = new Tone.Sequence((time, col) => {
                 const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
                 if (playbackModeCheck !== 'sequencer') {
-                    if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') this.patternPlayerSequence.stop();
+                    if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
+                        try { this.patternPlayerSequence.stop(); } catch(e) { console.warn(`[Track ${this.id}] Error stopping patternPlayerSequence during playback mode switch:`, e.message); }
+                    }
                     return;
                 }
 
                 const currentGlobalSoloId = this.appServices.getSoloedTrackId ? this.appServices.getSoloedTrackId() : null;
                 const isEffectivelyMuted = this.isMuted || (currentGlobalSoloId !== null && currentGlobalSoloId !== this.id);
 
-                if (this.appServices.highlightPlayingStep) this.appServices.highlightPlayingStep(this.id, col);
+                if (this.appServices.highlightPlayingStep) {
+                    this.appServices.highlightPlayingStep(this.id, col);
+                }
                 if (!this.gainNode || this.gainNode.disposed || isEffectivelyMuted) return;
 
                 const effectsChainStartPoint = (this.activeEffects.length > 0 && this.activeEffects[0].toneNode && !this.activeEffects[0].toneNode.disposed)
