@@ -771,6 +771,30 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Impact**: Clip renaming now properly captures undo state, allowing users to undo accidental renames
 - **Version**: Bumped to 0.35.0
 
+#### Day 38: Track Pan Control Feature (2026-04-21)
+- **Feature**: Added pan control functionality to the Mixer window for Audio tracks
+- **Files Modified**:
+  - `js/Track.js`:
+    - Added `pan` property initialization in Track constructor (defaults to 0, loaded from `initialData.pan`)
+    - Added `setPan(value, fromInteraction)` method - Sets pan with undo state capture and applies to inputChannel
+    - Added `getPan()` method - Returns current pan value
+    - Modified `initializeAudioNodes()` to apply stored pan to inputChannel when initialized
+  - `js/state.js`:
+    - Added `pan: track.pan !== undefined ? track.pan : 0` to trackData in `gatherProjectDataInternal()` for project save/load
+  - `js/ui.js`:
+    - Modified `handleMixerPanChange()` to call `track.setPan(value, true)` directly
+  - `js/constants.js`: Bumped APP_VERSION to 0.36.0
+- **Feature Details**:
+  - Pan Knob: The mixer already had a pan knob UI element, but it wasn't functional
+  - Range: -1 (full left) to +1 (full right), with 0 being center
+  - Audio Tracks Only: Pan is applied via the `inputChannel` (Tone.Channel), which is only created for Audio type tracks
+  - Undo Support: Pan changes are captured for undo/redo via `_captureUndoState`
+  - Persistence: Pan values are saved and restored when loading projects
+  - Visual Feedback: The mixer UI updates after pan changes via `updateMixerWindow()`
+- **Backend Note**: The Tone.Channel has a built-in pan property that handles stereo panning. The mixer UI was already rendering the pan knob, but `handleMixerPanChange` was calling a non-existent state setter and a `track.setPan` method that didn't exist.
+- **Usage**: Open Mixer window, drag the Pan knob on an Audio track strip
+- **Version**: Bumped to 0.36.0
+
 ## Code Style Guidelines
 
 ### Module Structure

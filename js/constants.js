@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.35.0"; // Day 37: Audio Clip Name Feature
+export const APP_VERSION = "0.36.0"; // Day 38: Track Pan Control Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

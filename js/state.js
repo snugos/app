@@ -604,6 +604,7 @@ export function gatherProjectDataInternal() {
                     isMuted: track.isMuted,
                     color: track.color, // Track color for visual identification
                     volume: track.previousVolumeBeforeMute, // Store the actual volume, not the muted one
+                    pan: track.pan !== undefined ? track.pan : 0,
                     activeEffects: (track.activeEffects || []).map(effect => ({
                         id: effect.id, type: effect.type,
                         params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {}

@@ -175,7 +175,10 @@ export class Track {
 
         // Audio Track specific
         this.inputChannel = null;
-        this.clipPlayers = new Map(); 
+        this.clipPlayers = new Map();
+
+        // Pan control (-1 left to +1 right)
+        this.pan = initialData?.pan !== undefined ? initialData.pan : 0;
     }
 /**
      * Loads a sample to a specific drum pad and saves it to IndexedDB.
@@ -282,7 +285,10 @@ export class Track {
             this.outputNode = this.gainNode; 
 
             if (this.type === 'Audio') {
-                this.inputChannel = new Tone.Channel(); 
+                this.inputChannel = new Tone.Channel();
+                if (this.pan !== undefined && this.pan !== 0) {
+                    this.inputChannel.pan.setValueAtTime(this.pan, Tone.now());
+                }
             }
 
             this.rebuildEffectChain();
@@ -760,6 +766,23 @@ export class Track {
                 this.gainNode.gain.setValueAtTime(this.previousVolumeBeforeMute, Tone.now());
             } catch (e) { console.error(`[Track ${this.id}] Error setting gainNode volume:`, e); }
         }
+    }
+
+    setPan(value, fromInteraction = false) {
+        if (!fromInteraction) this._captureUndoState(`Set pan on ${this.name}`);
+        this.pan = Math.max(-1, Math.min(parseFloat(value) || 0, 1));
+        if (this.inputChannel && !this.inputChannel.disposed) {
+            try {
+                this.inputChannel.pan.setValueAtTime(this.pan, Tone.now());
+            } catch (e) { console.error(`[Track ${this.id}] Error setting pan:`, e); }
+        }
+        if (this.appServices.updateMixerWindow) {
+            this.appServices.updateMixerWindow();
+        }
+    }
+
+    getPan() {
+        return this.pan;
     }
 
     setTrackColor(color) {

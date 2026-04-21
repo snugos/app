@@ -3336,7 +3336,10 @@ function handleMixerVolumeChange(trackId, value) {
 function handleMixerPanChange(trackId, value) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (track && track.setPan) {
-        track.setPan(value);
+        track.setPan(value, true);
+    }
+    if (localAppServices.setTrackPanState) {
+        localAppServices.setTrackPanState(trackId, value);
     }
 }
 
