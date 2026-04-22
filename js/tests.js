@@ -245,6 +245,122 @@ TestRunner.test('Playback rate limits are valid', (t) => {
 });
 
 // ============================================
+// Audio Clip Reverse Tests
+// ============================================
+TestRunner.test('Audio Clip Reverse - default value', (t) => {
+    t.assertEqual(DEFAULT_AUDIO_CLIP_REVERSE, false, 'Default reverse should be false');
+});
+
+TestRunner.test('Audio Clip Reverse - constants defined', (t) => {
+    t.assertTruthy(typeof DEFAULT_AUDIO_CLIP_REVERSE === 'boolean', 'DEFAULT_AUDIO_CLIP_REVERSE should be boolean');
+});
+
+// ============================================
+// Fade Curve Constants Tests
+// ============================================
+TestRunner.test('Fade curves are defined', (t) => {
+    t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear curve');
+    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential curve');
+});
+
+TestRunner.test('Default fade curve constants', (t) => {
+    t.assertEqual(DEFAULT_FADE_IN_CURVE, 'linear', 'Default fade in curve should be linear');
+    t.assertEqual(DEFAULT_FADE_OUT_CURVE, 'linear', 'Default fade out curve should be linear');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_IN, 0, 'Default fade in should be 0');
+    t.assertEqual(DEFAULT_AUDIO_CLIP_FADE_OUT, 0, 'Default fade out should be 0');
+    t.assertEqual(MAX_AUDIO_CLIP_FADE, 10, 'Max fade should be 10 seconds');
+});
+
+// ============================================
+// Chord Mode Tests
+// ============================================
+TestRunner.test('Chord types has all expected types', (t) => {
+    t.assertTruthy(CHORD_TYPES.major, 'Should have major chord');
+    t.assertTruthy(CHORD_TYPES.minor, 'Should have minor chord');
+    t.assertTruthy(CHORD_TYPES.diminished, 'Should have diminished chord');
+    t.assertTruthy(CHORD_TYPES.augmented, 'Should have augmented chord');
+    t.assertTruthy(CHORD_TYPES.dominant7, 'Should have dominant7 chord');
+    t.assertTruthy(CHORD_TYPES.major7, 'Should have major7 chord');
+    t.assertTruthy(CHORD_TYPES.minor7, 'Should have minor7 chord');
+});
+
+TestRunner.test('Chord intervals are valid', (t) => {
+    t.assertEqual(CHORD_TYPES.major.length, 3, 'Major chord should have 3 notes');
+    t.assertEqual(CHORD_TYPES.diminished7.length, 4, 'Diminished7 should have 4 notes');
+    t.assertEqual(CHORD_TYPES.power.length, 2, 'Power chord should have 2 notes');
+});
+
+TestRunner.test('Default chord mode structure', (t) => {
+    t.assertTruthy(typeof DEFAULT_CHORD_MODE === 'object', 'DEFAULT_CHORD_MODE should be object');
+    t.assertEqual(DEFAULT_CHORD_MODE.enabled, false, 'Chord mode should be disabled by default');
+    t.assertEqual(DEFAULT_CHORD_MODE.root, 0, 'Default root should be C');
+    t.assertEqual(DEFAULT_CHORD_MODE.type, 'major', 'Default type should be major');
+});
+
+// ============================================
+// Automation Lane Constants Tests
+// ============================================
+TestRunner.test('Automation lane parameters defined', (t) => {
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('volume'), 'Should include volume');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('pan'), 'Should include pan');
+    t.assertTruthy(AUTOMATION_LANE_PARAMETERS.includes('filterCutoff'), 'Should include filterCutoff');
+});
+
+TestRunner.test('Automation lane defaults', (t) => {
+    t.assertEqual(AUTOMATION_LANE_HEIGHT, 20, 'Lane height should be 20px');
+    t.assertEqual(AUTOMATION_LANE_DEFAULT, 0.5, 'Default value should be 0.5');
+    t.assertEqual(AUTOMATION_LANE_PRECISION, 2, 'Precision should be 2 decimals');
+});
+
+TestRunner.test('Automation lane colors defined', (t) => {
+    t.assertEqual(AUTOMATION_LANE_COLORS.length, 10, 'Should have 10 colors');
+});
+
+// ============================================
+// Timeline Marker Constants Tests
+// ============================================
+TestRunner.test('Timeline marker constants defined', (t) => {
+    t.assertEqual(MAX_TIMELINE_MARKERS, 64, 'Max markers should be 64');
+    t.assertEqual(DEFAULT_MARKER_COLOR, '#ff9f43', 'Default marker color should be orange');
+    t.assertEqual(MARKER_COLORS.length, 10, 'Should have 10 marker colors');
+});
+
+TestRunner.test('Default marker structure', (t) => {
+    t.assertEqual(DEFAULT_MARKER.name, 'Marker', 'Default name should be Marker');
+    t.assertEqual(DEFAULT_MARKER.bar, 1, 'Default bar should be 1');
+    t.assertEqual(DEFAULT_MARKER.color, DEFAULT_MARKER_COLOR, 'Color should match default');
+});
+
+// ============================================
+// Swing Constants Tests
+// ============================================
+TestRunner.test('Swing constants defined', (t) => {
+    t.assertEqual(MAX_SWING_AMOUNT, 100, 'Max swing should be 100');
+    t.assertEqual(SWING_SUBDIVISION, 8, 'Swing subdivision should be 8th notes');
+});
+
+TestRunner.test('Default swing settings', (t) => {
+    t.assertEqual(DEFAULT_SWING.enabled, false, 'Swing should be disabled by default');
+    t.assertEqual(DEFAULT_SWING.amount, 0, 'Default amount should be 0');
+});
+
+// ============================================
+// Send Track Constants Tests
+// ============================================
+TestRunner.test('Send track constants defined', (t) => {
+    t.assertEqual(MAX_SEND_TRACKS, 8, 'Max send tracks should be 8');
+    t.assertEqual(DEFAULT_SEND_LEVEL, 0, 'Default send level should be 0');
+    t.assertEqual(SEND_LEVEL_MIN, 0, 'Min send level should be 0');
+    t.assertEqual(SEND_LEVEL_MAX, 1.2, 'Max send level should be 1.2');
+});
+
+TestRunner.test('Default send track structure', (t) => {
+    t.assertEqual(DEFAULT_SEND_TRACK.name, 'Send', 'Default name should be Send');
+    t.assertEqual(DEFAULT_SEND_TRACK.level, 1.0, 'Default level should be 1.0');
+    t.assertEqual(DEFAULT_SEND_TRACK.muted, false, 'Should not be muted by default');
+});
+
+// ============================================
 // Run all tests function
 // ============================================
 export async function runTests(showNotification = null) {
