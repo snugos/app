@@ -3163,10 +3163,16 @@ export function openMixerWindow(savedState = null) {
 function buildMixerContentDOM() {
     const tracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     const sendTracks = localAppServices.getSendTracks ? localAppServices.getSendTracks() : [];
+    const trackGroups = localAppServices.getTrackGroupsState ? localAppServices.getTrackGroupsState() : [];
 
     let trackStripsHTML = '';
     tracks.forEach(track => {
         trackStripsHTML += buildMixerTrackStripHTML(track, sendTracks);
+    });
+
+    let groupStripsHTML = '';
+    trackGroups.forEach(group => {
+        groupStripsHTML += buildMixerGroupStripHTML(group);
     });
 
     let sendStripsHTML = '';
@@ -3175,6 +3181,14 @@ function buildMixerContentDOM() {
     });
 
     return `<div id="mixerContent" class="flex h-full bg-[#1a1a1a] text-gray-200 text-xs overflow-x-auto">
+        <!-- Track Groups Section -->
+        ${groupStripsHTML ? `
+        <div id="mixerGroupsContainer" class="flex flex-shrink-0">
+            ${groupStripsHTML}
+        </div>
+        <div class="w-1 bg-[#303030] flex-shrink-0"></div>
+        ` : ''}
+        
         <!-- Track Strips -->
         <div id="mixerTracksContainer" class="flex flex-shrink-0">
             ${trackStripsHTML}
@@ -3197,6 +3211,14 @@ function buildMixerContentDOM() {
         
         <!-- Separator -->
         <div class="w-1 bg-[#303030] flex-shrink-0"></div>
+        
+        <!-- Add Group Button -->
+        <div class="flex flex-col items-center justify-center w-16 h-full bg-[#1a1a2e] border-r border-[#303050]">
+            <button id="addGroupBtn" class="p-2 bg-[#3a3a5a] hover:bg-[#4a4a6a] rounded text-blue-300" title="Add Track Group">
+                <span class="text-lg">⚙</span>
+            </button>
+            <span class="text-[10px] mt-1 text-blue-400">Add Group</span>
+        </div>
         
         <!-- Master Strip -->
         ${buildMixerMasterStripHTML()}
@@ -3299,6 +3321,47 @@ function buildMixerTrackStripHTML(track, sendTracks) {
     </div>`;
 }
 
+function buildMixerGroupStripHTML(group) {
+    const muted = group.muted || false;
+    const soloed = group.soloed || false;
+    const memberCount = group.trackIds ? group.trackIds.length : 0;
+
+    return `<div class="mixer-group-strip flex flex-col items-center w-20 h-full bg-[#1a1a2e] border-r border-[#303050] p-1" data-group-id="${group.id}">
+        <!-- Group Color Indicator -->
+        <div class="w-full h-1 rounded-sm mb-1" style="background:${group.color || '#54a0ff'};"></div>
+        
+        <!-- Group Name -->
+        <div class="text-[10px] text-blue-300 truncate w-full text-center mb-1" title="${group.name}" style="border-left: 2px solid ${group.color || '#54a0ff'}; padding-left: 2px;">${group.name}</div>
+        
+        <!-- Mute/Solo Buttons -->
+        <div class="flex gap-0.5 mb-1">
+            <button class="mixer-group-btn mute-btn w-5 h-4 text-[8px] rounded ${muted ? 'bg-red-600 text-white' : 'bg-[#3a3a5a] text-gray-400 hover:bg-[#4a4a6a]'}" 
+                data-group-id="${group.id}" title="Mute Group">M</button>
+            <button class="mixer-group-btn solo-btn w-5 h-4 text-[8px] rounded ${soloed ? 'bg-yellow-600 text-white' : 'bg-[#3a3a5a] text-gray-400 hover:bg-[#4a4a6a]'}" 
+                data-group-id="${group.id}" title="Solo Group">S</button>
+        </div>
+        
+        <!-- Member Track Count -->
+        <div class="text-[8px] text-gray-500 mb-1" title="${memberCount} tracks in group">
+            <span class="text-blue-400">${memberCount}</span> track${memberCount !== 1 ? 's' : ''}
+        </div>
+        
+        <!-- Color Strip showing member tracks (visual indicator) -->
+        <div class="w-full flex-1 bg-[#151525] rounded border border-[#252545] p-0.5 flex flex-wrap content-start gap-0.5">
+            ${group.trackIds ? group.trackIds.slice(0, 8).map(trackId => {
+                const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                return `<div class="w-3 h-3 rounded-sm" style="background:${track?.color || '#666'}" title="Track ${trackId}"></div>`;
+            }).join('') : ''}
+            ${memberCount > 8 ? `<div class="text-[6px] text-gray-500">+${memberCount - 8}</div>` : ''}
+        </div>
+        
+        <!-- Context Menu Trigger (for right-click actions) -->
+        <button class="mt-1 p-0.5 text-[7px] text-gray-500 hover:text-gray-300" title="Group options">
+            <span class="text-xs">⚙</span>
+        </button>
+    </div>`;
+}
+
 function buildMixerSendStripHTML(send) {
     const level = send.level !== undefined ? send.level : 1.0;
     const muted = send.muted || false;
@@ -3356,6 +3419,15 @@ function initializeMixerEventHandlers(mixerElement) {
             const action = e.target.classList.contains('mute-btn') ? 'mute' :
                           e.target.classList.contains('solo-btn') ? 'solo' : 'arm';
             handleMixerButtonAction(trackId, action);
+        });
+    });
+
+    // Group mute/solo buttons
+    mixerElement.querySelectorAll('.mixer-group-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const groupId = parseInt(e.target.dataset.groupId);
+            const action = e.target.classList.contains('mute-btn') ? 'groupMute' : 'groupSolo';
+            handleMixerGroupAction(groupId, action);
         });
     });
 
@@ -3447,6 +3519,14 @@ function initializeMixerEventHandlers(mixerElement) {
         });
     }
 
+    // Add Group button
+    const addGroupBtn = mixerElement.querySelector('#addGroupBtn');
+    if (addGroupBtn) {
+        addGroupBtn.addEventListener('click', () => {
+            handleAddGroup();
+        });
+    }
+
     // Send bus mute buttons
     mixerElement.querySelectorAll('.mixer-send-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -3497,6 +3577,48 @@ function handleMixerButtonAction(trackId, action) {
     updateMixerWindow();
 }
 
+function handleMixerGroupAction(groupId, action) {
+    if (localAppServices.captureStateForUndo) {
+        localAppServices.captureStateForUndo(`Track Group ${action}`);
+    }
+    
+    const group = localAppServices.getTrackGroupByIdState ? localAppServices.getTrackGroupByIdState(groupId) : null;
+    if (!group) return;
+    
+    if (action === 'groupMute') {
+        const newMuted = !group.muted;
+        if (localAppServices.setTrackGroupMutedState) {
+            localAppServices.setTrackGroupMutedState(groupId, newMuted);
+        }
+        // Also mute/unmute all tracks in the group
+        if (group.trackIds && localAppServices.setTrackMutedState) {
+            group.trackIds.forEach(trackId => {
+                localAppServices.setTrackMutedState(trackId, newMuted);
+            });
+        }
+        showNotification(`Group ${group.name} ${newMuted ? 'muted' : 'unmuted'}`, 1500);
+    } else if (action === 'groupSolo') {
+        const newSoloed = !group.soloed;
+        if (localAppServices.setTrackGroupSoloedState) {
+            localAppServices.setTrackGroupSoloedState(groupId, newSoloed);
+        }
+        // Also solo/unsolo all tracks in the group
+        if (group.trackIds && localAppServices.setTrackSoloedState) {
+            group.trackIds.forEach(trackId => {
+                localAppServices.setTrackSoloedState(trackId, newSoloed);
+            });
+        }
+        showNotification(`Group ${group.name} ${newSoloed ? 'soloed' : 'unsoloed'}`, 1500);
+    }
+    
+    // Update the mixer UI
+    updateMixerWindow();
+    // Also update track panels since track mute/solo states changed
+    if (localAppServices.updateAllTrackPanels) {
+        localAppServices.updateAllTrackPanels();
+    }
+}
+
 function handleMixerVolumeChange(trackId, value) {
     const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
     if (track && track.setVolume) {
@@ -3529,6 +3651,36 @@ function handleAddSendBus() {
         if (sendTrack && localAppServices.createSendBus) {
             localAppServices.createSendBus(sendTrack.id);
         }
+        updateMixerWindow();
+    }
+}
+
+function handleAddGroup() {
+    if (localAppServices.addTrackGroupState && localAppServices.getTrackGroupsState) {
+        const groups = localAppServices.getTrackGroupsState();
+        if (groups.length >= Constants.MAX_TRACK_GROUPS) {
+            showNotification(`Maximum number of groups (${Constants.MAX_TRACK_GROUPS}) reached`, 2000);
+            return;
+        }
+        
+        // Generate a unique group name
+        const baseName = Constants.DEFAULT_TRACK_GROUP_NAME;
+        let counter = 1;
+        let name = baseName;
+        while (groups.some(g => g.name === name)) {
+            name = `${baseName} ${counter++}`;
+        }
+        
+        const newGroup = {
+            name: name,
+            color: Constants.DEFAULT_TRACK_GROUP_COLOR,
+            trackIds: [],
+            muted: false,
+            soloed: false
+        };
+        
+        const group = localAppServices.addTrackGroupState(newGroup);
+        showNotification(`Group "${name}" created`, 1500);
         updateMixerWindow();
     }
 }

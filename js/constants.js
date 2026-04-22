@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.51.0"; // Day 53: Track Groups Feature - Added constants, state management, and basic UI for organizing tracks into groups with mute/solo
+export const APP_VERSION = "0.52.0"; // Day 54: Track Groups UI Integration - Added mixer group strips, mute/solo buttons, add group functionality
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
