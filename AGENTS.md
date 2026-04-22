@@ -1078,3 +1078,17 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Right-click on group strip (⚙ button) or track strip in Mixer window
 - **Version**: Bumped to 0.53.1
 - **Bug Fix**: The group-context-btn class was missing on group strips, now added
+
+#### Day 55 final: Mixer Track FX Button (2026-04-22)
+- **Feature**: Added FX button to each track strip in the Mixer window for quick access to the effects rack
+- **Files Modified**:
+  - `js/ui.js`: Added FX button to `buildMixerTrackStripHTML()` with effect count indicator
+  - `js/ui.js`: Added event handler in `initializeMixerEventHandlers()` for FX button click
+  - `js/constants.js`: Bumped APP_VERSION to 0.53.2
+- **Feature Details**:
+  - FX button appears below the Sends section in each track strip
+  - Shows effect count badge when track has effects (e.g., "FX (3)")
+  - Clicking opens the track's Effects Rack window directly
+  - Provides quick access without needing to open the track inspector
+- **Usage**: Click the FX button in any track strip in the Mixer window
+- **Version**: Bumped to 0.53.2
