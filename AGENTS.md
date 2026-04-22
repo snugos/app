@@ -278,7 +278,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/main.js`:
     - Fixed `isReconstructinging` typo → `isReconstructinging` (variable name)
     - Fixed `getIsReconstructingingDAW` typo → `getIsReconstructingingDAW` (function name)
-    - Fixed `isReconstructconstructing` typo → `isReconstructinging` (variable name)
+    - Fixed `isReconstructconstructinging` typo → `isReconstructinging` (variable name)
     - Fixed in `addMasterEffect()`, `removeMasterEffect()`, and `reorderMasterEffect()` methods
 - **Impact**: These typos caused incorrect variable references in the reconstruction logic, potentially causing undo state capture during project reconstruction when it should have been skipped. The fixes ensure that the `isReconstructinging` flag is correctly checked during project load/reconstruction operations.
 - **Version**: No bump needed (bug fix)
@@ -875,43 +875,40 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/Track.js`: Added:
     - `setAudioClipCrossfade(clipId, crossfade)` - Sets clip crossfade with undo state capture and clamping
     - `getAudioClipCrossfade(clipId)` - Gets clip crossfade value (default 0)
-  - `js/ui.js`: Modified Apply button handler to:
-    - Retrieve crossfade value from `crossfadeInput`
-    - Call `track.setAudioClipCrossfade(clipId, newCrossfade)` to save it
-- **Impact**: Users can now properly set and save clip crossfade values from the Audio Clip Editor, which affects how clips fade into each other during timeline playback
-- **Version**: Bumped to 0.41.0
-
-## Code Style Guidelines
-
-### Module Structure
-- Each module exports functions and/or classes
-- `initialize*Module(appServices)` pattern for dependency injection
-- `localAppServices` holds references to shared services
-
-### UI Components
-- Use `createKnob()` for rotary controls
-- Use `createDropZoneHTML()` and `setupGenericDropZoneListeners()` for file/audio drop zones
-- Track-specific controls follow pattern: `initialize<TrackType>SpecificControls(track, winEl)`
-
-### State Management
-- Centralized state in `js/state.js`
-- Getters: `get*State()` functions
-- Setters: `set*State()` functions
-- Undo/redo via `captureStateForUndoInternal(description)`
-
-### Naming Conventions
-- Track methods: `setDrumSamplerPadVolume`, `setDrumSamplerPadPitch`, `setDrumSamplerPadEnv`
-- UI element IDs: `<type><controlName>-<trackId>-placeholder` for knob placeholders
-- Container IDs: `<type>Container-<trackId>-<subtype>` for specific containers
-
-
-#### Day 45: Audio Clip Editor Fade Curve Save Bug Fix (2026-04-22)
-- **Bug Fix**: Fixed Audio Clip Editor not saving fade in/out curve selections
-- **Issue**: The Apply button in the Audio Clip Editor had UI controls for fade in/out curve (select dropdowns for Linear/Exponential), but the Apply button handler was not extracting these values or calling the `setAudioClipFadeInCurve` and `setAudioClipFadeOutCurve` methods
-- **Files Modified**:
   - `js/ui.js`: Modified Apply button handler in `openAudioClipEditorWindow()`:
     - Added extraction of `newFadeInCurve` and `newFadeOutCurve` from the select dropdowns
-    - Added calls to `track.setAudioClipFadeInCurve(clipId, newFadeInCurve)` and `track.setAudioClipFadeOutCurve(clipId, newFadeOutCurve)`
-  - `js/constants.js`: Bumped APP_VERSION to 0.42.0
+    - Added calls to `track.setAudioClipCrossfade(clipId, newCrossfade)`
 - **Impact**: Users can now properly save fade curve choices (Linear or Exponential) from the Audio Clip Editor, which affects how fades sound during playback
 - **Version**: Bumped to 0.42.0
+
+#### Day 46: Audio Clip Duplicate Feature (2026-04-22)
+- **Feature**: Added the ability to duplicate audio clips in the Timeline
+- **Files Modified**:
+  - `js/Track.js`: Added new method:
+    - `duplicateTimelineClip(clipId)` - Duplicates an audio or sequence clip and inserts the copy right after the original
+  - `js/ui.js`: Added "Duplicate Clip" menu item to timeline clip context menu:
+    - Right-click on a clip in Timeline to access the Duplicate option
+    - The duplicate is positioned immediately after the original clip
+- **Feature Details**:
+  - Duplicate creates a copy of the clip with a new unique ID
+  - The copy shares the same audio source (sourceId) as the original
+  - Positioned immediately after the original clip in the timeline
+  - Undo Support: Duplicate operation captures state for undo/redo
+  - Works for both audio clips and sequence clips
+- **Usage**: Right-click on a clip in the Timeline, select "Duplicate Clip"
+- **Version**: Bumped to 0.43.0
+
+#### Day 47: Audio Clip Duplicate Feature - Bug Fix (2026-04-22)
+- **Bug Fix**: The Day 46 entry claimed `duplicateTimelineClip` was added to Track.js, but the method was never actually implemented. The AGENTS.md and constants.js version were updated but the code was missing.
+- **Files Modified**:
+  - `js/Track.js`: Added `duplicateTimelineClip(clipId)` method after `deleteTimelineClip`:
+    - Finds clip by ID in timelineClips array
+    - Captures undo state before duplication
+    - Creates deep JSON copy with new unique ID
+    - Positions duplicate immediately after original (startTime + duration)
+    - Inserts into timelineClips array at clipIndex + 1
+    - Triggers timeline re-render
+    - Returns the new clip or null if not found
+  - `js/constants.js`: Bumped APP_VERSION to 0.43.1
+- **Impact**: The Duplicate Clip context menu option now actually works
+- **Version**: Bumped to 0.43.1

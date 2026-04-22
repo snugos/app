@@ -2729,6 +2729,22 @@ export class Track {
         return true;
     }
 
+    duplicateTimelineClip(clipId) {
+        const clipIndex = this.timelineClips.findIndex(c => c.id === clipId);
+        if (clipIndex === -1) {
+            if (this.appServices.showNotification) this.appServices.showNotification('Clip not found', 1500);
+            return null;
+        }
+        const originalClip = this.timelineClips[clipIndex];
+        this._captureUndoState(`Duplicate "${originalClip.name || 'Clip'}" on ${this.name}`);
+        const newClip = JSON.parse(JSON.stringify(originalClip));
+        newClip.id = `clip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        newClip.startTime = originalClip.startTime + originalClip.duration;
+        this.timelineClips.splice(clipIndex + 1, 0, newClip);
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        return newClip;
+    }
+
     setAudioClipGain(clipId, gain) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (clip) {

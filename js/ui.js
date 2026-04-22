@@ -2901,6 +2901,17 @@ export function renderTimeline() {
                         }
                     }
                 }},
+                { label: 'Duplicate Clip', action: () => {
+                    if (trackId) {
+                        const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                        if (track && track.duplicateTimelineClip) {
+                            const newClip = track.duplicateTimelineClip(clipId);
+                            if (newClip) {
+                                showNotification('Clip duplicated', 1500);
+                            }
+                        }
+                    }
+                }},
                 { label: 'Delete Clip', action: () => {
                     if (trackId) {
                         const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;

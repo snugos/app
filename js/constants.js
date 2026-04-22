@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.42.0"; // Day 45: Audio Clip Editor Fade Curve Save Bug Fix
+export const APP_VERSION = "0.43.1"; // Day 47: Fixed duplicateTimelineClip method in Track.js (was missing from Day 46 implementation)
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
