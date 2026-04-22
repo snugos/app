@@ -2236,27 +2236,41 @@ export class Track {
                                 fadeGain.gain.setValueAtTime(0, effectivePlayStart);
                                 
                                 // Apply fade in (ramp to 1 over fadeIn duration)
+                                const fadeInCurve = clip.fadeInCurve || Constants.DEFAULT_FADE_IN_CURVE;
                                 if (fadeIn > 0 && clipStartInWindow < fadeIn) {
                                     const actualFadeIn = Math.min(fadeIn, effectivePlayDuration);
-                                    fadeGain.gain.linearRampToValueAtTime(clipGain, effectivePlayStart + actualFadeIn);
+                                    if (fadeInCurve === Constants.FADE_CURVE_EXPONENTIAL) {
+                                        fadeGain.gain.exponentialRampToValueAtTime(Math.max(clipGain, 0.001), effectivePlayStart + actualFadeIn);
+                                    } else {
+                                        fadeGain.gain.linearRampToValueAtTime(clipGain, effectivePlayStart + actualFadeIn);
+                                    }
                                 } else {
                                     fadeGain.gain.setValueAtTime(clipGain, effectivePlayStart);
                                 }
                                 
                                 // Apply fade out (ramp to 0 near end)
+                                const fadeOutCurve = clip.fadeOutCurve || Constants.DEFAULT_FADE_OUT_CURVE;
                                 if (fadeOut > 0 && actualCrossfade <= 0) {
                                     // No crossfade - use normal fade out
                                     const fadeOutStart = effectivePlayStart + effectivePlayDuration - fadeOut;
                                     if (fadeOutStart > effectivePlayStart) {
                                         fadeGain.gain.setValueAtTime(clipGain, fadeOutStart);
-                                        fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
+                                        if (fadeOutCurve === Constants.FADE_CURVE_EXPONENTIAL) {
+                                            fadeGain.gain.exponentialRampToValueAtTime(0.001, effectivePlayStart + effectivePlayDuration);
+                                        } else {
+                                            fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
+                                        }
                                     }
                                 } else if (actualCrossfade > 0) {
                                     // Crossfade with next clip - fade out over crossfade duration
                                     const crossfadeFadeOutStart = effectivePlayStart + effectivePlayDuration - actualCrossfade;
                                     if (crossfadeFadeOutStart > effectivePlayStart) {
                                         fadeGain.gain.setValueAtTime(clipGain, crossfadeFadeOutStart);
-                                        fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
+                                        if (fadeOutCurve === Constants.FADE_CURVE_EXPONENTIAL) {
+                                            fadeGain.gain.exponentialRampToValueAtTime(0.001, effectivePlayStart + effectivePlayDuration);
+                                        } else {
+                                            fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
+                                        }
                                     }
                                 }
                                 
@@ -2535,6 +2549,38 @@ export class Track {
             return true;
         }
         return false;
+    }
+
+    setAudioClipFadeInCurve(clipId, curve) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Fade In Curve on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.fadeInCurve = (curve === Constants.FADE_CURVE_EXPONENTIAL) ? Constants.FADE_CURVE_EXPONENTIAL : Constants.FADE_CURVE_LINEAR;
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    setAudioClipFadeOutCurve(clipId, curve) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Fade Out Curve on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.fadeOutCurve = (curve === Constants.FADE_CURVE_EXPONENTIAL) ? Constants.FADE_CURVE_EXPONENTIAL : Constants.FADE_CURVE_LINEAR;
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipFadeInCurve(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.fadeInCurve || Constants.DEFAULT_FADE_IN_CURVE) : Constants.DEFAULT_FADE_IN_CURVE;
+    }
+
+    getAudioClipFadeOutCurve(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.fadeOutCurve || Constants.DEFAULT_FADE_OUT_CURVE) : Constants.DEFAULT_FADE_OUT_CURVE;
     }
 
     setAudioClipCrossfade(clipId, crossfade) {

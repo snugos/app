@@ -222,6 +222,11 @@ export const DEFAULT_CLIP_COLOR = '#4a9eff'; // Default clip color (matches curr
 export const DEFAULT_AUDIO_CLIP_FADE_IN = 0;    // Default fade in time in seconds
 export const DEFAULT_AUDIO_CLIP_FADE_OUT = 0;   // Default fade out time in seconds
 export const MAX_AUDIO_CLIP_FADE = 10;          // Maximum fade time in seconds
+export const FADE_CURVE_LINEAR = 'linear';
+export const FADE_CURVE_EXPONENTIAL = 'exponential';
+export const FADE_CURVES = [FADE_CURVE_LINEAR, FADE_CURVE_EXPONENTIAL];
+export const DEFAULT_FADE_IN_CURVE = FADE_CURVE_LINEAR;
+export const DEFAULT_FADE_OUT_CURVE = FADE_CURVE_LINEAR;
 
 // Audio Clip Crossfade Constants
 export const DEFAULT_AUDIO_CLIP_CROSSFADE = 0; // Default crossfade time in seconds (0 = no crossfade)

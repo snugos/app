@@ -3610,6 +3610,26 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             </div>
             
             <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Fade Curve</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-500">Fade In Curve</label>
+                        <select id="clipFadeInCurve-${clipId}" class="w-full px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm">
+                            <option value="linear" ${(clip.fadeInCurve || 'linear') === 'linear' ? 'selected' : ''}>Linear</option>
+                            <option value="exponential" ${clip.fadeInCurve === 'exponential' ? 'selected' : ''}>Exponential</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-500">Fade Out Curve</label>
+                        <select id="clipFadeOutCurve-${clipId}" class="w-full px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm">
+                            <option value="linear" ${(clip.fadeOutCurve || 'linear') === 'linear' ? 'selected' : ''}>Linear</option>
+                            <option value="exponential" ${clip.fadeOutCurve === 'exponential' ? 'selected' : ''}>Exponential</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-1">
                 <label class="text-xs text-zinc-400">Crossfade (seconds)</label>
                 <div class="flex items-center gap-2">
                     <input type="range" id="clipCrossfadeSlider-${clipId}" min="0" max="${Math.min(Constants.MAX_AUDIO_CLIP_CROSSFADE, duration/4).toFixed(2)}" step="0.01" value="${(clip.crossfade || 0).toFixed(2)}"
