@@ -9543,4 +9543,204 @@ export class Track {
             return null;
         }
     }
+
+    // Freeze Track: Render track audio offline and replace clips with frozen audio
+    async freezeTrack() {
+        if (this.type === 'Audio') {
+            throw new Error('Cannot freeze Audio tracks directly. Use bounce instead.');
+        }
+
+        this._captureUndoState(`Freeze track ${this.name}`);
+
+        // Calculate duration from timeline clips
+        let maxDuration = 0;
+        if (this.timelineClips && this.timelineClips.length > 0) {
+            for (const clip of this.timelineClips) {
+                const clipEnd = clip.startTime + clip.duration;
+                if (clipEnd > maxDuration) maxDuration = clipEnd;
+            }
+        }
+
+        if (maxDuration === 0) {
+            throw new Error('No audio content to freeze');
+        }
+
+        maxDuration = Math.min(maxDuration, Constants.MAX_FREEZE_LENGTH_SECONDS);
+
+        // Get the audio buffer by rendering offline
+        const offlineContext = await Tone.Offline(async () => {
+            await this.schedulePlayback(0, maxDuration);
+        }, maxDuration);
+
+        if (!offlineContext || !offlineContext.buffer || !offlineContext.buffer.loaded) {
+            throw new Error('Failed to render track audio');
+        }
+
+        // Convert offline buffer to audio blob
+        const audioBuffer = offlineContext.buffer;
+        const numberOfChannels = audioBuffer.numberOfChannels;
+        const length = audioBuffer.length;
+        const sampleRate = audioBuffer.sampleRate;
+
+        const newBuffer = Tone.context.createBuffer(numberOfChannels, length, sampleRate);
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+            const channelData = audioBuffer.getChannelData(channel);
+            newBuffer.copyToChannel(channelData, channel);
+        }
+
+        // Convert to WAV blob
+        const wavBlob = this._audioBufferToWav(newBuffer, sampleRate);
+
+        // Store the frozen audio
+        const dbKey = `frozen_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+        await storeAudio(dbKey, wavBlob);
+
+        // Create a new audio clip with the frozen audio
+        const clipId = `audioclip_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        const frozenClip = {
+            id: clipId,
+            type: 'audio',
+            sourceId: dbKey,
+            startTime: 0,
+            duration: maxDuration,
+            name: `${Constants.FROZEN_TRACK_PREFIX}${this.name}`,
+            color: '#888888',
+            gain: 1.0,
+            playbackRate: 1.0,
+            startOffset: 0,
+            endOffset: -1,
+            crossfade: 0,
+            fadeIn: Constants.DEFAULT_FREEZE_FADE_OUT,
+            fadeOut: Constants.DEFAULT_FREEZE_FADE_OUT,
+            fadeInCurve: 'linear',
+            fadeOutCurve: 'linear',
+            reverse: false,
+            isFrozen: true,
+            originalTrackId: this.id
+        };
+
+        // Remove existing sequence clips and add frozen clip
+        this.timelineClips = this.timelineClips.filter(c => c.type !== 'sequence');
+        this.timelineClips.push(frozenClip);
+
+        // Clear synth/sampler audio to save memory
+        if (this.type === 'Synth' && this.instrument) {
+            try { this.instrument.dispose(); } catch(e) {}
+            this.instrument = null;
+        }
+        if (this.type === 'InstrumentSampler' && this.toneSampler) {
+            try { this.toneSampler.dispose(); } catch(e) {}
+            this.toneSampler = null;
+        }
+        if (this.type === 'Sampler') {
+            this.disposeSlicerMonoNodes();
+            if (this.audioBuffer) {
+                try { this.audioBuffer.dispose(); } catch(e) {}
+                this.audioBuffer = null;
+            }
+        }
+
+        if (this.appServices.updateTrackUI) {
+            this.appServices.updateTrackUI(this.id, 'trackFrozen');
+        }
+        if (this.appServices.renderTimeline) {
+            this.appServices.renderTimeline();
+        }
+
+        return frozenClip;
+    }
+
+    // Bounce Track: Render a single track to audio without affecting original
+    async bounceTrack() {
+        if (this.type !== 'Audio' && this.type !== 'Synth' && this.type !== 'InstrumentSampler' && this.type !== 'Sampler' && this.type !== 'DrumSampler') {
+            throw new Error('Unsupported track type for bounce');
+        }
+
+        // Calculate duration
+        let maxDuration = 0;
+        if (this.timelineClips && this.timelineClips.length > 0) {
+            for (const clip of this.timelineClips) {
+                const clipEnd = clip.startTime + clip.duration;
+                if (clipEnd > maxDuration) maxDuration = clipEnd;
+            }
+        }
+
+        if (this.sequences && this.sequences.length > 0) {
+            for (const seq of this.sequences) {
+                const seqEnd = (seq.metadata?.endBar || seq.metadata?.startBar || 0) * 4 * (60 / (this.appServices.getTempo ? this.appServices.getTempo() : 120));
+                if (seqEnd > maxDuration) maxDuration = seqEnd;
+            }
+        }
+
+        if (maxDuration === 0) {
+            throw new Error('No audio content to bounce');
+        }
+
+        maxDuration = Math.min(maxDuration, Constants.MAX_FREEZE_LENGTH_SECONDS);
+
+        // Render offline
+        const offlineContext = await Tone.Offline(async () => {
+            await this.schedulePlayback(0, maxDuration);
+        }, maxDuration);
+
+        if (!offlineContext || !offlineContext.buffer || !offlineContext.buffer.loaded) {
+            throw new Error('Failed to render track audio');
+        }
+
+        // Convert to WAV blob
+        const audioBuffer = offlineContext.buffer;
+        const numberOfChannels = audioBuffer.numberOfChannels;
+        const length = audioBuffer.length;
+        const sampleRate = audioBuffer.sampleRate;
+
+        const newBuffer = Tone.context.createBuffer(numberOfChannels, length, sampleRate);
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+            const channelData = audioBuffer.getChannelData(channel);
+            newBuffer.copyToChannel(channelData, channel);
+        }
+
+        return this._audioBufferToWav(newBuffer, sampleRate);
+    }
+
+    // Helper: Convert AudioBuffer to WAV Blob
+    _audioBufferToWav(audioBuffer, sampleRate) {
+        const numberOfChannels = audioBuffer.numberOfChannels;
+        const length = audioBuffer.length;
+        const wavBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
+        const view = new DataView(wavBuffer);
+
+        // WAV header
+        const writeString = (offset, string) => {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        };
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + length * numberOfChannels * 2, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, numberOfChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+        view.setUint16(32, numberOfChannels * 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, 'data');
+        view.setUint32(40, length * numberOfChannels * 2, true);
+
+        // Write audio data
+        let offset = 44;
+        for (let i = 0; i < length; i++) {
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                const sample = audioBuffer.getChannelData(channel)[i];
+                const clamp = Math.max(-1, Math.min(1, sample));
+                view.setInt16(offset, clamp * 0x7FFF, true);
+                offset += 2;
+            }
+        }
+
+        return new Blob([wavBuffer], { type: 'audio/wav' });
+    }
 }
