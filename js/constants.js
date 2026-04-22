@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.44.0"; // Day 47: Send Track State Functions - Added missing getSendTracksState, addSendTrackState, setSendTrackMutedState, getTrackSendsState, getTrackSendLevelState, setTrackSendLevelState to state.js
+export const APP_VERSION = "0.45.0"; // Day 48: Automation Lanes: Send Track State Functions - Added missing getSendTracksState, addSendTrackState, setSendTrackMutedState, getTrackSendsState, getTrackSendLevelState, setTrackSendLevelState to state.js
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -299,3 +299,14 @@ export const DEFAULT_MARKER = {
     bar: 1, // 1-indexed bar number
     color: DEFAULT_MARKER_COLOR
 };
+
+// Automation Lane Constants
+export const AUTOMATION_LANE_HEIGHT = 20; // pixels per lane
+export const AUTOMATION_LANE_DEFAULT = 0.5; // Default value (50%)
+export const AUTOMATION_LANE_PRECISION = 2; // Decimal places
+export const AUTOMATION_LANE_STEP = 0.01; // Step size (1%)
+export const AUTOMATION_LANE_PARAMETERS = ['volume', 'pan', 'filterCutoff', 'resonance', 'attack', 'decay', 'sustain', 'release']; // Supported parameters
+export const AUTOMATION_LANE_COLORS = [
+    '#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#ff9ff3',
+    '#f368e0', '#ff9f43', '#54a0ff', '#5f27cd', '#c8d6e5'
+];

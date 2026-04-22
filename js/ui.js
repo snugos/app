@@ -1328,6 +1328,13 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             <span class="text-[10px]">Probability</span>
         </label>`;
 
+    // Automation editor toggle button
+    const automationEditorToggleHTML = `
+        <label class="flex items-center gap-0.5 cursor-pointer ml-2 pl-2 border-l border-gray-400 dark:border-slate-600">
+            <input type="checkbox" id="automationEditorToggle-${track.id}" class="w-3 h-3">
+            <span class="text-[10px]">Automation</span>
+        </label>`;
+
     // Ghost Track selector (for showing notes from other tracks)
     const allTracks = localAppServices.getTracks ? localAppServices.getTracks() : [];
     const compatibleGhostTracks = allTracks.filter(t => t.id !== track.id && (t.type === 'Synth' || t.type === 'InstrumentSampler'));
@@ -1347,7 +1354,7 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
             </select>
         </label>` : '';
 
-    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${chordControlsHTML} ${velocityEditorToggleHTML} ${probabilityEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
+    let html = `<div class="sequencer-container p-1 text-xs overflow-auto h-full dark:bg-slate-900 dark:text-slate-300"> <div class="controls mb-1 flex flex-wrap justify-between items-center sticky top-0 left-0 bg-gray-200 dark:bg-slate-800 p-1 z-30 border-b dark:border-slate-700"> <span class="font-semibold">${track.name} - ${numBars} Bar${numBars > 1 ? 's' : ''} (${totalSteps} steps)</span> <div class="flex items-center flex-wrap gap-1"> <label for="seqLengthInput-${track.id}">Bars: </label> <input type="number" id="seqLengthInput-${track.id}" value="${numBars}" min="1" max="${Constants.MAX_BARS || 16}" step="0.1" class="w-12 p-0.5 border border-gray-300 rounded shadow-sm focus:ring-blue-500 focus:border-purple-600 text-sm dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200"> ${scaleControlsHTML} ${chordControlsHTML} ${velocityEditorToggleHTML} ${probabilityEditorToggleHTML} ${automationEditorToggleHTML} ${ghostTrackSelectHTML} </div> </div>`;
     html += `<div class="sequencer-grid-layout" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 20px; gap: 0px; width: fit-content; position: relative; top: 0; left: 0;"> <div class="sequencer-header-cell sticky top-0 left-0 z-20 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700"></div>`;
     for (let i = 0; i < totalSteps; i++) { const beatsPerBar = 4; const barNum = Math.floor(i / beatsPerBar) + 1; const beatInBar = (i % beatsPerBar) + 1; const label = beatInBar === 1 ? String(barNum) : `${barNum}.${beatInBar}`; html += `<div class="sequencer-header-cell sticky top-0 z-10 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center pr-1 text-[10px] text-gray-500 dark:text-slate-400">${label}</div>`; }
 
@@ -1492,6 +1499,50 @@ function buildSequencerContentDOM(track, rows, rowLabels, numBars) {
         
         html += `<div class="probability-cell relative border-r border-b border-gray-300 dark:border-slate-600 ${borderClass} flex items-end justify-center p-0.5 cursor-pointer hover:bg-slate-700" data-col="${col}" data-max-probability="${maxProb.toFixed(2)}" title="Step ${col + 1}: ${maxProb > 0 ? Math.round(maxProb * 100) + '%' : 'No notes'}">`;
         html += `<div class="probability-bar w-full rounded-t transition-all duration-75" style="height: ${barHeight}px; background-color: ${barColor};" data-col="${col}"></div>`;
+        html += `</div>`;
+    }
+    html += `</div></div>`;
+    
+
+    
+    // Automation Editor Lane (initially hidden)
+    html += `<div id="automationEditor-${track.id}" class="automation-editor-lane hidden mt-1 border-t border-gray-400 dark:border-slate-600 pt-1">`;
+    html += `<div class="text-[10px] font-semibold mb-1 text-gray-500 dark:text-slate-400">Automation Editor (click to add/move points)</div>`;
+    
+    // Parameter selector for automation
+    const paramOptions = (Constants.AUTOMATION_LANE_PARAMETERS || ['volume', 'pan']).map(p => 
+        `<option value="${p}">${p.charAt(0).toUpperCase() + p.slice(1)}</option>`
+    ).join('');
+    html += `<div class="flex items-center gap-2 mb-2">
+        <select id="automationParamSelect-${track.id}" class="p-0.5 border border-gray-300 rounded text-[10px] dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200">${paramOptions}</select>
+        <button id="clearAutomationBtn-${track.id}" class="px-2 py-0.5 text-[10px] border rounded dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-600">Clear Lane</button>
+    </div>`;
+    
+    html += `<div class="automation-editor-grid" style="display: grid; grid-template-columns: 50px repeat(${totalSteps}, 20px); grid-auto-rows: 60px; gap: 0px; width: fit-content;">`;
+    html += `<div class="automation-label sticky left-0 bg-gray-200 dark:bg-slate-800 border-r border-b dark:border-slate-700 flex items-center justify-center text-[9px] text-gray-400">AUTO</div>`;
+    
+    // Get current parameter and its automation data
+    const autoParam = 'volume'; // Default
+    const automationLane = track.getAutomationLane ? track.getAutomationLane(autoParam) : [];
+    
+    for (let col = 0; col < totalSteps; col++) {
+        // Find automation point at this step
+        const point = automationLane.find(p => p.step === col);
+        const hasPoint = !!point;
+        const pointValue = point ? point.value : Constants.AUTOMATION_LANE_DEFAULT;
+        const barHeight = Math.round(pointValue * 56); // 60px max height - 4px padding
+        const beatsPerBar = 4;
+        const borderClass = col % stepsPerBar === 0 && col > 0 ? 'border-l-2 border-l-gray-500' : '';
+        
+        // Color based on whether there's a point
+        const barColor = hasPoint ? '#ff9f43' : '#333333';
+        
+        html += `<div class="automation-cell relative border-r border-b border-gray-300 dark:border-slate-600 ${borderClass} flex items-end justify-center p-0.5 cursor-pointer hover:bg-slate-700" data-col="${col}" data-has-point="${hasPoint}" data-value="${pointValue.toFixed(2)}" title="Step ${col + 1}: ${hasPoint ? Math.round(pointValue * 100) + '%' : 'No point'}">`;
+        html += `<div class="automation-bar w-full rounded-t transition-all duration-75 ${hasPoint ? 'cursor-move' : ''}" style="height: ${barHeight}px; background-color: ${barColor}; ${hasPoint ? 'opacity: 1;' : 'opacity: 0.3;'}" data-col="${col}"></div>`;
+        // Show dot on top if there's a point
+        if (hasPoint) {
+            html += `<div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-orange-500 border border-white pointer-events-none"></div>`;
+        }
         html += `</div>`;
     }
     html += `</div></div>`;
