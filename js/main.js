@@ -79,11 +79,6 @@ import {
     setChordModeRootState,
     setChordModeTypeState,
     setChordModeLockState,
-    // Chord Mode state setters
-    setChordModeEnabledState,
-    setChordModeRootState,
-    setChordModeTypeState,
-    setChordModeLockState,
     // Ghost Track state setters
     setGhostTrackIdState,
     // Swing state setters
