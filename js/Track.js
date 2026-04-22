@@ -1919,7 +1919,7 @@ export class Track {
                 const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
                 if (playbackModeCheck !== 'sequencer') {
                     if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
-                        try { this.patternPlayerSequence.stop(); } catch(e) { console.warn(`[Track ${this.id}] Error stopping patternPlayerSequence during playback mode switch:`, e.message); }
+                        try { this.patternPlayerSequence.stop(); } catch(e){ console.warn(`[Track ${this.id}] Error stopping patternPlayerSequence during playback mode switch:`, e.message); }
                     }
                     return;
                 }
@@ -2210,7 +2210,9 @@ export class Track {
         this.stopPlayback(); 
 
         if (playbackMode === 'timeline') {
-            for (const clip of this.timelineClips) {
+            // Sort clips by start time for crossfade processing
+            const sortedClips = [...this.timelineClips].sort((a, b) => a.startTime - b.startTime);
+            for (const clip of sortedClips) {
                 if (!clip || typeof clip.startTime !== 'number' || typeof clip.duration !== 'number') {
                     console.warn(`[Track ${this.id} schedulePlayback] Skipping invalid clip:`, clip);
                     continue;
@@ -2297,10 +2299,18 @@ export class Track {
                                 }
                                 
                                 // Apply fade out (ramp to 0 near end)
-                                if (fadeOut > 0) {
+                                if (fadeOut > 0 && actualCrossfade <= 0) {
+                                    // No crossfade - use normal fade out
                                     const fadeOutStart = effectivePlayStart + effectivePlayDuration - fadeOut;
                                     if (fadeOutStart > effectivePlayStart) {
                                         fadeGain.gain.setValueAtTime(clipGain, fadeOutStart);
+                                        fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
+                                    }
+                                } else if (actualCrossfade > 0) {
+                                    // Crossfade with next clip - fade out over crossfade duration
+                                    const crossfadeFadeOutStart = effectivePlayStart + effectivePlayDuration - actualCrossfade;
+                                    if (crossfadeFadeOutStart > effectivePlayStart) {
+                                        fadeGain.gain.setValueAtTime(clipGain, crossfadeFadeOutStart);
                                         fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
                                     }
                                 }
