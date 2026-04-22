@@ -845,6 +845,27 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Double-click an audio clip in Timeline to open editor, adjust Start Offset and End Offset sliders in "Source Trim" section
 - **Version**: Bumped to 0.38.0
 
+#### Day 41: Audio Clip Split Feature (2026-04-21)
+- **Feature**: Added the ability to split audio clips at a specific time point
+- **Files Modified**:
+  - `js/Track.js`: Added new method:
+    - `splitAudioClip(clipId, splitTime)` - Splits an audio clip at the specified time into two clips
+  - `js/ui.js`: Added "Split Clip..." menu item to timeline clip context menu:
+    - Shows prompt with clip start/end bounds for user reference
+    - Validates split time is within clip bounds
+    - Creates second clip starting at split point
+  - `js/constants.js`: Bumped APP_VERSION to 0.39.0
+- **Feature Details**:
+  - Split Time: User enters the time in seconds where the clip should be split
+  - Clip Bounds Display: Prompt shows the clip's start and end times for reference
+  - Second Clip: Created with name suffixed "(2)" and inherits parent clip properties
+  - Source Sharing: Both clips share the same `sourceId` (IndexedDB audio data)
+  - Undo Support: Split operation captures undo state
+  - Visual Feedback: Timeline re-renders to show the new clip
+- **Backend Note**: The split operation modifies the original clip's duration to end at the split point, and creates a new clip that starts at the split point. The new clip's `startOffset` is auto-calculated to continue from where the original clip's offset ended.
+- **Usage**: Right-click on an audio clip in the Timeline, select "Split Clip...", enter split time in seconds
+- **Version**: Bumped to 0.39.0
+
 ## Code Style Guidelines
 
 ### Module Structure

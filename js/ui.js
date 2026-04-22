@@ -3610,6 +3610,16 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             </div>
             
             <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Crossfade (seconds)</label>
+                <div class="flex items-center gap-2">
+                    <input type="range" id="clipCrossfadeSlider-${clipId}" min="0" max="${Math.min(Constants.MAX_AUDIO_CLIP_CROSSFADE, duration/4).toFixed(2)}" step="0.01" value="${(clip.crossfade || 0).toFixed(2)}"
+                        class="flex-1 accent-amber-500">
+                    <input type="number" id="clipCrossfadeInput-${clipId}" value="${(clip.crossfade || 0).toFixed(2)}" step="0.01" min="0" max="${Math.min(Constants.MAX_AUDIO_CLIP_CROSSFADE, duration/4).toFixed(2)}"
+                        class="w-20 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm text-center">
+                </div>
+            </div>
+            
+            <div class="space-y-1">
                 <label class="text-xs text-zinc-400">Playback Options</label>
                 <div class="flex items-center gap-3 flex-wrap">
                     <label class="flex items-center gap-1.5 text-zinc-300 text-xs cursor-pointer">
@@ -3674,6 +3684,14 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         if (fadeOutSlider && fadeOutInput) {
             fadeOutSlider.addEventListener('input', () => { fadeOutInput.value = parseFloat(fadeOutSlider.value).toFixed(2); });
             fadeOutInput.addEventListener('input', () => { fadeOutSlider.value = parseFloat(fadeOutInput.value).toFixed(2); });
+        }
+        
+        // Sync slider and input for crossfade
+        const crossfadeSlider = el.querySelector(`#clipCrossfadeSlider-${clipId}`);
+        const crossfadeInput = el.querySelector(`#clipCrossfadeInput-${clipId}`);
+        if (crossfadeSlider && crossfadeInput) {
+            crossfadeSlider.addEventListener('input', () => { crossfadeInput.value = parseFloat(crossfadeSlider.value).toFixed(2); });
+            crossfadeInput.addEventListener('input', () => { crossfadeSlider.value = parseFloat(crossfadeInput.value).toFixed(2); });
         }
         
         // Sync slider and input for gain

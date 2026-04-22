@@ -2226,6 +2226,13 @@ export class Track {
 
                 const offsetIntoSource = Math.max(0, effectivePlayStart - clipActualStart);
 
+                // Determine crossfade with next clip
+                const clipIndex = sortedClips.indexOf(clip);
+                const nextClip = clipIndex >= 0 && clipIndex < sortedClips.length - 1 ? sortedClips[clipIndex + 1] : null;
+                const crossfade = clip.crossfade || 0;
+                const hasNextClip = nextClip && nextClip.type === 'audio' && nextClip.startTime < clipActualEnd && crossfade > 0;
+                const actualCrossfade = hasNextClip ? Math.min(crossfade, (clipActualEnd - nextClip.startTime) / 2, (clipActualEnd - clipActualStart) / 2) : 0;
+
                 if (clip.type === 'audio') {
                     if (!clip.sourceId) { console.warn(`[Track ${this.id}] Audio clip ${clip.id} has no sourceId.`); continue; }
                     const player = new Tone.Player();

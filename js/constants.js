@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.39.0"; // Day 41: Audio Clip Split Feature
+export const APP_VERSION = "0.40.0"; // Day 42: Audio Clip Crossfade Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -222,6 +222,11 @@ export const DEFAULT_CLIP_COLOR = '#4a9eff'; // Default clip color (matches curr
 export const DEFAULT_AUDIO_CLIP_FADE_IN = 0;    // Default fade in time in seconds
 export const DEFAULT_AUDIO_CLIP_FADE_OUT = 0;   // Default fade out time in seconds
 export const MAX_AUDIO_CLIP_FADE = 10;          // Maximum fade time in seconds
+
+// Audio Clip Crossfade Constants
+export const DEFAULT_AUDIO_CLIP_CROSSFADE = 0; // Default crossfade time in seconds (0 = no crossfade)
+export const MIN_AUDIO_CLIP_CROSSFADE = 0;       // Minimum crossfade
+export const MAX_AUDIO_CLIP_CROSSFADE = 5;      // Maximum crossfade time in seconds
 
 // Audio Clip Gain Constants
 export const DEFAULT_AUDIO_CLIP_GAIN = 1.0;    // Default gain (0dB = 1.0, no change)
