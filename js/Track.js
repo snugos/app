@@ -180,6 +180,98 @@ export class Track {
         // Pan control (-1 left to +1 right)
         this.pan = initialData?.pan !== undefined ? initialData.pan : 0;
     }
+
+    /**
+     * Creates a deep copy of this track with a new ID.
+     * Used for duplicating tracks in the DAW.
+     * @param {number} [newId] - Optional specific ID for the new track. If not provided, a new ID will be generated.
+     * @returns {Track} A new Track instance that is a copy of this track.
+     */
+    duplicateTrack(newId = null) {
+        // Capture undo state before duplicating
+        this._captureUndoState(`Duplicate Track "${this.name}"`);
+
+        // Create a deep copy of the initial data from this track
+        // We need to serialize what would be needed to reconstruct this track
+        const trackDataForCopy = {
+            name: `${this.name} (Copy)`,
+            color: this.color,
+            isMuted: this.isMuted,
+            volume: this.previousVolumeBeforeMute,
+            pan: this.pan,
+            isMonitoringEnabled: this.isMonitoringEnabled,
+            automation: this.automation ? JSON.parse(JSON.stringify(this.automation)) : { volume: [] },
+            activeEffects: (this.activeEffects || []).map(effect => ({
+                id: effect.id,
+                type: effect.type,
+                params: effect.params ? JSON.parse(JSON.stringify(effect.params)) : {}
+            })),
+        };
+
+        // Type-specific data copies
+        if (this.type === 'Synth') {
+            trackDataForCopy.synthEngineType = this.synthEngineType;
+            trackDataForCopy.synthParams = this.synthParams ? JSON.parse(JSON.stringify(this.synthParams)) : {};
+        } else if (this.type === 'Sampler') {
+            trackDataForCopy.samplerAudioData = {
+                fileName: this.samplerAudioData?.fileName,
+                audioBufferDataURL: this.samplerAudioData?.audioBufferDataURL,
+                dbKey: this.samplerAudioData?.dbKey,
+                status: this.samplerAudioData?.status
+            };
+            trackDataForCopy.slices = this.slices ? JSON.parse(JSON.stringify(this.slices)) : [];
+            trackDataForCopy.selectedSliceForEdit = this.selectedSliceForEdit;
+            trackDataForCopy.slicerIsPolyphonic = this.slicerIsPolyphonic;
+            trackDataForCopy.waveformZoom = this.waveformZoom;
+            trackDataForCopy.waveformScrollOffset = this.waveformScrollOffset;
+        } else if (this.type === 'DrumSampler') {
+            trackDataForCopy.drumSamplerPads = (this.drumSamplerPads || []).map(pad => ({
+                sampleUrl: pad.sampleUrl,
+                audioBufferDataURL: pad.audioBufferDataURL,
+                originalFileName: pad.originalFileName,
+                dbKey: pad.dbKey,
+                volume: pad.volume,
+                pitchShift: pad.pitchShift,
+                envelope: pad.envelope ? JSON.parse(JSON.stringify(pad.envelope)) : {},
+                status: pad.status
+            }));
+            trackDataForCopy.selectedDrumPadForEdit = this.selectedDrumPadForEdit;
+        } else if (this.type === 'InstrumentSampler') {
+            trackDataForCopy.instrumentSamplerSettings = {
+                sampleUrl: this.instrumentSamplerSettings?.sampleUrl,
+                audioBufferDataURL: this.instrumentSamplerSettings?.audioBufferDataURL,
+                originalFileName: this.instrumentSamplerSettings?.originalFileName,
+                dbKey: this.instrumentSamplerSettings?.dbKey,
+                rootNote: this.instrumentSamplerSettings?.rootNote,
+                loop: this.instrumentSamplerSettings?.loop,
+                loopStart: this.instrumentSamplerSettings?.loopStart,
+                loopEnd: this.instrumentSamplerSettings?.loopEnd,
+                envelope: this.instrumentSamplerSettings?.envelope ? JSON.parse(JSON.stringify(this.instrumentSamplerSettings.envelope)) : {},
+                status: this.instrumentSamplerSettings?.status
+            };
+            trackDataForCopy.instrumentSamplerIsPolyphonic = this.instrumentSamplerIsPolyphonic;
+        }
+
+        // Copy sequences (for non-Audio tracks)
+        if (this.type !== 'Audio' && this.sequences) {
+            trackDataForCopy.sequences = JSON.parse(JSON.stringify(this.sequences));
+            trackDataForCopy.activeSequenceId = this.activeSequenceId;
+        }
+
+        // Copy timeline clips
+        if (this.timelineClips) {
+            trackDataForCopy.timelineClips = JSON.parse(JSON.stringify(this.timelineClips));
+        }
+
+        // Assign new ID if not provided
+        const finalId = newId !== null ? newId : (this.id + 1000); // Use offset to avoid ID conflicts
+
+        // Create new track instance with the copied data
+        const newTrack = new Track(finalId, this.type, trackDataForCopy, this.appServices);
+
+        return newTrack;
+    }
+
 /**
      * Loads a sample to a specific drum pad and saves it to IndexedDB.
      * @param {number} padIndex The index of the pad (0-15).

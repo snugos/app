@@ -904,3 +904,14 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - UI element IDs: `<type><controlName>-<trackId>-placeholder` for knob placeholders
 - Container IDs: `<type>Container-<trackId>-<subtype>` for specific containers
 
+
+#### Day 45: Audio Clip Editor Fade Curve Save Bug Fix (2026-04-22)
+- **Bug Fix**: Fixed Audio Clip Editor not saving fade in/out curve selections
+- **Issue**: The Apply button in the Audio Clip Editor had UI controls for fade in/out curve (select dropdowns for Linear/Exponential), but the Apply button handler was not extracting these values or calling the `setAudioClipFadeInCurve` and `setAudioClipFadeOutCurve` methods
+- **Files Modified**:
+  - `js/ui.js`: Modified Apply button handler in `openAudioClipEditorWindow()`:
+    - Added extraction of `newFadeInCurve` and `newFadeOutCurve` from the select dropdowns
+    - Added calls to `track.setAudioClipFadeInCurve(clipId, newFadeInCurve)` and `track.setAudioClipFadeOutCurve(clipId, newFadeOutCurve)`
+  - `js/constants.js`: Bumped APP_VERSION to 0.42.0
+- **Impact**: Users can now properly save fade curve choices (Linear or Exponential) from the Audio Clip Editor, which affects how fades sound during playback
+- **Version**: Bumped to 0.42.0

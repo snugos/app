@@ -406,6 +406,56 @@ export async function addTrackToStateInternal(type, initialData = null, isUserAc
     return newTrack;
 }
 
+export async function duplicateTrackToStateInternal(sourceTrackId) {
+    try {
+        const sourceTrack = tracks.find(t => t.id === sourceTrackId);
+        if (!sourceTrack) {
+            console.warn(`[State duplicateTrackToStateInternal] Source track ID ${sourceTrackId} not found.`);
+            if (appServices.showNotification) appServices.showNotification('Source track not found for duplication.', 2000);
+            return null;
+        }
+
+        // Create the duplicate using the track's own duplicateTrack method
+        const duplicatedTrack = sourceTrack.duplicateTrack();
+
+        // Add the duplicated track to state
+        const newTrackId = duplicatedTrack.id;
+
+        // Initialize audio nodes for the new track
+        if (typeof duplicatedTrack.initializeAudioNodes === 'function') {
+            await duplicatedTrack.initializeAudioNodes();
+        }
+
+        // Fully initialize audio resources (load samples from DB/URL)
+        await duplicatedTrack.fullyInitializeAudioResources();
+
+        // Add to tracks array
+        tracks.push(duplicatedTrack);
+
+        if (appServices.showNotification) appServices.showNotification(`"${duplicatedTrack.name}" duplicated.`, 2000);
+
+        // Open inspector for the new track
+        if (appServices.openTrackInspectorWindow) {
+            setTimeout(() => appServices.openTrackInspectorWindow(duplicatedTrack.id), 50);
+        }
+
+        // Also open sequencer for applicable track types (non-Audio)
+        if (duplicatedTrack.type !== 'Audio' && appServices.openTrackSequencerWindow) {
+            setTimeout(() => appServices.openTrackSequencerWindow(duplicatedTrack.id, true), 150);
+        }
+
+        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
+        if (appServices.renderTimeline) appServices.renderTimeline();
+        if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
+
+        return duplicatedTrack;
+    } catch (error) {
+        console.error(`[State duplicateTrackToStateInternal] Error duplicating track ${sourceTrackId}:`, error);
+        if (appServices.showNotification) appServices.showNotification(`Error duplicating track: ${error.message}`, 3000);
+        return null;
+    }
+}
+
 export function removeTrackFromStateInternal(trackId) {
     try {
         const trackIndex = tracks.findIndex(t => t.id === trackId);

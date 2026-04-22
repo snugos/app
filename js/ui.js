@@ -3849,6 +3849,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             applyBtn.addEventListener('click', () => {
                 const newFadeIn = parseFloat(fadeInInput.value) || 0;
                 const newFadeOut = parseFloat(fadeOutInput.value) || 0;
+                const newFadeInCurve = el.querySelector(`#clipFadeInCurve-${clipId}`)?.value || Constants.FADE_CURVE_LINEAR;
+                const newFadeOutCurve = el.querySelector(`#clipFadeOutCurve-${clipId}`)?.value || Constants.FADE_CURVE_LINEAR;
                 const newStartTime = parseFloat(el.querySelector(`#clipStartTime-${clipId}`).value) || 0;
                 const newName = el.querySelector(`#clipNameInput-${clipId}`).value;
                 const newGain = parseFloat(gainInput.value) || Constants.DEFAULT_AUDIO_CLIP_GAIN;
@@ -3859,6 +3861,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 
                 if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, newFadeIn);
                 if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
+                if (track.setAudioClipFadeInCurve) track.setAudioClipFadeInCurve(clipId, newFadeInCurve);
+                if (track.setAudioClipFadeOutCurve) track.setAudioClipFadeOutCurve(clipId, newFadeOutCurve);
                 if (track.setAudioClipCrossfade) track.setAudioClipCrossfade(clipId, newCrossfade);
                 if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
                 if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
