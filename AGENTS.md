@@ -820,7 +820,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `MIN_AUDIO_CLIP_END_OFFSET` (-1) - End offset sentinel value
     - Bumped APP_VERSION to 0.38.0
   - `js/Track.js`: Added new methods:
-    - `setAudioClipStartOffset(clipId, startOffset)` - Sets trim start point with undo capture
+    - `setAudioClipStartOffset(clipId, startOffset)` - Sets trim start point with undo capture and clamping
     - `getAudioClipStartOffset(clipId)` - Gets current start offset value
     - `setAudioClipEndOffset(clipId, endOffset)` - Sets trim end point with undo capture (-1 = full audio)
     - `getAudioClipEndOffset(clipId)` - Gets current end offset value
@@ -988,3 +988,34 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/tests.js`: Added test suite for fade in/out methods and constants
 - **Impact**: Users can now properly save fade in/out time and curve settings from the Audio Clip Editor, which affects how audio clips sound during playback with fades
 - **Version**: Bumped to 0.49.0
+
+#### Day 53: Track Groups Feature - Constants and State Management (2026-04-22)
+- **Feature**: Added Track Groups feature foundation - constants, state management, and main.js wiring for organizing tracks into groups with mute/solo capabilities
+- **Files Modified**:
+  - `js/constants.js`:
+    - Added Track Group Constants: `MAX_TRACK_GROUPS` (16), `DEFAULT_TRACK_GROUP_NAME`, `TRACK_GROUP_COLORS` array, `DEFAULT_TRACK_GROUP_COLOR`, `DEFAULT_TRACK_GROUP` object structure
+    - Bumped APP_VERSION to 0.51.0
+  - `js/state.js`:
+    - Added `trackGroupsState` array and `trackGroupIdCounter` state variables
+    - Added Track Groups State Getter/Setters:
+      - `getTrackGroupsState()` - Returns all track groups
+      - `getTrackGroupByIdState(id)` - Finds group by ID
+      - `addTrackGroupState(groupData)` - Creates new track group
+      - `setTrackGroupNameState(id, name)` - Updates group name
+      - `setTrackGroupColorState(id, color)` - Updates group color
+      - `addTrackToGroupState(groupId, trackId)` - Adds track to group
+      - `removeTrackFromGroupState(groupId, trackId)` - Removes track from group
+      - `setTrackGroupMutedState(id, muted)` - Sets group mute state
+      - `setTrackGroupSoloedState(id, soloed)` - Sets group solo state
+      - `removeTrackGroupState(id)` - Deletes a track group
+  - `js/main.js`:
+    - Added Track Groups imports from state.js
+    - Added Track Groups to appServices with all getter/setter functions
+- **Feature Details**:
+  - Track Groups allow organizing multiple tracks together for collective mute/solo operations
+  - Each group has: id, name, color, trackIds array, muted state, soloed state
+  - Groups support standard mute/solo behavior affecting all member tracks
+  - Visual styling uses blue as default color (distinguishing from track colors)
+  - Maximum 16 groups supported
+- **Backend Note**: The state management and constants are in place. UI integration (mixer group strips, context menu to create/manage groups) will be implemented in a future day.
+- **Version**: Bumped to 0.51.0
