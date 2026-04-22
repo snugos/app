@@ -99,6 +99,9 @@ export function setSoloedTrackIdState(id) { soloedTrackId = id; }
 export function isTrackRecordingState() { return isRecordingGlobal; }
 export function getRecordingTrackIdState() { return recordingTrackIdGlobal; }
 export function getRecordingStartTimeState() { return recordingStartTime; }
+export function setIsRecordingState(val) { isRecordingGlobal = !!val; }
+export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
+export function setRecordingStartTimeState(t) { recordingStartTime = t; }
 export function getActiveSequencerTrackIdState() { return activeSequencerTrackId; }
 export function getUndoStackState() { return undoStack; }
 export function getRedoStackState() { return redoStack; }
