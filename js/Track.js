@@ -9360,6 +9360,74 @@ export class Track {
         return clip ? (clip.crossfade !== undefined ? clip.crossfade : 0) : 0;
     }
 
+    // Set audio clip fade in time with undo capture
+    setAudioClipFadeIn(clipId, fadeIn) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        const clamped = Math.max(Constants.MIN_AUDIO_CLIP_FADE || 0, Math.min(Constants.MAX_AUDIO_CLIP_FADE || 10, fadeIn));
+        if (clip.fadeIn === clamped) return false;
+        this._captureUndoState(`Set fade in on clip "${clip.name}"`);
+        clip.fadeIn = clamped;
+        return true;
+    }
+
+    // Get audio clip fade in time
+    getAudioClipFadeIn(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeIn !== undefined ? clip.fadeIn : Constants.DEFAULT_AUDIO_CLIP_FADE_IN) : Constants.DEFAULT_AUDIO_CLIP_FADE_IN;
+    }
+    // Set audio clip fade out time with undo capture
+    setAudioClipFadeOut(clipId, fadeOut) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        const clamped = Math.max(Constants.MIN_AUDIO_CLIP_FADE || 0, Math.min(Constants.MAX_AUDIO_CLIP_FADE || 10, fadeOut));
+        if (clip.fadeOut === clamped) return false;
+        this._captureUndoState(`Set fade out on clip "${clip.name}"`);
+        clip.fadeOut = clamped;
+        return true;
+    }
+
+    // Get audio clip fade out time
+    getAudioClipFadeOut(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeOut !== undefined ? clip.fadeOut : Constants.DEFAULT_AUDIO_CLIP_FADE_OUT) : Constants.DEFAULT_AUDIO_CLIP_FADE_OUT;
+    }
+
+    // Set audio clip fade in curve with undo capture
+    setAudioClipFadeInCurve(clipId, curve) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        const validCurve = Constants.FADE_CURVES.includes(curve) ? curve : Constants.DEFAULT_FADE_IN_CURVE;
+        if (clip.fadeInCurve === validCurve) return false;
+        this._captureUndoState(`Set fade in curve on clip "${clip.name}"`);
+        clip.fadeInCurve = validCurve;
+        return true;
+    }
+
+    // Get audio clip fade in curve
+    getAudioClipFadeInCurve(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeInCurve !== undefined ? clip.fadeInCurve : Constants.DEFAULT_FADE_IN_CURVE) : Constants.DEFAULT_FADE_IN_CURVE;
+    }
+
+
+    // Set audio clip fade out curve with undo capture
+    setAudioClipFadeOutCurve(clipId, curve) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        const validCurve = Constants.FADE_CURVES.includes(curve) ? curve : Constants.DEFAULT_FADE_OUT_CURVE;
+        if (clip.fadeOutCurve === validCurve) return false;
+        this._captureUndoState(`Set fade out curve on clip "${clip.name}"`);
+        clip.fadeOutCurve = validCurve;
+        return true;
+    }
+    // Get audio clip fade out curve
+    getAudioClipFadeOutCurve(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.fadeOutCurve !== undefined ? clip.fadeOutCurve : Constants.DEFAULT_FADE_OUT_CURVE) : Constants.DEFAULT_FADE_OUT_CURVE;
+    }
+
+
 
     // Set audio clip reverse with undo capture
     setAudioClipReverse(clipId, reverse) {

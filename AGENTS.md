@@ -970,3 +970,21 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - Send Track Constants Tests: Validates MAX_SEND_TRACKS, DEFAULT_SEND_LEVEL, SEND_LEVEL_MIN/MAX, DEFAULT_SEND_TRACK structure
 - **Feature Details**: These tests cover constants that were implemented but had no corresponding unit tests, ensuring consistency between constants definitions and their usage in Track.js and UI code
 - **Version**: No bump needed (test coverage improvement)
+
+#### Day 51: Audio Clip Fade In/Out Methods (2026-04-22)
+- **Bug Fix**: Added missing audio clip fade in/out methods to Track.js
+- **Issue**: The Audio Clip Editor UI was calling methods like `track.setAudioClipFadeIn`, `track.setAudioClipFadeOut`, `track.setAudioClipFadeInCurve`, and `track.setAudioClipFadeOutCurve` but these methods were never implemented in Track.js, causing the fade settings to not be saved
+- **Files Modified**:
+  - `js/Track.js`: Added new methods after `getAudioClipCrossfade`:
+    - `setAudioClipFadeIn(clipId, fadeIn)` - Sets fade in time with undo capture and clamping
+    - `getAudioClipFadeIn(clipId)` - Gets fade in time (defaults to 0)
+    - `setAudioClipFadeOut(clipId, fadeOut)` - Sets fade out time with undo capture and clamping
+    - `getAudioClipFadeOut(clipId)` - Gets fade out time (defaults to 0)
+    - `setAudioClipFadeInCurve(clipId, curve)` - Sets fade in curve (linear/exponential) with undo capture
+    - `getAudioClipFadeInCurve(clipId)` - Gets fade in curve (defaults to linear)
+    - `setAudioClipFadeOutCurve(clipId, curve)` - Sets fade out curve with undo capture
+    - `getAudioClipFadeOutCurve(clipId)` - Gets fade out curve (defaults to linear)
+  - `js/constants.js`: Bumped APP_VERSION to 0.49.0
+  - `js/tests.js`: Added test suite for fade in/out methods and constants
+- **Impact**: Users can now properly save fade in/out time and curve settings from the Audio Clip Editor, which affects how audio clips sound during playback with fades
+- **Version**: Bumped to 0.49.0

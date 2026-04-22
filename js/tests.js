@@ -377,3 +377,102 @@ export function getTestRunner() {
 if (typeof window !== 'undefined') {
     window.runSnugOSTests = runTests;
 }
+// Day 51: Audio Clip Fade In/Out Tests
+function testAudioClipFadeMethods() {
+    const results = [];
+    
+    // Test setAudioClipFadeIn exists
+    results.push({
+        test: 'setAudioClipFadeIn method exists',
+        passed: typeof track.setAudioClipFadeIn === 'function',
+        expected: 'function',
+        got: typeof track.setAudioClipFadeIn
+    });
+    
+    // Test getAudioClipFadeIn exists
+    results.push({
+        test: 'getAudioClipFadeIn method exists',
+        passed: typeof track.getAudioClipFadeIn === 'function',
+        expected: 'function',
+        got: typeof track.getAudioClipFadeIn
+    });
+    
+    // Test setAudioClipFadeOut exists
+    results.push({
+        test: 'setAudioClipFadeOut method exists',
+        passed: typeof track.setAudioClipFadeOut === 'function',
+        expected: 'function',
+        got: typeof track.setAudioClipFadeOut
+    });
+    
+    // Test getAudioClipFadeOut exists
+    results.push({
+        test: 'getAudioClipFadeOut method exists',
+        passed: typeof track.getAudioClipFadeOut === 'function',
+        expected: 'function',
+        got: typeof track.getAudioClipFadeOut
+    });
+    
+    // Test setAudioClipFadeInCurve exists
+    results.push({
+        test: 'setAudioClipFadeInCurve method exists',
+        passed: typeof track.setAudioClipFadeInCurve === 'function',
+        expected: 'function',
+        got: typeof track.setAudioClipFadeInCurve
+    });
+    
+    // Test getAudioClipFadeInCurve exists
+    results.push({
+        test: 'getAudioClipFadeInCurve method exists',
+        passed: typeof track.getAudioClipFadeInCurve === 'function',
+        expected: 'function',
+        got: typeof track.getAudioClipFadeInCurve
+    });
+    
+    // Test setAudioClipFadeOutCurve exists
+    results.push({
+        test: 'setAudioClipFadeOutCurve method exists',
+        passed: typeof track.setAudioClipFadeOutCurve === 'function',
+        expected: 'function',
+        got: typeof track.setAudioClipFadeOutCurve
+    });
+    
+    // Test getAudioClipFadeOutCurve exists
+    results.push({
+        test: 'getAudioClipFadeOutCurve method exists',
+        passed: typeof track.getAudioClipFadeOutCurve === 'function',
+        expected: 'function',
+        got: typeof track.getAudioClipFadeOutCurve
+    });
+    
+    // Test constants exist
+    results.push({
+        test: 'DEFAULT_AUDIO_CLIP_FADE_IN constant exists',
+        passed: Constants.DEFAULT_AUDIO_CLIP_FADE_IN === 0,
+        expected: 0,
+        got: Constants.DEFAULT_AUDIO_CLIP_FADE_IN
+    });
+    
+    results.push({
+        test: 'DEFAULT_AUDIO_CLIP_FADE_OUT constant exists',
+        passed: Constants.DEFAULT_AUDIO_CLIP_FADE_OUT === 0,
+        expected: 0,
+        got: Constants.DEFAULT_AUDIO_CLIP_FADE_OUT
+    });
+    
+    results.push({
+        test: 'MAX_AUDIO_CLIP_FADE constant exists',
+        passed: Constants.MAX_AUDIO_CLIP_FADE === 10,
+        expected: 10,
+        got: Constants.MAX_AUDIO_CLIP_FADE
+    });
+    
+    results.push({
+        test: 'FADE_CURVES array exists with linear and exponential',
+        passed: Array.isArray(Constants.FADE_CURVES) && Constants.FADE_CURVES.includes('linear') && Constants.FADE_CURVES.includes('exponential'),
+        expected: '["linear", "exponential"]',
+        got: JSON.stringify(Constants.FADE_CURVES)
+    });
+    
+    return results;
+}

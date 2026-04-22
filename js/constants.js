@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.48.0"; // Day 48: Automation Lane Mixer Integration - Added volume automation lane controls to each track strip in Mixer window with parameter selector, value display, and click-to-add/move automation points
+export const APP_VERSION = "0.49.0"; // Day 51: Audio Clip Fade In/Out Methods - Added volume automation lane controls to each track strip in Mixer window with parameter selector, value display, and click-to-add/move automation points
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
