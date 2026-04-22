@@ -750,6 +750,13 @@ export async function reconstructDAWInternal(projectData, isUndoRedo = false) {
     try { // --- Global Settings ---
         const gs = projectData.globalSettings || {};
         Tone.Transport.bpm.value = Number.isFinite(gs.tempo) ? gs.tempo : 120;
+        // Restore time signature
+        if (gs.timeSignature && typeof gs.timeSignature === 'object') {
+            const ts = gs.timeSignature;
+            setTimeSignatureState(ts.numerator || 4, ts.denominator || 4);
+        } else {
+            setTimeSignatureState(4, 4); // Default to 4/4
+        }
         setMasterGainValueState(Number.isFinite(gs.masterVolume) ? gs.masterVolume : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0);
         if (appServices.setActualMasterVolume) appServices.setActualMasterVolume(getMasterGainValueState());
         setPlaybackModeStateInternal(gs.playbackMode === 'timeline' || gs.playbackMode === 'sequencer' ? gs.playbackMode : 'sequencer');

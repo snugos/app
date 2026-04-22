@@ -3511,6 +3511,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
         const gain = clip.gain !== undefined ? clip.gain : Constants.DEFAULT_AUDIO_CLIP_GAIN;
         const gainDb = gain > 0 ? (20 * Math.log10(gain)).toFixed(1) : '-∞';
         const playbackRate = clip.playbackRate !== undefined ? clip.playbackRate : Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
+        const startOffset = clip.startOffset !== undefined ? clip.startOffset : Constants.DEFAULT_AUDIO_CLIP_START_OFFSET;
+        const endOffset = clip.endOffset !== undefined ? clip.endOffset : Constants.DEFAULT_AUDIO_CLIP_END_OFFSET;
         
         return `<div id="audioClipEditorContent-${clipId}" class="p-3 space-y-4 text-sm">
             <h3 class="text-base font-semibold dark:text-slate-200">Audio Clip Editor</h3>
@@ -3531,6 +3533,30 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                     <label class="text-xs text-zinc-400">Duration (s)</label>
                     <input type="number" id="clipDuration-${clipId}" value="${duration.toFixed(2)}" step="0.01" min="0.1"
                         class="w-full px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-sm" readonly>
+                </div>
+            </div>
+            
+            <div class="space-y-1">
+                <label class="text-xs text-zinc-400">Source Trim</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-500">Start Offset (s)</label>
+                        <div class="flex items-center gap-1">
+                            <input type="range" id="clipStartOffsetSlider-${clipId}" min="0" max="${duration.toFixed(2)}" step="0.01" value="${startOffset.toFixed(2)}"
+                                class="flex-1 accent-cyan-500">
+                            <input type="number" id="clipStartOffsetInput-${clipId}" value="${startOffset.toFixed(2)}" step="0.01" min="0" max="${duration.toFixed(2)}"
+                                class="w-16 px-1 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-xs text-center">
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs text-zinc-500">End Offset (s) <span class="text-zinc-600">(-1=full)</span></label>
+                        <div class="flex items-center gap-1">
+                            <input type="range" id="clipEndOffsetSlider-${clipId}" min="-1" max="${duration.toFixed(2)}" step="0.01" value="${endOffset < 0 ? duration.toFixed(2) : endOffset.toFixed(2)}"
+                                class="flex-1 accent-cyan-500">
+                            <input type="number" id="clipEndOffsetInput-${clipId}" value="${endOffset < 0 ? -1 : endOffset.toFixed(2)}" step="0.01" min="-1" max="${duration.toFixed(2)}"
+                                class="w-16 px-1 py-1 bg-zinc-700 border border-zinc-600 rounded text-zinc-200 text-xs text-center">
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -3609,7 +3635,7 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
     }
 
     const editorWindow = localAppServices.createWindow(windowId, `Clip: ${name}`, buildClipEditorContent(), {
-        width: 380, height: 560, minWidth: 320, minHeight: 450, initialContentKey: windowId
+        width: 380, height: 620, minWidth: 320, minHeight: 500, initialContentKey: windowId
     });
 
     if (editorWindow?.element) {
@@ -3661,6 +3687,44 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
             };
             playbackRateSlider.addEventListener('input', updatePlaybackRateDisplay);
             playbackRateInput.addEventListener('input', () => { playbackRateSlider.value = parseFloat(playbackRateInput.value); updatePlaybackRateDisplay(); });
+        }
+        
+        // Sync slider and input for start offset
+        const startOffsetSlider = el.querySelector(`#clipStartOffsetSlider-${clipId}`);
+        const startOffsetInput = el.querySelector(`#clipStartOffsetInput-${clipId}`);
+        if (startOffsetSlider && startOffsetInput) {
+            startOffsetSlider.addEventListener('input', () => { startOffsetInput.value = parseFloat(startOffsetSlider.value).toFixed(2); });
+            startOffsetInput.addEventListener('input', () => { 
+                const val = parseFloat(startOffsetInput.value);
+                startOffsetSlider.value = val;
+                // Enforce: start offset cannot exceed end offset (if end offset is set)
+                const endVal = parseFloat(endOffsetInput.value);
+                if (!isNaN(endVal) && endVal >= 0 && val > endVal) {
+                    startOffsetInput.value = endVal.toFixed(2);
+                    startOffsetSlider.value = endVal;
+                }
+            });
+        }
+        
+        // Sync slider and input for end offset
+        const endOffsetSlider = el.querySelector(`#clipEndOffsetSlider-${clipId}`);
+        const endOffsetInput = el.querySelector(`#clipEndOffsetInput-${clipId}`);
+        if (endOffsetSlider && endOffsetInput) {
+            const updateEndOffsetDisplay = () => {
+                const r = parseFloat(endOffsetSlider.value);
+                endOffsetInput.value = r < 0 ? -1 : r.toFixed(2);
+            };
+            endOffsetSlider.addEventListener('input', updateEndOffsetDisplay);
+            endOffsetInput.addEventListener('input', () => {
+                const val = parseFloat(endOffsetInput.value);
+                const startVal = parseFloat(startOffsetInput.value);
+                // -1 means use full audio, otherwise must be >= start offset
+                if (val >= 0 && !isNaN(startVal) && val < startVal) {
+                    endOffsetInput.value = startVal.toFixed(2);
+                } else {
+                    endOffsetSlider.value = val;
+                }
+            });
         }
         
         // Clip color swatches
@@ -3732,6 +3796,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 const newName = el.querySelector(`#clipNameInput-${clipId}`).value;
                 const newGain = parseFloat(gainInput.value) || Constants.DEFAULT_AUDIO_CLIP_GAIN;
                 const newReverse = el.querySelector(`#clipReverse-${clipId}`)?.checked || false;
+                const newStartOffset = parseFloat(startOffsetInput.value) || 0;
+                const newEndOffset = parseFloat(endOffsetInput.value);
                 
                 if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, newFadeIn);
                 if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
@@ -3740,6 +3806,8 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 if (track.setAudioClipName) track.setAudioClipName(clipId, newName);
                 if (track.setAudioClipReverse) track.setAudioClipReverse(clipId, newReverse);
                 if (track.setAudioClipPlaybackRate) track.setAudioClipPlaybackRate(clipId, parseFloat(el.querySelector(`#clipPlaybackRateInput-${clipId}`)?.value) || Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE);
+                if (track.setAudioClipStartOffset) track.setAudioClipStartOffset(clipId, newStartOffset);
+                if (track.setAudioClipEndOffset) track.setAudioClipEndOffset(clipId, isNaN(newEndOffset) ? -1 : newEndOffset);
                 
                 showNotification(`Clip settings applied`, 1500);
                 editorWindow.close();

@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.37.0"; // Day 39: Mixer Track Color Indicator
+export const APP_VERSION = "0.38.0"; // Day 40: Audio Clip Start/End Offset Trim Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -236,6 +236,12 @@ export const DEFAULT_AUDIO_CLIP_REVERSE = false; // Default reverse state (false
 export const DEFAULT_AUDIO_CLIP_PLAYBACK_RATE = 1.0; // Default playback rate (normal speed)
 export const MIN_AUDIO_CLIP_PLAYBACK_RATE = 0.25;    // Minimum playback rate (0.25x - very slow)
 export const MAX_AUDIO_CLIP_PLAYBACK_RATE = 4.0;      // Maximum playback rate (4x - very fast)
+
+// Audio Clip Start/End Offset Constants (for trimming source audio)
+export const DEFAULT_AUDIO_CLIP_START_OFFSET = 0;    // Default start offset in seconds (0 = beginning)
+export const MIN_AUDIO_CLIP_START_OFFSET = 0;         // Minimum start offset
+export const DEFAULT_AUDIO_CLIP_END_OFFSET = -1;       // Default end offset (-1 = use full audio length)
+export const MIN_AUDIO_CLIP_END_OFFSET = -1;           // -1 means use full audio length (useAudioDuration)
 
 // Chord Mode constants
 export const CHORD_TYPES = {

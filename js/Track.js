@@ -2255,9 +2255,25 @@ export class Track {
                                     player.playbackRate = clipPlaybackRate;
                                 }
                                 
+                                // Calculate source start offset (trim start of audio)
+                                // clip.startOffset defines where in the source audio to start playback
+                                const clipStartOffset = clip.startOffset !== undefined && clip.startOffset > 0 ? clip.startOffset : 0;
+                                // offsetIntoSource is the offset from the beginning of the clip's timeline position
+                                // We add clipStartOffset to skip the trimmed portion at the start
+                                const sourceStartOffset = offsetIntoSource + clipStartOffset;
+                                
+                                // Calculate effective duration based on end offset (trim end of audio)
+                                // clip.endOffset = -1 means use full audio (no trim at end)
+                                // clip.endOffset >= 0 means trim to that position in the source audio
+                                let effectivePlayDuration = playDurationInWindow;
+                                if (clip.endOffset !== undefined && clip.endOffset >= 0) {
+                                    // Calculate the total playable duration from startOffset to endOffset
+                                    const totalSourceDuration = clip.endOffset - clipStartOffset;
+                                    effectivePlayDuration = Math.min(playDurationInWindow, Math.max(0, totalSourceDuration - offsetIntoSource));
+                                }
+                                
                                 // Calculate actual fade times based on clip playback window
                                 const clipStartInWindow = effectivePlayStart - clipActualStart;
-                                const clipEndInWindow = effectivePlayStart + clip.duration;
                                 const fadeIn = clip.fadeIn || 0;
                                 const fadeOut = clip.fadeOut || 0;
                                 
@@ -2267,7 +2283,7 @@ export class Track {
                                 
                                 // Apply fade in (ramp to 1 over fadeIn duration)
                                 if (fadeIn > 0 && clipStartInWindow < fadeIn) {
-                                    const actualFadeIn = Math.min(fadeIn, playDurationInWindow);
+                                    const actualFadeIn = Math.min(fadeIn, effectivePlayDuration);
                                     fadeGain.gain.linearRampToValueAtTime(clipGain, effectivePlayStart + actualFadeIn);
                                 } else {
                                     fadeGain.gain.setValueAtTime(clipGain, effectivePlayStart);
@@ -2275,14 +2291,14 @@ export class Track {
                                 
                                 // Apply fade out (ramp to 0 near end)
                                 if (fadeOut > 0) {
-                                    const fadeOutStart = effectivePlayStart + playDurationInWindow - fadeOut;
+                                    const fadeOutStart = effectivePlayStart + effectivePlayDuration - fadeOut;
                                     if (fadeOutStart > effectivePlayStart) {
                                         fadeGain.gain.setValueAtTime(clipGain, fadeOutStart);
-                                        fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + playDurationInWindow);
+                                        fadeGain.gain.linearRampToValueAtTime(0, effectivePlayStart + effectivePlayDuration);
                                     }
                                 }
                                 
-                                player.start(effectivePlayStart, offsetIntoSource, playDurationInWindow);
+                                player.start(effectivePlayStart, sourceStartOffset, effectivePlayDuration);
                             };
                             player.onerror = (err) => { console.error(`[Track ${this.id}] Player error for clip ${clip.id}:`, err); URL.revokeObjectURL(url); if(this.clipPlayers.has(clip.id)){try{if(!player.disposed)player.dispose()}catch(e){}this.clipPlayers.delete(clip.id);} if(this.clipPlayers.has(`${clip.id}_gain`)){try{if(!fadeGain.disposed)fadeGain.dispose()}catch(e){}this.clipPlayers.delete(`${clip.id}_gain`);}}
                             await player.load(url);
@@ -2713,6 +2729,38 @@ export class Track {
         const clip = this.timelineClips.find(c => c.id === clipId);
         if (!clip) return Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
         return clip.playbackRate !== undefined ? clip.playbackRate : Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE;
+    }
+
+    setAudioClipStartOffset(clipId, startOffset) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Start Offset on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.startOffset = Math.max(Constants.MIN_AUDIO_CLIP_START_OFFSET, parseFloat(startOffset) || 0);
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipStartOffset(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.startOffset !== undefined ? clip.startOffset : Constants.DEFAULT_AUDIO_CLIP_START_OFFSET) : Constants.DEFAULT_AUDIO_CLIP_START_OFFSET;
+    }
+
+    setAudioClipEndOffset(clipId, endOffset) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set End Offset on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.endOffset = parseFloat(endOffset) || Constants.DEFAULT_AUDIO_CLIP_END_OFFSET; // -1 means use full audio
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipEndOffset(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.endOffset !== undefined ? clip.endOffset : Constants.DEFAULT_AUDIO_CLIP_END_OFFSET) : Constants.DEFAULT_AUDIO_CLIP_END_OFFSET;
     }
 
     dispose() {
