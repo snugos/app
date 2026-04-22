@@ -473,7 +473,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Undo Support: Both operations capture state for undo/redo
   - Visual Feedback: Notifications show count of notes affected
 - **Backend Note**: The `shiftSequenceNotes()` and `quantizeSequence()` methods already existed in Track.js but had no UI wiring
-- **Usage**: Right-click on sequencer grid, use Transpose or Timing sections in context menu
+- **Usage**: Right-click on sequencer grid, use Transpose or Quantize sections in context menu
 - **Version**: Bumped to 0.19.0
 
 #### Day 22: Ghost Notes Feature (2026-04-20)
@@ -561,7 +561,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `DEFAULT_NOTE_PROBABILITY` constant (1.0)
     - `MIN_NOTE_PROBABILITY` (0)
     - `MAX_NOTE_PROBABILITY` (1.0)
-  - `style.css`: Added `.probability-editor-lane` styling
+  - `js/Track.js`: Modified audio clip playback scheduling to apply clip gain during fade in/out
 - **Feature Details**:
   - Probability Toggle: "Prob" checkbox in sequencer toolbar to show/hide probability editor
   - Visual Bars: Height represents maximum probability of active notes in each column
@@ -603,7 +603,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Feature**: Added gain control and normalize functionality to the Audio Clip Editor
 - **Files Modified**:
   - `js/Track.js`: Added new methods:
-    - `setAudioClipGain(clipId, gain)` - Sets gain (0-4 range) for audio clip playback
+    - `setAudioClipGain(clipId, gain)` - Sets clip gain (0-4 range) for audio clip playback
     - `getAudioClipGain(clipId)` - Gets current gain value for a clip
     - `normalizeAudioClip(clipId)` - Analyzes audio peaks and sets gain to normalize to 0dB
   - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
@@ -623,9 +623,9 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - dB Display: Real-time display of gain in decibels (-∞ to +12dB)
   - Normalize: Analyzes audio peaks and calculates gain to bring maximum to 0dB
   - Apply Button: Saves gain setting along with fade in/out and position changes
-  - Playback Integration: Clip gain is applied during audio scheduling with fade in/out
+  - Playback Integration: Gain is applied during audio scheduling with fade in/out
 - **Backend Note**: The audio clip gain is applied via a FadeGain node during playback scheduling
-- **Usage**: Double-click an audio clip in the Timeline to open the Audio Clip Editor, adjust gain or click Normalize
+- **Usage**: Double-click an audio clip in Timeline to open the Audio Clip Editor, adjust gain or click Normalize
 - **Version**: Bumped to 0.25.0
 
 #### Day 30: Timeline Markers UI Fix (2026-04-21)
@@ -809,6 +809,41 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Consistency: Matches the color indicator style used in the Timeline view
 - **Usage**: Open Mixer window, each track strip shows its color at top and on the track name
 - **Version**: Bumped to 0.37.0
+
+#### Day 40: Audio Clip Start/End Offset Trim Feature (2026-04-21)
+- **Feature**: Added Source Trim controls to the Audio Clip Editor for trimming the beginning and end of audio clips
+- **Files Modified**:
+  - `js/constants.js`: Added new constants:
+    - `DEFAULT_AUDIO_CLIP_START_OFFSET` (0) - Default start offset in seconds
+    - `MIN_AUDIO_CLIP_START_OFFSET` (0) - Minimum start offset
+    - `DEFAULT_AUDIO_CLIP_END_OFFSET` (-1) - Default end offset (-1 = use full audio)
+    - `MIN_AUDIO_CLIP_END_OFFSET` (-1) - End offset sentinel value
+    - Bumped APP_VERSION to 0.38.0
+  - `js/Track.js`: Added new methods:
+    - `setAudioClipStartOffset(clipId, startOffset)` - Sets trim start point with undo capture
+    - `getAudioClipStartOffset(clipId)` - Gets current start offset value
+    - `setAudioClipEndOffset(clipId, endOffset)` - Sets trim end point with undo capture (-1 = full audio)
+    - `getAudioClipEndOffset(clipId)` - Gets current end offset value
+    - Modified audio clip scheduling in `schedulePlayback()` to use startOffset and endOffset when calculating playback parameters
+  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
+    - Added "Source Trim" section with Start Offset and End Offset slider/input controls
+    - Start Offset: Slider from 0 to clip duration (cyan accent)
+    - End Offset: Slider from -1 to clip duration (-1 displays as -1, means use full audio)
+    - Added validation: start cannot exceed end, end must be >= start or -1
+    - Added sync handlers for slider/input pairs
+    - Apply button now saves startOffset and endOffset values
+    - Window height increased from 560px to 620px to accommodate new controls
+  - `js/state.js`: Fixed time signature restoration during project load (bug fix in existing code)
+- **Feature Details**:
+  - Start Offset: How many seconds into the source audio to begin playback
+  - End Offset: Where in the source audio to end playback (-1 = use entire audio)
+  - UI shows "(s)" label for seconds and "(-1=full)" hint for end offset
+  - Validates that start < end when end offset is set (>= 0)
+  - Undo support: Changes are captured for undo/redo
+  - Playback Integration: Start/end offsets applied during audio scheduling
+- **Backend Note**: The actual trimming is implemented by adjusting the offset and duration passed to `player.start()` in the audio scheduling code. `sourceStartOffset = offsetIntoSource + clipStartOffset` and `effectivePlayDuration` is reduced if `clip.endOffset` is set.
+- **Usage**: Double-click an audio clip in Timeline to open editor, adjust Start Offset and End Offset sliders in "Source Trim" section
+- **Version**: Bumped to 0.38.0
 
 ## Code Style Guidelines
 
