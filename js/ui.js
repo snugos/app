@@ -12,7 +12,6 @@ import {
 } from './eventHandlers.js';
 import { getTracksState } from './state.js';
 import { getAudio } from './db.js';
-import { getAudio } from './db.js';
 
 
 // Module-level state for appServices, to be set by main.js

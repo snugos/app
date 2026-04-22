@@ -8,6 +8,18 @@ export const MAX_BARS = 512; // Maximum number of bars a sequence can have
 export const MIN_TEMPO = 0; // Minimum tempo in BPM
 export const MAX_TEMPO = 999; // Maximum tempo in BPM
 
+// Time Signature constants
+export const TIME_SIG_MIN_NUMERATOR = 1;
+export const TIME_SIG_MAX_NUMERATOR = 16;
+export const TIME_SIG_MIN_DENOMINATOR = 1;
+export const TIME_SIG_MAX_DENOMINATOR = 16;
+export const DEFAULT_TIME_SIGNATURE_NUMERATOR = 4;
+export const DEFAULT_TIME_SIGNATURE_DENOMINATOR = 4;
+export const DEFAULT_TIME_SIGNATURE = {
+    numerator: DEFAULT_TIME_SIGNATURE_NUMERATOR,
+    denominator: DEFAULT_TIME_SIGNATURE_DENOMINATOR
+};
+
 // Timeline constants
 export const TIMELINE_BEAT_WIDTH = 40; // pixels per beat
 export const TIMELINE_TRACK_HEIGHT = 60; // pixels per track lane

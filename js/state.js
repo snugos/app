@@ -156,6 +156,39 @@ export function setChordModeTypeState(type) { chordModeState.type = type || 'maj
 export function getChordModeLockState() { return chordModeState.lockChord; }
 export function setChordModeLockState(lock) { chordModeState.lockChord = !!lock; }
 
+// Time Signature State
+let timeSignatureState = { ...Constants.DEFAULT_TIME_SIGNATURE };
+
+export function getTimeSignatureState() { return { ...timeSignatureState }; }
+
+export function setTimeSignatureState(numerator, denominator) {
+    const num = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(Constants.TIME_SIG_MAX_NUMERATOR, parseInt(numerator) || 4));
+    const denom = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(Constants.TIME_SIG_MAX_DENOMINATOR, parseInt(denominator) || 4));
+    timeSignatureState = { numerator: num, denominator: denom };
+    // Apply to Tone.Transport
+    if (typeof Tone !== 'undefined' && Tone.Transport) {
+        Tone.Transport.timeSignature = [num, denom];
+    }
+}
+
+export function getTimeSignatureNumeratorState() { return timeSignatureState.numerator; }
+export function setTimeSignatureNumeratorState(numerator) {
+    const num = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(Constants.TIME_SIG_MAX_NUMERATOR, parseInt(numerator) || 4));
+    timeSignatureState.numerator = num;
+    if (typeof Tone !== 'undefined' && Tone.Transport) {
+        Tone.Transport.timeSignature = [num, timeSignatureState.denominator];
+    }
+}
+
+export function getTimeSignatureDenominatorState() { return timeSignatureState.denominator; }
+export function setTimeSignatureDenominatorState(denominator) {
+    const denom = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(Constants.TIME_SIG_MAX_DENOMINATOR, parseInt(denominator) || 4));
+    timeSignatureState.denominator = denom;
+    if (typeof Tone !== 'undefined' && Tone.Transport) {
+        Tone.Transport.timeSignature = [timeSignatureState.numerator, denom];
+    }
+}
+
 // Ghost Track State (for showing notes from other tracks in sequencer)
 let ghostTrackIdState = null; // null = no ghost track, or track ID
 
@@ -567,6 +600,7 @@ export function gatherProjectDataInternal() {
             version: Constants.APP_VERSION || "5.9.1", // Use a constant for app version
             globalSettings: {
                 tempo: Tone.Transport.bpm.value,
+                timeSignature: getTimeSignatureState(),
                 masterVolume: getMasterGainValueState(),
                 activeMIDIInputId: getActiveMIDIInputState() ? getActiveMIDIInputState().id : null,
                 soloedTrackId: getSoloedTrackIdState(),
