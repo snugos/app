@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.43.1"; // Day 47: Fixed duplicateTimelineClip method in Track.js (was missing from Day 46 implementation)
+export const APP_VERSION = "0.44.0"; // Day 47: Send Track State Functions - Added missing getSendTracksState, addSendTrackState, setSendTrackMutedState, getTrackSendsState, getTrackSendLevelState, setTrackSendLevelState to state.js
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

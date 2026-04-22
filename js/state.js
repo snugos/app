@@ -250,252 +250,49 @@ export function clearTimelineMarkersState() {
 // --- Setters for Centralized State (called internally or via appServices) ---
 export function addWindowToStoreState(id, instance) { openWindowsMap.set(id, instance); }
 export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
+
+// --- Send Tracks State Getters and Setters ---
+export function getSendTracksState() { return sendTracksState; }
+export function getSendTrackByIdState(id) { return sendTracksState.find(s => s.id === id); }
+export function addSendTrackState(sendData) {
+    const sendTrack = {
+        id: sendData.id,
+        name: sendData.name || `Send ${sendData.id}`,
+        effects: sendData.effects || [],
+        level: sendData.level !== undefined ? sendData.level : 1.0,
+        muted: sendData.muted || false
+    };
+    sendTracksState.push(sendTrack);
+    return sendTrack;
+}
+export function setSendTrackMutedState(sendId, muted) {
+    const send = sendTracksState.find(s => s.id === sendId);
+    if (send) {
+        send.muted = !!muted;
+        return true;
+    }
+    return false;
+}
+export function getTrackSendsState() { return trackSendsState; }
+export function getTrackSendLevelState(trackId, sendId) {
+    if (trackSendsState[trackId]) {
+        return trackSendsState[trackId][sendId] !== undefined ? trackSendsState[trackId][sendId] : 0;
+    }
+    return 0;
+}
+export function setTrackSendLevelState(trackId, sendId, level) {
+    if (!trackSendsState[trackId]) {
+        trackSendsState[trackId] = {};
+    }
+    trackSendsState[trackId][sendId] = Math.max(0, Math.min(1.2, parseFloat(level) || 0));
+}
+
+// --- Window Management ---
+export function getOpenWindowsState() { return openWindowsMap; }
+export function getWindowByIdState(id) { return openWindowsMap.get(id); }
+export function getHighestZState() { return highestZ; }
 export function setHighestZState(value) { highestZ = Number.isFinite(value) ? value : 100; }
 export function incrementHighestZState() { return ++highestZ; }
-
-export function setMasterEffectsState(newChain) { masterEffectsChainState = Array.isArray(newChain) ? newChain : []; }
-export function setMasterGainValueState(value) { masterGainValueState = Number.isFinite(value) ? value : (typeof Tone !== 'undefined' && Tone.dbToGain) ? Tone.dbToGain(0) : 1.0; }
-
-export function setMidiAccessState(access) { midiAccessGlobal = access; }
-export function setActiveMIDIInputState(input) { activeMIDIInputGlobal = input; }
-
-export function setLoadedZipFilesState(files) { loadedZipFilesGlobal = typeof files === 'object' && files !== null ? files : {}; }
-export function setSoundLibraryFileTreesState(trees) { soundLibraryFileTreesGlobal = typeof trees === 'object' && trees !== null ? trees : {}; }
-
-export function setCurrentLibraryNameState(name) { currentLibraryNameGlobal = name; }
-export function setCurrentSoundFileTreeState(tree) { currentSoundFileTreeGlobal = tree; }
-export function setCurrentSoundBrowserPathState(path) { currentSoundBrowserPathGlobal = Array.isArray(path) ? path : []; }
-export function setPreviewPlayerState(player) { previewPlayerGlobal = player; }
-
-export function setClipboardDataState(data) { clipboardDataGlobal = typeof data === 'object' && data !== null ? data : { type: null, data: null }; }
-
-export function setArmedTrackIdState(id) { armedTrackId = id; }
-export function setIsRecordingState(status) { isRecordingGlobal = !!status; }
-export function setRecordingTrackIdState(id) { recordingTrackIdGlobal = id; }
-export function setRecordingStartTimeState(time) { recordingStartTime = Number.isFinite(time) ? time : 0; }
-export function setActiveSequencerTrackIdState(id) { activeSequencerTrackId = id; }
-
-export function setPlaybackModeStateInternal(mode) {
-    const displayMode = typeof mode === 'string' ? mode.charAt(0).toUpperCase() + mode.slice(1) : 'Unknown';
-
-    if (mode === 'sequencer' || mode === 'timeline') {
-        if (globalPlaybackMode !== mode) {
-            if (appServices.captureStateForUndo) {
-                appServices.captureStateForUndo(`Set Playback Mode to ${displayMode}`);
-            } else {
-                captureStateForUndoInternal(`Set Playback Mode to ${displayMode}`); // Fallback
-            }
-            globalPlaybackMode = mode;
-
-            if (Tone.Transport.state === 'started') {
-                Tone.Transport.stop();
-            }
-            Tone.Transport.cancel(0); // Cancel all scheduled events
-
-            if (appServices.uiElementsCache?.playBtnGlobal) {
-                appServices.uiElementsCache.playBtnGlobal.textContent = 'Play';
-            } else {
-                console.warn("[State setPlaybackModeStateInternal] Play button UI element not found in cache.");
-            }
-            document.querySelectorAll('.sequencer-step-cell.playing').forEach(cell => cell.classList.remove('playing'));
-
-            const currentTracks = getTracksState();
-            try {
-                currentTracks.forEach(track => {
-                    if (track && track.type !== 'Audio' && typeof track.recreateToneSequence === 'function') {
-                        track.recreateToneSequence(true); // true to force restart
-                    }
-                    // If switching to sequencer mode, stop any timeline-based audio clip playback
-                    if (globalPlaybackMode === 'sequencer' && track && track.type === 'Audio' && typeof track.stopPlayback === 'function') {
-                        track.stopPlayback();
-                    }
-                });
-            } catch (error) {
-                console.error("[State setPlaybackModeStateInternal] Error during track sequence/playback re-initialization:", error);
-                if(appServices.showNotification) appServices.showNotification("Error updating track playback for new mode.", 3000);
-            }
-
-
-            if (appServices.onPlaybackModeChange && typeof appServices.onPlaybackModeChange === 'function') {
-                appServices.onPlaybackModeChange(globalPlaybackMode);
-            }
-             if (appServices.renderTimeline && typeof appServices.renderTimeline === 'function') {
-                appServices.renderTimeline();
-            }
-        } else {
-        }
-    } else {
-        console.warn(`[State setPlaybackModeStateInternal] Invalid playback mode attempted: ${mode}. Expected 'sequencer' or 'timeline'.`);
-    }
-}
-export { setPlaybackModeStateInternal as setPlaybackModeState }; // Export with the name expected by other modules
-
-// --- Track Management ---
-export async function addTrackToStateInternal(type, initialData = null, isUserAction = true) {
-    // _isUserActionPlaceholder is used by UI event handlers to signify a brand new track from user action,
-    // vs. a track being added during project load/undo/redo.
-    const isBrandNewUserTrack = isUserAction && (!initialData || initialData._isUserActionPlaceholder);
-
-    if (isBrandNewUserTrack) {
-        captureStateForUndoInternal(`Add ${type} Track`);
-        if (initialData && initialData._isUserActionPlaceholder) initialData = null; // Clear placeholder
-    }
-
-    let newTrack;
-    try {
-        let newTrackId;
-        if (initialData && initialData.id != null && Number.isFinite(initialData.id)) {
-            newTrackId = initialData.id;
-            if (newTrackId >= trackIdCounter) trackIdCounter = newTrackId + 1;
-        } else {
-            newTrackId = trackIdCounter++;
-        }
-
-        const trackAppServices = { // Pass necessary services to the Track instance
-            getSoloedTrackId: getSoloedTrackIdState,
-            captureStateForUndo: captureStateForUndoInternal,
-            updateTrackUI: appServices.updateTrackUI, // These come from main.js
-            highlightPlayingStep: appServices.highlightPlayingStep,
-            autoSliceSample: appServices.autoSliceSample,
-            closeAllTrackWindows: appServices.closeAllTrackWindows,
-            getMasterEffectsBusInputNode: appServices.getMasterEffectsBusInputNode,
-            showNotification: appServices.showNotification,
-            effectsRegistryAccess: appServices.effectsRegistryAccess,
-            renderTimeline: appServices.renderTimeline,
-            getPlaybackMode: getPlaybackModeState,
-            getTrackById: getTrackByIdState, // Track might need to interact with other tracks (e.g. sidechaining in future)
-            getTracks: getTracksState
-        };
-
-        newTrack = new Track(newTrackId, type, initialData, trackAppServices);
-        tracks.push(newTrack);
-
-        if (typeof newTrack.initializeAudioNodes === 'function') {
-            await newTrack.initializeAudioNodes();
-        }
-        // fullyInitializeAudioResources handles loading samples from DB/URL etc.
-        await newTrack.fullyInitializeAudioResources();
-
-        if (isBrandNewUserTrack && appServices.showNotification) {
-            appServices.showNotification(`${newTrack.name} added successfully.`, 2000);
-        }
-        if (isBrandNewUserTrack && appServices.openTrackInspectorWindow) {
-             // Delay opening inspector slightly to ensure track is fully set up
-            setTimeout(() => appServices.openTrackInspectorWindow(newTrack.id), 50);
-            
-            // Also open sequencer for applicable track types
-            if (newTrack.type !== 'Audio' && appServices.openTrackSequencerWindow) {
-                setTimeout(() => appServices.openTrackSequencerWindow(newTrack.id, true), 150);
-            }
-        }
-
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.renderTimeline) appServices.renderTimeline();
-
-    } catch (error) {
-        console.error(`[State addTrackToStateInternal] Error adding ${type} track:`, error);
-        if (appServices.showNotification) {
-            appServices.showNotification(`Failed to add ${type} track: ${error.message}`, 4000);
-        }
-        // If track creation failed, ensure it's not in the tracks array if partially added
-        if (newTrack && tracks.includes(newTrack)) {
-            tracks = tracks.filter(t => t.id !== newTrack.id);
-        }
-        return null; // Indicate failure
-    }
-    return newTrack;
-}
-
-export async function duplicateTrackToStateInternal(sourceTrackId) {
-    try {
-        const sourceTrack = tracks.find(t => t.id === sourceTrackId);
-        if (!sourceTrack) {
-            console.warn(`[State duplicateTrackToStateInternal] Source track ID ${sourceTrackId} not found.`);
-            if (appServices.showNotification) appServices.showNotification('Source track not found for duplication.', 2000);
-            return null;
-        }
-
-        // Create the duplicate using the track's own duplicateTrack method
-        const duplicatedTrack = sourceTrack.duplicateTrack();
-
-        // Add the duplicated track to state
-        const newTrackId = duplicatedTrack.id;
-
-        // Initialize audio nodes for the new track
-        if (typeof duplicatedTrack.initializeAudioNodes === 'function') {
-            await duplicatedTrack.initializeAudioNodes();
-        }
-
-        // Fully initialize audio resources (load samples from DB/URL)
-        await duplicatedTrack.fullyInitializeAudioResources();
-
-        // Add to tracks array
-        tracks.push(duplicatedTrack);
-
-        if (appServices.showNotification) appServices.showNotification(`"${duplicatedTrack.name}" duplicated.`, 2000);
-
-        // Open inspector for the new track
-        if (appServices.openTrackInspectorWindow) {
-            setTimeout(() => appServices.openTrackInspectorWindow(duplicatedTrack.id), 50);
-        }
-
-        // Also open sequencer for applicable track types (non-Audio)
-        if (duplicatedTrack.type !== 'Audio' && appServices.openTrackSequencerWindow) {
-            setTimeout(() => appServices.openTrackSequencerWindow(duplicatedTrack.id, true), 150);
-        }
-
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.renderTimeline) appServices.renderTimeline();
-        if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-
-        return duplicatedTrack;
-    } catch (error) {
-        console.error(`[State duplicateTrackToStateInternal] Error duplicating track ${sourceTrackId}:`, error);
-        if (appServices.showNotification) appServices.showNotification(`Error duplicating track: ${error.message}`, 3000);
-        return null;
-    }
-}
-
-export function removeTrackFromStateInternal(trackId) {
-    try {
-        const trackIndex = tracks.findIndex(t => t.id === trackId);
-        if (trackIndex === -1) {
-            console.warn(`[State removeTrackFromStateInternal] Track ID ${trackId} not found for removal.`);
-            return;
-        }
-
-        const track = tracks[trackIndex];
-        captureStateForUndoInternal(`Remove Track "${track.name}"`);
-
-        if (typeof track.dispose === 'function') {
-            track.dispose();
-        }
-        tracks.splice(trackIndex, 1);
-
-        if (armedTrackId === trackId) setArmedTrackIdState(null);
-        if (soloedTrackId === trackId) {
-            setSoloedTrackIdState(null);
-            // Re-evaluate solo states for all other tracks
-            tracks.forEach(t => {
-                if (t) {
-                    t.isSoloed = false; // Explicitly set, then applySoloState will use global state
-                    if (typeof t.applySoloState === 'function') t.applySoloState();
-                    if (appServices.updateTrackUI) appServices.updateTrackUI(t.id, 'soloChanged');
-                }
-            });
-        }
-        if (activeSequencerTrackId === trackId) setActiveSequencerTrackIdState(null);
-
-        if (appServices.showNotification) appServices.showNotification(`Track "${track.name}" removed.`, 2000);
-        if (appServices.updateMixerWindow) appServices.updateMixerWindow();
-        if (appServices.updateUndoRedoButtonsUI) appServices.updateUndoRedoButtonsUI();
-        if (appServices.renderTimeline) appServices.renderTimeline();
-
-    } catch (error) {
-        console.error(`[State removeTrackFromStateInternal] Error removing track ${trackId}:`, error);
-        if (appServices.showNotification) appServices.showNotification(`Error removing track: ${error.message}`, 3000);
-    }
-}
 
 // --- Master Effects Chain Management ---
 export function addMasterEffectToState(effectType, initialParams) {
