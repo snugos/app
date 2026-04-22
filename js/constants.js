@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.38.0"; // Day 40: Audio Clip Start/End Offset Trim Feature
+export const APP_VERSION = "0.39.0"; // Day 41: Audio Clip Split Feature
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

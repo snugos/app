@@ -2882,6 +2882,25 @@ export function renderTimeline() {
                         localAppServices.openAudioClipEditorWindow(trackId, clipId);
                     }
                 }},
+                { label: 'Split Clip...', action: () => {
+                    const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+                    if (!track) return;
+                    const clip = track.timelineClips?.find(c => c.id === clipId);
+                    if (!clip) return;
+                    const splitTimeStr = prompt(`Enter split time in seconds for "${clip.name || 'Clip'}":\n(Clip starts at ${clip.startTime.toFixed(2)}s, ends at ${(clip.startTime + clip.duration).toFixed(2)}s)`, (clip.startTime + clip.duration / 2).toFixed(2));
+                    if (splitTimeStr === null) return;
+                    const splitTime = parseFloat(splitTimeStr);
+                    if (isNaN(splitTime) || splitTime <= clip.startTime || splitTime >= clip.startTime + clip.duration) {
+                        showNotification('Invalid split time', 1500);
+                        return;
+                    }
+                    if (track.splitAudioClip) {
+                        const newClip = track.splitAudioClip(clipId, splitTime);
+                        if (newClip) {
+                            showNotification(`Clip split at ${splitTime.toFixed(2)}s`, 1500);
+                        }
+                    }
+                }},
                 { label: 'Delete Clip', action: () => {
                     if (trackId) {
                         const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;

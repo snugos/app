@@ -2758,6 +2758,60 @@ export class Track {
         return false;
     }
 
+    splitAudioClip(clipId, splitTime) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (!clip) {
+            if (this.appServices.showNotification) this.appServices.showNotification('Clip not found', 1500);
+            return null;
+        }
+        
+        if (clip.type !== 'audio') {
+            if (this.appServices.showNotification) this.appServices.showNotification('Can only split audio clips', 1500);
+            return null;
+        }
+        
+        const splitAt = parseFloat(splitTime);
+        if (isNaN(splitAt) || splitAt <= clip.startTime || splitAt >= clip.startTime + clip.duration) {
+            if (this.appServices.showNotification) this.appServices.showNotification('Invalid split time', 1500);
+            return null;
+        }
+        
+        this._captureUndoState(`Split Clip \"${clip.name || clip.id.slice(-4)}\" in ${this.name}`);
+        
+        const originalDuration = clip.duration;
+        const originalEndOffset = clip.endOffset;
+        
+        // First clip: startTime unchanged, duration = splitAt - startTime
+        clip.duration = splitAt - clip.startTime;
+        // For first clip, endOffset doesn't need adjustment since we want audio up to split point
+        
+        // Second clip: start at split point, duration = original end - splitAt
+        const secondClip = {
+            id: `split_${Date.now()}_${Math.random().toString(36).substr(2,5)}`,
+            type: 'audio',
+            sourceId: clip.sourceId,
+            startTime: splitAt,
+            duration: originalDuration - (splitAt - clip.startTime),
+            name: `${clip.name || 'Clip'} (2)`,
+            color: clip.color,
+            gain: clip.gain,
+            fadeIn: 0,
+            fadeOut: clip.fadeOut,
+            reverse: clip.reverse,
+            playbackRate: clip.playbackRate,
+            startOffset: -1, // Use -1 to mean "auto-calculate from source"
+            endOffset: originalEndOffset,
+            // Store the auto-calculated start offset for the second clip
+            autoStartOffset: clip.startOffset !== undefined ? clip.startOffset + clip.duration : clip.duration
+        };
+        
+        this.timelineClips.push(secondClip);
+        
+        if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+        
+        return secondClip;
+    }
+
     getAudioClipEndOffset(clipId) {
         const clip = this.timelineClips.find(c => c.id === clipId);
         return clip ? (clip.endOffset !== undefined ? clip.endOffset : Constants.DEFAULT_AUDIO_CLIP_END_OFFSET) : Constants.DEFAULT_AUDIO_CLIP_END_OFFSET;
