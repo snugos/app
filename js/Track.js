@@ -9228,7 +9228,13 @@ export class Track {
 
     // Get the probability of a note at a specific row/col
     getNoteProbability(row, col) {
-        if (this.type === 'Audio')
+        if (this.type === 'Audio') return 1.0;
+        const activeSeq = this.getActiveSequence();
+        if (!activeSeq || !activeSeq.data) return 1.0;
+        const stepData = activeSeq.data[row]?.[col];
+        if (!stepData || !stepData.active) return 1.0;
+        return stepData.probability !== undefined ? stepData.probability : 1.0;
+    }
     // --- Audio Clip Management ---
     // Get audio clip by ID from timelineClips
     _getAudioClip(clipId) {
@@ -9417,5 +9423,56 @@ export class Track {
         newClip.startTime = clip.startTime + clip.duration;
         this.timelineClips.push(newClip);
         return newClip;
+    }
+
+    // Add an audio clip from recorded blob to timeline
+    async addAudioClip(blob, startTime) {
+        if (!blob || blob.size === 0) {
+            console.warn("[Track addAudioClip] Invalid blob provided");
+            return null;
+        }
+        try {
+            const dbKey = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+            await storeAudio(dbKey, blob);
+            
+            this._captureUndoState(`Add recorded clip on ${this.name}`);
+            
+            const clipId = `audioclip_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            const clipName = `Rec ${this.timelineClips.filter(c => c.type === 'audio').length + 1}`;
+            
+            const newClip = {
+                id: clipId,
+                type: 'audio',
+                sourceId: dbKey,
+                startTime: startTime || 0,
+                duration: 0,
+                name: clipName,
+                color: Constants.DEFAULT_CLIP_COLOR,
+                gain: Constants.DEFAULT_AUDIO_CLIP_GAIN,
+                playbackRate: Constants.DEFAULT_AUDIO_CLIP_PLAYBACK_RATE,
+                startOffset: Constants.DEFAULT_AUDIO_CLIP_START_OFFSET,
+                endOffset: Constants.DEFAULT_AUDIO_CLIP_END_OFFSET,
+                crossfade: Constants.DEFAULT_AUDIO_CLIP_CROSSFADE,
+                fadeIn: Constants.DEFAULT_AUDIO_CLIP_FADE_IN,
+                fadeOut: Constants.DEFAULT_AUDIO_CLIP_FADE_OUT,
+                fadeInCurve: Constants.DEFAULT_FADE_IN_CURVE,
+                fadeOutCurve: Constants.DEFAULT_FADE_OUT_CURVE,
+                reverse: Constants.DEFAULT_AUDIO_CLIP_REVERSE
+            };
+            
+            this.timelineClips.push(newClip);
+            
+            if (this.appServices.updateTrackUI) {
+                this.appServices.updateTrackUI(this.id, 'audioClipAdded', clipId);
+            }
+            if (this.appServices.renderTimeline) {
+                this.appServices.renderTimeline();
+            }
+            
+            return newClip;
+        } catch (error) {
+            console.error("[Track addAudioClip] Error:", error);
+            return null;
+        }
     }
 }
