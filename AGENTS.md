@@ -1042,3 +1042,22 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Cascade Behavior: Mute/solo on group affects all member tracks
 - **Usage**: Open Mixer window (Menu > Mixer), click "Add Group" button to create groups, use group mute/solo buttons to control member tracks
 - **Version**: Bumped to 0.52.0
+
+#### Day 55: Track Groups Timeline Integration (2026-04-22)
+- **Feature**: Extended Track Groups feature with right-click context menu on timeline track lanes for group management
+- **Files Modified**:
+  - `js/ui.js`: Added right-click context menu handlers in `renderTimeline()`:
+    - Adds "Add to Group" submenu with list of groups not containing the track
+    - Adds "Remove from Group" submenu with list of groups containing the track
+    - Adds "Create Group from Track" option to create new group with selected track as member
+    - Adds "Track Settings" option to open track inspector
+    - Menu items update the mixer after group changes
+  - `js/constants.js`: Bumped APP_VERSION to 0.53.0
+- **Feature Details**:
+  - Right-click on any track lane in Timeline to access group management
+  - Add/Remove track from existing groups directly from timeline
+  - Create new group with selected track as member from timeline
+  - Access track settings from timeline context menu
+  - Works alongside existing Mixer window group management
+- **Usage**: Right-click on a track lane in Timeline window to add/remove from groups or create new group
+- **Version**: Bumped to 0.53.0
