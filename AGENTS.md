@@ -1061,3 +1061,20 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Works alongside existing Mixer window group management
 - **Usage**: Right-click on a track lane in Timeline window to add/remove from groups or create new group
 - **Version**: Bumped to 0.53.0
+
+#### Day 55 cont: Track Groups Mixer Context Menu (2026-04-22)
+- **Feature**: Extended Track Groups feature with right-click context menus on Mixer window group and track strips
+- **Files Modified**:
+  - `js/ui.js`: Added context menu handlers in `initializeMixerEventHandlers()`:
+    - Group strip right-click menu: Rename Group, Change Color (with color palette submenu), Delete Group
+    - Track strip right-click menu: Add to Group, Remove from Group, Create Group from Track
+  - `js/ui.js`: Modified `buildMixerGroupStripHTML()` to add group-context-btn for right-click trigger
+  - `js/constants.js`: Bumped APP_VERSION to 0.53.1
+- **Feature Details**:
+  - Group context menu allows rename, color change, and delete operations
+  - Track context menu allows add/remove from groups and create new group
+  - Color submenu uses TRACK_GROUP_COLORS palette
+  - Delete group confirmation and notification
+- **Usage**: Right-click on group strip (⚙ button) or track strip in Mixer window
+- **Version**: Bumped to 0.53.1
+- **Bug Fix**: The group-context-btn class was missing on group strips, now added
