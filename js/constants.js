@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.53.1"; // Day 55 cont: Track Groups Mixer Context Menu - Add right-click menus on mixer group/track strips
+export const APP_VERSION = "0.53.2"; // Day 55 final: Mixer Track FX Button - Add FX button to open effects rack directly from mixer
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks

@@ -3398,6 +3398,11 @@ function buildMixerTrackStripHTML(track, sendTracks) {
             <span class="text-[8px] text-gray-500 mb-1">Sends</span>
             ${sendKnobsHTML}
         </div>
+        
+        <!-- Effects Quick Access -->
+        <div class="w-full mt-1 border-t border-[#303030] pt-1 flex flex-col items-center">
+            <button class="track-fx-btn w-full text-[8px] py-0.5 rounded bg-[#2a2a3a] text-gray-400 hover:bg-[#3a3a4a] hover:text-gray-300 transition-colors" data-track-id="${track.id}" title="Effects Chain">FX${track.activeEffects && track.activeEffects.length > 0 ? ' (' + track.activeEffects.length + ')' : ''}</button>
+        </div>
     </div>`;
 }
 
@@ -3656,6 +3661,17 @@ function initializeMixerEventHandlers(mixerElement) {
             });
             
             createContextMenu(e, menuItems, localAppServices);
+        });
+    });
+    
+    // Track FX button (open effects rack)
+    mixerElement.querySelectorAll('.track-fx-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const trackId = parseInt(e.target.dataset.trackId);
+            if (localAppServices.openTrackEffectsRackWindow) {
+                localAppServices.openTrackEffectsRackWindow(trackId);
+            }
         });
     });
     
