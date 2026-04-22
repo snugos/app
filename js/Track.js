@@ -9354,6 +9354,21 @@ export class Track {
         return clip ? (clip.crossfade !== undefined ? clip.crossfade : 0) : 0;
     }
 
+
+    // Set audio clip reverse with undo capture
+    setAudioClipReverse(clipId, reverse) {
+        const clip = this._getAudioClip(clipId);
+        if (!clip) return false;
+        if (clip.reverse === reverse) return false;
+        this._captureUndoState(`Set reverse on clip "${clip.name}"`);
+        clip.reverse = reverse;
+        return true;
+    }
+    // Get audio clip reverse
+    getAudioClipReverse(clipId) {
+        const clip = this._getAudioClip(clipId);
+        return clip ? (clip.reverse !== undefined ? clip.reverse : false) : false;
+    }
     // Delete a timeline clip with undo capture
     deleteTimelineClip(clipId) {
         const clip = this._getAudioClip(clipId);
