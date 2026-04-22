@@ -2976,7 +2976,87 @@ export function renderTimeline() {
             createContextMenu(e, menuItems, localAppServices);
         });
     });
-    
+
+    // Add right-click context menu on track lanes for Track Group management
+    contentDiv.querySelectorAll('.timeline-track-lane').forEach(laneEl => {
+        laneEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const trackId = laneEl.dataset.trackId;
+            const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+            if (!track) return;
+
+            // Get current track groups
+            const trackGroups = localAppServices.getTrackGroups ? localAppServices.getTrackGroups() : [];
+            const groupsContainingTrack = trackGroups.filter(g => g.trackIds.includes(trackId));
+            const groupsNotContainingTrack = trackGroups.filter(g => !g.trackIds.includes(trackId));
+
+            const menuItems = [];
+
+            // Add to Group submenu
+            if (groupsNotContainingTrack.length > 0) {
+                const addToGroupItems = groupsNotContainingTrack.map(group => ({
+                    label: group.name || `Group ${group.id}`,
+                    action: () => {
+                        if (localAppServices.addTrackToGroupState) {
+                            localAppServices.addTrackToGroupState(group.id, trackId);
+                            showNotification(`Added "${track.name}" to "${group.name || `Group ${group.id}`}"`, 1500);
+                            if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
+                        }
+                    }
+                }));
+                menuItems.push({ label: 'Add to Group', submenu: addToGroupItems });
+            }
+
+            // Remove from Group submenu
+            if (groupsContainingTrack.length > 0) {
+                const removeFromGroupItems = groupsContainingTrack.map(group => ({
+                    label: group.name || `Group ${group.id}`,
+                    action: () => {
+                        if (localAppServices.removeTrackFromGroupState) {
+                            localAppServices.removeTrackFromGroupState(group.id, trackId);
+                            showNotification(`Removed "${track.name}" from "${group.name || `Group ${group.id}`}"`, 1500);
+                            if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
+                        }
+                    }
+                }));
+                menuItems.push({ label: 'Remove from Group', submenu: removeFromGroupItems });
+            }
+
+            // Create Group from Track (creates a new group with this track as member)
+            menuItems.push({
+                label: 'Create Group from Track',
+                action: () => {
+                    if (localAppServices.handleAddGroup) {
+                        localAppServices.handleAddGroup();
+                        // Wait a tick for the group to be created, then add track
+                        setTimeout(() => {
+                            const newGroups = localAppServices.getTrackGroups ? localAppServices.getTrackGroups() : [];
+                            const lastGroup = newGroups[newGroups.length - 1];
+                            if (lastGroup && localAppServices.addTrackToGroupState) {
+                                localAppServices.addTrackToGroupState(lastGroup.id, trackId);
+                                showNotification(`Created new group with "${track.name}"`, 1500);
+                                if (localAppServices.updateMixerWindow) localAppServices.updateMixerWindow();
+                            }
+                        }, 50);
+                    }
+                }
+            });
+
+            menuItems.push({ separator: true });
+            menuItems.push({
+                label: 'Track Settings',
+                action: () => {
+                    if (localAppServices.openTrackInspectorWindow) {
+                        localAppServices.openTrackInspectorWindow(trackId);
+                    }
+                }
+            });
+
+            createContextMenu(e, menuItems, localAppServices);
+        });
+    });
+
     // Add loop region control handlers
     const loopToggle = contentDiv.querySelector('#loopRegionToggle');
     const loopStartInput = contentDiv.querySelector('#loopStartBar');
