@@ -3436,9 +3436,7 @@ function buildMixerGroupStripHTML(group) {
         </div>
         
         <!-- Context Menu Trigger (for right-click actions) -->
-        <button class="mt-1 p-0.5 text-[7px] text-gray-500 hover:text-gray-300" title="Group options">
-            <span class="text-xs">⚙</span>
-        </button>
+        <button class="mt-1 p-0.5 text-[7px] text-gray-500 hover:text-gray-300 group-context-btn" data-group-id="${group.id}" title="Group options">⚙</button>
     </div>`;
 }
 
@@ -3606,6 +3604,125 @@ function initializeMixerEventHandlers(mixerElement) {
             handleAddGroup();
         });
     }
+    
+    // Group context menu (right-click on group strip)
+    mixerElement.querySelectorAll('.group-context-btn').forEach(btn => {
+        btn.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const groupId = parseInt(e.target.dataset.groupId);
+            const group = localAppServices.getTrackGroupByIdState ? localAppServices.getTrackGroupByIdState(groupId) : null;
+            if (!group) return;
+            
+            const menuItems = [];
+            
+            // Rename group
+            menuItems.push({
+                label: 'Rename Group...',
+                action: () => {
+                    const newName = prompt('Enter new group name:', group.name);
+                    if (newName && newName.trim() && localAppServices.setTrackGroupNameState) {
+                        localAppServices.setTrackGroupNameState(groupId, newName.trim());
+                        updateMixerWindow();
+                    }
+                }
+            });
+            
+            // Change color
+            const colorSubmenu = [];
+            Constants.TRACK_GROUP_COLORS.forEach(color => {
+                colorSubmenu.push({
+                    label: color,
+                    action: () => {
+                        if (localAppServices.setTrackGroupColorState) {
+                            localAppServices.setTrackGroupColorState(groupId, color);
+                            updateMixerWindow();
+                        }
+                    }
+                });
+            });
+            menuItems.push({ label: 'Change Color', submenu: colorSubmenu });
+            
+            // Delete group
+            menuItems.push({ separator: true });
+            menuItems.push({
+                label: 'Delete Group',
+                action: () => {
+                    if (localAppServices.removeTrackGroupState) {
+                        localAppServices.removeTrackGroupState(groupId);
+                        updateMixerWindow();
+                        showNotification(`Group "${group.name}" deleted`, 1500);
+                    }
+                }
+            });
+            
+            createContextMenu(e, menuItems, localAppServices);
+        });
+    });
+    
+    // Track strip context menu (right-click on track strip)
+    mixerElement.querySelectorAll('.mixer-track-strip').forEach(strip => {
+        strip.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const trackId = parseInt(strip.dataset.trackId);
+            const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+            if (!track) return;
+            
+            const groups = localAppServices.getTrackGroupsState ? localAppServices.getTrackGroupsState() : [];
+            const trackGroups = groups.filter(g => g.trackIds && g.trackIds.includes(trackId));
+            const otherGroups = groups.filter(g => !trackGroups.some(tg => tg.id === g.id));
+            
+            const menuItems = [];
+            
+            // Add to group submenu
+            if (otherGroups.length > 0) {
+                const addToGroupItems = otherGroups.map(g => ({
+                    label: g.name,
+                    action: () => {
+                        if (localAppServices.addTrackToGroupState) {
+                            localAppServices.addTrackToGroupState(g.id, trackId);
+                            updateMixerWindow();
+                            showNotification(`Added "${track.name}" to group "${g.name}"`, 1500);
+                        }
+                    }
+                }));
+                menuItems.push({ label: 'Add to Group', submenu: addToGroupItems });
+            }
+            
+            // Remove from group submenu
+            if (trackGroups.length > 0) {
+                const removeFromGroupItems = trackGroups.map(g => ({
+                    label: g.name,
+                    action: () => {
+                        if (localAppServices.removeTrackFromGroupState) {
+                            localAppServices.removeTrackFromGroupState(g.id, trackId);
+                            updateMixerWindow();
+                            showNotification(`Removed "${track.name}" from group "${g.name}"`, 1500);
+                        }
+                    }
+                }));
+                menuItems.push({ label: 'Remove from Group', submenu: removeFromGroupItems });
+            }
+            
+            // Create new group with track
+            menuItems.push({
+                label: 'Create Group from Track',
+                action: () => {
+                    handleAddGroup();
+                    setTimeout(() => {
+                        const newGroups = localAppServices.getTrackGroupsState ? localAppServices.getTrackGroupsState() : [];
+                        const lastGroup = newGroups[newGroups.length - 1];
+                        if (lastGroup && localAppServices.addTrackToGroupState) {
+                            localAppServices.addTrackToGroupState(lastGroup.id, trackId);
+                            updateMixerWindow();
+                            showNotification(`Created new group with "${track.name}"`, 1500);
+                        }
+                    }, 50);
+                }
+            });
+            
+            createContextMenu(e, menuItems, localAppServices);
+        });
+    });
 
     // Send bus mute buttons
     mixerElement.querySelectorAll('.mixer-send-btn').forEach(btn => {

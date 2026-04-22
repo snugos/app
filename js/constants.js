@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.53.0"; // Day 55: Track Groups Timeline Integration - Add right-click context menu on timeline track lanes for group management
+export const APP_VERSION = "0.53.1"; // Day 55 cont: Track Groups Mixer Context Menu - Add right-click menus on mixer group/track strips
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
