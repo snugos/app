@@ -866,6 +866,21 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Right-click on an audio clip in the Timeline, select "Split Clip...", enter split time in seconds
 - **Version**: Bumped to 0.39.0
 
+#### Day 44: Audio Clip Crossfade UI Wiring Bug Fix (2026-04-22)
+- **Bug Fix**: Fixed missing `setAudioClipCrossfade` and `getAudioClipCrossfade` methods and missing UI wiring in Audio Clip Editor
+- **Issue**: The Audio Clip Editor had a crossfade slider UI, and the playback engine code in Track.js was already using `clip.crossfade` for clip-to-clip crossfading, but there was no way to actually set/get the crossfade value from the UI because:
+  1. The `setAudioClipCrossfade` and `getAudioClipCrossfade` methods were missing from Track.js
+  2. The Apply button handler in ui.js was not retrieving or saving the crossfade value
+- **Files Modified**:
+  - `js/Track.js`: Added:
+    - `setAudioClipCrossfade(clipId, crossfade)` - Sets clip crossfade with undo state capture and clamping
+    - `getAudioClipCrossfade(clipId)` - Gets clip crossfade value (default 0)
+  - `js/ui.js`: Modified Apply button handler to:
+    - Retrieve crossfade value from `crossfadeInput`
+    - Call `track.setAudioClipCrossfade(clipId, newCrossfade)` to save it
+- **Impact**: Users can now properly set and save clip crossfade values from the Audio Clip Editor, which affects how clips fade into each other during timeline playback
+- **Version**: Bumped to 0.41.0
+
 ## Code Style Guidelines
 
 ### Module Structure

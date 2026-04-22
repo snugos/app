@@ -3835,9 +3835,11 @@ export function openAudioClipEditorWindow(trackId, clipId, savedState = null) {
                 const newReverse = el.querySelector(`#clipReverse-${clipId}`)?.checked || false;
                 const newStartOffset = parseFloat(startOffsetInput.value) || 0;
                 const newEndOffset = parseFloat(endOffsetInput.value);
+                const newCrossfade = parseFloat(crossfadeInput?.value) || 0;
                 
                 if (track.setAudioClipFadeIn) track.setAudioClipFadeIn(clipId, newFadeIn);
                 if (track.setAudioClipFadeOut) track.setAudioClipFadeOut(clipId, newFadeOut);
+                if (track.setAudioClipCrossfade) track.setAudioClipCrossfade(clipId, newCrossfade);
                 if (track.updateAudioClipPosition) track.updateAudioClipPosition(clipId, newStartTime);
                 if (track.setAudioClipGain) track.setAudioClipGain(clipId, newGain);
                 if (track.setAudioClipName) track.setAudioClipName(clipId, newName);

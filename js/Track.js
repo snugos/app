@@ -1840,61 +1840,6 @@ export class Track {
             console.warn(`[Track ${this.id} setSequenceLength] No active sequence to set length for.`);
             return;
         }
-
-        let validatedNewLength = Math.max(Constants.STEPS_PER_BAR, parseInt(newLengthInSteps) || Constants.defaultStepsPerBar);
-        validatedNewLength = Math.ceil(validatedNewLength / Constants.STEPS_PER_BAR) * Constants.STEPS_PER_BAR;
-        validatedNewLength = Math.min(validatedNewLength, Constants.MAX_BARS * Constants.STEPS_PER_BAR);
-
-        if (activeSeq.length === validatedNewLength) return; 
-
-        if (!skipUndoCapture) {
-            this._captureUndoState(`Set Seq Length for "${activeSeq.name}" on ${this.name} to ${validatedNewLength / Constants.STEPS_PER_BAR} bars`);
-        }
-        activeSeq.length = validatedNewLength;
-
-        let numRows;
-        if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRows = Constants.synthPitches.length;
-        else if (this.type === 'Sampler') numRows = (this.slices && this.slices.length > 0) ? this.slices.length : Constants.numSlices;
-        else if (this.type === 'DrumSampler') numRows = Constants.numDrumSamplerPads;
-        else numRows = (activeSeq.data && activeSeq.data.length > 0) ? activeSeq.data.length : 1;
-
-        if (numRows <= 0) numRows = 1; 
-
-        const currentSequenceData = activeSeq.data || [];
-        activeSeq.data = Array(numRows).fill(null).map((_, rIndex) => {
-            const currentRow = currentSequenceData[rIndex] || [];
-            const newRow = Array(activeSeq.length || Constants.defaultStepsPerBar).fill(null);
-            for (let c = 0; c < Math.min(currentRow.length, activeSeq.length); c++) newRow[c] = currentRow[c];
-            return newRow;
-        });
-
-        this.recreateToneSequence(true);
-        if (this.appServices.updateTrackUI) this.appServices.updateTrackUI(this.id, 'sequencerContentChanged');
-    }
-
-
-    recreateToneSequence(forceRestart = false, startTimeOffset = 0) {
-        if (this.type === 'Audio') return;
-        const currentPlaybackMode = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
-
-        if (this.patternPlayerSequence && !this.patternPlayerSequence.disposed) {
-            try {
-                this.patternPlayerSequence.stop();
-                this.patternPlayerSequence.clear();
-                this.patternPlayerSequence.dispose();
-            } catch(e) { console.warn(`[Track ${this.id}] Error disposing old Tone.Sequence:`, e.message); }
-        }
-        this.patternPlayerSequence = null; 
-
-        if (currentPlaybackMode !== 'sequencer') {
-            return;
-        }
-
-        const activeSeq = this.getActiveSequence();
-        if (!activeSeq) {
-            console.warn(`[Track ${this.id} recreateToneSequence] No active sequence (ID: ${this.activeSequenceId}). Aborting.`);
-            return;
-        }
         if (!activeSeq.data || !Array.isArray(activeSeq.data) || activeSeq.data.length === 0) {
             let numRowsForInit;
             if (this.type === 'Synth' || this.type === 'InstrumentSampler') numRowsForInit = Constants.synthPitches.length;
@@ -1903,11 +1848,11 @@ export class Track {
             else numRowsForInit = 1;
             if (numRowsForInit <= 0) numRowsForInit = 1;
             activeSeq.data = Array(numRowsForInit).fill(null).map(() => Array(activeSeq.length || Constants.defaultStepsPerBar).fill(null));
-            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" had invalid/empty data. Initialized with ${numRowsForInit} rows.`);
+            console.warn(`[Track ${this.id} setSequenceLength] Active sequence "${activeSeq.name}" had invalid/empty data. Initialized with ${numRowsForInit} rows.`);
         }
         if (!activeSeq.length || !Number.isFinite(activeSeq.length) || activeSeq.length < Constants.STEPS_PER_BAR) {
             activeSeq.length = Constants.defaultStepsPerBar;
-            console.warn(`[Track ${this.id} recreateToneSequence] Active sequence "${activeSeq.name}" had invalid length. Reset to ${activeSeq.length}.`);
+            console.warn(`[Track ${this.id} setSequenceLength] Active sequence "${activeSeq.name}" had invalid length. Reset to ${activeSeq.length}.`);
             activeSeq.data.forEach(row => { if(row) row.length = activeSeq.length; });
         }
 
@@ -1919,7 +1864,7 @@ export class Track {
                 const playbackModeCheck = this.appServices.getPlaybackMode ? this.appServices.getPlaybackMode() : 'sequencer';
                 if (playbackModeCheck !== 'sequencer') {
                     if (this.patternPlayerSequence && this.patternPlayerSequence.state === 'started') {
-                        try { this.patternPlayerSequence.stop(); } catch(e){ console.warn(`[Track ${this.id}] Error stopping patternPlayerSequence during playback mode switch:`, e.message); }
+                        try { this.patternPlayerSequence.stop(); } catch(e){ console.warn("Err stopping seq player during playback mode switch"); }
                     }
                     return;
                 }
@@ -2590,6 +2535,22 @@ export class Track {
             return true;
         }
         return false;
+    }
+
+    setAudioClipCrossfade(clipId, crossfade) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        if (clip) {
+            this._captureUndoState(`Set Crossfade on "${clip.name || clip.id.slice(-4)}" in ${this.name}`);
+            clip.crossfade = Math.max(Constants.MIN_AUDIO_CLIP_CROSSFADE, Math.min(parseFloat(crossfade) || 0, Constants.MAX_AUDIO_CLIP_CROSSFADE));
+            if (this.appServices.renderTimeline) this.appServices.renderTimeline();
+            return true;
+        }
+        return false;
+    }
+
+    getAudioClipCrossfade(clipId) {
+        const clip = this.timelineClips.find(c => c.id === clipId);
+        return clip ? (clip.crossfade || 0) : 0;
     }
 
     getAudioClipFadeIn(clipId) {

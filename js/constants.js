@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.40.0"; // Day 42: Audio Clip Crossfade Feature
+export const APP_VERSION = "0.41.0"; // Day 44: Audio Clip Crossfade UI Wiring Bug Fix
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
