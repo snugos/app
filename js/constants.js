@@ -300,6 +300,11 @@ export const DEFAULT_MARKER = {
     color: DEFAULT_MARKER_COLOR
 };
 
+// Track Freeze/Bounce Constants
+export const MAX_FREEZE_LENGTH_SECONDS = 600; // Maximum 10 minutes of frozen audio
+export const DEFAULT_FREEZE_FADE_OUT = 0.1; // Default fade out in seconds for frozen clips
+export const FROZEN_TRACK_PREFIX = '[Frozen] '; // Prefix for frozen track names
+
 // Automation Lane Constants
 export const AUTOMATION_LANE_HEIGHT = 20; // pixels per lane
 export const AUTOMATION_LANE_DEFAULT = 0.5; // Default value (50%)
