@@ -3225,6 +3225,12 @@ function buildMixerTrackStripHTML(track, sendTracks) {
             </div>`;
     });
 
+    // Check if automation data exists for this parameter
+    const hasAutomation = track.hasAutomation ? track.hasAutomation() : false;
+    const automationLane = hasAutomation && track.getAutomationLane ? track.getAutomationLane('volume') : [];
+    const automationCount = automationLane.length;
+    const hasAutoClass = automationCount > 0 ? 'automation-active' : '';
+
     return `<div class="mixer-track-strip flex flex-col items-center w-16 h-full bg-[#252525] border-r border-[#303030] p-1" data-track-id="${track.id}">
         <!-- Track Color Indicator -->
         <div class="w-full h-1 rounded-sm mb-1" style="background:${track.color || '#666'};"></div>
@@ -3258,6 +3264,31 @@ function buildMixerTrackStripHTML(track, sendTracks) {
             <input type="range" min="-50" max="50" value="${Math.round(pan * 50)}" 
                 class="pan-knob w-8 h-1 bg-[#404040] rounded appearance-none cursor-pointer" 
                 data-track-id="${track.id}">
+        </div>
+        
+        <!-- Automation Lane Mini Editor -->
+        <div class="w-full mt-1 border-t border-[#303030] pt-1">
+            <div class="flex items-center justify-between mb-0.5">
+                <span class="text-[7px] text-gray-500">AUTO</span>
+                <span class="text-[7px] ${hasAutoClass}" style="color: ${automationCount > 0 ? '#ff9f43' : '#555'}" title="${automationCount} automation points">${automationCount > 0 ? automationCount + 'pt' : '--'}</span>
+            </div>
+            <!-- Mini automation lane display -->
+            <div class="w-full h-6 bg-[#151515] rounded border border-[#252525] relative overflow-hidden cursor-pointer mixer-automation-mini" data-track-id="${track.id}" title="Click to edit automation">
+                <div class="absolute inset-0 flex items-end justify-around px-0.5 pb-0.5">
+                    ${[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(step => {
+                        const point = automationLane.find(p => p.step === step);
+                        return `<div class="w-1 bg-[#252525] rounded-t ${point ? 'automation-mini-point' : ''}" style="height: ${point ? Math.round(point.value * 100) : 0}%; background-color: ${point ? '#ff9f43' : '#252525'}; opacity: ${point ? 1 : 0.3};"></div>`;
+                    }).join('')}
+                </div>
+                ${automationCount === 0 ? '<div class="absolute inset-0 flex items-center justify-center text-[6px] text-gray-600">No Data</div>' : ''}
+            </div>
+            <!-- Parameter quick selector -->
+            <select class="mixer-auto-param-select w-full mt-0.5 text-[7px] bg-[#2a2a2a] text-gray-400 rounded border border-[#303030] cursor-pointer" data-track-id="${track.id}">
+                <option value="volume" selected>Volume</option>
+                <option value="pan">Pan</option>
+                <option value="filterCutoff">Filter</option>
+                <option value="resonance">Resonance</option>
+            </select>
         </div>
         
         <!-- Send Level Knobs -->
@@ -3343,6 +3374,58 @@ function initializeMixerEventHandlers(mixerElement) {
             const trackId = parseInt(e.target.dataset.trackId);
             const value = parseInt(e.target.value) / 50; // -1 to 1
             handleMixerPanChange(trackId, value);
+        });
+    });
+
+    // Mixer automation mini editor click handlers
+    mixerElement.querySelectorAll('.mixer-automation-mini').forEach(miniEditor => {
+        miniEditor.addEventListener('click', (e) => {
+            const trackId = parseInt(miniEditor.dataset.trackId);
+            // Open the track's sequencer window with automation visible
+            if (localAppServices.openTrackSequencerWindow) {
+                localAppServices.openTrackSequencerWindow(trackId);
+                // The sequencer will show the automation editor by default
+                showNotification('Automation editor available in Sequencer window', 2000);
+            }
+        });
+    });
+
+    // Mixer automation parameter selector handlers
+    mixerElement.querySelectorAll('.mixer-auto-param-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const trackId = parseInt(select.dataset.trackId);
+            const param = select.value;
+            // Update the mini display to show the correct parameter
+            const track = localAppServices.getTrackById ? localAppServices.getTrackById(trackId) : null;
+            if (track && track.getAutomationLane) {
+                const lane = track.getAutomationLane(param);
+                // Find the mini editor for this track
+                const miniEditor = select.parentElement.querySelector('.mixer-automation-mini');
+                if (miniEditor) {
+                    // Rebuild the mini bar display
+                    const barsContainer = miniEditor.querySelector('div:first-child');
+                    if (barsContainer) {
+                        const steps = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
+                        barsContainer.innerHTML = steps.map(step => {
+                            const point = lane.find(p => p.step === step);
+                            return `<div class="w-1 bg-[#252525] rounded-t ${point ? 'automation-mini-point' : ''}" style="height: ${point ? Math.round(point.value * 100) : 0}%; background-color: ${point ? '#ff9f43' : '#252525'}; opacity: ${point ? 1 : 0.3};"></div>`;
+                        }).join('');
+                    }
+                    // Update "No Data" overlay
+                    const noDataEl = miniEditor.querySelector('.absolute.inset-0.flex');
+                    if (lane.length === 0 && noDataEl) {
+                        noDataEl.style.display = 'flex';
+                    } else if (lane.length > 0 && noDataEl) {
+                        noDataEl.style.display = 'none';
+                    }
+                }
+                // Show automation count
+                const countSpan = select.parentElement.querySelector('span:last-child');
+                if (countSpan) {
+                    countSpan.textContent = lane.length > 0 ? lane.length + 'pt' : '--';
+                    countSpan.style.color = lane.length > 0 ? '#ff9f43' : '#555';
+                }
+            }
         });
     });
 

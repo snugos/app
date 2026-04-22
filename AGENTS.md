@@ -919,3 +919,29 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/constants.js`: Bumped APP_VERSION to 0.44.0
 - **Impact**: The "Add Send Bus" button in the Mixer window now properly creates send tracks, and the routing from tracks to send buses works correctly
 - **Version**: Bumped to 0.44.0
+
+#### Day 48: Automation Lane Mixer Integration (2026-04-22)
+- **Feature**: Added volume automation lane controls to each track strip in the Mixer window
+- **Files Modified**:
+  - `js/ui.js`: Modified `buildMixerTrackStripHTML()` to add:
+    - "AUTO" label with automation point count indicator (orange text when active)
+    - Mini automation lane display (6px height, 16 bars showing volume automation points)
+    - Parameter quick selector dropdown (Volume, Pan, Filter, Resonance)
+    - Click handler to open sequencer window for full automation editing
+    - Change handler to update mini display when parameter selection changes
+  - `style.css`: Added CSS styles for:
+    - `.mixer-automation-mini` - Mini automation lane container with hover effects
+    - `.automation-mini-point` - Individual automation point styling
+    - `.mixer-auto-param-select` - Parameter selector styling
+  - `js/constants.js`: Bumped APP_VERSION to 0.46.0
+- **Feature Details**:
+  - Mini Automation Display: Compact 16-step visualization showing automation points
+  - Orange bars represent active automation points with height = value
+  - "No Data" placeholder shown when lane is empty
+  - Point count displayed as "Npt" when active, "--" when empty
+  - Parameter Selector: Quick dropdown to switch between automation parameters
+  - Click to Edit: Clicking the mini editor opens the track's Sequencer window
+  - Real-time Updates: Changing parameter updates the mini display immediately
+- **Backend Note**: The automation lane data structures and methods (getAutomationLane, setAutomationPoint, etc.) were already implemented in Track.js from Day 12. This feature adds the Mixer UI integration to view and access that data.
+- **Usage**: Open Mixer window, each track strip shows an automation lane mini editor below the pan knob. Click the mini editor or any automation bar to open the full Sequencer with automation editor. Use the parameter dropdown to switch between Volume, Pan, Filter, or Resonance automation lanes.
+- **Version**: Bumped to 0.46.0

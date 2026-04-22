@@ -868,3 +868,32 @@ input::placeholder,
     box-shadow: 0 0 10px rgba(149, 125, 173, 0.5);
     z-index: 10;
 }
+
+/* --- Mixer Automation Lane Mini Editor --- */
+.mixer-automation-mini {
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.mixer-automation-mini:hover {
+    border-color: #ff9f43 !important;
+    background-color: #1a1a1a !important;
+}
+
+.mixer-automation-mini.automation-active {
+    border-color: #ff9f43;
+}
+
+.automation-mini-point {
+    transition: height 0.15s, opacity 0.15s;
+}
+
+.mixer-auto-param-select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 2px 4px;
+}
+
+.mixer-auto-param-select:focus {
+    outline: 1px solid #ff9f43;
+    border-color: #ff9f43;
+}
