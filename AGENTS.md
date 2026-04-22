@@ -956,3 +956,17 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - `js/constants.js`: Bumped APP_VERSION to 0.48.0
 - **Feature Details**: Enables audio recorded via microphone to be added to Audio tracks timeline
 - **Version**: Bumped to 0.48.0
+
+#### Day 50: Expand Unit Test Coverage for SnugOS Constants and Features (2026-04-22)
+- **Feature**: Added comprehensive unit tests for previously untested constants and features
+- **Files Modified**:
+  - `js/tests.js`: Added new test suites:
+    - Audio Clip Reverse Tests: Verifies DEFAULT_AUDIO_CLIP_REVERSE constant exists and is boolean
+    - Fade Curve Constants Tests: Validates FADE_CURVES, DEFAULT_FADE_IN_CURVE, DEFAULT_FADE_OUT_CURVE, DEFAULT_AUDIO_CLIP_FADE_IN/OUT, MAX_AUDIO_CLIP_FADE
+    - Chord Mode Tests: Validates CHORD_TYPES object (major, minor, diminished, augmented, dominant7, major7, minor7, etc.) and DEFAULT_CHORD_MODE structure
+    - Automation Lane Constants Tests: Validates AUTOMATION_LANE_PARAMETERS, AUTOMATION_LANE_HEIGHT, AUTOMATION_LANE_DEFAULT, AUTOMATION_LANE_PRECISION, AUTOMATION_LANE_COLORS
+    - Timeline Marker Constants Tests: Validates MAX_TIMELINE_MARKERS, DEFAULT_MARKER_COLOR, MARKER_COLORS array, DEFAULT_MARKER structure
+    - Swing Constants Tests: Validates MAX_SWING_AMOUNT, SWING_SUBDIVISION, DEFAULT_SWING object
+    - Send Track Constants Tests: Validates MAX_SEND_TRACKS, DEFAULT_SEND_LEVEL, SEND_LEVEL_MIN/MAX, DEFAULT_SEND_TRACK structure
+- **Feature Details**: These tests cover constants that were implemented but had no corresponding unit tests, ensuring consistency between constants definitions and their usage in Track.js and UI code
+- **Version**: No bump needed (test coverage improvement)
