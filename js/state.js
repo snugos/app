@@ -53,6 +53,10 @@ let sendTracksState = []; // Array of { id, name, effects, level, muted }
 let sendTrackIdCounter = 0;
 let trackSendsState = {}; // Map: trackId -> { sendId: level } (level 0-1.2, 0 = off)
 
+// Track Groups State (for organizing/busing multiple tracks)
+let trackGroupsState = []; // Array of { id, name, color, trackIds: [], muted: false, soloed: false }
+let trackGroupIdCounter = 0;
+
 // Undo/Redo
 let undoStack = [];
 let redoStack = [];
@@ -288,6 +292,82 @@ export function setTrackSendLevelState(trackId, sendId, level) {
         trackSendsState[trackId] = {};
     }
     trackSendsState[trackId][sendId] = Math.max(0, Math.min(1.2, parseFloat(level) || 0));
+}
+
+// --- Track Groups State Getters and Setters ---
+export function getTrackGroupsState() { return trackGroupsState; }
+export function getTrackGroupByIdState(id) { return trackGroupsState.find(g => g.id === id); }
+export function addTrackGroupState(groupData) {
+    const id = groupData.id !== undefined ? groupData.id : trackGroupIdCounter++;
+    const newGroup = {
+        id,
+        name: groupData.name || `${Constants.DEFAULT_TRACK_GROUP_NAME} ${id}`,
+        color: groupData.color || Constants.DEFAULT_TRACK_GROUP_COLOR,
+        trackIds: groupData.trackIds || [],
+        muted: groupData.muted || false,
+        soloed: groupData.soloed || false
+    };
+    trackGroupsState.push(newGroup);
+    return newGroup;
+}
+export function setTrackGroupNameState(id, name) {
+    const group = trackGroupsState.find(g => g.id === id);
+    if (group) {
+        group.name = name || `Group ${id}`;
+        return true;
+    }
+    return false;
+}
+export function setTrackGroupColorState(id, color) {
+    const group = trackGroupsState.find(g => g.id === id);
+    if (group) {
+        group.color = color || Constants.DEFAULT_TRACK_GROUP_COLOR;
+        return true;
+    }
+    return false;
+}
+export function addTrackToGroupState(groupId, trackId) {
+    const group = trackGroupsState.find(g => g.id === groupId);
+    if (group && !group.trackIds.includes(trackId)) {
+        group.trackIds.push(trackId);
+        return true;
+    }
+    return false;
+}
+export function removeTrackFromGroupState(groupId, trackId) {
+    const group = trackGroupsState.find(g => g.id === groupId);
+    if (group) {
+        const idx = group.trackIds.indexOf(trackId);
+        if (idx !== -1) {
+            group.trackIds.splice(idx, 1);
+            return true;
+        }
+    }
+    return false;
+}
+export function setTrackGroupMutedState(id, muted) {
+    const group = trackGroupsState.find(g => g.id === id);
+    if (group) {
+        group.muted = !!muted;
+        return true;
+    }
+    return false;
+}
+export function setTrackGroupSoloedState(id, soloed) {
+    const group = trackGroupsState.find(g => g.id === id);
+    if (group) {
+        group.soloed = !!soloed;
+        return true;
+    }
+    return false;
+}
+export function removeTrackGroupState(id) {
+    const idx = trackGroupsState.findIndex(g => g.id === id);
+    if (idx !== -1) {
+        trackGroupsState.splice(idx, 1);
+        return true;
+    }
+    return false;
 }
 
 // --- Window Management ---

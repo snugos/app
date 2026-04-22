@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = "0.50.0"; // Day 52: Audio Recording State Functions - Added missing setIsRecordingState, setRecordingTrackIdState, and setRecordingStartTimeState functions to state.js
+export const APP_VERSION = "0.51.0"; // Day 53: Track Groups Feature - Added constants, state management, and basic UI for organizing tracks into groups with mute/solo
 
 export const STEPS_PER_BAR = 16;
 export const defaultStepsPerBar = 16; // Default for new tracks
@@ -163,6 +163,35 @@ export const DEFAULT_SEND_LEVEL = 0; // Default send level (0 = off, -infinity d
 export const SEND_LEVEL_MIN = 0;
 export const SEND_LEVEL_MAX = 1.2; // 0dB = 1.0, can boost slightly above unity
 export const SEND_LEVEL_POST_FADER = true; // Sends are post-fader by default (after volume)
+
+// Track Group Constants
+export const MAX_TRACK_GROUPS = 16; // Maximum number of track groups
+export const DEFAULT_TRACK_GROUP_NAME = 'Group'; // Default name for new groups
+export const TRACK_GROUP_COLORS = [
+    '#54a0ff', // Blue (default for groups)
+    '#ff6b6b', // Red
+    '#1dd1a1', // Green
+    '#feca57', // Yellow
+    '#ff9ff3', // Pink
+    '#f368e0', // Magenta
+    '#ff9f43', // Orange
+    '#5f27cd', // Purple
+    '#c8d6e5', // Gray
+    '#00d2d3', // Teal
+    '#ff6348', // Coral
+    '#7bed9f', // Mint
+    '#a29bfe', // Lavender
+    '#fd79a8', // Rose
+    '#e17055'  // Terra
+];
+export const DEFAULT_TRACK_GROUP_COLOR = '#54a0ff';
+export const DEFAULT_TRACK_GROUP = {
+    name: DEFAULT_TRACK_GROUP_NAME,
+    color: DEFAULT_TRACK_GROUP_COLOR,
+    trackIds: [],
+    muted: false,
+    soloed: false
+};
 
 // Default send track settings
 export const DEFAULT_SEND_TRACK = {
