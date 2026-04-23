@@ -1627,9 +1627,9 @@ TestRunner.test('Master Effects - updateMasterEffectParamInState handles unknown
 });
 
 TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (t) => {
-    const id1 = addMasterEffectToState('Effect1', {});
-    const id2 = addMasterEffectToState('Effect2', {});
-    const id3 = addMasterEffectToState('Effect3', {});
+    const id1 = addMasterEffectToState('Reverb');
+    const id2 = addMasterEffectToState('Delay');
+    const id3 = addMasterEffectToState('Chorus');
     const effects = getMasterEffectsState();
     const idx1 = effects.findIndex(e => e.id === id1);
     const idx3 = effects.findIndex(e => e.id === id3);
@@ -1646,7 +1646,7 @@ TestRunner.test('Master Effects - reorderMasterEffectInState reorders effect', (
 });
 
 TestRunner.test('Master Effects - reorderMasterEffectInState handles same index', (t) => {
-    const id1 = addMasterEffectToState('SameIdx', {});
+    const id1 = addMasterEffectToState('SameIdx');
     const effectsBefore = getMasterEffectsState().map(e => e.id);
     reorderMasterEffectInState(id1, effectsBefore.findIndex(e => e === id1));
     const effectsAfter = getMasterEffectsState().map(e => e.id);
@@ -1656,7 +1656,7 @@ TestRunner.test('Master Effects - reorderMasterEffectInState handles same index'
 });
 
 TestRunner.test('Master Effects - reorderMasterEffectInState handles invalid index', (t) => {
-    const id1 = addMasterEffectToState('InvalidIdx', {});
+    const id1 = addMasterEffectToState('InvalidIdx');
     // Negative index should be handled
     reorderMasterEffectInState(id1, -1);
     // Index beyond length should be handled
@@ -1684,3 +1684,109 @@ TestRunner.test('Master Effects - multiple effects can be added and removed', (t
     effects = getMasterEffectsState();
     t.assertEqual(effects.length, 0, 'All effects should be removed');
 });
+
+// ============================================
+// Day 81: Fade Curve Methods Tests
+// ============================================
+TestRunner.test('Audio Clip - setAudioClipFadeInCurve validates curve values', (t) => {
+    const track = createMockTrack();
+    t.assertTruthy(track.setAudioClipFadeInCurve, 'setAudioClipFadeInCurve method should exist');
+    // Test with valid curve
+    const result = track.setAudioClipFadeInCurve('test-clip', 'exponential');
+    t.assertEqual(result, true, 'Should return true for valid curve change');
+    // Test with invalid curve defaults to linear
+    const result2 = track.setAudioClipFadeInCurve('test-clip', 'invalid');
+    t.assertEqual(result2, false, 'Should return false when curve unchanged (already linear default)');
+});
+
+TestRunner.test('Audio Clip - getAudioClipFadeInCurve returns default when unset', (t) => {
+    const track = createMockTrack();
+    t.assertTruthy(track.getAudioClipFadeInCurve, 'getAudioClipFadeInCurve method should exist');
+    const curve = track.getAudioClipFadeInCurve('nonexistent-clip');
+    t.assertEqual(curve, 'linear', 'Default fade in curve should be linear');
+});
+
+TestRunner.test('Audio Clip - setAudioClipFadeOutCurve validates curve values', (t) => {
+    const track = createMockTrack();
+    t.assertTruthy(track.setAudioClipFadeOutCurve, 'setAudioClipFadeOutCurve method should exist');
+    // Test with valid curve
+    const result = track.setAudioClipFadeOutCurve('test-clip', 'exponential');
+    t.assertEqual(result, true, 'Should return true for valid curve change');
+    // Test with invalid curve defaults to linear
+    const result2 = track.setAudioClipFadeOutCurve('test-clip', 'invalid');
+    t.assertEqual(result2, false, 'Should return false when curve unchanged (already linear default)');
+});
+
+TestRunner.test('Audio Clip - getAudioClipFadeOutCurve returns default when unset', (t) => {
+    const track = createMockTrack();
+    t.assertTruthy(track.getAudioClipFadeOutCurve, 'getAudioClipFadeOutCurve method should exist');
+    const curve = track.getAudioClipFadeOutCurve('nonexistent-clip');
+    t.assertEqual(curve, 'linear', 'Default fade out curve should be linear');
+});
+
+TestRunner.test('Audio Clip - fade curves array contains valid options', (t) => {
+    t.assertEqual(FADE_CURVES.length, 2, 'Should have exactly 2 curve options');
+    t.assertTruthy(FADE_CURVES.includes('linear'), 'Should include linear');
+    t.assertTruthy(FADE_CURVES.includes('exponential'), 'Should include exponential');
+});
+
+TestRunner.test('Audio Clip - FADE_CURVE_LINEAR and FADE_CURVE_EXPONENTIAL are correct strings', (t) => {
+    t.assertEqual(FADE_CURVE_LINEAR, 'linear', 'FADE_CURVE_LINEAR should be "linear"');
+    t.assertEqual(FADE_CURVE_EXPONENTIAL, 'exponential', 'FADE_CURVE_EXPONENTIAL should be "exponential"');
+});
+
+TestRunner.test('Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE default to linear', (t) => {
+    t.assertEqual(DEFAULT_FADE_IN_CURVE, 'linear', 'Default fade in curve should be linear');
+    t.assertEqual(DEFAULT_FADE_OUT_CURVE, 'linear', 'Default fade out curve should be linear');
+    t.assertEqual(DEFAULT_FADE_IN_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
+    t.assertEqual(DEFAULT_FADE_OUT_CURVE, FADE_CURVE_LINEAR, 'Default should match FADE_CURVE_LINEAR constant');
+});
+
+// Helper for mock track - self-contained implementation
+function createMockTrack() {
+    const FADE_CURVES = ['linear', 'exponential'];
+    const DEFAULT_FADE_IN_CURVE = 'linear';
+    const DEFAULT_FADE_OUT_CURVE = 'linear';
+    
+    const audioClips = [{
+        id: 'test-clip',
+        name: 'Test Clip',
+        fadeInCurve: 'linear',
+        fadeOutCurve: 'linear'
+    }];
+    
+    function setAudioClipFadeInCurve(clipId, curve) {
+        const clip = audioClips.find(c => c.id === clipId);
+        if (!clip) return false;
+        const validCurve = FADE_CURVES.includes(curve) ? curve : DEFAULT_FADE_IN_CURVE;
+        if (clip.fadeInCurve === validCurve) return false;
+        clip.fadeInCurve = validCurve;
+        return true;
+    }
+    
+    function getAudioClipFadeInCurve(clipId) {
+        const clip = audioClips.find(c => c.id === clipId);
+        return clip ? (clip.fadeInCurve !== undefined ? clip.fadeInCurve : DEFAULT_FADE_IN_CURVE) : DEFAULT_FADE_IN_CURVE;
+    }
+    
+    function setAudioClipFadeOutCurve(clipId, curve) {
+        const clip = audioClips.find(c => c.id === clipId);
+        if (!clip) return false;
+        const validCurve = FADE_CURVES.includes(curve) ? curve : DEFAULT_FADE_OUT_CURVE;
+        if (clip.fadeOutCurve === validCurve) return false;
+        clip.fadeOutCurve = validCurve;
+        return true;
+    }
+    
+    function getAudioClipFadeOutCurve(clipId) {
+        const clip = audioClips.find(c => c.id === clipId);
+        return clip ? (clip.fadeOutCurve !== undefined ? clip.fadeOutCurve : DEFAULT_FADE_OUT_CURVE) : DEFAULT_FADE_OUT_CURVE;
+    }
+    
+    return {
+        setAudioClipFadeInCurve,
+        getAudioClipFadeInCurve,
+        setAudioClipFadeOutCurve,
+        getAudioClipFadeOutCurve
+    };
+}

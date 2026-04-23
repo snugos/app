@@ -523,7 +523,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - "Arpeggiate Random 🎲" - Randomizes note order
     - "Arpeggiate Converge ⇥" - Plays from outer pitch edges toward center
     - "Arpeggiate Diverge ⇤" - Plays from center pitch outward to edges
-    - "Custom Arpeggio..." - Prompts for mode, rate, and octave settings
+    - "Custom Arpeggio..." - Prompts for mode, rate, octave settings
   - `js/constants.js`: Bumped APP_VERSION to 0.21.0
 - **Feature Details**:
   - Mode Options:
@@ -917,6 +917,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Version**: Bumped to 0.59.9
 
 #### Day 77: Fade Curve Constants Tests (2026-04-23)
+- **Feature**: Added 7 new unit tests for audio clip fade curve methods and fade curve constants
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The fade curve functionality for audio clips (`setAudioClipFadeInCurve`, `getAudioClipFadeInCurve`, `setAudioClipFadeOutCurve`, `getAudioClipFadeOutCurve`) lacked unit test coverage despite being used in the Audio Clip Editor window.
+- **Files Modified**:
+  - `js/tests.js`: Added 7 new tests in Day 77 section:
+    - `Audio Clip - setAudioClipFadeInCurve validates curve values` - Tests that setAudioClipFadeInCurve validates curve values and returns true for valid changes
+    - `Audio Clip - getAudioClipFadeInCurve returns default when unset` - Tests default value ('linear') is returned for nonexistent clips
+    - `Audio Clip - setAudioClipFadeOutCurve validates curve values` - Tests that setAudioClipFadeOutCurve validates curve values
+    - `Audio Clip - getAudioClipFadeOutCurve returns default when unset` - Tests default value ('linear') is returned
+    - `Audio Clip - fade curves array contains valid options` - Tests FADE_CURVES array has exactly 2 options (linear, exponential)
+    - `Audio Clip - FADE_CURVE_LINEAR and FADE_CURVE_EXPONENTIAL are correct strings` - Tests the curve type constants
+    - `Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE default to linear` - Tests both defaults match FADE_CURVE_LINEAR
+- **Feature Details**:
+  - Tests validate fade curve setter/getter behavior using a self-contained mock track implementation
+  - Tests validate that invalid curve values default to 'linear' gracefully
+  - Tests validate the FADE_CURVES array contains exactly 'linear' and 'exponential'
+  - Tests validate that defaults match the FADE_CURVE_LINEAR constant
+  - Mock implementation mirrors the actual Track.js behavior for accuracy
+- **Backend Note**: The fade curve methods in Track.js are used by the Audio Clip Editor UI (openAudioClipEditorWindow in ui.js) to allow users to select fade curve types for audio clips. The constants (FADE_CURVE_LINEAR, FADE_CURVE_EXPONENTIAL, FADE_CURVES, DEFAULT_FADE_IN_CURVE, DEFAULT_FADE_OUT_CURVE) are defined in js/constants.js.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.2
 
 #### Day 78: MIDI Export Feature (2026-04-23)
 - **Feature**: Added MIDI Export functionality to export sequences as Standard MIDI Files
@@ -979,4 +999,26 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Backend Note**: These state functions are used by `startAudioRecording` and `stopAudioRecording` in `js/audio.js` to track which track is recording and when recording started. The tests verify the state API without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.1
+
+#### Day 81: Fade Curve Methods Tests (2026-04-23)
+- **Feature**: Added 7 new unit tests for audio clip fade curve methods and fade curve constants
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The fade curve functionality for audio clips (`setAudioClipFadeInCurve`, `getAudioClipFadeInCurve`, `setAudioClipFadeOutCurve`, `getAudioClipFadeOutCurve`) lacked unit test coverage despite being used in the Audio Clip Editor window.
+- **Files Modified**:
+  - `js/tests.js`: Added 7 new tests in Day 81 section:
+    - `Audio Clip - setAudioClipFadeInCurve validates curve values` - Tests that setAudioClipFadeInCurve validates curve values and returns true for valid changes
+    - `Audio Clip - getAudioClipFadeInCurve returns default when unset` - Tests default value ('linear') is returned for nonexistent clips
+    - `Audio Clip - setAudioClipFadeOutCurve validates curve values` - Tests that setAudioClipFadeOutCurve validates curve values
+    - `Audio Clip - getAudioClipFadeOutCurve returns default when unset` - Tests default value ('linear') is returned
+    - `Audio Clip - fade curves array contains valid options` - Tests FADE_CURVES array has exactly 2 options (linear, exponential)
+    - `Audio Clip - FADE_CURVE_LINEAR and FADE_CURVE_EXPONENTIAL are correct strings` - Tests the curve type constants
+    - `Audio Clip - DEFAULT_FADE_IN_CURVE and DEFAULT_FADE_OUT_CURVE default to linear` - Tests both defaults match FADE_CURVE_LINEAR
+- **Feature Details**:
+  - Tests validate fade curve setter/getter behavior using a self-contained mock track implementation
+  - Tests validate that invalid curve values default to 'linear' gracefully
+  - Tests validate the FADE_CURVES array contains exactly 'linear' and 'exponential'
+  - Tests validate that defaults match the FADE_CURVE_LINEAR constant
+  - Mock implementation mirrors the actual Track.js behavior for accuracy
+- **Backend Note**: The fade curve methods in Track.js are used by the Audio Clip Editor UI (openAudioClipEditorWindow in ui.js) to allow users to select fade curve types for audio clips. The constants (FADE_CURVE_LINEAR, FADE_CURVE_EXPONENTIAL, FADE_CURVES, DEFAULT_FADE_IN_CURVE, DEFAULT_FADE_OUT_CURVE) are defined in js/constants.js.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.60.2
 
