@@ -684,7 +684,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
     - `MAX_AUDIO_CLIP_PLAYBACK_RATE` (4.0)
     - Bumped APP_VERSION to 0.34.0
   - `js/Track.js`: Added new methods:
-    - `setAudioClipPlaybackRate(clipId, rate)` - Sets playback rate with undo state capture
+    - `setAudioClipPlaybackRate(clipId, rate)` - Sets playback rate with undo state capture and clamping
     - `getAudioClipPlaybackRate(clipId)` - Gets clip playback rate (default 1.0)
     - Modified audio clip playback scheduling to apply rate to Tone.Player
   - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
@@ -997,7 +997,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Mute/Solo Buttons: M and S buttons toggle group mute/solo state
   - Member Track Count: Shows number of tracks in the group
   - Visual Track Indicators: Small color squares representing member tracks (up to 8 shown)
-  - Add Group Button: Creates new group with auto-generated unique name
+  - Add Group Button: Creates new group with selected track as member
   - Cascade Behavior: Mute/solo on group affects all member tracks
 - **Usage**: Open Mixer window (Menu > Mixer), click "Add Group" button to create groups, use group mute/solo buttons to control member tracks
 - **Version**: Bumped to 0.52.0
@@ -1081,3 +1081,19 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - All constants documented with comments explaining their purpose
 - **Backend Note**: These constants provide a centralized configuration source for the recording system. The actual recording implementation in `js/audio.js` (startAudioRecording/stopAudioRecording functions) already uses Tone.UserMedia and Tone.Recorder, which respect these constraints.
 - **Version**: Bumped to 0.54.0
+
+#### Day 57: Timeline Freeze/Bounce UI (2026-04-22)
+- **Feature**: Added Freeze Track and Bounce Track options to timeline track lane right-click context menu
+- **Files Modified**:
+  - `js/ui.js`: Added context menu items in timeline track lane right-click handler:
+    - "Freeze Track" - Renders track audio offline and replaces sequence clips with frozen audio clip (only shown for non-Audio tracks with sequences)
+    - "Bounce Track" - Renders track audio to WAV and downloads file (shown for all track types with content)
+    - Both options call the existing `track.freezeTrack()` and `track.bounceTrack()` methods in Track.js
+  - `js/constants.js`: Bumped APP_VERSION to 0.55.0
+- **Feature Details**:
+  - Freeze Track: Converts instrument/sampler tracks to audio by rendering all notes offline, replacing sequence clips with a single frozen audio clip. Frees up CPU by disposing instrument/sampler nodes. Only available for Synth, InstrumentSampler, Sampler, and DrumSampler tracks with sequences.
+  - Bounce Track: Exports track audio as a WAV file download without modifying the original track. Works for all track types with timeline clips or sequences. Useful for exporting individual instrument stems.
+  - Both operations render using Tone.Offline context for non-real-time processing
+  - Error handling with user-friendly notifications
+- **Usage**: Right-click on a track lane in Timeline window, select "Freeze Track" or "Bounce Track"
+- **Version**: Bumped to 0.55.0

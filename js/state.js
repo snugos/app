@@ -270,12 +270,13 @@ export function removeWindowFromStoreState(id) { openWindowsMap.delete(id); }
 export function getSendTracksState() { return sendTracksState; }
 export function getSendTrackByIdState(id) { return sendTracksState.find(s => s.id === id); }
 export function addSendTrackState(sendData) {
+    const id = sendData && sendData.id !== undefined ? sendData.id : sendTrackIdCounter++;
     const sendTrack = {
-        id: sendData.id,
-        name: sendData.name || `Send ${sendData.id}`,
-        effects: sendData.effects || [],
-        level: sendData.level !== undefined ? sendData.level : 1.0,
-        muted: sendData.muted || false
+        id,
+        name: (sendData && sendData.name) || `Send ${id}`,
+        effects: (sendData && sendData.effects) || [],
+        level: (sendData && sendData.level !== undefined) ? sendData.level : 1.0,
+        muted: !!(sendData && sendData.muted)
     };
     sendTracksState.push(sendTrack);
     return sendTrack;
