@@ -153,13 +153,33 @@ export function resetPerformanceMonitorState() {
 let loopRegionState = { ...Constants.DEFAULT_LOOP_REGION };
 
 export function getLoopRegionState() { return { ...loopRegionState }; }
-export function setLoopRegionState(state) { loopRegionState = { ...state }; }
+export function setLoopRegionState(state) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loop Region`);
+    }
+    loopRegionState = { ...state }; 
+}
 export function getLoopRegionEnabledState() { return loopRegionState.enabled; }
-export function setLoopRegionEnabledState(enabled) { loopRegionState.enabled = !!enabled; }
+export function setLoopRegionEnabledState(enabled) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Loop Region ${enabled ? 'On' : 'Off'}`);
+    }
+    loopRegionState.enabled = !!enabled; 
+}
 export function getLoopRegionStartBarState() { return loopRegionState.startBar; }
-export function setLoopRegionStartBarState(bar) { loopRegionState.startBar = Math.max(1, parseInt(bar) || 1); }
+export function setLoopRegionStartBarState(bar) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loop Region Start Bar`);
+    }
+    loopRegionState.startBar = Math.max(1, parseInt(bar) || 1); 
+}
 export function getLoopRegionEndBarState() { return loopRegionState.endBar; }
-export function setLoopRegionEndBarState(bar) { loopRegionState.endBar = Math.max(loopRegionState.startBar, parseInt(bar) || 4); }
+export function setLoopRegionEndBarState(bar) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Loop Region End Bar`);
+    }
+    loopRegionState.endBar = Math.max(loopRegionState.startBar, parseInt(bar) || 4); 
+}
 
 // Timeline Zoom State
 let timelineZoomState = {
@@ -170,10 +190,16 @@ let timelineZoomState = {
 export function getTimelineZoomState() { return { ...timelineZoomState }; }
 export function getTimelineZoomLevelState() { return timelineZoomState.horizontal; }
 export function setTimelineZoomLevelState(level) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Timeline Zoom Level`);
+    }
     timelineZoomState.horizontal = Math.max(Constants.TIMELINE_ZOOM_MIN, Math.min(Constants.TIMELINE_ZOOM_MAX, parseFloat(level) || Constants.TIMELINE_ZOOM_DEFAULT)); 
 }
 export function getTimelineVerticalZoomState() { return timelineZoomState.vertical; }
 export function setTimelineVerticalZoomState(level) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Timeline Vertical Zoom`);
+    }
     timelineZoomState.vertical = Math.max(Constants.TIMELINE_VERTICAL_ZOOM_MIN, Math.min(Constants.TIMELINE_VERTICAL_ZOOM_MAX, parseFloat(level) || Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT)); 
 }
 export function zoomInTimeline() {
@@ -189,6 +215,9 @@ export function zoomOutVerticalTimeline() {
     setTimelineVerticalZoomState(timelineZoomState.vertical - Constants.TIMELINE_VERTICAL_ZOOM_STEP);
 }
 export function resetTimelineZoom() {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Reset Timeline Zoom`);
+    }
     timelineZoomState.horizontal = Constants.TIMELINE_ZOOM_DEFAULT;
     timelineZoomState.vertical = Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT;
 }
@@ -257,8 +286,18 @@ export function getPlaybackModeState() { return globalPlaybackMode; }
 // Metronome Getters/Setters
 export function getMetronomeEnabledState() { return metronomeEnabled; }
 export function getMetronomeVolumeState() { return metronomeVolume; }
-export function setMetronomeEnabledState(enabled) { metronomeEnabled = !!enabled; }
-export function setMetronomeVolumeState(volume) { metronomeVolume = Math.max(0, Math.min(1, parseFloat(volume) || 0.5)); }
+export function setMetronomeEnabledState(enabled) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Metronome ${enabled ? 'On' : 'Off'}`);
+    }
+    metronomeEnabled = !!enabled; 
+}
+export function setMetronomeVolumeState(volume) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Metronome Volume`);
+    }
+    metronomeVolume = Math.max(0, Math.min(1, parseFloat(volume) || 0.5)); 
+}
 
 // Scale Mode State
 let scaleModeState = { ...Constants.DEFAULT_SCALE_MODE };
@@ -267,21 +306,44 @@ export function getScaleModeState() { return scaleModeState; }
 
 export function setScaleModeState(state) {
     if (state && typeof state === 'object') {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Scale Mode Settings`);
+        }
         scaleModeState = { ...Constants.DEFAULT_SCALE_MODE, ...state };
     }
 }
 
 export function getScaleModeEnabledState() { return scaleModeState.enabled; }
-export function setScaleModeEnabledState(enabled) { scaleModeState.enabled = !!enabled; }
+export function setScaleModeEnabledState(enabled) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Scale Mode ${enabled ? 'On' : 'Off'}`);
+    }
+    scaleModeState.enabled = !!enabled; 
+}
 
 export function getScaleModeScaleState() { return scaleModeState.scale; }
-export function setScaleModeScaleState(scale) { scaleModeState.scale = scale || 'Major'; }
+export function setScaleModeScaleState(scale) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Scale to ${scale || 'Major'}`);
+    }
+    scaleModeState.scale = scale || 'Major'; 
+}
 
 export function getScaleModeRootState() { return scaleModeState.root; }
-export function setScaleModeRootState(root) { scaleModeState.root = root || 'C'; }
+export function setScaleModeRootState(root) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Scale Root to ${root || 'C'}`);
+    }
+    scaleModeState.root = root || 'C'; 
+}
 
 export function getScaleModeLockState() { return scaleModeState.lock; }
-export function setScaleModeLockState(lock) { scaleModeState.lock = !!lock; }
+export function setScaleModeLockState(lock) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`${lock ? 'Enable' : 'Disable'} Scale Lock`);
+    }
+    scaleModeState.lock = !!lock; 
+}
 
 // Chord Mode State (for constraining notes to chord tones)
 let chordModeState = { ...Constants.DEFAULT_CHORD_MODE };
@@ -290,28 +352,53 @@ export function getChordModeState() { return chordModeState; }
 
 export function setChordModeState(state) {
     if (state && typeof state === 'object') {
+        if (appServices.captureStateForUndo) {
+            appServices.captureStateForUndo(`Set Chord Mode Settings`);
+        }
         chordModeState = { ...Constants.DEFAULT_CHORD_MODE, ...state };
     }
 }
 
 export function getChordModeEnabledState() { return chordModeState.enabled; }
-export function setChordModeEnabledState(enabled) { chordModeState.enabled = !!enabled; }
+export function setChordModeEnabledState(enabled) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Toggle Chord Mode ${enabled ? 'On' : 'Off'}`);
+    }
+    chordModeState.enabled = !!enabled; 
+}
 
 export function getChordModeRootState() { return chordModeState.root; }
-export function setChordModeRootState(root) { chordModeState.root = Math.max(0, Math.min(11, parseInt(root) || 0)); }
+export function setChordModeRootState(root) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Chord Root`);
+    }
+    chordModeState.root = Math.max(0, Math.min(11, parseInt(root) || 0)); 
+}
 
 export function getChordModeTypeState() { return chordModeState.type; }
-export function setChordModeTypeState(type) { chordModeState.type = type || 'major'; }
+export function setChordModeTypeState(type) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Chord Type to ${type || 'major'}`);
+    }
+    chordModeState.type = type || 'major'; 
+}
 
 export function getChordModeLockState() { return chordModeState.lockChord; }
-export function setChordModeLockState(lock) { chordModeState.lockChord = !!lock; }
+export function setChordModeLockState(lock) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`${lock ? 'Enable' : 'Disable'} Chord Lock`);
+    }
+    chordModeState.lockChord = !!lock; 
+}
 
-// Chord Voicing State
 export function getChordVoicingState() {
     return chordModeState.voicing || Constants.DEFAULT_CHORD_VOICING;
 }
-export function setChordVoicingState(voicing) {
-    chordModeState.voicing = (voicing && Constants.CHORD_VOICINGS.includes(voicing)) ? voicing : Constants.DEFAULT_CHORD_VOICING;
+export function setChordVoicingState(voicing) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Chord Voicing to ${voicing || 'closed'}`);
+    }
+    chordModeState.voicing = (voicing && Constants.CHORD_VOICINGS.includes(voicing)) ? voicing : Constants.DEFAULT_CHORD_VOICING; 
 }
 
 // Time Signature State
@@ -320,6 +407,9 @@ let timeSignatureState = { ...Constants.DEFAULT_TIME_SIGNATURE };
 export function getTimeSignatureState() { return { ...timeSignatureState }; }
 
 export function setTimeSignatureState(numerator, denominator) {
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Time Signature to ${numerator || 4}/${denominator || 4}`);
+    }
     const num = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(Constants.TIME_SIG_MAX_NUMERATOR, parseInt(numerator) || 4));
     const denom = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(Constants.TIME_SIG_MAX_DENOMINATOR, parseInt(denominator) || 4));
     timeSignatureState = { numerator: num, denominator: denom };
@@ -330,7 +420,10 @@ export function setTimeSignatureState(numerator, denominator) {
 }
 
 export function getTimeSignatureNumeratorState() { return timeSignatureState.numerator; }
-export function setTimeSignatureNumeratorState(numerator) {
+export function setTimeSignatureNumeratorState(numerator) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Time Signature Numerator`);
+    }
     const num = Math.max(Constants.TIME_SIG_MIN_NUMERATOR, Math.min(Constants.TIME_SIG_MAX_NUMERATOR, parseInt(numerator) || 4));
     timeSignatureState.numerator = num;
     if (typeof Tone !== 'undefined' && Tone.Transport) {
@@ -339,7 +432,10 @@ export function setTimeSignatureNumeratorState(numerator) {
 }
 
 export function getTimeSignatureDenominatorState() { return timeSignatureState.denominator; }
-export function setTimeSignatureDenominatorState(denominator) {
+export function setTimeSignatureDenominatorState(denominator) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(`Set Time Signature Denominator`);
+    }
     const denom = Math.max(Constants.TIME_SIG_MIN_DENOMINATOR, Math.min(Constants.TIME_SIG_MAX_DENOMINATOR, parseInt(denominator) || 4));
     timeSignatureState.denominator = denom;
     if (typeof Tone !== 'undefined' && Tone.Transport) {
@@ -351,7 +447,12 @@ export function setTimeSignatureDenominatorState(denominator) {
 let ghostTrackIdState = null; // null = no ghost track, or track ID
 
 export function getGhostTrackIdState() { return ghostTrackIdState; }
-export function setGhostTrackIdState(trackId) { ghostTrackIdState = trackId; }
+export function setGhostTrackIdState(trackId) { 
+    if (appServices.captureStateForUndo) {
+        appServices.captureStateForUndo(trackId ? `Set Ghost Track` : `Clear Ghost Track`);
+    }
+    ghostTrackIdState = trackId; 
+}
 
 // Timeline Markers State
 let timelineMarkersState = []; // Array of { id, name, bar, color }
@@ -2040,7 +2141,7 @@ function parseMidiFile(data) {
                 const metaType = data[currentPos];
                 currentPos++;
                 const metaLength = readVarLen(data, currentPos);
-                currentPos = metaLength.nextPos;
+                currentPos = metaLength.nextPos + metaLength.value;
 
                 if (metaType === 0x51) {
                     // Set Tempo
