@@ -1,6 +1,6 @@
 // js/constants.js - Shared constants for SnugOS
 
-export const APP_VERSION = '0.61.4'; // Day 87: Performance Monitor
+export const APP_VERSION = '0.61.6'; // Day 89: Timeline Zoom UI Fixes
 
 // Performance Monitor Constants
 export const PERFORMANCE_MONITOR_ENABLED = true; // Feature flag
@@ -38,6 +38,16 @@ export const DEFAULT_TIME_SIGNATURE = {
 export const TIMELINE_BEAT_WIDTH = 40; // pixels per beat
 export const TIMELINE_TRACK_HEIGHT = 60; // pixels per track lane
 export const TIMELINE_HEADER_HEIGHT = 30; // pixels for time ruler
+
+// Timeline Zoom constants
+export const TIMELINE_ZOOM_MIN = 0.25; // Minimum zoom level (25%)
+export const TIMELINE_ZOOM_MAX = 4.0; // Maximum zoom level (400%)
+export const TIMELINE_ZOOM_STEP = 0.25; // Zoom step size
+export const TIMELINE_ZOOM_DEFAULT = 1.0; // Default zoom level (100%)
+export const TIMELINE_VERTICAL_ZOOM_MIN = 0.5; // Minimum vertical zoom
+export const TIMELINE_VERTICAL_ZOOM_MAX = 2.0; // Maximum vertical zoom
+export const TIMELINE_VERTICAL_ZOOM_STEP = 0.1; // Vertical zoom step size
+export const TIMELINE_VERTICAL_ZOOM_DEFAULT = 1.0; // Default vertical zoom (100%)
 
 // Note: Reversed for typical top-to-bottom piano roll display in a UI
 export const synthPitches = [

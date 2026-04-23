@@ -190,6 +190,50 @@ TestRunner.test('Constants - MAX_AUDIO_CLIP_FADE is valid', (t) => {
 });
 
 // ============================================
+// Day 88: Performance Monitor Constants Tests
+// ============================================
+TestRunner.test('Performance Monitor - PERFORMANCE_MONITOR_ENABLED is boolean', (t) => {
+    t.assertEqual(typeof PERFORMANCE_MONITOR_ENABLED, 'boolean', 'PERFORMANCE_MONITOR_ENABLED should be boolean');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_UPDATE_INTERVAL_MS is positive', (t) => {
+    t.assertTruthy(PERFORMANCE_UPDATE_INTERVAL_MS > 0, 'Update interval should be positive');
+    t.assertTruthy(PERFORMANCE_UPDATE_INTERVAL_MS <= 5000, 'Update interval should be reasonable (<5s)');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_CONTEXT_STATE values are valid', (t) => {
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_OK, 'running', 'Context state OK should be "running"');
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_SUSPENDED, 'suspended', 'Context state suspended should be "suspended"');
+    t.assertEqual(PERFORMANCE_CONTEXT_STATE_CLOSED, 'closed', 'Context state closed should be "closed"');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS is reasonable', (t) => {
+    t.assertTruthy(PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS >= 1, 'Buffer size should be at least 1');
+    t.assertTruthy(PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS <= 16, 'Buffer size should be reasonable (<16)');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_DEFAULT_LATENCY_HINT is valid', (t) => {
+    const validHints = ['interactive', 'balanced', 'power-saving', 'max'];
+    t.assertTruthy(validHints.includes(PERFORMANCE_DEFAULT_LATENCY_HINT), 'Latency hint should be valid Tone.js hint');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_MEMORY_PRESSURE values are distinct', (t) => {
+    const values = [
+        PERFORMANCE_MEMORY_PRESSURE_NONE,
+        PERFORMANCE_MEMORY_PRESSURE_LOW,
+        PERFORMANCE_MEMORY_PRESSURE_MEDIUM,
+        PERFORMANCE_MEMORY_PRESSURE_HIGH
+    ];
+    const uniqueValues = [...new Set(values)];
+    t.assertEqual(values.length, uniqueValues.length, 'All memory pressure values should be distinct');
+});
+
+TestRunner.test('Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is reasonable', (t) => {
+    t.assertTruthy(PERFORMANCE_WARNING_THRESHOLD_MS > 0, 'Warning threshold should be positive');
+    t.assertTruthy(PERFORMANCE_WARNING_THRESHOLD_MS <= 200, 'Warning threshold should be reasonable (<200ms)');
+});
+
+// ============================================
 // Utility Function Tests
 // ============================================
 TestRunner.test('Utils - createDropZoneHTML generates valid HTML', (t) => {

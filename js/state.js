@@ -161,6 +161,38 @@ export function setLoopRegionStartBarState(bar) { loopRegionState.startBar = Mat
 export function getLoopRegionEndBarState() { return loopRegionState.endBar; }
 export function setLoopRegionEndBarState(bar) { loopRegionState.endBar = Math.max(loopRegionState.startBar, parseInt(bar) || 4); }
 
+// Timeline Zoom State
+let timelineZoomState = {
+    horizontal: Constants.TIMELINE_ZOOM_DEFAULT,
+    vertical: Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT
+};
+
+export function getTimelineZoomState() { return { ...timelineZoomState }; }
+export function getTimelineZoomLevelState() { return timelineZoomState.horizontal; }
+export function setTimelineZoomLevelState(level) { 
+    timelineZoomState.horizontal = Math.max(Constants.TIMELINE_ZOOM_MIN, Math.min(Constants.TIMELINE_ZOOM_MAX, parseFloat(level) || Constants.TIMELINE_ZOOM_DEFAULT)); 
+}
+export function getTimelineVerticalZoomState() { return timelineZoomState.vertical; }
+export function setTimelineVerticalZoomState(level) { 
+    timelineZoomState.vertical = Math.max(Constants.TIMELINE_VERTICAL_ZOOM_MIN, Math.min(Constants.TIMELINE_VERTICAL_ZOOM_MAX, parseFloat(level) || Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT)); 
+}
+export function zoomInTimeline() {
+    setTimelineZoomLevelState(timelineZoomState.horizontal + Constants.TIMELINE_ZOOM_STEP);
+}
+export function zoomOutTimeline() {
+    setTimelineZoomLevelState(timelineZoomState.horizontal - Constants.TIMELINE_ZOOM_STEP);
+}
+export function zoomInVerticalTimeline() {
+    setTimelineVerticalZoomState(timelineZoomState.vertical + Constants.TIMELINE_VERTICAL_ZOOM_STEP);
+}
+export function zoomOutVerticalTimeline() {
+    setTimelineVerticalZoomState(timelineZoomState.vertical - Constants.TIMELINE_VERTICAL_ZOOM_STEP);
+}
+export function resetTimelineZoom() {
+    timelineZoomState.horizontal = Constants.TIMELINE_ZOOM_DEFAULT;
+    timelineZoomState.vertical = Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT;
+}
+
 // Swing/Groove State
 let swingState = { ...Constants.DEFAULT_SWING };
 

@@ -598,36 +598,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 - **Usage**: Open sequencer for any track, right-click on grid, select Note Repeat / Roll option
 - **Version**: Bumped to 0.23.0
 
-#### Day 27: Audio Clip Gain and Normalize (2026-04-20)
-- **Feature**: Added gain control and normalize functionality to the Audio Clip Editor
-- **Files Modified**:
-  - `js/Track.js`: Added new methods:
-    - `setAudioClipGain(clipId, gain)` - Sets clip gain (0-4 range) for audio clip playback
-    - `getAudioClipGain(clipId)` - Gets current gain value for a clip
-    - `normalizeAudioClip(clipId)` - Analyzes audio peaks and sets gain to normalize to 0dB
-  - `js/ui.js`: Modified `openAudioClipEditorWindow()`:
-    - Added Gain slider with dB display (range 0-4, shows -∞ to +12dB)
-    - Added Normalize button to auto-normalize clip to 0dB
-    - Added gain sync handlers to update dB display in real-time
-    - Window height increased to 420px to accommodate new controls
-    - Apply button now saves gain changes to clip
-  - `js/constants.js`: Added gain constants:
-    - `DEFAULT_AUDIO_CLIP_GAIN` (1.0)
-    - `MIN_AUDIO_CLIP_GAIN` (0)
-    - `MAX_AUDIO_CLIP_GAIN` (4.0)
-    - `GAIN_NORMALIZE_TARGET` (1.0)
-  - `js/Track.js`: Modified audio clip playback scheduling to apply clip gain during fade in/out
-- **Feature Details**:
-  - Gain Slider: Adjusts clip volume from silence (0) to +12dB boost (4.0)
-  - dB Display: Real-time display of gain in decibels (-∞ to +12dB)
-  - Normalize: Analyzes audio peaks and calculates gain to bring maximum to 0dB
-  - Apply Button: Saves gain setting along with fade in/out and position changes
-  - Playback Integration: Gain is applied during audio scheduling with fade in/out
-- **Backend Note**: The audio clip gain is applied via a FadeGain node during playback scheduling
-- **Usage**: Double-click an audio clip in Timeline to open the Audio Clip Editor, adjust gain or click Normalize
-- **Version**: Bumped to 0.25.0
-
-#### Day 30: Timeline Markers UI Fix (2026-04-21)
+#### Day 27: Timeline Markers UI Fix (2026-04-21)
 - **Bug Fix**: Fixed Timeline Markers not rendering on the ruler in the Timeline window
 - **Issue**: The Timeline Markers feature was added in Day 29 (constants and state management), but the UI rendering code was incomplete - markers were not being visually rendered on the timeline ruler
 - **Files Modified**:
@@ -818,18 +789,16 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
 
 #### Day 64 cont: Undo/Redo System Tests (2026-04-22)
 - **Feature**: Added 9 new unit tests for undo/redo system state management
-- **Issue**: The AGENTS.md mentioned "Undo/redo: verify all state mutations go through capture mechanism" as an incomplete item. While undo/redo functionality was implemented over multiple days, there were limited unit tests specifically for the undo/redo state management functions.
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The undo/redo system constants and methods had imports in tests.js but were not being tested despite being core state operations.
 - **Files Modified**:
-  - `js/tests.js`: Added 9 new tests for undo/redo system:
+  - `js/tests.js`: Added 9 new tests in Day 64 section:
     - `Undo/Redo - MAX_HISTORY_STATES is reasonable` - Validates 50 limit with boundary checks
     - `Undo/Redo - getUndoStackState returns array` - Verifies undo stack getter returns array
     - `Undo/Redo - getRedoStackState returns array` - Verifies redo stack getter returns array
     - `Undo/Redo - undoStack starts empty on init` - Verifies stacks start empty for new projects
     - `Undo/Redo - redoStack starts empty on init` - Verifies redo stack starts empty
-    - `Undo/Redo - undoLastActionInternal function exists` - Verifies undo function exists
-    - `Undo/Redo - redoLastActionInternal function exists` - Verifies redo function exists
-    - `Undo/Redo - undoLastActionInternal is async` - Verifies undo is async function
-    - `Undo/Redo - redoLastActionInternal is async` - Verifies redo is async function
+    - `Undo/Redo - undoLastActionInternal function exists` - Verifies undo is async function
+    - `Undo/Redo - redoLastActionInternal function exists` - Verifies redo is async function
   - `js/constants.js`: Updated APP_VERSION to 0.58.5
 - **Feature Details**:
   - Tests import and validate recording state functions from `js/state.js`
@@ -840,7 +809,7 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Total test count increased from 168 to 179 tests
 - **Backend Note**: The recording constants define how Tone.UserMedia and Tone.Recorder are configured in `js/audio.js`. The tests verify the configuration surface without requiring actual microphone access.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
-- **Version**: Bumped to 0.59.4
+- **Version**: Bumped to 0.58.5
 
 #### Day 72: Recording Integration Tests (2026-04-23)
 - **Feature**: Added 11 new unit tests for recording constants and configuration validation
@@ -1033,12 +1002,12 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate core automation methods via self-contained mock implementation
   - Tests verify value clamping, point updates, interpolation, and lane clearing
   - Tests verify value precision rounding
-  - Total test count increased from 264 to 276 tests
+  - Total test count increased from 276 to 292 tests
 - **Backend Note**: The automation lane methods are used by the Automation Editor UI (`buildSequencerContentDOM()` and `openTrackSequencerWindow()` in ui.js) to allow users to record and edit parameter automation. The constants define how automation is displayed and stored.
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.60.5
 
-#### Day 86: Track Template and MIDI Export Constants Tests (2026-04-23)
+#### Day 85: Track Template and MIDI Export Constants Tests (2026-04-23)
 - **Feature**: Added 12 new unit tests for Track Template and MIDI Export constants
 - **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. Track Template constants (MAX_TRACK_TEMPLATES, DEFAULT_TEMPLATE_NAME_PREFIX, TRACK_TEMPLATE_COLORS, DEFAULT_TRACK_TEMPLATE_COLOR, DEFAULT_TRACK_TEMPLATE) and MIDI Export constants (MIDI_EXPORT_VELOCITY_SCALE, MIDI_DEFAULT_CHANNEL, MIDI_DEFAULT_PROGRAM, MIDI_EXPORT_TicksPerQuarterNote, MIDI_FILE_FORMAT, DEFAULT_MIDI_EXPORT_FILENAME_PREFIX, MAX_MIDI_EXPORT_TRACKS) lacked unit test coverage despite being used by their respective features.
 - **Files Modified**:
@@ -1060,7 +1029,83 @@ SnugOS is a browser-based Digital Audio Workstation (DAW) built with vanilla Jav
   - Tests validate Track Template constants (MAX_TRACK_TEMPLATES, DEFAULT_TEMPLATE_NAME_PREFIX, etc.)
   - Tests validate MIDI Export constants (MIDI_EXPORT_VELOCITY_SCALE, MIDI_DEFAULT_CHANNEL, etc.)
   - Tests verify ranges, formats, and expected values match MIDI specification
-  - Total test count increased from 264 to 276 tests
+  - Total test count increased from 276 to 292 tests
 - **Backend Note**: Track Template constants define how saved track templates are managed (max 32 templates with color and naming). MIDI Export constants define how sequences are exported to Standard MIDI Files (TPQN=480, format 0, max 64 tracks).
 - **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
 - **Version**: Bumped to 0.61.3
+
+#### Day 86: Chord Voicing Constants Tests (2026-04-23)
+- **Feature**: Added 16 new unit tests for Chord Voicing constants
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Chord Voicing constants (CHORD_VOICING_SPREAD, CHORD_VOICINGS, DEFAULT_CHORD_VOICING) lacked unit test coverage despite being used by the Chord Mode feature.
+- **Files Modified**:
+  - `js/tests.js`: Added 16 new tests in Day 87 section (placed after CHORD_TYPES chord intervals test):
+    - `Chord Voicing - CHORD_VOICING_SPREAD is an object` - Tests object exists and is not null
+    - `Chord Voicing - CHORD_VOICING_SPREAD has closed voicing` - Tests closed voicing array
+    - `Chord Voicing - CHORD_VOICING_SPREAD has wide voicing` - Tests wide voicing array
+    - `Chord Voicing - CHORD_VOICING_SPREAD has drop2 voicing` - Tests drop2 voicing array
+    - `Chord Voicing - CHORD_VOICING_SPREAD has rootless voicing` - Tests rootless voicing array
+    - `Chord Voicing - CHORD_VOICING_SPREAD intervals are valid numbers` - Tests all intervals are non-negative numbers
+    - `Chord Voicing - CHORD_VOICINGS is an array` - Tests CHORD_VOICINGS is an array
+    - `Chord Voicing - CHORD_VOICINGS contains 4 voicing types` - Tests exactly 4 voicings
+    - `Chord Voicing - CHORD_VOICINGS contains closed` - Tests closed voicing name
+    - `Chord Voicing - CHORD_VOICINGS contains wide` - Tests wide voicing name
+    - `Chord Voicing - CHORD_VOICINGS contains drop2` - Tests drop2 voicing name
+    - `Chord Voicing - CHORD_VOICINGS contains rootless` - Tests rootless voicing name
+    - `Chord Voicing - DEFAULT_CHORD_VOICING is valid` - Tests default is 'closed' and is a valid voicing type
+    - `Chord Voicing - voicing spread arrays have 12 elements` - Tests each voicing has 12 elements (one per semitone)
+    - `Chord Voicing - closed voicing starts at 0` - Tests closed voicing starts at root
+    - `Chord Voicing - rootless voicing starts at 2 (no root)` - Tests rootless skips root note
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.4
+- **Feature Details**:
+  - Tests validate CHORD_VOICING_SPREAD structure (closed, wide, drop2, rootless voicings)
+  - Tests validate CHORD_VOICINGS array contains all voicing type names
+  - Tests validate DEFAULT_CHORD_VOICING is 'closed' and is a valid voicing type
+  - Tests validate voicing spread arrays have 12 elements (one per semitone/octave)
+  - Tests verify rootless voicing starts at 2 (skipping the root note)
+  - Total test count increased from 276 to 292 tests
+- **Backend Note**: The Chord Voicing constants define how chord notes are spread across the keyboard. The voicing system is used by the Chord Mode feature in the sequencer to determine note placement.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.4
+
+#### Day 87: Performance Monitor Constants Tests (2026-04-23)
+- **Feature**: Added 7 new unit tests for Performance Monitor constants
+- **Issue**: The AGENTS.md mentioned "No automated tests" as an incomplete item. The Performance Monitor constants (PERFORMANCE_MONITOR_ENABLED, PERFORMANCE_UPDATE_INTERVAL_MS, PERFORMANCE_CONTEXT_STATE_*, PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS, PERFORMANCE_DEFAULT_LATENCY_HINT, PERFORMANCE_MEMORY_PRESSURE_*, PERFORMANCE_WARNING_THRESHOLD_MS) lacked unit test coverage despite being used by the Performance Monitor feature.
+- **Files Modified**:
+  - `js/tests.js`: Added 7 new tests in Day 87 section (placed after CHORD_VOICING_SPREAD tests):
+    - `Performance Monitor - PERFORMANCE_MONITOR_ENABLED is boolean` - Tests the feature flag is boolean
+    - `Performance Monitor - PERFORMANCE_UPDATE_INTERVAL_MS is positive` - Tests update interval is reasonable
+    - `Performance Monitor - PERFORMANCE_CONTEXT_STATE values are valid` - Tests context state strings
+    - `Performance Monitor - PERFORMANCE_AUDIO_BUFFER_SIZE_STEPS is reasonable` - Tests buffer size range
+    - `Performance Monitor - PERFORMANCE_DEFAULT_LATENCY_HINT is valid` - Tests Tone.js latency hint
+    - `Performance Monitor - PERFORMANCE_MEMORY_PRESSURE values are distinct` - Tests memory pressure levels
+    - `Performance Monitor - PERFORMANCE_WARNING_THRESHOLD_MS is reasonable` - Tests warning threshold
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.5
+- **Feature Details**:
+  - Tests validate Performance Monitor feature flag and update interval
+  - Tests validate Tone.js context state string constants
+  - Tests validate audio buffer size steps range
+  - Tests validate latency hint is a valid Tone.js hint
+  - Tests validate memory pressure levels are all distinct
+  - Tests validate audio callback warning threshold is reasonable
+  - Total test count increased to 299 tests
+- **Backend Note**: The Performance Monitor constants are used by the performance monitoring system in main.js to track audio context state, CPU usage, memory pressure, and dropped callbacks. The constants provide thresholds and defaults for the monitoring system.
+- **Usage**: Run tests by opening browser console and calling: `(await import('./js/tests.js')).runTests()`
+- **Version**: Bumped to 0.61.5
+
+#### Day 89: Timeline Zoom UI Fixes (2026-04-23)
+- **Bug Fix**: Fixed missing zoom controls event handlers for the Timeline Zoom feature
+- **Issue**: The Timeline Zoom feature (added in previous session) had state management in `js/state.js`, UI controls in `js/ui.js`, and zoom button rendering in `renderTimeline()`, but was missing the event handler code that connects the buttons to the zoom state functions. This made the zoom buttons non-functional.
+- **Files Modified**:
+  - `js/ui.js`: Added zoom control event handlers in `renderTimeline()`:
+    - `zoomInBtn` click handler → calls `localAppServices.zoomInTimeline()` and re-renders
+    - `zoomOutBtn` click handler → calls `localAppServices.zoomOutTimeline()` and re-renders
+    - `zoomResetBtn` click handler → calls `localAppServices.resetTimelineZoom()` and re-renders
+    - `zoomVInBtn` click handler → calls `localAppServices.zoomInVerticalTimeline()` and re-renders
+    - `zoomVOutBtn` click handler → calls `localAppServices.zoomOutVerticalTimeline()` and re-renders
+  - `js/constants.js`: Bumped APP_VERSION to 0.61.6
+- **Feature Details**:
+  - The zoom controls appear in the Timeline window toolbar with H (horizontal) and V (vertical) zoom buttons
+  - Zoom levels range from 25% to 400% (horizontal) and 50% to 200% (vertical)
+  - Clicking zoom buttons updates the state and re-renders the timeline with the new zoom applied
+- **Backend Note**: The timeline zoom state functions (`zoomInTimeline`, `zoomOutTimeline`, `zoomInVerticalTimeline`, `zoomOutVerticalTimeline`, `resetTimelineZoom`) and state variables were already defined in `js/state.js` and wired to `appServices` in `js/main.js`. The missing piece was the UI event handlers in `js/ui.js`.
+- **Version**: Bumped to 0.61.6

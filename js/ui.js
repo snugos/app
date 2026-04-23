@@ -3215,9 +3215,14 @@ export function renderTimeline() {
     const contentDiv = win.element.querySelector('#timelineContent');
     if (!contentDiv) return;
     
-    // Build timeline HTML
-    const beatWidth = Constants.TIMELINE_BEAT_WIDTH;
-    const trackHeight = Constants.TIMELINE_TRACK_HEIGHT;
+    // Get timeline zoom state
+    const zoomState = localAppServices.getTimelineZoomState ? localAppServices.getTimelineZoomState() : { horizontal: Constants.TIMELINE_ZOOM_DEFAULT, vertical: Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT };
+    const horizontalZoom = zoomState.horizontal || Constants.TIMELINE_ZOOM_DEFAULT;
+    const verticalZoom = zoomState.vertical || Constants.TIMELINE_VERTICAL_ZOOM_DEFAULT;
+    
+    // Build timeline HTML with zoom applied
+    const beatWidth = Constants.TIMELINE_BEAT_WIDTH * horizontalZoom;
+    const trackHeight = Constants.TIMELINE_TRACK_HEIGHT * verticalZoom;
     const headerHeight = Constants.TIMELINE_HEADER_HEIGHT;
     const bpm = Tone.Transport.bpm.value;
     const pixelsPerSecond = (beatWidth * bpm) / 60;
@@ -3231,6 +3236,21 @@ export function renderTimeline() {
     
     // Get timeline markers
     const markers = localAppServices.getTimelineMarkersState ? localAppServices.getTimelineMarkersState() : [];
+    
+    // Create zoom controls
+    let zoomControlsHTML = `
+        <div class="zoom-controls flex items-center gap-2 p-2 bg-zinc-800 border-b border-zinc-700">
+            <span class="text-xs text-zinc-400 font-semibold">Zoom:</span>
+            <button id="zoomOutBtn" class="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs rounded" title="Zoom Out (Scroll down)">−</button>
+            <span id="zoomLevelDisplay" class="text-xs text-zinc-300 w-16 text-center">${Math.round(horizontalZoom * 100)}%</span>
+            <button id="zoomInBtn" class="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs rounded" title="Zoom In (Scroll up)">+</button>
+            <button id="zoomResetBtn" class="px-2 py-1 bg-zinc-600 hover:bg-zinc-500 text-white text-xs rounded ml-2" title="Reset Zoom">Reset</button>
+            <span class="text-xs text-zinc-500 ml-4">V:</span>
+            <button id="zoomVOutBtn" class="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs rounded">−</button>
+            <span id="zoomVLevelDisplay" class="text-xs text-zinc-300 w-14 text-center">${Math.round(verticalZoom * 100)}%</span>
+            <button id="zoomVInBtn" class="px-2 py-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs rounded">+</button>
+        </div>
+    `;
     
     // Create loop region controls
     let loopControlsHTML = `
@@ -3318,6 +3338,7 @@ export function renderTimeline() {
     const playheadHTML = `<div id="timelinePlayhead" style="position:absolute;top:0;left:0;width:2px;height:100%;background:#ff4444;z-index:10;pointer-events:none;"></div>`;
     
     contentDiv.innerHTML = `<div class="timeline-container" style="display:flex;flex-direction:column;height:100%;position:relative;overflow:hidden;">
+        ${zoomControlsHTML}
         ${loopControlsHTML}
         ${markerControlsHTML}
         ${rulerHTML}
@@ -3726,6 +3747,60 @@ export function renderTimeline() {
             createContextMenu(e, menuItems, localAppServices);
         });
     });
+
+    // Add zoom control handlers
+    const zoomInBtn = contentDiv.querySelector('#zoomInBtn');
+    const zoomOutBtn = contentDiv.querySelector('#zoomOutBtn');
+    const zoomResetBtn = contentDiv.querySelector('#zoomResetBtn');
+    const zoomVInBtn = contentDiv.querySelector('#zoomVInBtn');
+    const zoomVOutBtn = contentDiv.querySelector('#zoomVOutBtn');
+    const zoomLevelDisplay = contentDiv.querySelector('#zoomLevelDisplay');
+    const zoomVLevelDisplay = contentDiv.querySelector('#zoomVLevelDisplay');
+    
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            if (localAppServices.zoomInTimeline) {
+                localAppServices.zoomInTimeline();
+                renderTimeline();
+            }
+        });
+    }
+    
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            if (localAppServices.zoomOutTimeline) {
+                localAppServices.zoomOutTimeline();
+                renderTimeline();
+            }
+        });
+    }
+    
+    if (zoomResetBtn) {
+        zoomResetBtn.addEventListener('click', () => {
+            if (localAppServices.resetTimelineZoom) {
+                localAppServices.resetTimelineZoom();
+                renderTimeline();
+            }
+        });
+    }
+    
+    if (zoomVInBtn) {
+        zoomVInBtn.addEventListener('click', () => {
+            if (localAppServices.zoomInVerticalTimeline) {
+                localAppServices.zoomInVerticalTimeline();
+                renderTimeline();
+            }
+        });
+    }
+    
+    if (zoomVOutBtn) {
+        zoomVOutBtn.addEventListener('click', () => {
+            if (localAppServices.zoomOutVerticalTimeline) {
+                localAppServices.zoomOutVerticalTimeline();
+                renderTimeline();
+            }
+        });
+    }
     
 }
 
